@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_emr_cluster"
-sidebar_current: "docs-aws-resource-emr-cluster"
 description: |-
   Provides an Elastic MapReduce Cluster
 ---
@@ -176,6 +175,51 @@ resource "aws_emr_cluster" "example" {
 }
 ```
 
+### Multiple Node Master Instance Group
+
+Available in EMR version 5.23.0 and later, an EMR Cluster can be launched with three master nodes for high availability. Additional information about this functionality and its requirements can be found in the [EMR Management Guide](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-plan-ha.html).
+
+```hcl
+# This configuration is for illustrative purposes and highlights
+# only relevant configurations for working with this functionality.
+
+# Map public IP on launch must be enabled for public (Internet accessible) subnets
+resource "aws_subnet" "example" {
+  # ... other configuration ...
+
+  map_public_ip_on_launch = true
+}
+
+resource "aws_emr_cluster" "example" {
+  # ... other configuration ...
+
+  # EMR version must be 5.23.0 or later
+  release_label = "emr-5.24.1"
+
+  # Termination protection is automatically enabled for multiple masters
+  # To destroy the cluster, this must be configured to false and applied first
+  termination_protection = true
+
+  ec2_attributes {
+    # ... other configuration ...
+
+    subnet_id = "${aws_subnet.example.id}"
+  }
+
+  master_instance_group {
+    # ... other configuration ...
+
+    # Master instance count must be set to 3
+    instance_count = 3
+  }
+
+  # core_instance_group must be configured
+  core_instance_group {
+    # ... other configuration ...
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -194,7 +238,7 @@ The following arguments are supported:
 * `instance_group` - (Optional, **DEPRECATED**) Use the `master_instance_group` configuration block, `core_instance_group` configuration block and [`aws_emr_instance_group` resource(s)](/docs/providers/aws/r/emr_instance_group.html) instead. A list of `instance_group` objects for each instance group in the cluster. Exactly one of `master_instance_type` and `instance_group` must be specified. If `instance_group` is set, then it must contain a configuration block for at least the `MASTER` instance group type (as well as any additional instance groups). Cannot be specified if `master_instance_group` or `core_instance_group` configuration blocks are set. Defined below
 * `log_uri` - (Optional) S3 bucket to write the log files of the job flow. If a value is not provided, logs are not created
 * `applications` - (Optional) A list of applications for the cluster. Valid values are: `Flink`, `Hadoop`, `Hive`, `Mahout`, `Pig`, `Spark`, and `JupyterHub` (as of EMR 5.14.0). Case insensitive
-* `termination_protection` - (Optional) Switch on/off termination protection (default is off)
+* `termination_protection` - (Optional) Switch on/off termination protection (default is `false`, except when using multiple master nodes). Before attempting to destroy the resource when termination protection is enabled, this configuration must be applied with its value set to `false`.
 * `keep_job_flow_alive_when_no_steps` - (Optional) Switch on/off run cluster with no steps or when all steps are complete (default is on)
 * `ec2_attributes` - (Optional) Attributes for the EC2 instances running the job flow. Defined below
 * `kerberos_attributes` - (Optional) Kerberos configuration for the cluster. Defined below
@@ -299,6 +343,7 @@ Supported nested arguments for the `master_instance_group` configuration block:
 * `instance_type` - (Required) EC2 instance type for all instances in the instance group.
 * `bid_price` - (Optional) Bid price for each EC2 instance in the instance group, expressed in USD. By setting this attribute, the instance group is being declared as a Spot Instance, and will implicitly create a Spot request. Leave this blank to use On-Demand Instances.
 * `ebs_config` - (Optional) Configuration block(s) for EBS volumes attached to each instance in the instance group. Detailed below.
+* `instance_count` - (Optional) Target number of instances for the instance group. Must be 1 or 3. Defaults to 1. Launching with multiple master nodes is only supported in EMR version 5.23.0+, and requires this resource's `core_instance_group` to be configured. Public (Internet accessible) instances must be created in VPC subnets that have [map public IP on launch](/docs/providers/aws/r/subnet.html#map_public_ip_on_launch) enabled. Termination protection is automatically enabled when launched with multiple master nodes and Terraform must have the `termination_protection = false` configuration applied before destroying this resource.
 * `name` - (Optional) Friendly name given to the instance group.
 
 ## ebs_config

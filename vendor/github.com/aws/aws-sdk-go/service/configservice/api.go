@@ -342,8 +342,24 @@ func (c *ConfigService) DeleteConfigRuleRequest(input *DeleteConfigRuleInput) (r
 //   rule names are correct and try again.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   The rule is currently being deleted or the rule is deleting your evaluation
-//   results. Try your request again later.
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
+//      request again later.
+//
+//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule API, a remediation action is associated with the
+//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteConfigRule
 func (c *ConfigService) DeleteConfigRule(input *DeleteConfigRuleInput) (*DeleteConfigRuleOutput, error) {
@@ -687,8 +703,24 @@ func (c *ConfigService) DeleteEvaluationResultsRequest(input *DeleteEvaluationRe
 //   rule names are correct and try again.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   The rule is currently being deleted or the rule is deleting your evaluation
-//   results. Try your request again later.
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
+//      request again later.
+//
+//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule API, a remediation action is associated with the
+//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteEvaluationResults
 func (c *ConfigService) DeleteEvaluationResults(input *DeleteEvaluationResultsInput) (*DeleteEvaluationResultsOutput, error) {
@@ -757,6 +789,13 @@ func (c *ConfigService) DeleteOrganizationConfigRuleRequest(input *DeleteOrganiz
 
 // DeleteOrganizationConfigRule API operation for AWS Config.
 //
+// Deletes the specified organization config rule and all of its evaluation
+// results from all member accounts in that organization. Only a master account
+// can delete an organization config rule.
+//
+// AWS Config sets the state of a rule to DELETE_IN_PROGRESS until the deletion
+// is complete. You cannot update a rule while it is in this state.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -766,10 +805,35 @@ func (c *ConfigService) DeleteOrganizationConfigRuleRequest(input *DeleteOrganiz
 //
 // Returned Error Codes:
 //   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+//   You specified one or more organization config rules that do not exist.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   The rule is currently being deleted or the rule is deleting your evaluation
-//   results. Try your request again later.
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
+//      request again later.
+//
+//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule API, a remediation action is associated with the
+//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
+//   are called from member accounts. All APIs must be called from organization
+//   master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteOrganizationConfigRule
 func (c *ConfigService) DeleteOrganizationConfigRule(input *DeleteOrganizationConfigRuleInput) (*DeleteOrganizationConfigRuleOutput, error) {
@@ -934,6 +998,8 @@ func (c *ConfigService) DeleteRemediationConfigurationRequest(input *DeleteRemed
 //   You specified an AWS Config rule without a remediation configuration.
 //
 //   * ErrCodeRemediationInProgressException "RemediationInProgressException"
+//   Remediation action is in progress. You can either cancel execution in AWS
+//   Systems Manager or wait and try again later.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteRemediationConfiguration
 func (c *ConfigService) DeleteRemediationConfiguration(input *DeleteRemediationConfigurationInput) (*DeleteRemediationConfigurationOutput, error) {
@@ -952,6 +1018,85 @@ func (c *ConfigService) DeleteRemediationConfiguration(input *DeleteRemediationC
 // for more information on using Contexts.
 func (c *ConfigService) DeleteRemediationConfigurationWithContext(ctx aws.Context, input *DeleteRemediationConfigurationInput, opts ...request.Option) (*DeleteRemediationConfigurationOutput, error) {
 	req, out := c.DeleteRemediationConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteRemediationExceptions = "DeleteRemediationExceptions"
+
+// DeleteRemediationExceptionsRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRemediationExceptions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteRemediationExceptions for more information on using the DeleteRemediationExceptions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteRemediationExceptionsRequest method.
+//    req, resp := client.DeleteRemediationExceptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteRemediationExceptions
+func (c *ConfigService) DeleteRemediationExceptionsRequest(input *DeleteRemediationExceptionsInput) (req *request.Request, output *DeleteRemediationExceptionsOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRemediationExceptions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteRemediationExceptionsInput{}
+	}
+
+	output = &DeleteRemediationExceptionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteRemediationExceptions API operation for AWS Config.
+//
+// Deletes one or more remediation exceptions mentioned in the resource keys.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DeleteRemediationExceptions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchRemediationExceptionException "NoSuchRemediationExceptionException"
+//   You tried to delete a remediation exception that does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteRemediationExceptions
+func (c *ConfigService) DeleteRemediationExceptions(input *DeleteRemediationExceptionsInput) (*DeleteRemediationExceptionsOutput, error) {
+	req, out := c.DeleteRemediationExceptionsRequest(input)
+	return out, req.Send()
+}
+
+// DeleteRemediationExceptionsWithContext is the same as DeleteRemediationExceptions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRemediationExceptions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DeleteRemediationExceptionsWithContext(ctx aws.Context, input *DeleteRemediationExceptionsInput, opts ...request.Option) (*DeleteRemediationExceptionsOutput, error) {
+	req, out := c.DeleteRemediationExceptionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2274,6 +2419,19 @@ func (c *ConfigService) DescribeOrganizationConfigRuleStatusesRequest(input *Des
 
 // DescribeOrganizationConfigRuleStatuses API operation for AWS Config.
 //
+// Provides organization config rule deployment status for an organization.
+//
+// The status is not considered successful until organization config rule is
+// successfully deployed in all the member accounts with an exception of excluded
+// accounts.
+//
+// When you specify the limit and the next token, you receive a paginated response.
+// Limit and next token are not applicable if you specify organization config
+// rule names. It is only applicable, when you request all the organization
+// config rules.
+//
+// Only a master account can call this API.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2283,6 +2441,7 @@ func (c *ConfigService) DescribeOrganizationConfigRuleStatusesRequest(input *Des
 //
 // Returned Error Codes:
 //   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+//   You specified one or more organization config rules that do not exist.
 //
 //   * ErrCodeInvalidLimitException "InvalidLimitException"
 //   The specified limit is outside the allowable range.
@@ -2290,6 +2449,14 @@ func (c *ConfigService) DescribeOrganizationConfigRuleStatusesRequest(input *Des
 //   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
+//   are called from member accounts. All APIs must be called from organization
+//   master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConfigRuleStatuses
 func (c *ConfigService) DescribeOrganizationConfigRuleStatuses(input *DescribeOrganizationConfigRuleStatusesInput) (*DescribeOrganizationConfigRuleStatusesOutput, error) {
@@ -2357,6 +2524,15 @@ func (c *ConfigService) DescribeOrganizationConfigRulesRequest(input *DescribeOr
 
 // DescribeOrganizationConfigRules API operation for AWS Config.
 //
+// Returns a list of organization config rules.
+//
+// When you specify the limit and the next token, you receive a paginated response.
+// Limit and next token are not applicable if you specify organization config
+// rule names. It is only applicable, when you request all the organization
+// config rules.
+//
+// Only a master account can call this API.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2366,6 +2542,7 @@ func (c *ConfigService) DescribeOrganizationConfigRulesRequest(input *DescribeOr
 //
 // Returned Error Codes:
 //   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+//   You specified one or more organization config rules that do not exist.
 //
 //   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
 //   The specified next token is invalid. Specify the nextToken string that was
@@ -2373,6 +2550,14 @@ func (c *ConfigService) DescribeOrganizationConfigRulesRequest(input *DescribeOr
 //
 //   * ErrCodeInvalidLimitException "InvalidLimitException"
 //   The specified limit is outside the allowable range.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
+//   are called from member accounts. All APIs must be called from organization
+//   master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConfigRules
 func (c *ConfigService) DescribeOrganizationConfigRules(input *DescribeOrganizationConfigRulesInput) (*DescribeOrganizationConfigRulesOutput, error) {
@@ -2557,6 +2742,154 @@ func (c *ConfigService) DescribeRemediationConfigurationsWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
+const opDescribeRemediationExceptions = "DescribeRemediationExceptions"
+
+// DescribeRemediationExceptionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeRemediationExceptions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeRemediationExceptions for more information on using the DescribeRemediationExceptions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeRemediationExceptionsRequest method.
+//    req, resp := client.DescribeRemediationExceptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeRemediationExceptions
+func (c *ConfigService) DescribeRemediationExceptionsRequest(input *DescribeRemediationExceptionsInput) (req *request.Request, output *DescribeRemediationExceptionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeRemediationExceptions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "Limit",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeRemediationExceptionsInput{}
+	}
+
+	output = &DescribeRemediationExceptionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeRemediationExceptions API operation for AWS Config.
+//
+// Returns the details of one or more remediation exceptions. A detailed view
+// of a remediation exception for a set of resources that includes an explanation
+// of an exception and the time when the exception will be deleted. When you
+// specify the limit and the next token, you receive a paginated response.
+//
+// When you specify the limit and the next token, you receive a paginated response.
+//
+// Limit and next token are not applicable if you request resources in batch.
+// It is only applicable, when you request all resources.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DescribeRemediationExceptions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One or more of the specified parameters are invalid. Verify that your parameters
+//   are valid and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeRemediationExceptions
+func (c *ConfigService) DescribeRemediationExceptions(input *DescribeRemediationExceptionsInput) (*DescribeRemediationExceptionsOutput, error) {
+	req, out := c.DescribeRemediationExceptionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeRemediationExceptionsWithContext is the same as DescribeRemediationExceptions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeRemediationExceptions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DescribeRemediationExceptionsWithContext(ctx aws.Context, input *DescribeRemediationExceptionsInput, opts ...request.Option) (*DescribeRemediationExceptionsOutput, error) {
+	req, out := c.DescribeRemediationExceptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeRemediationExceptionsPages iterates over the pages of a DescribeRemediationExceptions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeRemediationExceptions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeRemediationExceptions operation.
+//    pageNum := 0
+//    err := client.DescribeRemediationExceptionsPages(params,
+//        func(page *configservice.DescribeRemediationExceptionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ConfigService) DescribeRemediationExceptionsPages(input *DescribeRemediationExceptionsInput, fn func(*DescribeRemediationExceptionsOutput, bool) bool) error {
+	return c.DescribeRemediationExceptionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeRemediationExceptionsPagesWithContext same as DescribeRemediationExceptionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DescribeRemediationExceptionsPagesWithContext(ctx aws.Context, input *DescribeRemediationExceptionsInput, fn func(*DescribeRemediationExceptionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeRemediationExceptionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeRemediationExceptionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*DescribeRemediationExceptionsOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opDescribeRemediationExecutionStatus = "DescribeRemediationExecutionStatus"
 
 // DescribeRemediationExecutionStatusRequest generates a "aws/request.Request" representing the
@@ -2622,6 +2955,10 @@ func (c *ConfigService) DescribeRemediationExecutionStatusRequest(input *Describ
 // Returned Error Codes:
 //   * ErrCodeNoSuchRemediationConfigurationException "NoSuchRemediationConfigurationException"
 //   You specified an AWS Config rule without a remediation configuration.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeRemediationExecutionStatus
 func (c *ConfigService) DescribeRemediationExecutionStatus(input *DescribeRemediationExecutionStatusInput) (*DescribeRemediationExecutionStatusOutput, error) {
@@ -3653,6 +3990,11 @@ func (c *ConfigService) GetOrganizationConfigRuleDetailedStatusRequest(input *Ge
 
 // GetOrganizationConfigRuleDetailedStatus API operation for AWS Config.
 //
+// Returns detailed status for each member account within an organization for
+// a given organization config rule.
+//
+// Only a master account can call this API.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3662,6 +4004,7 @@ func (c *ConfigService) GetOrganizationConfigRuleDetailedStatusRequest(input *Ge
 //
 // Returned Error Codes:
 //   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+//   You specified one or more organization config rules that do not exist.
 //
 //   * ErrCodeInvalidLimitException "InvalidLimitException"
 //   The specified limit is outside the allowable range.
@@ -3669,6 +4012,14 @@ func (c *ConfigService) GetOrganizationConfigRuleDetailedStatusRequest(input *Ge
 //   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
+//   are called from member accounts. All APIs must be called from organization
+//   master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetOrganizationConfigRuleDetailedStatus
 func (c *ConfigService) GetOrganizationConfigRuleDetailedStatus(input *GetOrganizationConfigRuleDetailedStatusInput) (*GetOrganizationConfigRuleDetailedStatusOutput, error) {
@@ -4329,17 +4680,37 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //   you add new rules.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   The rule is currently being deleted or the rule is deleting your evaluation
-//   results. Try your request again later.
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
+//      request again later.
+//
+//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule API, a remediation action is associated with the
+//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
 //
 //   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
 //   Indicates one of the following errors:
 //
-//      * The rule cannot be created because the IAM role assigned to AWS Config
-//      lacks permissions to perform the config:Put* action.
+//      * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//      to AWS Config lacks permissions to perform the config:Put* action.
 //
-//      * The AWS Lambda function cannot be invoked. Check the function ARN, and
-//      check the function's permissions.
+//      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//      the function ARN, and check the function's permissions.
+//
+//      * For OrganizationConfigRule, organization config rule cannot be created
+//      because you do not have permissions to call IAM GetRole action or create
+//      service linked role.
 //
 //   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
 //   There are no configuration recorders available to provide the role needed
@@ -4446,14 +4817,19 @@ func (c *ConfigService) PutConfigurationAggregatorRequest(input *PutConfiguratio
 //   You have provided a null or empty role ARN.
 //
 //   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
-//   No permission to call the EnableAWSServiceAccess API.
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
+//   are called from member accounts. All APIs must be called from organization
+//   master account.
 //
 //   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
-//   Organization does is no longer available.
+//   Organization is no longer available.
 //
 //   * ErrCodeOrganizationAllFeaturesNotEnabledException "OrganizationAllFeaturesNotEnabledException"
-//   The configuration aggregator cannot be created because organization does
-//   not have all features enabled.
+//   AWS Config resource cannot be created because your organization does not
+//   have all features enabled.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutConfigurationAggregator
 func (c *ConfigService) PutConfigurationAggregator(input *PutConfigurationAggregatorInput) (*PutConfigurationAggregatorOutput, error) {
@@ -4822,6 +5198,29 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 
 // PutOrganizationConfigRule API operation for AWS Config.
 //
+// Adds or updates organization config rule for your entire organization evaluating
+// whether your AWS resources comply with your desired configurations. Only
+// a master account can create or update an organization config rule.
+//
+// This API enables organization service access through the EnableAWSServiceAccess
+// action and creates a service linked role AWSServiceRoleForConfigMultiAccountSetup
+// in the master account of your organization. The service linked role is created
+// only when the role does not exist in the master account. AWS Config verifies
+// the existence of role with GetRole action.
+//
+// You can use this action to create both custom AWS Config rules and AWS managed
+// Config rules. If you are adding a new custom AWS Config rule, you must first
+// create AWS Lambda function in the master account that the rule invokes to
+// evaluate your resources. When you use the PutOrganizationConfigRule action
+// to add the rule to AWS Config, you must specify the Amazon Resource Name
+// (ARN) that AWS Lambda assigns to the function. If you are adding an AWS managed
+// Config rule, specify the rule's identifier for the RuleIdentifier key.
+//
+// The maximum number of organization config rules that AWS Config supports
+// is 150.
+//
+// Specify either OrganizationCustomRuleMetadata or OrganizationManagedRuleMetadata.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -4831,10 +5230,28 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //
 // Returned Error Codes:
 //   * ErrCodeMaxNumberOfOrganizationConfigRulesExceededException "MaxNumberOfOrganizationConfigRulesExceededException"
+//   You have reached the limit of the number of organization config rules you
+//   can create.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   The rule is currently being deleted or the rule is deleting your evaluation
-//   results. Try your request again later.
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
+//      request again later.
+//
+//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule API, a remediation action is associated with the
+//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One or more of the specified parameters are invalid. Verify that your parameters
@@ -4844,23 +5261,32 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //   The requested action is not valid.
 //
 //   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
-//   No permission to call the EnableAWSServiceAccess API.
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
+//   are called from member accounts. All APIs must be called from organization
+//   master account.
 //
 //   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
-//   Organization does is no longer available.
+//   Organization is no longer available.
 //
 //   * ErrCodeOrganizationAllFeaturesNotEnabledException "OrganizationAllFeaturesNotEnabledException"
-//   The configuration aggregator cannot be created because organization does
-//   not have all features enabled.
+//   AWS Config resource cannot be created because your organization does not
+//   have all features enabled.
 //
 //   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
 //   Indicates one of the following errors:
 //
-//      * The rule cannot be created because the IAM role assigned to AWS Config
-//      lacks permissions to perform the config:Put* action.
+//      * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//      to AWS Config lacks permissions to perform the config:Put* action.
 //
-//      * The AWS Lambda function cannot be invoked. Check the function ARN, and
-//      check the function's permissions.
+//      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//      the function ARN, and check the function's permissions.
+//
+//      * For OrganizationConfigRule, organization config rule cannot be created
+//      because you do not have permissions to call IAM GetRole action or create
+//      service linked role.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConfigRule
 func (c *ConfigService) PutOrganizationConfigRule(input *PutOrganizationConfigRuleInput) (*PutOrganizationConfigRuleOutput, error) {
@@ -4945,11 +5371,15 @@ func (c *ConfigService) PutRemediationConfigurationsRequest(input *PutRemediatio
 //   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
 //   Indicates one of the following errors:
 //
-//      * The rule cannot be created because the IAM role assigned to AWS Config
-//      lacks permissions to perform the config:Put* action.
+//      * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//      to AWS Config lacks permissions to perform the config:Put* action.
 //
-//      * The AWS Lambda function cannot be invoked. Check the function ARN, and
-//      check the function's permissions.
+//      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//      the function ARN, and check the function's permissions.
+//
+//      * For OrganizationConfigRule, organization config rule cannot be created
+//      because you do not have permissions to call IAM GetRole action or create
+//      service linked role.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One or more of the specified parameters are invalid. Verify that your parameters
@@ -4972,6 +5402,88 @@ func (c *ConfigService) PutRemediationConfigurations(input *PutRemediationConfig
 // for more information on using Contexts.
 func (c *ConfigService) PutRemediationConfigurationsWithContext(ctx aws.Context, input *PutRemediationConfigurationsInput, opts ...request.Option) (*PutRemediationConfigurationsOutput, error) {
 	req, out := c.PutRemediationConfigurationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutRemediationExceptions = "PutRemediationExceptions"
+
+// PutRemediationExceptionsRequest generates a "aws/request.Request" representing the
+// client's request for the PutRemediationExceptions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutRemediationExceptions for more information on using the PutRemediationExceptions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutRemediationExceptionsRequest method.
+//    req, resp := client.PutRemediationExceptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutRemediationExceptions
+func (c *ConfigService) PutRemediationExceptionsRequest(input *PutRemediationExceptionsInput) (req *request.Request, output *PutRemediationExceptionsOutput) {
+	op := &request.Operation{
+		Name:       opPutRemediationExceptions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutRemediationExceptionsInput{}
+	}
+
+	output = &PutRemediationExceptionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutRemediationExceptions API operation for AWS Config.
+//
+// A remediation exception is when a specific resource is no longer considered
+// for auto-remediation. This API adds a new exception or updates an exisiting
+// exception for a specific resource with a specific AWS Config rule.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation PutRemediationExceptions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One or more of the specified parameters are invalid. Verify that your parameters
+//   are valid and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutRemediationExceptions
+func (c *ConfigService) PutRemediationExceptions(input *PutRemediationExceptionsInput) (*PutRemediationExceptionsOutput, error) {
+	req, out := c.PutRemediationExceptionsRequest(input)
+	return out, req.Send()
+}
+
+// PutRemediationExceptionsWithContext is the same as PutRemediationExceptions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutRemediationExceptions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) PutRemediationExceptionsWithContext(ctx aws.Context, input *PutRemediationExceptionsInput, opts ...request.Option) (*PutRemediationExceptionsOutput, error) {
+	req, out := c.PutRemediationExceptionsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5255,8 +5767,24 @@ func (c *ConfigService) StartConfigRulesEvaluationRequest(input *StartConfigRule
 //   of accounts and aggregators exceeds the limit.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
-//   The rule is currently being deleted or the rule is deleting your evaluation
-//   results. Try your request again later.
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
+//      request again later.
+//
+//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule API, a remediation action is associated with the
+//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One or more of the specified parameters are invalid. Verify that your parameters
@@ -5431,14 +5959,22 @@ func (c *ConfigService) StartRemediationExecutionRequest(input *StartRemediation
 // API operation StartRemediationExecution for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One or more of the specified parameters are invalid. Verify that your parameters
+//   are valid and try again.
+//
 //   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
 //   Indicates one of the following errors:
 //
-//      * The rule cannot be created because the IAM role assigned to AWS Config
-//      lacks permissions to perform the config:Put* action.
+//      * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//      to AWS Config lacks permissions to perform the config:Put* action.
 //
-//      * The AWS Lambda function cannot be invoked. Check the function ARN, and
-//      check the function's permissions.
+//      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//      the function ARN, and check the function's permissions.
+//
+//      * For OrganizationConfigRule, organization config rule cannot be created
+//      because you do not have permissions to call IAM GetRole action or create
+//      service linked role.
 //
 //   * ErrCodeNoSuchRemediationConfigurationException "NoSuchRemediationConfigurationException"
 //   You specified an AWS Config rule without a remediation configuration.
@@ -8150,6 +8686,8 @@ func (s DeleteEvaluationResultsOutput) GoString() string {
 type DeleteOrganizationConfigRuleInput struct {
 	_ struct{} `type:"structure"`
 
+	// The name of organization config rule that you want to delete.
+	//
 	// OrganizationConfigRuleName is a required field
 	OrganizationConfigRuleName *string `min:"1" type:"string" required:"true"`
 }
@@ -8332,6 +8870,101 @@ func (s DeleteRemediationConfigurationOutput) String() string {
 // GoString returns the string representation
 func (s DeleteRemediationConfigurationOutput) GoString() string {
 	return s.String()
+}
+
+type DeleteRemediationExceptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the AWS Config rule for which you want to delete remediation
+	// exception configuration.
+	//
+	// ConfigRuleName is a required field
+	ConfigRuleName *string `min:"1" type:"string" required:"true"`
+
+	// An exception list of resource exception keys to be processed with the current
+	// request. AWS Config adds exception for each resource key. For example, AWS
+	// Config adds 3 exceptions for 3 resource keys.
+	//
+	// ResourceKeys is a required field
+	ResourceKeys []*RemediationExceptionResourceKey `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteRemediationExceptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRemediationExceptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteRemediationExceptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteRemediationExceptionsInput"}
+	if s.ConfigRuleName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigRuleName"))
+	}
+	if s.ConfigRuleName != nil && len(*s.ConfigRuleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConfigRuleName", 1))
+	}
+	if s.ResourceKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceKeys"))
+	}
+	if s.ResourceKeys != nil && len(s.ResourceKeys) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceKeys", 1))
+	}
+	if s.ResourceKeys != nil {
+		for i, v := range s.ResourceKeys {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResourceKeys", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigRuleName sets the ConfigRuleName field's value.
+func (s *DeleteRemediationExceptionsInput) SetConfigRuleName(v string) *DeleteRemediationExceptionsInput {
+	s.ConfigRuleName = &v
+	return s
+}
+
+// SetResourceKeys sets the ResourceKeys field's value.
+func (s *DeleteRemediationExceptionsInput) SetResourceKeys(v []*RemediationExceptionResourceKey) *DeleteRemediationExceptionsInput {
+	s.ResourceKeys = v
+	return s
+}
+
+type DeleteRemediationExceptionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns a list of failed delete remediation exceptions batch objects. Each
+	// object in the batch consists of a list of failed items and failure messages.
+	FailedBatches []*FailedDeleteRemediationExceptionsBatch `type:"list"`
+}
+
+// String returns the string representation
+func (s DeleteRemediationExceptionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRemediationExceptionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailedBatches sets the FailedBatches field's value.
+func (s *DeleteRemediationExceptionsOutput) SetFailedBatches(v []*FailedDeleteRemediationExceptionsBatch) *DeleteRemediationExceptionsOutput {
+	s.FailedBatches = v
+	return s
 }
 
 type DeleteRetentionConfigurationInput struct {
@@ -9509,10 +10142,18 @@ func (s *DescribeDeliveryChannelsOutput) SetDeliveryChannels(v []*DeliveryChanne
 type DescribeOrganizationConfigRuleStatusesInput struct {
 	_ struct{} `type:"structure"`
 
+	// The maximum number of OrganizationConfigRuleStatuses returned on each page.
+	// If you do no specify a number, AWS Config uses the default. The default is
+	// 100.
 	Limit *int64 `type:"integer"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 
+	// The names of organization config rules for which you want status details.
+	// If you do not specify any names, AWS Config returns details for all your
+	// organization AWS Confg rules.
 	OrganizationConfigRuleNames []*string `type:"list"`
 }
 
@@ -9547,8 +10188,11 @@ func (s *DescribeOrganizationConfigRuleStatusesInput) SetOrganizationConfigRuleN
 type DescribeOrganizationConfigRuleStatusesOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 
+	// A list of OrganizationConfigRuleStatus objects.
 	OrganizationConfigRuleStatuses []*OrganizationConfigRuleStatus `type:"list"`
 }
 
@@ -9577,10 +10221,17 @@ func (s *DescribeOrganizationConfigRuleStatusesOutput) SetOrganizationConfigRule
 type DescribeOrganizationConfigRulesInput struct {
 	_ struct{} `type:"structure"`
 
+	// The maximum number of organization config rules returned on each page. If
+	// you do no specify a number, AWS Config uses the default. The default is 100.
 	Limit *int64 `type:"integer"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 
+	// The names of organization config rules for which you want details. If you
+	// do not specify any names, AWS Config returns details for all your organization
+	// config rules.
 	OrganizationConfigRuleNames []*string `type:"list"`
 }
 
@@ -9615,8 +10266,11 @@ func (s *DescribeOrganizationConfigRulesInput) SetOrganizationConfigRuleNames(v 
 type DescribeOrganizationConfigRulesOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 
+	// Retuns a list OrganizationConfigRule objects.
 	OrganizationConfigRules []*OrganizationConfigRule `type:"list"`
 }
 
@@ -9771,6 +10425,124 @@ func (s *DescribeRemediationConfigurationsOutput) SetRemediationConfigurations(v
 	return s
 }
 
+type DescribeRemediationExceptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the AWS Config rule.
+	//
+	// ConfigRuleName is a required field
+	ConfigRuleName *string `min:"1" type:"string" required:"true"`
+
+	// The maximum number of RemediationExceptionResourceKey returned on each page.
+	// The default is 25. If you specify 0, AWS Config uses the default.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// An exception list of resource exception keys to be processed with the current
+	// request. AWS Config adds exception for each resource key. For example, AWS
+	// Config adds 3 exceptions for 3 resource keys.
+	ResourceKeys []*RemediationExceptionResourceKey `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeRemediationExceptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeRemediationExceptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeRemediationExceptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeRemediationExceptionsInput"}
+	if s.ConfigRuleName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigRuleName"))
+	}
+	if s.ConfigRuleName != nil && len(*s.ConfigRuleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConfigRuleName", 1))
+	}
+	if s.ResourceKeys != nil && len(s.ResourceKeys) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceKeys", 1))
+	}
+	if s.ResourceKeys != nil {
+		for i, v := range s.ResourceKeys {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResourceKeys", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigRuleName sets the ConfigRuleName field's value.
+func (s *DescribeRemediationExceptionsInput) SetConfigRuleName(v string) *DescribeRemediationExceptionsInput {
+	s.ConfigRuleName = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeRemediationExceptionsInput) SetLimit(v int64) *DescribeRemediationExceptionsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeRemediationExceptionsInput) SetNextToken(v string) *DescribeRemediationExceptionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceKeys sets the ResourceKeys field's value.
+func (s *DescribeRemediationExceptionsInput) SetResourceKeys(v []*RemediationExceptionResourceKey) *DescribeRemediationExceptionsInput {
+	s.ResourceKeys = v
+	return s
+}
+
+type DescribeRemediationExceptionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// Returns a list of remediation exception objects.
+	RemediationExceptions []*RemediationException `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeRemediationExceptionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeRemediationExceptionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeRemediationExceptionsOutput) SetNextToken(v string) *DescribeRemediationExceptionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRemediationExceptions sets the RemediationExceptions field's value.
+func (s *DescribeRemediationExceptionsOutput) SetRemediationExceptions(v []*RemediationException) *DescribeRemediationExceptionsOutput {
+	s.RemediationExceptions = v
+	return s
+}
+
 type DescribeRemediationExecutionStatusInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9785,7 +10557,7 @@ type DescribeRemediationExecutionStatusInput struct {
 
 	// The nextToken string returned on a previous page that you use to get the
 	// next page of results in a paginated response.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// A list of resource keys to be processed with the current request. Each element
 	// in the list consists of the resource type and resource ID.
@@ -9810,9 +10582,6 @@ func (s *DescribeRemediationExecutionStatusInput) Validate() error {
 	}
 	if s.ConfigRuleName != nil && len(*s.ConfigRuleName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ConfigRuleName", 1))
-	}
-	if s.NextToken != nil && len(*s.NextToken) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 	if s.ResourceKeys != nil && len(s.ResourceKeys) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ResourceKeys", 1))
@@ -9863,7 +10632,7 @@ type DescribeRemediationExecutionStatusOutput struct {
 
 	// The nextToken string returned on a previous page that you use to get the
 	// next page of results in a paginated response.
-	NextToken *string `min:"1" type:"string"`
+	NextToken *string `type:"string"`
 
 	// Returns a list of remediation execution statuses objects.
 	RemediationExecutionStatuses []*RemediationExecutionStatus `type:"list"`
@@ -10234,6 +11003,79 @@ func (s *EvaluationResultQualifier) SetResourceType(v string) *EvaluationResultQ
 	return s
 }
 
+// The controls that AWS Config uses for executing remediations.
+type ExecutionControls struct {
+	_ struct{} `type:"structure"`
+
+	// A SsmControls object.
+	SsmControls *SsmControls `type:"structure"`
+}
+
+// String returns the string representation
+func (s ExecutionControls) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExecutionControls) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExecutionControls) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExecutionControls"}
+	if s.SsmControls != nil {
+		if err := s.SsmControls.Validate(); err != nil {
+			invalidParams.AddNested("SsmControls", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSsmControls sets the SsmControls field's value.
+func (s *ExecutionControls) SetSsmControls(v *SsmControls) *ExecutionControls {
+	s.SsmControls = v
+	return s
+}
+
+// List of each of the failed delete remediation exceptions with specific reasons.
+type FailedDeleteRemediationExceptionsBatch struct {
+	_ struct{} `type:"structure"`
+
+	// Returns remediation exception resource key object of the failed items.
+	FailedItems []*RemediationExceptionResourceKey `min:"1" type:"list"`
+
+	// Returns a failure message for delete remediation exception. For example,
+	// AWS Config creates an exception due to an internal error.
+	FailureMessage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s FailedDeleteRemediationExceptionsBatch) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedDeleteRemediationExceptionsBatch) GoString() string {
+	return s.String()
+}
+
+// SetFailedItems sets the FailedItems field's value.
+func (s *FailedDeleteRemediationExceptionsBatch) SetFailedItems(v []*RemediationExceptionResourceKey) *FailedDeleteRemediationExceptionsBatch {
+	s.FailedItems = v
+	return s
+}
+
+// SetFailureMessage sets the FailureMessage field's value.
+func (s *FailedDeleteRemediationExceptionsBatch) SetFailureMessage(v string) *FailedDeleteRemediationExceptionsBatch {
+	s.FailureMessage = &v
+	return s
+}
+
 // List of each of the failed remediations with specific reasons.
 type FailedRemediationBatch struct {
 	_ struct{} `type:"structure"`
@@ -10263,6 +11105,39 @@ func (s *FailedRemediationBatch) SetFailedItems(v []*RemediationConfiguration) *
 
 // SetFailureMessage sets the FailureMessage field's value.
 func (s *FailedRemediationBatch) SetFailureMessage(v string) *FailedRemediationBatch {
+	s.FailureMessage = &v
+	return s
+}
+
+// List of each of the failed remediation exceptions with specific reasons.
+type FailedRemediationExceptionBatch struct {
+	_ struct{} `type:"structure"`
+
+	// Returns remediation exception resource key object of the failed items.
+	FailedItems []*RemediationException `type:"list"`
+
+	// Returns a failure message. For example, the auto-remediation has failed.
+	FailureMessage *string `type:"string"`
+}
+
+// String returns the string representation
+func (s FailedRemediationExceptionBatch) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedRemediationExceptionBatch) GoString() string {
+	return s.String()
+}
+
+// SetFailedItems sets the FailedItems field's value.
+func (s *FailedRemediationExceptionBatch) SetFailedItems(v []*RemediationException) *FailedRemediationExceptionBatch {
+	s.FailedItems = v
+	return s
+}
+
+// SetFailureMessage sets the FailureMessage field's value.
+func (s *FailedRemediationExceptionBatch) SetFailureMessage(v string) *FailedRemediationExceptionBatch {
 	s.FailureMessage = &v
 	return s
 }
@@ -11218,12 +12093,21 @@ func (s *GetDiscoveredResourceCountsOutput) SetTotalDiscoveredResources(v int64)
 type GetOrganizationConfigRuleDetailedStatusInput struct {
 	_ struct{} `type:"structure"`
 
+	// A StatusDetailFilters object.
 	Filters *StatusDetailFilters `type:"structure"`
 
+	// The maximum number of OrganizationConfigRuleDetailedStatus returned on each
+	// page. If you do not specify a number, AWS Config uses the default. The default
+	// is 100.
 	Limit *int64 `type:"integer"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 
+	// The name of organization config rule for which you want status details for
+	// member accounts.
+	//
 	// OrganizationConfigRuleName is a required field
 	OrganizationConfigRuleName *string `min:"1" type:"string" required:"true"`
 }
@@ -11281,8 +12165,11 @@ func (s *GetOrganizationConfigRuleDetailedStatusInput) SetOrganizationConfigRule
 type GetOrganizationConfigRuleDetailedStatusOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 
+	// A list of MemberAccountStatus objects.
 	OrganizationConfigRuleDetailedStatus []*MemberAccountStatus `type:"list"`
 }
 
@@ -11833,21 +12720,60 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 	return s
 }
 
+// Organization config rule creation or deletion status in each member account.
+// This includes the name of the rule, the status, error code and error message
+// when the rule creation or deletion failed.
 type MemberAccountStatus struct {
 	_ struct{} `type:"structure"`
 
+	// The 12-digit account ID of a member account.
+	//
 	// AccountId is a required field
 	AccountId *string `type:"string" required:"true"`
 
+	// The name of config rule deployed in the member account.
+	//
 	// ConfigRuleName is a required field
 	ConfigRuleName *string `min:"1" type:"string" required:"true"`
 
+	// An error code that is returned when config rule creation or deletion failed
+	// in the member account.
 	ErrorCode *string `type:"string"`
 
+	// An error message indicating that config rule account creation or deletion
+	// has failed due to an error in the member account.
 	ErrorMessage *string `type:"string"`
 
+	// The timestamp of the last status update.
 	LastUpdateTime *time.Time `type:"timestamp"`
 
+	// Indicates deployment status for config rule in the member account. When master
+	// account calls PutOrganizationConfigRule action for the first time, config
+	// rule status is created in the member account. When master account calls PutOrganizationConfigRule
+	// action for the second time, config rule status is updated in the member account.
+	// Config rule status is deleted when the master account deletes OrganizationConfigRule
+	// and disables service access for config-multiaccountsetup.amazonaws.com.
+	//
+	// AWS Config sets the state of the rule to:
+	//
+	//    * CREATE_SUCCESSFUL when config rule has been created in the member account.
+	//
+	//    * CREATE_IN_PROGRESS when config rule is being created in the member account.
+	//
+	//    * CREATE_FAILED when config rule creation has failed in the member account.
+	//
+	//    * DELETE_FAILED when config rule deletion has failed in the member account.
+	//
+	//    * DELETE_IN_PROGRESS when config rule is being deleted in the member account.
+	//
+	//    * DELETE_SUCCESSFUL when config rule has been deleted in the member account.
+	//
+	//    * UPDATE_SUCCESSFUL when config rule has been updated in the member account.
+	//
+	//    * UPDATE_IN_PROGRESS when config rule is being updated in the member account.
+	//
+	//    * UPDATE_FAILED when config rule deletion has failed in the member account.
+	//
 	// MemberAccountRuleStatus is a required field
 	MemberAccountRuleStatus *string `type:"string" required:"true" enum:"MemberAccountRuleStatus"`
 }
@@ -11960,21 +12886,31 @@ func (s *OrganizationAggregationSource) SetRoleArn(v string) *OrganizationAggreg
 	return s
 }
 
+// An organization config rule that has information about config rules that
+// AWS Config creates in member accounts.
 type OrganizationConfigRule struct {
 	_ struct{} `type:"structure"`
 
+	// A comma-separated list of accounts excluded from organization config rule.
 	ExcludedAccounts []*string `type:"list"`
 
+	// The timestamp of the last update.
 	LastUpdateTime *time.Time `type:"timestamp"`
 
+	// The Amazon Resource Name (ARN) of organization config rule.
+	//
 	// OrganizationConfigRuleArn is a required field
 	OrganizationConfigRuleArn *string `min:"1" type:"string" required:"true"`
 
+	// The name that you assign to organization config rule.
+	//
 	// OrganizationConfigRuleName is a required field
 	OrganizationConfigRuleName *string `min:"1" type:"string" required:"true"`
 
+	// An OrganizationCustomRuleMetadata object.
 	OrganizationCustomRuleMetadata *OrganizationCustomRuleMetadata `type:"structure"`
 
+	// An OrganizationManagedRuleMetadata object.
 	OrganizationManagedRuleMetadata *OrganizationManagedRuleMetadata `type:"structure"`
 }
 
@@ -12024,18 +12960,61 @@ func (s *OrganizationConfigRule) SetOrganizationManagedRuleMetadata(v *Organizat
 	return s
 }
 
+// Returns the status for an organization config rule in an organization.
 type OrganizationConfigRuleStatus struct {
 	_ struct{} `type:"structure"`
 
+	// An error code that is returned when organization config rule creation or
+	// deletion has failed.
 	ErrorCode *string `type:"string"`
 
+	// An error message indicating that organization config rule creation or deletion
+	// failed due to an error.
 	ErrorMessage *string `type:"string"`
 
+	// The timestamp of the last update.
 	LastUpdateTime *time.Time `type:"timestamp"`
 
+	// The name that you assign to organization config rule.
+	//
 	// OrganizationConfigRuleName is a required field
 	OrganizationConfigRuleName *string `min:"1" type:"string" required:"true"`
 
+	// Indicates deployment status of an organization config rule. When master account
+	// calls PutOrganizationConfigRule action for the first time, config rule status
+	// is created in all the member accounts. When master account calls PutOrganizationConfigRule
+	// action for the second time, config rule status is updated in all the member
+	// accounts. Additionally, config rule status is updated when one or more member
+	// accounts join or leave an organization. Config rule status is deleted when
+	// the master account deletes OrganizationConfigRule in all the member accounts
+	// and disables service access for config-multiaccountsetup.amazonaws.com.
+	//
+	// AWS Config sets the state of the rule to:
+	//
+	//    * CREATE_SUCCESSFUL when an organization config rule has been successfully
+	//    created in all the member accounts.
+	//
+	//    * CREATE_IN_PROGRESS when an organization config rule creation is in progress.
+	//
+	//    * CREATE_FAILED when an organization config rule creation failed in one
+	//    or more member accounts within that organization.
+	//
+	//    * DELETE_FAILED when an organization config rule deletion failed in one
+	//    or more member accounts within that organization.
+	//
+	//    * DELETE_IN_PROGRESS when an organization config rule deletion is in progress.
+	//
+	//    * DELETE_SUCCESSFUL when an organization config rule has been successfully
+	//    deleted from all the member accounts.
+	//
+	//    * UPDATE_SUCCESSFUL when an organization config rule has been successfully
+	//    updated in all the member accounts.
+	//
+	//    * UPDATE_IN_PROGRESS when an organization config rule update is in progress.
+	//
+	//    * UPDATE_FAILED when an organization config rule update failed in one
+	//    or more member accounts within that organization.
+	//
 	// OrganizationRuleStatus is a required field
 	OrganizationRuleStatus *string `type:"string" required:"true" enum:"OrganizationRuleStatus"`
 }
@@ -12080,27 +13059,64 @@ func (s *OrganizationConfigRuleStatus) SetOrganizationRuleStatus(v string) *Orga
 	return s
 }
 
+// An object that specifies organization custom rule metadata such as resource
+// type, resource ID of AWS resource, Lamdba function ARN, and organization
+// trigger types that trigger AWS Config to evaluate your AWS resources against
+// a rule. It also provides the frequency with which you want AWS Config to
+// run evaluations for the rule if the trigger type is periodic.
 type OrganizationCustomRuleMetadata struct {
 	_ struct{} `type:"structure"`
 
+	// The description that you provide for organization config rule.
 	Description *string `type:"string"`
 
+	// A string, in JSON format, that is passed to organization config rule Lambda
+	// function.
 	InputParameters *string `min:"1" type:"string"`
 
+	// The lambda function ARN.
+	//
 	// LambdaFunctionArn is a required field
 	LambdaFunctionArn *string `min:"1" type:"string" required:"true"`
 
+	// The maximum frequency with which AWS Config runs evaluations for a rule.
+	// Your custom rule is triggered when AWS Config delivers the configuration
+	// snapshot. For more information, see ConfigSnapshotDeliveryProperties.
+	//
+	// By default, rules with a periodic trigger are evaluated every 24 hours. To
+	// change the frequency, specify a valid value for the MaximumExecutionFrequency
+	// parameter.
 	MaximumExecutionFrequency *string `type:"string" enum:"MaximumExecutionFrequency"`
 
+	// The type of notification that triggers AWS Config to run an evaluation for
+	// a rule. You can specify the following notification types:
+	//
+	//    * ConfigurationItemChangeNotification - Triggers an evaluation when AWS
+	//    Config delivers a configuration item as a result of a resource change.
+	//
+	//    * OversizedConfigurationItemChangeNotification - Triggers an evaluation
+	//    when AWS Config delivers an oversized configuration item. AWS Config may
+	//    generate this notification type when a resource changes and the notification
+	//    exceeds the maximum size allowed by Amazon SNS.
+	//
+	//    * ScheduledNotification - Triggers a periodic evaluation at the frequency
+	//    specified for MaximumExecutionFrequency.
+	//
 	// OrganizationConfigRuleTriggerTypes is a required field
 	OrganizationConfigRuleTriggerTypes []*string `type:"list" required:"true"`
 
+	// The ID of the AWS resource that was evaluated.
 	ResourceIdScope *string `min:"1" type:"string"`
 
+	// The type of the AWS resource that was evaluated.
 	ResourceTypesScope []*string `type:"list"`
 
+	// One part of a key-value pair that make up a tag. A key is a general label
+	// that acts like a category for more specific tag values.
 	TagKeyScope *string `min:"1" type:"string"`
 
+	// The optional part of a key-value pair that make up a tag. A value acts as
+	// a descriptor within a tag category (key).
 	TagValueScope *string `min:"1" type:"string"`
 }
 
@@ -12199,24 +13215,47 @@ func (s *OrganizationCustomRuleMetadata) SetTagValueScope(v string) *Organizatio
 	return s
 }
 
+// An object that specifies organization managed rule metadata such as resource
+// type and ID of AWS resource along with the rule identifier. It also provides
+// the frequency with which you want AWS Config to run evaluations for the rule
+// if the trigger type is periodic.
 type OrganizationManagedRuleMetadata struct {
 	_ struct{} `type:"structure"`
 
+	// The description that you provide for organization config rule.
 	Description *string `type:"string"`
 
+	// A string, in JSON format, that is passed to organization config rule Lambda
+	// function.
 	InputParameters *string `min:"1" type:"string"`
 
+	// The maximum frequency with which AWS Config runs evaluations for a rule.
+	// You are using an AWS managed rule that is triggered at a periodic frequency.
+	//
+	// By default, rules with a periodic trigger are evaluated every 24 hours. To
+	// change the frequency, specify a valid value for the MaximumExecutionFrequency
+	// parameter.
 	MaximumExecutionFrequency *string `type:"string" enum:"MaximumExecutionFrequency"`
 
+	// The ID of the AWS resource that was evaluated.
 	ResourceIdScope *string `min:"1" type:"string"`
 
+	// The type of the AWS resource that was evaluated.
 	ResourceTypesScope []*string `type:"list"`
 
+	// For organization config managed rules, a predefined identifier from a list.
+	// For example, IAM_PASSWORD_POLICY is a managed rule. To reference a managed
+	// rule, see Using AWS Managed Config Rules (https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html).
+	//
 	// RuleIdentifier is a required field
 	RuleIdentifier *string `min:"1" type:"string" required:"true"`
 
+	// One part of a key-value pair that make up a tag. A key is a general label
+	// that acts like a category for more specific tag values.
 	TagKeyScope *string `min:"1" type:"string"`
 
+	// The optional part of a key-value pair that make up a tag. A value acts as
+	// a descriptor within a tag category (key).
 	TagValueScope *string `min:"1" type:"string"`
 }
 
@@ -12353,6 +13392,7 @@ type PutAggregationAuthorizationInput struct {
 	// AuthorizedAwsRegion is a required field
 	AuthorizedAwsRegion *string `min:"1" type:"string" required:"true"`
 
+	// An array of tag object.
 	Tags []*Tag `type:"list"`
 }
 
@@ -12444,6 +13484,7 @@ type PutConfigRuleInput struct {
 	// ConfigRule is a required field
 	ConfigRule *ConfigRule `type:"structure" required:"true"`
 
+	// An array of tag object.
 	Tags []*Tag `type:"list"`
 }
 
@@ -12525,6 +13566,7 @@ type PutConfigurationAggregatorInput struct {
 	// An OrganizationAggregationSource object.
 	OrganizationAggregationSource *OrganizationAggregationSource `type:"structure"`
 
+	// An array of tag object.
 	Tags []*Tag `type:"list"`
 }
 
@@ -12845,13 +13887,19 @@ func (s *PutEvaluationsOutput) SetFailedEvaluations(v []*Evaluation) *PutEvaluat
 type PutOrganizationConfigRuleInput struct {
 	_ struct{} `type:"structure"`
 
+	// A comma-separated list of accounts that you want to exclude from an organization
+	// config rule.
 	ExcludedAccounts []*string `type:"list"`
 
+	// The name that you assign to an organization config rule.
+	//
 	// OrganizationConfigRuleName is a required field
 	OrganizationConfigRuleName *string `min:"1" type:"string" required:"true"`
 
+	// An OrganizationCustomRuleMetadata object.
 	OrganizationCustomRuleMetadata *OrganizationCustomRuleMetadata `type:"structure"`
 
+	// An OrganizationManagedRuleMetadata object.
 	OrganizationManagedRuleMetadata *OrganizationManagedRuleMetadata `type:"structure"`
 }
 
@@ -12918,6 +13966,7 @@ func (s *PutOrganizationConfigRuleInput) SetOrganizationManagedRuleMetadata(v *O
 type PutOrganizationConfigRuleOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of an organization config rule.
 	OrganizationConfigRuleArn *string `min:"1" type:"string"`
 }
 
@@ -13004,6 +14053,122 @@ func (s PutRemediationConfigurationsOutput) GoString() string {
 
 // SetFailedBatches sets the FailedBatches field's value.
 func (s *PutRemediationConfigurationsOutput) SetFailedBatches(v []*FailedRemediationBatch) *PutRemediationConfigurationsOutput {
+	s.FailedBatches = v
+	return s
+}
+
+type PutRemediationExceptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the AWS Config rule for which you want to create remediation
+	// exception.
+	//
+	// ConfigRuleName is a required field
+	ConfigRuleName *string `min:"1" type:"string" required:"true"`
+
+	// The exception is automatically deleted after the expiration date.
+	ExpirationTime *time.Time `type:"timestamp"`
+
+	// The message contains an explanation of the exception.
+	Message *string `min:"1" type:"string"`
+
+	// An exception list of resource exception keys to be processed with the current
+	// request. AWS Config adds exception for each resource key. For example, AWS
+	// Config adds 3 exceptions for 3 resource keys.
+	//
+	// ResourceKeys is a required field
+	ResourceKeys []*RemediationExceptionResourceKey `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s PutRemediationExceptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutRemediationExceptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutRemediationExceptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutRemediationExceptionsInput"}
+	if s.ConfigRuleName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConfigRuleName"))
+	}
+	if s.ConfigRuleName != nil && len(*s.ConfigRuleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConfigRuleName", 1))
+	}
+	if s.Message != nil && len(*s.Message) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Message", 1))
+	}
+	if s.ResourceKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceKeys"))
+	}
+	if s.ResourceKeys != nil && len(s.ResourceKeys) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceKeys", 1))
+	}
+	if s.ResourceKeys != nil {
+		for i, v := range s.ResourceKeys {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResourceKeys", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfigRuleName sets the ConfigRuleName field's value.
+func (s *PutRemediationExceptionsInput) SetConfigRuleName(v string) *PutRemediationExceptionsInput {
+	s.ConfigRuleName = &v
+	return s
+}
+
+// SetExpirationTime sets the ExpirationTime field's value.
+func (s *PutRemediationExceptionsInput) SetExpirationTime(v time.Time) *PutRemediationExceptionsInput {
+	s.ExpirationTime = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *PutRemediationExceptionsInput) SetMessage(v string) *PutRemediationExceptionsInput {
+	s.Message = &v
+	return s
+}
+
+// SetResourceKeys sets the ResourceKeys field's value.
+func (s *PutRemediationExceptionsInput) SetResourceKeys(v []*RemediationExceptionResourceKey) *PutRemediationExceptionsInput {
+	s.ResourceKeys = v
+	return s
+}
+
+type PutRemediationExceptionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns a list of failed remediation exceptions batch objects. Each object
+	// in the batch consists of a list of failed items and failure messages.
+	FailedBatches []*FailedRemediationExceptionBatch `type:"list"`
+}
+
+// String returns the string representation
+func (s PutRemediationExceptionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutRemediationExceptionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailedBatches sets the FailedBatches field's value.
+func (s *PutRemediationExceptionsOutput) SetFailedBatches(v []*FailedRemediationExceptionBatch) *PutRemediationExceptionsOutput {
 	s.FailedBatches = v
 	return s
 }
@@ -13255,16 +14420,44 @@ func (s *Relationship) SetResourceType(v string) *Relationship {
 type RemediationConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// Amazon Resource Name (ARN) of remediation configuration.
+	Arn *string `min:"1" type:"string"`
+
+	// The remediation is triggered automatically.
+	Automatic *bool `type:"boolean"`
+
 	// The name of the AWS Config rule.
 	//
 	// ConfigRuleName is a required field
 	ConfigRuleName *string `min:"1" type:"string" required:"true"`
+
+	// Name of the service that owns the service linked rule, if applicable.
+	CreatedByService *string `min:"1" type:"string"`
+
+	// An ExecutionControls object.
+	ExecutionControls *ExecutionControls `type:"structure"`
+
+	// The maximum number of failed attempts for auto-remediation. If you do not
+	// select a number, the default is 5.
+	//
+	// For example, if you specify MaximumAutomaticAttempts as 5 with RetryAttemptsSeconds
+	// as 50 seconds, AWS Config throws an exception after the 5th failed attempt
+	// within 50 seconds.
+	MaximumAutomaticAttempts *int64 `min:"1" type:"integer"`
 
 	// An object of the RemediationParameterValue.
 	Parameters map[string]*RemediationParameterValue `type:"map"`
 
 	// The type of a resource.
 	ResourceType *string `type:"string"`
+
+	// Maximum time in seconds that AWS Config runs auto-remediation. If you do
+	// not select a number, the default is 60 seconds.
+	//
+	// For example, if you specify RetryAttemptsSeconds as 50 seconds and MaximumAutomaticAttempts
+	// as 5, AWS Config will run auto-remediations 5 times within 50 seconds before
+	// throwing an exception.
+	RetryAttemptSeconds *int64 `min:"1" type:"long"`
 
 	// Target ID is the name of the public document.
 	//
@@ -13293,11 +14486,23 @@ func (s RemediationConfiguration) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *RemediationConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "RemediationConfiguration"}
+	if s.Arn != nil && len(*s.Arn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Arn", 1))
+	}
 	if s.ConfigRuleName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ConfigRuleName"))
 	}
 	if s.ConfigRuleName != nil && len(*s.ConfigRuleName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ConfigRuleName", 1))
+	}
+	if s.CreatedByService != nil && len(*s.CreatedByService) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CreatedByService", 1))
+	}
+	if s.MaximumAutomaticAttempts != nil && *s.MaximumAutomaticAttempts < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumAutomaticAttempts", 1))
+	}
+	if s.RetryAttemptSeconds != nil && *s.RetryAttemptSeconds < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("RetryAttemptSeconds", 1))
 	}
 	if s.TargetId == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetId"))
@@ -13308,6 +14513,21 @@ func (s *RemediationConfiguration) Validate() error {
 	if s.TargetType == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetType"))
 	}
+	if s.ExecutionControls != nil {
+		if err := s.ExecutionControls.Validate(); err != nil {
+			invalidParams.AddNested("ExecutionControls", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Parameters != nil {
+		for i, v := range s.Parameters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Parameters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13315,9 +14535,39 @@ func (s *RemediationConfiguration) Validate() error {
 	return nil
 }
 
+// SetArn sets the Arn field's value.
+func (s *RemediationConfiguration) SetArn(v string) *RemediationConfiguration {
+	s.Arn = &v
+	return s
+}
+
+// SetAutomatic sets the Automatic field's value.
+func (s *RemediationConfiguration) SetAutomatic(v bool) *RemediationConfiguration {
+	s.Automatic = &v
+	return s
+}
+
 // SetConfigRuleName sets the ConfigRuleName field's value.
 func (s *RemediationConfiguration) SetConfigRuleName(v string) *RemediationConfiguration {
 	s.ConfigRuleName = &v
+	return s
+}
+
+// SetCreatedByService sets the CreatedByService field's value.
+func (s *RemediationConfiguration) SetCreatedByService(v string) *RemediationConfiguration {
+	s.CreatedByService = &v
+	return s
+}
+
+// SetExecutionControls sets the ExecutionControls field's value.
+func (s *RemediationConfiguration) SetExecutionControls(v *ExecutionControls) *RemediationConfiguration {
+	s.ExecutionControls = v
+	return s
+}
+
+// SetMaximumAutomaticAttempts sets the MaximumAutomaticAttempts field's value.
+func (s *RemediationConfiguration) SetMaximumAutomaticAttempts(v int64) *RemediationConfiguration {
+	s.MaximumAutomaticAttempts = &v
 	return s
 }
 
@@ -13330,6 +14580,12 @@ func (s *RemediationConfiguration) SetParameters(v map[string]*RemediationParame
 // SetResourceType sets the ResourceType field's value.
 func (s *RemediationConfiguration) SetResourceType(v string) *RemediationConfiguration {
 	s.ResourceType = &v
+	return s
+}
+
+// SetRetryAttemptSeconds sets the RetryAttemptSeconds field's value.
+func (s *RemediationConfiguration) SetRetryAttemptSeconds(v int64) *RemediationConfiguration {
+	s.RetryAttemptSeconds = &v
 	return s
 }
 
@@ -13348,6 +14604,124 @@ func (s *RemediationConfiguration) SetTargetType(v string) *RemediationConfigura
 // SetTargetVersion sets the TargetVersion field's value.
 func (s *RemediationConfiguration) SetTargetVersion(v string) *RemediationConfiguration {
 	s.TargetVersion = &v
+	return s
+}
+
+// An object that represents the details about the remediation exception. The
+// details include the rule name, an explanation of an exception, the time when
+// the exception will be deleted, the resource ID, and resource type.
+type RemediationException struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the AWS Config rule.
+	//
+	// ConfigRuleName is a required field
+	ConfigRuleName *string `min:"1" type:"string" required:"true"`
+
+	// The time when the remediation exception will be deleted.
+	ExpirationTime *time.Time `type:"timestamp"`
+
+	// An explanation of an remediation exception.
+	Message *string `min:"1" type:"string"`
+
+	// The ID of the resource (for example., sg-xxxxxx).
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+
+	// The type of a resource.
+	//
+	// ResourceType is a required field
+	ResourceType *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RemediationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemediationException) GoString() string {
+	return s.String()
+}
+
+// SetConfigRuleName sets the ConfigRuleName field's value.
+func (s *RemediationException) SetConfigRuleName(v string) *RemediationException {
+	s.ConfigRuleName = &v
+	return s
+}
+
+// SetExpirationTime sets the ExpirationTime field's value.
+func (s *RemediationException) SetExpirationTime(v time.Time) *RemediationException {
+	s.ExpirationTime = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *RemediationException) SetMessage(v string) *RemediationException {
+	s.Message = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *RemediationException) SetResourceId(v string) *RemediationException {
+	s.ResourceId = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *RemediationException) SetResourceType(v string) *RemediationException {
+	s.ResourceType = &v
+	return s
+}
+
+// The details that identify a resource within AWS Config, including the resource
+// type and resource ID.
+type RemediationExceptionResourceKey struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the resource (for example., sg-xxxxxx).
+	ResourceId *string `min:"1" type:"string"`
+
+	// The type of a resource.
+	ResourceType *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s RemediationExceptionResourceKey) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemediationExceptionResourceKey) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemediationExceptionResourceKey) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemediationExceptionResourceKey"}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *RemediationExceptionResourceKey) SetResourceId(v string) *RemediationExceptionResourceKey {
+	s.ResourceId = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *RemediationExceptionResourceKey) SetResourceType(v string) *RemediationExceptionResourceKey {
+	s.ResourceType = &v
 	return s
 }
 
@@ -13493,6 +14867,26 @@ func (s RemediationParameterValue) String() string {
 // GoString returns the string representation
 func (s RemediationParameterValue) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RemediationParameterValue) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RemediationParameterValue"}
+	if s.ResourceValue != nil {
+		if err := s.ResourceValue.Validate(); err != nil {
+			invalidParams.AddNested("ResourceValue", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.StaticValue != nil {
+		if err := s.StaticValue.Validate(); err != nil {
+			invalidParams.AddNested("StaticValue", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetResourceValue sets the ResourceValue field's value.
@@ -13777,7 +15171,9 @@ type ResourceValue struct {
 	_ struct{} `type:"structure"`
 
 	// The value is a resource ID.
-	Value *string `type:"string" enum:"ResourceValueType"`
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true" enum:"ResourceValueType"`
 }
 
 // String returns the string representation
@@ -13788,6 +15184,19 @@ func (s ResourceValue) String() string {
 // GoString returns the string representation
 func (s ResourceValue) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceValue) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceValue"}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetValue sets the Value field's value.
@@ -14170,6 +15579,62 @@ func (s *SourceDetail) SetMessageType(v string) *SourceDetail {
 	return s
 }
 
+// AWS Systems Manager (SSM) specific remediation controls.
+type SsmControls struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum percentage of remediation actions allowed to run in parallel
+	// on the non-compliant resources for that specific rule. You can specify a
+	// percentage, such as 10%. The default value is 10.
+	ConcurrentExecutionRatePercentage *int64 `min:"1" type:"integer"`
+
+	// The percentage of errors that are allowed before SSM stops running automations
+	// on non-compliant resources for that specific rule. You can specify a percentage
+	// of errors, for example 10%. If you do not specifiy a percentage, the default
+	// is 50%. For example, if you set the ErrorPercentage to 40% for 10 non-compliant
+	// resources, then SSM stops running the automations when the fifth error is
+	// received.
+	ErrorPercentage *int64 `min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s SsmControls) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SsmControls) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SsmControls) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SsmControls"}
+	if s.ConcurrentExecutionRatePercentage != nil && *s.ConcurrentExecutionRatePercentage < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ConcurrentExecutionRatePercentage", 1))
+	}
+	if s.ErrorPercentage != nil && *s.ErrorPercentage < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ErrorPercentage", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConcurrentExecutionRatePercentage sets the ConcurrentExecutionRatePercentage field's value.
+func (s *SsmControls) SetConcurrentExecutionRatePercentage(v int64) *SsmControls {
+	s.ConcurrentExecutionRatePercentage = &v
+	return s
+}
+
+// SetErrorPercentage sets the ErrorPercentage field's value.
+func (s *SsmControls) SetErrorPercentage(v int64) *SsmControls {
+	s.ErrorPercentage = &v
+	return s
+}
+
 type StartConfigRulesEvaluationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14386,7 +15851,9 @@ type StaticValue struct {
 	_ struct{} `type:"structure"`
 
 	// A list of values. For example, the ARN of the assumed role.
-	Values []*string `type:"list"`
+	//
+	// Values is a required field
+	Values []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -14399,17 +15866,59 @@ func (s StaticValue) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StaticValue) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StaticValue"}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetValues sets the Values field's value.
 func (s *StaticValue) SetValues(v []*string) *StaticValue {
 	s.Values = v
 	return s
 }
 
+// Status filter object to filter results based on specific member account ID
+// or status type for an organization config rule.
 type StatusDetailFilters struct {
 	_ struct{} `type:"structure"`
 
+	// The 12-digit account ID of the member account within an organization.
 	AccountId *string `type:"string"`
 
+	// Indicates deployment status for config rule in the member account. When master
+	// account calls PutOrganizationConfigRule action for the first time, config
+	// rule status is created in the member account. When master account calls PutOrganizationConfigRule
+	// action for the second time, config rule status is updated in the member account.
+	// Config rule status is deleted when the master account deletes OrganizationConfigRule
+	// and disables service access for config-multiaccountsetup.amazonaws.com.
+	//
+	// AWS Config sets the state of the rule to:
+	//
+	//    * CREATE_SUCCESSFUL when config rule has been created in the member account.
+	//
+	//    * CREATE_IN_PROGRESS when config rule is being created in the member account.
+	//
+	//    * CREATE_FAILED when config rule creation has failed in the member account.
+	//
+	//    * DELETE_FAILED when config rule deletion has failed in the member account.
+	//
+	//    * DELETE_IN_PROGRESS when config rule is being deleted in the member account.
+	//
+	//    * DELETE_SUCCESSFUL when config rule has been deleted in the member account.
+	//
+	//    * UPDATE_SUCCESSFUL when config rule has been updated in the member account.
+	//
+	//    * UPDATE_IN_PROGRESS when config rule is being updated in the member account.
+	//
+	//    * UPDATE_FAILED when config rule deletion has failed in the member account.
 	MemberAccountRuleStatus *string `type:"string" enum:"MemberAccountRuleStatus"`
 }
 
@@ -14824,6 +16333,15 @@ const (
 	// MemberAccountRuleStatusCreateFailed is a MemberAccountRuleStatus enum value
 	MemberAccountRuleStatusCreateFailed = "CREATE_FAILED"
 
+	// MemberAccountRuleStatusUpdateSuccessful is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// MemberAccountRuleStatusUpdateFailed is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateFailed = "UPDATE_FAILED"
+
+	// MemberAccountRuleStatusUpdateInProgress is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+
 	// MemberAccountRuleStatusDeleteSuccessful is a MemberAccountRuleStatus enum value
 	MemberAccountRuleStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
 
@@ -14868,6 +16386,15 @@ const (
 
 	// OrganizationRuleStatusCreateFailed is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusCreateFailed = "CREATE_FAILED"
+
+	// OrganizationRuleStatusUpdateSuccessful is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// OrganizationRuleStatusUpdateFailed is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateFailed = "UPDATE_FAILED"
+
+	// OrganizationRuleStatusUpdateInProgress is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
 
 	// OrganizationRuleStatusDeleteSuccessful is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
@@ -14985,6 +16512,27 @@ const (
 	// ResourceTypeAwsEc2Vpngateway is a ResourceType enum value
 	ResourceTypeAwsEc2Vpngateway = "AWS::EC2::VPNGateway"
 
+	// ResourceTypeAwsEc2RegisteredHainstance is a ResourceType enum value
+	ResourceTypeAwsEc2RegisteredHainstance = "AWS::EC2::RegisteredHAInstance"
+
+	// ResourceTypeAwsEc2NatGateway is a ResourceType enum value
+	ResourceTypeAwsEc2NatGateway = "AWS::EC2::NatGateway"
+
+	// ResourceTypeAwsEc2EgressOnlyInternetGateway is a ResourceType enum value
+	ResourceTypeAwsEc2EgressOnlyInternetGateway = "AWS::EC2::EgressOnlyInternetGateway"
+
+	// ResourceTypeAwsEc2Vpcendpoint is a ResourceType enum value
+	ResourceTypeAwsEc2Vpcendpoint = "AWS::EC2::VPCEndpoint"
+
+	// ResourceTypeAwsEc2VpcendpointService is a ResourceType enum value
+	ResourceTypeAwsEc2VpcendpointService = "AWS::EC2::VPCEndpointService"
+
+	// ResourceTypeAwsEc2FlowLog is a ResourceType enum value
+	ResourceTypeAwsEc2FlowLog = "AWS::EC2::FlowLog"
+
+	// ResourceTypeAwsEc2VpcpeeringConnection is a ResourceType enum value
+	ResourceTypeAwsEc2VpcpeeringConnection = "AWS::EC2::VPCPeeringConnection"
+
 	// ResourceTypeAwsIamGroup is a ResourceType enum value
 	ResourceTypeAwsIamGroup = "AWS::IAM::Group"
 
@@ -14997,11 +16545,20 @@ const (
 	// ResourceTypeAwsIamUser is a ResourceType enum value
 	ResourceTypeAwsIamUser = "AWS::IAM::User"
 
+	// ResourceTypeAwsElasticLoadBalancingV2LoadBalancer is a ResourceType enum value
+	ResourceTypeAwsElasticLoadBalancingV2LoadBalancer = "AWS::ElasticLoadBalancingV2::LoadBalancer"
+
 	// ResourceTypeAwsAcmCertificate is a ResourceType enum value
 	ResourceTypeAwsAcmCertificate = "AWS::ACM::Certificate"
 
 	// ResourceTypeAwsRdsDbinstance is a ResourceType enum value
 	ResourceTypeAwsRdsDbinstance = "AWS::RDS::DBInstance"
+
+	// ResourceTypeAwsRdsDbparameterGroup is a ResourceType enum value
+	ResourceTypeAwsRdsDbparameterGroup = "AWS::RDS::DBParameterGroup"
+
+	// ResourceTypeAwsRdsDboptionGroup is a ResourceType enum value
+	ResourceTypeAwsRdsDboptionGroup = "AWS::RDS::DBOptionGroup"
 
 	// ResourceTypeAwsRdsDbsubnetGroup is a ResourceType enum value
 	ResourceTypeAwsRdsDbsubnetGroup = "AWS::RDS::DBSubnetGroup"
@@ -15012,17 +16569,23 @@ const (
 	// ResourceTypeAwsRdsDbsnapshot is a ResourceType enum value
 	ResourceTypeAwsRdsDbsnapshot = "AWS::RDS::DBSnapshot"
 
+	// ResourceTypeAwsRdsDbcluster is a ResourceType enum value
+	ResourceTypeAwsRdsDbcluster = "AWS::RDS::DBCluster"
+
+	// ResourceTypeAwsRdsDbclusterParameterGroup is a ResourceType enum value
+	ResourceTypeAwsRdsDbclusterParameterGroup = "AWS::RDS::DBClusterParameterGroup"
+
+	// ResourceTypeAwsRdsDbclusterSnapshot is a ResourceType enum value
+	ResourceTypeAwsRdsDbclusterSnapshot = "AWS::RDS::DBClusterSnapshot"
+
 	// ResourceTypeAwsRdsEventSubscription is a ResourceType enum value
 	ResourceTypeAwsRdsEventSubscription = "AWS::RDS::EventSubscription"
-
-	// ResourceTypeAwsElasticLoadBalancingV2LoadBalancer is a ResourceType enum value
-	ResourceTypeAwsElasticLoadBalancingV2LoadBalancer = "AWS::ElasticLoadBalancingV2::LoadBalancer"
 
 	// ResourceTypeAwsS3Bucket is a ResourceType enum value
 	ResourceTypeAwsS3Bucket = "AWS::S3::Bucket"
 
-	// ResourceTypeAwsSsmManagedInstanceInventory is a ResourceType enum value
-	ResourceTypeAwsSsmManagedInstanceInventory = "AWS::SSM::ManagedInstanceInventory"
+	// ResourceTypeAwsS3AccountPublicAccessBlock is a ResourceType enum value
+	ResourceTypeAwsS3AccountPublicAccessBlock = "AWS::S3::AccountPublicAccessBlock"
 
 	// ResourceTypeAwsRedshiftCluster is a ResourceType enum value
 	ResourceTypeAwsRedshiftCluster = "AWS::Redshift::Cluster"
@@ -15042,14 +16605,17 @@ const (
 	// ResourceTypeAwsRedshiftEventSubscription is a ResourceType enum value
 	ResourceTypeAwsRedshiftEventSubscription = "AWS::Redshift::EventSubscription"
 
+	// ResourceTypeAwsSsmManagedInstanceInventory is a ResourceType enum value
+	ResourceTypeAwsSsmManagedInstanceInventory = "AWS::SSM::ManagedInstanceInventory"
+
 	// ResourceTypeAwsCloudWatchAlarm is a ResourceType enum value
 	ResourceTypeAwsCloudWatchAlarm = "AWS::CloudWatch::Alarm"
 
 	// ResourceTypeAwsCloudFormationStack is a ResourceType enum value
 	ResourceTypeAwsCloudFormationStack = "AWS::CloudFormation::Stack"
 
-	// ResourceTypeAwsDynamoDbTable is a ResourceType enum value
-	ResourceTypeAwsDynamoDbTable = "AWS::DynamoDB::Table"
+	// ResourceTypeAwsElasticLoadBalancingLoadBalancer is a ResourceType enum value
+	ResourceTypeAwsElasticLoadBalancingLoadBalancer = "AWS::ElasticLoadBalancing::LoadBalancer"
 
 	// ResourceTypeAwsAutoScalingAutoScalingGroup is a ResourceType enum value
 	ResourceTypeAwsAutoScalingAutoScalingGroup = "AWS::AutoScaling::AutoScalingGroup"
@@ -15063,6 +16629,9 @@ const (
 	// ResourceTypeAwsAutoScalingScheduledAction is a ResourceType enum value
 	ResourceTypeAwsAutoScalingScheduledAction = "AWS::AutoScaling::ScheduledAction"
 
+	// ResourceTypeAwsDynamoDbTable is a ResourceType enum value
+	ResourceTypeAwsDynamoDbTable = "AWS::DynamoDB::Table"
+
 	// ResourceTypeAwsCodeBuildProject is a ResourceType enum value
 	ResourceTypeAwsCodeBuildProject = "AWS::CodeBuild::Project"
 
@@ -15071,6 +16640,9 @@ const (
 
 	// ResourceTypeAwsWafRule is a ResourceType enum value
 	ResourceTypeAwsWafRule = "AWS::WAF::Rule"
+
+	// ResourceTypeAwsWafRuleGroup is a ResourceType enum value
+	ResourceTypeAwsWafRuleGroup = "AWS::WAF::RuleGroup"
 
 	// ResourceTypeAwsWafWebAcl is a ResourceType enum value
 	ResourceTypeAwsWafWebAcl = "AWS::WAF::WebACL"
@@ -15081,6 +16653,9 @@ const (
 	// ResourceTypeAwsWafregionalRule is a ResourceType enum value
 	ResourceTypeAwsWafregionalRule = "AWS::WAFRegional::Rule"
 
+	// ResourceTypeAwsWafregionalRuleGroup is a ResourceType enum value
+	ResourceTypeAwsWafregionalRuleGroup = "AWS::WAFRegional::RuleGroup"
+
 	// ResourceTypeAwsWafregionalWebAcl is a ResourceType enum value
 	ResourceTypeAwsWafregionalWebAcl = "AWS::WAFRegional::WebACL"
 
@@ -15090,11 +16665,8 @@ const (
 	// ResourceTypeAwsCloudFrontStreamingDistribution is a ResourceType enum value
 	ResourceTypeAwsCloudFrontStreamingDistribution = "AWS::CloudFront::StreamingDistribution"
 
-	// ResourceTypeAwsWafRuleGroup is a ResourceType enum value
-	ResourceTypeAwsWafRuleGroup = "AWS::WAF::RuleGroup"
-
-	// ResourceTypeAwsWafregionalRuleGroup is a ResourceType enum value
-	ResourceTypeAwsWafregionalRuleGroup = "AWS::WAFRegional::RuleGroup"
+	// ResourceTypeAwsLambdaAlias is a ResourceType enum value
+	ResourceTypeAwsLambdaAlias = "AWS::Lambda::Alias"
 
 	// ResourceTypeAwsLambdaFunction is a ResourceType enum value
 	ResourceTypeAwsLambdaFunction = "AWS::Lambda::Function"
@@ -15108,8 +16680,8 @@ const (
 	// ResourceTypeAwsElasticBeanstalkEnvironment is a ResourceType enum value
 	ResourceTypeAwsElasticBeanstalkEnvironment = "AWS::ElasticBeanstalk::Environment"
 
-	// ResourceTypeAwsElasticLoadBalancingLoadBalancer is a ResourceType enum value
-	ResourceTypeAwsElasticLoadBalancingLoadBalancer = "AWS::ElasticLoadBalancing::LoadBalancer"
+	// ResourceTypeAwsMobileHubProject is a ResourceType enum value
+	ResourceTypeAwsMobileHubProject = "AWS::MobileHub::Project"
 
 	// ResourceTypeAwsXrayEncryptionConfig is a ResourceType enum value
 	ResourceTypeAwsXrayEncryptionConfig = "AWS::XRay::EncryptionConfig"
@@ -15129,8 +16701,41 @@ const (
 	// ResourceTypeAwsConfigResourceCompliance is a ResourceType enum value
 	ResourceTypeAwsConfigResourceCompliance = "AWS::Config::ResourceCompliance"
 
+	// ResourceTypeAwsLicenseManagerLicenseConfiguration is a ResourceType enum value
+	ResourceTypeAwsLicenseManagerLicenseConfiguration = "AWS::LicenseManager::LicenseConfiguration"
+
+	// ResourceTypeAwsApiGatewayDomainName is a ResourceType enum value
+	ResourceTypeAwsApiGatewayDomainName = "AWS::ApiGateway::DomainName"
+
+	// ResourceTypeAwsApiGatewayMethod is a ResourceType enum value
+	ResourceTypeAwsApiGatewayMethod = "AWS::ApiGateway::Method"
+
+	// ResourceTypeAwsApiGatewayStage is a ResourceType enum value
+	ResourceTypeAwsApiGatewayStage = "AWS::ApiGateway::Stage"
+
+	// ResourceTypeAwsApiGatewayRestApi is a ResourceType enum value
+	ResourceTypeAwsApiGatewayRestApi = "AWS::ApiGateway::RestApi"
+
+	// ResourceTypeAwsApiGatewayV2DomainName is a ResourceType enum value
+	ResourceTypeAwsApiGatewayV2DomainName = "AWS::ApiGatewayV2::DomainName"
+
+	// ResourceTypeAwsApiGatewayV2Stage is a ResourceType enum value
+	ResourceTypeAwsApiGatewayV2Stage = "AWS::ApiGatewayV2::Stage"
+
+	// ResourceTypeAwsApiGatewayV2Api is a ResourceType enum value
+	ResourceTypeAwsApiGatewayV2Api = "AWS::ApiGatewayV2::Api"
+
 	// ResourceTypeAwsCodePipelinePipeline is a ResourceType enum value
 	ResourceTypeAwsCodePipelinePipeline = "AWS::CodePipeline::Pipeline"
+
+	// ResourceTypeAwsServiceCatalogCloudFormationProvisionedProduct is a ResourceType enum value
+	ResourceTypeAwsServiceCatalogCloudFormationProvisionedProduct = "AWS::ServiceCatalog::CloudFormationProvisionedProduct"
+
+	// ResourceTypeAwsServiceCatalogCloudFormationProduct is a ResourceType enum value
+	ResourceTypeAwsServiceCatalogCloudFormationProduct = "AWS::ServiceCatalog::CloudFormationProduct"
+
+	// ResourceTypeAwsServiceCatalogPortfolio is a ResourceType enum value
+	ResourceTypeAwsServiceCatalogPortfolio = "AWS::ServiceCatalog::Portfolio"
 )
 
 const (

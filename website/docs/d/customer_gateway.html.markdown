@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_customer_gateway"
-sidebar_current: "docs-aws-datasource-customer-gateway"
 description: |-
   Get an existing AWS Customer Gateway.
 ---

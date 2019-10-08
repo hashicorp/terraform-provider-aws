@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glacier_vault_lock"
-sidebar_current: "docs-aws-resource-glacier-vault-lock"
 description: |-
   Manages a Glacier Vault Lock.
 ---

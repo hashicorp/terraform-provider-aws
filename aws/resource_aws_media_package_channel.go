@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsMediaPackageChannel() *schema.Resource {
@@ -151,10 +151,10 @@ func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting MediaPackage Channel: %s", err)
 	}
 
+	dcinput := &mediapackage.DescribeChannelInput{
+		Id: aws.String(d.Id()),
+	}
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		dcinput := &mediapackage.DescribeChannelInput{
-			Id: aws.String(d.Id()),
-		}
 		_, err := conn.DescribeChannel(dcinput)
 		if err != nil {
 			if isAWSErr(err, mediapackage.ErrCodeNotFoundException, "") {
@@ -164,6 +164,9 @@ func resourceAwsMediaPackageChannelDelete(d *schema.ResourceData, meta interface
 		}
 		return resource.RetryableError(fmt.Errorf("MediaPackage Channel (%s) still exists", d.Id()))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeChannel(dcinput)
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for MediaPackage Channel (%s) deletion: %s", d.Id(), err)
 	}

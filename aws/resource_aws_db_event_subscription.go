@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDbEventSubscription() *schema.Resource {
@@ -154,6 +154,12 @@ func resourceAwsDbEventSubscriptionRead(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).rdsconn
 
 	sub, err := resourceAwsDbEventSubscriptionRetrieve(d.Id(), conn)
+
+	if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+		log.Printf("[WARN] RDS Event Subscription (%s) not found - removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 
 	if err != nil {
 		return fmt.Errorf("error retrieving RDS Event Subscription (%s): %s", d.Id(), err)
@@ -385,6 +391,10 @@ func resourceAwsDbEventSubscriptionRefreshFunc(name string, conn *rds.RDS) resou
 
 	return func() (interface{}, string, error) {
 		sub, err := resourceAwsDbEventSubscriptionRetrieve(name, conn)
+
+		if isAWSErr(err, rds.ErrCodeSubscriptionNotFoundFault, "") {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err

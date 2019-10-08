@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsApiGatewayDomainName() *schema.Resource {
@@ -59,6 +59,16 @@ func resourceAwsApiGatewayDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+
+			"security_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.SecurityPolicyTls10,
+					apigateway.SecurityPolicyTls12,
+				}, true),
 			},
 
 			"certificate_arn": {
@@ -173,6 +183,10 @@ func resourceAwsApiGatewayDomainNameCreate(d *schema.ResourceData, meta interfac
 		params.RegionalCertificateName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("security_policy"); ok && v.(string) != "" {
+		params.SecurityPolicy = aws.String(v.(string))
+	}
+
 	domainName, err := conn.CreateDomainName(params)
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Domain Name: %s", err)
@@ -208,6 +222,7 @@ func resourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{
 	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
 	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
 	d.Set("domain_name", domainName.DomainName)
+	d.Set("security_policy", domainName.SecurityPolicy)
 
 	if err := d.Set("endpoint_configuration", flattenApiGatewayEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %s", err)
@@ -253,6 +268,14 @@ func resourceAwsApiGatewayDomainNameUpdateOperations(d *schema.ResourceData) []*
 			Op:    aws.String("replace"),
 			Path:  aws.String("/regionalCertificateArn"),
 			Value: aws.String(d.Get("regional_certificate_arn").(string)),
+		})
+	}
+
+	if d.HasChange("security_policy") {
+		operations = append(operations, &apigateway.PatchOperation{
+			Op:    aws.String("replace"),
+			Path:  aws.String("/securityPolicy"),
+			Value: aws.String(d.Get("security_policy").(string)),
 		})
 	}
 

@@ -3,7 +3,7 @@ package tls
 import (
 	"crypto/x509"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceLocallySignedCert() *schema.Resource {
@@ -31,6 +31,7 @@ func resourceLocallySignedCert() *schema.Resource {
 		Required:    true,
 		Description: "PEM-encoded CA private key used to sign the certificate",
 		ForceNew:    true,
+		Sensitive:   true,
 		StateFunc: func(v interface{}) string {
 			return hashForState(v.(string))
 		},
@@ -47,10 +48,12 @@ func resourceLocallySignedCert() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Create: CreateLocallySignedCert,
-		Delete: DeleteCertificate,
-		Read:   ReadCertificate,
-		Schema: s,
+		Create:        CreateLocallySignedCert,
+		Delete:        DeleteCertificate,
+		Read:          ReadCertificate,
+		Update:        UpdateCertificate,
+		CustomizeDiff: CustomizeCertificateDiff,
+		Schema:        s,
 	}
 }
 
@@ -72,6 +75,7 @@ func CreateLocallySignedCert(d *schema.ResourceData, meta interface{}) error {
 		Subject:               certReq.Subject,
 		DNSNames:              certReq.DNSNames,
 		IPAddresses:           certReq.IPAddresses,
+		URIs:                  certReq.URIs,
 		BasicConstraintsValid: true,
 	}
 

@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -167,11 +167,11 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1708034931.name", "character_set_results"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1708034931.value", "utf8"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1937131004.name", "event_scheduler"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1937131004.value", "on"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1937131004.value", "ON"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.3437079877.name", "innodb_buffer_pool_dump_at_shutdown"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.3437079877.value", "1"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1092112861.name", "innodb_file_format"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1092112861.value", "barracuda"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1092112861.value", "Barracuda"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.615571931.name", "innodb_io_capacity"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.615571931.value", "2000"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1065962799.name", "innodb_io_capacity_max"),
@@ -185,7 +185,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.591700516.name", "log_warnings"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.591700516.value", "2"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1918306725.name", "log_output"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1918306725.value", "file"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1918306725.value", "FILE"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.386204433.name", "max_allowed_packet"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.386204433.value", "1073741824"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1700901269.name", "max_connect_errors"),
@@ -197,7 +197,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.881816039.name", "sync_binlog"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.881816039.value", "0"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.748684209.name", "tx_isolation"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.748684209.value", "repeatable-read"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.748684209.value", "REPEATABLE-READ"),
 				),
 			},
 			{
@@ -260,11 +260,11 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1708034931.name", "character_set_results"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1708034931.value", "utf8"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1937131004.name", "event_scheduler"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1937131004.value", "on"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1937131004.value", "ON"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.3437079877.name", "innodb_buffer_pool_dump_at_shutdown"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.3437079877.value", "1"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1092112861.name", "innodb_file_format"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1092112861.value", "barracuda"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1092112861.value", "Barracuda"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.615571931.name", "innodb_io_capacity"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.615571931.value", "2000"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1065962799.name", "innodb_io_capacity_max"),
@@ -278,7 +278,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.591700516.name", "log_warnings"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.591700516.value", "2"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1918306725.name", "log_output"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1918306725.value", "file"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1918306725.value", "FILE"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.386204433.name", "max_allowed_packet"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.386204433.value", "1073741824"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.1700901269.name", "max_connect_errors"),
@@ -290,7 +290,7 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.881816039.name", "sync_binlog"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.881816039.value", "0"),
 					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.748684209.name", "tx_isolation"),
-					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.748684209.value", "repeatable-read"),
+					resource.TestCheckResourceAttr("aws_db_parameter_group.large", "parameter.748684209.value", "REPEATABLE-READ"),
 				),
 			},
 		},

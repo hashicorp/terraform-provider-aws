@@ -14,9 +14,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -279,7 +279,7 @@ func TestAccAWSLambdaFunction_updateRuntime(t *testing.T) {
 				Config: testAccAWSLambdaConfigBasicUpdateRuntime(funcName, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists("aws_lambda_function.lambda_function_test", funcName, &conf),
-					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs6.10"),
+					resource.TestCheckResourceAttr("aws_lambda_function.lambda_function_test", "runtime", "nodejs10.x"),
 				),
 			},
 		},
@@ -470,14 +470,10 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "version",
 						regexp.MustCompile("^2$")),
-					resource.TestMatchResourceAttr("data.template_file.function_version", "rendered",
-						regexp.MustCompile("^2$")),
 					resource.TestMatchResourceAttr("aws_lambda_function.lambda_function_test", "qualified_arn",
-						regexp.MustCompile(":"+funcName+":[0-9]+$")),
-					resource.TestMatchResourceAttr("data.template_file.qualified_arn", "rendered",
 						regexp.MustCompile(fmt.Sprintf(":function:%s:2$", funcName))),
 					func(s *terraform.State) error {
-						return testAccCheckAttributeIsDateAfter(s, "data.template_file.last_modified", "rendered", timeBeforeUpdate)
+						return testAccCheckAttributeIsDateAfter(s, "aws_lambda_function.lambda_function_test", "last_modified", timeBeforeUpdate)
 					},
 				),
 			},
@@ -832,6 +828,33 @@ func TestAccAWSLambdaFunction_VPC_withInvocation(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10044
+func TestAccAWSLambdaFunction_VpcConfig_ProperIamDependencies(t *testing.T) {
+	var function lambda.GetFunctionOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_function.test"
+	vpcResourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigVpcConfigProperIamDependencies(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &function),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", vpcResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_EmptyVpcConfig(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -931,7 +954,7 @@ func TestAccAWSLambdaFunction_localUpdate(t *testing.T) {
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, funcName),
 					testAccCheckAwsLambdaSourceCodeHash(&conf, "0tdaP9H9hsk9c2CycSwOG/sa/x5JyAmSYunA/ce99Pg="),
 					func(s *terraform.State) error {
-						return testAccCheckAttributeIsDateAfter(s, "data.template_file.last_modified", "rendered", timeBeforeUpdate)
+						return testAccCheckAttributeIsDateAfter(s, "aws_lambda_function.lambda_function_local", "last_modified", timeBeforeUpdate)
 					},
 				),
 			},
@@ -1724,7 +1747,7 @@ resource "aws_lambda_function" "lambda_function_test" {
     function_name = "%s"
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
-    runtime = "nodejs6.10"
+    runtime = "nodejs10.x"
 }
 `, funcName)
 }
@@ -1874,31 +1897,84 @@ resource "aws_lambda_function" "lambda_function_test" {
     handler = "exports.example"
     runtime = "nodejs8.10"
 }
-
-data "template_file" "function_version" {
-  template = "$${function_version}"
-
-  vars = {
-    function_version = "${aws_lambda_function.lambda_function_test.version}"
-  }
-}
-
-data "template_file" "last_modified" {
-  template = "$${last_modified}"
-
-  vars = {
-    last_modified = "${aws_lambda_function.lambda_function_test.last_modified}"
-  }
-}
-
-data "template_file" "qualified_arn" {
-  template = "$${qualified_arn}"
-
-  vars = {
-    qualified_arn = "${aws_lambda_function.lambda_function_test.qualified_arn}"
-  }
-}
 `, fileName, funcName)
+}
+
+func testAccAWSLambdaConfigVpcConfigProperIamDependencies(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+  role       = "${aws_iam_role.test.id}"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+
+  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+
+  name   = %[1]q
+  vpc_id = "${aws_vpc.test.id}"
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = "${aws_iam_role.test.arn}"
+  handler       = "exports.example"
+  runtime       = "nodejs8.10"
+
+  vpc_config {
+    subnet_ids         = ["${aws_subnet.test.id}"]
+    security_group_ids = ["${aws_security_group.test.id}"]
+  }
+}
+`, rName)
 }
 
 func testAccAWSLambdaConfigWithTracingConfig(funcName, policyName, roleName, sgName string) string {
@@ -2333,14 +2409,6 @@ resource "aws_lambda_function" "lambda_function_local" {
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.example"
   runtime          = "nodejs8.10"
-}
-
-data "template_file" "last_modified" {
-  template = "$${last_modified}"
-
-  vars = {
-    last_modified = "${aws_lambda_function.lambda_function_local.last_modified}"
-  }
 }
 `, roleName, filePath, filePath, funcName)
 }

@@ -630,46 +630,6 @@ func TestValidateSagemakerName(t *testing.T) {
 	}
 }
 
-func TestResourceAWSElastiCacheClusterIdValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "tEsting",
-			ErrCount: 1,
-		},
-		{
-			Value:    "t.sting",
-			ErrCount: 1,
-		},
-		{
-			Value:    "t--sting",
-			ErrCount: 1,
-		},
-		{
-			Value:    "1testing",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing-",
-			ErrCount: 1,
-		},
-		{
-			Value:    randomString(65),
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateElastiCacheClusterId(tc.Value, "aws_elasticache_cluster_cluster_id")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the ElastiCache Cluster cluster_id to trigger a validation error")
-		}
-	}
-}
-
 func TestValidateDbEventSubscriptionName(t *testing.T) {
 	validNames := []string{
 		"valid-name",

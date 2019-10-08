@@ -90,6 +90,14 @@ func (c *RAM) AcceptResourceShareInvitationRequest(input *AcceptResourceShareInv
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The service is not available.
 //
+//   * ErrCodeInvalidClientTokenException "InvalidClientTokenException"
+//   A client token is not valid.
+//
+//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   A client token input parameter was reused with an operation, but at least
+//   one of the other input parameters is different from the previous call to
+//   the operation.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04/AcceptResourceShareInvitation
 func (c *RAM) AcceptResourceShareInvitation(input *AcceptResourceShareInvitationInput) (*AcceptResourceShareInvitationOutput, error) {
 	req, out := c.AcceptResourceShareInvitationRequest(input)
@@ -306,6 +314,9 @@ func (c *RAM) CreateResourceShareRequest(input *CreateResourceShareInput) (req *
 //
 //   * ErrCodeResourceShareLimitExceededException "ResourceShareLimitExceededException"
 //   The requested resource share exceeds the limit for your account.
+//
+//   * ErrCodeTagPolicyViolationException "TagPolicyViolationException"
+//   The specified tag is a reserved word and cannot be used.
 //
 //   * ErrCodeServerInternalException "ServerInternalException"
 //   The service could not respond to the request due to an internal problem.
@@ -593,7 +604,9 @@ func (c *RAM) EnableSharingWithAwsOrganizationRequest(input *EnableSharingWithAw
 
 // EnableSharingWithAwsOrganization API operation for AWS Resource Access Manager.
 //
-// Enables resource sharing within your organization.
+// Enables resource sharing within your AWS Organization.
+//
+// The caller must be the master account for the AWS Organization.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -684,7 +697,7 @@ func (c *RAM) GetResourcePoliciesRequest(input *GetResourcePoliciesInput) (req *
 
 // GetResourcePolicies API operation for AWS Resource Access Manager.
 //
-// Gets the policies for the specifies resources.
+// Gets the policies for the specified resources that you own and have shared.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -831,7 +844,7 @@ func (c *RAM) GetResourceShareAssociationsRequest(input *GetResourceShareAssocia
 
 // GetResourceShareAssociations API operation for AWS Resource Access Manager.
 //
-// Gets the associations for the specified resource share.
+// Gets the resources or principals for the resource shares that you own.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -984,7 +997,7 @@ func (c *RAM) GetResourceShareInvitationsRequest(input *GetResourceShareInvitati
 
 // GetResourceShareInvitations API operation for AWS Resource Access Manager.
 //
-// Gets the specified invitations for resource sharing.
+// Gets the invitations for resource sharing that you've received.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1137,7 +1150,8 @@ func (c *RAM) GetResourceSharesRequest(input *GetResourceSharesInput) (req *requ
 
 // GetResourceShares API operation for AWS Resource Access Manager.
 //
-// Gets the specified resource shares or all of your resource shares.
+// Gets the resource shares that you own or the resource shares that are shared
+// with you.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1237,6 +1251,166 @@ func (c *RAM) GetResourceSharesPagesWithContext(ctx aws.Context, input *GetResou
 	return p.Err()
 }
 
+const opListPendingInvitationResources = "ListPendingInvitationResources"
+
+// ListPendingInvitationResourcesRequest generates a "aws/request.Request" representing the
+// client's request for the ListPendingInvitationResources operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListPendingInvitationResources for more information on using the ListPendingInvitationResources
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListPendingInvitationResourcesRequest method.
+//    req, resp := client.ListPendingInvitationResourcesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04/ListPendingInvitationResources
+func (c *RAM) ListPendingInvitationResourcesRequest(input *ListPendingInvitationResourcesInput) (req *request.Request, output *ListPendingInvitationResourcesOutput) {
+	op := &request.Operation{
+		Name:       opListPendingInvitationResources,
+		HTTPMethod: "POST",
+		HTTPPath:   "/listpendinginvitationresources",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListPendingInvitationResourcesInput{}
+	}
+
+	output = &ListPendingInvitationResourcesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListPendingInvitationResources API operation for AWS Resource Access Manager.
+//
+// Lists the resources in a resource share that is shared with you but that
+// the invitation is still pending for.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Resource Access Manager's
+// API operation ListPendingInvitationResources for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMalformedArnException "MalformedArnException"
+//   The format of an Amazon Resource Name (ARN) is not valid.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified value for NextToken is not valid.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   A parameter is not valid.
+//
+//   * ErrCodeServerInternalException "ServerInternalException"
+//   The service could not respond to the request due to an internal problem.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is not available.
+//
+//   * ErrCodeResourceShareInvitationArnNotFoundException "ResourceShareInvitationArnNotFoundException"
+//   The Amazon Resource Name (ARN) for an invitation was not found.
+//
+//   * ErrCodeMissingRequiredParameterException "MissingRequiredParameterException"
+//   A required input parameter is missing.
+//
+//   * ErrCodeResourceShareInvitationAlreadyRejectedException "ResourceShareInvitationAlreadyRejectedException"
+//   The invitation was already rejected.
+//
+//   * ErrCodeResourceShareInvitationExpiredException "ResourceShareInvitationExpiredException"
+//   The invitation is expired.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04/ListPendingInvitationResources
+func (c *RAM) ListPendingInvitationResources(input *ListPendingInvitationResourcesInput) (*ListPendingInvitationResourcesOutput, error) {
+	req, out := c.ListPendingInvitationResourcesRequest(input)
+	return out, req.Send()
+}
+
+// ListPendingInvitationResourcesWithContext is the same as ListPendingInvitationResources with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListPendingInvitationResources for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RAM) ListPendingInvitationResourcesWithContext(ctx aws.Context, input *ListPendingInvitationResourcesInput, opts ...request.Option) (*ListPendingInvitationResourcesOutput, error) {
+	req, out := c.ListPendingInvitationResourcesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListPendingInvitationResourcesPages iterates over the pages of a ListPendingInvitationResources operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPendingInvitationResources method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPendingInvitationResources operation.
+//    pageNum := 0
+//    err := client.ListPendingInvitationResourcesPages(params,
+//        func(page *ram.ListPendingInvitationResourcesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *RAM) ListPendingInvitationResourcesPages(input *ListPendingInvitationResourcesInput, fn func(*ListPendingInvitationResourcesOutput, bool) bool) error {
+	return c.ListPendingInvitationResourcesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPendingInvitationResourcesPagesWithContext same as ListPendingInvitationResourcesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RAM) ListPendingInvitationResourcesPagesWithContext(ctx aws.Context, input *ListPendingInvitationResourcesInput, fn func(*ListPendingInvitationResourcesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPendingInvitationResourcesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPendingInvitationResourcesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	cont := true
+	for p.Next() && cont {
+		cont = fn(p.Page().(*ListPendingInvitationResourcesOutput), !p.HasNextPage())
+	}
+	return p.Err()
+}
+
 const opListPrincipals = "ListPrincipals"
 
 // ListPrincipalsRequest generates a "aws/request.Request" representing the
@@ -1287,7 +1461,8 @@ func (c *RAM) ListPrincipalsRequest(input *ListPrincipalsInput) (req *request.Re
 
 // ListPrincipals API operation for AWS Resource Access Manager.
 //
-// Lists the principals with access to the specified resource.
+// Lists the principals that you have shared resources with or the principals
+// that have shared resources with you.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1437,7 +1612,8 @@ func (c *RAM) ListResourcesRequest(input *ListResourcesInput) (req *request.Requ
 
 // ListResources API operation for AWS Resource Access Manager.
 //
-// Lists the resources that the specified principal can access.
+// Lists the resources that you added to a resource shares or the resources
+// that are shared with you.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1618,6 +1794,14 @@ func (c *RAM) RejectResourceShareInvitationRequest(input *RejectResourceShareInv
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The service is not available.
 //
+//   * ErrCodeInvalidClientTokenException "InvalidClientTokenException"
+//   A client token is not valid.
+//
+//   * ErrCodeIdempotentParameterMismatchException "IdempotentParameterMismatchException"
+//   A client token input parameter was reused with an operation, but at least
+//   one of the other input parameters is different from the previous call to
+//   the operation.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04/RejectResourceShareInvitation
 func (c *RAM) RejectResourceShareInvitation(input *RejectResourceShareInvitationInput) (*RejectResourceShareInvitationOutput, error) {
 	req, out := c.RejectResourceShareInvitationRequest(input)
@@ -1685,7 +1869,7 @@ func (c *RAM) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 
 // TagResource API operation for AWS Resource Access Manager.
 //
-// Adds the specified tags to the specified resource share.
+// Adds the specified tags to the specified resource share that you own.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1706,6 +1890,9 @@ func (c *RAM) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //
 //   * ErrCodeResourceArnNotFoundException "ResourceArnNotFoundException"
 //   An Amazon Resource Name (ARN) was not found.
+//
+//   * ErrCodeTagPolicyViolationException "TagPolicyViolationException"
+//   The specified tag is a reserved word and cannot be used.
 //
 //   * ErrCodeServerInternalException "ServerInternalException"
 //   The service could not respond to the request due to an internal problem.
@@ -1780,7 +1967,7 @@ func (c *RAM) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 
 // UntagResource API operation for AWS Resource Access Manager.
 //
-// Removes the specified tags from the specified resource share.
+// Removes the specified tags from the specified resource share that you own.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1865,7 +2052,7 @@ func (c *RAM) UpdateResourceShareRequest(input *UpdateResourceShareInput) (req *
 
 // UpdateResourceShare API operation for AWS Resource Access Manager.
 //
-// Updates the specified resource share.
+// Updates the specified resource share that you own.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2109,7 +2296,7 @@ func (s *AssociateResourceShareOutput) SetResourceShareAssociations(v []*Resourc
 type CreateResourceShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether principals outside your organization can be associated
+	// Indicates whether principals outside your AWS organization can be associated
 	// with a resource share.
 	AllowExternalPrincipals *bool `locationName:"allowExternalPrincipals" type:"boolean"`
 
@@ -2548,7 +2735,7 @@ func (s *GetResourcePoliciesOutput) SetPolicies(v []*string) *GetResourcePolicie
 type GetResourceShareAssociationsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The status of the association.
+	// The association status.
 	AssociationStatus *string `locationName:"associationStatus" type:"string" enum:"ResourceShareAssociationStatus"`
 
 	// The association type.
@@ -2563,10 +2750,12 @@ type GetResourceShareAssociationsInput struct {
 	// The token for the next page of results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
-	// The principal.
+	// The principal. You cannot specify this parameter if the association type
+	// is RESOURCE.
 	Principal *string `locationName:"principal" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the resource. You cannot specify this parameter
+	// if the association type is PRINCIPAL.
 	ResourceArn *string `locationName:"resourceArn" type:"string"`
 
 	// The Amazon Resource Names (ARN) of the resource shares.
@@ -2648,7 +2837,7 @@ type GetResourceShareAssociationsOutput struct {
 	// when there are no more results to return.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
-	// Information about the association.
+	// Information about the associations.
 	ResourceShareAssociations []*ResourceShareAssociation `locationName:"resourceShareAssociations" type:"list"`
 }
 
@@ -2900,6 +3089,99 @@ func (s *GetResourceSharesOutput) SetResourceShares(v []*ResourceShare) *GetReso
 	return s
 }
 
+type ListPendingInvitationResourcesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the invitation.
+	//
+	// ResourceShareInvitationArn is a required field
+	ResourceShareInvitationArn *string `locationName:"resourceShareInvitationArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListPendingInvitationResourcesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListPendingInvitationResourcesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListPendingInvitationResourcesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListPendingInvitationResourcesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ResourceShareInvitationArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceShareInvitationArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListPendingInvitationResourcesInput) SetMaxResults(v int64) *ListPendingInvitationResourcesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListPendingInvitationResourcesInput) SetNextToken(v string) *ListPendingInvitationResourcesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceShareInvitationArn sets the ResourceShareInvitationArn field's value.
+func (s *ListPendingInvitationResourcesInput) SetResourceShareInvitationArn(v string) *ListPendingInvitationResourcesInput {
+	s.ResourceShareInvitationArn = &v
+	return s
+}
+
+type ListPendingInvitationResourcesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// Information about the resources included the resource share.
+	Resources []*Resource `locationName:"resources" type:"list"`
+}
+
+// String returns the string representation
+func (s ListPendingInvitationResourcesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListPendingInvitationResourcesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListPendingInvitationResourcesOutput) SetNextToken(v string) *ListPendingInvitationResourcesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResources sets the Resources field's value.
+func (s *ListPendingInvitationResourcesOutput) SetResources(v []*Resource) *ListPendingInvitationResourcesOutput {
+	s.Resources = v
+	return s
+}
+
 type ListPrincipalsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2925,6 +3207,9 @@ type ListPrincipalsInput struct {
 	ResourceShareArns []*string `locationName:"resourceShareArns" type:"list"`
 
 	// The resource type.
+	//
+	// Valid values: route53resolver:ResolverRule | ec2:TransitGateway | ec2:Subnet
+	// | license-manager:LicenseConfiguration
 	ResourceType *string `locationName:"resourceType" type:"string"`
 }
 
@@ -3054,6 +3339,9 @@ type ListResourcesInput struct {
 	ResourceShareArns []*string `locationName:"resourceShareArns" type:"list"`
 
 	// The resource type.
+	//
+	// Valid values: route53resolver:ResolverRule | ec2:TransitGateway | ec2:Subnet
+	// | license-manager:LicenseConfiguration
 	ResourceType *string `locationName:"resourceType" type:"string"`
 }
 
@@ -3165,8 +3453,8 @@ type Principal struct {
 	// The time when the principal was associated with the resource share.
 	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
 
-	// Indicates whether the principal belongs to the same organization as the AWS
-	// account that owns the resource share.
+	// Indicates whether the principal belongs to the same AWS organization as the
+	// AWS account that owns the resource share.
 	External *bool `locationName:"external" type:"boolean"`
 
 	// The ID of the principal.
@@ -3382,7 +3670,7 @@ func (s *Resource) SetType(v string) *Resource {
 type ResourceShare struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether principals outside your organization can be associated
+	// Indicates whether principals outside your AWS organization can be associated
 	// with a resource share.
 	AllowExternalPrincipals *bool `locationName:"allowExternalPrincipals" type:"boolean"`
 
@@ -3490,8 +3778,8 @@ type ResourceShareAssociation struct {
 	// The time when the association was created.
 	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
 
-	// Indicates whether the principal belongs to the same organization as the AWS
-	// account that owns the resource share.
+	// Indicates whether the principal belongs to the same AWS organization as the
+	// AWS account that owns the resource share.
 	External *bool `locationName:"external" type:"boolean"`
 
 	// The time when the association was last updated.
@@ -3499,6 +3787,9 @@ type ResourceShareAssociation struct {
 
 	// The Amazon Resource Name (ARN) of the resource share.
 	ResourceShareArn *string `locationName:"resourceShareArn" type:"string"`
+
+	// The name of the resource share.
+	ResourceShareName *string `locationName:"resourceShareName" type:"string"`
 
 	// The status of the association.
 	Status *string `locationName:"status" type:"string" enum:"ResourceShareAssociationStatus"`
@@ -3553,6 +3844,12 @@ func (s *ResourceShareAssociation) SetResourceShareArn(v string) *ResourceShareA
 	return s
 }
 
+// SetResourceShareName sets the ResourceShareName field's value.
+func (s *ResourceShareAssociation) SetResourceShareName(v string) *ResourceShareAssociation {
+	s.ResourceShareName = &v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *ResourceShareAssociation) SetStatus(v string) *ResourceShareAssociation {
 	s.Status = &v
@@ -3578,8 +3875,11 @@ type ResourceShareInvitation struct {
 	// The Amazon Resource Name (ARN) of the resource share.
 	ResourceShareArn *string `locationName:"resourceShareArn" type:"string"`
 
-	// The resources associated with the resource share.
-	ResourceShareAssociations []*ResourceShareAssociation `locationName:"resourceShareAssociations" type:"list"`
+	// To view the resources associated with a pending resource share invitation,
+	// use ListPendingInvitationResources (https://docs.aws.amazon.com/ram/latest/APIReference/API_ListPendingInvitationResources.html).
+	//
+	// Deprecated: This member has been deprecated. Use ListPendingInvitationResources.
+	ResourceShareAssociations []*ResourceShareAssociation `locationName:"resourceShareAssociations" deprecated:"true" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the invitation.
 	ResourceShareInvitationArn *string `locationName:"resourceShareInvitationArn" type:"string"`
@@ -3853,7 +4153,7 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateResourceShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether principals outside your organization can be associated
+	// Indicates whether principals outside your AWS organization can be associated
 	// with a resource share.
 	AllowExternalPrincipals *bool `locationName:"allowExternalPrincipals" type:"boolean"`
 
@@ -4026,4 +4326,7 @@ const (
 
 	// ResourceStatusUnavailable is a ResourceStatus enum value
 	ResourceStatusUnavailable = "UNAVAILABLE"
+
+	// ResourceStatusPending is a ResourceStatus enum value
+	ResourceStatusPending = "PENDING"
 )

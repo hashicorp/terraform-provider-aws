@@ -46,8 +46,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/mitchellh/copystructure"
 	"gopkg.in/yaml.v2"
 )
@@ -1203,14 +1203,40 @@ func expandESClusterConfig(m map[string]interface{}) *elasticsearch.Elasticsearc
 	}
 
 	if v, ok := m["zone_awareness_enabled"]; ok {
-		config.ZoneAwarenessEnabled = aws.Bool(v.(bool))
+		isEnabled := v.(bool)
+		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
+
+		if isEnabled {
+			if v, ok := m["zone_awareness_config"]; ok {
+				config.ZoneAwarenessConfig = expandElasticsearchZoneAwarenessConfig(v.([]interface{}))
+			}
+		}
 	}
 
 	return &config
 }
 
+func expandElasticsearchZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	zoneAwarenessConfig := &elasticsearch.ZoneAwarenessConfig{}
+
+	if v, ok := m["availability_zone_count"]; ok && v.(int) > 0 {
+		zoneAwarenessConfig.AvailabilityZoneCount = aws.Int64(int64(v.(int)))
+	}
+
+	return zoneAwarenessConfig
+}
+
 func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{}
+	m := map[string]interface{}{
+		"zone_awareness_config":  flattenElasticsearchZoneAwarenessConfig(c.ZoneAwarenessConfig),
+		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
+	}
 
 	if c.DedicatedMasterCount != nil {
 		m["dedicated_master_count"] = *c.DedicatedMasterCount
@@ -1227,11 +1253,20 @@ func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[s
 	if c.InstanceType != nil {
 		m["instance_type"] = *c.InstanceType
 	}
-	if c.ZoneAwarenessEnabled != nil {
-		m["zone_awareness_enabled"] = *c.ZoneAwarenessEnabled
-	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
+	if zoneAwarenessConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"availability_zone_count": aws.Int64Value(zoneAwarenessConfig.AvailabilityZoneCount),
+	}
+
+	return []interface{}{m}
 }
 
 func expandESCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
@@ -4602,37 +4637,40 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	return result
 }
 
-func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if options.AllowDnsResolutionFromRemoteVpc != nil {
-		m["allow_remote_vpc_dns_resolution"] = *options.AllowDnsResolutionFromRemoteVpc
+func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {
+	// When the VPC Peering Connection is pending acceptance,
+	// the details about accepter and/or requester peering
+	// options would not be included in the response.
+	if options == nil {
+		return []interface{}{}
 	}
 
-	if options.AllowEgressFromLocalClassicLinkToRemoteVpc != nil {
-		m["allow_classic_link_to_remote_vpc"] = *options.AllowEgressFromLocalClassicLinkToRemoteVpc
-	}
-
-	if options.AllowEgressFromLocalVpcToRemoteClassicLink != nil {
-		m["allow_vpc_to_remote_classic_link"] = *options.AllowEgressFromLocalVpcToRemoteClassicLink
-	}
-
-	return []map[string]interface{}{m}
+	return []interface{}{map[string]interface{}{
+		"allow_remote_vpc_dns_resolution":  aws.BoolValue(options.AllowDnsResolutionFromRemoteVpc),
+		"allow_classic_link_to_remote_vpc": aws.BoolValue(options.AllowEgressFromLocalClassicLinkToRemoteVpc),
+		"allow_vpc_to_remote_classic_link": aws.BoolValue(options.AllowEgressFromLocalVpcToRemoteClassicLink),
+	}}
 }
 
-func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringConnectionOptionsRequest {
+func expandVpcPeeringConnectionOptions(vOptions []interface{}, crossRegionPeering bool) *ec2.PeeringConnectionOptionsRequest {
+	if len(vOptions) == 0 || vOptions[0] == nil {
+		return nil
+	}
+
+	mOptions := vOptions[0].(map[string]interface{})
+
 	options := &ec2.PeeringConnectionOptionsRequest{}
 
-	if v, ok := m["allow_remote_vpc_dns_resolution"]; ok {
-		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v.(bool))
+	if v, ok := mOptions["allow_remote_vpc_dns_resolution"].(bool); ok {
+		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v)
 	}
-
-	if v, ok := m["allow_classic_link_to_remote_vpc"]; ok {
-		options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v.(bool))
-	}
-
-	if v, ok := m["allow_vpc_to_remote_classic_link"]; ok {
-		options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v.(bool))
+	if !crossRegionPeering {
+		if v, ok := mOptions["allow_classic_link_to_remote_vpc"].(bool); ok {
+			options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v)
+		}
+		if v, ok := mOptions["allow_vpc_to_remote_classic_link"].(bool); ok {
+			options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v)
+		}
 	}
 
 	return options
@@ -4770,6 +4808,10 @@ func expandRdsScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
 		SecondsUntilAutoPause: aws.Int64(int64(m["seconds_until_auto_pause"].(int))),
 	}
 
+	if vTimeoutAction, ok := m["timeout_action"].(string); ok && vTimeoutAction != "" {
+		scalingConfiguration.TimeoutAction = aws.String(vTimeoutAction)
+	}
+
 	return scalingConfiguration
 }
 
@@ -4783,6 +4825,7 @@ func flattenRdsScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 		"max_capacity":             aws.Int64Value(scalingConfigurationInfo.MaxCapacity),
 		"min_capacity":             aws.Int64Value(scalingConfigurationInfo.MinCapacity),
 		"seconds_until_auto_pause": aws.Int64Value(scalingConfigurationInfo.SecondsUntilAutoPause),
+		"timeout_action":           aws.StringValue(scalingConfigurationInfo.TimeoutAction),
 	}
 
 	return []interface{}{m}

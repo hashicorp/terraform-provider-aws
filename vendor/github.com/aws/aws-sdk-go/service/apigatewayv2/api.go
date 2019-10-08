@@ -8637,10 +8637,6 @@ type DomainNameConfiguration struct {
 	// for this domain name was uploaded.
 	CertificateUploadDate *time.Time `locationName:"certificateUploadDate" type:"timestamp" timestampFormat:"iso8601"`
 
-	// The status of the domain name migration. The valid values are AVAILABLE and
-	// UPDATING. If the status is UPDATING, the domain cannot be modified further
-	// until the existing operation is complete. If it is AVAILABLE, the domain
-	// can be updated.
 	DomainNameStatus *string `locationName:"domainNameStatus" type:"string" enum:"DomainNameStatus"`
 
 	// An optional text message containing detailed information about status of
@@ -8653,8 +8649,6 @@ type DomainNameConfiguration struct {
 	// The Amazon Route 53 Hosted Zone ID of the endpoint.
 	HostedZoneId *string `locationName:"hostedZoneId" type:"string"`
 
-	// The Transport Layer Security (TLS) version of the security policy for this
-	// domain name. The valid values are TLS_1_0 and TLS_1_2.
 	SecurityPolicy *string `locationName:"securityPolicy" type:"string" enum:"SecurityPolicy"`
 }
 

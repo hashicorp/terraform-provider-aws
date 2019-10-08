@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ecr_repository"
-sidebar_current: "docs-aws-resource-ecr-repository"
 description: |-
   Provides an Elastic Container Registry Repository.
 ---
@@ -23,6 +22,7 @@ resource "aws_ecr_repository" "foo" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the repository.
+* `image_tag_mutability` - (Optional) The tag mutability setting for the repository. Must be one of: `MUTABLE` or `IMMUTABLE`. Defaults to `MUTABLE`.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference

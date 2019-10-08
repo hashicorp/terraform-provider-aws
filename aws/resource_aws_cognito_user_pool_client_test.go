@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCognitoUserPoolClient_basic(t *testing.T) {
@@ -108,6 +108,33 @@ func TestAccAWSCognitoUserPoolClient_RefreshTokenValidity(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolClientExists("aws_cognito_user_pool_client.client"),
 					resource.TestCheckResourceAttr("aws_cognito_user_pool_client.client", "refresh_token_validity", "120"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCognitoUserPoolClient_Name(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_cognito_user_pool_client.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolClientDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name1"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolClientConfig_Name(rName, "name2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolClientExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "name2"),
 				),
 			},
 		},
@@ -285,6 +312,19 @@ resource "aws_cognito_user_pool_client" "client" {
   user_pool_id           = "${aws_cognito_user_pool.pool.id}"
 }
 `, rName, rName, refreshTokenValidity)
+}
+
+func testAccAWSCognitoUserPoolClientConfig_Name(rName, name string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name                   = %[2]q
+  user_pool_id           = "${aws_cognito_user_pool.test.id}"
+}
+`, rName, name)
 }
 
 func testAccAWSCognitoUserPoolClientConfig_allFields(userPoolName, clientName string, refreshTokenValidity int) string {
