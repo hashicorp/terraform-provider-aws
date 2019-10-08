@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_acm_certificate"
-sidebar_current: "docs-aws-resource-acm-certificate"
 description: |-
   Requests and manages a certificate from Amazon Certificate Manager (ACM).
 ---
@@ -84,11 +83,22 @@ The following arguments are supported:
   * `domain_name` - (Required) A domain name for which the certificate should be issued
   * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
   * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
+  * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
 * Importing an existing certificate
   * `private_key` - (Required) The certificate's PEM-formatted private key
   * `certificate_body` - (Required) The certificate's PEM-formatted public key
   * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
+* Creating a private CA issued certificate
+  * `domain_name` - (Required) A domain name for which the certificate should be issued
+  * `certificate_authority_arn` - (Required) ARN of an ACMPCA
+  * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
 * `tags` - (Optional) A mapping of tags to assign to the resource.
+
+## options Configuration Block
+
+Supported nested arguments for the `options` configuration block:
+
+* `certificate_transparency_logging_preference` - (Optional) Specifies whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
 
 ## Attributes Reference
 

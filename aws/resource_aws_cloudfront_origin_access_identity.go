@@ -2,12 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsCloudFrontOriginAccessIdentity() *schema.Resource {
@@ -125,7 +125,7 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 	}
 	// This sets CallerReference if it's still pending computation (ie: new resource)
 	if v, ok := d.GetOk("caller_reference"); !ok {
-		originAccessIdentityConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
+		originAccessIdentityConfig.CallerReference = aws.String(resource.UniqueId())
 	} else {
 		originAccessIdentityConfig.CallerReference = aws.String(v.(string))
 	}

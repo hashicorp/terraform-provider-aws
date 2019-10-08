@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSMskConfiguration_basic(t *testing.T) {
@@ -18,7 +18,7 @@ func TestAccAWSMskConfiguration_basic(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccAWSMskConfiguration_Description(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -75,7 +75,7 @@ func TestAccAWSMskConfiguration_KafkaVersions(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func TestAccAWSMskConfiguration_ServerProperties(t *testing.T) {
 	resourceName := "aws_msk_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckMskConfigurationDestroy,
 		Steps: []resource.TestStep{

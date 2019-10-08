@@ -2,15 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_dx_gateway_association_proposal", &resource.Sweeper{
+		Name: "aws_dx_gateway_association_proposal",
+		F:    testSweepDirectConnectGatewayAssociationProposals,
+	})
+}
+
+func testSweepDirectConnectGatewayAssociationProposals(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).dxconn
+	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{}
+
+	for {
+		output, err := conn.DescribeDirectConnectGatewayAssociationProposals(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Direct Connect Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error retrieving Direct Connect Gateway Association Proposals: %s", err)
+		}
+
+		for _, gatewayAssociationProposal := range output.DirectConnectGatewayAssociationProposals {
+			proposalID := aws.StringValue(gatewayAssociationProposal.ProposalId)
+
+			if aws.StringValue(gatewayAssociationProposal.AssociatedGateway.Region) != region {
+				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in different home region: %s", proposalID, aws.StringValue(gatewayAssociationProposal.AssociatedGateway.Region))
+				continue
+			}
+
+			if aws.StringValue(gatewayAssociationProposal.ProposalState) != directconnect.GatewayAssociationProposalStateAccepted {
+				log.Printf("[INFO] Skipping Direct Connect Gateway Association Proposal (%s) in non-accepted (%s) state", proposalID, aws.StringValue(gatewayAssociationProposal.ProposalState))
+				continue
+			}
+
+			input := &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
+				ProposalId: gatewayAssociationProposal.ProposalId,
+			}
+
+			log.Printf("[INFO] Deleting Direct Connect Gateway Association Proposal: %s", proposalID)
+			_, err := conn.DeleteDirectConnectGatewayAssociationProposal(input)
+
+			if err != nil {
+				return fmt.Errorf("error deleting Direct Connect Gateway Association Proposal (%s): %s", proposalID, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAwsDxGatewayAssociationProposal_VpnGatewayId(t *testing.T) {
 	var proposal1 directconnect.GatewayAssociationProposal

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEBSSnapshot_basic(t *testing.T) {
@@ -172,6 +172,11 @@ resource "aws_ebs_snapshot" "test" {
 
   tags = {
     Name = "%s"
+  }
+
+  timeouts {
+	create = "10m"
+	delete = "10m"
   }
 }
 `, rName)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafRuleGroup() *schema.Resource {
@@ -15,6 +15,9 @@ func resourceAwsWafRuleGroup() *schema.Resource {
 		Read:   resourceAwsWafRuleGroupRead,
 		Update: resourceAwsWafRuleGroupUpdate,
 		Delete: resourceAwsWafRuleGroupDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

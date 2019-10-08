@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
-sidebar_current: "docs-aws-datasource-subnet-ids"
 description: |-
     Provides a list of subnet Ids for a VPC
 ---
@@ -82,4 +81,4 @@ data "aws_subnet_ids" "selected" {
 
 ## Attributes Reference
 
-* `ids` - A list of all the subnet ids found. This data source will fail if none are found.
+* `ids` - A set of all the subnet ids found. This data source will fail if none are found.

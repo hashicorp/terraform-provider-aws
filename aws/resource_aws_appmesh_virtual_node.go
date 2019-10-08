@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsAppmeshVirtualNode() *schema.Resource {
@@ -218,11 +218,40 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"aws_cloud_map": {
+										Type:          schema.TypeList,
+										Optional:      true,
+										MinItems:      0,
+										MaxItems:      1,
+										ConflictsWith: []string{"spec.0.service_discovery.0.dns"},
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"attributes": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+
+												"namespace_name": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateServiceDiscoveryHttpNamespaceName,
+												},
+
+												"service_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
+
 									"dns": {
-										Type:     schema.TypeList,
-										Required: true,
-										MinItems: 1,
-										MaxItems: 1,
+										Type:          schema.TypeList,
+										Optional:      true,
+										MinItems:      0,
+										MaxItems:      1,
+										ConflictsWith: []string{"spec.0.service_discovery.0.aws_cloud_map"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"service_name": {

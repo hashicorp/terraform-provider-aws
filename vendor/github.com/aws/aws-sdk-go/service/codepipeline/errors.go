@@ -31,7 +31,7 @@ const (
 	// ErrCodeInvalidActionDeclarationException for service response error code
 	// "InvalidActionDeclarationException".
 	//
-	// The specified action declaration was specified in an invalid format.
+	// The action declaration was specified in an invalid format.
 	ErrCodeInvalidActionDeclarationException = "InvalidActionDeclarationException"
 
 	// ErrCodeInvalidApprovalTokenException for service response error code
@@ -61,38 +61,38 @@ const (
 	// ErrCodeInvalidJobException for service response error code
 	// "InvalidJobException".
 	//
-	// The specified job was specified in an invalid format or cannot be found.
+	// The job was specified in an invalid format or cannot be found.
 	ErrCodeInvalidJobException = "InvalidJobException"
 
 	// ErrCodeInvalidJobStateException for service response error code
 	// "InvalidJobStateException".
 	//
-	// The specified job state was specified in an invalid format.
+	// The job state was specified in an invalid format.
 	ErrCodeInvalidJobStateException = "InvalidJobStateException"
 
 	// ErrCodeInvalidNextTokenException for service response error code
 	// "InvalidNextTokenException".
 	//
 	// The next token was specified in an invalid format. Make sure that the next
-	// token you provided is the token returned by a previous call.
+	// token you provide is the token returned by a previous call.
 	ErrCodeInvalidNextTokenException = "InvalidNextTokenException"
 
 	// ErrCodeInvalidNonceException for service response error code
 	// "InvalidNonceException".
 	//
-	// The specified nonce was specified in an invalid format.
+	// The nonce was specified in an invalid format.
 	ErrCodeInvalidNonceException = "InvalidNonceException"
 
 	// ErrCodeInvalidStageDeclarationException for service response error code
 	// "InvalidStageDeclarationException".
 	//
-	// The specified stage declaration was specified in an invalid format.
+	// The stage declaration was specified in an invalid format.
 	ErrCodeInvalidStageDeclarationException = "InvalidStageDeclarationException"
 
 	// ErrCodeInvalidStructureException for service response error code
 	// "InvalidStructureException".
 	//
-	// The specified structure was specified in an invalid format.
+	// The structure was specified in an invalid format.
 	ErrCodeInvalidStructureException = "InvalidStructureException"
 
 	// ErrCodeInvalidTagsException for service response error code
@@ -116,7 +116,7 @@ const (
 	// ErrCodeJobNotFoundException for service response error code
 	// "JobNotFoundException".
 	//
-	// The specified job was specified in an invalid format or cannot be found.
+	// The job was specified in an invalid format or cannot be found.
 	ErrCodeJobNotFoundException = "JobNotFoundException"
 
 	// ErrCodeLimitExceededException for service response error code
@@ -149,35 +149,32 @@ const (
 	// ErrCodePipelineNotFoundException for service response error code
 	// "PipelineNotFoundException".
 	//
-	// The specified pipeline was specified in an invalid format or cannot be found.
+	// The pipeline was specified in an invalid format or cannot be found.
 	ErrCodePipelineNotFoundException = "PipelineNotFoundException"
 
 	// ErrCodePipelineVersionNotFoundException for service response error code
 	// "PipelineVersionNotFoundException".
 	//
-	// The specified pipeline version was specified in an invalid format or cannot
-	// be found.
+	// The pipeline version was specified in an invalid format or cannot be found.
 	ErrCodePipelineVersionNotFoundException = "PipelineVersionNotFoundException"
 
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
 	//
-	// The specified resource was specified in an invalid format.
+	// The resource was specified in an invalid format.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 
 	// ErrCodeStageNotFoundException for service response error code
 	// "StageNotFoundException".
 	//
-	// The specified stage was specified in an invalid format or cannot be found.
+	// The stage was specified in an invalid format or cannot be found.
 	ErrCodeStageNotFoundException = "StageNotFoundException"
 
 	// ErrCodeStageNotRetryableException for service response error code
 	// "StageNotRetryableException".
 	//
-	// The specified stage can't be retried because the pipeline structure or stage
-	// state changed after the stage was not completed; the stage contains no failed
-	// actions; one or more actions are still in progress; or another retry attempt
-	// is already in progress.
+	// Unable to retry. The pipeline structure or stage state might have changed
+	// while actions awaited retry, or the stage contains no failed actions.
 	ErrCodeStageNotRetryableException = "StageNotRetryableException"
 
 	// ErrCodeTooManyTagsException for service response error code

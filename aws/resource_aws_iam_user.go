@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamUser() *schema.Resource {
@@ -358,10 +358,11 @@ func deleteAwsIamUserMFADevices(svc *iam.IAM, username string) error {
 
 func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	var err error
+	input := &iam.DeleteLoginProfileInput{
+		UserName: aws.String(username),
+	}
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err = svc.DeleteLoginProfile(&iam.DeleteLoginProfileInput{
-			UserName: aws.String(username),
-		})
+		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
 			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 				return nil
@@ -374,7 +375,9 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = svc.DeleteLoginProfile(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Account Login Profile: %s", err)
 	}

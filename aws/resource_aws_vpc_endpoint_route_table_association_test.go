@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSVpcEndpointRouteTableAssociation_basic(t *testing.T) {
@@ -103,10 +103,6 @@ func testAccCheckVpcEndpointRouteTableAssociationExists(n string, vpce *ec2.VpcE
 }
 
 const testAccVpcEndpointRouteTableAssociationConfig = `
-provider "aws" {
-    region = "us-west-2"
-}
-
 resource "aws_vpc" "foo" {
     cidr_block = "10.0.0.0/16"
   tags = {

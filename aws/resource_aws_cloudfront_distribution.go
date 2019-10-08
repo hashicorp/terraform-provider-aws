@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
@@ -1065,7 +1065,7 @@ func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interfac
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
 		Refresh:    resourceAwsCloudFrontWebDistributionStateRefreshFunc(id, meta),
-		Timeout:    70 * time.Minute,
+		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      1 * time.Minute,
 	}

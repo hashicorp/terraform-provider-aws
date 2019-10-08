@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_backup_plan"
-sidebar_current: "docs-aws-resource-backup-plan"
 description: |-
   Provides an AWS Backup plan resource.
 ---

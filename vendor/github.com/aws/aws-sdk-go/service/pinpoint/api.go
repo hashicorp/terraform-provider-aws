@@ -4,6 +4,7 @@ package pinpoint
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
@@ -2567,6 +2568,101 @@ func (c *Pinpoint) GetAppWithContext(ctx aws.Context, input *GetAppInput, opts .
 	return out, req.Send()
 }
 
+const opGetApplicationDateRangeKpi = "GetApplicationDateRangeKpi"
+
+// GetApplicationDateRangeKpiRequest generates a "aws/request.Request" representing the
+// client's request for the GetApplicationDateRangeKpi operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetApplicationDateRangeKpi for more information on using the GetApplicationDateRangeKpi
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetApplicationDateRangeKpiRequest method.
+//    req, resp := client.GetApplicationDateRangeKpiRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApplicationDateRangeKpi
+func (c *Pinpoint) GetApplicationDateRangeKpiRequest(input *GetApplicationDateRangeKpiInput) (req *request.Request, output *GetApplicationDateRangeKpiOutput) {
+	op := &request.Operation{
+		Name:       opGetApplicationDateRangeKpi,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/apps/{application-id}/kpis/daterange/{kpi-name}",
+	}
+
+	if input == nil {
+		input = &GetApplicationDateRangeKpiInput{}
+	}
+
+	output = &GetApplicationDateRangeKpiOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetApplicationDateRangeKpi API operation for Amazon Pinpoint.
+//
+// Retrieves (queries) pre-aggregated data for a standard metric that applies
+// to an application.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetApplicationDateRangeKpi for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApplicationDateRangeKpi
+func (c *Pinpoint) GetApplicationDateRangeKpi(input *GetApplicationDateRangeKpiInput) (*GetApplicationDateRangeKpiOutput, error) {
+	req, out := c.GetApplicationDateRangeKpiRequest(input)
+	return out, req.Send()
+}
+
+// GetApplicationDateRangeKpiWithContext is the same as GetApplicationDateRangeKpi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetApplicationDateRangeKpi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetApplicationDateRangeKpiWithContext(ctx aws.Context, input *GetApplicationDateRangeKpiInput, opts ...request.Option) (*GetApplicationDateRangeKpiOutput, error) {
+	req, out := c.GetApplicationDateRangeKpiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetApplicationSettings = "GetApplicationSettings"
 
 // GetApplicationSettingsRequest generates a "aws/request.Request" representing the
@@ -3034,6 +3130,101 @@ func (c *Pinpoint) GetCampaignActivities(input *GetCampaignActivitiesInput) (*Ge
 // for more information on using Contexts.
 func (c *Pinpoint) GetCampaignActivitiesWithContext(ctx aws.Context, input *GetCampaignActivitiesInput, opts ...request.Option) (*GetCampaignActivitiesOutput, error) {
 	req, out := c.GetCampaignActivitiesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetCampaignDateRangeKpi = "GetCampaignDateRangeKpi"
+
+// GetCampaignDateRangeKpiRequest generates a "aws/request.Request" representing the
+// client's request for the GetCampaignDateRangeKpi operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCampaignDateRangeKpi for more information on using the GetCampaignDateRangeKpi
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCampaignDateRangeKpiRequest method.
+//    req, resp := client.GetCampaignDateRangeKpiRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignDateRangeKpi
+func (c *Pinpoint) GetCampaignDateRangeKpiRequest(input *GetCampaignDateRangeKpiInput) (req *request.Request, output *GetCampaignDateRangeKpiOutput) {
+	op := &request.Operation{
+		Name:       opGetCampaignDateRangeKpi,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/apps/{application-id}/campaigns/{campaign-id}/kpis/daterange/{kpi-name}",
+	}
+
+	if input == nil {
+		input = &GetCampaignDateRangeKpiInput{}
+	}
+
+	output = &GetCampaignDateRangeKpiOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCampaignDateRangeKpi API operation for Amazon Pinpoint.
+//
+// Retrieves (queries) pre-aggregated data for a standard metric that applies
+// to a campaign.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetCampaignDateRangeKpi for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignDateRangeKpi
+func (c *Pinpoint) GetCampaignDateRangeKpi(input *GetCampaignDateRangeKpiInput) (*GetCampaignDateRangeKpiOutput, error) {
+	req, out := c.GetCampaignDateRangeKpiRequest(input)
+	return out, req.Send()
+}
+
+// GetCampaignDateRangeKpiWithContext is the same as GetCampaignDateRangeKpi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCampaignDateRangeKpi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetCampaignDateRangeKpiWithContext(ctx aws.Context, input *GetCampaignDateRangeKpiInput, opts ...request.Option) (*GetCampaignDateRangeKpiOutput, error) {
+	req, out := c.GetCampaignDateRangeKpiRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8997,6 +9188,89 @@ func (s *AddressConfiguration) SetTitleOverride(v string) *AddressConfiguration 
 	return s
 }
 
+// Provides the results of a query that retrieved the data for a standard metric
+// that applies to an application, and provides information about that query.
+type ApplicationDateRangeKpiResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the application that the metric applies to.
+	//
+	// ApplicationId is a required field
+	ApplicationId *string `type:"string" required:"true"`
+
+	// EndTime is a required field
+	EndTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+
+	// The name of the metric, also referred to as a key performance indicator (KPI),
+	// that the data was retrieved for. This value describes the associated metric
+	// and consists of two or more terms, which are comprised of lowercase alphanumeric
+	// characters, separated by a hyphen. For a list of valid values, see the Amazon
+	// Pinpoint Developer Guide (developerguide.html).
+	//
+	// KpiName is a required field
+	KpiName *string `type:"string" required:"true"`
+
+	// An array of objects that contains the results of the query. Each object contains
+	// the value for the metric and metadata about that value.
+	//
+	// KpiResult is a required field
+	KpiResult *BaseKpiResult `type:"structure" required:"true"`
+
+	// The string to use in a subsequent request to get the next page of results
+	// in a paginated response. This value is null for the App Metrics resource.
+	// The App Metrics resource returns all results in a single page.
+	NextToken *string `type:"string"`
+
+	// StartTime is a required field
+	StartTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+}
+
+// String returns the string representation
+func (s ApplicationDateRangeKpiResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApplicationDateRangeKpiResponse) GoString() string {
+	return s.String()
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *ApplicationDateRangeKpiResponse) SetApplicationId(v string) *ApplicationDateRangeKpiResponse {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *ApplicationDateRangeKpiResponse) SetEndTime(v time.Time) *ApplicationDateRangeKpiResponse {
+	s.EndTime = &v
+	return s
+}
+
+// SetKpiName sets the KpiName field's value.
+func (s *ApplicationDateRangeKpiResponse) SetKpiName(v string) *ApplicationDateRangeKpiResponse {
+	s.KpiName = &v
+	return s
+}
+
+// SetKpiResult sets the KpiResult field's value.
+func (s *ApplicationDateRangeKpiResponse) SetKpiResult(v *BaseKpiResult) *ApplicationDateRangeKpiResponse {
+	s.KpiResult = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ApplicationDateRangeKpiResponse) SetNextToken(v string) *ApplicationDateRangeKpiResponse {
+	s.NextToken = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ApplicationDateRangeKpiResponse) SetStartTime(v time.Time) *ApplicationDateRangeKpiResponse {
+	s.StartTime = &v
+	return s
+}
+
 // Provides information about an application.
 type ApplicationResponse struct {
 	_ struct{} `type:"structure"`
@@ -9636,6 +9910,128 @@ func (s *BaiduMessage) SetTitle(v string) *BaiduMessage {
 // SetUrl sets the Url field's value.
 func (s *BaiduMessage) SetUrl(v string) *BaiduMessage {
 	s.Url = &v
+	return s
+}
+
+// Provides the results of a query that retrieved the data for a standard metric
+// that applies to an application or campaign.
+type BaseKpiResult struct {
+	_ struct{} `type:"structure"`
+
+	// An array of objects that provides the results of a query that retrieved the
+	// data for a standard metric that applies to an application or campaign.
+	//
+	// Rows is a required field
+	Rows []*ResultRow `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BaseKpiResult) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BaseKpiResult) GoString() string {
+	return s.String()
+}
+
+// SetRows sets the Rows field's value.
+func (s *BaseKpiResult) SetRows(v []*ResultRow) *BaseKpiResult {
+	s.Rows = v
+	return s
+}
+
+// Provides the results of a query that retrieved the data for a standard metric
+// that applies to a campaign, and provides information about that query.
+type CampaignDateRangeKpiResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier for the application that the metric applies to.
+	//
+	// ApplicationId is a required field
+	ApplicationId *string `type:"string" required:"true"`
+
+	// The unique identifier for the campaign that the metric applies to.
+	//
+	// CampaignId is a required field
+	CampaignId *string `type:"string" required:"true"`
+
+	// EndTime is a required field
+	EndTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+
+	// The name of the metric, also referred to as a key performance indicator (KPI),
+	// that the data was retrieved for. This value describes the associated metric
+	// and consists of two or more terms, which are comprised of lowercase alphanumeric
+	// characters, separated by a hyphen. For a list of valid values, see the Amazon
+	// Pinpoint Developer Guide (developerguide.html).
+	//
+	// KpiName is a required field
+	KpiName *string `type:"string" required:"true"`
+
+	// An array of objects that contains the results of the query. Each object contains
+	// the value for the metric and metadata about that value.
+	//
+	// KpiResult is a required field
+	KpiResult *BaseKpiResult `type:"structure" required:"true"`
+
+	// The string to use in a subsequent request to get the next page of results
+	// in a paginated response. This value is null for the Campaign Metrics resource.
+	// The Campaign Metrics resource returns all results in a single page.
+	NextToken *string `type:"string"`
+
+	// StartTime is a required field
+	StartTime *time.Time `type:"timestamp" timestampFormat:"iso8601" required:"true"`
+}
+
+// String returns the string representation
+func (s CampaignDateRangeKpiResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CampaignDateRangeKpiResponse) GoString() string {
+	return s.String()
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *CampaignDateRangeKpiResponse) SetApplicationId(v string) *CampaignDateRangeKpiResponse {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetCampaignId sets the CampaignId field's value.
+func (s *CampaignDateRangeKpiResponse) SetCampaignId(v string) *CampaignDateRangeKpiResponse {
+	s.CampaignId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *CampaignDateRangeKpiResponse) SetEndTime(v time.Time) *CampaignDateRangeKpiResponse {
+	s.EndTime = &v
+	return s
+}
+
+// SetKpiName sets the KpiName field's value.
+func (s *CampaignDateRangeKpiResponse) SetKpiName(v string) *CampaignDateRangeKpiResponse {
+	s.KpiName = &v
+	return s
+}
+
+// SetKpiResult sets the KpiResult field's value.
+func (s *CampaignDateRangeKpiResponse) SetKpiResult(v *BaseKpiResult) *CampaignDateRangeKpiResponse {
+	s.KpiResult = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *CampaignDateRangeKpiResponse) SetNextToken(v string) *CampaignDateRangeKpiResponse {
+	s.NextToken = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *CampaignDateRangeKpiResponse) SetStartTime(v time.Time) *CampaignDateRangeKpiResponse {
+	s.StartTime = &v
 	return s
 }
 
@@ -15107,6 +15503,118 @@ func (s *GetAppOutput) SetApplicationResponse(v *ApplicationResponse) *GetAppOut
 	return s
 }
 
+type GetApplicationDateRangeKpiInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApplicationId is a required field
+	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
+
+	EndTime *time.Time `location:"querystring" locationName:"end-time" type:"timestamp" timestampFormat:"iso8601"`
+
+	// KpiName is a required field
+	KpiName *string `location:"uri" locationName:"kpi-name" type:"string" required:"true"`
+
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+
+	PageSize *string `location:"querystring" locationName:"page-size" type:"string"`
+
+	StartTime *time.Time `location:"querystring" locationName:"start-time" type:"timestamp" timestampFormat:"iso8601"`
+}
+
+// String returns the string representation
+func (s GetApplicationDateRangeKpiInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetApplicationDateRangeKpiInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetApplicationDateRangeKpiInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetApplicationDateRangeKpiInput"}
+	if s.ApplicationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
+	if s.KpiName == nil {
+		invalidParams.Add(request.NewErrParamRequired("KpiName"))
+	}
+	if s.KpiName != nil && len(*s.KpiName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KpiName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *GetApplicationDateRangeKpiInput) SetApplicationId(v string) *GetApplicationDateRangeKpiInput {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *GetApplicationDateRangeKpiInput) SetEndTime(v time.Time) *GetApplicationDateRangeKpiInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetKpiName sets the KpiName field's value.
+func (s *GetApplicationDateRangeKpiInput) SetKpiName(v string) *GetApplicationDateRangeKpiInput {
+	s.KpiName = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetApplicationDateRangeKpiInput) SetNextToken(v string) *GetApplicationDateRangeKpiInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *GetApplicationDateRangeKpiInput) SetPageSize(v string) *GetApplicationDateRangeKpiInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *GetApplicationDateRangeKpiInput) SetStartTime(v time.Time) *GetApplicationDateRangeKpiInput {
+	s.StartTime = &v
+	return s
+}
+
+type GetApplicationDateRangeKpiOutput struct {
+	_ struct{} `type:"structure" payload:"ApplicationDateRangeKpiResponse"`
+
+	// Provides the results of a query that retrieved the data for a standard metric
+	// that applies to an application, and provides information about that query.
+	//
+	// ApplicationDateRangeKpiResponse is a required field
+	ApplicationDateRangeKpiResponse *ApplicationDateRangeKpiResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetApplicationDateRangeKpiOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetApplicationDateRangeKpiOutput) GoString() string {
+	return s.String()
+}
+
+// SetApplicationDateRangeKpiResponse sets the ApplicationDateRangeKpiResponse field's value.
+func (s *GetApplicationDateRangeKpiOutput) SetApplicationDateRangeKpiResponse(v *ApplicationDateRangeKpiResponse) *GetApplicationDateRangeKpiOutput {
+	s.ApplicationDateRangeKpiResponse = v
+	return s
+}
+
 type GetApplicationSettingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15384,6 +15892,133 @@ func (s GetCampaignActivitiesOutput) GoString() string {
 // SetActivitiesResponse sets the ActivitiesResponse field's value.
 func (s *GetCampaignActivitiesOutput) SetActivitiesResponse(v *ActivitiesResponse) *GetCampaignActivitiesOutput {
 	s.ActivitiesResponse = v
+	return s
+}
+
+type GetCampaignDateRangeKpiInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApplicationId is a required field
+	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
+
+	// CampaignId is a required field
+	CampaignId *string `location:"uri" locationName:"campaign-id" type:"string" required:"true"`
+
+	EndTime *time.Time `location:"querystring" locationName:"end-time" type:"timestamp" timestampFormat:"iso8601"`
+
+	// KpiName is a required field
+	KpiName *string `location:"uri" locationName:"kpi-name" type:"string" required:"true"`
+
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+
+	PageSize *string `location:"querystring" locationName:"page-size" type:"string"`
+
+	StartTime *time.Time `location:"querystring" locationName:"start-time" type:"timestamp" timestampFormat:"iso8601"`
+}
+
+// String returns the string representation
+func (s GetCampaignDateRangeKpiInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCampaignDateRangeKpiInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCampaignDateRangeKpiInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCampaignDateRangeKpiInput"}
+	if s.ApplicationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationId"))
+	}
+	if s.ApplicationId != nil && len(*s.ApplicationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationId", 1))
+	}
+	if s.CampaignId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CampaignId"))
+	}
+	if s.CampaignId != nil && len(*s.CampaignId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CampaignId", 1))
+	}
+	if s.KpiName == nil {
+		invalidParams.Add(request.NewErrParamRequired("KpiName"))
+	}
+	if s.KpiName != nil && len(*s.KpiName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("KpiName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationId sets the ApplicationId field's value.
+func (s *GetCampaignDateRangeKpiInput) SetApplicationId(v string) *GetCampaignDateRangeKpiInput {
+	s.ApplicationId = &v
+	return s
+}
+
+// SetCampaignId sets the CampaignId field's value.
+func (s *GetCampaignDateRangeKpiInput) SetCampaignId(v string) *GetCampaignDateRangeKpiInput {
+	s.CampaignId = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *GetCampaignDateRangeKpiInput) SetEndTime(v time.Time) *GetCampaignDateRangeKpiInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetKpiName sets the KpiName field's value.
+func (s *GetCampaignDateRangeKpiInput) SetKpiName(v string) *GetCampaignDateRangeKpiInput {
+	s.KpiName = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetCampaignDateRangeKpiInput) SetNextToken(v string) *GetCampaignDateRangeKpiInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *GetCampaignDateRangeKpiInput) SetPageSize(v string) *GetCampaignDateRangeKpiInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *GetCampaignDateRangeKpiInput) SetStartTime(v time.Time) *GetCampaignDateRangeKpiInput {
+	s.StartTime = &v
+	return s
+}
+
+type GetCampaignDateRangeKpiOutput struct {
+	_ struct{} `type:"structure" payload:"CampaignDateRangeKpiResponse"`
+
+	// Provides the results of a query that retrieved the data for a standard metric
+	// that applies to a campaign, and provides information about that query.
+	//
+	// CampaignDateRangeKpiResponse is a required field
+	CampaignDateRangeKpiResponse *CampaignDateRangeKpiResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCampaignDateRangeKpiOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCampaignDateRangeKpiOutput) GoString() string {
+	return s.String()
+}
+
+// SetCampaignDateRangeKpiResponse sets the CampaignDateRangeKpiResponse field's value.
+func (s *GetCampaignDateRangeKpiOutput) SetCampaignDateRangeKpiResponse(v *CampaignDateRangeKpiResponse) *GetCampaignDateRangeKpiOutput {
+	s.CampaignDateRangeKpiResponse = v
 	return s
 }
 
@@ -18328,7 +18963,8 @@ type NumberValidateResponse struct {
 	_ struct{} `type:"structure"`
 
 	// The carrier or service provider that the phone number is currently registered
-	// with.
+	// with. In some countries and regions, this value may be the carrier or service
+	// provider that the phone number was originally registered with.
 	Carrier *string `type:"string"`
 
 	// The name of the city where the phone number was originally registered.
@@ -18876,9 +19512,6 @@ func (s *QuietTime) SetStart(v string) *QuietTime {
 type RawEmail struct {
 	_ struct{} `type:"structure"`
 
-	// The email message, represented as a raw MIME message. The entire message
-	// must be base64 encoded.
-	//
 	// Data is automatically base64 encoded/decoded by the SDK.
 	Data []byte `type:"blob"`
 }
@@ -19048,6 +19681,100 @@ func (s RemoveAttributesOutput) GoString() string {
 // SetAttributesResource sets the AttributesResource field's value.
 func (s *RemoveAttributesOutput) SetAttributesResource(v *AttributesResource) *RemoveAttributesOutput {
 	s.AttributesResource = v
+	return s
+}
+
+// Provides the results of a query that retrieved the data for a standard metric
+// that applies to an application or campaign.
+type ResultRow struct {
+	_ struct{} `type:"structure"`
+
+	// An array of objects that defines the field and field values that were used
+	// to group data in a result set that contains multiple results. This value
+	// is null if the data in a result set isn’t grouped.
+	//
+	// GroupedBys is a required field
+	GroupedBys []*ResultRowValue `type:"list" required:"true"`
+
+	// An array of objects that provides pre-aggregated values for a standard metric
+	// that applies to an application or campaign.
+	//
+	// Values is a required field
+	Values []*ResultRowValue `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ResultRow) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResultRow) GoString() string {
+	return s.String()
+}
+
+// SetGroupedBys sets the GroupedBys field's value.
+func (s *ResultRow) SetGroupedBys(v []*ResultRowValue) *ResultRow {
+	s.GroupedBys = v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *ResultRow) SetValues(v []*ResultRowValue) *ResultRow {
+	s.Values = v
+	return s
+}
+
+// Provides a single value and metadata about that value as part of an array
+// of query results for a standard metric that applies to an application or
+// campaign.
+type ResultRowValue struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the field that Amazon Pinpoint uses to store the value specified
+	// by the Value property.
+	//
+	// Key is a required field
+	Key *string `type:"string" required:"true"`
+
+	// The data type of the value specified by the Value property.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true"`
+
+	// In a Values object, the value for the metric that the query retrieved data
+	// for. In a GroupedBys object, the value for the field that was used to group
+	// data in a result set that contains multiple results (Values objects).
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResultRowValue) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResultRowValue) GoString() string {
+	return s.String()
+}
+
+// SetKey sets the Key field's value.
+func (s *ResultRowValue) SetKey(v string) *ResultRowValue {
+	s.Key = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ResultRowValue) SetType(v string) *ResultRowValue {
+	s.Type = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *ResultRowValue) SetValue(v string) *ResultRowValue {
+	s.Value = &v
 	return s
 }
 
@@ -22372,6 +23099,8 @@ type VoiceChannelResponse struct {
 	// The date and time, in ISO 8601 format, when the voice channel was last modified.
 	LastModifiedDate *string `type:"string"`
 
+	OriginationNumber *string `type:"string"`
+
 	// The type of messaging or notification platform for the channel. For the voice
 	// channel, this value is VOICE.
 	//
@@ -22437,6 +23166,12 @@ func (s *VoiceChannelResponse) SetLastModifiedBy(v string) *VoiceChannelResponse
 // SetLastModifiedDate sets the LastModifiedDate field's value.
 func (s *VoiceChannelResponse) SetLastModifiedDate(v string) *VoiceChannelResponse {
 	s.LastModifiedDate = &v
+	return s
+}
+
+// SetOriginationNumber sets the OriginationNumber field's value.
+func (s *VoiceChannelResponse) SetOriginationNumber(v string) *VoiceChannelResponse {
+	s.OriginationNumber = &v
 	return s
 }
 

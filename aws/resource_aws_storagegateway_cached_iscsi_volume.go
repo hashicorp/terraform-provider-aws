@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsStorageGatewayCachedIscsiVolume() *schema.Resource {
@@ -195,6 +195,12 @@ func resourceAwsStorageGatewayCachedIscsiVolumeDelete(d *schema.ResourceData, me
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteVolume(input)
+	}
+	if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
+		return nil
+	}
 	if err != nil {
 		return fmt.Errorf("error deleting Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
 	}

@@ -262,6 +262,9 @@ func (c *CloudWatchLogs) CreateExportTaskRequest(input *CreateExportTaskInput) (
 // same S3 bucket. To separate out log data for each export task, you can specify
 // a prefix to be used as the Amazon S3 key prefix for all exported objects.
 //
+// Exporting to S3 buckets that are encrypted with AES-256 is supported. Exporting
+// to S3 buckets encrypted with SSE-KMS is not supported.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -2746,14 +2749,17 @@ func (c *CloudWatchLogs) GetQueryResultsRequest(input *GetQueryResultsInput) (re
 
 // GetQueryResults API operation for Amazon CloudWatch Logs.
 //
-// Returns the results from the specified query. If the query is in progress,
-// partial results of that current execution are returned.
+// Returns the results from the specified query.
 //
 // Only the fields requested in the query are returned, along with a @ptr field
 // which is the identifier for the log record. You can use the value of @ptr
 // in a operation to get the full log record.
 //
 // GetQueryResults does not start a query execution. To run a query, use .
+//
+// If the value of the Status field in the output is Running, this operation
+// returns only partial results. If you see a value of Scheduled or Running
+// for the status, you can retry the operation later to see the final results.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2923,14 +2929,14 @@ func (c *CloudWatchLogs) PutDestinationRequest(input *PutDestinationInput) (req 
 // Creates or updates a destination. A destination encapsulates a physical resource
 // (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time
 // stream of log events for a different account, ingested using PutLogEvents.
-// Currently, the only supported physical resource is a Kinesis stream belonging
-// to the same account as the destination.
+// A destination can be an Amazon Kinesis stream, Amazon Kinesis Data Firehose
+// strea, or an AWS Lambda function.
 //
-// Through an access policy, a destination controls what is written to its Kinesis
-// stream. By default, PutDestination does not set any access policy with the
-// destination, which means a cross-account user cannot call PutSubscriptionFilter
-// against this destination. To enable this, the destination owner must call
-// PutDestinationPolicy after PutDestination.
+// Through an access policy, a destination controls what is written to it. By
+// default, PutDestination does not set any access policy with the destination,
+// which means a cross-account user cannot call PutSubscriptionFilter against
+// this destination. To enable this, the destination owner must call PutDestinationPolicy
+// after PutDestination.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6047,7 +6053,9 @@ type FilterLogEventsInput struct {
 	// IMPORTANT: Starting on June 17, 2019, this parameter will be ignored and
 	// the value will be assumed to be true. The response from this operation will
 	// always interleave events from multiple log streams within a log group.
-	Interleaved *bool `locationName:"interleaved" type:"boolean"`
+	//
+	// Deprecated: Starting on June 17, 2019, this parameter will be ignored and the value will be assumed to be true. The response from this operation will always interleave events from multiple log streams within a log group.
+	Interleaved *bool `locationName:"interleaved" deprecated:"true" type:"boolean"`
 
 	// The maximum number of events to return. The default is 10,000 events.
 	Limit *int64 `locationName:"limit" min:"1" type:"integer"`
@@ -6308,6 +6316,8 @@ type GetLogEventsInput struct {
 	// If the value is true, the earliest log events are returned first. If the
 	// value is false, the latest log events are returned first. The default value
 	// is false.
+	//
+	// If you are using nextToken in this operation, you must specify true for startFromHead.
 	StartFromHead *bool `locationName:"startFromHead" type:"boolean"`
 
 	// The start of the time range, expressed as the number of milliseconds after
@@ -6949,7 +6959,9 @@ type LogStream struct {
 	// IMPORTANT: Starting on June 17, 2019, this parameter will be deprecated for
 	// log streams, and will be reported as zero. This change applies only to log
 	// streams. The storedBytes parameter for log groups is not affected.
-	StoredBytes *int64 `locationName:"storedBytes" type:"long"`
+	//
+	// Deprecated: Starting on June 17, 2019, this parameter will be deprecated for log streams, and will be reported as zero. This change applies only to log streams. The storedBytes parameter for log groups is not affected.
+	StoredBytes *int64 `locationName:"storedBytes" deprecated:"true" type:"long"`
 
 	// The sequence token.
 	UploadSequenceToken *string `locationName:"uploadSequenceToken" min:"1" type:"string"`
@@ -8298,8 +8310,15 @@ type StartQueryInput struct {
 
 	// The log group on which to perform the query.
 	//
-	// LogGroupName is a required field
-	LogGroupName *string `locationName:"logGroupName" min:"1" type:"string" required:"true"`
+	// A StartQuery operation must include a logGroupNames or a logGroupName parameter,
+	// but not both.
+	LogGroupName *string `locationName:"logGroupName" min:"1" type:"string"`
+
+	// The list of log groups to be queried. You can include up to 20 log groups.
+	//
+	// A StartQuery operation must include a logGroupNames or a logGroupName parameter,
+	// but not both.
+	LogGroupNames []*string `locationName:"logGroupNames" type:"list"`
 
 	// The query string to use. For more information, see CloudWatch Logs Insights
 	// Query Syntax (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/CWL_QuerySyntax.html).
@@ -8334,9 +8353,6 @@ func (s *StartQueryInput) Validate() error {
 	if s.Limit != nil && *s.Limit < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
 	}
-	if s.LogGroupName == nil {
-		invalidParams.Add(request.NewErrParamRequired("LogGroupName"))
-	}
 	if s.LogGroupName != nil && len(*s.LogGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("LogGroupName", 1))
 	}
@@ -8368,6 +8384,12 @@ func (s *StartQueryInput) SetLimit(v int64) *StartQueryInput {
 // SetLogGroupName sets the LogGroupName field's value.
 func (s *StartQueryInput) SetLogGroupName(v string) *StartQueryInput {
 	s.LogGroupName = &v
+	return s
+}
+
+// SetLogGroupNames sets the LogGroupNames field's value.
+func (s *StartQueryInput) SetLogGroupNames(v []*string) *StartQueryInput {
+	s.LogGroupNames = v
 	return s
 }
 

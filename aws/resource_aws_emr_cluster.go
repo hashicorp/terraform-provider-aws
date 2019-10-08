@@ -15,11 +15,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsEMRCluster() *schema.Resource {
@@ -382,6 +382,13 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"instance_count": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      1,
+							ValidateFunc: validation.IntInSlice([]int{1, 3}),
+						},
 						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -633,6 +640,11 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		keepJobFlowAliveWhenNoSteps = v.(bool)
 	}
 
+	// For multiple master nodes, EMR automatically enables
+	// termination protection and ignores this configuration at launch.
+	// There is additional handling after the job flow is running
+	// to potentially disable termination protection to match the
+	// desired Terraform configuration.
 	terminationProtection := false
 	if v, ok := d.GetOk("termination_protection"); ok {
 		terminationProtection = v.(bool)
@@ -646,7 +658,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		m := l[0].(map[string]interface{})
 
 		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(1),
+			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
 			InstanceType:  aws.String(m["instance_type"].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
@@ -907,9 +919,26 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	_, err = stateConf.WaitForState()
+	clusterRaw, err := stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for EMR Cluster state to be \"WAITING\" or \"RUNNING\": %s", err)
+	}
+
+	// For multiple master nodes, EMR automatically enables
+	// termination protection and ignores the configuration at launch.
+	// This additional handling is to potentially disable termination
+	// protection to match the desired Terraform configuration.
+	cluster := clusterRaw.(*emr.Cluster)
+
+	if aws.BoolValue(cluster.TerminationProtected) != terminationProtection {
+		input := &emr.SetTerminationProtectionInput{
+			JobFlowIds:           []*string{aws.String(d.Id())},
+			TerminationProtected: aws.Bool(terminationProtection),
+		}
+
+		if _, err := conn.SetTerminationProtection(input); err != nil {
+			return fmt.Errorf("error setting EMR Cluster (%s) termination protection to match configuration: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsEMRClusterRead(d, meta)
@@ -1533,11 +1562,12 @@ func flattenEmrMasterInstanceGroup(instanceGroup *emr.InstanceGroup) []interface
 	}
 
 	m := map[string]interface{}{
-		"bid_price":     aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":    flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		"id":            aws.StringValue(instanceGroup.Id),
-		"instance_type": aws.StringValue(instanceGroup.InstanceType),
-		"name":          aws.StringValue(instanceGroup.Name),
+		"bid_price":      aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":     flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		"id":             aws.StringValue(instanceGroup.Id),
+		"instance_count": aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		"instance_type":  aws.StringValue(instanceGroup.InstanceType),
+		"name":           aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}

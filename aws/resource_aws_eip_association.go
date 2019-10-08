@@ -6,11 +6,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsEipAssociation() *schema.Resource {
@@ -105,6 +105,9 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.AssociateAddress(request)
+	}
 	if err != nil {
 		return fmt.Errorf("Error associating EIP: %s", err)
 	}

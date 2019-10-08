@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ebs_default_kms_key"
-sidebar_current: "docs-aws-ebs-default-kms-key"
 description: |-
   Provides metadata about the KMS key set for EBS default encryption
 ---
