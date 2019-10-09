@@ -444,7 +444,93 @@ func testAccCheckAWSIoTAnalyticsDatasetExists_basic(name string) resource.TestCh
 	}
 }
 
+func TestAccAWSIoTAnalyticsDataset_contentDeliveryRuleS3Destination(t *testing.T) {
+	rString := acctest.RandString(5)
+	resourceName := "aws_iotanalytics_dataset.dataset"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTAnalyticsDatasetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTAnalyticsDataset_contentDeliveryRuleDestinationS3(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTAnalyticsDatasetExists_basic("aws_iotanalytics_dataset.dataset"),
+					resource.TestCheckResourceAttr("aws_iotanalytics_dataset.dataset", "name", fmt.Sprintf("test_dataset_%s", rString)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSIoTAnalyticsDataset_contentDeliveryRuleIotEventsDestination(t *testing.T) {
+	rString := acctest.RandString(5)
+	resourceName := "aws_iotanalytics_dataset.dataset"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTAnalyticsDatasetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTAnalyticsDataset_contentDeliveryRuleDestinationIotEvents(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTAnalyticsDatasetExists_basic("aws_iotanalytics_dataset.dataset"),
+					resource.TestCheckResourceAttr("aws_iotanalytics_dataset.dataset", "name", fmt.Sprintf("test_dataset_%s", rString)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 const testAccAWSIoTAnalyticsDatasetRole = `
+resource "aws_iam_role" "iotanalytics_role" {
+    name = "test_role_%[1]s"
+    assume_role_policy = <<EOF
+{
+    "Version":"2012-10-17",
+    "Statement":[{
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "iotanalytics.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+    }]
+}
+EOF
+}
+resource "aws_iam_policy" "policy" {
+    name = "test_policy_%[1]s"
+    path = "/"
+    description = "My test policy"
+    policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [{
+        "Effect": "Allow",
+        "Action": "*",
+        "Resource": "*"
+    }]
+}
+EOF
+}
+resource "aws_iam_policy_attachment" "attach_policy" {
+    name = "test_policy_attachment_%[1]s"
+    roles = ["${aws_iam_role.iotanalytics_role.name}"]
+    policy_arn = "${aws_iam_policy.policy.arn}"
+}
+
 resource "aws_iotanalytics_datastore" "datastore" {
 	name = "test_datastore_%[1]s"
   
@@ -620,6 +706,97 @@ resource "aws_iotanalytics_dataset" "dataset" {
   versioning_configuration {
 	unlimited = true
   }
+}
+`, rString)
+}
+
+func testAccAWSIoTAnalyticsDataset_contentDeliveryRuleDestinationIotEvents(rString string) string {
+	return fmt.Sprintf(testAccAWSIoTAnalyticsDatasetRole+`
+
+resource "aws_iotevents_input" "test_input" {
+  name = "test_input_%[1]s"
+  
+  definition {
+	  attribute {
+		json_path = "temperature"
+	  }
+
+	  attribute {
+		json_path = "humidity"
+	  }
+  }
+}
+
+resource "aws_iotanalytics_dataset" "dataset" {
+  name = "test_dataset_%[1]s"
+
+  action {
+	  name = "test_action"
+
+	  query_action {
+
+		filter {
+			delta_time {
+				offset_seconds = 30
+				time_expression = "date"
+			}
+		}
+
+		  sql_query = "select * from ${aws_iotanalytics_datastore.datastore.name}"
+	  }
+  }
+
+  content_delivery_rule {
+      entry_name = ""
+	  destination {
+		iotevents_destination {
+			input_name = "${aws_iotevents_input.test_input.name}"
+			role_arn = "${aws_iam_role.iotanalytics_role.arn}"
+		}
+	  }
+  }
+
+}
+`, rString)
+}
+
+func testAccAWSIoTAnalyticsDataset_contentDeliveryRuleDestinationS3(rString string) string {
+	return fmt.Sprintf(testAccAWSIoTAnalyticsDatasetRole+`
+resource "aws_iotanalytics_dataset" "dataset" {
+  name = "test_dataset_%[1]s"
+
+  action {
+	  name = "test_action"
+
+	  query_action {
+
+		filter {
+			delta_time {
+				offset_seconds = 30
+				time_expression = "date"
+			}
+		}
+
+		  sql_query = "select * from ${aws_iotanalytics_datastore.datastore.name}"
+	  }
+  }
+
+  content_delivery_rule {
+	  entry_name = ""
+	  destination {
+		s3_destination {
+			bucket = "test_bucket"
+			key = "test_key"
+			role_arn = "${aws_iam_role.iotanalytics_role.arn}"
+
+			glue_configuration {
+				database_name = "test_db_name"
+				table_name = "test_table_name"
+			}
+		}
+	  }
+  }
+
 }
 `, rString)
 }
