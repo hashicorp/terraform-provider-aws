@@ -690,6 +690,15 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "2"),
 				),
 			},
+			// Trigger a reboot
+			{
+				Config: testAccMqBrokerConfig_updateUsersSecurityGroups(sgName, brokerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.1074486012.password", "TestTest9999"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "1"),
+				),
+			},
 		},
 	})
 }
@@ -1166,9 +1175,43 @@ resource "aws_mq_broker" "test" {
   host_instance_type = "mq.t2.micro"
   security_groups    = ["${aws_security_group.test.id}", "${aws_security_group.test2.id}"]
 
+	logs {
+    general = true
+  }
+
   user {
     username = "Test"
     password = "TestTest1234"
+  }
+}
+`, sgName, sgName, brokerName)
+}
+
+func testAccMqBrokerConfig_updateUsersSecurityGroups(sgName, brokerName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = "%s"
+}
+
+resource "aws_security_group" "test2" {
+  name = "%s-2"
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately  = true
+  broker_name        = "%s"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+  security_groups    = ["${aws_security_group.test2.id}"]
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest9999"
   }
 }
 `, sgName, sgName, brokerName)
