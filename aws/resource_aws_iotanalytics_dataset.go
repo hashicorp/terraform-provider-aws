@@ -498,7 +498,7 @@ func parseContentDeliveryRule(rawContentDeliveryRule map[string]interface{}) *io
 func parseRetentionPeriod(rawRetentionPeriod map[string]interface{}) *iotanalytics.RetentionPeriod {
 
 	var numberOfDays *int64
-	if v, ok := rawRetentionPeriod["number_of_days"]; ok && int64(v.(int)) > 1 {
+	if v, ok := rawRetentionPeriod["number_of_days"]; ok && int64(v.(int)) >= 1 {
 		numberOfDays = aws.Int64(int64(v.(int)))
 	}
 	var unlimited *bool
