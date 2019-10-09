@@ -86,6 +86,11 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"require_https": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -359,6 +364,12 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 
 	if v, ok := d.GetOk("advanced_options"); ok {
 		input.AdvancedOptions = stringMapToPointers(v.(map[string]interface{}))
+	}
+
+	if d.Get("require_https").(bool) {
+		input.DomainEndpointOptions = &elasticsearch.DomainEndpointOptions{
+			EnforceHTTPS: aws.Bool(true),
+		}
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
@@ -642,6 +653,10 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		d.Set("log_publishing_options", m)
 	}
 
+	if ds.DomainEndpointOptions != nil && ds.DomainEndpointOptions.EnforceHTTPS {
+		d.Set("require_https", true)
+	}
+
 	d.Set("arn", ds.ARN)
 
 	listOut, err := conn.ListTags(&elasticsearch.ListTagsInput{
@@ -682,6 +697,12 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("advanced_options") {
 		input.AdvancedOptions = stringMapToPointers(d.Get("advanced_options").(map[string]interface{}))
+	}
+
+	if d.HasChange("require_https") {
+		input.SetDomainEndpointOptions(&elasticsearch.DomainEndpointOptions{
+			EnforceHTTPS: aws.Bool(d.Get("require_https").(string)),
+		})
 	}
 
 	if d.HasChange("ebs_options") || d.HasChange("cluster_config") {

@@ -223,6 +223,7 @@ The following arguments are supported:
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
 * `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
+* `require_https` - (Optional) Whether the Elasticsearch domain requires HTTPS to connect
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
 **ebs_options** supports the following attributes:
