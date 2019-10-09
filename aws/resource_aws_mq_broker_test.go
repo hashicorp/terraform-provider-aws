@@ -644,7 +644,7 @@ func TestAccAWSMqBroker_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.env", "test"),
 				),
 			},
-			// Adding new user + modify existing
+			// Modify existing tags
 			{
 				Config: testAccMqBrokerConfig_updateTags2(sgName, brokerName),
 				Check: resource.ComposeTestCheckFunc(
@@ -654,7 +654,7 @@ func TestAccAWSMqBroker_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "tags.role", "test-role"),
 				),
 			},
-			// Deleting user + modify existing
+			// Deleting tags
 			{
 				Config: testAccMqBrokerConfig_updateTags3(sgName, brokerName),
 				Check: resource.ComposeTestCheckFunc(
@@ -695,8 +695,9 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 				Config: testAccMqBrokerConfig_updateUsersSecurityGroups(sgName, brokerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
-					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.1074486012.password", "TestTest9999"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.6404715923.password", "TestTest9999"),
 				),
 			},
 		},
@@ -1151,8 +1152,16 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-  security_groups    = ["${aws_security_group.test.id}"]
+	security_groups    = ["${aws_security_group.test.id}"]
 
+	user {
+    username = "Test"
+    password = "TestTest1234"
+	}
+
+	tags = {
+		role = "test-role"
+	}
 }
 `, sgName, brokerName)
 }

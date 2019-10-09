@@ -381,9 +381,9 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
 
-	rebootRequired := true
+	// rebootMarker is used to determine if changes require a broker reboot
+	rebootMarker := 0
 
-	// Changes to security_groups can be applied directly without a reboot
 	if d.HasChange("security_groups") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:       aws.String(d.Id()),
@@ -392,7 +392,6 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		rebootRequired = false
 	}
 
 	if d.HasChange("configuration") || d.HasChange("logs") {
@@ -404,20 +403,27 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		rebootRequired = true
+		rebootMarker++
 	}
 
 	if d.HasChange("user") {
 		o, n := d.GetChange("user")
 		var err error
-		rebootRequired, err = updateAwsMqBrokerUsers(conn, d.Id(),
+		// d.HasChange("user") always reports a change when running resourceAwsMqBrokerUpdate
+		// updateAwsMqBrokerUsers needs to be called to know if changes to user are actually made
+		var usersUpdated bool
+		usersUpdated, err = updateAwsMqBrokerUsers(conn, d.Id(),
 			o.(*schema.Set).List(), n.(*schema.Set).List())
 		if err != nil {
 			return err
 		}
+
+		if usersUpdated {
+			rebootMarker++
+		}
 	}
 
-	if d.Get("apply_immediately").(bool) && rebootRequired {
+	if d.Get("apply_immediately").(bool) && rebootMarker > 0 {
 		_, err := conn.RebootBroker(&mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
 		})
@@ -518,6 +524,7 @@ func waitForMqBrokerDeletion(conn *mq.MQ, id string) error {
 }
 
 func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) (bool, error) {
+	// If there are any user creates/deletes/updates, updatedUsers will be set to true
 	updatedUsers := false
 
 	createL, deleteL, updateL, err := diffAwsMqBrokerUsers(bId, oldUsers, newUsers)
@@ -525,7 +532,6 @@ func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interf
 		return updatedUsers, err
 	}
 
-	// mark users as updated if there are any creates/deletes/updates
 	for _, c := range createL {
 		_, err := conn.CreateUser(c)
 		updatedUsers = true
