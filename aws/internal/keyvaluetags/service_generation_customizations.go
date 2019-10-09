@@ -34,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -147,6 +148,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(docdb.New)
 	case "dynamodb":
 		funcType = reflect.TypeOf(dynamodb.New)
+	case "ec2":
+		funcType = reflect.TypeOf(ec2.New)
 	case "ecr":
 		funcType = reflect.TypeOf(ecr.New)
 	case "ecs":
