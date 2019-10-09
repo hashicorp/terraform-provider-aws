@@ -15,11 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-tls/tls"
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
-var testAccProvidersWithTLS map[string]terraform.ResourceProvider
 var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
 var testAccProvider *schema.Provider
 var testAccProviderFunc func() *schema.Provider
@@ -38,14 +36,6 @@ func init() {
 			},
 		}
 	}
-	testAccProvidersWithTLS = map[string]terraform.ResourceProvider{
-		"tls": tls.Provider(),
-	}
-
-	for k, v := range testAccProviders {
-		testAccProvidersWithTLS[k] = v
-	}
-
 	testAccProviderFunc = func() *schema.Provider { return testAccProvider }
 }
 
