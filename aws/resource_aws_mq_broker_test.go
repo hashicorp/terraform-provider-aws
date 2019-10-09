@@ -690,14 +690,16 @@ func TestAccAWSMqBroker_updateSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "2"),
 				),
 			},
-			// Trigger a reboot
+			// Trigger a reboot and ensure the password change was applied
+			// User hashcode can be retrieved by calling resourceAwsMqUserHash
 			{
 				Config: testAccMqBrokerConfig_updateUsersSecurityGroups(sgName, brokerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists("aws_mq_broker.test"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "security_groups.#", "1"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.#", "1"),
-					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.6404715923.password", "TestTest9999"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.2209734970.username", "Test"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "user.2209734970.password", "TestTest9999"),
 				),
 			},
 		},
