@@ -61,12 +61,14 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(100),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	tags := tagsFromMapWAF(d.Get("tags").(map[string]interface{}))
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -76,6 +78,10 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 			Name:        aws.String(d.Get("name").(string)),
 			RateKey:     aws.String(d.Get("rate_key").(string)),
 			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
+		}
+
+		if len(tags) > 0 {
+			params.Tags = tags
 		}
 
 		return conn.CreateRateBasedRule(params)
