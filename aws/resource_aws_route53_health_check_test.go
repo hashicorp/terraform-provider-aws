@@ -24,6 +24,8 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 						"aws_route53_health_check.foo", "measure_latency", "true"),
 					resource.TestCheckResourceAttr(
 						"aws_route53_health_check.foo", "invert_healthcheck", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_route53_health_check.foo", "disable_healthcheck", "true"),
 				),
 			},
 			{
@@ -39,6 +41,8 @@ func TestAccAWSRoute53HealthCheck_basic(t *testing.T) {
 						"aws_route53_health_check.foo", "failure_threshold", "5"),
 					resource.TestCheckResourceAttr(
 						"aws_route53_health_check.foo", "invert_healthcheck", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_route53_health_check.foo", "disable_healthcheck", "false"),
 				),
 			},
 		},
@@ -59,6 +63,8 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_route53_health_check.foo", "invert_healthcheck", "false"),
 					resource.TestCheckResourceAttr(
+						"aws_route53_health_check.foo", "disable_healthcheck", "false"),
+					resource.TestCheckResourceAttr(
 						"aws_route53_health_check.foo", "search_string", "OK"),
 				),
 			},
@@ -73,6 +79,8 @@ func TestAccAWSRoute53HealthCheck_withSearchString(t *testing.T) {
 					testAccCheckRoute53HealthCheckExists("aws_route53_health_check.foo"),
 					resource.TestCheckResourceAttr(
 						"aws_route53_health_check.foo", "invert_healthcheck", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_route53_health_check.foo", "disable_healthcheck", "true"),
 					resource.TestCheckResourceAttr(
 						"aws_route53_health_check.foo", "search_string", "FAILED"),
 				),
@@ -279,6 +287,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disable_healthcheck = true
 
   tags = {
     Name = "tf-test-health-check"
@@ -296,6 +305,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = false
+  disable_healthcheck = false
 
   tags = {
     Name = "tf-test-health-check"
@@ -387,6 +397,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = false
+  disable_healthcheck = false
   search_string = "OK"
 
   tags = {
@@ -405,6 +416,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disable_healthcheck = true
   search_string = "FAILED"
 
   tags = {
@@ -423,6 +435,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disable_healthcheck = true
 
   tags = {
     Name = "tf-test-health-check"
@@ -440,6 +453,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disable_healthcheck = true
   enable_sni = true
 
   tags = {
@@ -458,6 +472,7 @@ resource "aws_route53_health_check" "foo" {
   request_interval = "30"
   measure_latency = true
   invert_healthcheck = true
+  disable_healthcheck = true
   enable_sni = false
 
   tags = {

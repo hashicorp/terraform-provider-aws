@@ -71,6 +71,11 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Optional: true,
 			},
 
+			"disable_healthcheck": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"resource_path": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -164,6 +169,10 @@ func resourceAwsRoute53HealthCheckUpdate(d *schema.ResourceData, meta interface{
 		updateHealthCheck.Inverted = aws.Bool(d.Get("invert_healthcheck").(bool))
 	}
 
+	if d.HasChange("disable_healthcheck") {
+		updateHealthCheck.Disabled = aws.Bool(d.Get("disable_healthcheck").(bool))
+	}
+
 	if d.HasChange("child_healthchecks") {
 		updateHealthCheck.ChildHealthChecks = expandStringList(d.Get("child_healthchecks").(*schema.Set).List())
 
@@ -252,6 +261,10 @@ func resourceAwsRoute53HealthCheckCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("invert_healthcheck"); ok {
 		healthConfig.Inverted = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("disable_healthcheck"); ok {
+		healthConfig.Disabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("enable_sni"); ok {
@@ -343,6 +356,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 	d.Set("resource_path", updated.ResourcePath)
 	d.Set("measure_latency", updated.MeasureLatency)
 	d.Set("invert_healthcheck", updated.Inverted)
+	d.Set("disable_healthcheck", updated.Disabled)
 
 	if err := d.Set("child_healthchecks", flattenStringList(updated.ChildHealthChecks)); err != nil {
 		return fmt.Errorf("error setting child_healthchecks: %s", err)
