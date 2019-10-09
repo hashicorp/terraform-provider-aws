@@ -93,6 +93,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/autoscalingplans" = [
       "aws_autoscalingplans_",
     ],
+    "service/backup" = [
+      "aws_backup_",
+    ],
     "service/batch" = [
       "aws_batch_",
     ],
@@ -174,6 +177,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/dlm" = [
       "aws_dlm_",
     ],
+    "service/docdb" = [
+      "aws_docdb_",
+    ],
     "service/dynamodb" = [
       "aws_dynamodb_",
     ],
@@ -242,6 +248,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/fms" = [
       "aws_fms_",
+    ],
+    "service/forecast" = [
+      "aws_forecast_",
     ],
     "service/fsx" = [
       "aws_fsx_",
@@ -337,6 +346,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/organizations" = [
       "aws_organizations_",
     ],
+    "service/personalize" = [
+      "aws_personalize_",
+    ],
     "service/pinpoint" = [
       "aws_pinpoint_",
     ],
@@ -345,6 +357,12 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/pricing" = [
       "aws_pricing_",
+    ],
+    "service/qldb" = [
+      "aws_qldb_",
+    ],
+    "service/quicksight" = [
+      "aws_quicksight_",
     ],
     "service/ram" = [
       "aws_ram_",
@@ -439,6 +457,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/workdocs" = [
       "aws_workdocs_",
+    ],
+    "service/worklink" = [
+      "aws_worklink_",
     ],
     "service/workmail" = [
       "aws_workmail_",
