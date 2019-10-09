@@ -24,7 +24,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pquerna/otp v1.2.0
-	github.com/terraform-providers/terraform-provider-tls v2.1.1+incompatible
 	github.com/vmihailenco/msgpack v4.0.1+incompatible // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.4
