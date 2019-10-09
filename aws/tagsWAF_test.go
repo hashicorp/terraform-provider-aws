@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 )
 
+// go test -v -run="TestDiffWAFTags"
 func TestDiffWAFTags(t *testing.T) {
 	cases := []struct {
 		Old, New       map[string]interface{}
@@ -19,13 +20,14 @@ func TestDiffWAFTags(t *testing.T) {
 				"foo": "bar",
 			},
 			New: map[string]interface{}{
-				"foo": "bar",
 				"bar": "baz",
 			},
 			Create: map[string]string{
 				"bar": "baz",
 			},
-			Remove: map[string]string{},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
 		},
 
 		// Modify
@@ -91,17 +93,17 @@ func TestDiffWAFTags(t *testing.T) {
 	}
 }
 
+// go test -v -run="TestIgnoringTagsWAF"
 func TestIgnoringTagsWAF(t *testing.T) {
-	ignoredTags := []*waf.Tag{
-		{
-			Key:   aws.String("aws:cloudformation:logical-id"),
-			Value: aws.String("foo"),
-		},
-		{
-			Key:   aws.String("aws:foo:bar"),
-			Value: aws.String("baz"),
-		},
-	}
+	var ignoredTags []*waf.Tag
+	ignoredTags = append(ignoredTags, &waf.Tag{
+		Key:   aws.String("aws:cloudformation:logical-id"),
+		Value: aws.String("foo"),
+	})
+	ignoredTags = append(ignoredTags, &waf.Tag{
+		Key:   aws.String("aws:foo:bar"),
+		Value: aws.String("baz"),
+	})
 	for _, tag := range ignoredTags {
 		if !tagIgnoredWAF(tag) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
