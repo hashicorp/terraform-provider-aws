@@ -305,7 +305,11 @@ func resourceAwsInstance() *schema.Resource {
 
 			"aws_tags": {
 				Type:     schema.TypeMap,
+				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 
 			"volume_tags": tagsSchemaComputed(),
@@ -1979,7 +1983,7 @@ func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]int
 func awsTagsToMap(ts []*ec2.Tag) map[string]string {
 	result := map[string]string{}
 	for _, t := range ts {
-		if tagIgnored(t) {
+		if strings.HasPrefix(*t.Key, "aws:") {
 			result[*t.Key] = *t.Value
 		}
 	}
