@@ -12,12 +12,68 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+func TestAccAWSEIPAssociation_instance(t *testing.T) {
+	resourceName := "aws_eip_association.test"
+	var a ec2.Address
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPAssociationConfig_instance,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(
+						"aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists(
+						resourceName, &a),
+					testAccCheckAWSEIPAssociationExists(
+						resourceName, &a),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEIPAssociation_networkInterface(t *testing.T) {
+	resourceName := "aws_eip_association.test"
+	var a ec2.Address
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPAssociationConfig_networkInterface,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(
+						"aws_eip.test", &a),
+					testAccCheckAWSEIPAssociationExists(
+						resourceName, &a),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEIPAssociation_basic(t *testing.T) {
 	var a ec2.Address
 	resourceName := "aws_eip_association.by_allocation_id"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccEC2VPCOnlyPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -64,10 +120,10 @@ func TestAccAWSEIPAssociation_ec2Classic(t *testing.T) {
 				Config: testAccAWSEIPAssociationConfig_ec2Classic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test", &a),
-					testAccCheckAWSEIPAssociationExists("aws_eip_association.test", &a),
-					resource.TestCheckResourceAttrSet("aws_eip_association.test", "public_ip"),
-					resource.TestCheckResourceAttr("aws_eip_association.test", "allocation_id", ""),
-					testAccCheckAWSEIPAssociationHasIpBasedId("aws_eip_association.test", &a),
+					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
+					testAccCheckAWSEIPAssociationHasIpBasedId(resourceName, &a),
 				),
 			},
 			{
@@ -93,9 +149,9 @@ func TestAccAWSEIPAssociation_spotInstance(t *testing.T) {
 				Config: testAccAWSEIPAssociationConfig_spotInstance(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEIPExists("aws_eip.test", &a),
-					testAccCheckAWSEIPAssociationExists("aws_eip_association.test", &a),
-					resource.TestCheckResourceAttrSet("aws_eip_association.test", "allocation_id"),
-					resource.TestCheckResourceAttrSet("aws_eip_association.test", "instance_id"),
+					testAccCheckAWSEIPAssociationExists(resourceName, &a),
+					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 				),
 			},
 			{
@@ -226,16 +282,31 @@ func testAccCheckAWSEIPAssociationDestroy(s *terraform.State) error {
 }
 
 const testAccAWSEIPAssociationConfig = `
+data "aws_availability_zones" "available" {
+	state = "available"
+}
+
 resource "aws_vpc" "test" {
 	cidr_block = "192.168.0.0/24"
 	tags = {
 		Name = "terraform-testacc-eip-association"
 	}
 }
+
+data "aws_ami" "amzn-ami-minimal-pv" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+	  name = "name"
+	  values = ["amzn-ami-minimal-pv-*"]
+	}
+}
+
 resource "aws_subnet" "test" {
 	vpc_id = "${aws_vpc.test.id}"
 	cidr_block = "192.168.0.0/25"
-	availability_zone = "us-west-2a"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 	tags = {
 		Name = "tf-acc-eip-association"
 	}
@@ -245,9 +316,9 @@ resource "aws_internet_gateway" "test" {
 }
 resource "aws_instance" "test" {
 	count = 2
-	ami = "ami-21f78e11"
-	availability_zone = "us-west-2a"
-	instance_type = "t1.micro"
+	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
+	instance_type = "m1.small"
 	subnet_id = "${aws_subnet.test.id}"
 	private_ip = "192.168.0.${count.index+10}"
 }
@@ -281,6 +352,20 @@ resource "aws_network_interface" "test" {
 `
 
 const testAccAWSEIPAssociationConfigDisappears = `
+data "aws_availability_zones" "available" {
+	state = "available"
+}
+
+data "aws_ami" "amzn-ami-minimal-pv" {
+	most_recent = true
+	owners      = ["amazon"]
+  
+	filter {
+	  name = "name"
+	  values = ["amzn-ami-minimal-pv-*"]
+	}
+}
+
 resource "aws_vpc" "main" {
 	cidr_block = "192.168.0.0/24"
 	tags = {
@@ -290,7 +375,7 @@ resource "aws_vpc" "main" {
 resource "aws_subnet" "sub" {
 	vpc_id = "${aws_vpc.main.id}"
 	cidr_block = "192.168.0.0/25"
-	availability_zone = "us-west-2a"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 	tags = {
 		Name = "tf-acc-eip-association-disappears"
 	}
@@ -299,9 +384,9 @@ resource "aws_internet_gateway" "igw" {
 	vpc_id = "${aws_vpc.main.id}"
 }
 resource "aws_instance" "foo" {
-	ami = "ami-21f78e11"
-	availability_zone = "us-west-2a"
-	instance_type = "t1.micro"
+	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
+	instance_type = "m1.small"
 	subnet_id = "${aws_subnet.sub.id}"
 }
 resource "aws_eip" "bar" {
@@ -319,7 +404,9 @@ provider "aws" {
 
 resource "aws_eip" "test" {}
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+	state = "available"
+}
 
 data "aws_ami" "ubuntu" {
   most_recent = true
