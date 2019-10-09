@@ -367,9 +367,9 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	}
 
 	if d.Get("require_https").(bool) {
-		input.DomainEndpointOptions = &elasticsearch.DomainEndpointOptions{
+		input.SetDomainEndpointOptions(&elasticsearch.DomainEndpointOptions{
 			EnforceHTTPS: aws.Bool(true),
-		}
+		})
 	}
 
 	if v, ok := d.GetOk("ebs_options"); ok {
@@ -653,7 +653,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		d.Set("log_publishing_options", m)
 	}
 
-	if ds.DomainEndpointOptions != nil && ds.DomainEndpointOptions.EnforceHTTPS {
+	if *ds.DomainEndpointOptions.EnforceHTTPS {
 		d.Set("require_https", true)
 	}
 
@@ -701,7 +701,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("require_https") {
 		input.SetDomainEndpointOptions(&elasticsearch.DomainEndpointOptions{
-			EnforceHTTPS: aws.Bool(d.Get("require_https").(string)),
+			EnforceHTTPS: aws.Bool(d.Get("require_https").(bool)),
 		})
 	}
 
