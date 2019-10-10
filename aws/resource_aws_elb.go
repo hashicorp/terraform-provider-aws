@@ -79,6 +79,9 @@ func resourceAwsElb() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Set:      schema.HashString,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 
 			"security_groups": {

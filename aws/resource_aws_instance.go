@@ -303,6 +303,15 @@ func resourceAwsInstance() *schema.Resource {
 
 			"tags": tagsSchema(),
 
+			"aws_tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
+			},
+
 			"volume_tags": tagsSchemaComputed(),
 
 			"block_device": {
@@ -793,6 +802,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("tags", tagsToMap(instance.Tags))
+	d.Set("aws_tags", awsTagsToMap(instance.Tags))
 
 	if err := readVolumeTags(conn, d); err != nil {
 		return err
@@ -1968,4 +1978,14 @@ func getCreditSpecifications(conn *ec2.EC2, instanceId string) ([]map[string]int
 	}
 
 	return creditSpecifications, nil
+}
+
+func awsTagsToMap(ts []*ec2.Tag) map[string]string {
+	result := map[string]string{}
+	for _, t := range ts {
+		if strings.HasPrefix(*t.Key, "aws:") {
+			result[*t.Key] = *t.Value
+		}
+	}
+	return result
 }

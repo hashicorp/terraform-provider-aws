@@ -86,10 +86,16 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 			"write_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 			"read_capacity": {
 				Type:     schema.TypeInt,
 				Required: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return true
+				},
 			},
 			"attribute": {
 				Type:     schema.TypeSet,
@@ -179,10 +185,16 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return true
+							},
 						},
 						"read_capacity": {
 							Type:     schema.TypeInt,
 							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return true
+							},
 						},
 						"hash_key": {
 							Type:     schema.TypeString,
