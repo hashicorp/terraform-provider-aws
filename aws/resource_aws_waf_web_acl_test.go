@@ -485,7 +485,6 @@ resource "aws_waf_web_acl" "test" {
   default_action {
     type = "ALLOW"
   }
-
 }
 `, rName, rName)
 }
@@ -499,8 +498,6 @@ resource "aws_waf_web_acl" "test" {
   default_action {
     type = %q
   }
-
-
 }
 `, rName, rName, defaultAction)
 }
@@ -543,8 +540,6 @@ resource "aws_waf_web_acl" "test" {
       type = "BLOCK"
     }
   }
-
-
 }
 `, rName, rName, rName, rName, rName)
 }
@@ -573,8 +568,6 @@ resource "aws_waf_web_acl" "test" {
       type = "NONE"
     }
   }
-
-
 }
 `, rName, rName, rName, rName)
 }
@@ -632,8 +625,6 @@ resource "aws_waf_web_acl" "test" {
       type = "NONE"
     }
   }
-
-
 }
 `, rName, rName, rName, rName, rName, rName, rName)
 }
@@ -661,8 +652,6 @@ resource "aws_waf_web_acl" "test" {
         type = "HEADER"
       }
     }
-
-
   }
 }
 
@@ -717,8 +706,6 @@ resource "aws_waf_web_acl" "test" {
   logging_configuration {
     log_destination = "${aws_kinesis_firehose_delivery_stream.test.arn}"
   }
-
-
 }
 
 resource "aws_s3_bucket" "test" {
