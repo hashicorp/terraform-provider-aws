@@ -4,8 +4,8 @@ jobs:
   markIssuesForTriage:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v1.0.0
     - name: Apply Triage Label
-      uses: actions/checkout@v1.0.0
       uses: actions/github@v1.0.0
       if: github.event.action == 'opened'
       env:
