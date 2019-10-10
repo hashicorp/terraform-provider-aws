@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * provider: Fix session handling to correctly validate and use assume_role credentials [GH-10379]
+* resource/aws_autoscaling_group: Batch ALB/NLB attachments and detachments by 10 to prevent API and rate limiting errors [GH-10435]
 * resource/aws_emr_instance_group: Remove terminated instance groups from the Terraform state [GH-10425]
 * resource/aws_s3_bucket: Prevent infinite deletion recursion with `force_destroy` argument and object keys with empty "directory" prefixes present since version 2.29.0 [GH-10388]
 
