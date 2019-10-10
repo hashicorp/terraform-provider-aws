@@ -2,16 +2,16 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"log"
+	"regexp"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"log"
-	"regexp"
-	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 )
@@ -31,19 +31,34 @@ func testSweepQLDBLedgers(region string) error {
 	}
 
 	conn := client.(*AWSClient).qldbconn
-	req := &qldb.DescribeLedgerInput{}
-	resp, err := conn.DescribeLedger(req)
+	input := &qldb.ListLedgersInput{}
+	page, err := conn.ListLedgers(input)
+
 	if err != nil {
 		if testSweepSkipSweepError(err) {
 			log.Printf("[WARN] Skipping QLDB Ledger sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error describing QLDB Ledgers: %s", err)
+		return fmt.Errorf("Error listing QLDB Ledgers: %s", err)
 	}
 
-	if len(aws.StringValue(resp.Name)) == 0 {
-		log.Print("[DEBUG] No aws QLDB Kedgers to sweep")
-		return nil
+	for _, item := range page.Ledgers {
+		input := &qldb.DeleteLedgerInput{
+			Name: item.Name,
+		}
+		name := aws.StringValue(item.Name)
+
+		log.Printf("[INFO] Deleting QLDB Ledger: %s", name)
+		_, err = conn.DeleteLedger(input)
+
+		if err != nil {
+			log.Printf("[ERROR] Failed to delete QLDB Ledger %s: %s", name, err)
+			continue
+		}
+
+		if err := waitForQLDBLedgerDeletion(conn, name); err != nil {
+			log.Printf("[ERROR] Error waiting for QLDB Ledger (%s) deletion: %s", name, err)
+		}
 	}
 
 	return nil
@@ -74,33 +89,57 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-				},
 			},
 		},
 	})
 }
 
 func testAccCheckAWSQLDBLedgerDestroy(s *terraform.State) error {
-	err := testAccCheckAWSClusterDestroyWithProvider(s, testAccProvider)
-	if err != nil {
-		qldberr := err.(awserr.Error)
-		if qldberr.Code() == "ResourceInUseException" {
-			log.Println("Ledger is in creating state. Retrying in 10 seconds...")
-			time.Sleep(time.Second * 10)
-			return testAccCheckAWSQLDBLedgerDestroy(s)
-		}
+	err := testAccCheckAWSLedgerDestroyWithProvider(s, testAccProvider)
+	if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
+		log.Println("Ledger is in creating state. Retrying in 10 seconds...")
+		time.Sleep(time.Second * 10)
+		return testAccCheckAWSQLDBLedgerDestroy(s)
 	}
 
 	return err
 }
 
-func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) resource.TestCheckFunc {
-	return testAccCheckAWSQLDBLedgerExistsWithProvider(n, v, func() *schema.Provider { return testAccProvider })
+func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
+	conn := provider.Meta().(*AWSClient).qldbconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_qldb_ledger" {
+			continue
+		}
+
+		// Try to find the Group
+		var err error
+		resp, err := conn.DescribeLedger(
+			&qldb.DescribeLedgerInput{
+				Name: aws.String(rs.Primary.ID),
+			})
+
+		if err == nil {
+			if len(aws.StringValue(resp.Name)) != 0 && aws.StringValue(resp.Name) == rs.Primary.ID {
+				return fmt.Errorf("QLDB Ledger %s still exists", rs.Primary.ID)
+			}
+		}
+
+		// Return nil if the cluster is already destroyed
+		if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func testAccCheckAWSQLDBLedgerExistsWithProvider(n string, v *qldb.DescribeLedgerOutput, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckAWSQLDBLedgerExists(n string, v *qldb.DescribeLedgerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -111,8 +150,7 @@ func testAccCheckAWSQLDBLedgerExistsWithProvider(n string, v *qldb.DescribeLedge
 			return fmt.Errorf("No QLDB Ledger ID is set")
 		}
 
-		provider := providerF()
-		conn := provider.Meta().(*AWSClient).qldbconn
+		conn := testAccProvider.Meta().(*AWSClient).qldbconn
 		resp, err := conn.DescribeLedger(&qldb.DescribeLedgerInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -145,9 +183,9 @@ func TestAccAWSQLDBLedger_Tags(t *testing.T) {
 	resourceName := "aws_qldb_ledger.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEksClusterDestroy,
+		CheckDestroy: testAccCheckAWSQLDBLedgerDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQLDBLedgerConfigTags1(rName, "key1", "value1"),

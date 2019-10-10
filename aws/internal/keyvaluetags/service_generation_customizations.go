@@ -4,7 +4,6 @@ package keyvaluetags
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/qldb"
 	"reflect"
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
@@ -68,6 +67,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"

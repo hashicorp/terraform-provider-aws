@@ -2,11 +2,13 @@ package aws
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+
 	"log"
 	"regexp"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -23,21 +25,10 @@ func dataSourceAwsQLDBLedger() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					validNamePattern := "^[A-Za-z0-9_-]+$"
-					validName, nameMatchErr := regexp.MatchString(validNamePattern, value)
-					if !validName || nameMatchErr != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q must match regex '%v'", k, validNamePattern))
-					}
-					return
-				},
-			},
-
-			"permissions_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+				),
 			},
 
 			"deletion_protection": {
@@ -64,10 +55,8 @@ func dataSourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error describing ledger: %s", err)
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId(aws.StringValue(resp.Name))
 	d.Set("arn", resp.Arn)
-	// This is hardcoded because AWS SDK does not allow returning Permissions Mode
-	d.Set("permissions_mode", qldb.PermissionsModeAllowAll)
 	d.Set("deletion_protection", resp.DeletionProtection)
 
 	return nil

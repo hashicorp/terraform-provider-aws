@@ -26,5 +26,4 @@ data "aws_qldb_ledger" "example" {
 ## Attributes Reference
 
 * `arn` - Set to the ARN of the found topic, suitable for referencing in other resources that support QLDB ledgers.
-* `permissions_mode` - Permissions mode attached to the QLDB Ledger instance. Currently outputs `ALLOW_ALL`
 * `deletion_protection` - Deletion protection on the QLDB Ledger instance. Set to `true` by default. 

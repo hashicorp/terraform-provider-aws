@@ -241,6 +241,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_partition":                                 dataSourceAwsPartition(),
 			"aws_prefix_list":                               dataSourceAwsPrefixList(),
 			"aws_pricing_product":                           dataSourceAwsPricingProduct(),
+			"aws_qldb_ledger":                               dataSourceAwsQLDBLedger(),
 			"aws_ram_resource_share":                        dataSourceAwsRamResourceShare(),
 			"aws_rds_cluster":                               dataSourceAwsRdsCluster(),
 			"aws_redshift_cluster":                          dataSourceAwsRedshiftCluster(),
@@ -284,7 +285,6 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
-			"aws_qldb_ledger":                               dataSourceAwsQLDBLedger(),
 
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
@@ -635,6 +635,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_organizational_unit":                   resourceAwsOrganizationsOrganizationalUnit(),
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
+			"aws_qldb_ledger":                                         resourceAwsQLDBLedger(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
 			"aws_ram_resource_association":                            resourceAwsRamResourceAssociation(),
@@ -810,7 +811,6 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
 			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
-			"aws_qldb_ledger":                                         resourceAwsQLDBLedger(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point

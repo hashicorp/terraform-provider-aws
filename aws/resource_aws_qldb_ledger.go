@@ -2,13 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
-	"strings"
+	"regexp"
 	"time"
 
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -22,10 +22,10 @@ func resourceAwsQLDBLedger() *schema.Resource {
 		Update: resourceAwsQLDBLedgerUpdate,
 		Delete: resourceAwsQLDBLedgerDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsQLDBLedgerImport,
+			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 0,
+		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -38,13 +38,10 @@ func resourceAwsQLDBLedger() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-
-			"name_prefix": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+				),
 			},
 
 			"permissions_mode": {
@@ -58,7 +55,6 @@ func resourceAwsQLDBLedger() *schema.Resource {
 			"deletion_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: false,
 				Default:  true,
 			},
 
@@ -73,18 +69,13 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		name = resource.PrefixedUniqueId(v.(string))
 	} else {
-		name = resource.UniqueId()
+		name = resource.PrefixedUniqueId("tf")
 	}
 
-	if len(name) > 31 {
-		log.Printf("[DEBUG] QLDB Ledger name is bigger than 32 characters, getting the first 32 characters %v -> %v", name, name[:32])
-		name = name[:32]
+	if err := d.Set("name", name); err != nil {
+		return fmt.Errorf("error setting name: %s", err)
 	}
-
-	d.Set("name", name)
 
 	// Create the QLDB Ledger
 	createOpts := &qldb.CreateLedgerInput{
@@ -105,6 +96,20 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[INFO] QLDB Ledger name: %s", d.Id())
 
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{qldb.LedgerStateCreating},
+		Target:     []string{qldb.LedgerStateActive},
+		Refresh:    qldbLedgerRefreshStatusFunc(conn, d.Id()),
+		Timeout:    8 * time.Minute,
+		MinTimeout: 3 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		d.SetId("")
+		return fmt.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
+	}
+
 	// Update our attributes and return
 	return resourceAwsQLDBLedgerRead(d, meta)
 }
@@ -113,36 +118,52 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
 
 	// Refresh the QLDB state
-	qldbRaw, _, err := QLDBLedgerStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
+	input := &qldb.DescribeLedgerInput{
+		Name: aws.String(d.Id()),
 	}
-	if qldbRaw == nil {
+
+	qldbLedger, err := conn.DescribeLedger(input)
+
+	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] QLDB Ledger (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
+	if err != nil {
+		return fmt.Errorf("error describing QLDB Ledger (%s): %s", d.Id(), err)
+	}
+
 	// QLDB stuff
-	qldbLedger := qldbRaw.(*qldb.DescribeLedgerOutput)
-	d.Set("name", qldbLedger.Name)
-	d.Set("deletion_protection", aws.BoolValue(qldbLedger.DeletionProtection))
+	if err := d.Set("name", qldbLedger.Name); err != nil {
+		return fmt.Errorf("error setting name: %s", err)
+	}
+
+	if err := d.Set("deletion_protection", qldbLedger.DeletionProtection); err != nil {
+		return fmt.Errorf("error setting deletion protection: %s", err)
+	}
 
 	// ARN
-	d.Set("arn", qldbLedger.Arn)
+	if err := d.Set("arn", qldbLedger.Arn); err != nil {
+		return fmt.Errorf("error setting ARN: %s", err)
+	}
 
 	// Tags
-	log.Printf(
-		"[INFO] Fetching tags for %s",
-		d.Id())
+	log.Printf("[INFO] Fetching tags for %s", d.Id())
 	tags, err := keyvaluetags.QldbListTags(conn, d.Get("arn").(string))
 	if err != nil {
 		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
 	}
-	d.Set("tags", tags.Map())
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	// Setting the permissions_mode manually because GO AWS SDK currently
 	// does not return the set permissions_mode
-	d.Set("permissions_mode", qldb.PermissionsModeAllowAll)
+	if err := d.Set("permissions_mode", qldb.PermissionsModeAllowAll); err != nil {
+		return fmt.Errorf("error setting permissions mode: %s", err)
+	}
 
 	return nil
 }
@@ -190,66 +211,76 @@ func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteLedger(deleteLedgerOpts)
-		if err == nil {
-			return nil
-		}
 
-		qldberr, ok := err.(awserr.Error)
-
-		if ok && strings.Contains(qldberr.Code(), ".NotFound") {
-			return nil
-		} else if qldberr.Code() == "ResourceInUseException" {
+		if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
 			return resource.RetryableError(err)
 		}
-		if isAWSErr(err, "DependencyViolation", "") {
-			return resource.RetryableError(err)
+
+		if err != nil {
+			return resource.NonRetryableError(err)
 		}
-		return resource.NonRetryableError(fmt.Errorf("Error deleting QLDB Ledger: %s", err))
+
+		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteLedger(deleteLedgerOpts)
-		if err != nil {
-			qldberr, ok := err.(awserr.Error)
-			if !ok && !strings.Contains(qldberr.Code(), ".NotFound") {
-				return err
-			}
-		}
+	}
+
+	if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting QLDB Ledger: %s", err)
+		return fmt.Errorf("error deleting QLDB Ledger (%s): %s", d.Id(), err)
 	}
+
+	if err := waitForQLDBLedgerDeletion(conn, d.Id()); err != nil {
+		log.Printf("[ERROR] Error waiting for QLDB Ledger (%s) deletion: %s", d.Id(), err)
+	}
+
 	return nil
 }
 
-// QLDBLedgerStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
-// a QLDB Ledger.
-func QLDBLedgerStateRefreshFunc(conn *qldb.QLDB, id string) resource.StateRefreshFunc {
+func qldbLedgerRefreshStatusFunc(conn *qldb.QLDB, ledger string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		describeQLDBOpts := &qldb.DescribeLedgerInput{
-			Name: aws.String(id),
+		input := &qldb.DescribeLedgerInput{
+			Name: aws.String(ledger),
 		}
-		resp, err := conn.DescribeLedger(describeQLDBOpts)
+		resp, err := conn.DescribeLedger(input)
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "ResourceNotFoundException" {
-				resp = nil
-			} else {
-				log.Printf("Error on QLDBLedgerStateRefresh: %s", err)
-				return nil, "", err
-			}
+			return nil, "failed", err
 		}
-
-		if resp == nil {
-			// Sometimes AWS just has consistency issues and doesn't see
-			// our instance yet. Return an empty state.
-			return nil, "", nil
-		}
-
 		return resp, *resp.State, nil
 	}
 }
 
-func resourceAwsQLDBLedgerImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	return []*schema.ResourceData{d}, nil
+func waitForQLDBLedgerDeletion(conn *qldb.QLDB, ledgerName string) error {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{qldb.LedgerStateCreating,
+			qldb.LedgerStateActive,
+			qldb.LedgerStateDeleting},
+		Target:     []string{""},
+		Timeout:    5 * time.Minute,
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeLedger(&qldb.DescribeLedgerInput{
+				Name: aws.String(ledgerName),
+			})
+
+			if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
+				return 1, "", nil
+			}
+
+			if err != nil {
+				return nil, qldb.ErrCodeResourceInUseException, err
+			}
+
+			return resp, aws.StringValue(resp.State), nil
+		},
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }
