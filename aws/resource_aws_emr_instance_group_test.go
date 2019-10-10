@@ -227,7 +227,6 @@ func TestAccAWSEMRInstanceGroup_EmrClusterDisappears(t *testing.T) {
 	})
 }
 
-
 func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()

@@ -204,7 +204,7 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] EMR Instance Group (%s) terminated, removing", d.Id())
 		d.SetId("")
 		return nil
-  }
+	}
 
 	switch {
 	case len(ig.Configurations) > 0:
