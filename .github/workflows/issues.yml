@@ -14,7 +14,7 @@ jobs:
         args: label needs-triage
 
     - name: Add new issue into Triage Board
-      uses: aareet/github-project-automation-plus@v0.1.0
+      uses: alex-page/github-project-automation-plus@v0.1.1
       if: github.event.action == 'opened'
       with:
         project: AWS Provider Triage
