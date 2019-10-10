@@ -177,7 +177,7 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
-	if *ig.Status.State == "TERMINATED" {
+	if ig.Status != nil && aws.StringValue(ig.Status.State) == emr.InstanceGroupStateTerminated {
 		log.Printf("[DEBUG] EMR Instance Group (%s) terminated, removing", d.Id())
 		d.SetId("")
 		return nil
