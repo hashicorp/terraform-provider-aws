@@ -23,6 +23,6 @@ data "aws_guardduty_detector" "example" {
 ## Attributes Reference
 
 * `id` - The ID of the detector.
-* `enabled` - State of the detector.
-* `service_role_arn` - Service role used by the detector.
-* `finding_publishing_frequency` - Finding publishing frequence configured.
+* `enabled` - The current status of the detector.
+* `service_role_arn` - The service-linked role that grants GuardDuty access to the resources in the AWS account.
+* `finding_publishing_frequency` - The frequency of notifications sent about subsequent finding occurrences.
