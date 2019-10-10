@@ -4,6 +4,10 @@ NOTES:
 
 * provider: The underlying Terraform codebase dependency for the provider SDK and acceptance testing framework has been migrated from `github.com/hashicorp/terraform` to `github.com/hashicorp/terraform-plugin-sdk`. They are functionality equivalent and this should only impact codebase development to switch imports. For more information see the [Terraform Plugin SDK page in the Extending Terraform documentation](https://www.terraform.io/docs/extend/plugin-sdk.html). [GH-10367]
 
+ENHANCEMENTS:
+
+* resource/aws_emr_instance_group: Add `configurations_json` argument [GH-10426]
+
 BUG FIXES:
 
 * provider: Fix session handling to correctly validate and use assume_role credentials [GH-10379]
