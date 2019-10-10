@@ -530,7 +530,7 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -564,7 +564,7 @@ func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAcmCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
