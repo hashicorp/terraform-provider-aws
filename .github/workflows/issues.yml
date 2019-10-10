@@ -19,4 +19,4 @@ jobs:
       with:
         project: AWS Provider Triage
         column:  Needs Triage
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        repo-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
