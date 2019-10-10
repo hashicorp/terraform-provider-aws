@@ -201,6 +201,32 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 	})
 }
 
+// Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1355
+func TestAccAWSEMRInstanceGroup_EmrClusterDisappears(t *testing.T) {
+	var cluster emr.Cluster
+	var ig emr.InstanceGroup
+	rInt := acctest.RandInt()
+	emrClusterResourceName := "aws_emr_cluster.tf-test-cluster"
+	resourceName := "aws_emr_instance_group.task"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(emrClusterResourceName, &cluster),
+					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckAWSEmrClusterDisappears(&cluster),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRInstanceGroup_EbsConfig_EbsOptimized(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()

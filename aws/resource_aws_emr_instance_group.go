@@ -200,6 +200,17 @@ func resourceAwsEMRInstanceGroupRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
+	if ig.Status != nil {
+		switch aws.StringValue(ig.Status.State) {
+		case emr.InstanceGroupStateTerminating:
+			fallthrough
+		case emr.InstanceGroupStateTerminated:
+			log.Printf("[DEBUG] EMR Instance Group (%s) terminated, removing", d.Id())
+			d.SetId("")
+			return nil
+		}
+	}
+
 	switch {
 	case len(ig.Configurations) > 0:
 		configOut, err := flattenConfigurationJson(ig.Configurations)
