@@ -8706,6 +8706,80 @@ func (c *EC2) DeletePlacementGroupWithContext(ctx aws.Context, input *DeletePlac
 	return out, req.Send()
 }
 
+const opDeleteQueuedReservedInstances = "DeleteQueuedReservedInstances"
+
+// DeleteQueuedReservedInstancesRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteQueuedReservedInstances operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteQueuedReservedInstances for more information on using the DeleteQueuedReservedInstances
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteQueuedReservedInstancesRequest method.
+//    req, resp := client.DeleteQueuedReservedInstancesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteQueuedReservedInstances
+func (c *EC2) DeleteQueuedReservedInstancesRequest(input *DeleteQueuedReservedInstancesInput) (req *request.Request, output *DeleteQueuedReservedInstancesOutput) {
+	op := &request.Operation{
+		Name:       opDeleteQueuedReservedInstances,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteQueuedReservedInstancesInput{}
+	}
+
+	output = &DeleteQueuedReservedInstancesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteQueuedReservedInstances API operation for Amazon Elastic Compute Cloud.
+//
+// Deletes the queued purchases for the specified Reserved Instances.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation DeleteQueuedReservedInstances for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/DeleteQueuedReservedInstances
+func (c *EC2) DeleteQueuedReservedInstances(input *DeleteQueuedReservedInstancesInput) (*DeleteQueuedReservedInstancesOutput, error) {
+	req, out := c.DeleteQueuedReservedInstancesRequest(input)
+	return out, req.Send()
+}
+
+// DeleteQueuedReservedInstancesWithContext is the same as DeleteQueuedReservedInstances with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteQueuedReservedInstances for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) DeleteQueuedReservedInstancesWithContext(ctx aws.Context, input *DeleteQueuedReservedInstancesInput, opts ...request.Option) (*DeleteQueuedReservedInstancesOutput, error) {
+	req, out := c.DeleteQueuedReservedInstancesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteRoute = "DeleteRoute"
 
 // DeleteRouteRequest generates a "aws/request.Request" representing the
@@ -29203,6 +29277,9 @@ func (c *EC2) PurchaseReservedInstancesOfferingRequest(input *PurchaseReservedIn
 // offerings that match your specifications. After you've purchased a Reserved
 // Instance, you can check for your new Reserved Instance with DescribeReservedInstances.
 //
+// To queue a purchase for a future date and time, specify a purchase time.
+// If you do not specify a purchase time, the default is the current time.
+//
 // For more information, see Reserved Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts-on-demand-reserved-instances.html)
 // and Reserved Instance Marketplace (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ri-market-general.html)
 // in the Amazon Elastic Compute Cloud User Guide.
@@ -46808,6 +46885,125 @@ func (s DeletePlacementGroupOutput) GoString() string {
 	return s.String()
 }
 
+// Describes the error for a Reserved Instance whose queued purchase could not
+// be deleted.
+type DeleteQueuedReservedInstancesError struct {
+	_ struct{} `type:"structure"`
+
+	// The error code.
+	Code *string `locationName:"code" type:"string" enum:"DeleteQueuedReservedInstancesErrorCode"`
+
+	// The error message.
+	Message *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteQueuedReservedInstancesError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteQueuedReservedInstancesError) GoString() string {
+	return s.String()
+}
+
+// SetCode sets the Code field's value.
+func (s *DeleteQueuedReservedInstancesError) SetCode(v string) *DeleteQueuedReservedInstancesError {
+	s.Code = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *DeleteQueuedReservedInstancesError) SetMessage(v string) *DeleteQueuedReservedInstancesError {
+	s.Message = &v
+	return s
+}
+
+type DeleteQueuedReservedInstancesInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// The IDs of the Reserved Instances.
+	//
+	// ReservedInstancesIds is a required field
+	ReservedInstancesIds []*string `locationName:"ReservedInstancesId" locationNameList:"item" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteQueuedReservedInstancesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteQueuedReservedInstancesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteQueuedReservedInstancesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteQueuedReservedInstancesInput"}
+	if s.ReservedInstancesIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReservedInstancesIds"))
+	}
+	if s.ReservedInstancesIds != nil && len(s.ReservedInstancesIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ReservedInstancesIds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *DeleteQueuedReservedInstancesInput) SetDryRun(v bool) *DeleteQueuedReservedInstancesInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetReservedInstancesIds sets the ReservedInstancesIds field's value.
+func (s *DeleteQueuedReservedInstancesInput) SetReservedInstancesIds(v []*string) *DeleteQueuedReservedInstancesInput {
+	s.ReservedInstancesIds = v
+	return s
+}
+
+type DeleteQueuedReservedInstancesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the queued purchases that could not be deleted.
+	FailedQueuedPurchaseDeletions []*FailedQueuedPurchaseDeletion `locationName:"failedQueuedPurchaseDeletionSet" locationNameList:"item" type:"list"`
+
+	// Information about the queued purchases that were successfully deleted.
+	SuccessfulQueuedPurchaseDeletions []*SuccessfulQueuedPurchaseDeletion `locationName:"successfulQueuedPurchaseDeletionSet" locationNameList:"item" type:"list"`
+}
+
+// String returns the string representation
+func (s DeleteQueuedReservedInstancesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteQueuedReservedInstancesOutput) GoString() string {
+	return s.String()
+}
+
+// SetFailedQueuedPurchaseDeletions sets the FailedQueuedPurchaseDeletions field's value.
+func (s *DeleteQueuedReservedInstancesOutput) SetFailedQueuedPurchaseDeletions(v []*FailedQueuedPurchaseDeletion) *DeleteQueuedReservedInstancesOutput {
+	s.FailedQueuedPurchaseDeletions = v
+	return s
+}
+
+// SetSuccessfulQueuedPurchaseDeletions sets the SuccessfulQueuedPurchaseDeletions field's value.
+func (s *DeleteQueuedReservedInstancesOutput) SetSuccessfulQueuedPurchaseDeletions(v []*SuccessfulQueuedPurchaseDeletion) *DeleteQueuedReservedInstancesOutput {
+	s.SuccessfulQueuedPurchaseDeletions = v
+	return s
+}
+
 type DeleteRouteInput struct {
 	_ struct{} `type:"structure"`
 
@@ -62439,7 +62635,10 @@ func (s *DnsServersOptionsModifyStructure) SetEnabled(v bool) *DnsServersOptions
 type EbsBlockDevice struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether the EBS volume is deleted on instance termination.
+	// Indicates whether the EBS volume is deleted on instance termination. For
+	// more information, see Preserving Amazon EBS Volumes on Instance Termination
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination)
+	// in the Amazon Elastic Compute Cloud User Guide.
 	DeleteOnTermination *bool `locationName:"deleteOnTermination" type:"boolean"`
 
 	// Indicates whether the encryption state of an EBS volume is changed while
@@ -64289,6 +64488,39 @@ func (s ExportTransitGatewayRoutesOutput) GoString() string {
 // SetS3Location sets the S3Location field's value.
 func (s *ExportTransitGatewayRoutesOutput) SetS3Location(v string) *ExportTransitGatewayRoutesOutput {
 	s.S3Location = &v
+	return s
+}
+
+// Describes a Reserved Instance whose queued purchase was not deleted.
+type FailedQueuedPurchaseDeletion struct {
+	_ struct{} `type:"structure"`
+
+	// The error.
+	Error *DeleteQueuedReservedInstancesError `locationName:"error" type:"structure"`
+
+	// The ID of the Reserved Instance.
+	ReservedInstancesId *string `locationName:"reservedInstancesId" type:"string"`
+}
+
+// String returns the string representation
+func (s FailedQueuedPurchaseDeletion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedQueuedPurchaseDeletion) GoString() string {
+	return s.String()
+}
+
+// SetError sets the Error field's value.
+func (s *FailedQueuedPurchaseDeletion) SetError(v *DeleteQueuedReservedInstancesError) *FailedQueuedPurchaseDeletion {
+	s.Error = v
+	return s
+}
+
+// SetReservedInstancesId sets the ReservedInstancesId field's value.
+func (s *FailedQueuedPurchaseDeletion) SetReservedInstancesId(v string) *FailedQueuedPurchaseDeletion {
+	s.ReservedInstancesId = &v
 	return s
 }
 
@@ -80381,6 +80613,9 @@ type PurchaseReservedInstancesOfferingInput struct {
 	// prices.
 	LimitPrice *ReservedInstanceLimitPrice `locationName:"limitPrice" type:"structure"`
 
+	// The time at which to purchase the Reserved Instance.
+	PurchaseTime *time.Time `type:"timestamp"`
+
 	// The ID of the Reserved Instance offering to purchase.
 	//
 	// ReservedInstancesOfferingId is a required field
@@ -80428,6 +80663,12 @@ func (s *PurchaseReservedInstancesOfferingInput) SetInstanceCount(v int64) *Purc
 // SetLimitPrice sets the LimitPrice field's value.
 func (s *PurchaseReservedInstancesOfferingInput) SetLimitPrice(v *ReservedInstanceLimitPrice) *PurchaseReservedInstancesOfferingInput {
 	s.LimitPrice = v
+	return s
+}
+
+// SetPurchaseTime sets the PurchaseTime field's value.
+func (s *PurchaseReservedInstancesOfferingInput) SetPurchaseTime(v time.Time) *PurchaseReservedInstancesOfferingInput {
+	s.PurchaseTime = &v
 	return s
 }
 
@@ -82556,6 +82797,10 @@ type RequestSpotInstancesInput struct {
 	// launch, the request expires, or the request is canceled. If the request is
 	// persistent, the request becomes active at this date and time and remains
 	// active until it expires or is canceled.
+	//
+	// The specified start date and time cannot be equal to the current date and
+	// time. You must specify a start date and time that occurs after the current
+	// date and time.
 	ValidFrom *time.Time `locationName:"validFrom" type:"timestamp"`
 
 	// The end date of the request. If this is a one-time request, the request remains
@@ -90199,6 +90444,30 @@ func (s *SuccessfulInstanceCreditSpecificationItem) SetInstanceId(v string) *Suc
 	return s
 }
 
+// Describes a Reserved Instance whose queued purchase was successfully deleted.
+type SuccessfulQueuedPurchaseDeletion struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Reserved Instance.
+	ReservedInstancesId *string `locationName:"reservedInstancesId" type:"string"`
+}
+
+// String returns the string representation
+func (s SuccessfulQueuedPurchaseDeletion) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SuccessfulQueuedPurchaseDeletion) GoString() string {
+	return s.String()
+}
+
+// SetReservedInstancesId sets the ReservedInstancesId field's value.
+func (s *SuccessfulQueuedPurchaseDeletion) SetReservedInstancesId(v string) *SuccessfulQueuedPurchaseDeletion {
+	s.ReservedInstancesId = &v
+	return s
+}
+
 // Describes a tag.
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -95772,6 +96041,17 @@ const (
 )
 
 const (
+	// DeleteQueuedReservedInstancesErrorCodeReservedInstancesIdInvalid is a DeleteQueuedReservedInstancesErrorCode enum value
+	DeleteQueuedReservedInstancesErrorCodeReservedInstancesIdInvalid = "reserved-instances-id-invalid"
+
+	// DeleteQueuedReservedInstancesErrorCodeReservedInstancesNotInQueuedState is a DeleteQueuedReservedInstancesErrorCode enum value
+	DeleteQueuedReservedInstancesErrorCodeReservedInstancesNotInQueuedState = "reserved-instances-not-in-queued-state"
+
+	// DeleteQueuedReservedInstancesErrorCodeUnexpectedError is a DeleteQueuedReservedInstancesErrorCode enum value
+	DeleteQueuedReservedInstancesErrorCodeUnexpectedError = "unexpected-error"
+)
+
+const (
 	// DeviceTypeEbs is a DeviceType enum value
 	DeviceTypeEbs = "ebs"
 
@@ -96899,6 +97179,105 @@ const (
 
 	// InstanceTypeA14xlarge is a InstanceType enum value
 	InstanceTypeA14xlarge = "a1.4xlarge"
+
+	// InstanceTypeA1Metal is a InstanceType enum value
+	InstanceTypeA1Metal = "a1.metal"
+
+	// InstanceTypeM5dnLarge is a InstanceType enum value
+	InstanceTypeM5dnLarge = "m5dn.large"
+
+	// InstanceTypeM5dnXlarge is a InstanceType enum value
+	InstanceTypeM5dnXlarge = "m5dn.xlarge"
+
+	// InstanceTypeM5dn2xlarge is a InstanceType enum value
+	InstanceTypeM5dn2xlarge = "m5dn.2xlarge"
+
+	// InstanceTypeM5dn4xlarge is a InstanceType enum value
+	InstanceTypeM5dn4xlarge = "m5dn.4xlarge"
+
+	// InstanceTypeM5dn8xlarge is a InstanceType enum value
+	InstanceTypeM5dn8xlarge = "m5dn.8xlarge"
+
+	// InstanceTypeM5dn12xlarge is a InstanceType enum value
+	InstanceTypeM5dn12xlarge = "m5dn.12xlarge"
+
+	// InstanceTypeM5dn16xlarge is a InstanceType enum value
+	InstanceTypeM5dn16xlarge = "m5dn.16xlarge"
+
+	// InstanceTypeM5dn24xlarge is a InstanceType enum value
+	InstanceTypeM5dn24xlarge = "m5dn.24xlarge"
+
+	// InstanceTypeM5nLarge is a InstanceType enum value
+	InstanceTypeM5nLarge = "m5n.large"
+
+	// InstanceTypeM5nXlarge is a InstanceType enum value
+	InstanceTypeM5nXlarge = "m5n.xlarge"
+
+	// InstanceTypeM5n2xlarge is a InstanceType enum value
+	InstanceTypeM5n2xlarge = "m5n.2xlarge"
+
+	// InstanceTypeM5n4xlarge is a InstanceType enum value
+	InstanceTypeM5n4xlarge = "m5n.4xlarge"
+
+	// InstanceTypeM5n8xlarge is a InstanceType enum value
+	InstanceTypeM5n8xlarge = "m5n.8xlarge"
+
+	// InstanceTypeM5n12xlarge is a InstanceType enum value
+	InstanceTypeM5n12xlarge = "m5n.12xlarge"
+
+	// InstanceTypeM5n16xlarge is a InstanceType enum value
+	InstanceTypeM5n16xlarge = "m5n.16xlarge"
+
+	// InstanceTypeM5n24xlarge is a InstanceType enum value
+	InstanceTypeM5n24xlarge = "m5n.24xlarge"
+
+	// InstanceTypeR5dnLarge is a InstanceType enum value
+	InstanceTypeR5dnLarge = "r5dn.large"
+
+	// InstanceTypeR5dnXlarge is a InstanceType enum value
+	InstanceTypeR5dnXlarge = "r5dn.xlarge"
+
+	// InstanceTypeR5dn2xlarge is a InstanceType enum value
+	InstanceTypeR5dn2xlarge = "r5dn.2xlarge"
+
+	// InstanceTypeR5dn4xlarge is a InstanceType enum value
+	InstanceTypeR5dn4xlarge = "r5dn.4xlarge"
+
+	// InstanceTypeR5dn8xlarge is a InstanceType enum value
+	InstanceTypeR5dn8xlarge = "r5dn.8xlarge"
+
+	// InstanceTypeR5dn12xlarge is a InstanceType enum value
+	InstanceTypeR5dn12xlarge = "r5dn.12xlarge"
+
+	// InstanceTypeR5dn16xlarge is a InstanceType enum value
+	InstanceTypeR5dn16xlarge = "r5dn.16xlarge"
+
+	// InstanceTypeR5dn24xlarge is a InstanceType enum value
+	InstanceTypeR5dn24xlarge = "r5dn.24xlarge"
+
+	// InstanceTypeR5nLarge is a InstanceType enum value
+	InstanceTypeR5nLarge = "r5n.large"
+
+	// InstanceTypeR5nXlarge is a InstanceType enum value
+	InstanceTypeR5nXlarge = "r5n.xlarge"
+
+	// InstanceTypeR5n2xlarge is a InstanceType enum value
+	InstanceTypeR5n2xlarge = "r5n.2xlarge"
+
+	// InstanceTypeR5n4xlarge is a InstanceType enum value
+	InstanceTypeR5n4xlarge = "r5n.4xlarge"
+
+	// InstanceTypeR5n8xlarge is a InstanceType enum value
+	InstanceTypeR5n8xlarge = "r5n.8xlarge"
+
+	// InstanceTypeR5n12xlarge is a InstanceType enum value
+	InstanceTypeR5n12xlarge = "r5n.12xlarge"
+
+	// InstanceTypeR5n16xlarge is a InstanceType enum value
+	InstanceTypeR5n16xlarge = "r5n.16xlarge"
+
+	// InstanceTypeR5n24xlarge is a InstanceType enum value
+	InstanceTypeR5n24xlarge = "r5n.24xlarge"
 )
 
 const (
@@ -97278,6 +97657,12 @@ const (
 
 	// ReservedInstanceStateRetired is a ReservedInstanceState enum value
 	ReservedInstanceStateRetired = "retired"
+
+	// ReservedInstanceStateQueued is a ReservedInstanceState enum value
+	ReservedInstanceStateQueued = "queued"
+
+	// ReservedInstanceStateQueuedDeleted is a ReservedInstanceState enum value
+	ReservedInstanceStateQueuedDeleted = "queued-deleted"
 )
 
 const (
