@@ -216,6 +216,16 @@ func testAccEC2ClassicPreCheck(t *testing.T) {
 	}
 }
 
+func testAccEC2VPCOnlyPreCheck(t *testing.T) {
+	client := testAccProvider.Meta().(*AWSClient)
+	platforms := client.supportedplatforms
+	region := client.region
+	if hasEc2Classic(platforms) {
+		t.Skipf("This test can only in regions without EC2 Classic, platforms available in %s: %q",
+			region, platforms)
+	}
+}
+
 func testAccHasServicePreCheck(service string, t *testing.T) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		if _, ok := partition.Services()[service]; !ok {
