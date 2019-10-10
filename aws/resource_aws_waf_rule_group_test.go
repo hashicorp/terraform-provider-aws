@@ -250,6 +250,56 @@ func computeWafActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priori
 	}
 }
 
+func TestAccAWSWafRuleGroup_Tags(t *testing.T) {
+	var group waf.RuleGroup
+	groupName := fmt.Sprintf("test%s", acctest.RandString(5))
+	resourceName := "aws_waf_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRuleGroupConfigTags1(groupName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSWafRuleGroupConfigTags2(groupName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSWafRuleGroupConfigTags1(groupName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("test%s", acctest.RandString(5))
@@ -264,10 +314,8 @@ func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 				Config: testAccAWSWafRuleGroupConfig_noActivatedRules(groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", groupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
 				),
 			},
 		},
@@ -457,4 +505,31 @@ resource "aws_waf_rule_group" "test" {
   metric_name = "%[1]s"
 }
 `, groupName)
+}
+
+func testAccAWSWafRuleGroupConfigTags1(gName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rule_group" "test" {
+  name        = "%[1]s"
+  metric_name = "%[1]s"
+
+  tags = {
+	%q = %q
+  }
+}
+`, gName, tag1Key, tag1Value)
+}
+
+func testAccAWSWafRuleGroupConfigTags2(gName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rule_group" "test" {
+  name        = "%[1]s"
+  metric_name = "%[1]s"
+
+  tags = {
+	%q = %q
+	%q = %q
+  }
+}
+`, gName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
