@@ -277,7 +277,6 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF ACL: %s", err)
 		}
-
 	}
 
 	if d.HasChange("logging_configuration") {
