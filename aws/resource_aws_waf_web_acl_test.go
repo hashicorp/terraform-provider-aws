@@ -363,6 +363,20 @@ func TestAccAWSWafWebAcl_Tags(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSWafWebAclConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+				),
+			},
+			{
 				Config: testAccAWSWafWebAclConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
@@ -471,7 +485,6 @@ resource "aws_waf_web_acl" "test" {
   default_action {
     type = "ALLOW"
   }
-
 
 }
 `, rName, rName)
@@ -765,12 +778,12 @@ resource "aws_waf_web_acl" "test" {
 func testAccAWSWafWebAclConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_web_acl" "test" {
-  metric_name = %q
-  name        = %q
+ metric_name = %q
+ name        = %q
 
-  default_action {
-    type = "ALLOW"
-  }
+ default_action {
+   type = "ALLOW"
+ }
 	tags = {
 		%q = %q
 		%q = %q

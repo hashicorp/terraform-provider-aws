@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWafWebAcl() *schema.Resource {
@@ -147,7 +148,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 
 func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
-	tags := tagsFromMapWAF(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WafTags()
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -225,7 +226,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Failed to get WAF ACL parameter tags for %s: %s", d.Get("name"), err)
 	}
-	if err := d.Set("tags", tagsToMapWAF(tagList.TagInfoForResource.TagList)); err != nil {
+	if err := d.Set("tags", keyvaluetags.WafKeyValueTags(tagList.TagInfoForResource.TagList).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -277,11 +278,6 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf("Error Updating WAF ACL: %s", err)
 		}
 
-		if !d.IsNewResource() {
-			if err := setTagsWAF(conn, d); err != nil {
-				return fmt.Errorf("error updating WAF ACL tags for %s: %s", d.Id(), err)
-			}
-		}
 	}
 
 	if d.HasChange("logging_configuration") {
@@ -307,6 +303,14 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsWafWebAclRead(d, meta)
