@@ -36,14 +36,10 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-All above attributes except for `session_name` are exported as well as:
+All above attributes except for `session_name` and `identity_type` are exported as well as:
 
 * `arn` - Amazon Resource Name (ARN) of the user
 
 ## Import
 
-QuickSight User can be imported using the AWS account ID, namespace and user name separated by `/`.
-
-```
-$ terraform import aws_quicksight_user.example 123456789123/default/a-reader-user
-```
+Importing is currently not supported on this resource.

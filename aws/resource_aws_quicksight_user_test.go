@@ -16,9 +16,10 @@ import (
 
 func TestAccAWSQuickSightUser_basic(t *testing.T) {
 	var user quicksight.User
-	resourceName := "aws_quicksight_user.default"
-	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName1 := "tfacctest" + acctest.RandString(10)
+	resourceName1 := "aws_quicksight_user." + rName1
+	rName2 := "tfacctest" + acctest.RandString(10)
+	resourceName2 := "aws_quicksight_user." + rName2
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -28,32 +29,27 @@ func TestAccAWSQuickSightUser_basic(t *testing.T) {
 			{
 				Config: testAccAWSQuickSightUserConfig(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName1),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("user/default/%s", rName1)),
+					testAccCheckQuickSightUserExists(resourceName1, &user),
+					resource.TestCheckResourceAttr(resourceName1, "user_name", rName1),
+					testAccCheckResourceAttrRegionalARN(resourceName1, "arn", "quicksight", fmt.Sprintf("user/default/%s", rName1)),
 				),
 			},
 			{
 				Config: testAccAWSQuickSightUserConfig(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckQuickSightUserExists(resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName2),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("user/default/%s", rName2)),
+					testAccCheckQuickSightUserExists(resourceName2, &user),
+					resource.TestCheckResourceAttr(resourceName2, "user_name", rName2),
+					testAccCheckResourceAttrRegionalARN(resourceName2, "arn", "quicksight", fmt.Sprintf("user/default/%s", rName2)),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAWSQuickSightUser_withRealEmail(t *testing.T) {
+func TestAccAWSQuickSightUser_withInvalidFormattedEmailStillWorks(t *testing.T) {
 	var user quicksight.User
-	resourceName := "aws_quicksight_user.default"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := "tfacctest" + acctest.RandString(10)
+	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -74,19 +70,14 @@ func TestAccAWSQuickSightUser_withRealEmail(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email", "nottarealemailbutworks2"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
 
 func TestAccAWSQuickSightUser_disappears(t *testing.T) {
 	var user quicksight.User
-	resourceName := "aws_quicksight_user.default"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rName := "tfacctest" + acctest.RandString(10)
+	resourceName := "aws_quicksight_user." + rName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -197,27 +188,20 @@ func testAccCheckQuickSightUserDisappears(v *quicksight.User) resource.TestCheck
 	}
 }
 
-func testAccAWSQuickSightUserConfig(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_quicksight_user" "default" {
-  user_name     = %[1]q
-  email         = "fakeemail@example.com"
-  identity_type = "IAM"
-  user_role     = "READER"
-}
-`, rName)
-}
-
 func testAccAWSQuickSightUserConfigWithEmail(rName, email string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-resource "aws_quicksight_user" "default" {
+resource "aws_quicksight_user" %[1]q {
   aws_account_id = "${data.aws_caller_identity.current.account_id}"
   user_name      = %[1]q
   email          = %[2]q
-  identity_type  = "IAM"
+  identity_type  = "QUICKSIGHT"
   user_role      = "READER"
 }
 `, rName, email)
+}
+
+func testAccAWSQuickSightUserConfig(rName string) string {
+	return testAccAWSQuickSightUserConfigWithEmail(rName, "fakeemail@example.com")
 }

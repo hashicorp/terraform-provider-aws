@@ -19,10 +19,6 @@ func resourceAwsQuickSightUser() *schema.Resource {
 		Update: resourceAwsQuickSightUserUpdate,
 		Delete: resourceAwsQuickSightUserDelete,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -53,8 +49,8 @@ func resourceAwsQuickSightUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"IAM",
-					"QUICKSIGHT",
+					quicksight.IdentityTypeIam,
+					quicksight.IdentityTypeQuicksight,
 				}, false),
 			},
 
@@ -85,9 +81,9 @@ func resourceAwsQuickSightUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"READER",
-					"AUTHOR",
-					"ADMIN",
+					quicksight.UserRoleReader,
+					quicksight.UserRoleAuthor,
+					quicksight.UserRoleAdmin,
 				}, false),
 			},
 		},
@@ -127,7 +123,7 @@ func resourceAwsQuickSightUserCreate(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.RegisterUser(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error registering user in QuickSight Group: %s", err)
+		return fmt.Errorf("Error registering QuickSight user: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.User.UserName)))
@@ -162,7 +158,6 @@ func resourceAwsQuickSightUserRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", resp.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("email", resp.User.Email)
-	d.Set("identity_type", resp.User.IdentityType)
 	d.Set("namespace", namespace)
 	d.Set("user_role", resp.User.Role)
 	d.Set("user_name", resp.User.UserName)
