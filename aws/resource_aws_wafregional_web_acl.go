@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWafRegionalWebAcl() *schema.Resource {
@@ -140,6 +141,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -147,6 +149,7 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WafTags()
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -155,6 +158,10 @@ func resourceAwsWafRegionalWebAclCreate(d *schema.ResourceData, meta interface{}
 			DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
+		}
+
+		if len(tags) > 0 {
+			params.Tags = tags
 		}
 
 		return conn.CreateWebACL(params)
