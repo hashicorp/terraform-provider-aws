@@ -573,6 +573,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ses_template":                                 resourceAwsSesTemplate(),
 			"aws_s3_bucket":                                    resourceAwsS3Bucket(),
 			"aws_s3_bucket_policy":                             resourceAwsS3BucketPolicy(),
+			"aws_s3_bucket_public_access_block":                resourceAwsS3BucketPublicAccessBlock(),
 			"aws_s3_bucket_object":                             resourceAwsS3BucketObject(),
 			"aws_s3_bucket_notification":                       resourceAwsS3BucketNotification(),
 			"aws_s3_bucket_metric":                             resourceAwsS3BucketMetric(),
