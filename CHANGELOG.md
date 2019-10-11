@@ -6,6 +6,13 @@ FEATURES:
 * **New Data Source:** `aws_wafregional_rate_based_rule` [GH-10125]
 * **New Resource:** `aws_quicksight_user` [GH-10401]
 
+ENHANCEMENTS:
+
+* resource/aws_waf_rate_based_rule: Support resource import [GH-10475]
+* resource/aws_waf_rule: Add `tags` argument [GH-10408]
+* resource/aws_waf_rule_group: Add `tags` argument [GH-10408]
+* resource/aws_waf_web_acl: Add `tags` argument [GH-10408]
+
 BUG FIXES:
 
 * resource/aws_gamelift_fleet: Increase default deletion timeout to 20 minutes to match service timing [GH-10443]
