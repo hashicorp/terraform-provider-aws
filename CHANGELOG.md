@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_glue_classifier: Add `csv_classifier` configuration block (support CSV classifiers) [GH-9824]
 * resource/aws_waf_byte_match_set: Support resource import [GH-10477]
 * resource/aws_waf_rate_based_rule: Support resource import [GH-10475]
 * resource/aws_waf_rule: Add `tags` argument [GH-10408]
