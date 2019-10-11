@@ -1,4 +1,9 @@
 ## 2.33.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_gamelift_fleet: Increase default deletion timeout to 20 minutes to match service timing [GH-10443]
+
 ## 2.32.0 (October 10, 2019)
 
 NOTES:
