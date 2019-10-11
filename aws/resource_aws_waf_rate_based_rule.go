@@ -5,10 +5,12 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWafRateBasedRule() *schema.Resource {
@@ -64,12 +66,14 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(100),
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WafTags()
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -79,6 +83,10 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 			Name:        aws.String(d.Get("name").(string)),
 			RateKey:     aws.String(d.Get("rate_key").(string)),
 			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
+		}
+
+		if len(tags) > 0 {
+			params.Tags = tags
 		}
 
 		return conn.CreateRateBasedRule(params)
@@ -120,6 +128,23 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 		predicates = append(predicates, predicate)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
+	}.String()
+
+	tagList, err := conn.ListTagsForResource(&waf.ListTagsForResourceInput{
+		ResourceARN: aws.String(arn),
+	})
+	if err != nil {
+		return fmt.Errorf("Failed to get WAF Rated Based Rule parameter tags for %s: %s", d.Get("name"), err)
+	}
+	if err := d.Set("tags", keyvaluetags.WafKeyValueTags(tagList.TagInfoForResource.TagList).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("predicates", predicates)
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
@@ -140,6 +165,21 @@ func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{})
 		err := updateWafRateBasedRuleResource(d.Id(), oldP, newP, rateLimit, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		}
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
+	}.String()
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.WafUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 

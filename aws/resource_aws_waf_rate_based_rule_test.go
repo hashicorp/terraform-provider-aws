@@ -214,6 +214,53 @@ func TestAccAWSWafRateBasedRule_noPredicates(t *testing.T) {
 	})
 }
 
+func TestAccAWSWafRateBasedRule_Tags(t *testing.T) {
+	var rule waf.RateBasedRule
+	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_waf_rate_based_rule.wafrule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName,"key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSWafRateBasedRuleConfigTags2(ruleName,"key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName,"key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSWafRateBasedRuleDisappears(v *waf.RateBasedRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).wafconn
@@ -422,4 +469,35 @@ resource "aws_waf_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 }
 `, name, name)
+}
+
+func testAccAWSWafRateBasedRuleConfigTags1(name ,tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rate_based_rule" "wafrule" {
+  name        = "%s"
+  metric_name = "%s"
+  rate_key    = "IP"
+  rate_limit  = 2000
+
+  tags = {
+  	%q = %q
+  }
+}
+`, name, name, tag1Key, tag1Value)
+}
+
+func testAccAWSWafRateBasedRuleConfigTags2(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rate_based_rule" "wafrule" {
+  name        = "%s"
+  metric_name = "%s"
+  rate_key    = "IP"
+  rate_limit  = 2000
+
+  tags = {
+  	%q = %q
+  	%q = %q
+  }
+}
+`, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
 }
