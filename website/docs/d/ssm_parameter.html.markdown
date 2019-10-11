@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_parameter"
-sidebar_current: "docs-aws-datasource-ssm-parameter"
 description: |-
   Provides a SSM Parameter datasource
 ---

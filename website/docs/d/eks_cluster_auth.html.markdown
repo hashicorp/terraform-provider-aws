@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_eks_cluster_auth"
-sidebar_current: "docs-aws-datasource-eks-cluster-auth"
 description: |-
   Get an authentication token to communicate with an EKS Cluster
 ---

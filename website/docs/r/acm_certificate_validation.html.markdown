@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_acm_certificate_validation"
-sidebar_current: "docs-aws-resource-acm-certificate-validation"
 description: |-
   Waits for and checks successful validation of an ACM certificate.
 ---

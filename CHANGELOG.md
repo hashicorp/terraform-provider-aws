@@ -1,19 +1,70 @@
-## 2.31.0 (Unreleased)
+## 2.33.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_waf_rate_based_rule` [GH-10124]
+* **New Data Source:** `aws_wafregional_rate_based_rule` [GH-10125]
+* **New Resource:** `aws_quicksight_user` [GH-10401]
 
 ENHANCEMENTS:
 
-* resource_aws_efs_filesystem: Support tag-on-create [GH-10254]
-* resource/aws_mq_broker: Add `encryption_options` configuration block (support AWS and customer managed KMS CMKs) [GH-10276]
+* resource/aws_glue_classifier: Add `csv_classifier` configuration block (support CSV classifiers) [GH-9824]
+* resource/aws_waf_byte_match_set: Support resource import [GH-10477]
+* resource/aws_waf_rate_based_rule: Support resource import [GH-10475]
+* resource/aws_waf_rule: Add `tags` argument [GH-10408]
+* resource/aws_waf_rule_group: Add `tags` argument [GH-10408]
+* resource/aws_waf_web_acl: Add `tags` argument [GH-10408]
 
 BUG FIXES:
 
-* resource/aws_lb_listener_certificate: Retry `CertificateNotFound` errors on creation for eventual consistency [GH-10294]
-* resource/aws_vpc_peering_connection: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
-* resource/aws_vpc_peering_connection_accepter: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
-* resource/aws_vpc_peering_connection_options: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering [GH-7627]
-* resource/aws_wafregional_web_acl_association: Ensure missing resource triggers state removal [GH-10216]
-* service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled [GH-10242]
-* service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled [GH-10242]
+* resource/aws_gamelift_fleet: Increase default deletion timeout to 20 minutes to match service timing [GH-10443]
+
+## 2.32.0 (October 10, 2019)
+
+NOTES:
+
+* provider: The underlying Terraform codebase dependency for the provider SDK and acceptance testing framework has been migrated from `github.com/hashicorp/terraform` to `github.com/hashicorp/terraform-plugin-sdk`. They are functionality equivalent and this should only impact codebase development to switch imports. For more information see the [Terraform Plugin SDK page in the Extending Terraform documentation](https://www.terraform.io/docs/extend/plugin-sdk.html). ([#10367](https://github.com/terraform-providers/terraform-provider-aws/issues/10367))
+
+ENHANCEMENTS:
+
+* resource/aws_emr_instance_group: Add `configurations_json` argument ([#10426](https://github.com/terraform-providers/terraform-provider-aws/issues/10426))
+
+BUG FIXES:
+
+* provider: Fix session handling to correctly validate and use assume_role credentials ([#10379](https://github.com/terraform-providers/terraform-provider-aws/issues/10379))
+* resource/aws_autoscaling_group: Batch ALB/NLB attachments and detachments by 10 to prevent API and rate limiting errors ([#10435](https://github.com/terraform-providers/terraform-provider-aws/issues/10435))
+* resource/aws_emr_instance_group: Remove terminated instance groups from the Terraform state ([#10425](https://github.com/terraform-providers/terraform-provider-aws/issues/10425))
+* resource/aws_s3_bucket: Prevent infinite deletion recursion with `force_destroy` argument and object keys with empty "directory" prefixes present since version 2.29.0 ([#10388](https://github.com/terraform-providers/terraform-provider-aws/issues/10388))
+* resource/aws_vpc_endpoint_route_table_association: Fix resource import support ([#10454](https://github.com/terraform-providers/terraform-provider-aws/issues/10454))
+
+## 2.31.0 (October 03, 2019)
+
+NOTES:
+
+* resource/aws_lambda_function: Environments using Lambda functions with VPC configurations should upgrade their Terraform AWS Provider to this version or later to appropriately handle the networking changes introduced by the [improved VPC networking for AWS Lambda functions](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/) deployment. These changes prevent proper deletion of EC2 Subnets and Security Groups for accounts and regions updated to the new Lambda networking infrastructure in older versions of the Terraform AWS Provider. Additional information and configuration workarounds for prior versions can be found in [this GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
+
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster: Add `tags` attribute ([#10307](https://github.com/terraform-providers/terraform-provider-aws/issues/10307))
+* resource/aws_efs_filesystem: Support tag-on-create ([#10254](https://github.com/terraform-providers/terraform-provider-aws/issues/10254))
+* resource/aws_eks_cluster: Add `tags` argument ([#10307](https://github.com/terraform-providers/terraform-provider-aws/issues/10307))
+* resource/aws_mq_broker: Add `encryption_options` configuration block (support AWS and customer managed KMS CMKs) ([#10276](https://github.com/terraform-providers/terraform-provider-aws/issues/10276))
+
+BUG FIXES:
+
+* provider: Upstream AWS Go SDK fix for parsing AWS shared credentials files missing right-hand values ([#10310](https://github.com/terraform-providers/terraform-provider-aws/issues/10310))
+* resource/aws_lb_listener_certificate: Retry `CertificateNotFound` errors on creation for eventual consistency ([#10294](https://github.com/terraform-providers/terraform-provider-aws/issues/10294))
+* resource/aws_s3_bucket_object: Fix object deletion for non-versioned objects ([#10352](https://github.com/terraform-providers/terraform-provider-aws/issues/10352))
+* resource/aws_security_group: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs ([#10114](https://github.com/terraform-providers/terraform-provider-aws/issues/10114)] / [[#10347](https://github.com/terraform-providers/terraform-provider-aws/issues/10347))
+* resource/aws_subnet: Handle updated ENI description and longer deletion timeframe for new Lambda Hyperplane ENIs ([#10114](https://github.com/terraform-providers/terraform-provider-aws/issues/10114)] / [[#10347](https://github.com/terraform-providers/terraform-provider-aws/issues/10347))
+* resource/aws_vpc_peering_connection: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
+* resource/aws_vpc_peering_connection_accepter: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
+* resource/aws_vpc_peering_connection_options: Ensure `allow_remote_vpc_dns_resolution` usage works with inter-region peering ([#7627](https://github.com/terraform-providers/terraform-provider-aws/issues/7627))
+* resource/aws_waf_rate_based_rule: Upstream AWS Go SDK fix to allow `rate_limit` arguments between 100 and 1999 ([#10310](https://github.com/terraform-providers/terraform-provider-aws/issues/10310))
+* resource/aws_wafregional_rate_based_rule: Upstream AWS Go SDK fix to allow `rate_limit` arguments between 100 and 1999 ([#10310](https://github.com/terraform-providers/terraform-provider-aws/issues/10310))
+* resource/aws_wafregional_web_acl_association: Ensure missing resource triggers state removal ([#10216](https://github.com/terraform-providers/terraform-provider-aws/issues/10216))
+* service/waf: Prevent incorrect `Error getting WAF change token` errors for API calls that should be retried or specially handled ([#10242](https://github.com/terraform-providers/terraform-provider-aws/issues/10242))
+* service/wafregional: Prevent incorrect `Error getting WAF regional change token` errors for API calls that should be retried or specially handled ([#10242](https://github.com/terraform-providers/terraform-provider-aws/issues/10242))
 
 ## 2.30.0 (September 26, 2019)
 

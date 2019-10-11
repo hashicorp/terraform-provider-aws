@@ -6540,7 +6540,7 @@ func (c *WAF) PutLoggingConfigurationRequest(input *PutLoggingConfigurationInput
 // You can access information about all traffic that AWS WAF inspects using
 // the following steps:
 //
-// Create an Amazon Kinesis Data Firehose .
+// Create an Amazon Kinesis Data Firehose.
 //
 // Create the data firehose with a PUT source and in the region that you are
 // operating. However, if you are capturing logs for Amazon CloudFront, always
@@ -10261,7 +10261,7 @@ type CreateRateBasedRuleInput struct {
 	// rule.
 	//
 	// RateLimit is a required field
-	RateLimit *int64 `min:"2000" type:"long" required:"true"`
+	RateLimit *int64 `min:"100" type:"long" required:"true"`
 
 	Tags []*Tag `min:"1" type:"list"`
 }
@@ -10300,8 +10300,8 @@ func (s *CreateRateBasedRuleInput) Validate() error {
 	if s.RateLimit == nil {
 		invalidParams.Add(request.NewErrParamRequired("RateLimit"))
 	}
-	if s.RateLimit != nil && *s.RateLimit < 2000 {
-		invalidParams.Add(request.NewErrParamMinValue("RateLimit", 2000))
+	if s.RateLimit != nil && *s.RateLimit < 100 {
+		invalidParams.Add(request.NewErrParamMinValue("RateLimit", 100))
 	}
 	if s.Tags != nil && len(s.Tags) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
@@ -14189,7 +14189,7 @@ func (s *HTTPRequest) SetURI(v string) *HTTPRequest {
 // ranges: /24, /32, /48, /56, /64, and /128.
 //
 // To specify an individual IP address, you specify the four-part IP address
-// followed by a /32, for example, 192.0.2.0/31. To block a range of IP addresses,
+// followed by a /32, for example, 192.0.2.0/32. To block a range of IP addresses,
 // you can specify /8 or any range between /16 through /32 (for IPv4) or /24,
 // /32, /48, /56, /64, or /128 (for IPv6). For more information about CIDR notation,
 // see the Wikipedia entry Classless Inter-Domain Routing (https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing).
@@ -14703,11 +14703,10 @@ type ListIPSetsInput struct {
 	// another batch of IPSet objects.
 	Limit *int64 `type:"integer"`
 
-	// If you specify a value for Limit and you have more IPSets than the value
-	// of Limit, AWS WAF returns a NextMarker value in the response that allows
-	// you to list another group of IPSets. For the second and subsequent ListIPSets
-	// requests, specify the value of NextMarker from the previous response to get
-	// information about another batch of IPSets.
+	// AWS WAF returns a NextMarker value in the response that allows you to list
+	// another group of IPSets. For the second and subsequent ListIPSets requests,
+	// specify the value of NextMarker from the previous response to get information
+	// about another batch of IPSets.
 	NextMarker *string `min:"1" type:"string"`
 }
 
@@ -14752,10 +14751,8 @@ type ListIPSetsOutput struct {
 	// An array of IPSetSummary objects.
 	IPSets []*IPSetSummary `type:"list"`
 
-	// If you have more IPSet objects than the number that you specified for Limit
-	// in the request, the response includes a NextMarker value. To list more IPSet
-	// objects, submit another ListIPSets request, and specify the NextMarker value
-	// from the response in the NextMarker value in the next request.
+	// To list more IPSet objects, submit another ListIPSets request, and in the
+	// next request use the NextMarker response value as the NextMarker value.
 	NextMarker *string `min:"1" type:"string"`
 }
 
@@ -16012,6 +16009,9 @@ type PutLoggingConfigurationInput struct {
 	// the redacted fields details, and the Amazon Resource Name (ARN) of the web
 	// ACL to monitor.
 	//
+	// When specifying Type in RedactedFields, you must use one of the following
+	// values: URI, QUERY_STRING, HEADER, or METHOD.
+	//
 	// LoggingConfiguration is a required field
 	LoggingConfiguration *LoggingConfiguration `type:"structure" required:"true"`
 }
@@ -16196,7 +16196,7 @@ type RateBasedRule struct {
 	// rule.
 	//
 	// RateLimit is a required field
-	RateLimit *int64 `min:"2000" type:"long" required:"true"`
+	RateLimit *int64 `min:"100" type:"long" required:"true"`
 
 	// A unique identifier for a RateBasedRule. You use RuleId to get more information
 	// about a RateBasedRule (see GetRateBasedRule), update a RateBasedRule (see
@@ -18524,7 +18524,7 @@ type UpdateRateBasedRuleInput struct {
 	// rule.
 	//
 	// RateLimit is a required field
-	RateLimit *int64 `min:"2000" type:"long" required:"true"`
+	RateLimit *int64 `min:"100" type:"long" required:"true"`
 
 	// The RuleId of the RateBasedRule that you want to update. RuleId is returned
 	// by CreateRateBasedRule and by ListRateBasedRules.
@@ -18561,8 +18561,8 @@ func (s *UpdateRateBasedRuleInput) Validate() error {
 	if s.RateLimit == nil {
 		invalidParams.Add(request.NewErrParamRequired("RateLimit"))
 	}
-	if s.RateLimit != nil && *s.RateLimit < 2000 {
-		invalidParams.Add(request.NewErrParamMinValue("RateLimit", 2000))
+	if s.RateLimit != nil && *s.RateLimit < 100 {
+		invalidParams.Add(request.NewErrParamMinValue("RateLimit", 100))
 	}
 	if s.RuleId == nil {
 		invalidParams.Add(request.NewErrParamRequired("RuleId"))

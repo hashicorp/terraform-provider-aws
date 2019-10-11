@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl"
-sidebar_current: "docs-aws-resource-wafregional-web-acl"
 description: |-
   Provides a AWS WAF Regional web access control group (ACL) resource for use with ALB.
 ---
