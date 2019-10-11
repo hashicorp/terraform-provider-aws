@@ -165,7 +165,7 @@ func resourceAwsQuickSightGroupMembershipDelete(d *schema.ResourceData, meta int
 
 func resourceAwsQuickSightGroupMembershipParseID(id string) (string, string, string, string, error) {
 	parts := strings.SplitN(id, "/", 4)
-	if len(parts) < 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[2] == "" {
+	if len(parts) < 4 || parts[0] == "" || parts[1] == "" || parts[2] == "" || parts[3] == "" {
 		return "", "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/NAMESPACE/GROUP_NAME/USER_NAME", id)
 	}
 	return parts[0], parts[1], parts[2], parts[3], nil
