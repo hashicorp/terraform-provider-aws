@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_waf_rate_based_rule` [GH-10124]
+* **New Data Source:** `aws_wafregional_rate_based_rule` [GH-10125]
 
 BUG FIXES:
 
