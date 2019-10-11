@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -28,6 +29,7 @@ func TestAccAWSWafRateBasedRule_basic(t *testing.T) {
 				Config: testAccAWSWafRateBasedRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &v),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`ratebasedrule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
@@ -225,16 +227,17 @@ func TestAccAWSWafRateBasedRule_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafRateBasedRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName,"key1", "value1"),
+				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`ratebasedrule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAWSWafRateBasedRuleConfigTags2(ruleName,"key1", "value1updated", "key2", "value2"),
+				Config: testAccAWSWafRateBasedRuleConfigTags2(ruleName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
@@ -244,7 +247,7 @@ func TestAccAWSWafRateBasedRule_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName,"key2", "value2"),
+				Config: testAccAWSWafRateBasedRuleConfigTags1(ruleName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRateBasedRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
@@ -471,7 +474,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
 `, name, name)
 }
 
-func testAccAWSWafRateBasedRuleConfigTags1(name ,tag1Key, tag1Value string) string {
+func testAccAWSWafRateBasedRuleConfigTags1(name, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
   name        = "%s"

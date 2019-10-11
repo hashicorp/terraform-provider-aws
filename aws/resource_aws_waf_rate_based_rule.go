@@ -67,6 +67,10 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(100),
 			},
 			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -134,6 +138,7 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
 	}.String()
+	d.Set("arn", arn)
 
 	tagList, err := conn.ListTagsForResource(&waf.ListTagsForResourceInput{
 		ResourceARN: aws.String(arn),

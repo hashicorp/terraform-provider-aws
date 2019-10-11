@@ -70,6 +70,7 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule.
+* `arn` - Amazon Resource Name (ARN)
 
 ## Import
 
