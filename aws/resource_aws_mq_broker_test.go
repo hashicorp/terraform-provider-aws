@@ -1186,7 +1186,7 @@ resource "aws_mq_broker" "test" {
   host_instance_type = "mq.t2.micro"
   security_groups    = ["${aws_security_group.test.id}", "${aws_security_group.test2.id}"]
 
-	logs {
+  logs {
     general = true
   }
 
