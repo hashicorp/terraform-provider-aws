@@ -18,6 +18,10 @@ func resourceAwsQuickSightGroupMembership() *schema.Resource {
 		Read:   resourceAwsQuickSightGroupMembershipRead,
 		Delete: resourceAwsQuickSightGroupMembershipDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,

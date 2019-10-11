@@ -28,6 +28,11 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 					testAccCheckQuickSightGroupMembershipExists(resourceName),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
