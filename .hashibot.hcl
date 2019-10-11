@@ -561,6 +561,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_autoscalingplans_*",
       "**/autoscalingplans_*"
     ]
+    "service/backup" = [
+      "**/*backup_*",
+      "**/backup_*"
+    ]
     "service/batch" = [
       "**/*_batch_*",
       "**/batch_*"
@@ -633,7 +637,11 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/cognito" = [
       "**/*_cognito_*",
-      "**/_cognito_*"
+      "**/cognito_*"
+    ]
+    "service/comprehend" = [
+      "**/*_comprehend_*",
+      "**/comprehend_*"
     ]
     "service/configservice" = [
       "aws/*_aws_config_*",
@@ -670,6 +678,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/dlm" = [
       "**/*_dlm_*",
       "**/dlm_*"
+    ]
+    "service/docdb" = [
+      "**/*_docdb_*",
+      "**/docdb_*"
     ]
     "service/dynamodb" = [
       "**/*_dynamodb_*",
@@ -938,6 +950,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/quicksight" = [
+      "**/*_quicksight_*",
+      "**/quicksight_*"
+    ]
     "service/ram" = [
       "**/*_ram_*",
       "**/ram_*"
@@ -956,6 +972,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_resourcegroups_*",
       "**/resourcegroups_*"
     ]
+    "service/robomaker" = [
+      "**/*_robomaker_*",
+      "**/robomaker_*",
+    ]
     "service/route53" = [
       "**/*_route53_delegation_set*",
       "**/*_route53_health_check*",
@@ -968,13 +988,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_record*",
       "**/route53_zone*"
     ]
-    "service/robomaker" = [
-      "**/*_robomaker_*",
-      "**/robomaker_*",
-    ]
     "service/route53domains" = [
       "**/*_route53_domains_*",
       "**/route53_domains_*"
+    ]
+    "service/route53resolver" = [
+      "**/*_route53resolver_*",
+      "**/route53resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",
@@ -1067,6 +1087,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/workdocs" = [
       "**/*_workdocs_*",
       "**/workdocs_*"
+    ]
+    "service/worklink" = [
+      "**/*_worklink_*",
+      "**/worklink_*"
     ]
     "service/workmail" = [
       "**/*_workmail_*",
