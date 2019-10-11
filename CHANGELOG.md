@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_waf_rate_based_rule: Support resource import [GH-10475]
 * resource/aws_waf_rule: Add `tags` argument [GH-10408]
 * resource/aws_waf_rule_group: Add `tags` argument [GH-10408]
 * resource/aws_waf_web_acl: Add `tags` argument [GH-10408]
