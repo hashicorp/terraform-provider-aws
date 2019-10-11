@@ -1,5 +1,9 @@
 ## 2.33.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_waf_rate_based_rule` [GH-10124]
+
 BUG FIXES:
 
 * resource/aws_gamelift_fleet: Increase default deletion timeout to 20 minutes to match service timing [GH-10443]
