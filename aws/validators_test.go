@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"regexp"
 	"strings"
 	"testing"
-
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 )
 
 func TestValidateTypeStringNullableBoolean(t *testing.T) {
@@ -1474,7 +1474,7 @@ func TestValidateNeptuneEventSubscriptionName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1504,7 +1504,7 @@ func TestValidateNeptuneEventSubscriptionNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(254),
+			Value:    acctest.RandStringFromCharSet(254, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1534,7 +1534,7 @@ func TestValidateDbSubnetGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(300),
+			Value:    acctest.RandStringFromCharSet(300, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1566,7 +1566,7 @@ func TestValidateNeptuneSubnetGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(300),
+			Value:    acctest.RandStringFromCharSet(300, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1594,7 +1594,7 @@ func TestValidateDbSubnetGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(230),
+			Value:    acctest.RandStringFromCharSet(230, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1622,7 +1622,7 @@ func TestValidateNeptuneSubnetGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(230),
+			Value:    acctest.RandStringFromCharSet(230, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1658,7 +1658,7 @@ func TestValidateDbOptionGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1690,7 +1690,7 @@ func TestValidateDbOptionGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(230),
+			Value:    acctest.RandStringFromCharSet(230, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -1734,7 +1734,7 @@ func TestValidateDbParamGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2451,7 +2451,7 @@ func TestResourceAWSElastiCacheReplicationGroupAuthTokenValidation(t *testing.T)
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(129),
+			Value:    acctest.RandStringFromCharSet(129, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2664,7 +2664,7 @@ func TestValidateNeptuneParamGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2704,7 +2704,7 @@ func TestValidateNeptuneParamGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2732,7 +2732,7 @@ func TestValidateCloudFrontPublicKeyName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(129),
+			Value:    acctest.RandStringFromCharSet(129, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2760,7 +2760,7 @@ func TestValidateCloudFrontPublicKeyNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(128),
+			Value:    acctest.RandStringFromCharSet(128, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2827,7 +2827,7 @@ func TestValidateLbTargetGroupName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(33),
+			Value:    acctest.RandStringFromCharSet(33, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2853,7 +2853,7 @@ func TestValidateLbTargetGroupNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(32),
+			Value:    acctest.RandStringFromCharSet(32, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2879,7 +2879,7 @@ func TestValidateSecretManagerSecretName(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(513),
+			Value:    acctest.RandStringFromCharSet(513, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2905,7 +2905,7 @@ func TestValidateSecretManagerSecretNamePrefix(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(512),
+			Value:    acctest.RandStringFromCharSet(512, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}
@@ -2931,7 +2931,7 @@ func TestValidateRoute53ResolverName(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
-			Value:    randomString(65),
+			Value:    acctest.RandStringFromCharSet(65, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 		{
