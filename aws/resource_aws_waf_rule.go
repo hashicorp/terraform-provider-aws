@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -116,6 +117,23 @@ func resourceAwsWafRuleRead(d *schema.ResourceData, meta interface{}) error {
 		predicates = append(predicates, predicate)
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "waf",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("rule/%s", d.Id()),
+	}.String()
+
+	tagList, err := conn.ListTagsForResource(&waf.ListTagsForResourceInput{
+		ResourceARN: aws.String(arn),
+	})
+	if err != nil {
+		return fmt.Errorf("Failed to get WAF Rule parameter tags for %s: %s", d.Get("name"), err)
+	}
+	if err := d.Set("tags", keyvaluetags.WafKeyValueTags(tagList.TagInfoForResource.TagList).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("predicates", predicates)
 	d.Set("name", resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
@@ -133,6 +151,21 @@ func resourceAwsWafRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		err := updateWafRuleResource(d.Id(), oldP, newP, conn)
 		if err != nil {
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		arn := arn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "waf",
+			AccountID: meta.(*AWSClient).accountid,
+			Resource:  fmt.Sprintf("rule/%s", d.Id()),
+		}.String()
+
+		if err := keyvaluetags.WafUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
