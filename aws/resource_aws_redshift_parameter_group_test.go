@@ -185,7 +185,7 @@ func TestResourceAWSRedshiftParameterGroupNameValidation(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    randomString(256),
+			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
 			ErrCount: 1,
 		},
 	}

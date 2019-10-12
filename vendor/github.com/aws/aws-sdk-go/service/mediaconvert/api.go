@@ -2781,7 +2781,8 @@ func (s *Ac3Settings) SetSampleRate(v int64) *Ac3Settings {
 type AccelerationSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Acceleration configuration for the job.
+	// Specify the conditions when the service will run your job with accelerated
+	// transcoding.
 	//
 	// Mode is a required field
 	Mode *string `locationName:"mode" type:"string" required:"true" enum:"AccelerationMode"`
@@ -4608,6 +4609,14 @@ type CmafGroupSettings struct {
 	// to 1, your final segment is 3.5 seconds.
 	MinFinalSegmentLength *float64 `locationName:"minFinalSegmentLength" type:"double"`
 
+	// Specify whether your DASH profile is on-demand or main. When you choose Main
+	// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+	// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+	// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+	// When you choose On-demand, you must also set the output group setting Segment
+	// control (SegmentControl) to Single file (SINGLE_FILE).
+	MpdProfile *string `locationName:"mpdProfile" type:"string" enum:"CmafMpdProfile"`
+
 	// When set to SINGLE_FILE, a single output file is generated, which is internally
 	// segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 	// separate segment files will be created.
@@ -4728,6 +4737,12 @@ func (s *CmafGroupSettings) SetMinBufferTime(v int64) *CmafGroupSettings {
 // SetMinFinalSegmentLength sets the MinFinalSegmentLength field's value.
 func (s *CmafGroupSettings) SetMinFinalSegmentLength(v float64) *CmafGroupSettings {
 	s.MinFinalSegmentLength = &v
+	return s
+}
+
+// SetMpdProfile sets the MpdProfile field's value.
+func (s *CmafGroupSettings) SetMpdProfile(v string) *CmafGroupSettings {
+	s.MpdProfile = &v
 	return s
 }
 
@@ -5027,6 +5042,10 @@ type CreateJobInput struct {
 	// your job to the time it completes the transcode or encounters an error.
 	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
+	// The tags that you want to add to the resource. You can tag resources with
+	// a key-value pair or with only a key.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
 	// User-defined metadata that you want to associate with an MediaConvert job.
 	// You specify metadata in key/value pairs.
 	UserMetadata map[string]*string `locationName:"userMetadata" type:"map"`
@@ -5128,6 +5147,12 @@ func (s *CreateJobInput) SetSimulateReservedQueue(v string) *CreateJobInput {
 // SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
 func (s *CreateJobInput) SetStatusUpdateInterval(v string) *CreateJobInput {
 	s.StatusUpdateInterval = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateJobInput) SetTags(v map[string]*string) *CreateJobInput {
+	s.Tags = v
 	return s
 }
 
@@ -5651,6 +5676,14 @@ type DashIsoGroupSettings struct {
 	// playout.
 	MinBufferTime *int64 `locationName:"minBufferTime" type:"integer"`
 
+	// Specify whether your DASH profile is on-demand or main. When you choose Main
+	// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+	// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+	// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+	// When you choose On-demand, you must also set the output group setting Segment
+	// control (SegmentControl) to Single file (SINGLE_FILE).
+	MpdProfile *string `locationName:"mpdProfile" type:"string" enum:"DashIsoMpdProfile"`
+
 	// When set to SINGLE_FILE, a single output file is generated, which is internally
 	// segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 	// separate segment files will be created.
@@ -5663,12 +5696,13 @@ type DashIsoGroupSettings struct {
 	// files as in other output types.
 	SegmentLength *int64 `locationName:"segmentLength" min:"1" type:"integer"`
 
-	// When you enable Precise segment duration in manifests (writeSegmentTimelineInRepresentation),
-	// your DASH manifest shows precise segment durations. The segment duration
-	// information appears inside the SegmentTimeline element, inside SegmentTemplate
-	// at the Representation level. When this feature isn't enabled, the segment
-	// durations in your DASH manifest are approximate. The segment duration information
-	// appears in the duration attribute of the SegmentTemplate element.
+	// If you get an HTTP error in the 400 range when you play back your DASH output,
+	// enable this setting and run your transcoding job again. When you enable this
+	// setting, the service writes precise segment durations in the DASH manifest.
+	// The segment duration information appears inside the SegmentTimeline element,
+	// inside SegmentTemplate at the Representation level. When you don't enable
+	// this setting, the service writes approximate segment durations in your DASH
+	// manifest.
 	WriteSegmentTimelineInRepresentation *string `locationName:"writeSegmentTimelineInRepresentation" type:"string" enum:"DashIsoWriteSegmentTimelineInRepresentation"`
 }
 
@@ -5737,6 +5771,12 @@ func (s *DashIsoGroupSettings) SetHbbtvCompliance(v string) *DashIsoGroupSetting
 // SetMinBufferTime sets the MinBufferTime field's value.
 func (s *DashIsoGroupSettings) SetMinBufferTime(v int64) *DashIsoGroupSettings {
 	s.MinBufferTime = &v
+	return s
+}
+
+// SetMpdProfile sets the MpdProfile field's value.
+func (s *DashIsoGroupSettings) SetMpdProfile(v string) *DashIsoGroupSettings {
+	s.MpdProfile = &v
 	return s
 }
 
@@ -8623,17 +8663,16 @@ type H265Settings struct {
 	// Inserts timecode for each frame as 4 bytes of an unregistered SEI message.
 	UnregisteredSeiTimecode *string `locationName:"unregisteredSeiTimecode" type:"string" enum:"H265UnregisteredSeiTimecode"`
 
-	// Use this setting only for outputs encoded with H.265 that are in CMAF or
-	// DASH output groups. If you include writeMp4PackagingType in your JSON job
-	// specification for other outputs, your video might not work properly with
-	// downstream systems and video players. If the location of parameter set NAL
-	// units don't matter in your workflow, ignore this setting. The service defaults
-	// to marking your output as HEV1. Choose HVC1 to mark your output as HVC1.
-	// This makes your output compliant with this specification: ISO IECJTC1 SC29
-	// N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these outputs, the service
-	// stores parameter set NAL units in the sample headers but not in the samples
-	// directly. Keep the default HEV1 to mark your output as HEV1. For these outputs,
-	// the service writes parameter set NAL units directly into the samples.
+	// If the location of parameter set NAL units doesn't matter in your workflow,
+	// ignore this setting. Use this setting in your CMAF, DASH, or file MP4 output.
+	// For file MP4 outputs, choosing HVC1 can create video that doesn't work properly
+	// with some downstream systems and video players. Choose HVC1 to mark your
+	// output as HVC1. This makes your output compliant with the following specification:
+	// ISO IECJTC1 SC29 N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these
+	// outputs, the service stores parameter set NAL units in the sample headers
+	// but not in the samples directly. The service defaults to marking your output
+	// as HEV1. For these outputs, the service writes parameter set NAL units directly
+	// into the samples.
 	WriteMp4PackagingType *string `locationName:"writeMp4PackagingType" type:"string" enum:"H265WriteMp4PackagingType"`
 }
 
@@ -10486,8 +10525,8 @@ type InsertableImage struct {
 	// blank.
 	Height *int64 `locationName:"height" type:"integer"`
 
-	// Specify the Amazon S3 location of the image that you want to overlay on the
-	// video. Use a PNG or TGA file.
+	// Specify the HTTP, HTTPS, or Amazon S3 location of the image that you want
+	// to overlay on the video. Use a PNG or TGA file.
 	ImageInserterInput *string `locationName:"imageInserterInput" min:"14" type:"string"`
 
 	// Specify the distance, in pixels, between the inserted image and the left
@@ -10617,6 +10656,19 @@ type Job struct {
 	// complex content.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
+	// Describes whether the current job is running with accelerated transcoding.
+	// For jobs that have Acceleration (AccelerationMode) set to DISABLED, AccelerationStatus
+	// is always NOT_APPLICABLE. For jobs that have Acceleration (AccelerationMode)
+	// set to ENABLED or PREFERRED, AccelerationStatus is one of the other states.
+	// AccelerationStatus is IN_PROGRESS initially, while the service determines
+	// whether the input files and job settings are compatible with accelerated
+	// transcoding. If they are, AcclerationStatus is ACCELERATED. If your input
+	// files and job settings aren't compatible with accelerated transcoding, the
+	// service either fails your job or runs it without accelerated transcoding,
+	// depending on how you set Acceleration (AccelerationMode). When the service
+	// runs your job without accelerated transcoding, AccelerationStatus is NOT_ACCELERATED.
+	AccelerationStatus *string `locationName:"accelerationStatus" type:"string" enum:"AccelerationStatus"`
+
 	// An identifier for this resource that is unique within all of AWS.
 	Arn *string `locationName:"arn" type:"string"`
 
@@ -10656,6 +10708,10 @@ type Job struct {
 	// The job template that the job is created from, if it is created from a job
 	// template.
 	JobTemplate *string `locationName:"jobTemplate" type:"string"`
+
+	// Provides messages from the service about jobs that you have already successfully
+	// submitted.
+	Messages *JobMessages `locationName:"messages" type:"structure"`
 
 	// List of output group details
 	OutputGroupDetails []*OutputGroupDetail `locationName:"outputGroupDetails" type:"list"`
@@ -10723,6 +10779,12 @@ func (s *Job) SetAccelerationSettings(v *AccelerationSettings) *Job {
 	return s
 }
 
+// SetAccelerationStatus sets the AccelerationStatus field's value.
+func (s *Job) SetAccelerationStatus(v string) *Job {
+	s.AccelerationStatus = &v
+	return s
+}
+
 // SetArn sets the Arn field's value.
 func (s *Job) SetArn(v string) *Job {
 	s.Arn = &v
@@ -10774,6 +10836,12 @@ func (s *Job) SetJobPercentComplete(v int64) *Job {
 // SetJobTemplate sets the JobTemplate field's value.
 func (s *Job) SetJobTemplate(v string) *Job {
 	s.JobTemplate = &v
+	return s
+}
+
+// SetMessages sets the Messages field's value.
+func (s *Job) SetMessages(v *JobMessages) *Job {
+	s.Messages = v
 	return s
 }
 
@@ -10840,6 +10908,42 @@ func (s *Job) SetTiming(v *Timing) *Job {
 // SetUserMetadata sets the UserMetadata field's value.
 func (s *Job) SetUserMetadata(v map[string]*string) *Job {
 	s.UserMetadata = v
+	return s
+}
+
+// Provides messages from the service about jobs that you have already successfully
+// submitted.
+type JobMessages struct {
+	_ struct{} `type:"structure"`
+
+	// List of messages that are informational only and don't indicate a problem
+	// with your job.
+	Info []*string `locationName:"info" type:"list"`
+
+	// List of messages that warn about conditions that might cause your job not
+	// to run or to fail.
+	Warning []*string `locationName:"warning" type:"list"`
+}
+
+// String returns the string representation
+func (s JobMessages) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JobMessages) GoString() string {
+	return s.String()
+}
+
+// SetInfo sets the Info field's value.
+func (s *JobMessages) SetInfo(v []*string) *JobMessages {
+	s.Info = v
+	return s
+}
+
+// SetWarning sets the Warning field's value.
+func (s *JobMessages) SetWarning(v []*string) *JobMessages {
+	s.Warning = v
 	return s
 }
 
@@ -16980,14 +17084,47 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
-// Enable Acceleration (AccelerationMode) on any job that you want processed
-// with accelerated transcoding.
+// Specify whether the service runs your job with accelerated transcoding. Choose
+// DISABLED if you don't want accelerated transcoding. Choose ENABLED if you
+// want your job to run with accelerated transcoding and to fail if your input
+// files or your job settings aren't compatible with accelerated transcoding.
+// Choose PREFERRED if you want your job to run with accelerated transcoding
+// if the job is compatible with the feature and to run at standard speed if
+// it's not.
 const (
 	// AccelerationModeDisabled is a AccelerationMode enum value
 	AccelerationModeDisabled = "DISABLED"
 
 	// AccelerationModeEnabled is a AccelerationMode enum value
 	AccelerationModeEnabled = "ENABLED"
+
+	// AccelerationModePreferred is a AccelerationMode enum value
+	AccelerationModePreferred = "PREFERRED"
+)
+
+// Describes whether the current job is running with accelerated transcoding.
+// For jobs that have Acceleration (AccelerationMode) set to DISABLED, AccelerationStatus
+// is always NOT_APPLICABLE. For jobs that have Acceleration (AccelerationMode)
+// set to ENABLED or PREFERRED, AccelerationStatus is one of the other states.
+// AccelerationStatus is IN_PROGRESS initially, while the service determines
+// whether the input files and job settings are compatible with accelerated
+// transcoding. If they are, AcclerationStatus is ACCELERATED. If your input
+// files and job settings aren't compatible with accelerated transcoding, the
+// service either fails your job or runs it without accelerated transcoding,
+// depending on how you set Acceleration (AccelerationMode). When the service
+// runs your job without accelerated transcoding, AccelerationStatus is NOT_ACCELERATED.
+const (
+	// AccelerationStatusNotApplicable is a AccelerationStatus enum value
+	AccelerationStatusNotApplicable = "NOT_APPLICABLE"
+
+	// AccelerationStatusInProgress is a AccelerationStatus enum value
+	AccelerationStatusInProgress = "IN_PROGRESS"
+
+	// AccelerationStatusAccelerated is a AccelerationStatus enum value
+	AccelerationStatusAccelerated = "ACCELERATED"
+
+	// AccelerationStatusNotAccelerated is a AccelerationStatus enum value
+	AccelerationStatusNotAccelerated = "NOT_ACCELERATED"
 )
 
 // This setting only applies to H.264, H.265, and MPEG2 outputs. Use Insert
@@ -17184,6 +17321,9 @@ const (
 
 	// BillingTagsSourceJobTemplate is a BillingTagsSource enum value
 	BillingTagsSourceJobTemplate = "JOB_TEMPLATE"
+
+	// BillingTagsSourceJob is a BillingTagsSource enum value
+	BillingTagsSourceJob = "JOB"
 )
 
 // If no explicit x_position or y_position is provided, setting alignment to
@@ -17442,6 +17582,20 @@ const (
 	CmafManifestDurationFormatInteger = "INTEGER"
 )
 
+// Specify whether your DASH profile is on-demand or main. When you choose Main
+// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+// When you choose On-demand, you must also set the output group setting Segment
+// control (SegmentControl) to Single file (SINGLE_FILE).
+const (
+	// CmafMpdProfileMainProfile is a CmafMpdProfile enum value
+	CmafMpdProfileMainProfile = "MAIN_PROFILE"
+
+	// CmafMpdProfileOnDemandProfile is a CmafMpdProfile enum value
+	CmafMpdProfileOnDemandProfile = "ON_DEMAND_PROFILE"
+)
+
 // When set to SINGLE_FILE, a single output file is generated, which is internally
 // segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 // separate segment files will be created.
@@ -17603,6 +17757,20 @@ const (
 
 	// DashIsoHbbtvComplianceNone is a DashIsoHbbtvCompliance enum value
 	DashIsoHbbtvComplianceNone = "NONE"
+)
+
+// Specify whether your DASH profile is on-demand or main. When you choose Main
+// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+// When you choose On-demand, you must also set the output group setting Segment
+// control (SegmentControl) to Single file (SINGLE_FILE).
+const (
+	// DashIsoMpdProfileMainProfile is a DashIsoMpdProfile enum value
+	DashIsoMpdProfileMainProfile = "MAIN_PROFILE"
+
+	// DashIsoMpdProfileOnDemandProfile is a DashIsoMpdProfile enum value
+	DashIsoMpdProfileOnDemandProfile = "ON_DEMAND_PROFILE"
 )
 
 // This setting can improve the compatibility of your output with video players
@@ -18896,17 +19064,16 @@ const (
 	H265UnregisteredSeiTimecodeEnabled = "ENABLED"
 )
 
-// Use this setting only for outputs encoded with H.265 that are in CMAF or
-// DASH output groups. If you include writeMp4PackagingType in your JSON job
-// specification for other outputs, your video might not work properly with
-// downstream systems and video players. If the location of parameter set NAL
-// units don't matter in your workflow, ignore this setting. The service defaults
-// to marking your output as HEV1. Choose HVC1 to mark your output as HVC1.
-// This makes your output compliant with this specification: ISO IECJTC1 SC29
-// N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these outputs, the service
-// stores parameter set NAL units in the sample headers but not in the samples
-// directly. Keep the default HEV1 to mark your output as HEV1. For these outputs,
-// the service writes parameter set NAL units directly into the samples.
+// If the location of parameter set NAL units doesn't matter in your workflow,
+// ignore this setting. Use this setting in your CMAF, DASH, or file MP4 output.
+// For file MP4 outputs, choosing HVC1 can create video that doesn't work properly
+// with some downstream systems and video players. Choose HVC1 to mark your
+// output as HVC1. This makes your output compliant with the following specification:
+// ISO IECJTC1 SC29 N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these
+// outputs, the service stores parameter set NAL units in the sample headers
+// but not in the samples directly. The service defaults to marking your output
+// as HEV1. For these outputs, the service writes parameter set NAL units directly
+// into the samples.
 const (
 	// H265WriteMp4PackagingTypeHvc1 is a H265WriteMp4PackagingType enum value
 	H265WriteMp4PackagingTypeHvc1 = "HVC1"
