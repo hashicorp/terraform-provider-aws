@@ -30,3 +30,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regex Pattern Set.
+* `arn` - The ARN of the WAF IPSet.
+
+## Import
+
+WAF IPSets can be imported using their ID, e.g.
+
+```
+$ terraform import aws_waf_regex_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```
