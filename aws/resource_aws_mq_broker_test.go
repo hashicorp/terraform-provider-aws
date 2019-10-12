@@ -1154,16 +1154,16 @@ resource "aws_mq_broker" "test" {
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.0"
   host_instance_type = "mq.t2.micro"
-	security_groups    = ["${aws_security_group.test.id}"]
+  security_groups    = ["${aws_security_group.test.id}"]
 
-	user {
+  user {
     username = "Test"
     password = "TestTest1234"
-	}
+  }
 
-	tags = {
-		role = "test-role"
-	}
+  tags = {
+    role = "test-role"
+  }
 }
 `, sgName, brokerName)
 }

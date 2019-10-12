@@ -381,8 +381,7 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
 
-	// rebootMarker is used to determine if changes require a broker reboot
-	rebootMarker := 0
+	requiresReboot := false
 
 	if d.HasChange("security_groups") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
@@ -390,7 +389,7 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			SecurityGroups: expandStringSet(d.Get("security_groups").(*schema.Set)),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating MQ Broker (%s) security groups: %s", d.Id(), err)
 		}
 	}
 
@@ -401,9 +400,9 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			Logs:          expandMqLogs(d.Get("logs").([]interface{})),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating MQ Broker (%s) configuration: %s", d.Id(), err)
 		}
-		rebootMarker++
+		requiresReboot = true
 	}
 
 	if d.HasChange("user") {
@@ -415,20 +414,20 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 		usersUpdated, err = updateAwsMqBrokerUsers(conn, d.Id(),
 			o.(*schema.Set).List(), n.(*schema.Set).List())
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating MQ Broker (%s) user: %s", d.Id(), err)
 		}
 
 		if usersUpdated {
-			rebootMarker++
+			requiresReboot = true
 		}
 	}
 
-	if d.Get("apply_immediately").(bool) && rebootMarker > 0 {
+	if d.Get("apply_immediately").(bool) && requiresReboot {
 		_, err := conn.RebootBroker(&mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error rebooting MQ Broker (%s): %s", d.Id(), err)
 		}
 
 		stateConf := resource.StateChangeConf{
