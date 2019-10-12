@@ -183,7 +183,7 @@ func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.WafUpdateTags(conn, arn, o, n); err != nil {
+		if err := keyvaluetags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
