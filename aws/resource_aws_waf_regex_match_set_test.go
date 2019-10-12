@@ -337,7 +337,7 @@ func testAccCheckAWSWafRegexMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the Regex Pattern Set is already destroyed
-		if isAWSErr(err, "WAFNonexistentItemException", "") {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 			return nil
 		}
 
