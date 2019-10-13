@@ -108,6 +108,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Optional: true,
 			},
 
+			"enable_http_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -760,6 +765,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:  aws.String(identifier),
 			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
+			EnableHttpEndpoint:   aws.Bool(d.Get("enable_http_endpoint").(bool)),
 			Engine:               aws.String(d.Get("engine").(string)),
 			EngineMode:           aws.String(d.Get("engine_mode").(string)),
 			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
@@ -1133,6 +1139,11 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("scaling_configuration") {
 		d.SetPartial("scaling_configuration")
 		req.ScalingConfiguration = expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+		requestUpdate = true
+	}
+
+	if d.HasChange("enable_http_endpoint") {
+		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		requestUpdate = true
 	}
 
