@@ -16,6 +16,7 @@ func resourceAwsDbClusterSnapshot() *schema.Resource {
 		Create: resourceAwsDbClusterSnapshotCreate,
 		Read:   resourceAwsDbClusterSnapshotRead,
 		Delete: resourceAwsDbClusterSnapshotDelete,
+		Update: resourceAwsdbClusterSnapshotUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -171,6 +172,20 @@ func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) 
 
 	if err := saveTagsRDS(conn, d, aws.StringValue(snapshot.DBClusterSnapshotArn)); err != nil {
 		log.Printf("[WARN] Failed to save tags for RDS DB Cluster Snapshot (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).rdsconn
+
+	if d.HasChange("tags") {
+		if err := setTagsRDS(conn, d, d.Get("db_cluster_snapshot_arn").(string)); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
 	}
 
 	return nil
