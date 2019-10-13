@@ -176,7 +176,6 @@ type accKinesisStreamConsumerConfig struct {
 	resourceType      string
 	resourceLocalName string
 	consumerBasename  string
-	streamBasename    string
 	count             int
 	randInt           int
 }
@@ -191,10 +190,6 @@ func (r *accKinesisStreamConsumerConfig) getIndexedName(index int) string {
 
 func (r *accKinesisStreamConsumerConfig) getConsumerName() string {
 	return fmt.Sprintf("%s-%d", r.consumerBasename, r.randInt)
-}
-
-func (r *accKinesisStreamConsumerConfig) getStreamName() string {
-	return fmt.Sprintf("%s-%d", r.streamBasename, r.randInt)
 }
 
 func (r *accKinesisStreamConsumerConfig) data() string {
