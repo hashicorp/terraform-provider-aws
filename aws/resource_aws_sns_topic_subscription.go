@@ -218,7 +218,7 @@ func getResourceAttributes(d *schema.ResourceData) (output map[string]*string) {
 		attributes["FilterPolicy"] = aws.String(filter_policy)
 	}
 
-	if raw_message_delivery != false {
+	if raw_message_delivery {
 		attributes["RawMessageDelivery"] = aws.String(fmt.Sprintf("%t", raw_message_delivery))
 	}
 
