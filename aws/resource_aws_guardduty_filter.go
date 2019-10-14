@@ -967,6 +967,96 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 	}
 }
 
+func buildFindingCriteria(findingCriteria map[string]interface{}) *guardduty.FindingCriteria {
+	criteriaMap := map[string][]string{
+		"confidence": {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
+		"id":         {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
+		"account_id": {"equals", "not_equals"},
+		"region":     {"equals", "not_equals"},
+		"resource.accessKeyDetails.accessKeyId":                                          {"equals", "not_equals"},
+		"resource.accessKeyDetails.principalId":                                          {"equals", "not_equals"},
+		"resource.accessKeyDetails.userName":                                             {"equals", "not_equals"},
+		"resource.accessKeyDetails.userType":                                             {"equals", "not_equals"},
+		"resource.instanceDetails.iamInstanceProfile.id":                                 {"equals", "not_equals"},
+		"resource.instanceDetails.imageId":                                               {"equals", "not_equals"},
+		"resource.instanceDetails.instanceId":                                            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.ipv6Addresses":                       {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.privateIpAddresses.privateIpAddress": {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.publicDnsName":                       {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.publicIp":                            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.securityGroups.groupId":              {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.securityGroups.groupName":            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.subnetId":                            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.vpcId":                               {"equals", "not_equals"},
+		"resource.instanceDetails.tags.key":                                              {"equals", "not_equals"},
+		"resource.instanceDetails.tags.value":                                            {"equals", "not_equals"},
+		"resource.resourceType":                                                          {"equals", "not_equals"},
+		"service.action.actionType":                                                      {"equals", "not_equals"},
+		"service.action.awsApiCallAction.api":                                            {"equals", "not_equals"},
+		"service.action.awsApiCallAction.callerType":                                     {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.city.cityName":                  {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.country.countryName":            {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.ipAddressV4":                    {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.organization.asn":               {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.organization.asnOrg":            {"equals", "not_equals"},
+		"service.action.awsApiCallAction.serviceName":                                    {"equals", "not_equals"},
+		"service.action.dnsRequestAction.domain":                                         {"equals", "not_equals"},
+		"service.action.networkConnectionAction.blocked":                                 {"equals", "not_equals"},
+		"service.action.networkConnectionAction.connectionDirection":                     {"equals", "not_equals"},
+		"service.action.networkConnectionAction.localPortDetails.port":                   {"equals", "not_equals"},
+		"service.action.networkConnectionAction.protocol":                                {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.city.cityName":           {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.country.countryName":     {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.ipAddressV4":             {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.organization.asn":        {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.organization.asnOrg":     {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remotePortDetails.port":                  {"equals", "not_equals"},
+		"service.additionalInfo.threatListName":                                          {"equals", "not_equals"},
+		"service.archived":                                                               {"equals", "not_equals"},
+		"service.resourceRole":                                                           {"equals", "not_equals"},
+		"severity":                                                                       {"equals", "not_equals"},
+		"type":                                                                           {"equals", "not_equals"},
+		"updatedAt":                                                                      {"equals", "not_equals"},
+	}
+
+	inputFindingCriterion := findingCriteria["criterion"].(*schema.Set).List()[0].(map[string]interface{})
+	resultedFindingCriterion := map[string]*guardduty.Condition{}
+
+	for criterion, conditions := range criteriaMap {
+		condition := inputFindingCriterion[criterion].(*schema.Set).List()[0].(map[string]interface{})
+
+
+		interfaceForEquals := condition["equals"].([]interface{})
+
+		equals := make([]string, len(interfaceForEquals))
+		for i, v := range interfaceForEquals {
+			equals[i] = string(v.(string))
+		}
+
+		resultedFindingCriterion[criterion] := &guardduty.Condition{
+			Equals: aws.StringSlice(equals),
+		},
+
+		interfaceForNotEquals := condition["not_equals"].([]interface{})
+
+		notEquals := make([]string, len(interfaceForNotEquals))
+		for i, v := range interfaceForNotEquals {
+			notEquals[i] = string(v.(string))
+		}
+	}
+
+
+	log.Printf("[DEBUG] Creating FindingCriteria map: %#v", findingCriteria)
+
+	return &guardduty.FindingCriteria{
+		Criterion: map[string]*guardduty.Condition{
+			"region": &guardduty.Condition{
+				Equals: aws.StringSlice(equals),
+			},
+		},
+	}
+}
+
 func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
@@ -979,22 +1069,8 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 
 	// building `FindingCriteria`
 	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
-	criterion := findingCriteria["criterion"].(*schema.Set).List()[0].(map[string]interface{})
-	condition := criterion["region"].(*schema.Set).List()[0].(map[string]interface{})
-
-	interfaceForEquals := condition["equals"].([]interface{})
-
-	equals := make([]string, len(interfaceForEquals))
-	for i, v := range interfaceForEquals {
-		equals[i] = string(v.(string)) // Maybe aws.string?
-	}
-
-	interfaceForNotEquals := condition["not_equals"].([]interface{})
-
-	notEquals := make([]string, len(interfaceForNotEquals))
-	for i, v := range interfaceForNotEquals {
-		notEquals[i] = string(v.(string))
-	}
+	buildFindingCriteria(findingCriteria)
+	input.FindingCriteria = buildFindingCriteria(findingCriteria)
 
 	tagsInterface := d.Get("tags").(map[string]interface{})
 	if len(tagsInterface) > 0 {
@@ -1019,14 +1095,6 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 	//	},
 	//}
 	// Currently it works only for region, must be expanded to all other resources
-	input.FindingCriteria = &guardduty.FindingCriteria{
-		Criterion: map[string]*guardduty.Condition{
-			"region": &guardduty.Condition{
-				Equals: aws.StringSlice(equals),
-			},
-		},
-	}
-	log.Printf("[DEBUG] Creating FindingCriteria map: %#v", findingCriteria)
 
 	// Setting the default value for `action`
 	action := "NOOP"
