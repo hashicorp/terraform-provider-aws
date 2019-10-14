@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
+	//"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -64,6 +65,7 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
+				ForceNew:	   true,
 				ConflictsWith: []string{"activation_key"},
 			},
 		},
@@ -147,8 +149,9 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 		ActivationKey: aws.String(activationKey),
 		Tags:          expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
 	}
-
+	fmt.Printf("******* meta: %v", meta)
 	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+	//	vpce, err := findResourceVpcEndpoint(v.(string), meta)
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
@@ -299,4 +302,20 @@ func resourceAwsDataSyncAgentDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	return nil
+}
+
+func findResourceVpcEndpoint(id string, meta interface{}) (*ec2.VpcEndpoint, error) {
+	conn := meta.(*AWSClient).ec2conn
+	resp, err := conn.DescribeVpcEndpoints(&ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: aws.StringSlice([]string{id}),
+	})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("********** endpoint: $v", resp)
+	if resp.VpcEndpoints == nil || len(resp.VpcEndpoints) == 0 {
+		return nil, fmt.Errorf("No VPC Endpoints were found for %s", id)
+	}
+
+	return resp.VpcEndpoints[0], nil
 }

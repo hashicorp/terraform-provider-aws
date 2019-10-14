@@ -390,7 +390,7 @@ resource "aws_instance" "test" {
   associate_public_ip_address = true
 
   # Default instance type from sync.sh
-  instance_type          = "c5.2xlarge"
+  instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.test.id}"]
   subnet_id              = "${aws_subnet.test.id}"
 
@@ -445,16 +445,22 @@ resource "aws_datasync_agent" "test" {
 
 func testAccAWSDataSyncAgentPrivateLink(rName string) string {
 	return testAccAWSDataSyncAgentConfigAgentBase() + fmt.Sprintf(`
+data "aws_region" "current" {}	
+
 resource "aws_vpc_endpoint" "interface" {
   security_group_ids = ["${aws_security_group.test.id}"]
-  service_name       = "tf-acc-test-datasync-vpce"
+  service_name       = "com.amazonaws.${data.aws_region.current.name}.datasync"
   subnet_ids         = ["${aws_subnet.test.id}"]
   vpc_endpoint_type  = "Interface"
   vpc_id             = "${aws_vpc.test.id}"
 }
+
+output "rendered" {
+  value = "${aws_vpc_endpoint.interface.network_interface_ids}"
+}
 	  
 resource "aws_datasync_agent" "test" {
-  private_link_ip = "${aws_instance.test.private_ip}"
+  ip_address 	  = "${aws_instance.test.private_ip}"
   vpc_endpoint_id = "${aws_vpc_endpoint.interface.id}"
   name       = %q
 }
