@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -18,8 +17,8 @@ func dataSourceAwsGuarddutyDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enabled": {
-				Type:     schema.TypeBool,
+			"status": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"service_role_arn": {
@@ -40,19 +39,18 @@ func dataSourceAwsGuarddutyDetectorRead(d *schema.ResourceData, meta interface{}
 	detectorId := d.Get("id").(string)
 
 	if detectorId == "" {
-		log.Print("[DEBUG] No Guardduty ID has been defined, try to lookup using find (There should be only one)")
 		input := &guardduty.ListDetectorsInput{}
 
 		resp, err := conn.ListDetectors(input)
 		if err != nil {
-			return err
+			return fmt.Errorf("error listing GuardDuty Detectors: %s ,", err)
 		}
 
 		if resp == nil || len(resp.DetectorIds) == 0 {
-			return fmt.Errorf("no detectors found")
+			return fmt.Errorf("no GuardDuty Detectors found")
 		}
 		if len(resp.DetectorIds) > 1 {
-			return fmt.Errorf("multiple detectors found; Amazon AWS API behavior has changed; this is a bug in the provider an should be reported")
+			return fmt.Errorf("multiple GuardDuty Detectors found; please use the `id` argument to look up a single detector")
 		}
 
 		detectorId = aws.StringValue(resp.DetectorIds[0])
@@ -68,28 +66,13 @@ func dataSourceAwsGuarddutyDetectorRead(d *schema.ResourceData, meta interface{}
 	}
 
 	if getResp == nil {
-		return fmt.Errorf("cannot receive detector details")
+		return fmt.Errorf("cannot receive GuardDuty Detector details")
 	}
 
-	status := getResp.Status
-	enabled := false
-	if *status == "ENABLED" {
-		enabled = true
-	} else {
-		enabled = false
-	}
-
-	serviceRole := getResp.ServiceRole
-	frequency := getResp.FindingPublishingFrequency
-
-	log.Printf("[DEBUG] Setting AWS Guardduty Detector ID to %s.", detectorId)
 	d.SetId(detectorId)
-	log.Printf("[DEBUG] Setting AWS Guardduty enabled to %t.", enabled)
-	d.Set("enabled", enabled)
-	log.Printf("[DEBUG] Setting AWS Guardduty Service Role ARN to %s.", *serviceRole)
-	d.Set("service_role_arn", *serviceRole)
-	log.Printf("[DEBUG] Setting AWS Guardduty Log Publishing Frequency to %s.", *frequency)
-	d.Set("finding_publishing_frequency", *frequency)
+	d.Set("enabled", getResp.Status)
+	d.Set("service_role_arn", getResp.ServiceRole)
+	d.Set("finding_publishing_frequency", getResp.FindingPublishingFrequency)
 
 	return nil
 }
