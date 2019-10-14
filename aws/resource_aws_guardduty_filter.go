@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -89,7 +90,6 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 	}
 }
 
-//noinspection GoMissingReturn
 func buildFindingCriteria(findingCriteria map[string]interface{}) *guardduty.FindingCriteria {
 	// 	criteriaMap := map[string][]string{
 	// 		"confidence": {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
@@ -148,19 +148,60 @@ func buildFindingCriteria(findingCriteria map[string]interface{}) *guardduty.Fin
 		typedCriterion := criterion.(map[string]interface{})
 		log.Printf("[DEBUG!!!!!!!!!!] Criterion info: %#v", criterion)
 
-		values := make([]string, len(typedCriterion["values"].([]interface{})))
-		for i, v := range typedCriterion["values"].([]interface{}) {
-			values[i] = string(v.(string))
+		switch typedCriterion["condition"].(string) {
+		case "equals":
+			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+				Equals: aws.StringSlice(conditionValueToStrings(typedCriterion["values"].([]interface{}))),
+			}
+		case "greater_than":
+			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+				GreaterThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+			}
+		case "greater_than_or_equals":
+			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+				GreaterThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+			}
+		case "less_than":
+			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+				LessThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+			}
+		case "less_than_or_equals":
+			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+				LessThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+			}
+		case "not_equals":
+			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+				NotEquals: aws.StringSlice(conditionValueToStrings(typedCriterion["values"].([]interface{}))),
+			}
 		}
 
-		criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-			Equals: aws.StringSlice(values),
-		}
 	}
 	log.Printf("[DEBUG] Creating FindingCriteria map: %#v", findingCriteria)
 	log.Printf("[DEBUG] Creating FindingCriteria's criteria map: %#v", criteria)
 
 	return &guardduty.FindingCriteria{Criterion: criteria}
+}
+
+func conditionValueToStrings(untypedValues []interface{}) []string {
+	values := make([]string, len(untypedValues))
+	for i, v := range untypedValues {
+		values[i] = string(v.(string))
+	}
+	return values
+}
+
+func conditionValueToInt(untypedValues []interface{}) interface{} {
+	if len(untypedValues) != 1 {
+		return fmt.Errorf("Exactly one value must be given for conditions like less_ or greater_than. Instead given: %v", untypedValues)
+	}
+
+	untypedValue := untypedValues[0]
+	typedValue, err := strconv.ParseInt(untypedValue.(string), 10, 64)
+	if err != nil {
+		return fmt.Errorf("Parsing condition value failed: %s", err.Error())
+	}
+
+	return typedValue
 }
 
 func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) error {
