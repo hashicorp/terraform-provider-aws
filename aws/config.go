@@ -280,6 +280,7 @@ type AWSClient struct {
 	resourcegroupsconn                  *resourcegroups.ResourceGroups
 	route53resolverconn                 *route53resolver.Route53Resolver
 	s3conn                              *s3.S3
+	s3connUriCleaningDisabled           *s3.S3
 	s3controlconn                       *s3control.S3Control
 	sagemakerconn                       *sagemaker.SageMaker
 	scconn                              *servicecatalog.ServiceCatalog
@@ -470,7 +471,6 @@ func (c *Config) Client() (interface{}, error) {
 		region:                              c.Region,
 		resourcegroupsconn:                  resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
-		s3conn:                              s3.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3"]), S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle)})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
 		scconn:                              servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicecatalog"])})),
@@ -507,6 +507,17 @@ func (c *Config) Client() (interface{}, error) {
 	shieldConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["shield"]),
 	}
+
+	// Services that require multiple client configurations
+	s3Config := &aws.Config{
+		Endpoint:         aws.String(c.Endpoints["s3"]),
+		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
+	}
+
+	client.s3conn = s3.New(sess.Copy(s3Config))
+
+	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
+	client.s3connUriCleaningDisabled = s3.New(sess.Copy(s3Config))
 
 	// Handle deprecated endpoint configurations
 	if c.Endpoints["kinesis_analytics"] != "" {

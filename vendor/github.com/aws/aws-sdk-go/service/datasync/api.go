@@ -330,7 +330,8 @@ func (c *DataSync) CreateLocationNfsRequest(input *CreateLocationNfsInput) (req 
 
 // CreateLocationNfs API operation for AWS DataSync.
 //
-// Creates an endpoint for a Network File System (NFS) file system.
+// Defines a file system on a Network File System (NFS) server that can be read
+// from or written to
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -503,7 +504,8 @@ func (c *DataSync) CreateLocationSmbRequest(input *CreateLocationSmbInput) (req 
 
 // CreateLocationSmb API operation for AWS DataSync.
 //
-// Creates an endpoint for a Server Message Block (SMB) file system.
+// Defines a file system on an Server Message Block (SMB) server that can be
+// read from or written to
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5420,6 +5422,13 @@ type Options struct {
 	// currently supported for Amazon EFS.
 	PreserveDevices *string `type:"string" enum:"PreserveDevices"`
 
+	// A value that determines whether tasks should be queued before executing the
+	// tasks. If set to Enabled, the tasks will queued. The default is Enabled.
+	//
+	// If you use the same agent to run multiple tasks you can enable the tasks
+	// to run in series. For more information see task-queue.
+	TaskQueueing *string `type:"string" enum:"TaskQueueing"`
+
 	// The user ID (UID) of the file's owner.
 	//
 	// Default value: INT_VALUE. This preserves the integer value of the ID.
@@ -5510,6 +5519,12 @@ func (s *Options) SetPreserveDeletedFiles(v string) *Options {
 // SetPreserveDevices sets the PreserveDevices field's value.
 func (s *Options) SetPreserveDevices(v string) *Options {
 	s.PreserveDevices = &v
+	return s
+}
+
+// SetTaskQueueing sets the TaskQueueing field's value.
+func (s *Options) SetTaskQueueing(v string) *Options {
+	s.TaskQueueing = &v
 	return s
 }
 
@@ -6445,6 +6460,9 @@ const (
 )
 
 const (
+	// TaskExecutionStatusQueued is a TaskExecutionStatus enum value
+	TaskExecutionStatusQueued = "QUEUED"
+
 	// TaskExecutionStatusLaunching is a TaskExecutionStatus enum value
 	TaskExecutionStatusLaunching = "LAUNCHING"
 
@@ -6465,11 +6483,22 @@ const (
 )
 
 const (
+	// TaskQueueingEnabled is a TaskQueueing enum value
+	TaskQueueingEnabled = "ENABLED"
+
+	// TaskQueueingDisabled is a TaskQueueing enum value
+	TaskQueueingDisabled = "DISABLED"
+)
+
+const (
 	// TaskStatusAvailable is a TaskStatus enum value
 	TaskStatusAvailable = "AVAILABLE"
 
 	// TaskStatusCreating is a TaskStatus enum value
 	TaskStatusCreating = "CREATING"
+
+	// TaskStatusQueued is a TaskStatus enum value
+	TaskStatusQueued = "QUEUED"
 
 	// TaskStatusRunning is a TaskStatus enum value
 	TaskStatusRunning = "RUNNING"

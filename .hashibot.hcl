@@ -93,6 +93,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/autoscalingplans" = [
       "aws_autoscalingplans_",
     ],
+    "service/backup" = [
+      "aws_backup_",
+    ],
     "service/batch" = [
       "aws_batch_",
     ],
@@ -174,6 +177,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/dlm" = [
       "aws_dlm_",
     ],
+    "service/docdb" = [
+      "aws_docdb_",
+    ],
     "service/dynamodb" = [
       "aws_dynamodb_",
     ],
@@ -242,6 +248,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/fms" = [
       "aws_fms_",
+    ],
+    "service/forecast" = [
+      "aws_forecast_",
     ],
     "service/fsx" = [
       "aws_fsx_",
@@ -337,6 +346,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/organizations" = [
       "aws_organizations_",
     ],
+    "service/personalize" = [
+      "aws_personalize_",
+    ],
     "service/pinpoint" = [
       "aws_pinpoint_",
     ],
@@ -345,6 +357,12 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/pricing" = [
       "aws_pricing_",
+    ],
+    "service/qldb" = [
+      "aws_qldb_",
+    ],
+    "service/quicksight" = [
+      "aws_quicksight_",
     ],
     "service/ram" = [
       "aws_ram_",
@@ -439,6 +457,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/workdocs" = [
       "aws_workdocs_",
+    ],
+    "service/worklink" = [
+      "aws_worklink_",
     ],
     "service/workmail" = [
       "aws_workmail_",
@@ -540,6 +561,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_autoscalingplans_*",
       "**/autoscalingplans_*"
     ]
+    "service/backup" = [
+      "**/*backup_*",
+      "**/backup_*"
+    ]
     "service/batch" = [
       "**/*_batch_*",
       "**/batch_*"
@@ -612,7 +637,11 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/cognito" = [
       "**/*_cognito_*",
-      "**/_cognito_*"
+      "**/cognito_*"
+    ]
+    "service/comprehend" = [
+      "**/*_comprehend_*",
+      "**/comprehend_*"
     ]
     "service/configservice" = [
       "aws/*_aws_config_*",
@@ -649,6 +678,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/dlm" = [
       "**/*_dlm_*",
       "**/dlm_*"
+    ]
+    "service/docdb" = [
+      "**/*_docdb_*",
+      "**/docdb_*"
     ]
     "service/dynamodb" = [
       "**/*_dynamodb_*",
@@ -917,6 +950,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/quicksight" = [
+      "**/*_quicksight_*",
+      "**/quicksight_*"
+    ]
     "service/ram" = [
       "**/*_ram_*",
       "**/ram_*"
@@ -935,6 +972,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_resourcegroups_*",
       "**/resourcegroups_*"
     ]
+    "service/robomaker" = [
+      "**/*_robomaker_*",
+      "**/robomaker_*",
+    ]
     "service/route53" = [
       "**/*_route53_delegation_set*",
       "**/*_route53_health_check*",
@@ -947,13 +988,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_record*",
       "**/route53_zone*"
     ]
-    "service/robomaker" = [
-      "**/*_robomaker_*",
-      "**/robomaker_*",
-    ]
     "service/route53domains" = [
       "**/*_route53_domains_*",
       "**/route53_domains_*"
+    ]
+    "service/route53resolver" = [
+      "**/*_route53resolver_*",
+      "**/route53resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",
@@ -1046,6 +1087,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/workdocs" = [
       "**/*_workdocs_*",
       "**/workdocs_*"
+    ]
+    "service/worklink" = [
+      "**/*_worklink_*",
+      "**/worklink_*"
     ]
     "service/workmail" = [
       "**/*_workmail_*",

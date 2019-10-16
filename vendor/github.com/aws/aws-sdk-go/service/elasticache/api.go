@@ -5586,10 +5586,11 @@ func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 type BatchApplyUpdateActionInput struct {
 	_ struct{} `type:"structure"`
 
+	// The cache cluster IDs
+	CacheClusterIds []*string `type:"list"`
+
 	// The replication group IDs
-	//
-	// ReplicationGroupIds is a required field
-	ReplicationGroupIds []*string `type:"list" required:"true"`
+	ReplicationGroupIds []*string `type:"list"`
 
 	// The unique ID of the service update
 	//
@@ -5610,9 +5611,6 @@ func (s BatchApplyUpdateActionInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *BatchApplyUpdateActionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "BatchApplyUpdateActionInput"}
-	if s.ReplicationGroupIds == nil {
-		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupIds"))
-	}
 	if s.ServiceUpdateName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceUpdateName"))
 	}
@@ -5621,6 +5619,12 @@ func (s *BatchApplyUpdateActionInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCacheClusterIds sets the CacheClusterIds field's value.
+func (s *BatchApplyUpdateActionInput) SetCacheClusterIds(v []*string) *BatchApplyUpdateActionInput {
+	s.CacheClusterIds = v
+	return s
 }
 
 // SetReplicationGroupIds sets the ReplicationGroupIds field's value.
@@ -5670,10 +5674,11 @@ func (s *BatchApplyUpdateActionOutput) SetUnprocessedUpdateActions(v []*Unproces
 type BatchStopUpdateActionInput struct {
 	_ struct{} `type:"structure"`
 
+	// The cache cluster IDs
+	CacheClusterIds []*string `type:"list"`
+
 	// The replication group IDs
-	//
-	// ReplicationGroupIds is a required field
-	ReplicationGroupIds []*string `type:"list" required:"true"`
+	ReplicationGroupIds []*string `type:"list"`
 
 	// The unique ID of the service update
 	//
@@ -5694,9 +5699,6 @@ func (s BatchStopUpdateActionInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *BatchStopUpdateActionInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "BatchStopUpdateActionInput"}
-	if s.ReplicationGroupIds == nil {
-		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupIds"))
-	}
 	if s.ServiceUpdateName == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServiceUpdateName"))
 	}
@@ -5705,6 +5707,12 @@ func (s *BatchStopUpdateActionInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCacheClusterIds sets the CacheClusterIds field's value.
+func (s *BatchStopUpdateActionInput) SetCacheClusterIds(v []*string) *BatchStopUpdateActionInput {
+	s.CacheClusterIds = v
+	return s
 }
 
 // SetReplicationGroupIds sets the ReplicationGroupIds field's value.
@@ -6404,6 +6412,94 @@ func (s *CacheNodeTypeSpecificValue) SetCacheNodeType(v string) *CacheNodeTypeSp
 // SetValue sets the Value field's value.
 func (s *CacheNodeTypeSpecificValue) SetValue(v string) *CacheNodeTypeSpecificValue {
 	s.Value = &v
+	return s
+}
+
+// The status of the service update on the cache node
+type CacheNodeUpdateStatus struct {
+	_ struct{} `type:"structure"`
+
+	// The node ID of the cache cluster
+	CacheNodeId *string `type:"string"`
+
+	// The deletion date of the node
+	NodeDeletionDate *time.Time `type:"timestamp"`
+
+	// The end date of the update for a node
+	NodeUpdateEndDate *time.Time `type:"timestamp"`
+
+	// Reflects whether the update was initiated by the customer or automatically
+	// applied
+	NodeUpdateInitiatedBy *string `type:"string" enum:"NodeUpdateInitiatedBy"`
+
+	// The date when the update is triggered
+	NodeUpdateInitiatedDate *time.Time `type:"timestamp"`
+
+	// The start date of the update for a node
+	NodeUpdateStartDate *time.Time `type:"timestamp"`
+
+	// The update status of the node
+	NodeUpdateStatus *string `type:"string" enum:"NodeUpdateStatus"`
+
+	// The date when the NodeUpdateStatus was last modified>
+	NodeUpdateStatusModifiedDate *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s CacheNodeUpdateStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CacheNodeUpdateStatus) GoString() string {
+	return s.String()
+}
+
+// SetCacheNodeId sets the CacheNodeId field's value.
+func (s *CacheNodeUpdateStatus) SetCacheNodeId(v string) *CacheNodeUpdateStatus {
+	s.CacheNodeId = &v
+	return s
+}
+
+// SetNodeDeletionDate sets the NodeDeletionDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeDeletionDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeDeletionDate = &v
+	return s
+}
+
+// SetNodeUpdateEndDate sets the NodeUpdateEndDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateEndDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateEndDate = &v
+	return s
+}
+
+// SetNodeUpdateInitiatedBy sets the NodeUpdateInitiatedBy field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateInitiatedBy(v string) *CacheNodeUpdateStatus {
+	s.NodeUpdateInitiatedBy = &v
+	return s
+}
+
+// SetNodeUpdateInitiatedDate sets the NodeUpdateInitiatedDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateInitiatedDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateInitiatedDate = &v
+	return s
+}
+
+// SetNodeUpdateStartDate sets the NodeUpdateStartDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateStartDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateStartDate = &v
+	return s
+}
+
+// SetNodeUpdateStatus sets the NodeUpdateStatus field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateStatus(v string) *CacheNodeUpdateStatus {
+	s.NodeUpdateStatus = &v
+	return s
+}
+
+// SetNodeUpdateStatusModifiedDate sets the NodeUpdateStatusModifiedDate field's value.
+func (s *CacheNodeUpdateStatus) SetNodeUpdateStatusModifiedDate(v time.Time) *CacheNodeUpdateStatus {
+	s.NodeUpdateStatusModifiedDate = &v
 	return s
 }
 
@@ -10213,6 +10309,12 @@ func (s *DescribeSnapshotsOutput) SetSnapshots(v []*Snapshot) *DescribeSnapshots
 type DescribeUpdateActionsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The cache cluster IDs
+	CacheClusterIds []*string `type:"list"`
+
+	// The Elasticache engine to which the update applies. Either Redis or Memcached
+	Engine *string `type:"string"`
+
 	// An optional marker returned from a prior request. Use this marker for pagination
 	// of results from this operation. If this parameter is specified, the response
 	// includes only records beyond the marker, up to the value specified by MaxRecords.
@@ -10249,6 +10351,18 @@ func (s DescribeUpdateActionsInput) String() string {
 // GoString returns the string representation
 func (s DescribeUpdateActionsInput) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterIds sets the CacheClusterIds field's value.
+func (s *DescribeUpdateActionsInput) SetCacheClusterIds(v []*string) *DescribeUpdateActionsInput {
+	s.CacheClusterIds = v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *DescribeUpdateActionsInput) SetEngine(v string) *DescribeUpdateActionsInput {
+	s.Engine = &v
+	return s
 }
 
 // SetMarker sets the Marker field's value.
@@ -12385,6 +12499,9 @@ func (s *PendingModifiedValues) SetNumCacheNodes(v int64) *PendingModifiedValues
 type ProcessedUpdateAction struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the cache cluster
+	CacheClusterId *string `type:"string"`
+
 	// The ID of the replication group
 	ReplicationGroupId *string `type:"string"`
 
@@ -12403,6 +12520,12 @@ func (s ProcessedUpdateAction) String() string {
 // GoString returns the string representation
 func (s ProcessedUpdateAction) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterId sets the CacheClusterId field's value.
+func (s *ProcessedUpdateAction) SetCacheClusterId(v string) *ProcessedUpdateAction {
+	s.CacheClusterId = &v
+	return s
 }
 
 // SetReplicationGroupId sets the ReplicationGroupId field's value.
@@ -13526,10 +13649,11 @@ type ServiceUpdate struct {
 	// recommended apply-by date has expired.
 	AutoUpdateAfterRecommendedApplyByDate *bool `type:"boolean"`
 
-	// The Redis engine to which the service update applies
+	// The Elasticache engine to which the update applies. Either Redis or Memcached
 	Engine *string `type:"string"`
 
-	// The Redis engine version to which the service update applies
+	// The Elasticache engine version to which the update applies. Either Redis
+	// or Memcached engine version
 	EngineVersion *string `type:"string"`
 
 	// The estimated length of time the service update will take
@@ -14209,6 +14333,9 @@ func (s *TimeRangeFilter) SetStartTime(v time.Time) *TimeRangeFilter {
 type UnprocessedUpdateAction struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the cache cluster
+	CacheClusterId *string `type:"string"`
+
 	// The error message that describes the reason the request was not processed
 	ErrorMessage *string `type:"string"`
 
@@ -14230,6 +14357,12 @@ func (s UnprocessedUpdateAction) String() string {
 // GoString returns the string representation
 func (s UnprocessedUpdateAction) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterId sets the CacheClusterId field's value.
+func (s *UnprocessedUpdateAction) SetCacheClusterId(v string) *UnprocessedUpdateAction {
+	s.CacheClusterId = &v
+	return s
 }
 
 // SetErrorMessage sets the ErrorMessage field's value.
@@ -14259,6 +14392,15 @@ func (s *UnprocessedUpdateAction) SetServiceUpdateName(v string) *UnprocessedUpd
 // The status of the service update for a specific replication group
 type UpdateAction struct {
 	_ struct{} `type:"structure"`
+
+	// The ID of the cache cluster
+	CacheClusterId *string `type:"string"`
+
+	// The status of the service update on the cache node
+	CacheNodeUpdateStatus []*CacheNodeUpdateStatus `locationNameList:"CacheNodeUpdateStatus" type:"list"`
+
+	// The Elasticache engine to which the update applies. Either Redis or Memcached
+	Engine *string `type:"string"`
 
 	// The estimated length of time for the update to complete
 	EstimatedUpdateTime *string `type:"string"`
@@ -14316,6 +14458,24 @@ func (s UpdateAction) String() string {
 // GoString returns the string representation
 func (s UpdateAction) GoString() string {
 	return s.String()
+}
+
+// SetCacheClusterId sets the CacheClusterId field's value.
+func (s *UpdateAction) SetCacheClusterId(v string) *UpdateAction {
+	s.CacheClusterId = &v
+	return s
+}
+
+// SetCacheNodeUpdateStatus sets the CacheNodeUpdateStatus field's value.
+func (s *UpdateAction) SetCacheNodeUpdateStatus(v []*CacheNodeUpdateStatus) *UpdateAction {
+	s.CacheNodeUpdateStatus = v
+	return s
+}
+
+// SetEngine sets the Engine field's value.
+func (s *UpdateAction) SetEngine(v string) *UpdateAction {
+	s.Engine = &v
+	return s
 }
 
 // SetEstimatedUpdateTime sets the EstimatedUpdateTime field's value.
