@@ -51,17 +51,39 @@ func resourceAwsRoute53Zone() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Suppress diff when transitioning from the old schema
+								if d.Get("vpc_id").(string) == new {
+									return true
+								}
+								return false
+							},
 						},
 						"vpc_region": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Suppress diff when transitioning from the old schema
+								if d.Get("vpc_region").(string) == new {
+									return true
+								}
+								return false
+							},
 						},
 					},
 				},
 				Set: route53HostedZoneVPCHash,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Suppress vpc.# 0 -> vpc.# 1 when transitioning from the old schema
+					if d.Get("vpc_id").(string) != "" {
+						return true
+					}
+					return false
+				},
 			},
 
+			// Phasing this out since it's part of the old schema
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -73,6 +95,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				},
 			},
 
+			// Phasing this out since it's part of the old schema
 			"vpc_region": {
 				Type:     schema.TypeString,
 				Optional: true,
