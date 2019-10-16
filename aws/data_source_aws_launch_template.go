@@ -349,27 +349,8 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 		LaunchTemplateNames: []*string{aws.String(d.Get("name").(string))},
 	})
 
-	if isAWSErr(err, ec2.LaunchTemplateErrorCodeLaunchTemplateIdDoesNotExist, "") {
-		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	// AWS SDK constant above is currently incorrect
-	if isAWSErr(err, "InvalidLaunchTemplateId.NotFound", "") {
-		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
 	if err != nil {
 		return fmt.Errorf("Error getting launch template: %s", err)
-	}
-
-	if dlt == nil || len(dlt.LaunchTemplates) == 0 {
-		log.Printf("[WARN] launch template (%s) not found - removing from state", d.Id())
-		d.SetId("")
-		return nil
 	}
 
 	log.Printf("[DEBUG] Found launch template %s", d.Id())
