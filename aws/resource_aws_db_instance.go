@@ -527,11 +527,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		// Read replicate_source_db that should be used for create
-		var replicate_source_db string
+		var replicate_source_db = v
 		if attr, ok := d.GetOk("replicate_source_db_create"); ok {
-			replicate_source_db = attr.(string)
-		} else {
-			replicate_source_db = v.(string)
+			replicate_source_db = attr
 		}
 
 		opts := rds.CreateDBInstanceReadReplicaInput{
@@ -541,7 +539,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
 			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
-			SourceDBInstanceIdentifier: aws.String(replicate_source_db),
+			SourceDBInstanceIdentifier: aws.String(replicate_source_db.(string)),
 			Tags:                       tags,
 		}
 
@@ -588,7 +586,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		if attr, ok := d.GetOk("kms_key_id"); ok {
 			opts.KmsKeyId = aws.String(attr.(string))
-			if arnParts := strings.Split(replicate_source_db, ":"); len(arnParts) >= 4 {
+			if arnParts := strings.Split(replicate_source_db.(string), ":"); len(arnParts) >= 4 {
 				opts.SourceRegion = aws.String(arnParts[3])
 			}
 		}
