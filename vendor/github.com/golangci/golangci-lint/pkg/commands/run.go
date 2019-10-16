@@ -10,9 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golangci/golangci-lint/pkg/packages"
-	"github.com/golangci/golangci-lint/pkg/result/processors"
-
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -23,8 +20,10 @@ import (
 	"github.com/golangci/golangci-lint/pkg/lint"
 	"github.com/golangci/golangci-lint/pkg/lint/lintersdb"
 	"github.com/golangci/golangci-lint/pkg/logutils"
+	"github.com/golangci/golangci-lint/pkg/packages"
 	"github.com/golangci/golangci-lint/pkg/printers"
 	"github.com/golangci/golangci-lint/pkg/result"
+	"github.com/golangci/golangci-lint/pkg/result/processors"
 )
 
 func getDefaultIssueExcludeHelp() string {
@@ -86,7 +85,10 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	fs.IntVar(&rc.ExitCodeIfIssuesFound, "issues-exit-code",
 		exitcodes.IssuesFound, wh("Exit code when issues were found"))
 	fs.StringSliceVar(&rc.BuildTags, "build-tags", nil, wh("Build tags"))
-	fs.DurationVar(&rc.Deadline, "deadline", time.Minute, wh("Deadline for total work"))
+	fs.DurationVar(&rc.Timeout, "deadline", time.Minute, wh("Deadline for total work"))
+	hideFlag("deadline")
+	fs.DurationVar(&rc.Timeout, "timeout", time.Minute, wh("Timeout for total work"))
+
 	fs.BoolVar(&rc.AnalyzeTests, "tests", true, wh("Analyze tests (*_test.go)"))
 	fs.BoolVar(&rc.PrintResourcesUsage, "print-resources-usage", false,
 		wh("Print avg and max memory usage of golangci-lint and total time"))
@@ -265,7 +267,7 @@ func fixSlicesFlags(fs *pflag.FlagSet) {
 	})
 }
 
-func (e *Executor) runAnalysis(ctx context.Context, args []string) (<-chan result.Issue, error) {
+func (e *Executor) runAnalysis(ctx context.Context, args []string) ([]result.Issue, error) {
 	e.cfg.Run.Args = args
 
 	enabledLinters, err := e.EnabledLintersSet.Get(true)
@@ -290,15 +292,15 @@ func (e *Executor) runAnalysis(ctx context.Context, args []string) (<-chan resul
 	}
 	lintCtx.Log = e.log.Child("linters context")
 
-	runner, err := lint.NewRunner(lintCtx.ASTCache, e.cfg, e.log.Child("runner"),
-		e.goenv, e.lineCache, e.DBManager)
+	runner, err := lint.NewRunner(e.cfg, e.log.Child("runner"),
+		e.goenv, e.lineCache, e.DBManager, lintCtx.Packages)
 	if err != nil {
 		return nil, err
 	}
 
-	issuesCh := runner.Run(ctx, enabledLinters, lintCtx)
+	issues := runner.Run(ctx, enabledLinters, lintCtx)
 	fixer := processors.NewFixer(e.cfg, e.log, e.fileCache)
-	return fixer.Process(issuesCh), nil
+	return fixer.Process(issues), nil
 }
 
 func (e *Executor) setOutputToDevNull() (savedStdout, savedStderr *os.File) {
@@ -313,24 +315,10 @@ func (e *Executor) setOutputToDevNull() (savedStdout, savedStderr *os.File) {
 	return
 }
 
-func (e *Executor) setExitCodeIfIssuesFound(issues <-chan result.Issue) <-chan result.Issue {
-	resCh := make(chan result.Issue, 1024)
-
-	go func() {
-		issuesFound := false
-		for i := range issues {
-			issuesFound = true
-			resCh <- i
-		}
-
-		if issuesFound {
-			e.exitCode = e.cfg.Run.ExitCodeIfIssuesFound
-		}
-
-		close(resCh)
-	}()
-
-	return resCh
+func (e *Executor) setExitCodeIfIssuesFound(issues []result.Issue) {
+	if len(issues) != 0 {
+		e.exitCode = e.cfg.Run.ExitCodeIfIssuesFound
+	}
 }
 
 func (e *Executor) runAndPrint(ctx context.Context, args []string) error {
@@ -357,7 +345,7 @@ func (e *Executor) runAndPrint(ctx context.Context, args []string) error {
 		return err
 	}
 
-	issues = e.setExitCodeIfIssuesFound(issues)
+	e.setExitCodeIfIssuesFound(issues)
 
 	if err = p.Print(ctx, issues); err != nil {
 		return fmt.Errorf("can't print %d issues: %s", len(issues), err)
@@ -402,7 +390,7 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 		}
 	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), e.cfg.Run.Deadline)
+	ctx, cancel := context.WithTimeout(context.Background(), e.cfg.Run.Timeout)
 	defer cancel()
 
 	if needTrackResources {
@@ -426,7 +414,7 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 func (e *Executor) setupExitCode(ctx context.Context) {
 	if ctx.Err() != nil {
 		e.exitCode = exitcodes.Timeout
-		e.log.Errorf("Deadline exceeded: try increase it by passing --deadline option")
+		e.log.Errorf("Timeout exceeded: try increase it by passing --timeout option")
 		return
 	}
 
