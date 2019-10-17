@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -24,7 +23,6 @@ func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
 			{
 				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`webaclassociation/.+`)),
 					testAccCheckWafRegionalWebAclAssociationExists(resourceName),
 				),
 			},

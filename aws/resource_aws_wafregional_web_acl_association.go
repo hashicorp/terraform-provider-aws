@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -27,10 +26,6 @@ func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"resource_arn": {
 				Type:     schema.TypeString,
@@ -109,15 +104,6 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 
 	d.Set("resource_arn", resourceArn)
 	d.Set("web_acl_id", output.WebACLSummary.WebACLId)
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Resource:  fmt.Sprintf("webaclassociation/%s", d.Id()),
-		Region:    meta.(*AWSClient).region,
-		Service:   "waf-regional",
-		AccountID: meta.(*AWSClient).accountid,
-	}
-	d.Set("arn", arn.String())
 
 	return nil
 }
