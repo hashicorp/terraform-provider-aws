@@ -93,3 +93,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association
+* `arn` - Amazon Resource Name (ARN)
+
+## Import
+
+WAF Regional Web ACL Association can be imported using their ID, e.g.
+
+```
+$ terraform import aws_waf_xss_match_set.aws_wafregional_web_acl_association a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

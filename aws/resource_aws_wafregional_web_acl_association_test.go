@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -13,6 +14,8 @@ import (
 )
 
 func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
+	resourceName := "aws_wafregional_web_acl_association.foo"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -21,8 +24,14 @@ func TestAccAWSWafRegionalWebAclAssociation_basic(t *testing.T) {
 			{
 				Config: testAccCheckWafRegionalWebAclAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`webaclassociation/.+`)),
+					testAccCheckWafRegionalWebAclAssociationExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -47,6 +56,8 @@ func TestAccAWSWafRegionalWebAclAssociation_disappears(t *testing.T) {
 }
 
 func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
+	resourceName := "aws_wafregional_web_acl_association.foo"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -55,9 +66,14 @@ func TestAccAWSWafRegionalWebAclAssociation_multipleAssociations(t *testing.T) {
 			{
 				Config: testAccCheckWafRegionalWebAclAssociationConfig_multipleAssociations,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.foo"),
+					testAccCheckWafRegionalWebAclAssociationExists(resourceName),
 					testAccCheckWafRegionalWebAclAssociationExists("aws_wafregional_web_acl_association.bar"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -77,6 +93,11 @@ func TestAccAWSWafRegionalWebAclAssociation_ResourceArn_ApiGatewayStage(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWafRegionalWebAclAssociationExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
