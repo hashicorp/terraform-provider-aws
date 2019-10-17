@@ -100,5 +100,5 @@ In addition to all arguments above, the following attributes are exported:
 WAF Regional Web ACL Association can be imported using their `web_acl_id:resource_arn`, e.g.
 
 ```
-$ terraform import aws_waf_xss_match_set.aws_wafregional_web_acl_association web_acl_id:resource_arn
+$ terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
 ```
