@@ -3048,20 +3048,6 @@ resource "aws_instance" "foo" {
 `, rInt)
 }
 
-const testAccInstanceSpotMaxPriceConfig = `
-
-resource "aws_instance" "foo" {
-  # us-west-2
-  ami               = "ami-4fccb37f"
-  availability_zone = "us-west-2a"
-  use_spot_market	= true
-  max_price 		= "0.007"
-
-  instance_type   = "m1.small"
-  user_data       = "foo:-with-character's"
-}
-`
-
 const testAccInstanceSpotAttrConfig = `
 
 resource "aws_instance" "foo" {
