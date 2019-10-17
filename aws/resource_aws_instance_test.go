@@ -148,6 +148,28 @@ func TestFetchRootDevice(t *testing.T) {
 
 func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigVPC,
+			},
+
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "user_data", "use_spot_market"},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
+	resourceName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 	var v ec2.Instance
 
@@ -322,6 +344,187 @@ func TestAccAWSInstance_basic(t *testing.T) {
 					_, err := conn.DeleteVolume(&ec2.DeleteVolumeInput{VolumeId: vol.VolumeId})
 					return err
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_basicSpotInstance(t *testing.T) {
+	var v ec2.Instance
+	var vol *ec2.Volume
+
+	rInt := acctest.RandIntRange(0, 2)
+
+	checkIfSpotIntance := func(expected bool) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			conn := testAccProvider.Meta().(*AWSClient).ec2conn
+			r, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
+				InstanceIds: []*string{v.InstanceId},
+			})
+			if err != nil {
+				return err
+			}
+			ri := *r.Reservations[0].Instances[0].SpotInstanceRequestId
+			if ri == "" {
+				return fmt.Errorf("SpotInstanceRequestId should not be nil")
+			}
+			return nil
+		}
+	}
+
+	testCheck := func(rInt int) func(*terraform.State) error {
+		return func(*terraform.State) error {
+			if *v.Placement.AvailabilityZone != "us-west-2a" {
+				return fmt.Errorf("bad availability zone: %#v", *v.Placement.AvailabilityZone)
+			}
+
+			if len(v.SecurityGroups) == 0 {
+				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
+			}
+			if *v.SecurityGroups[0].GroupName != fmt.Sprintf("tf_test_%d", rInt) {
+				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
+			}
+
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			// Create a volume to cover #1249
+			{
+				// Need a resource in this config so the provisioner will be available
+				Config: testAccInstanceConfig_pre(rInt),
+				Check: func(*terraform.State) error {
+					conn := testAccProvider.Meta().(*AWSClient).ec2conn
+					var err error
+					vol, err = conn.CreateVolume(&ec2.CreateVolumeInput{
+						AvailabilityZone: aws.String("us-west-2a"),
+						Size:             aws.Int64(int64(5)),
+					})
+					return err
+				},
+			},
+
+			{
+				Config: testAccInstanceSpotConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					testCheck(rInt),
+					checkIfSpotIntance(true),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"user_data",
+						"3dc39dda39be1205215e776bad998da361a5955d"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "ebs_block_device.#", "0"),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo",
+						"arn",
+						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
+				),
+			},
+
+			// We repeat the exact same test so that we can be sure
+			// that the user data hash stuff is working without generating
+			// an incorrect diff.
+			{
+				Config: testAccInstanceSpotConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					testCheck(rInt),
+					checkIfSpotIntance(true),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"user_data",
+						"3dc39dda39be1205215e776bad998da361a5955d"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "ebs_block_device.#", "0"),
+				),
+			},
+
+			// Clean up volume created above
+			{
+				Config: testAccInstanceSpotConfig(rInt),
+				Check: func(*terraform.State) error {
+					conn := testAccProvider.Meta().(*AWSClient).ec2conn
+					_, err := conn.DeleteVolume(&ec2.DeleteVolumeInput{VolumeId: vol.VolumeId})
+					return err
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_SpotInstanceAttributes(t *testing.T) {
+	var v ec2.Instance
+
+	checkSpotRequestAttributes := func(expected bool) resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			conn := testAccProvider.Meta().(*AWSClient).ec2conn
+			r, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
+				InstanceIds: []*string{v.InstanceId},
+			})
+			if err != nil {
+				return err
+			}
+			ri := *r.Reservations[0].Instances[0].SpotInstanceRequestId
+
+			spotReqInput := &ec2.DescribeSpotInstanceRequestsInput{
+				SpotInstanceRequestIds: []*string{aws.String(ri)},
+			}
+
+			spotReqResp, err := conn.DescribeSpotInstanceRequests(spotReqInput)
+			if err != nil {
+				return err
+			}
+			spotReq := spotReqResp.SpotInstanceRequests[0]
+			var errMsg string
+			if *spotReq.SpotPrice != "0.009000" {
+				errMsg += fmt.Sprintf("MaxPrice want: 0.009000 got: %s ", *spotReq.SpotPrice)
+			}
+			if *spotReq.InstanceInterruptionBehavior != "terminate" {
+				errMsg += fmt.Sprintf("InterruptionBehabior: want: hibernate got: %s, ", *spotReq.InstanceInterruptionBehavior)
+			}
+			if *spotReq.Type != "one-time" {
+				errMsg += fmt.Sprintf("Spot instance type: want: persistent got: %s, ", *spotReq.Type)
+			}
+			if errMsg != "" {
+				return fmt.Errorf(errMsg)
+			}
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_instance.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceSpotAttrConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						"aws_instance.foo", &v),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo",
+						"user_data",
+						"3dc39dda39be1205215e776bad998da361a5955d"),
+					resource.TestCheckResourceAttr(
+						"aws_instance.foo", "ebs_block_device.#", "0"),
+					checkSpotRequestAttributes(true),
+					resource.TestMatchResourceAttr(
+						"aws_instance.foo",
+						"arn",
+						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
+				),
 			},
 		},
 	})
@@ -2817,6 +3020,63 @@ resource "aws_instance" "test" {
 }
 `, rInt)
 }
+
+func testAccInstanceSpotConfig(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "tf_test_foo" {
+  name        = "tf_test_%d"
+  description = "foo"
+
+  ingress {
+    protocol    = "icmp"
+    from_port   = -1
+    to_port     = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami               = "ami-4fccb37f"
+  availability_zone = "us-west-2a"
+  use_spot_market	= true
+
+  instance_type   = "m1.small"
+  security_groups = ["${aws_security_group.tf_test_foo.name}"]
+  user_data       = "foo:-with-character's"
+}
+`, rInt)
+}
+
+const testAccInstanceSpotMaxPriceConfig = `
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami               = "ami-4fccb37f"
+  availability_zone = "us-west-2a"
+  use_spot_market	= true
+  max_price 		= "0.007"
+
+  instance_type   = "m1.small"
+  user_data       = "foo:-with-character's"
+}
+`
+
+const testAccInstanceSpotAttrConfig = `
+
+resource "aws_instance" "foo" {
+  # us-west-2
+  ami               				= "ami-4fccb37f"
+  availability_zone 				= "us-west-2a"
+  use_spot_market					= true
+  max_price 						= "0.009000"
+  instance_interruption_behaviour	= "terminate"
+  spot_instance_type				= "one-time"
+
+  instance_type   = "m1.small"
+  user_data       = "foo:-with-character's"
+}
+`
 
 const testAccInstanceConfigWithSmallInstanceType = `
 resource "aws_instance" "test" {
