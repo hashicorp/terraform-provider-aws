@@ -517,6 +517,37 @@ func resourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+
+			"use_spot_market": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  false,
+			},
+			"max_price": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"block_duration_minutes": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
+			},
+			"instance_interruption_behaviour": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.InstanceInterruptionBehaviorTerminate,
+					ec2.InstanceInterruptionBehaviorStop,
+					ec2.InstanceInterruptionBehaviorHibernate,
+				}, false),
+			},
+			"spot_instance_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -592,6 +623,32 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		tagsSpec = append(tagsSpec, spec)
+	}
+
+	if d.Get("use_spot_market").(bool) {
+		log.Printf("[DEBUG] using spot market for the ec2 instace")
+		instanceMarketOptions := &ec2.InstanceMarketOptionsRequest{
+			MarketType: aws.String("spot"),
+		}
+		spotMarketOptions := &ec2.SpotMarketOptions{}
+		if v, ok := d.GetOk("max_price"); ok {
+			spotMarketOptions.MaxPrice = aws.String(v.(string))
+		}
+		if v, ok := d.GetOk("spot_instance_type"); ok {
+			spotMarketOptions.SpotInstanceType = aws.String(v.(string))
+		} else {
+			spotMarketOptions.SpotInstanceType = aws.String(ec2.SpotInstanceTypeOneTime)
+		}
+		if v, ok := d.GetOk("instance_interruption_behaviour"); ok {
+			spotMarketOptions.InstanceInterruptionBehavior = aws.String(v.(string))
+		} else {
+			spotMarketOptions.InstanceInterruptionBehavior = aws.String(ec2.InstanceInterruptionBehaviorTerminate)
+		}
+		if v, ok := d.GetOk("block_duration_minutes"); ok {
+			spotMarketOptions.BlockDurationMinutes = aws.Int64(int64(v.(int)))
+		}
+		instanceMarketOptions.SpotOptions = spotMarketOptions
+		runOpts.InstanceMarketOptions = instanceMarketOptions
 	}
 
 	if len(tagsSpec) > 0 {
