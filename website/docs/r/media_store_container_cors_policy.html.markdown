@@ -21,7 +21,7 @@ resource "aws_media_store_container" "example" {
 resource "aws_media_store_container_cors_policy" "example" {
   container_name = "${aws_media_store_container.example.name}"
 
-  cors_policy = {
+  cors_policy {
     allowed_headers = ["*"]
     allowed_methods = ["GET"]
     allowed_origins = ["*"]
