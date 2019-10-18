@@ -37,7 +37,6 @@ func resourceAwsRoute53Zone() *schema.Resource {
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "Managed by Terraform",
 			},
 
 			"vpc": {
