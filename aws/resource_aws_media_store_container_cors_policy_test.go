@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSMediaStoreContainerCorsPolicy_basic(t *testing.T) {
@@ -139,7 +140,7 @@ func testAccMediaStoreContainerCorsPolicyConfig(rName string) string {
 resource "aws_media_store_container_cors_policy" "test" {
 	container_name = "${aws_media_store_container.test.name}"
 
-	cors_policy = {
+	cors_policy {
 		allowed_headers = ["*"]
 		allowed_methods = ["GET"]
 		allowed_origins = ["*"]
@@ -154,7 +155,7 @@ func testAccMediaStoreContainerCorsPolicyConfig_optional(rName string) string {
 resource "aws_media_store_container_cors_policy" "test" {
 	container_name = "${aws_media_store_container.test.name}"
 
-	cors_policy = {
+	cors_policy {
 		allowed_headers = ["*"]
 		allowed_methods = ["GET", "HEAD"]
 		allowed_origins = ["http://aaa.example.com"]
@@ -171,7 +172,7 @@ func testAccMediaStoreContainerCorsPolicyConfig_update(rName string) string {
 resource "aws_media_store_container_cors_policy" "test" {
 	container_name = "${aws_media_store_container.test.name}"
 
-	cors_policy = {
+	cors_policy {
 		allowed_headers = ["Access-Control-Request-Headers"]
 		allowed_methods = ["PUT", "GET"]
 		allowed_origins = ["http://aaa.example.com", "http://bbb.example.com"]
