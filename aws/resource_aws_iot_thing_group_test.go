@@ -106,31 +106,6 @@ func testAccCheckAWSIotThingGroup_basic(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSIotThingGroupDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).iotconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iot_thing_group" {
-			continue
-		}
-
-		params := &iot.DescribeThingGroupInput{
-			ThingGroupName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeThingGroup(params)
-		if err != nil {
-			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
-				return nil
-			}
-			return err
-		}
-		return fmt.Errorf("Expected IoT Thing Group to be destroyed, %s found", rs.Primary.ID)
-	}
-
-	return nil
-}
-
 func TestAccAWSIotThingGroup_parentGroup(t *testing.T) {
 	rString := acctest.RandString(5)
 	resourceName := "aws_iot_thing_group.group"
@@ -157,6 +132,31 @@ func TestAccAWSIotThingGroup_parentGroup(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSIotThingGroupDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).iotconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_iot_thing_group" {
+			continue
+		}
+
+		params := &iot.DescribeThingGroupInput{
+			ThingGroupName: aws.String(rs.Primary.ID),
+		}
+
+		_, err := conn.DescribeThingGroup(params)
+		if err != nil {
+			if isAWSErr(err, iot.ErrCodeResourceNotFoundException, "") {
+				return nil
+			}
+			return err
+		}
+		return fmt.Errorf("Expected IoT Thing Group to be destroyed, %s found", rs.Primary.ID)
+	}
+
+	return nil
 }
 
 func testAccCheckAWSIotThingGroupExists_basic(name string) resource.TestCheckFunc {
