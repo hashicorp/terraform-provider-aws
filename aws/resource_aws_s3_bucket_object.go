@@ -375,7 +375,32 @@ func resourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) err
 			return fmt.Errorf("Failed to describe default S3 KMS key (alias/aws/s3): %s", err)
 		}
 
-		if *resp.SSEKMSKeyId != *kmsresp.KeyMetadata.Arn {
+		// Read the bucket server side encryption configuration to see if this object was encrypted
+		// with the default bucket encryption key
+		bucketEncryptionResponse, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+			return s3conn.GetBucketEncryption(&s3.GetBucketEncryptionInput{
+				Bucket: aws.String(bucket),
+			})
+		})
+		if err != nil && !isAWSErr(err, "ServerSideEncryptionConfigurationNotFoundError", "server side encryption configuration was not found") {
+			return fmt.Errorf("error getting S3 Bucket encryption: %s", err)
+		}
+
+		objectUsesDefaultBucketKey := false
+
+		if bucketEncryption, ok := bucketEncryptionResponse.(*s3.GetBucketEncryptionOutput); ok && bucketEncryption.ServerSideEncryptionConfiguration != nil {
+			for _, v := range bucketEncryption.ServerSideEncryptionConfiguration.Rules {
+				if v.ApplyServerSideEncryptionByDefault != nil {
+					if aws.StringValue(v.ApplyServerSideEncryptionByDefault.SSEAlgorithm) == s3.ServerSideEncryptionAwsKms {
+						if *resp.SSEKMSKeyId == aws.StringValue(v.ApplyServerSideEncryptionByDefault.KMSMasterKeyID) {
+							objectUsesDefaultBucketKey = true
+						}
+					}
+				}
+			}
+		}
+
+		if *resp.SSEKMSKeyId != *kmsresp.KeyMetadata.Arn && !objectUsesDefaultBucketKey {
 			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", *resp.SSEKMSKeyId)
 			d.Set("kms_key_id", resp.SSEKMSKeyId)
 		}
