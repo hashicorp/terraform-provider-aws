@@ -100,7 +100,18 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 	}
 	resp := out.(*waf.CreateRateBasedRuleOutput)
 	d.SetId(*resp.Rule.RuleId)
-	return resourceAwsWafRateBasedRuleUpdate(d, meta)
+
+	newPredicates := d.Get("predicates").(*schema.Set).List()
+	if len(newPredicates) > 0 {
+		noPredicates := []interface{}{}
+		err := updateWafRateBasedRuleResource(d.Id(), noPredicates, newPredicates, int64(d.Get("rate_limit").(int)), conn)
+		if err != nil {
+			return fmt.Errorf("Error updating WAF Rate Based Rule Predicates: %s", err)
+		}
+
+	}
+
+	return resourceAwsWafRateBasedRuleRead(d, meta)
 }
 
 func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
@@ -112,7 +123,7 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.GetRateBasedRule(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == waf.ErrCodeNonexistentItemException {
 			log.Printf("[WARN] WAF Rate Based Rule (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -172,13 +183,6 @@ func resourceAwsWafRateBasedRuleUpdate(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("Error Updating WAF Rule: %s", err)
 		}
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
-	}.String()
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
