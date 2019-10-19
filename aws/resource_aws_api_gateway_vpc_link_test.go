@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -71,8 +72,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfig(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					//testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
@@ -82,6 +82,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfig(rName, "test update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-update-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test update"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
