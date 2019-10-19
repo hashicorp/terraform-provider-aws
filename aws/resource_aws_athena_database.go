@@ -60,11 +60,12 @@ func resourceAwsAthenaDatabase() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
-func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList []interface{}) (*athena.ResultConfiguration, error) {
+func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList []interface{}, tags map[string]interface{}) (*athena.ResultConfiguration, error) {
 	resultConfig := athena.ResultConfiguration{
 		OutputLocation: aws.String("s3://" + bucket),
 	}
@@ -86,6 +87,7 @@ func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList 
 	}
 
 	resultConfig.EncryptionConfiguration = &encryptionConfig
+	resultConfig.Tags = tagsFromMapGeneric(tags)
 
 	return &resultConfig, nil
 }
@@ -93,7 +95,7 @@ func expandAthenaResultConfiguration(bucket string, encryptionConfigurationList 
 func resourceAwsAthenaDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).athenaconn
 
-	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}))
+	resultConfig, err := expandAthenaResultConfiguration(d.Get("bucket").(string), d.Get("encryption_configuration").([]interface{}), d.Get("tags").(map[string]interface{}))
 	if err != nil {
 		return err
 	}

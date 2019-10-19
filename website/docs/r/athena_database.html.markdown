@@ -35,6 +35,7 @@ An `encryption_configuration` block supports the following arguments:
 
 * `encryption_option` - (Required) The type of key; one of `SSE_S3`, `SSE_KMS`, `CSE_KMS`
 * `kms_key` - (Optional) The KMS key ARN or ID; required for key types `SSE_KMS` and `CSE_KMS`.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ~> **NOTE:** When Athena queries are executed, result files may be created in the specified bucket. Consider using `force_destroy` on the bucket too in order to avoid any problems when destroying the bucket.  
 
