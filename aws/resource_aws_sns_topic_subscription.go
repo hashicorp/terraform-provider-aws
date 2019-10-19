@@ -222,7 +222,13 @@ func subscribeToSNSTopic(d *schema.ResourceData, snsconn *sns.SNS) (output *sns.
 
 	output, err = snsconn.Subscribe(req)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating SNS topic: %s", err)
+		var error_response error
+		if strings.Contains(err.Error(), "Invalid parameter: TopicArn") {
+			error_response = fmt.Errorf("Error creating SNS topic subscription. You may be trying to add an SNS subscription in a region different from the topic's region: %s", err)
+		} else {
+			error_response = fmt.Errorf("Error creating SNS topic subscription: %s", err)
+		}
+		return nil, error_response
 	}
 
 	log.Printf("[DEBUG] Finished subscribing to topic %s with subscription arn %s", topic_arn, *output.SubscriptionArn)
