@@ -62,6 +62,8 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
+	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
+	vpcLinkNameUpdated := fmt.Sprintf("tf-apigateway-update-%s", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -73,17 +75,17 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 				),
 			},
 			{
-				Config: testAccAPIGatewayVpcLinkConfig(rName, "test update"),
+				Config: testAccAPIGatewayVpcLinkConfig_Update(rName, "test update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "apigateway", regexp.MustCompile(`/vpclinks/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-update-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", "test update"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 				),
@@ -95,6 +97,7 @@ func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
+	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
 	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,7 +109,7 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfigTags1(rName, description, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -117,7 +120,7 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfigTags2(rName, description, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -129,7 +132,7 @@ func TestAccAWSAPIGatewayVpcLink_tags(t *testing.T) {
 				Config: testAccAPIGatewayVpcLinkConfigTags1(rName, description, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -273,4 +276,14 @@ resource "aws_api_gateway_vpc_link" "test" {
   }
 }
 `, rName, description, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAPIGatewayVpcLinkConfig_Update(rName, description string) string {
+	return testAccAPIGatewayVpcLinkConfig_basis(rName) + fmt.Sprintf(`
+resource "aws_api_gateway_vpc_link" "test" {
+  name = "tf-apigateway-update-%s"
+  description = %q
+  target_arns = ["${aws_lb.test_a.arn}"]
+}
+`, rName, description)
 }
