@@ -417,7 +417,7 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 
   tags = {
-	%q = %q
+	%[4]q = %[5]q
   }
 }
 `, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), tagKey1, tagValue1)
@@ -439,8 +439,8 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 
   tags = {
-	%q = %q
-	%q = %q
+	%[4]q = %[5]q
+	%[6]q = %[7]q
   }
 }
 `, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
