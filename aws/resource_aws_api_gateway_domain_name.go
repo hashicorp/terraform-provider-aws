@@ -216,7 +216,7 @@ func resourceAwsApiGatewayDomainNameRead(d *schema.ResourceData, meta interface{
 		DomainName: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == apigateway.ErrCodeNotFoundException {
 			log.Printf("[WARN] API Gateway Domain Name (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
