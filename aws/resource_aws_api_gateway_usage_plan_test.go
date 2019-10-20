@@ -444,7 +444,7 @@ func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
 		if !ok {
 			return err
 		}
-		if aws2err.Code() != "NotFoundException" {
+		if aws2err.Code() != apigateway.ErrCodeNotFoundException {
 			return err
 		}
 
