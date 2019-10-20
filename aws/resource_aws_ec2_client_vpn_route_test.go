@@ -8,9 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"testing"
+	"time"
 )
 
-func TestAccResourceAwsEc2ClientVpnRoute_basic(t *testing.T) {
+func TestAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 	var assoc1 ec2.ClientVpnRoute
 	rStr := acctest.RandString(5)
 
@@ -28,6 +29,27 @@ func TestAccResourceAwsEc2ClientVpnRoute_basic(t *testing.T) {
 		},
 	})
 
+}
+
+func TestAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
+	var assoc1 ec2.ClientVpnRoute
+	rStr := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnRouteConfig(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnRouteExists("aws_ec2_client_vpn_route.test", &assoc1),
+					testAccCheckAwsEc2ClientVpnRouteDisappears(&assoc1),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
@@ -61,6 +83,36 @@ func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAwsEc2ClientVpnRouteDisappears(clientVpnRoute *ec2.ClientVpnRoute) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		req := &ec2.DeleteClientVpnRouteInput{
+			ClientVpnEndpointId:  clientVpnRoute.ClientVpnEndpointId,
+			TargetVpcSubnetId:    clientVpnRoute.TargetSubnet,
+			DestinationCidrBlock: clientVpnRoute.DestinationCidr,
+		}
+		_, err := conn.DeleteClientVpnRoute(req)
+		if err != nil {
+			return err
+		}
+
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{ec2.ClientVpnRouteStatusCodeDeleting},
+			Target:  []string{"DELETED"},
+			Refresh: clientVpnRouteRefreshFunc(conn,
+				aws.StringValue(clientVpnRoute.TargetSubnet),
+				aws.StringValue(clientVpnRoute.DestinationCidr),
+				aws.StringValue(clientVpnRoute.ClientVpnEndpointId)),
+			Timeout: 10 * time.Minute,
+		}
+
+		_, err = stateConf.WaitForState()
+
+		return err
+	}
 }
 
 func testAccCheckAwsEc2ClientVpnRouteExists(name string, assoc *ec2.ClientVpnRoute) resource.TestCheckFunc {
@@ -97,11 +149,12 @@ func testAccCheckAwsEc2ClientVpnRouteExists(name string, assoc *ec2.ClientVpnRou
 
 		for _, a := range resp.Routes {
 			if *a.DestinationCidr == rs.Primary.Attributes["cidr_block"] && *a.TargetSubnet == rs.Primary.Attributes["subnet_id"] {
+				*assoc = *a
 				return nil
 			}
 		}
 
-		return nil
+		return fmt.Errorf("Client VPN route (%s) not found", rs.Primary.ID)
 	}
 }
 
