@@ -104,11 +104,10 @@ func resourceAwsWafRateBasedRuleCreate(d *schema.ResourceData, meta interface{})
 	newPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateWafRateBasedRuleResource(d.Id(), noPredicates, newPredicates, int64(d.Get("rate_limit").(int)), conn)
+		err := updateWafRateBasedRuleResource(*resp.Rule.RuleId, noPredicates, newPredicates, d.Get("rate_limit"), conn)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Rate Based Rule Predicates: %s", err)
+			return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
 		}
-
 	}
 
 	return resourceAwsWafRateBasedRuleRead(d, meta)
