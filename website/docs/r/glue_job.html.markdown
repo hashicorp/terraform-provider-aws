@@ -54,6 +54,7 @@ be removed in future releases, please use `max_capacity` instead.
 * `default_arguments` – (Optional) The map of default arguments for this job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes. For information about how to specify and consume your own Job arguments, see the [Calling AWS Glue APIs in Python](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-calling.html) topic in the developer guide. For information about the key-value pairs that AWS Glue consumes to set up your job, see the [Special Parameters Used by AWS Glue](http://docs.aws.amazon.com/glue/latest/dg/aws-glue-programming-python-glue-arguments.html) topic in the developer guide.
 * `description` – (Optional) Description of the job.
 * `execution_property` – (Optional) Execution property of the job. Defined below.
+* `glue_version` - (Optional) The glue version determines the spark and python version, see [glue version table](https://docs.aws.amazon.com/en_pv/glue/latest/dg/add-job.html#glue-version-table). Current valid values are '0.9' and '1.0'.
 * `max_capacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs.
 * `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.

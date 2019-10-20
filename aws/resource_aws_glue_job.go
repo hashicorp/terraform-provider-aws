@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -82,6 +83,12 @@ func resourceAwsGlueJob() *schema.Resource {
 					},
 				},
 			},
+			"glue_version": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\d\.\d`), "must be 'major.minor', e.g. '0.9' or '1.0'"),
+			},
 			"max_capacity": {
 				Type:          schema.TypeFloat,
 				Optional:      true,
@@ -159,6 +166,10 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("glue_version"); ok {
+		input.GlueVersion = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("max_retries"); ok {
 		input.MaxRetries = aws.Int64(int64(v.(int)))
 	}
@@ -216,6 +227,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("execution_property", flattenGlueExecutionProperty(job.ExecutionProperty)); err != nil {
 		return fmt.Errorf("error setting execution_property: %s", err)
 	}
+	d.Set("glue_version", job.GlueVersion)
 	d.Set("max_capacity", aws.Float64Value(job.MaxCapacity))
 	d.Set("max_retries", int(aws.Int64Value(job.MaxRetries)))
 	d.Set("name", job.Name)
@@ -269,6 +281,10 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("execution_property"); ok {
 		jobUpdate.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("glue_version"); ok {
+		jobUpdate.GlueVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {

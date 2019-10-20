@@ -273,6 +273,44 @@ func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSGlueJobConfig_GlueVersion(rName, "1"),
+				ExpectError: regexp.MustCompile(`must be 'major.minor', e.g. '0.9' or '1.0'`),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "0.9"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "1.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueJob_MaxRetries(t *testing.T) {
 	var job glue.Job
 
@@ -665,6 +703,25 @@ resource "aws_glue_job" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName, maxConcurrentRuns)
+}
+
+func testAccAWSGlueJobConfig_GlueVersion(rName string, glueVersion string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
+  glue_version       = "%s"
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, glueVersion)
 }
 
 func testAccAWSGlueJobConfig_MaxRetries(rName string, maxRetries int) string {
