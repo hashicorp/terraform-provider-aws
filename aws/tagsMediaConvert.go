@@ -5,7 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/hashicorp/terraform/helper/schema"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func setTagsMediaConvert(conn *mediaconvert.MediaConvert, d *schema.ResourceData, arn string) error {
