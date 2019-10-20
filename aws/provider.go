@@ -347,6 +347,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_ipset":                          dataSourceAwsWafRegionalIpSet(),
 			"aws_wafregional_rule":                           dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_rate_based_rule":                dataSourceAwsWafRegionalRateBasedRule(),
+			"aws_waf_subscribed_rule_group":                  dataSourceAwsWafSubscribedRuleGroup(),
 			"aws_wafregional_web_acl":                        dataSourceAwsWafRegionalWebAcl(),
 			"aws_wafv2_ip_set":                               dataSourceAwsWafv2IPSet(),
 			"aws_wafv2_regex_pattern_set":                    dataSourceAwsWafv2RegexPatternSet(),
