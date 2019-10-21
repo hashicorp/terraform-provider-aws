@@ -722,7 +722,7 @@ func flattenSelectAttributesActivity(selectAttributesActivity *iotanalytics.Sele
 func wrapMapInList(mapping map[string]interface{}) []map[string]interface{} {
 	// We should use TypeList or TypeSet with MaxItems in case we want single object.
 	// So, schema.ResourceData.Set requires list as type of argument for such fields,
-	// as a result code becames a little bit messy with such instructions : []map[string]interface{}{someObject}.
+	// as a result code becomes a little bit messy with such instructions : []map[string]interface{}{someObject}.
 	// This helper function wrap mapping in list, and makes code more readable and intuitive.
 	if mapping == nil {
 		return make([]map[string]interface{}, 0)
