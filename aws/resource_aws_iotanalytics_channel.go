@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func generateCustomerManagedS3Schema() *schema.Resource {
+func generateChannelCustomerManagedS3Schema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -29,7 +29,7 @@ func generateCustomerManagedS3Schema() *schema.Resource {
 	}
 }
 
-func generateServiceManagedS3Schema() *schema.Resource {
+func generateChannelServiceManagedS3Schema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{},
 	}
@@ -43,14 +43,14 @@ func generateStorageSchema() *schema.Resource {
 				Optional:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"storage.0.service_managed_s3"},
-				Elem:          generateCustomerManagedS3Schema(),
+				Elem:          generateChannelCustomerManagedS3Schema(),
 			},
 			"service_managed_s3": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"storage.0.customer_managed_s3"},
-				Elem:          generateServiceManagedS3Schema(),
+				Elem:          generateChannelServiceManagedS3Schema(),
 			},
 		},
 	}
@@ -106,7 +106,7 @@ func resourceAwsIotAnalyticsChannel() *schema.Resource {
 	}
 }
 
-func parseCustomerManagedS3(rawCustomerManagedS3 map[string]interface{}) *iotanalytics.CustomerManagedChannelS3Storage {
+func parseChannelCustomerManagedS3(rawCustomerManagedS3 map[string]interface{}) *iotanalytics.CustomerManagedChannelS3Storage {
 	bucket := rawCustomerManagedS3["bucket"].(string)
 	roleArn := rawCustomerManagedS3["role_arn"].(string)
 	customerManagedS3 := &iotanalytics.CustomerManagedChannelS3Storage{
@@ -121,22 +121,22 @@ func parseCustomerManagedS3(rawCustomerManagedS3 map[string]interface{}) *iotana
 	return customerManagedS3
 }
 
-func parseServiceManagedS3(rawServiceManagedS3 map[string]interface{}) *iotanalytics.ServiceManagedChannelS3Storage {
+func parseChannelServiceManagedS3(rawServiceManagedS3 map[string]interface{}) *iotanalytics.ServiceManagedChannelS3Storage {
 	return &iotanalytics.ServiceManagedChannelS3Storage{}
 }
 
-func parseStorage(rawChannelStorage map[string]interface{}) *iotanalytics.ChannelStorage {
+func parseChannelStorage(rawChannelStorage map[string]interface{}) *iotanalytics.ChannelStorage {
 
 	var customerManagedS3 *iotanalytics.CustomerManagedChannelS3Storage
 	if list := rawChannelStorage["customer_managed_s3"].([]interface{}); len(list) > 0 {
 		rawCustomerManagedS3 := list[0].(map[string]interface{})
-		customerManagedS3 = parseCustomerManagedS3(rawCustomerManagedS3)
+		customerManagedS3 = parseChannelCustomerManagedS3(rawCustomerManagedS3)
 	}
 
 	var serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage
 	if list := rawChannelStorage["service_managed_s3"].([]interface{}); len(list) > 0 {
 		rawServiceManagedS3 := list[0].(map[string]interface{})
-		serviceManagedS3 = parseServiceManagedS3(rawServiceManagedS3)
+		serviceManagedS3 = parseChannelServiceManagedS3(rawServiceManagedS3)
 	}
 
 	return &iotanalytics.ChannelStorage{
@@ -171,7 +171,7 @@ func resourceAwsIotAnalyticsChannelCreate(d *schema.ResourceData, meta interface
 	channelStorageSet := d.Get("storage").(*schema.Set).List()
 	if len(channelStorageSet) >= 1 {
 		rawChannelStorage := channelStorageSet[0].(map[string]interface{})
-		params.ChannelStorage = parseStorage(rawChannelStorage)
+		params.ChannelStorage = parseChannelStorage(rawChannelStorage)
 	}
 
 	retentionPeriodSet := d.Get("retention_period").(*schema.Set).List()
@@ -194,14 +194,13 @@ func resourceAwsIotAnalyticsChannelCreate(d *schema.ResourceData, meta interface
 	// second time(when all required resources are created) channel will be created successfully.
 	// So we suppose that problem is that AWS return response of successful role arn creation before
 	// process of creation is really ended, and then creation of channel model fails.
-	for _, sleepSeconds := range retrySecondsList {
-		err = nil
-
+	for index, sleepSeconds := range retrySecondsList {
 		_, err = conn.CreateChannel(params)
 		if err == nil {
 			break
+		} else if err != nil && index != len(retrySecondsList)-1 {
+			err = nil
 		}
-
 		time.Sleep(time.Duration(sleepSeconds) * time.Second)
 	}
 
@@ -214,7 +213,7 @@ func resourceAwsIotAnalyticsChannelCreate(d *schema.ResourceData, meta interface
 	return resourceAwsIotAnalyticsChannelRead(d, meta)
 }
 
-func flattenCustomerManagedS3(customerManagedS3 *iotanalytics.CustomerManagedChannelS3Storage) map[string]interface{} {
+func flattenChannelCustomerManagedS3(customerManagedS3 *iotanalytics.CustomerManagedChannelS3Storage) map[string]interface{} {
 	if customerManagedS3 == nil {
 		return nil
 	}
@@ -231,7 +230,7 @@ func flattenCustomerManagedS3(customerManagedS3 *iotanalytics.CustomerManagedCha
 	return rawCustomerManagedS3
 }
 
-func flattenServiceManagedS3(serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage) map[string]interface{} {
+func flattenChannelServiceManagedS3(serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage) map[string]interface{} {
 	if serviceManagedS3 == nil {
 		return nil
 	}
@@ -240,9 +239,9 @@ func flattenServiceManagedS3(serviceManagedS3 *iotanalytics.ServiceManagedChanne
 	return rawServiceManagedS3
 }
 
-func flattenStorage(channelStorage *iotanalytics.ChannelStorage) map[string]interface{} {
-	customerManagedS3 := flattenCustomerManagedS3(channelStorage.CustomerManagedS3)
-	serviceManagedS3 := flattenServiceManagedS3(channelStorage.ServiceManagedS3)
+func flattenChannelStorage(channelStorage *iotanalytics.ChannelStorage) map[string]interface{} {
+	customerManagedS3 := flattenChannelCustomerManagedS3(channelStorage.CustomerManagedS3)
+	serviceManagedS3 := flattenChannelServiceManagedS3(channelStorage.ServiceManagedS3)
 
 	if customerManagedS3 == nil && serviceManagedS3 == nil {
 		return nil
@@ -291,7 +290,7 @@ func resourceAwsIotAnalyticsChannelRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.Set("name", out.Channel.Name)
-	storage := flattenStorage(out.Channel.Storage)
+	storage := flattenChannelStorage(out.Channel.Storage)
 	d.Set("storage", wrapMapInList(storage))
 	retentionPeriod := flattenRetentionPeriod(out.Channel.RetentionPeriod)
 	d.Set("retention_period", wrapMapInList(retentionPeriod))
@@ -309,7 +308,7 @@ func resourceAwsIotAnalyticsChannelUpdate(d *schema.ResourceData, meta interface
 	channelStorageSet := d.Get("storage").(*schema.Set).List()
 	if len(channelStorageSet) >= 1 {
 		rawChannelStorage := channelStorageSet[0].(map[string]interface{})
-		params.ChannelStorage = parseStorage(rawChannelStorage)
+		params.ChannelStorage = parseChannelStorage(rawChannelStorage)
 	}
 
 	retentionPeriodSet := d.Get("retention_period").(*schema.Set).List()
@@ -328,14 +327,13 @@ func resourceAwsIotAnalyticsChannelUpdate(d *schema.ResourceData, meta interface
 	// Full explanation can be found in function `resourceAwsIotAnalyticsChannelCreate`.
 	// We suppose that such error can appear during update also, if you update
 	// role arn.
-	for _, sleepSeconds := range retrySecondsList {
-		err = nil
-
+	for index, sleepSeconds := range retrySecondsList {
 		_, err = conn.UpdateChannel(params)
 		if err == nil {
 			break
+		} else if err != nil && index != len(retrySecondsList)-1 {
+			err = nil
 		}
-
 		time.Sleep(time.Duration(sleepSeconds) * time.Second)
 	}
 
