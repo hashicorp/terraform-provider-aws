@@ -594,14 +594,13 @@ func resourceAwsIotDetectorCreate(d *schema.ResourceData, meta interface{}) erro
 	// second time(when all required resources are created) detector will be created successfully.
 	// So we suppose that problem is that AWS return response of successful role arn creation before
 	// process of creation is really ended, and then creation of detector model fails.
-	for _, sleepSeconds := range retrySecondsList {
-		err = nil
-
+	for index, sleepSeconds := range retrySecondsList {
 		_, err = conn.CreateDetectorModel(params)
 		if err == nil {
 			break
+		} else if err != nil && index != len(retrySecondsList)-1 {
+			err = nil
 		}
-
 		time.Sleep(time.Duration(sleepSeconds) * time.Second)
 	}
 
@@ -840,14 +839,13 @@ func resourceAwsIotDetectorUpdate(d *schema.ResourceData, meta interface{}) erro
 	// Full explanation can be found in function `resourceAwsIotDetectorCreate`.
 	// We suppose that such error can appear during update also, if you update
 	// role arn.
-	for _, sleepSeconds := range retrySecondsList {
-		err = nil
-
+	for index, sleepSeconds := range retrySecondsList {
 		_, err = conn.UpdateDetectorModel(params)
 		if err == nil {
 			break
+		} else if err != nil && index != len(retrySecondsList)-1 {
+			err = nil
 		}
-
 		time.Sleep(time.Duration(sleepSeconds) * time.Second)
 	}
 
