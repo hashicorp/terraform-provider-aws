@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -591,9 +590,6 @@ func xmlConfigToTunnelInfo(xmlConfig string) (*TunnelInfo, error) {
 	if err := xml.Unmarshal([]byte(xmlConfig), &vpnConfig); err != nil {
 		return nil, fmt.Errorf("Error Unmarshalling XML: %s", err)
 	}
-
-	// don't expect consistent ordering from the XML
-	sort.Sort(vpnConfig)
 
 	tunnelInfo := TunnelInfo{
 		Tunnel1Address:          vpnConfig.Tunnels[0].OutsideAddress,

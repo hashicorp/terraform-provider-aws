@@ -584,35 +584,6 @@ const testAccAwsVpnTunnelInfoXML = `
         <ip_address>123.123.123.123</ip_address>
       </tunnel_outside_address>
       <tunnel_inside_address>
-        <ip_address>SECOND_CGW_INSIDE_ADDRESS</ip_address>
-        <network_mask>255.255.255.252</network_mask>
-        <network_cidr>30</network_cidr>
-      </tunnel_inside_address>
-    </customer_gateway>
-    <vpn_gateway>
-      <tunnel_outside_address>
-        <ip_address>SECOND_ADDRESS</ip_address>
-      </tunnel_outside_address>
-      <tunnel_inside_address>
-        <ip_address>SECOND_VGW_INSIDE_ADDRESS</ip_address>
-        <network_mask>255.255.255.252</network_mask>
-        <network_cidr>30</network_cidr>
-      </tunnel_inside_address>
-      <bgp>
-        <asn>SECOND_BGP_ASN</asn>
-        <hold_time>32</hold_time>
-      </bgp>
-    </vpn_gateway>
-    <ike>
-      <pre_shared_key>SECOND_KEY</pre_shared_key>
-    </ike>
-  </ipsec_tunnel>
-  <ipsec_tunnel>
-    <customer_gateway>
-      <tunnel_outside_address>
-        <ip_address>123.123.123.123</ip_address>
-      </tunnel_outside_address>
-      <tunnel_inside_address>
         <ip_address>FIRST_CGW_INSIDE_ADDRESS</ip_address>
         <network_mask>255.255.255.252</network_mask>
         <network_cidr>30</network_cidr>
@@ -634,6 +605,35 @@ const testAccAwsVpnTunnelInfoXML = `
     </vpn_gateway>
     <ike>
       <pre_shared_key>FIRST_KEY</pre_shared_key>
+    </ike>
+  </ipsec_tunnel>
+  <ipsec_tunnel>
+    <customer_gateway>
+      <tunnel_outside_address>
+        <ip_address>123.123.123.123</ip_address>
+      </tunnel_outside_address>
+      <tunnel_inside_address>
+        <ip_address>SECOND_CGW_INSIDE_ADDRESS</ip_address>
+        <network_mask>255.255.255.252</network_mask>
+        <network_cidr>30</network_cidr>
+      </tunnel_inside_address>
+    </customer_gateway>
+    <vpn_gateway>
+      <tunnel_outside_address>
+        <ip_address>SECOND_ADDRESS</ip_address>
+      </tunnel_outside_address>
+      <tunnel_inside_address>
+        <ip_address>SECOND_VGW_INSIDE_ADDRESS</ip_address>
+        <network_mask>255.255.255.252</network_mask>
+        <network_cidr>30</network_cidr>
+      </tunnel_inside_address>
+      <bgp>
+        <asn>SECOND_BGP_ASN</asn>
+        <hold_time>32</hold_time>
+      </bgp>
+    </vpn_gateway>
+    <ike>
+      <pre_shared_key>SECOND_KEY</pre_shared_key>
     </ike>
   </ipsec_tunnel>
 </vpn_connection>
