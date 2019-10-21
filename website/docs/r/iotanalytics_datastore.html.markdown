@@ -33,7 +33,7 @@ The `storage` - (Optional) The definition of the input. Object takes the followi
     * `role_arn` - (Required) The ARN of the role which grants AWS IoT Analytics permission to interact with your Amazon S3 resources
 
 `Note:` You can use only one parameter for `storage` (`service_managed_s3` or `customer_managed_s3`), otherwise you will get an error.
-If you don't choose any parameter or don't define `storage` object, `service_managed_s3` will be choosen by AWS.
+If you don't choose any parameter or don't define `storage` object, `service_managed_s3` will be chosen by AWS.
 
 The `retention_period` - (Optional) How long, in days, message data is kept for the datastore. Object takes following arguments.
 
