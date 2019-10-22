@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dlm_lifecycle_policy"
-sidebar_current: "docs-aws-resource-dlm-lifecycle-policy"
 description: |-
   Provides a Data Lifecycle Manager (DLM) lifecycle policy for managing snapshots.
 ---

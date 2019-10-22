@@ -9,6 +9,10 @@ default: build
 build: fmtcheck
 	go install
 
+gen:
+	rm -f aws/internal/keyvaluetags/*_gen.go
+	go generate ./...
+
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test $(TEST) -v -sweep=$(SWEEP) $(SWEEPARGS)
@@ -32,8 +36,7 @@ websitefmtcheck:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	@golangci-lint run --no-config --deadline 5m --disable-all --enable staticcheck --exclude SA1019 --max-issues-per-linter 0 --max-same-issues 0 ./$(PKG_NAME)
-	@golangci-lint run ./$(PKG_NAME)
+	@golangci-lint run ./$(PKG_NAME)/...
 	@tfproviderlint \
 		-c 1 \
 		-AT001 \
@@ -87,5 +90,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test
+.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test
 

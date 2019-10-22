@@ -3,9 +3,9 @@ package aws
 import (
 	"log"
 
-	"github.com/hashicorp/terraform/helper/mutexkv"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -280,9 +280,11 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpn_gateway":                               dataSourceAwsVpnGateway(),
 			"aws_waf_ipset":                                 dataSourceAwsWafIpSet(),
 			"aws_waf_rule":                                  dataSourceAwsWafRule(),
+			"aws_waf_rate_based_rule":                       dataSourceAwsWafRateBasedRule(),
 			"aws_waf_web_acl":                               dataSourceAwsWafWebAcl(),
 			"aws_wafregional_ipset":                         dataSourceAwsWafRegionalIpSet(),
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
+			"aws_wafregional_rate_based_rule":               dataSourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
@@ -636,6 +638,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
+			"aws_quicksight_user":                                     resourceAwsQuickSightUser(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
 			"aws_ram_resource_association":                            resourceAwsRamResourceAssociation(),
 			"aws_ram_resource_share":                                  resourceAwsRamResourceShare(),
@@ -964,6 +967,7 @@ func init() {
 		"es",
 		"firehose",
 		"fms",
+		"forecast",
 		"fsx",
 		"gamelift",
 		"glacier",
@@ -1001,6 +1005,7 @@ func init() {
 		"personalize",
 		"pinpoint",
 		"pricing",
+		"qldb",
 		"quicksight",
 		"r53",
 		"ram",

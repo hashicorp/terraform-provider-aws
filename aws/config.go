@@ -66,6 +66,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/aws/aws-sdk-go/service/forecastservice"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
@@ -103,6 +104,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/personalize"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -136,7 +138,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
-	"github.com/hashicorp/terraform/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 )
 
 type Config struct {
@@ -229,6 +231,7 @@ type AWSClient struct {
 	esconn                              *elasticsearch.ElasticsearchService
 	firehoseconn                        *firehose.Firehose
 	fmsconn                             *fms.FMS
+	forecastconn                        *forecastservice.ForecastService
 	fsxconn                             *fsx.FSx
 	gameliftconn                        *gamelift.GameLift
 	glacierconn                         *glacier.Glacier
@@ -267,6 +270,7 @@ type AWSClient struct {
 	personalizeconn                     *personalize.Personalize
 	pinpointconn                        *pinpoint.Pinpoint
 	pricingconn                         *pricing.Pricing
+	qldbconn                            *qldb.QLDB
 	quicksightconn                      *quicksight.QuickSight
 	r53conn                             *route53.Route53
 	ramconn                             *ram.RAM
@@ -276,6 +280,7 @@ type AWSClient struct {
 	resourcegroupsconn                  *resourcegroups.ResourceGroups
 	route53resolverconn                 *route53resolver.Route53Resolver
 	s3conn                              *s3.S3
+	s3connUriCleaningDisabled           *s3.S3
 	s3controlconn                       *s3control.S3Control
 	sagemakerconn                       *sagemaker.SageMaker
 	scconn                              *servicecatalog.ServiceCatalog
@@ -420,6 +425,7 @@ func (c *Config) Client() (interface{}, error) {
 		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["es"])})),
 		firehoseconn:                        firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["firehose"])})),
 		fmsconn:                             fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fms"])})),
+		forecastconn:                        forecastservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["forecast"])})),
 		fsxconn:                             fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fsx"])})),
 		gameliftconn:                        gamelift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["gamelift"])})),
 		glacierconn:                         glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glacier"])})),
@@ -457,6 +463,7 @@ func (c *Config) Client() (interface{}, error) {
 		personalizeconn:                     personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["personalize"])})),
 		pinpointconn:                        pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
 		pricingconn:                         pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pricing"])})),
+		qldbconn:                            qldb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["qldb"])})),
 		quicksightconn:                      quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),
 		ramconn:                             ram.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ram"])})),
 		rdsconn:                             rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["rds"])})),
@@ -464,7 +471,6 @@ func (c *Config) Client() (interface{}, error) {
 		region:                              c.Region,
 		resourcegroupsconn:                  resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
-		s3conn:                              s3.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3"]), S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle)})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
 		scconn:                              servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicecatalog"])})),
@@ -501,6 +507,17 @@ func (c *Config) Client() (interface{}, error) {
 	shieldConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["shield"]),
 	}
+
+	// Services that require multiple client configurations
+	s3Config := &aws.Config{
+		Endpoint:         aws.String(c.Endpoints["s3"]),
+		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
+	}
+
+	client.s3conn = s3.New(sess.Copy(s3Config))
+
+	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
+	client.s3connUriCleaningDisabled = s3.New(sess.Copy(s3Config))
 
 	// Handle deprecated endpoint configurations
 	if c.Endpoints["kinesis_analytics"] != "" {

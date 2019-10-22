@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codecommit_repository"
-sidebar_current: "docs-aws-datasource-codecommit-repository"
 description: |-
   Provides details about CodeCommit Repository.
 ---

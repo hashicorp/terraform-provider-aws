@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
-sidebar_current: "docs-aws-resource-s3-bucket-object"
 description: |-
   Provides a S3 bucket object resource.
 ---
@@ -145,6 +144,8 @@ Default is `false`. This value should be set to `true` only if the bucket has S3
 * `object_lock_retain_until_date` - (Optional) The date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
 
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
+
+-> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
 ## Attributes Reference
 

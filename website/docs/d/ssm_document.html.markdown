@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_document"
-sidebar_current: "docs-aws-datasource-ssm-document"
 description: |-
   Provides a SSM Document datasource
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dms_certificate"
-sidebar_current: "docs-aws-resource-dms-certificate"
 description: |-
   Provides a DMS (Data Migration Service) certificate resource.
 ---

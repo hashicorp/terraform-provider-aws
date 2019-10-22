@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_msk_configuration"
-sidebar_current: "docs-aws-resource-msk-configuration"
 description: |-
   Terraform resource for managing an Amazon Managed Streaming for Kafka configuration
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster_snapshot"
-sidebar_current: "docs-aws-resource-neptune-cluster-snapshot"
 description: |-
   Manages a Neptune database cluster snapshot.
 ---
