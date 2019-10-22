@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_waf_size_constraint_set"
-sidebar_current: "docs-aws-resource-waf-size-constraint-set"
 description: |-
   Provides a AWS WAF Size Constraint Set resource.
 ---

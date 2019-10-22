@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl"
-sidebar_current: "docs-aws-datasource-wafregional-web-acl"
 description: |-
     Retrieves a WAF Regional Web ACL id.
 ---

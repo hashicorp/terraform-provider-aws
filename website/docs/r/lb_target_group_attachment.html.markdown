@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lb_target_group_attachment"
-sidebar_current: "docs-aws-resource-elbv2-target-group-attachment"
 description: |-
   Provides the ability to register instances and containers with a LB
   target group

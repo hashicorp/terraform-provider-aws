@@ -800,6 +800,13 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //
 // Creates a new maintenance window.
 //
+// The value you specify for Duration determines the specific end time for the
+// maintenance window based on the time it begins. No maintenance window tasks
+// are permitted to start after the resulting endtime minus the number of hours
+// you specify for Cutoff. For example, if the maintenance window starts at
+// 3 PM, the duration is three hours, and the value you specify for Cutoff is
+// one hour, no maintenance window tasks can start after 5 PM.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10449,6 +10456,9 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 // For information, see Install the Session Manager Plugin for the AWS CLI (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 // in the AWS Systems Manager User Guide.
 //
+// AWS Tools for PowerShell usage: Start-SSMSession is not currently supported
+// by AWS Tools for PowerShell on Windows local machines.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10712,6 +10722,13 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //
 // Updates an association. You can update the association name and version,
 // the document version, schedule, parameters, and Amazon S3 output.
+//
+// In order to call this API action, your IAM user account, group, or role must
+// be configured with permission to call the DescribeAssociation API action.
+// If you don't have permission to call DescribeAssociation, then you receive
+// the following error: An error occurred (AccessDeniedException) when calling
+// the UpdateAssociation operation: User: <user_arn> is not authorized to perform:
+// ssm:DescribeAssociation on resource: <resource_arn>
 //
 // When you update an association, the association immediately runs against
 // the specified targets.
@@ -11137,6 +11154,13 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 // UpdateMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
 // Updates an existing maintenance window. Only specified parameters are modified.
+//
+// The value you specify for Duration determines the specific end time for the
+// maintenance window based on the time it begins. No maintenance window tasks
+// are permitted to start after the resulting endtime minus the number of hours
+// you specify for Cutoff. For example, if the maintenance window starts at
+// 3 PM, the duration is three hours, and the value you specify for Cutoff is
+// one hour, no maintenance window tasks can start after 5 PM.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -25101,10 +25125,10 @@ type InstanceInformation struct {
 	// The instance ID.
 	InstanceId *string `type:"string"`
 
-	// Indicates whether latest version of SSM Agent is running on your instance.
-	// Some older versions of Windows Server use the EC2Config service to process
-	// SSM requests. For this reason, this field does not indicate whether or not
-	// the latest version is installed on Windows managed instances.
+	// Indicates whether the latest version of SSM Agent is running on your Linux
+	// Managed Instance. This field does not indicate whether or not the latest
+	// version is installed on Windows managed instances, because some older versions
+	// of Windows Server use the EC2Config service to process SSM requests.
 	IsLatestVersion *bool `type:"boolean"`
 
 	// The date the association was last run.
@@ -26375,7 +26399,7 @@ type LabelParameterVersionInput struct {
 
 	// The specific version of the parameter on which you want to attach one or
 	// more labels. If no version is specified, the system attaches the label to
-	// the latest version.)
+	// the latest version.
 	ParameterVersion *int64 `type:"long"`
 }
 
@@ -26436,6 +26460,9 @@ type LabelParameterVersionOutput struct {
 	// label requirements, see Labeling Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
 	// in the AWS Systems Manager User Guide.
 	InvalidLabels []*string `min:"1" type:"list"`
+
+	// The version of the parameter that has been labeled.
+	ParameterVersion *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -26451,6 +26478,12 @@ func (s LabelParameterVersionOutput) GoString() string {
 // SetInvalidLabels sets the InvalidLabels field's value.
 func (s *LabelParameterVersionOutput) SetInvalidLabels(v []*string) *LabelParameterVersionOutput {
 	s.InvalidLabels = v
+	return s
+}
+
+// SetParameterVersion sets the ParameterVersion field's value.
+func (s *LabelParameterVersionOutput) SetParameterVersion(v int64) *LabelParameterVersionOutput {
+	s.ParameterVersion = &v
 	return s
 }
 
@@ -31722,6 +31755,9 @@ func (s *PutParameterInput) SetValue(v string) *PutParameterInput {
 type PutParameterOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The tier assigned to the parameter.
+	Tier *string `type:"string" enum:"ParameterTier"`
+
 	// The new version number of a parameter. If you edit a parameter value, Parameter
 	// Store automatically creates a new version and assigns this new version a
 	// unique ID. You can reference a parameter version ID in API actions or in
@@ -31739,6 +31775,12 @@ func (s PutParameterOutput) String() string {
 // GoString returns the string representation
 func (s PutParameterOutput) GoString() string {
 	return s.String()
+}
+
+// SetTier sets the Tier field's value.
+func (s *PutParameterOutput) SetTier(v string) *PutParameterOutput {
+	s.Tier = &v
+	return s
 }
 
 // SetVersion sets the Version field's value.

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
-sidebar_current: "docs-aws-datasource-launch-configuration"
 description: |-
   Provides a Launch Configuration data source.
 ---

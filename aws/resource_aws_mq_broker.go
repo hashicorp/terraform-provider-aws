@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/mitchellh/copystructure"
 )
 
@@ -64,6 +64,30 @@ func resourceAwsMqBroker() *schema.Resource {
 				Optional: true,
 				Default:  "SINGLE_INSTANCE",
 				ForceNew: true,
+			},
+			"encryption_options": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
+						},
+						"use_aws_owned_key": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+							Default:  true,
+						},
+					},
+				},
 			},
 			"engine_type": {
 				Type:     schema.TypeString,
@@ -217,6 +241,7 @@ func resourceAwsMqBrokerCreate(d *schema.ResourceData, meta interface{}) error {
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
 		CreatorRequestId:        aws.String(requestId),
+		EncryptionOptions:       expandMqEncryptionOptions(d.Get("encryption_options").([]interface{})),
 		EngineType:              aws.String(d.Get("engine_type").(string)),
 		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
@@ -304,6 +329,11 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("instances", flattenMqBrokerInstances(out.BrokerInstances))
 	d.Set("broker_name", out.BrokerName)
 	d.Set("deployment_mode", out.DeploymentMode)
+
+	if err := d.Set("encryption_options", flattenMqEncryptionOptions(out.EncryptionOptions)); err != nil {
+		return fmt.Errorf("error setting encryption_options: %s", err)
+	}
+
 	d.Set("engine_type", out.EngineType)
 	d.Set("engine_version", out.EngineVersion)
 	d.Set("host_instance_type", out.HostInstanceType)
@@ -577,6 +607,37 @@ func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (
 	}
 
 	return
+}
+
+func expandMqEncryptionOptions(l []interface{}) *mq.EncryptionOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	encryptionOptions := &mq.EncryptionOptions{
+		UseAwsOwnedKey: aws.Bool(m["use_aws_owned_key"].(bool)),
+	}
+
+	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+		encryptionOptions.KmsKeyId = aws.String(v)
+	}
+
+	return encryptionOptions
+}
+
+func flattenMqEncryptionOptions(encryptionOptions *mq.EncryptionOptions) []interface{} {
+	if encryptionOptions == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"kms_key_id":        aws.StringValue(encryptionOptions.KmsKeyId),
+		"use_aws_owned_key": aws.BoolValue(encryptionOptions.UseAwsOwnedKey),
+	}
+
+	return []interface{}{m}
 }
 
 func validateMqBrokerPassword(v interface{}, k string) (ws []string, errors []error) {
