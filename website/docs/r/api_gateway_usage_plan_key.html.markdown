@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_usage_plan_key"
-sidebar_current: "docs-aws-resource-api-gateway-usage-plan-key"
 description: |-
   Provides an API Gateway Usage Plan Key.
 ---

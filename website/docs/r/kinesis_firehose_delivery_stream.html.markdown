@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kinesis_firehose_delivery_stream"
-sidebar_current: "docs-aws-resource-kinesis-firehose-delivery-stream"
 description: |-
   Provides a AWS Kinesis Firehose Delivery Stream
 ---

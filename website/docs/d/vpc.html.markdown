@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_vpc"
-sidebar_current: "docs-aws-datasource-vpc-x"
 description: |-
     Provides details about a specific VPC
 ---

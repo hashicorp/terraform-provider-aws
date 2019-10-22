@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_servicequotas_service_quota"
-sidebar_current: "docs-aws-resource-servicequotas-service-quota"
 description: |-
   Manages an individual Service Quota
 ---

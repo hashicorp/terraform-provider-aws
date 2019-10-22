@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_stage"
-sidebar_current: "docs-aws-resource-api-gateway-stage"
 description: |-
   Provides an API Gateway Stage.
 ---
