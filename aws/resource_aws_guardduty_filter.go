@@ -25,24 +25,20 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 			"detector_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true, // perhaps remove here and below, when Update is back
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true, // perhaps remove here and below, when Update is back
 			},
 			"tags": tagsSchemaForceNew(),
 			"finding_criteria": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
-				ForceNew: true, // perhaps remove here and below, when Update is back
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"criterion": &schema.Schema{
@@ -279,48 +275,39 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-// func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) error {
-// 	conn := meta.(*AWSClient).guarddutyconn
-//
-// 	accountID, detectorID, err := decodeGuardDutyMemberID(d.Id())
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	if d.HasChange("invite") {
-// 		if d.Get("invite").(bool) {
-// 			input := &guardduty.InviteMembersInput{
-// 				DetectorId:               aws.String(detectorID),
-// 				AccountIds:               []*string{aws.String(accountID)},
-// 				DisableEmailNotification: aws.Bool(d.Get("disable_email_notification").(bool)),
-// 				Message:                  aws.String(d.Get("invitation_message").(string)),
-// 			}
-//
-// 			log.Printf("[INFO] Inviting GuardDuty Member: %s", input)
-// 			output, err := conn.InviteMembers(input)
-// 			if err != nil {
-// 				return fmt.Errorf("error inviting GuardDuty Member %q: %s", d.Id(), err)
-// 			}
-//
-// 			// {"unprocessedAccounts":[{"result":"The request is rejected because the current account has already invited or is already the GuardDuty master of the given member account ID.","accountId":"067819342479"}]}
-// 			if len(output.UnprocessedAccounts) > 0 {
-// 				return fmt.Errorf("error inviting GuardDuty Member %q: %s", d.Id(), aws.StringValue(output.UnprocessedAccounts[0].Result))
-// 			}
-// 		} else {
-// 			input := &guardduty.DisassociateMembersInput{
-// 				AccountIds: []*string{aws.String(accountID)},
-// 				DetectorId: aws.String(detectorID),
-// 			}
-// 			log.Printf("[INFO] Disassociating GuardDuty Member: %s", input)
-// 			_, err := conn.DisassociateMembers(input)
-// 			if err != nil {
-// 				return fmt.Errorf("error disassociating GuardDuty Member %q: %s", d.Id(), err)
-// 			}
-// 		}
-// 	}
-//
-// 	return resourceAwsGuardDutyFilterRead(d, meta)
-// }
+func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).guarddutyconn
+
+	input := guardduty.UpdateFilterInput{
+		DetectorId:  aws.String(d.Get("detector_id").(string)),
+		FilterName:  aws.String(d.Get("name").(string)),
+		Description: aws.String(d.Get("description").(string)),
+		Rank:        aws.Int64(int64(d.Get("rank").(int))),
+	}
+
+	// building `FindingCriteria`
+	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
+	buildFindingCriteria(findingCriteria)
+	input.FindingCriteria = buildFindingCriteria(findingCriteria)
+
+	// Setting the default value for `action`
+	action := "NOOP"
+
+	if len(d.Get("action").(string)) > 0 {
+		action = d.Get("action").(string)
+	}
+
+	input.Action = aws.String(action)
+
+	log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
+
+	output, err := conn.UpdateFilter(&input)
+	if err != nil {
+		return fmt.Errorf("Updating GuardDuty Filter with ID %s failed: %s", d.Id(), err.Error())
+	}
+
+	return resourceAwsGuardDutyFilterRead(d, meta)
+}
 
 func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
