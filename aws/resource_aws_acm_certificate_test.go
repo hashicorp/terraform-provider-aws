@@ -538,7 +538,6 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 	newCaCertificate := tlsRsaX509SelfSignedCaCertificatePem(newCaKey)
 	newCertificate := tlsRsaX509LocallySignedCertificatePem(newCaKey, newCaCertificate, key, commonName)
 
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
