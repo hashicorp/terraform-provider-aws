@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_eip"
-sidebar_current: "docs-aws-resource-eip"
 description: |-
   Provides an Elastic IP resource.
 ---

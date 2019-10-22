@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_user"
-sidebar_current: "docs-aws-datasource-iam-user"
 description: |-
   Get information on a Amazon IAM user
 ---

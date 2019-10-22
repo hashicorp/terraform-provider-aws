@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_domain_name"
-sidebar_current: "docs-aws-resource-api-gateway-domain-name"
 description: |-
   Registers a custom domain name for use with AWS API Gateway.
 ---

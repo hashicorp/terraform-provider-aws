@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_api_key"
-sidebar_current: "docs-aws-resource-api-gateway-api-key"
 description: |-
   Provides an API Gateway API Key.
 ---

@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAthenaWorkgroup() *schema.Resource {
@@ -136,7 +137,7 @@ func resourceAwsAthenaWorkgroupCreate(d *schema.ResourceData, meta interface{}) 
 	// Prevent the below error:
 	// InvalidRequestException: Tags provided upon WorkGroup creation must not be empty
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		input.Tags = tagsFromMapAthena(v)
+		input.Tags = keyvaluetags.New(v).IgnoreAws().AthenaTags()
 	}
 
 	_, err := conn.CreateWorkGroup(input)
@@ -198,15 +199,13 @@ func resourceAwsAthenaWorkgroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", resp.WorkGroup.Name)
 	d.Set("state", resp.WorkGroup.State)
 
-	err = saveTagsAthena(conn, d, d.Get("arn").(string))
-
-	if isAWSErr(err, athena.ErrCodeInvalidRequestException, "is not found") {
-		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
+	tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
 
 	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -262,9 +261,8 @@ func resourceAwsAthenaWorkgroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("tags") {
-		err := setTagsAthena(conn, d, d.Get("arn").(string))
-
-		if err != nil {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.AthenaUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

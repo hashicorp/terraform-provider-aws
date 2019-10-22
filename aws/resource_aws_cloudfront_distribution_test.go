@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -2390,35 +2390,17 @@ resource "aws_cloudfront_distribution" "test" {
 
 // CloudFront Distribution ACM Certificates must be created in us-east-1
 func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBase(commonName string) string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
+
 	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = %q
-    organization = "ACME Examples, Inc"
-  }
-}
-
 resource "aws_acm_certificate" "test" {
   provider = "aws.us-east-1"
 
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
 }
-`, commonName)
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
 func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArn(retainOnDelete bool) string {

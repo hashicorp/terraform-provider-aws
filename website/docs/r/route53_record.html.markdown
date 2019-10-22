@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route53_record"
-sidebar_current: "docs-aws-resource-route53-record"
 description: |-
   Provides a Route53 record resource.
 ---
