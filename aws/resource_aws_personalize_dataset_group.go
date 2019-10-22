@@ -1,7 +1,7 @@
 package aws
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -34,18 +34,28 @@ func resourceAwsPersonalizeDatasetGroup() *schema.Resource {
 				Required: true,
 			},
 
-			"kms_key_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
-			},
+			"kms": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
+						},
 
-			"role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateArn,
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -58,19 +68,23 @@ func resourceAwsPersonalizeDatasetGroupCreate(d *schema.ResourceData, meta inter
 		Name: aws.String(d.Get("name").(string)),
 	}
 
-	kmsKeyArn, hasKmsKeyArn := d.GetOk("kms_key_arn")
-	roleArn, hasRoleArn := d.GetOk("role_arn")
+	kms := d.Get("kms").([]interface{})
 
-	if hasKmsKeyArn {
-		createOpts.KmsKeyArn = aws.String(kmsKeyArn.(string))
-	}
+	if len(kms) > 0 {
+		var k map[string]interface{}
+		if kms[0] != nil {
+			k = kms[0].(map[string]interface{})
+		} else {
+			k = make(map[string]interface{})
+		}
 
-	if hasRoleArn {
-		createOpts.RoleArn = aws.String(roleArn.(string))
-	}
+		if v, ok := k["key_arn"]; ok {
+			createOpts.KmsKeyArn = aws.String(v.(string))
+		}
 
-	if hasKmsKeyArn == false && hasRoleArn {
-		return errors.New("role_arn can only be set when kms_key_arn is specified")
+		if v, ok := k["role_arn"]; ok {
+			createOpts.RoleArn = aws.String(v.(string))
+		}
 	}
 
 	log.Printf("[DEBUG] Personalize dataset group create options: %#v", *createOpts)
