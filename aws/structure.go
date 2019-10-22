@@ -630,6 +630,23 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 	return result
 }
 
+// Flattens an array of Volumes into a []map[string]interface{}
+func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, volume := range list {
+		l := map[string]interface{}{
+			"name": *volume.Name,
+		}
+
+		if volume.Host != nil && volume.Host.SourcePath != nil {
+			l["host_path"] = *volume.Host.SourcePath
+		}
+
+		result = append(result, l)
+	}
+	return result
+}
+
 // Flattens an array of ECS LoadBalancers into a []map[string]interface{}
 func flattenEcsLoadBalancers(list []*ecs.LoadBalancer) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
