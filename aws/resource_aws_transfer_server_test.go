@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -9,10 +10,60 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/transfer"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_transfer_server", &resource.Sweeper{
+		Name: "aws_transfer_server",
+		F:    testSweepTransferServers,
+	})
+}
+
+func testSweepTransferServers(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).transferconn
+	input := &transfer.ListServersInput{}
+
+	err = conn.ListServersPages(input, func(page *transfer.ListServersOutput, lastPage bool) bool {
+		for _, server := range page.Servers {
+			id := aws.StringValue(server.ServerId)
+			input := &transfer.DeleteServerInput{
+				ServerId: server.ServerId,
+			}
+
+			log.Printf("[INFO] Deleting Transfer Server: %s", id)
+			_, err := conn.DeleteServer(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting Transfer Server (%s): %s", id, err)
+				continue
+			}
+
+			if err := waitForTransferServerDeletion(conn, id); err != nil {
+				log.Printf("[ERROR] Error waiting for Transfer Server (%s) deletion: %s", id, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Transfer Server sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Transfer Servers: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSTransferServer_basic(t *testing.T) {
 	var conf transfer.DescribedServer

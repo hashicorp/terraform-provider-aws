@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_waf_rule_group"
-sidebar_current: "docs-aws-resource-waf-rule-group"
 description: |-
   Provides a AWS WAF rule group resource.
 ---
@@ -40,6 +39,7 @@ The following arguments are supported:
 * `name` - (Required) A friendly name of the rule group
 * `metric_name` - (Required) A friendly name for the metrics from the rule group
 * `activated_rule` - (Optional) A list of activated rules, see below
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Nested Blocks
 

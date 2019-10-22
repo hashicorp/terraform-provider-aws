@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsWafRateBasedRule() *schema.Resource {
@@ -17,6 +17,9 @@ func resourceAwsWafRateBasedRule() *schema.Resource {
 		Read:   resourceAwsWafRateBasedRuleRead,
 		Update: resourceAwsWafRateBasedRuleUpdate,
 		Delete: resourceAwsWafRateBasedRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codebuild_project"
-sidebar_current: "docs-aws-resource-codebuild-project"
 description: |-
   Provides a CodeBuild Project resource.
 ---
@@ -75,7 +74,7 @@ resource "aws_iam_role_policy" "example" {
       ],
       "Resource": [
         "arn:aws:ec2:us-east-1:123456789012:network-interface/*"
-      ]
+      ],
       "Condition": {
         "StringEquals": {
           "ec2:Subnet": [

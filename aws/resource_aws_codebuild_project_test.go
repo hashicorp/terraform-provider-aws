@@ -6,13 +6,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // This is used for testing aws_codebuild_webhook as well as aws_codebuild_project.

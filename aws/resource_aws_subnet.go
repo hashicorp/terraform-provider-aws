@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsSubnet() *schema.Resource {
@@ -319,8 +319,8 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Deleting subnet: %s", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d, "subnet-id"); err != nil {
-		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
+	if err := deleteLingeringLambdaENIs(conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error deleting Lambda ENIs using subnet (%s): %s", d.Id(), err)
 	}
 
 	req := &ec2.DeleteSubnetInput{

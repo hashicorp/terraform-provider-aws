@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glue_job"
-sidebar_current: "docs-aws-resource-glue-job"
 description: |-
   Provides an Glue Job resource.
 ---
