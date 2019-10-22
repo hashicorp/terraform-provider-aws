@@ -80,7 +80,7 @@ func isAllowedType(t types.Type) bool {
 			return false
 		}
 		// HasSuffix here due to vendoring
-		if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform/helper/schema") {
+		if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform-plugin-sdk/helper/schema") {
 			return false
 		}
 	case *types.Pointer:

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint"
-sidebar_current: "docs-aws-resource-vpc-endpoint"
 description: |-
   Provides a VPC Endpoint resource.
 ---

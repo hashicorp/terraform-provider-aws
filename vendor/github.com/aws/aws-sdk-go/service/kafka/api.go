@@ -1990,7 +1990,13 @@ func (s *BrokerEBSVolumeInfo) SetVolumeSizeGB(v int64) *BrokerEBSVolumeInfo {
 type BrokerNodeGroupInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The distribution of broker nodes across Availability Zones.
+	// The distribution of broker nodes across Availability Zones. This is an optional
+	// parameter. If you don't specify it, Amazon MSK gives it the value DEFAULT.
+	// You can also explicitly set this parameter to the value DEFAULT. No other
+	// values are currently allowed.
+	//
+	// Amazon MSK distributes the broker nodes evenly across the Availability Zones
+	// that correspond to the subnets you provide when you create the cluster.
 	BrokerAZDistribution *string `locationName:"brokerAZDistribution" type:"string" enum:"BrokerAZDistribution"`
 
 	// The list of subnets to connect to in the client virtual private cloud (VPC).
@@ -4771,10 +4777,13 @@ func (s *ZookeeperNodeInfo) SetZookeeperVersion(v string) *ZookeeperNodeInfo {
 	return s
 }
 
-// The distribution of broker nodes across Availability Zones. By default, broker
-// nodes are distributed among three Availability Zones. Currently, the only
-// supported value is DEFAULT. You can either specify this value explicitly
-// or leave it out.
+// The distribution of broker nodes across Availability Zones. This is an optional
+// parameter. If you don't specify it, Amazon MSK gives it the value DEFAULT.
+// You can also explicitly set this parameter to the value DEFAULT. No other
+// values are currently allowed.
+//
+// Amazon MSK distributes the broker nodes evenly across the Availability Zones
+// that correspond to the subnets you provide when you create the cluster.
 const (
 	// BrokerAZDistributionDefault is a BrokerAZDistribution enum value
 	BrokerAZDistributionDefault = "DEFAULT"

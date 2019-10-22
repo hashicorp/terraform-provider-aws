@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret"
-sidebar_current: "docs-aws-datasource-secretsmanager-secret"
 description: |-
   Retrieve metadata information about a Secrets Manager secret
 ---

@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsS3BucketPublicAccessBlock() *schema.Resource {

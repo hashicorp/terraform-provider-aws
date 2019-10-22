@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_rds_cluster"
-sidebar_current: "docs-aws-resource-rds-cluster"
 description: |-
   Manages a RDS Aurora Cluster
 ---
