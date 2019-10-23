@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsGuardDutyFilter() *schema.Resource {
@@ -49,15 +50,21 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"field": {
-										Type:     schema.TypeString,
-										Required: true,
-										// ValidateFunc: validation.StringInSlice([]string{
-										// 	"region"
-										// }, false),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(criteriaFields(), false),
 									},
 									"condition": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											"equals",
+											"not_equals",
+											"greater_than",
+											"greater_than_or_equal",
+											"less_than",
+											"less_than_or_equal",
+										}, false),
 									},
 									"values": {
 										Type:     schema.TypeList,
@@ -73,6 +80,10 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 			"action": {
 				Type:     schema.TypeString, // should have a new type or a validation for NOOP/ARCHIVE
 				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"NOOP",
+					"ARCHIVE",
+				}, false),
 			},
 			"rank": {
 				Type:     schema.TypeInt,
@@ -86,58 +97,68 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 	}
 }
 
+func criteriaFields() []string {
+	criteria := make([]string, 0, len(criteriaMap()))
+	for criterion := range criteriaMap() {
+		criteria = append(criteria, criterion)
+	}
+	return criteria
+}
+
+func criteriaMap() map[string][]string {
+	return map[string][]string{
+		"confidence": {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
+		"id":         {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
+		"account_id": {"equals", "not_equals"},
+		"region":     {"equals", "not_equals"},
+		"resource.accessKeyDetails.accessKeyId":                                          {"equals", "not_equals"},
+		"resource.accessKeyDetails.principalId":                                          {"equals", "not_equals"},
+		"resource.accessKeyDetails.userName":                                             {"equals", "not_equals"},
+		"resource.accessKeyDetails.userType":                                             {"equals", "not_equals"},
+		"resource.instanceDetails.iamInstanceProfile.id":                                 {"equals", "not_equals"},
+		"resource.instanceDetails.imageId":                                               {"equals", "not_equals"},
+		"resource.instanceDetails.instanceId":                                            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.ipv6Addresses":                       {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.privateIpAddresses.privateIpAddress": {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.publicDnsName":                       {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.publicIp":                            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.securityGroups.groupId":              {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.securityGroups.groupName":            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.subnetId":                            {"equals", "not_equals"},
+		"resource.instanceDetails.networkInterfaces.vpcId":                               {"equals", "not_equals"},
+		"resource.instanceDetails.tags.key":                                              {"equals", "not_equals"},
+		"resource.instanceDetails.tags.value":                                            {"equals", "not_equals"},
+		"resource.resourceType":                                                          {"equals", "not_equals"},
+		"service.action.actionType":                                                      {"equals", "not_equals"},
+		"service.action.awsApiCallAction.api":                                            {"equals", "not_equals"},
+		"service.action.awsApiCallAction.callerType":                                     {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.city.cityName":                  {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.country.countryName":            {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.ipAddressV4":                    {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.organization.asn":               {"equals", "not_equals"},
+		"service.action.awsApiCallAction.remoteIpDetails.organization.asnOrg":            {"equals", "not_equals"},
+		"service.action.awsApiCallAction.serviceName":                                    {"equals", "not_equals"},
+		"service.action.dnsRequestAction.domain":                                         {"equals", "not_equals"},
+		"service.action.networkConnectionAction.blocked":                                 {"equals", "not_equals"},
+		"service.action.networkConnectionAction.connectionDirection":                     {"equals", "not_equals"},
+		"service.action.networkConnectionAction.localPortDetails.port":                   {"equals", "not_equals"},
+		"service.action.networkConnectionAction.protocol":                                {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.city.cityName":           {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.country.countryName":     {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.ipAddressV4":             {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.organization.asn":        {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remoteIpDetails.organization.asnOrg":     {"equals", "not_equals"},
+		"service.action.networkConnectionAction.remotePortDetails.port":                  {"equals", "not_equals"},
+		"service.additionalInfo.threatListName":                                          {"equals", "not_equals"},
+		"service.archived":                                                               {"equals", "not_equals"},
+		"service.resourceRole":                                                           {"equals", "not_equals"},
+		"severity":                                                                       {"equals", "not_equals"},
+		"type":                                                                           {"equals", "not_equals"},
+		"updatedAt":                                                                      {"equals", "not_equals"},
+	}
+}
+
 func buildFindingCriteria(findingCriteria map[string]interface{}) *guardduty.FindingCriteria {
-	// 	criteriaMap := map[string][]string{
-	// 		"confidence": {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
-	// 		"id":         {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
-	// 		"account_id": {"equals", "not_equals"},
-	// 		"region":     {"equals", "not_equals"},
-	// 		"resource.accessKeyDetails.accessKeyId":                                          {"equals", "not_equals"},
-	// 		"resource.accessKeyDetails.principalId":                                          {"equals", "not_equals"},
-	// 		"resource.accessKeyDetails.userName":                                             {"equals", "not_equals"},
-	// 		"resource.accessKeyDetails.userType":                                             {"equals", "not_equals"},
-	// 		"resource.instanceDetails.iamInstanceProfile.id":                                 {"equals", "not_equals"},
-	// 		"resource.instanceDetails.imageId":                                               {"equals", "not_equals"},
-	// 		"resource.instanceDetails.instanceId":                                            {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.ipv6Addresses":                       {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.privateIpAddresses.privateIpAddress": {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.publicDnsName":                       {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.publicIp":                            {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.securityGroups.groupId":              {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.securityGroups.groupName":            {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.subnetId":                            {"equals", "not_equals"},
-	// 		"resource.instanceDetails.networkInterfaces.vpcId":                               {"equals", "not_equals"},
-	// 		"resource.instanceDetails.tags.key":                                              {"equals", "not_equals"},
-	// 		"resource.instanceDetails.tags.value":                                            {"equals", "not_equals"},
-	// 		"resource.resourceType":                                                          {"equals", "not_equals"},
-	// 		"service.action.actionType":                                                      {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.api":                                            {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.callerType":                                     {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.remoteIpDetails.city.cityName":                  {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.remoteIpDetails.country.countryName":            {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.remoteIpDetails.ipAddressV4":                    {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.remoteIpDetails.organization.asn":               {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.remoteIpDetails.organization.asnOrg":            {"equals", "not_equals"},
-	// 		"service.action.awsApiCallAction.serviceName":                                    {"equals", "not_equals"},
-	// 		"service.action.dnsRequestAction.domain":                                         {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.blocked":                                 {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.connectionDirection":                     {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.localPortDetails.port":                   {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.protocol":                                {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.remoteIpDetails.city.cityName":           {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.remoteIpDetails.country.countryName":     {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.remoteIpDetails.ipAddressV4":             {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.remoteIpDetails.organization.asn":        {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.remoteIpDetails.organization.asnOrg":     {"equals", "not_equals"},
-	// 		"service.action.networkConnectionAction.remotePortDetails.port":                  {"equals", "not_equals"},
-	// 		"service.additionalInfo.threatListName":                                          {"equals", "not_equals"},
-	// 		"service.archived":                                                               {"equals", "not_equals"},
-	// 		"service.resourceRole":                                                           {"equals", "not_equals"},
-	// 		"severity":                                                                       {"equals", "not_equals"},
-	// 		"type":                                                                           {"equals", "not_equals"},
-	// 		"updatedAt":                                                                      {"equals", "not_equals"},
-	// 	}
-	//
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List() //[0].(map[string]interface{})
 	criteria := map[string]*guardduty.Condition{}
 	for _, criterion := range inputFindingCriteria {
