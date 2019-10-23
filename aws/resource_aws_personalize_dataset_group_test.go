@@ -16,10 +16,6 @@ func TestAccPersonalizeDatasetGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
-		/*
-			IDRefreshName:   resourceName,
-			IDRefreshIgnore: []string{"force_destroy"},
-		*/
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPersonalizeDatasetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -51,10 +47,6 @@ func TestAccPersonalizeDatasetGroup_kms(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
-		/*
-			IDRefreshName:   resourceName,
-			IDRefreshIgnore: []string{"force_destroy"},
-		*/
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPersonalizeDatasetGroupDestroy,
 		Steps: []resource.TestStep{
