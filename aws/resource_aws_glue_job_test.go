@@ -76,8 +76,8 @@ func TestAccAWSGlueJob_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
-					resource.TestCheckResourceAttr("aws_mq_configuration.test", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_mq_configuration.test", "tags.env", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resoureName, "tags.env", "test"),
 				),
 			},
 			{
