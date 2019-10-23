@@ -15,7 +15,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsGuardDutyFilterCreate,
 		Read:   resourceAwsGuardDutyFilterRead,
-		// Update: resourceAwsGuardDutyFilterUpdate,
+		Update: resourceAwsGuardDutyFilterUpdate,
 		Delete: resourceAwsGuardDutyFilterDelete,
 
 		// Importer: &schema.ResourceImporter{
@@ -25,10 +25,12 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 			"detector_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -70,13 +72,11 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 			},
 			"action": {
 				Type:     schema.TypeString, // should have a new type or a validation for NOOP/ARCHIVE
-				Optional: true,
-				ForceNew: true, // perhaps remove here and below, when Update is back
+				Required: true,
 			},
 			"rank": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true, // perhaps remove here and below, when Update is back
 			},
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -204,9 +204,10 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).guarddutyconn
 
 	input := guardduty.CreateFilterInput{
+		Action:      aws.String(d.Get("action").(string)),
+		Description: aws.String(d.Get("description").(string)),
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		Name:        aws.String(d.Get("name").(string)),
-		Description: aws.String(d.Get("description").(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
 	}
 
@@ -224,15 +225,6 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 
 		input.Tags = tags
 	}
-
-	// Setting the default value for `action`
-	action := "NOOP"
-
-	if len(d.Get("action").(string)) > 0 {
-		action = d.Get("action").(string)
-	}
-
-	input.Action = aws.String(action)
 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
 	output, err := conn.CreateFilter(&input)
@@ -279,9 +271,10 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).guarddutyconn
 
 	input := guardduty.UpdateFilterInput{
+		Action:      aws.String(d.Get("action").(string)),
+		Description: aws.String(d.Get("description").(string)),
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		FilterName:  aws.String(d.Get("name").(string)),
-		Description: aws.String(d.Get("description").(string)),
 		Rank:        aws.Int64(int64(d.Get("rank").(int))),
 	}
 
@@ -290,18 +283,9 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 	buildFindingCriteria(findingCriteria)
 	input.FindingCriteria = buildFindingCriteria(findingCriteria)
 
-	// Setting the default value for `action`
-	action := "NOOP"
-
-	if len(d.Get("action").(string)) > 0 {
-		action = d.Get("action").(string)
-	}
-
-	input.Action = aws.String(action)
-
 	log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
 
-	output, err := conn.UpdateFilter(&input)
+	_, err := conn.UpdateFilter(&input)
 	if err != nil {
 		return fmt.Errorf("Updating GuardDuty Filter with ID %s failed: %s", d.Id(), err.Error())
 	}
