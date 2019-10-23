@@ -22,7 +22,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 		// Importer: &schema.ResourceImporter{
 		// 	State: schema.ImportStatePassthrough,
 		// },
-		Schema: map[string]*schema.Schema{ // TODO: add validations
+		Schema: map[string]*schema.Schema{
 			"detector_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -158,12 +158,28 @@ func criteriaMap() map[string][]string {
 	}
 }
 
-func buildFindingCriteria(findingCriteria map[string]interface{}) *guardduty.FindingCriteria {
-	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List() //[0].(map[string]interface{})
+func conditionAllowedForCriterion(criterion map[string]interface{}) bool {
+	availableConditions := criteriaMap()[criterion["field"].(string)]
+	conditionToCheck := criterion["condition"].(string)
+
+	for _, availableCondition := range availableConditions {
+		if availableCondition == conditionToCheck {
+			return true
+		}
+	}
+	return false
+}
+
+func buildFindingCriteria(findingCriteria map[string]interface{}) (*guardduty.FindingCriteria, error) {
+	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 	criteria := map[string]*guardduty.Condition{}
 	for _, criterion := range inputFindingCriteria {
 		typedCriterion := criterion.(map[string]interface{})
 		log.Printf("[DEBUG!!!!!!!!!!] Criterion info: %#v", criterion)
+
+		if !conditionAllowedForCriterion(typedCriterion) {
+			return nil, fmt.Errorf("The condition is not supported for the given field. Supported conditions are: %v", criteriaMap()[typedCriterion["field"].(string)])
+		}
 
 		switch typedCriterion["condition"].(string) {
 		case "equals":
@@ -196,7 +212,7 @@ func buildFindingCriteria(findingCriteria map[string]interface{}) *guardduty.Fin
 	log.Printf("[DEBUG] Creating FindingCriteria map: %#v", findingCriteria)
 	log.Printf("[DEBUG] Creating FindingCriteria's criteria map: %#v", criteria)
 
-	return &guardduty.FindingCriteria{Criterion: criteria}
+	return &guardduty.FindingCriteria{Criterion: criteria}, nil
 }
 
 func conditionValueToStrings(untypedValues []interface{}) []string {
@@ -234,8 +250,12 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 
 	// building `FindingCriteria`
 	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
-	buildFindingCriteria(findingCriteria)
-	input.FindingCriteria = buildFindingCriteria(findingCriteria)
+
+	var err error
+	input.FindingCriteria, err = buildFindingCriteria(findingCriteria)
+	if err != nil {
+		return err
+	}
 
 	tagsInterface := d.Get("tags").(map[string]interface{})
 	if len(tagsInterface) > 0 {
@@ -301,12 +321,17 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 
 	// building `FindingCriteria`
 	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
-	buildFindingCriteria(findingCriteria)
-	input.FindingCriteria = buildFindingCriteria(findingCriteria)
+
+	var err error
+	input.FindingCriteria, err = buildFindingCriteria(findingCriteria)
+
+	if err != nil {
+		return err
+	}
 
 	log.Printf("[DEBUG] Updating GuardDuty Filter: %s", input)
 
-	_, err := conn.UpdateFilter(&input)
+	_, err = conn.UpdateFilter(&input)
 	if err != nil {
 		return fmt.Errorf("Updating GuardDuty Filter with ID %s failed: %s", d.Id(), err.Error())
 	}
