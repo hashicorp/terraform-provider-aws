@@ -78,7 +78,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				},
 			},
 			"action": {
-				Type:     schema.TypeString, // should have a new type or a validation for NOOP/ARCHIVE
+				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"NOOP",
@@ -175,7 +175,6 @@ func buildFindingCriteria(findingCriteria map[string]interface{}) (*guardduty.Fi
 	criteria := map[string]*guardduty.Condition{}
 	for _, criterion := range inputFindingCriteria {
 		typedCriterion := criterion.(map[string]interface{})
-		log.Printf("[DEBUG!!!!!!!!!!] Criterion info: %#v", criterion)
 
 		if !conditionAllowedForCriterion(typedCriterion) {
 			return nil, fmt.Errorf("The condition is not supported for the given field. Supported conditions are: %v", criteriaMap()[typedCriterion["field"].(string)])
@@ -210,7 +209,6 @@ func buildFindingCriteria(findingCriteria map[string]interface{}) (*guardduty.Fi
 
 	}
 	log.Printf("[DEBUG] Creating FindingCriteria map: %#v", findingCriteria)
-	log.Printf("[DEBUG] Creating FindingCriteria's criteria map: %#v", criteria)
 
 	return &guardduty.FindingCriteria{Criterion: criteria}, nil
 }
@@ -300,10 +298,12 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Reading GuardDuty Filter '%s' failed: %s", name, err.Error())
 	}
 
-	d.Set("action", filter.Action) // Make sure I really want to set all these attrs
+	d.Set("action", filter.Action)
 	d.Set("description", filter.Description)
-	d.Set("rank", filter.Rank)
+	d.Set("finding_criteria", filter.FindingCriteria)
 	d.Set("name", d.Id())
+	d.Set("rank", filter.Rank)
+	d.Set("tags", filter.Tags)
 
 	return nil
 }
