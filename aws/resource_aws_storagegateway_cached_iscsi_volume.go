@@ -162,20 +162,18 @@ func resourceAwsStorageGatewayCachedIscsiVolumeRead(d *schema.ResourceData, meta
 
 	volume := output.CachediSCSIVolumes[0]
 
-	arn := volume.VolumeARN
-	d.Set("arn", aws.StringValue(arn))
+	arn := aws.StringValue(volume.VolumeARN)
+	d.Set("arn", arn)
 	d.Set("snapshot_id", aws.StringValue(volume.SourceSnapshotId))
-	d.Set("volume_arn", aws.StringValue(arn))
+	d.Set("volume_arn", arn)
 	d.Set("volume_id", aws.StringValue(volume.VolumeId))
 	d.Set("volume_size_in_bytes", int(aws.Int64Value(volume.VolumeSizeInBytes)))
 
-	tagList, err := conn.ListTagsForResource(&storagegateway.ListTagsForResourceInput{
-		ResourceARN: aws.String(*arn),
-	})
+	tags, err := keyvaluetags.StoragegatewayListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("Failed to get Storage Gateway Cached ISCSI Volume tags for %s: %s", d.Get("name"), err)
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}
-	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(tagList.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
