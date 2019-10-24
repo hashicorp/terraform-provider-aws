@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -271,15 +272,35 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Creating GuardDuty Filter failed: %s", err.Error())
 	}
 
-	d.SetId(*output.Name)
+	d.SetId(strings.Join([]string{d.Get("detector_id").(string), *output.Name}, "_"))
 
 	return resourceAwsGuardDutyFilterRead(d, meta)
 }
 
+func parseImportedId(importedId string) (string, string, error) {
+	parts := strings.SplitN(importedId, "_", 2)
+	if len(parts) < 2 {
+		return "", "", fmt.Errorf("Error Importing aws_guardduty_filter record: '%s' Please make sure the record ID is in the form detectorId_name.", importedId)
+	}
+	return parts[0], parts[1], nil
+}
+
 func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) error {
+	var detectorId, name string
+	var err error
+
+	if _, ok := d.GetOk("detector_id"); !ok {
+		// If there is no "detector_id" passed, then it's an import.
+		detectorId, name, err = parseImportedId(d.Id())
+		if err != nil {
+			return err
+		}
+	} else {
+		detectorId = d.Get("detector_id").(string)
+		name = d.Get("name").(string)
+	}
+
 	conn := meta.(*AWSClient).guarddutyconn
-	detectorId := d.Get("detector_id").(string)
-	name := d.Get("name").(string)
 
 	input := guardduty.GetFilterInput{
 		DetectorId: aws.String(detectorId),
@@ -301,9 +322,11 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("action", filter.Action)
 	d.Set("description", filter.Description)
 	d.Set("finding_criteria", filter.FindingCriteria)
-	d.Set("name", d.Id())
+	d.Set("name", filter.Name)
+	d.Set("detector_id", detectorId)
 	d.Set("rank", filter.Rank)
 	d.Set("tags", filter.Tags)
+	d.SetId(strings.Join([]string{detectorId, name}, "_"))
 
 	return nil
 }
