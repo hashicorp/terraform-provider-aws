@@ -74,7 +74,7 @@ resource "aws_iam_role_policy" "example" {
       ],
       "Resource": [
         "arn:aws:ec2:us-east-1:123456789012:network-interface/*"
-      ]
+      ],
       "Condition": {
         "StringEquals": {
           "ec2:Subnet": [
@@ -161,7 +161,7 @@ resource "aws_codebuild_project" "example" {
 
     security_group_ids = [
       "${aws_security_group.example1.id}",
-      "${aws_security_gorup.example2.id}",
+      "${aws_security_group.example2.id}",
     ]
   }
 
