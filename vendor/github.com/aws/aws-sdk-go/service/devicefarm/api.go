@@ -7620,6 +7620,8 @@ type CreateRemoteAccessSessionInput struct {
 	// on the same client, you should pass the same clientId value in each call
 	// to CreateRemoteAccessSession. This is required only if remoteDebugEnabled
 	// is set to true.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	ClientId *string `locationName:"clientId" type:"string"`
 
 	// The configuration information for the remote access session request.
@@ -7660,6 +7662,8 @@ type CreateRemoteAccessSessionInput struct {
 
 	// Set to true if you want to access devices remotely for debugging in your
 	// remote access session.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	RemoteDebugEnabled *bool `locationName:"remoteDebugEnabled" type:"boolean"`
 
 	// The Amazon Resource Name (ARN) for the app to be recorded in the remote access
@@ -7678,9 +7682,11 @@ type CreateRemoteAccessSessionInput struct {
 	// Farm FAQs.
 	SkipAppResign *bool `locationName:"skipAppResign" type:"boolean"`
 
-	// The public key of the ssh key pair you want to use for connecting to remote
-	// devices in your remote debugging session. This is only required if remoteDebugEnabled
-	// is set to true.
+	// Ignored. The public key of the ssh key pair you want to use for connecting
+	// to remote devices in your remote debugging session. This is only required
+	// if remoteDebugEnabled is set to true.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	SshPublicKey *string `locationName:"sshPublicKey" type:"string"`
 }
 
@@ -8689,6 +8695,8 @@ type Device struct {
 	RemoteAccessEnabled *bool `locationName:"remoteAccessEnabled" type:"boolean"`
 
 	// This flag is set to true if remote debugging is enabled for the device.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	RemoteDebugEnabled *bool `locationName:"remoteDebugEnabled" type:"boolean"`
 
 	// The resolution of the device.
@@ -8900,10 +8908,12 @@ type DeviceFilter struct {
 	//
 	// REMOTE_DEBUG_ENABLED
 	//
-	// Whether the device is enabled for remote debugging. Valid values are "TRUE"
-	// or "FALSE".
+	// Ignored.Whether the device is enabled for remote debugging. Valid values
+	// are "TRUE" or "FALSE".
 	//
 	// Supported operators: EQUALS
+	//
+	// This filter will be ignored, as remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	//
 	// INSTANCE_ARN
 	//
@@ -9239,9 +9249,11 @@ type DeviceSelectionConfiguration struct {
 	//    For example, "Apple". REMOTE_ACCESS_ENABLED: Whether the device is enabled
 	//    for remote access. Valid values are "TRUE" or "FALSE". REMOTE_DEBUG_ENABLED:
 	//    Whether the device is enabled for remote debugging. Valid values are "TRUE"
-	//    or "FALSE". INSTANCE_ARN: The Amazon Resource Name (ARN) of the device
-	//    instance. INSTANCE_LABELS: The label of the device instance. FLEET_TYPE:
-	//    The fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	//    or "FALSE". This filter will be ignored, as remote debugging is no longer
+	//    supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
+	//    INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance. INSTANCE_LABELS:
+	//    The label of the device instance. FLEET_TYPE: The fleet type. Valid values
+	//    are "PUBLIC" or "PRIVATE".
 	//
 	//    * Operator The filter operator. The EQUALS operator is available for every
 	//    attribute except INSTANCE_LABELS. The CONTAINS operator is available for
@@ -11317,9 +11329,11 @@ type ListDevicesInput struct {
 	//    For example, "Apple". REMOTE_ACCESS_ENABLED: Whether the device is enabled
 	//    for remote access. Valid values are "TRUE" or "FALSE". REMOTE_DEBUG_ENABLED:
 	//    Whether the device is enabled for remote debugging. Valid values are "TRUE"
-	//    or "FALSE". INSTANCE_ARN: The Amazon Resource Name (ARN) of the device
-	//    instance. INSTANCE_LABELS: The label of the device instance. FLEET_TYPE:
-	//    The fleet type. Valid values are "PUBLIC" or "PRIVATE".
+	//    or "FALSE". This attribute will be ignored, as remote debugging is no
+	//    longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
+	//    INSTANCE_ARN: The Amazon Resource Name (ARN) of the device instance. INSTANCE_LABELS:
+	//    The label of the device instance. FLEET_TYPE: The fleet type. Valid values
+	//    are "PUBLIC" or "PRIVATE".
 	//
 	//    * Operator: The filter operator. The EQUALS operator is available for
 	//    every attribute except INSTANCE_LABELS. The CONTAINS operator is available
@@ -11993,8 +12007,8 @@ func (s *ListProjectsOutput) SetProjects(v []*Project) *ListProjectsOutput {
 type ListRemoteAccessSessionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the remote access session about which you
-	// are requesting information.
+	// The Amazon Resource Name (ARN) of the project about which you are requesting
+	// information.
 	//
 	// Arn is a required field
 	Arn *string `locationName:"arn" min:"32" type:"string" required:"true"`
@@ -13656,6 +13670,8 @@ type RemoteAccessSession struct {
 
 	// Unique identifier of your client for the remote access session. Only returned
 	// if remote debugging is enabled for the remote access session.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	ClientId *string `locationName:"clientId" type:"string"`
 
 	// The date and time the remote access session was created.
@@ -13670,6 +13686,8 @@ type RemoteAccessSession struct {
 
 	// Unique device identifier for the remote device. Only returned if remote debugging
 	// is enabled for the remote access session.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	DeviceUdid *string `locationName:"deviceUdid" type:"string"`
 
 	// The endpoint for the remote access sesssion.
@@ -13677,6 +13695,8 @@ type RemoteAccessSession struct {
 
 	// IP address of the EC2 host where you need to connect to remotely debug devices.
 	// Only returned if remote debugging is enabled for the remote access session.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	HostAddress *string `locationName:"hostAddress" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the instance.
@@ -13704,6 +13724,8 @@ type RemoteAccessSession struct {
 
 	// This flag is set to true if remote debugging is enabled for the remote access
 	// session.
+	//
+	// Remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	RemoteDebugEnabled *bool `locationName:"remoteDebugEnabled" type:"boolean"`
 
 	// The Amazon Resource Name (ARN) for the app to be recorded in the remote access
@@ -14098,6 +14120,8 @@ type Rule struct {
 	// or "FALSE".
 	//
 	// Supported operators: EQUALS
+	//
+	// This filter will be ignored, as remote debugging is no longer supported (https://docs.aws.amazon.com/devicefarm/latest/developerguide/history.html).
 	Attribute *string `locationName:"attribute" type:"string" enum:"DeviceAttribute"`
 
 	// Specifies how Device Farm compares the rule's attribute to the value. For
@@ -14614,7 +14638,8 @@ func (s *Sample) SetUrl(v string) *Sample {
 type ScheduleRunConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// A list of auxiliary apps for the run.
+	// A list of Upload ARNs for app packages that will be installed alongside your
+	// app.
 	AuxiliaryApps []*string `locationName:"auxiliaryApps" type:"list"`
 
 	// Specifies the billing method for a test run: metered or unmetered. If the
