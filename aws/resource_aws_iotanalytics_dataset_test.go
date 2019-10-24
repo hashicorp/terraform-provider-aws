@@ -25,6 +25,7 @@ func TestAccAWSIoTAnalyticsDataset_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAnalyticsDatasetExists_basic("aws_iotanalytics_dataset.dataset"),
 					resource.TestCheckResourceAttr("aws_iotanalytics_dataset.dataset", "name", fmt.Sprintf("test_dataset_%s", rString)),
+					resource.TestCheckResourceAttr("aws_iotanalytics_dataset.dataset", "tags.tagKey", "tagValue"),
 					testAccCheckAWSIoTAnalyticsDataset_basic(rString),
 				),
 			},
@@ -548,6 +549,10 @@ func testAccAWSIoTAnalyticsDataset_basic(rString string) string {
 	return fmt.Sprintf(testAccAWSIoTAnalyticsDatasetRole+`
 resource "aws_iotanalytics_dataset" "dataset" {
   name = "test_dataset_%[1]s"
+
+  tags = {
+	  "tagKey" = "tagValue"
+  }
 
   action {
 	  name = "test_action"

@@ -35,6 +35,7 @@ resource "aws_iotanalytics_dataset" "dataset" {
 ## Argument Reference
 
 * `name` - (Required) The name of the data set.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the dataset.
 * [`action`](#action) - Object (At least 1). A list of actions that create the data set contents.
 * [`content_delivery_rule`](#content_delivery_rule) - Object (Optional) Can be many. When data set contents are created they are delivered to destinations specified here.
 * [`trigger`](#trigger) - Object (Optional) Can be many. A list of triggers. A trigger causes data set contents to be populated at a specified time interval or when another data set's contents are created. The list of triggers can be empty or contain up to five DataSetTrigger objects.
@@ -114,11 +115,17 @@ resource "aws_iotanalytics_dataset" "dataset" {
 * `max_versions` - (Required) How many versions of data set contents will be kept. The "unlimited" parameter must be false.
 * `unlmited` - (Required) If true, unlimited versions of data set contents will be kept.
 
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The name of the dataset
+* `arn` - The ARN of the dataset.
 
 ## Import
 
-IoTAnalytics Datastore can be imported using the `name`, e.g.
+IoTAnalytics Dataset can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_iotanalytics_datastore.datastore <name>
+$ terraform import aws_iotanalytics_dataset.dataset <name>
 ```

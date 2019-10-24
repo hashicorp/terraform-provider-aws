@@ -252,6 +252,11 @@ func resourceAwsIotAnalyticsDataset() *schema.Resource {
 				MaxItems: 1,
 				Elem:     generateVersioningConfigurationSchema(),
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -408,6 +413,10 @@ func resourceAwsIotAnalyticsDatasetCreate(d *schema.ResourceData, meta interface
 	name := d.Get("name").(string)
 	params := &iotanalytics.CreateDatasetInput{
 		DatasetName: aws.String(name),
+	}
+
+	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
+		params.Tags = tagsFromMapIotAnalytics(tags)
 	}
 
 	rawActions := d.Get("action").(*schema.Set).List()
@@ -642,6 +651,12 @@ func resourceAwsIotAnalyticsDatasetRead(d *schema.ResourceData, meta interface{}
 
 	rawVersioningConfiguration := flattenVersioningConfiguration(out.Dataset.VersioningConfiguration)
 	d.Set("versioning_configuration", wrapMapInList(rawVersioningConfiguration))
+	d.Set("arn", out.Dataset.Arn)
+
+	if err := getTagsIotAnalytics(conn, d); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -693,6 +708,10 @@ func resourceAwsIotAnalyticsDatasetUpdate(d *schema.ResourceData, meta interface
 	_, err := conn.UpdateDataset(params)
 
 	if err != nil {
+		return err
+	}
+
+	if err := setTagsIotAnalytics(conn, d); err != nil {
 		return err
 	}
 
