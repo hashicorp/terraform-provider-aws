@@ -102,6 +102,11 @@ func resourceAwsIotAnalyticsDatastore() *schema.Resource {
 				MaxItems: 1,
 				Elem:     generateRetentionPeriodSchema(),
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -166,6 +171,10 @@ func resourceAwsIotAnalyticsDatastoreCreate(d *schema.ResourceData, meta interfa
 
 	params := &iotanalytics.CreateDatastoreInput{
 		DatastoreName: aws.String(d.Get("name").(string)),
+	}
+
+	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
+		params.Tags = tagsFromMapIotAnalytics(tags)
 	}
 
 	datastoreStorageSet := d.Get("storage").(*schema.Set).List()
@@ -295,6 +304,11 @@ func resourceAwsIotAnalyticsDatastoreRead(d *schema.ResourceData, meta interface
 	d.Set("storage", wrapMapInList(storage))
 	retentionPeriod := flattenRetentionPeriod(out.Datastore.RetentionPeriod)
 	d.Set("retention_period", wrapMapInList(retentionPeriod))
+	d.Set("arn", out.Datastore.Arn)
+
+	if err := getTagsIotAnalytics(conn, d); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -340,6 +354,10 @@ func resourceAwsIotAnalyticsDatastoreUpdate(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
+		return err
+	}
+
+	if err := setTagsIotAnalytics(conn, d); err != nil {
 		return err
 	}
 

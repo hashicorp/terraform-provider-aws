@@ -24,6 +24,7 @@ func TestAccAWSIoTAnalyticsDatastore_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAnalyticsDatastoreExists_basic("aws_iotanalytics_datastore.datastore"),
 					resource.TestCheckResourceAttr("aws_iotanalytics_datastore.datastore", "name", fmt.Sprintf("test_datastore_%s", rString)),
+					resource.TestCheckResourceAttr("aws_iotanalytics_datastore.datastore", "tags.tagKey", "tagValue"),
 				),
 			},
 		},
@@ -233,6 +234,10 @@ func testAccAWSIoTAnalyticsDatastore_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iotanalytics_datastore" "datastore" {
   name = "test_datastore_%[1]s"
+
+  tags = {
+	"tagKey" = "tagValue",
+  }
 
   storage {
 	  service_managed_s3 {}

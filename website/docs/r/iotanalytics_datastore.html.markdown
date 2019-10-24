@@ -23,6 +23,7 @@ resource "aws_iotanalytics_datastore" "datastore_example" {
 ## Argument Reference
 
 * `name` - (Required) The name of the input.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the datastore. 
 
 The `storage` - (Optional) The definition of the input. Object takes the following arguments:
 
@@ -47,7 +48,8 @@ The `retention_period` - (Optional) How long, in days, message data is kept for 
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the input
+* `id` - The name of the datastore
+* `arn` - The ARN of the datastore. 
 
 ## Import
 
