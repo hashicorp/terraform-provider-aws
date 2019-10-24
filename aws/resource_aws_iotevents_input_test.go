@@ -32,6 +32,7 @@ func TestAccAWSIotEventsInput_basic(t *testing.T) {
 					testAccCheckIotEventsInputExists("aws_iotevents_input.test", &input),
 					resource.TestCheckResourceAttr("aws_iotevents_input.test", "name", inputName),
 					resource.TestCheckResourceAttr("aws_iotevents_input.test", "description", "Test Description"),
+					resource.TestCheckResourceAttr("aws_iotevents_input.test", "tags.tagKey", "tagValue"),
 					testAccCheckIotEventsInputAttribute("aws_iotevents_input.test", inputAttributes),
 				),
 			},
@@ -182,6 +183,10 @@ resource "aws_iotevents_input" "test" {
 	  attribute {
 		json_path = "%s"
 	  }
+  }
+
+  tags = {
+	  "tagKey" = "tagValue",
   }
 }
 `, inputName, inputDescription, attributes[0], attributes[1])

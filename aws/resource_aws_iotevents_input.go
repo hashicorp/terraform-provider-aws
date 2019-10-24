@@ -53,6 +53,11 @@ func resourceAwsIotEventsInput() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -98,6 +103,7 @@ func resourceAwsIotInputCreate(d *schema.ResourceData, meta interface{}) error {
 	params := &iotevents.CreateInputInput{
 		InputName:       aws.String(inputName),
 		InputDefinition: prepareInputDefinition(d),
+		Tags:            tagsFromMapIotEvents(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -132,7 +138,11 @@ func resourceAwsIotInputRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", out.Input.InputConfiguration.InputName)
 	d.Set("description", out.Input.InputConfiguration.InputDescription)
 	d.Set("definition", flattenIoTEventsInputDefinition(out.Input.InputDefinition))
+	d.Set("arn", out.Input.InputConfiguration.InputArn)
 
+	if err := getTagsIotEvents(conn, d); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -154,6 +164,10 @@ func resourceAwsIotInputUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.UpdateInput(params)
 
 	if err != nil {
+		return err
+	}
+
+	if err := setTagsIotEvents(conn, d); err != nil {
 		return err
 	}
 

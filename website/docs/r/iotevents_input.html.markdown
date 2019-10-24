@@ -31,6 +31,7 @@ resource "aws_iotevents_input" "input_example" {
 
 * `name` - (Required) The name of the input.
 * `description` - (Optional) The description of the input.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the input.
 
 The `definition` - (Required) The definition of the input. Object takes the following arguments:
 
@@ -42,6 +43,7 @@ The `definition` - (Required) The definition of the input. Object takes the foll
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The name of the input
+* `arn` - The ARN of the input.
 
 ## Import
 
