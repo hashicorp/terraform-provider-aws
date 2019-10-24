@@ -1,12 +1,42 @@
-## 2.32.0 (Unreleased)
+## 2.34.0 (Unreleased)
+## 2.33.0 (October 17, 2019)
 
-NOTES:
+FEATURES:
 
-* provider: The underlying Terraform codebase dependency for the provider SDK and acceptance testing framework has been migrated from `github.com/hashicorp/terraform` to `github.com/hashicorp/terraform-plugin-sdk`. They are functionality equivalent and this should only impact codebase development to switch imports. For more information see the [Terraform Plugin SDK page in the Extending Terraform documentation](https://www.terraform.io/docs/extend/plugin-sdk.html). [GH-10367]
+* **New Data Source:** `aws_waf_rate_based_rule` ([#10124](https://github.com/terraform-providers/terraform-provider-aws/issues/10124))
+* **New Data Source:** `aws_wafregional_rate_based_rule` ([#10125](https://github.com/terraform-providers/terraform-provider-aws/issues/10125))
+* **New Resource:** `aws_quicksight_user` ([#10401](https://github.com/terraform-providers/terraform-provider-aws/issues/10401))
+
+ENHANCEMENTS:
+
+* resource/aws_glue_classifier: Add `csv_classifier` configuration block (support CSV classifiers) ([#9824](https://github.com/terraform-providers/terraform-provider-aws/issues/9824))
+* resource/aws_waf_byte_match_set: Support resource import ([#10477](https://github.com/terraform-providers/terraform-provider-aws/issues/10477))
+* resource/aws_waf_rate_based_rule: Support resource import ([#10475](https://github.com/terraform-providers/terraform-provider-aws/issues/10475))
+* resource/aws_waf_rule: Add `tags` argument ([#10408](https://github.com/terraform-providers/terraform-provider-aws/issues/10408))
+* resource/aws_waf_rule_group: Add `tags` argument ([#10408](https://github.com/terraform-providers/terraform-provider-aws/issues/10408))
+* resource/aws_waf_web_acl: Add `tags` argument ([#10408](https://github.com/terraform-providers/terraform-provider-aws/issues/10408))
 
 BUG FIXES:
 
-* resource/aws_s3_bucket: Prevent infinite deletion recursion with `force_destroy` argument and object keys with empty "directory" prefixes present since version 2.29.0 [GH-10388]
+* resource/aws_gamelift_fleet: Increase default deletion timeout to 20 minutes to match service timing ([#10443](https://github.com/terraform-providers/terraform-provider-aws/issues/10443))
+
+## 2.32.0 (October 10, 2019)
+
+NOTES:
+
+* provider: The underlying Terraform codebase dependency for the provider SDK and acceptance testing framework has been migrated from `github.com/hashicorp/terraform` to `github.com/hashicorp/terraform-plugin-sdk`. They are functionality equivalent and this should only impact codebase development to switch imports. For more information see the [Terraform Plugin SDK page in the Extending Terraform documentation](https://www.terraform.io/docs/extend/plugin-sdk.html). ([#10367](https://github.com/terraform-providers/terraform-provider-aws/issues/10367))
+
+ENHANCEMENTS:
+
+* resource/aws_emr_instance_group: Add `configurations_json` argument ([#10426](https://github.com/terraform-providers/terraform-provider-aws/issues/10426))
+
+BUG FIXES:
+
+* provider: Fix session handling to correctly validate and use assume_role credentials ([#10379](https://github.com/terraform-providers/terraform-provider-aws/issues/10379))
+* resource/aws_autoscaling_group: Batch ALB/NLB attachments and detachments by 10 to prevent API and rate limiting errors ([#10435](https://github.com/terraform-providers/terraform-provider-aws/issues/10435))
+* resource/aws_emr_instance_group: Remove terminated instance groups from the Terraform state ([#10425](https://github.com/terraform-providers/terraform-provider-aws/issues/10425))
+* resource/aws_s3_bucket: Prevent infinite deletion recursion with `force_destroy` argument and object keys with empty "directory" prefixes present since version 2.29.0 ([#10388](https://github.com/terraform-providers/terraform-provider-aws/issues/10388))
+* resource/aws_vpc_endpoint_route_table_association: Fix resource import support ([#10454](https://github.com/terraform-providers/terraform-provider-aws/issues/10454))
 
 ## 2.31.0 (October 03, 2019)
 
