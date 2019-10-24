@@ -26,6 +26,7 @@ func TestAccAWSIoTAnalyticsPipeline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAnalyticsPipelineExists_basic("aws_iotanalytics_pipeline.pipeline"),
 					resource.TestCheckResourceAttr("aws_iotanalytics_pipeline.pipeline", "name", fmt.Sprintf("test_pipeline_%s", rString)),
+					resource.TestCheckResourceAttr("aws_iotanalytics_pipeline.pipeline", "tags.tagKey", "tagValue"),
 					testAccCheckAWSIoTAnalyticsPipeline_basic(rString),
 				),
 			},
@@ -828,7 +829,11 @@ func testAccAWSIoTAnalyticsPipeline_basic(rString string) string {
 	return fmt.Sprintf(testAccAWSIoTAnalyticsPipelineBasicConfig+`
 resource "aws_iotanalytics_pipeline" "pipeline" {
   name = "test_pipeline_%[1]s"
- 
+
+  tags = {
+	  "tagKey" = "tagValue",
+  }
+
   pipeline_activity {
 	  channel {
 		name = "channel_activity"

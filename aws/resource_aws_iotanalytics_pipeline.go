@@ -322,6 +322,11 @@ func resourceAwsIotAnalyticsPipeline() *schema.Resource {
 				MaxItems: 25,
 				Elem:     generatePipelineActivitySchema(),
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -569,6 +574,10 @@ func resourceAwsIotAnalyticsPipelineCreate(d *schema.ResourceData, meta interfac
 		PipelineActivities: pipelineActivities,
 	}
 
+	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
+		params.Tags = tagsFromMapIotAnalytics(tags)
+	}
+
 	_, err := conn.CreatePipeline(params)
 
 	if err != nil {
@@ -807,6 +816,11 @@ func resourceAwsIotAnalyticsPipelineRead(d *schema.ResourceData, meta interface{
 		rawPipelineActivites = append(rawPipelineActivites, flattenPipelineActivity(pa))
 	}
 	d.Set("pipeline_activity", rawPipelineActivites)
+	d.Set("arn", out.Pipeline.Arn)
+
+	if err := getTagsIotAnalytics(conn, d); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -830,6 +844,10 @@ func resourceAwsIotAnalyticsPipelineUpdate(d *schema.ResourceData, meta interfac
 	_, err := conn.UpdatePipeline(params)
 
 	if err != nil {
+		return err
+	}
+
+	if err := setTagsIotAnalytics(conn, d); err != nil {
 		return err
 	}
 

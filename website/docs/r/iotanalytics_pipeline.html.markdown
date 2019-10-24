@@ -34,6 +34,7 @@ resource "aws_iotanalytics_pipeline" "pipeline" {
 ## Argument Reference
 
 * `name` - (Required) The name of the input.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the pipeline.
 * `pipeline_activity` - (Required) Object, Can be multiple limited to 25. A list of "PipelineActivity" objects. Activities perform transformations on your messages, such as removing, renaming or adding message attributes; filtering messages based on attribute values; invoking your Lambda functions on messages for advanced processing; or performing mathematical transformations to normalize device data. The list can be 2-25 PipelineActivity objects and must contain both a channel and a datastore activity. Each entry in the list must contain only one activity. It must be said that ordering of pipeline activities matter. Channel activity should always be first and datastore last. Other activities should be ordered depending on `next_activity` field of previous activity in such way that name of activity should be equals to value in `next_activity` field of previous activity.
 
 `pipeline_activity` takes such arguments:
@@ -108,7 +109,8 @@ resource "aws_iotanalytics_pipeline" "pipeline" {
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The name of the input
+* `id` - The name of the pipeline
+* `arn` - The ARN of the pipeline.
 
 ## Import
 
