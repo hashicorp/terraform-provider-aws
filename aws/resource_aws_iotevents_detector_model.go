@@ -317,6 +317,11 @@ func resourceAwsIotEventsDetectorModel() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateArn,
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -570,6 +575,7 @@ func resourceAwsIotDetectorCreate(d *schema.ResourceData, meta interface{}) erro
 		DetectorModelName:       aws.String(detectorName),
 		DetectorModelDefinition: detectorDefinitionParams,
 		RoleArn:                 aws.String(roleArn),
+		Tags:                    tagsFromMapIotEvents(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -808,6 +814,11 @@ func resourceAwsIotDetectorRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("role_arn", out.DetectorModel.DetectorModelConfiguration.RoleArn)
 	detectorModelDefinition := []map[string]interface{}{flattenDetectorModelDefinition(out.DetectorModel.DetectorModelDefinition)}
 	d.Set("definition", detectorModelDefinition)
+	d.Set("arn", out.DetectorModel.DetectorModelConfiguration.DetectorModelArn)
+
+	if err := getTagsIotEvents(conn, d); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -850,6 +861,10 @@ func resourceAwsIotDetectorUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
+		return err
+	}
+
+	if err := setTagsIotEvents(conn, d); err != nil {
 		return err
 	}
 

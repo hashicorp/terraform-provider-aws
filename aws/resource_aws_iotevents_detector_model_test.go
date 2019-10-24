@@ -25,6 +25,7 @@ func TestAccAWSIoTEventsDetectorModel_basic(t *testing.T) {
 					testAccCheckAWSIoTEventsDetectorModelExists("aws_iotevents_detector_model.detector"),
 					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "name", fmt.Sprintf("test_detector_%s", rString)),
 					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "description", "Example detector model"),
+					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "tags.tagKey", "tagValue"),
 					testAccDetectorModleBasic(rString),
 				),
 			},
@@ -661,6 +662,10 @@ resource "aws_iotevents_detector_model" "detector" {
 	aws_iotevents_input.test_input,
 	aws_iam_policy_attachment.attach_policy,
   ]
+
+	tags = {
+		"tagKey" = "tagValue",
+	}
 
   definition {
     initial_state_name = "first_state"

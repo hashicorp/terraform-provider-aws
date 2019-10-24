@@ -47,6 +47,7 @@ the appropriate detector (instance). This parameter uses a JSON-path expression 
 attribute-value pair in the message payload of each input that is used to identify the device associated with 
 the input.
 * `role_arn` - (Required) .The ARN of the role that grants permission to AWS IoT Events to perform its operations.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the detector model.
 
 The `definition` object describes information that defines how the detectors operate. It takes such arguments:
 * `initial_state_name` - (Required) The state that is entered at the creation of each detector.
@@ -132,6 +133,12 @@ Data Firehose stream. Valid values are: '\n' (newline), '\t' (tab), '\r\n' (Wind
 * `queue_url` - (Required) The URL of the SQS queue where the data is written.
 * `use_base64` - (Optional) Set this to TRUE if you want the data to be Base-64 encoded before it is written to the queue. Otherwise, set this to FALSE.
 
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `arn` - The ARN of the detector model.
 
 ## Import
 
