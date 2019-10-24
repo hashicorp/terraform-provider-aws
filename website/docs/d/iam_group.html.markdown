@@ -30,3 +30,17 @@ data "aws_iam_group" "example" {
 * `path` - The path to the group.
 
 * `group_id` - The stable and unique string identifying the group.
+
+* `users` - The list of users in the group.
+  * `path` - The path to the user.
+  * `user_name` - The friendly name identifying the user.
+  * `user_id` - The stable and unique string identifying the user.
+  * `arn` - The Amazon Resource Name (ARN) that identifies the user.
+  * `create_date` - The date and time the user was created.
+  * `password_last_used` - The date and time when the user's password was last used to sign in to an AWS website.
+  * `permissions_boundary` - The ARN of the policy used to set the permissions boundary for the user.
+    * `permissions_boundary_type` - The permissions boundary usage type for an entity.
+    * `permissions_boundary_arn` - The ARN of the policy used to set the permissions boundary for the user or role.
+  * `tags` - Tags associated to the user.
+    * `tags.#.key` - The key name of the tag.
+    * `tags.#.value` - The value of the tag.
