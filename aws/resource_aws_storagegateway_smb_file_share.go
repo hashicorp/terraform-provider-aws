@@ -48,7 +48,6 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Optional: true,
 				Default:  "S3_STANDARD",
 				ValidateFunc: validation.StringInSlice([]string{
-
 					"S3_ONEZONE_IA",
 					"S3_STANDARD_IA",
 					"S3_STANDARD",
