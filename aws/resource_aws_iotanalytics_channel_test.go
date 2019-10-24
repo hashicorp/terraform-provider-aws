@@ -24,6 +24,7 @@ func TestAccAWSIoTAnalyticsChannel_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIoTAnalyticsChannelExists_basic("aws_iotanalytics_channel.channel"),
 					resource.TestCheckResourceAttr("aws_iotanalytics_channel.channel", "name", fmt.Sprintf("test_channel_%s", rString)),
+					resource.TestCheckResourceAttr("aws_iotanalytics_channel.channel", "tags.tagKey", "tagValue"),
 				),
 			},
 		},
@@ -233,6 +234,10 @@ func testAccAWSIoTAnalyticsChannel_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iotanalytics_channel" "channel" {
   name = "test_channel_%[1]s"
+
+  tags = {
+	"tagKey" = "tagValue",
+  }
 
   storage {
 	  service_managed_s3 {}

@@ -102,6 +102,11 @@ func resourceAwsIotAnalyticsChannel() *schema.Resource {
 				MaxItems: 1,
 				Elem:     generateRetentionPeriodSchema(),
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -166,6 +171,10 @@ func resourceAwsIotAnalyticsChannelCreate(d *schema.ResourceData, meta interface
 
 	params := &iotanalytics.CreateChannelInput{
 		ChannelName: aws.String(d.Get("name").(string)),
+	}
+
+	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
+		params.Tags = tagsFromMapIotAnalytics(tags)
 	}
 
 	channelStorageSet := d.Get("storage").(*schema.Set).List()
@@ -294,7 +303,11 @@ func resourceAwsIotAnalyticsChannelRead(d *schema.ResourceData, meta interface{}
 	d.Set("storage", wrapMapInList(storage))
 	retentionPeriod := flattenRetentionPeriod(out.Channel.RetentionPeriod)
 	d.Set("retention_period", wrapMapInList(retentionPeriod))
+	d.Set("arn", out.Channel.Arn)
 
+	if err := getTagsIotAnalytics(conn, d); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -338,6 +351,10 @@ func resourceAwsIotAnalyticsChannelUpdate(d *schema.ResourceData, meta interface
 	}
 
 	if err != nil {
+		return err
+	}
+
+	if err := setTagsIotAnalytics(conn, d); err != nil {
 		return err
 	}
 
