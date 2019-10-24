@@ -767,6 +767,78 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgRemoving bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Removing" {
+				tgRemoving = true
+				break
+			}
+		}
+
+		if tgRemoving {
+			tgRemoving = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
+func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgAdding bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Adding" {
+				tgAdding = true
+				break
+			}
+		}
+
+		if tgAdding {
+			tgAdding = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
 func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
 	shouldWaitForCapacity := false
@@ -920,22 +992,55 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		add := expandStringList(ns.Difference(os).List())
 
 		if len(remove) > 0 {
-			_, err := conn.DetachLoadBalancerTargetGroups(&autoscaling.DetachLoadBalancerTargetGroupsInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				TargetGroupARNs:      remove,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+			// AWS API only supports adding/removing 10 at a time
+			var batches [][]*string
+
+			batchSize := 10
+
+			for batchSize < len(remove) {
+				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
 			}
+			batches = append(batches, remove)
+
+			for _, batch := range batches {
+				_, err := conn.DetachLoadBalancerTargetGroups(&autoscaling.DetachLoadBalancerTargetGroupsInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					TargetGroupARNs:      batch,
+				})
+				if err != nil {
+					return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancer Target Groups being removed: %s", d.Id(), err)
+				}
+			}
+
 		}
 
 		if len(add) > 0 {
-			_, err := conn.AttachLoadBalancerTargetGroups(&autoscaling.AttachLoadBalancerTargetGroupsInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				TargetGroupARNs:      add,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+			batchSize := 10
+
+			var batches [][]*string
+
+			for batchSize < len(add) {
+				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			}
+			batches = append(batches, add)
+
+			for _, batch := range batches {
+				_, err := conn.AttachLoadBalancerTargetGroups(&autoscaling.AttachLoadBalancerTargetGroupsInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					TargetGroupARNs:      batch,
+				})
+
+				if err != nil {
+					return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancer Target Groups being added: %s", d.Id(), err)
+				}
 			}
 		}
 	}
