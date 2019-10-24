@@ -277,14 +277,6 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 	return resourceAwsGuardDutyFilterRead(d, meta)
 }
 
-func parseImportedId(importedId string) (string, string, error) {
-	parts := strings.SplitN(importedId, "_", 2)
-	if len(parts) < 2 {
-		return "", "", fmt.Errorf("Error Importing aws_guardduty_filter record: '%s' Please make sure the record ID is in the form detectorId_name.", importedId)
-	}
-	return parts[0], parts[1], nil
-}
-
 func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) error {
 	var detectorId, name string
 	var err error
@@ -380,4 +372,12 @@ func resourceAwsGuardDutyFilterDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Deleting GuardDuty Filter '%s' failed: %s", d.Id(), err.Error())
 	}
 	return nil
+}
+
+func parseImportedId(importedId string) (string, string, error) {
+	parts := strings.SplitN(importedId, "_", 2)
+	if len(parts) < 2 {
+		return "", "", fmt.Errorf("Error Importing aws_guardduty_filter record: '%s' Please make sure the record ID is in the form detectorId_name.", importedId)
+	}
+	return parts[0], parts[1], nil
 }
