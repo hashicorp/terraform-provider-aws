@@ -9146,6 +9146,8 @@ func (c *Organizations) ListTagsForResourceRequest(input *ListTagsForResourceInp
 //
 // Currently, you can list tags on an account in AWS Organizations.
 //
+// This operation can be called only from the organization's master account.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10081,6 +10083,8 @@ func (c *Organizations) TagResourceRequest(input *TagResourceInput) (req *reques
 //
 // Currently, you can tag and untag accounts in AWS Organizations.
 //
+// This operation can be called only from the organization's master account.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10351,6 +10355,8 @@ func (c *Organizations) UntagResourceRequest(input *UntagResourceInput) (req *re
 // Removes a tag from the specified resource.
 //
 // Currently, you can tag and untag accounts in AWS Organizations.
+//
+// This operation can be called only from the organization's master account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11545,6 +11551,10 @@ type CreateAccountStatus struct {
 	//
 	//    * EMAIL_ALREADY_EXISTS: The account could not be created because another
 	//    AWS account with that email address already exists.
+	//
+	//    * GOVCLOUD_ACCOUNT_ALREADY_EXISTS: The account in the AWS GovCloud (US)
+	//    Region could not be created because this Region already includes an account
+	//    with that email address.
 	//
 	//    * INVALID_ADDRESS: The account could not be created because the address
 	//    you provided is not valid.

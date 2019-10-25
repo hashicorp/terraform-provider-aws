@@ -202,6 +202,98 @@ func (c *Pinpoint) CreateCampaignWithContext(ctx aws.Context, input *CreateCampa
 	return out, req.Send()
 }
 
+const opCreateEmailTemplate = "CreateEmailTemplate"
+
+// CreateEmailTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateEmailTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateEmailTemplate for more information on using the CreateEmailTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateEmailTemplateRequest method.
+//    req, resp := client.CreateEmailTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateEmailTemplate
+func (c *Pinpoint) CreateEmailTemplateRequest(input *CreateEmailTemplateInput) (req *request.Request, output *CreateEmailTemplateOutput) {
+	op := &request.Operation{
+		Name:       opCreateEmailTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/templates/{template-name}/email",
+	}
+
+	if input == nil {
+		input = &CreateEmailTemplateInput{}
+	}
+
+	output = &CreateEmailTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateEmailTemplate API operation for Amazon Pinpoint.
+//
+// Creates a message template that you can use in messages that are sent through
+// the email channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation CreateEmailTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateEmailTemplate
+func (c *Pinpoint) CreateEmailTemplate(input *CreateEmailTemplateInput) (*CreateEmailTemplateOutput, error) {
+	req, out := c.CreateEmailTemplateRequest(input)
+	return out, req.Send()
+}
+
+// CreateEmailTemplateWithContext is the same as CreateEmailTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateEmailTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) CreateEmailTemplateWithContext(ctx aws.Context, input *CreateEmailTemplateInput, opts ...request.Option) (*CreateEmailTemplateOutput, error) {
+	req, out := c.CreateEmailTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateExportJob = "CreateExportJob"
 
 // CreateExportJobRequest generates a "aws/request.Request" representing the
@@ -246,7 +338,7 @@ func (c *Pinpoint) CreateExportJobRequest(input *CreateExportJobInput) (req *req
 
 // CreateExportJob API operation for Amazon Pinpoint.
 //
-// Creates a new export job for an application.
+// Creates an export job for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -340,7 +432,7 @@ func (c *Pinpoint) CreateImportJobRequest(input *CreateImportJobInput) (req *req
 
 // CreateImportJob API operation for Amazon Pinpoint.
 //
-// Creates a new import job for an application.
+// Creates an import job for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -385,6 +477,98 @@ func (c *Pinpoint) CreateImportJob(input *CreateImportJobInput) (*CreateImportJo
 // for more information on using Contexts.
 func (c *Pinpoint) CreateImportJobWithContext(ctx aws.Context, input *CreateImportJobInput, opts ...request.Option) (*CreateImportJobOutput, error) {
 	req, out := c.CreateImportJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreatePushTemplate = "CreatePushTemplate"
+
+// CreatePushTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreatePushTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreatePushTemplate for more information on using the CreatePushTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreatePushTemplateRequest method.
+//    req, resp := client.CreatePushTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreatePushTemplate
+func (c *Pinpoint) CreatePushTemplateRequest(input *CreatePushTemplateInput) (req *request.Request, output *CreatePushTemplateOutput) {
+	op := &request.Operation{
+		Name:       opCreatePushTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/templates/{template-name}/push",
+	}
+
+	if input == nil {
+		input = &CreatePushTemplateInput{}
+	}
+
+	output = &CreatePushTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreatePushTemplate API operation for Amazon Pinpoint.
+//
+// Creates a message template that you can use in messages that are sent through
+// a push notification channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation CreatePushTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreatePushTemplate
+func (c *Pinpoint) CreatePushTemplate(input *CreatePushTemplateInput) (*CreatePushTemplateOutput, error) {
+	req, out := c.CreatePushTemplateRequest(input)
+	return out, req.Send()
+}
+
+// CreatePushTemplateWithContext is the same as CreatePushTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreatePushTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) CreatePushTemplateWithContext(ctx aws.Context, input *CreatePushTemplateInput, opts ...request.Option) (*CreatePushTemplateOutput, error) {
+	req, out := c.CreatePushTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -480,6 +664,98 @@ func (c *Pinpoint) CreateSegment(input *CreateSegmentInput) (*CreateSegmentOutpu
 // for more information on using Contexts.
 func (c *Pinpoint) CreateSegmentWithContext(ctx aws.Context, input *CreateSegmentInput, opts ...request.Option) (*CreateSegmentOutput, error) {
 	req, out := c.CreateSegmentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateSmsTemplate = "CreateSmsTemplate"
+
+// CreateSmsTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateSmsTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateSmsTemplate for more information on using the CreateSmsTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateSmsTemplateRequest method.
+//    req, resp := client.CreateSmsTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateSmsTemplate
+func (c *Pinpoint) CreateSmsTemplateRequest(input *CreateSmsTemplateInput) (req *request.Request, output *CreateSmsTemplateOutput) {
+	op := &request.Operation{
+		Name:       opCreateSmsTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/templates/{template-name}/sms",
+	}
+
+	if input == nil {
+		input = &CreateSmsTemplateInput{}
+	}
+
+	output = &CreateSmsTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateSmsTemplate API operation for Amazon Pinpoint.
+//
+// Creates a message template that you can use in messages that are sent through
+// the SMS channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation CreateSmsTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateSmsTemplate
+func (c *Pinpoint) CreateSmsTemplate(input *CreateSmsTemplateInput) (*CreateSmsTemplateOutput, error) {
+	req, out := c.CreateSmsTemplateRequest(input)
+	return out, req.Send()
+}
+
+// CreateSmsTemplateWithContext is the same as CreateSmsTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateSmsTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) CreateSmsTemplateWithContext(ctx aws.Context, input *CreateSmsTemplateInput, opts ...request.Option) (*CreateSmsTemplateOutput, error) {
+	req, out := c.CreateSmsTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1338,6 +1614,101 @@ func (c *Pinpoint) DeleteEmailChannelWithContext(ctx aws.Context, input *DeleteE
 	return out, req.Send()
 }
 
+const opDeleteEmailTemplate = "DeleteEmailTemplate"
+
+// DeleteEmailTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteEmailTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteEmailTemplate for more information on using the DeleteEmailTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteEmailTemplateRequest method.
+//    req, resp := client.DeleteEmailTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEmailTemplate
+func (c *Pinpoint) DeleteEmailTemplateRequest(input *DeleteEmailTemplateInput) (req *request.Request, output *DeleteEmailTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteEmailTemplate,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/templates/{template-name}/email",
+	}
+
+	if input == nil {
+		input = &DeleteEmailTemplateInput{}
+	}
+
+	output = &DeleteEmailTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteEmailTemplate API operation for Amazon Pinpoint.
+//
+// Deletes a message template that was designed for use in messages that were
+// sent through the email channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation DeleteEmailTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEmailTemplate
+func (c *Pinpoint) DeleteEmailTemplate(input *DeleteEmailTemplateInput) (*DeleteEmailTemplateOutput, error) {
+	req, out := c.DeleteEmailTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteEmailTemplateWithContext is the same as DeleteEmailTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteEmailTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) DeleteEmailTemplateWithContext(ctx aws.Context, input *DeleteEmailTemplateInput, opts ...request.Option) (*DeleteEmailTemplateOutput, error) {
+	req, out := c.DeleteEmailTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteEndpoint = "DeleteEndpoint"
 
 // DeleteEndpointRequest generates a "aws/request.Request" representing the
@@ -1621,6 +1992,101 @@ func (c *Pinpoint) DeleteGcmChannelWithContext(ctx aws.Context, input *DeleteGcm
 	return out, req.Send()
 }
 
+const opDeletePushTemplate = "DeletePushTemplate"
+
+// DeletePushTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeletePushTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeletePushTemplate for more information on using the DeletePushTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeletePushTemplateRequest method.
+//    req, resp := client.DeletePushTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeletePushTemplate
+func (c *Pinpoint) DeletePushTemplateRequest(input *DeletePushTemplateInput) (req *request.Request, output *DeletePushTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDeletePushTemplate,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/templates/{template-name}/push",
+	}
+
+	if input == nil {
+		input = &DeletePushTemplateInput{}
+	}
+
+	output = &DeletePushTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeletePushTemplate API operation for Amazon Pinpoint.
+//
+// Deletes a message template that was designed for use in messages that were
+// sent through a push notification channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation DeletePushTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeletePushTemplate
+func (c *Pinpoint) DeletePushTemplate(input *DeletePushTemplateInput) (*DeletePushTemplateOutput, error) {
+	req, out := c.DeletePushTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DeletePushTemplateWithContext is the same as DeletePushTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeletePushTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) DeletePushTemplateWithContext(ctx aws.Context, input *DeletePushTemplateInput, opts ...request.Option) (*DeletePushTemplateOutput, error) {
+	req, out := c.DeletePushTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteSegment = "DeleteSegment"
 
 // DeleteSegmentRequest generates a "aws/request.Request" representing the
@@ -1805,6 +2271,101 @@ func (c *Pinpoint) DeleteSmsChannel(input *DeleteSmsChannelInput) (*DeleteSmsCha
 // for more information on using Contexts.
 func (c *Pinpoint) DeleteSmsChannelWithContext(ctx aws.Context, input *DeleteSmsChannelInput, opts ...request.Option) (*DeleteSmsChannelOutput, error) {
 	req, out := c.DeleteSmsChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteSmsTemplate = "DeleteSmsTemplate"
+
+// DeleteSmsTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteSmsTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteSmsTemplate for more information on using the DeleteSmsTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteSmsTemplateRequest method.
+//    req, resp := client.DeleteSmsTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteSmsTemplate
+func (c *Pinpoint) DeleteSmsTemplateRequest(input *DeleteSmsTemplateInput) (req *request.Request, output *DeleteSmsTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteSmsTemplate,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/templates/{template-name}/sms",
+	}
+
+	if input == nil {
+		input = &DeleteSmsTemplateInput{}
+	}
+
+	output = &DeleteSmsTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteSmsTemplate API operation for Amazon Pinpoint.
+//
+// Deletes a message template that was designed for use in messages that were
+// sent through the SMS channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation DeleteSmsTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteSmsTemplate
+func (c *Pinpoint) DeleteSmsTemplate(input *DeleteSmsTemplateInput) (*DeleteSmsTemplateOutput, error) {
+	req, out := c.DeleteSmsTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteSmsTemplateWithContext is the same as DeleteSmsTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteSmsTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) DeleteSmsTemplateWithContext(ctx aws.Context, input *DeleteSmsTemplateInput, opts ...request.Option) (*DeleteSmsTemplateOutput, error) {
+	req, out := c.DeleteSmsTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2895,8 +3456,8 @@ func (c *Pinpoint) GetBaiduChannelRequest(input *GetBaiduChannelInput) (req *req
 
 // GetBaiduChannel API operation for Amazon Pinpoint.
 //
-// Retrieves information about the status and settings of the Baidu Cloud Push
-// channel for an application.
+// Retrieves information about the status and settings of the Baidu channel
+// for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3705,6 +4266,101 @@ func (c *Pinpoint) GetEmailChannelWithContext(ctx aws.Context, input *GetEmailCh
 	return out, req.Send()
 }
 
+const opGetEmailTemplate = "GetEmailTemplate"
+
+// GetEmailTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the GetEmailTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetEmailTemplate for more information on using the GetEmailTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetEmailTemplateRequest method.
+//    req, resp := client.GetEmailTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEmailTemplate
+func (c *Pinpoint) GetEmailTemplateRequest(input *GetEmailTemplateInput) (req *request.Request, output *GetEmailTemplateOutput) {
+	op := &request.Operation{
+		Name:       opGetEmailTemplate,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/templates/{template-name}/email",
+	}
+
+	if input == nil {
+		input = &GetEmailTemplateInput{}
+	}
+
+	output = &GetEmailTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetEmailTemplate API operation for Amazon Pinpoint.
+//
+// Retrieves the content and settings for a message template that you can use
+// in messages that are sent through the email channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetEmailTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEmailTemplate
+func (c *Pinpoint) GetEmailTemplate(input *GetEmailTemplateInput) (*GetEmailTemplateOutput, error) {
+	req, out := c.GetEmailTemplateRequest(input)
+	return out, req.Send()
+}
+
+// GetEmailTemplateWithContext is the same as GetEmailTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetEmailTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetEmailTemplateWithContext(ctx aws.Context, input *GetEmailTemplateInput, opts ...request.Option) (*GetEmailTemplateOutput, error) {
+	req, out := c.GetEmailTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetEndpoint = "GetEndpoint"
 
 // GetEndpointRequest generates a "aws/request.Request" representing the
@@ -4364,6 +5020,101 @@ func (c *Pinpoint) GetImportJobs(input *GetImportJobsInput) (*GetImportJobsOutpu
 // for more information on using Contexts.
 func (c *Pinpoint) GetImportJobsWithContext(ctx aws.Context, input *GetImportJobsInput, opts ...request.Option) (*GetImportJobsOutput, error) {
 	req, out := c.GetImportJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetPushTemplate = "GetPushTemplate"
+
+// GetPushTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the GetPushTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPushTemplate for more information on using the GetPushTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPushTemplateRequest method.
+//    req, resp := client.GetPushTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetPushTemplate
+func (c *Pinpoint) GetPushTemplateRequest(input *GetPushTemplateInput) (req *request.Request, output *GetPushTemplateOutput) {
+	op := &request.Operation{
+		Name:       opGetPushTemplate,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/templates/{template-name}/push",
+	}
+
+	if input == nil {
+		input = &GetPushTemplateInput{}
+	}
+
+	output = &GetPushTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPushTemplate API operation for Amazon Pinpoint.
+//
+// Retrieves the content and settings for a message template that you can use
+// in messages that are sent through a push notification channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetPushTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetPushTemplate
+func (c *Pinpoint) GetPushTemplate(input *GetPushTemplateInput) (*GetPushTemplateOutput, error) {
+	req, out := c.GetPushTemplateRequest(input)
+	return out, req.Send()
+}
+
+// GetPushTemplateWithContext is the same as GetPushTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPushTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetPushTemplateWithContext(ctx aws.Context, input *GetPushTemplateInput, opts ...request.Option) (*GetPushTemplateOutput, error) {
+	req, out := c.GetPushTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5034,6 +5785,101 @@ func (c *Pinpoint) GetSmsChannelWithContext(ctx aws.Context, input *GetSmsChanne
 	return out, req.Send()
 }
 
+const opGetSmsTemplate = "GetSmsTemplate"
+
+// GetSmsTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the GetSmsTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetSmsTemplate for more information on using the GetSmsTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetSmsTemplateRequest method.
+//    req, resp := client.GetSmsTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSmsTemplate
+func (c *Pinpoint) GetSmsTemplateRequest(input *GetSmsTemplateInput) (req *request.Request, output *GetSmsTemplateOutput) {
+	op := &request.Operation{
+		Name:       opGetSmsTemplate,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/templates/{template-name}/sms",
+	}
+
+	if input == nil {
+		input = &GetSmsTemplateInput{}
+	}
+
+	output = &GetSmsTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSmsTemplate API operation for Amazon Pinpoint.
+//
+// Retrieves the content and settings for a message template that you can use
+// in messages that are sent through the SMS channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetSmsTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSmsTemplate
+func (c *Pinpoint) GetSmsTemplate(input *GetSmsTemplateInput) (*GetSmsTemplateOutput, error) {
+	req, out := c.GetSmsTemplateRequest(input)
+	return out, req.Send()
+}
+
+// GetSmsTemplateWithContext is the same as GetSmsTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSmsTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetSmsTemplateWithContext(ctx aws.Context, input *GetSmsTemplateInput, opts ...request.Option) (*GetSmsTemplateOutput, error) {
+	req, out := c.GetSmsTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetUserEndpoints = "GetUserEndpoints"
 
 // GetUserEndpointsRequest generates a "aws/request.Request" representing the
@@ -5269,7 +6115,7 @@ func (c *Pinpoint) ListTagsForResourceRequest(input *ListTagsForResourceInput) (
 // ListTagsForResource API operation for Amazon Pinpoint.
 //
 // Retrieves all the tags (keys and values) that are associated with an application,
-// campaign, or segment.
+// campaign, message template, or segment.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5294,6 +6140,98 @@ func (c *Pinpoint) ListTagsForResource(input *ListTagsForResourceInput) (*ListTa
 // for more information on using Contexts.
 func (c *Pinpoint) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListTemplates = "ListTemplates"
+
+// ListTemplatesRequest generates a "aws/request.Request" representing the
+// client's request for the ListTemplates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTemplates for more information on using the ListTemplates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTemplatesRequest method.
+//    req, resp := client.ListTemplatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/ListTemplates
+func (c *Pinpoint) ListTemplatesRequest(input *ListTemplatesInput) (req *request.Request, output *ListTemplatesOutput) {
+	op := &request.Operation{
+		Name:       opListTemplates,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/templates",
+	}
+
+	if input == nil {
+		input = &ListTemplatesInput{}
+	}
+
+	output = &ListTemplatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTemplates API operation for Amazon Pinpoint.
+//
+// Retrieves information about all the message templates that are associated
+// with your Amazon Pinpoint account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation ListTemplates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/ListTemplates
+func (c *Pinpoint) ListTemplates(input *ListTemplatesInput) (*ListTemplatesOutput, error) {
+	req, out := c.ListTemplatesRequest(input)
+	return out, req.Send()
+}
+
+// ListTemplatesWithContext is the same as ListTemplates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTemplates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) ListTemplatesWithContext(ctx aws.Context, input *ListTemplatesInput, opts ...request.Option) (*ListTemplatesOutput, error) {
+	req, out := c.ListTemplatesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5911,7 +6849,8 @@ func (c *Pinpoint) TagResourceRequest(input *TagResourceInput) (req *request.Req
 
 // TagResource API operation for Amazon Pinpoint.
 //
-// Adds one or more tags (keys and values) to an application, campaign, or segment.
+// Adds one or more tags (keys and values) to an application, campaign, message
+// template, or segment.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5987,7 +6926,7 @@ func (c *Pinpoint) UntagResourceRequest(input *UntagResourceInput) (req *request
 // UntagResource API operation for Amazon Pinpoint.
 //
 // Removes one or more tags (keys and values) from an application, campaign,
-// or segment.
+// message template, or segment.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6061,7 +7000,8 @@ func (c *Pinpoint) UpdateAdmChannelRequest(input *UpdateAdmChannelInput) (req *r
 
 // UpdateAdmChannel API operation for Amazon Pinpoint.
 //
-// Updates the ADM channel settings for an application.
+// Enables the ADM channel for an application or updates the status and settings
+// of the ADM channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6155,7 +7095,8 @@ func (c *Pinpoint) UpdateApnsChannelRequest(input *UpdateApnsChannelInput) (req 
 
 // UpdateApnsChannel API operation for Amazon Pinpoint.
 //
-// Updates the APNs channel settings for an application.
+// Enables the APNs channel for an application or updates the status and settings
+// of the APNs channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6249,7 +7190,8 @@ func (c *Pinpoint) UpdateApnsSandboxChannelRequest(input *UpdateApnsSandboxChann
 
 // UpdateApnsSandboxChannel API operation for Amazon Pinpoint.
 //
-// Updates the APNs sandbox channel settings for an application.
+// Enables the APNs sandbox channel for an application or updates the status
+// and settings of the APNs sandbox channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6343,7 +7285,8 @@ func (c *Pinpoint) UpdateApnsVoipChannelRequest(input *UpdateApnsVoipChannelInpu
 
 // UpdateApnsVoipChannel API operation for Amazon Pinpoint.
 //
-// Updates the APNs VoIP channel settings for an application.
+// Enables the APNs VoIP channel for an application or updates the status and
+// settings of the APNs VoIP channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6437,7 +7380,8 @@ func (c *Pinpoint) UpdateApnsVoipSandboxChannelRequest(input *UpdateApnsVoipSand
 
 // UpdateApnsVoipSandboxChannel API operation for Amazon Pinpoint.
 //
-// Updates the settings for the APNs VoIP sandbox channel for an application.
+// Enables the APNs VoIP sandbox channel for an application or updates the status
+// and settings of the APNs VoIP sandbox channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6625,7 +7569,8 @@ func (c *Pinpoint) UpdateBaiduChannelRequest(input *UpdateBaiduChannelInput) (re
 
 // UpdateBaiduChannel API operation for Amazon Pinpoint.
 //
-// Updates the settings of the Baidu channel for an application.
+// Enables the Baidu channel for an application or updates the status and settings
+// of the Baidu channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6813,7 +7758,8 @@ func (c *Pinpoint) UpdateEmailChannelRequest(input *UpdateEmailChannelInput) (re
 
 // UpdateEmailChannel API operation for Amazon Pinpoint.
 //
-// Updates the status and settings of the email channel for an application.
+// Enables the email channel for an application or updates the status and settings
+// of the email channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6858,6 +7804,101 @@ func (c *Pinpoint) UpdateEmailChannel(input *UpdateEmailChannelInput) (*UpdateEm
 // for more information on using Contexts.
 func (c *Pinpoint) UpdateEmailChannelWithContext(ctx aws.Context, input *UpdateEmailChannelInput, opts ...request.Option) (*UpdateEmailChannelOutput, error) {
 	req, out := c.UpdateEmailChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateEmailTemplate = "UpdateEmailTemplate"
+
+// UpdateEmailTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateEmailTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateEmailTemplate for more information on using the UpdateEmailTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateEmailTemplateRequest method.
+//    req, resp := client.UpdateEmailTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEmailTemplate
+func (c *Pinpoint) UpdateEmailTemplateRequest(input *UpdateEmailTemplateInput) (req *request.Request, output *UpdateEmailTemplateOutput) {
+	op := &request.Operation{
+		Name:       opUpdateEmailTemplate,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/templates/{template-name}/email",
+	}
+
+	if input == nil {
+		input = &UpdateEmailTemplateInput{}
+	}
+
+	output = &UpdateEmailTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateEmailTemplate API operation for Amazon Pinpoint.
+//
+// Updates an existing message template that you can use in messages that are
+// sent through the email channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation UpdateEmailTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEmailTemplate
+func (c *Pinpoint) UpdateEmailTemplate(input *UpdateEmailTemplateInput) (*UpdateEmailTemplateOutput, error) {
+	req, out := c.UpdateEmailTemplateRequest(input)
+	return out, req.Send()
+}
+
+// UpdateEmailTemplateWithContext is the same as UpdateEmailTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateEmailTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) UpdateEmailTemplateWithContext(ctx aws.Context, input *UpdateEmailTemplateInput, opts ...request.Option) (*UpdateEmailTemplateOutput, error) {
+	req, out := c.UpdateEmailTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7101,7 +8142,8 @@ func (c *Pinpoint) UpdateGcmChannelRequest(input *UpdateGcmChannelInput) (req *r
 
 // UpdateGcmChannel API operation for Amazon Pinpoint.
 //
-// Updates the status and settings of the GCM channel for an application.
+// Enables the GCM channel for an application or updates the status and settings
+// of the GCM channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7146,6 +8188,101 @@ func (c *Pinpoint) UpdateGcmChannel(input *UpdateGcmChannelInput) (*UpdateGcmCha
 // for more information on using Contexts.
 func (c *Pinpoint) UpdateGcmChannelWithContext(ctx aws.Context, input *UpdateGcmChannelInput, opts ...request.Option) (*UpdateGcmChannelOutput, error) {
 	req, out := c.UpdateGcmChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdatePushTemplate = "UpdatePushTemplate"
+
+// UpdatePushTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the UpdatePushTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdatePushTemplate for more information on using the UpdatePushTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdatePushTemplateRequest method.
+//    req, resp := client.UpdatePushTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdatePushTemplate
+func (c *Pinpoint) UpdatePushTemplateRequest(input *UpdatePushTemplateInput) (req *request.Request, output *UpdatePushTemplateOutput) {
+	op := &request.Operation{
+		Name:       opUpdatePushTemplate,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/templates/{template-name}/push",
+	}
+
+	if input == nil {
+		input = &UpdatePushTemplateInput{}
+	}
+
+	output = &UpdatePushTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdatePushTemplate API operation for Amazon Pinpoint.
+//
+// Updates an existing message template that you can use in messages that are
+// sent through a push notification channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation UpdatePushTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdatePushTemplate
+func (c *Pinpoint) UpdatePushTemplate(input *UpdatePushTemplateInput) (*UpdatePushTemplateOutput, error) {
+	req, out := c.UpdatePushTemplateRequest(input)
+	return out, req.Send()
+}
+
+// UpdatePushTemplateWithContext is the same as UpdatePushTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdatePushTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) UpdatePushTemplateWithContext(ctx aws.Context, input *UpdatePushTemplateInput, opts ...request.Option) (*UpdatePushTemplateOutput, error) {
+	req, out := c.UpdatePushTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7290,7 +8427,8 @@ func (c *Pinpoint) UpdateSmsChannelRequest(input *UpdateSmsChannelInput) (req *r
 
 // UpdateSmsChannel API operation for Amazon Pinpoint.
 //
-// Updates the status and settings of the SMS channel for an application.
+// Enables the SMS channel for an application or updates the status and settings
+// of the SMS channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7340,6 +8478,101 @@ func (c *Pinpoint) UpdateSmsChannelWithContext(ctx aws.Context, input *UpdateSms
 	return out, req.Send()
 }
 
+const opUpdateSmsTemplate = "UpdateSmsTemplate"
+
+// UpdateSmsTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateSmsTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateSmsTemplate for more information on using the UpdateSmsTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateSmsTemplateRequest method.
+//    req, resp := client.UpdateSmsTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateSmsTemplate
+func (c *Pinpoint) UpdateSmsTemplateRequest(input *UpdateSmsTemplateInput) (req *request.Request, output *UpdateSmsTemplateOutput) {
+	op := &request.Operation{
+		Name:       opUpdateSmsTemplate,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/templates/{template-name}/sms",
+	}
+
+	if input == nil {
+		input = &UpdateSmsTemplateInput{}
+	}
+
+	output = &UpdateSmsTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateSmsTemplate API operation for Amazon Pinpoint.
+//
+// Updates an existing message template that you can use in messages that are
+// sent through the SMS channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation UpdateSmsTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateSmsTemplate
+func (c *Pinpoint) UpdateSmsTemplate(input *UpdateSmsTemplateInput) (*UpdateSmsTemplateOutput, error) {
+	req, out := c.UpdateSmsTemplateRequest(input)
+	return out, req.Send()
+}
+
+// UpdateSmsTemplateWithContext is the same as UpdateSmsTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateSmsTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) UpdateSmsTemplateWithContext(ctx aws.Context, input *UpdateSmsTemplateInput, opts ...request.Option) (*UpdateSmsTemplateOutput, error) {
+	req, out := c.UpdateSmsTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateVoiceChannel = "UpdateVoiceChannel"
 
 // UpdateVoiceChannelRequest generates a "aws/request.Request" representing the
@@ -7384,7 +8617,8 @@ func (c *Pinpoint) UpdateVoiceChannelRequest(input *UpdateVoiceChannelInput) (re
 
 // UpdateVoiceChannel API operation for Amazon Pinpoint.
 //
-// Updates the status and settings of the voice channel for an application.
+// Enables the voice channel for an application or updates the status and settings
+// of the voice channel for an application.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8091,17 +9325,46 @@ type APNSMessage struct {
 
 	// The raw, JSON-formatted string to use as the payload for the notification
 	// message. This value overrides the message.
+	//
+	// If you specify the raw content of an APNs push notification, the message
+	// payload has to include the content-available key. The value of the content-available
+	// key has to be an integer, and can only be 0 or 1. If you're sending a standard
+	// notification, set the value of content-available to 0. If you're sending
+	// a silent (background) notification, set the value of content-available to
+	// 1. Additionally, silent notification payloads can't include the alert, badge,
+	// or sound keys. For more information, see Generating a Remote Notification
+	// (https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification)
+	// and Pushing Background Updates to Your App (https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/pushing_background_updates_to_your_app)
+	// on the Apple Developer website.
 	RawContent *string `type:"string"`
 
-	// Specifies whether the notification is a silent push notification, which is
-	// a push notification that doesn't display on a recipient's device. Silent
-	// push notifications can be used for cases such as updating an app's configuration,
-	// displaying messages in an in-app message center, or supporting phone home
-	// functionality.
+	// Specifies whether the notification is a silent push notification. A silent
+	// (or background) push notification isn't displayed on recipients' devices.
+	// You can use silent push notifications to make small updates to your app,
+	// or to display messages in an in-app message center.
+	//
+	// Amazon Pinpoint uses this property to determine the correct value for the
+	// apns-push-type request header when it sends the notification message to APNs.
+	// If you specify a value of true for this property, Amazon Pinpoint sets the
+	// value for the apns-push-type header field to background.
+	//
+	// If you specify the raw content of an APNs push notification, the message
+	// payload has to include the content-available key. For silent (background)
+	// notifications, set the value of content-available to 1. Additionally, the
+	// message payload for a silent notification can't include the alert, badge,
+	// or sound keys. For more information, see Generating a Remote Notification
+	// (https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/generating_a_remote_notification)
+	// and Pushing Background Updates to Your App (https://developer.apple.com/documentation/usernotifications/setting_up_a_remote_notification_server/pushing_background_updates_to_your_app)
+	// on the Apple Developer website.
+	//
+	// Apple has indicated that they will throttle "excessive" background notifications
+	// based on current traffic volumes. To prevent your notifications being throttled,
+	// Apple recommends that you send no more than 3 silent push notifications to
+	// each recipient per hour.
 	SilentPush *bool `type:"boolean"`
 
 	// The key for the sound to play when the recipient receives the push notification.
-	// The value of this key is the name of a sound file in your app's main bundle
+	// The value for this key is the name of a sound file in your app's main bundle
 	// or the Library/Sounds folder in your app's data container. If the sound file
 	// can't be found or you specify default for the value, the system plays the
 	// default alert sound.
@@ -8242,6 +9505,96 @@ func (s *APNSMessage) SetTitle(v string) *APNSMessage {
 
 // SetUrl sets the Url field's value.
 func (s *APNSMessage) SetUrl(v string) *APNSMessage {
+	s.Url = &v
+	return s
+}
+
+// Specifies the content and settings for a message template that can be used
+// in push notifications that are sent through the APNs (Apple Push Notification
+// service) channel.
+type APNSPushNotificationTemplate struct {
+	_ struct{} `type:"structure"`
+
+	// The action to occur if a recipient taps a push notification that's based
+	// on the message template. Valid values are:
+	//
+	//    * OPEN_APP - Your app opens or it becomes the foreground app if it was
+	//    sent to the background. This is the default action.
+	//
+	//    * DEEP_LINK - Your app opens and displays a designated user interface
+	//    in the app. This setting uses the deep-linking features of the iOS platform.
+	//
+	//    * URL - The default mobile browser on the recipient's device opens and
+	//    loads the web page at a URL that you specify.
+	Action *string `type:"string" enum:"Action"`
+
+	// The message body to use in push notifications that are based on the message
+	// template.
+	Body *string `type:"string"`
+
+	// The URL of an image or video to display in push notifications that are based
+	// on the message template.
+	MediaUrl *string `type:"string"`
+
+	// The key for the sound to play when the recipient receives a push notification
+	// that's based on the message template. The value for this key is the name
+	// of a sound file in your app's main bundle or the Library/Sounds folder in
+	// your app's data container. If the sound file can't be found or you specify
+	// default for the value, the system plays the default alert sound.
+	Sound *string `type:"string"`
+
+	// The title to use in push notifications that are based on the message template.
+	// This title appears above the notification message on a recipient's device.
+	Title *string `type:"string"`
+
+	// The URL to open in the recipient's default mobile browser, if a recipient
+	// taps a push notification that's based on the message template and the value
+	// of the Action property is URL.
+	Url *string `type:"string"`
+}
+
+// String returns the string representation
+func (s APNSPushNotificationTemplate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s APNSPushNotificationTemplate) GoString() string {
+	return s.String()
+}
+
+// SetAction sets the Action field's value.
+func (s *APNSPushNotificationTemplate) SetAction(v string) *APNSPushNotificationTemplate {
+	s.Action = &v
+	return s
+}
+
+// SetBody sets the Body field's value.
+func (s *APNSPushNotificationTemplate) SetBody(v string) *APNSPushNotificationTemplate {
+	s.Body = &v
+	return s
+}
+
+// SetMediaUrl sets the MediaUrl field's value.
+func (s *APNSPushNotificationTemplate) SetMediaUrl(v string) *APNSPushNotificationTemplate {
+	s.MediaUrl = &v
+	return s
+}
+
+// SetSound sets the Sound field's value.
+func (s *APNSPushNotificationTemplate) SetSound(v string) *APNSPushNotificationTemplate {
+	s.Sound = &v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *APNSPushNotificationTemplate) SetTitle(v string) *APNSPushNotificationTemplate {
+	s.Title = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *APNSPushNotificationTemplate) SetUrl(v string) *APNSPushNotificationTemplate {
 	s.Url = &v
 	return s
 }
@@ -9188,6 +10541,117 @@ func (s *AddressConfiguration) SetTitleOverride(v string) *AddressConfiguration 
 	return s
 }
 
+// Specifies the content and settings for a message template can be used in
+// push notifications that are sent through the ADM (Amazon Device Messaging),
+// GCM (Firebase Cloud Messaging, formerly Google Cloud Messaging), or Baidu
+// (Baidu Cloud Push) channel.
+type AndroidPushNotificationTemplate struct {
+	_ struct{} `type:"structure"`
+
+	// The action to occur if a recipient taps a push notification that's based
+	// on the message template. Valid values are:
+	//
+	//    * OPEN_APP - Your app opens or it becomes the foreground app if it was
+	//    sent to the background. This is the default action.
+	//
+	//    * DEEP_LINK - Your app opens and displays a designated user interface
+	//    in the app. This action uses the deep-linking features of the Android
+	//    platform.
+	//
+	//    * URL - The default mobile browser on the recipient's device opens and
+	//    loads the web page at a URL that you specify.
+	Action *string `type:"string" enum:"Action"`
+
+	// The message body to use in a push notification that's based on the message
+	// template.
+	Body *string `type:"string"`
+
+	// The URL of the large icon image to display in the content view of a push
+	// notification that's based on the message template.
+	ImageIconUrl *string `type:"string"`
+
+	// The URL of an image to display in a push notification that's based on the
+	// message template.
+	ImageUrl *string `type:"string"`
+
+	// The URL of the small icon image to display in the status bar and the content
+	// view of a push notification that's based on the message template.
+	SmallImageIconUrl *string `type:"string"`
+
+	// The sound to play when a recipient receives a push notification that's based
+	// on the message template. You can use the default stream or specify the file
+	// name of a sound resource that's bundled in your app. On an Android platform,
+	// the sound file must reside in /res/raw/.
+	Sound *string `type:"string"`
+
+	// The title to use in a push notification that's based on the message template.
+	// This title appears above the notification message on a recipient's device.
+	Title *string `type:"string"`
+
+	// The URL to open in a recipient's default mobile browser, if a recipient taps
+	// a a push notification that's based on the message template and the value
+	// of the Action property is URL.
+	Url *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AndroidPushNotificationTemplate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AndroidPushNotificationTemplate) GoString() string {
+	return s.String()
+}
+
+// SetAction sets the Action field's value.
+func (s *AndroidPushNotificationTemplate) SetAction(v string) *AndroidPushNotificationTemplate {
+	s.Action = &v
+	return s
+}
+
+// SetBody sets the Body field's value.
+func (s *AndroidPushNotificationTemplate) SetBody(v string) *AndroidPushNotificationTemplate {
+	s.Body = &v
+	return s
+}
+
+// SetImageIconUrl sets the ImageIconUrl field's value.
+func (s *AndroidPushNotificationTemplate) SetImageIconUrl(v string) *AndroidPushNotificationTemplate {
+	s.ImageIconUrl = &v
+	return s
+}
+
+// SetImageUrl sets the ImageUrl field's value.
+func (s *AndroidPushNotificationTemplate) SetImageUrl(v string) *AndroidPushNotificationTemplate {
+	s.ImageUrl = &v
+	return s
+}
+
+// SetSmallImageIconUrl sets the SmallImageIconUrl field's value.
+func (s *AndroidPushNotificationTemplate) SetSmallImageIconUrl(v string) *AndroidPushNotificationTemplate {
+	s.SmallImageIconUrl = &v
+	return s
+}
+
+// SetSound sets the Sound field's value.
+func (s *AndroidPushNotificationTemplate) SetSound(v string) *AndroidPushNotificationTemplate {
+	s.Sound = &v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *AndroidPushNotificationTemplate) SetTitle(v string) *AndroidPushNotificationTemplate {
+	s.Title = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *AndroidPushNotificationTemplate) SetUrl(v string) *AndroidPushNotificationTemplate {
+	s.Url = &v
+	return s
+}
+
 // Provides the results of a query that retrieved the data for a standard metric
 // that applies to an application, and provides information about that query.
 type ApplicationDateRangeKpiResponse struct {
@@ -9205,7 +10669,7 @@ type ApplicationDateRangeKpiResponse struct {
 	// that the data was retrieved for. This value describes the associated metric
 	// and consists of two or more terms, which are comprised of lowercase alphanumeric
 	// characters, separated by a hyphen. For a list of valid values, see the Amazon
-	// Pinpoint Developer Guide (developerguide.html).
+	// Pinpoint Developer Guide (https://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html).
 	//
 	// KpiName is a required field
 	KpiName *string `type:"string" required:"true"`
@@ -9217,8 +10681,8 @@ type ApplicationDateRangeKpiResponse struct {
 	KpiResult *BaseKpiResult `type:"structure" required:"true"`
 
 	// The string to use in a subsequent request to get the next page of results
-	// in a paginated response. This value is null for the App Metrics resource.
-	// The App Metrics resource returns all results in a single page.
+	// in a paginated response. This value is null for the Application Metrics resource.
+	// The Application Metrics resource returns all results in a single page.
 	NextToken *string `type:"string"`
 
 	// StartTime is a required field
@@ -9514,12 +10978,12 @@ type AttributesResource struct {
 	// The type of attribute or attributes that were removed from the endpoints.
 	// Valid values are:
 	//
-	//    * endpoint-custom-attributes - Custom attributes that describe endpoints
+	//    * endpoint-custom-attributes - Custom attributes that describe endpoints.
 	//
 	//    * endpoint-custom-metrics - Custom metrics that your app reports to Amazon
-	//    Pinpoint for endpoints
+	//    Pinpoint for endpoints.
 	//
-	//    * endpoint-user-attributes - Custom attributes that describe users
+	//    * endpoint-user-attributes - Custom attributes that describe users.
 	//
 	// AttributeType is a required field
 	AttributeType *string `type:"string" required:"true"`
@@ -9963,7 +11427,7 @@ type CampaignDateRangeKpiResponse struct {
 	// that the data was retrieved for. This value describes the associated metric
 	// and consists of two or more terms, which are comprised of lowercase alphanumeric
 	// characters, separated by a hyphen. For a list of valid values, see the Amazon
-	// Pinpoint Developer Guide (developerguide.html).
+	// Pinpoint Developer Guide (https://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html).
 	//
 	// KpiName is a required field
 	KpiName *string `type:"string" required:"true"`
@@ -10347,6 +11811,9 @@ type CampaignResponse struct {
 	// an associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
+	// The message template that’s used for the campaign.
+	TemplateConfiguration *TemplateConfiguration `type:"structure"`
+
 	// The custom description of a variation of the campaign that's used for A/B
 	// testing.
 	TreatmentDescription *string `type:"string"`
@@ -10479,6 +11946,12 @@ func (s *CampaignResponse) SetState(v *CampaignState) *CampaignResponse {
 // SetTags sets the Tags field's value.
 func (s *CampaignResponse) SetTags(v map[string]*string) *CampaignResponse {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateConfiguration sets the TemplateConfiguration field's value.
+func (s *CampaignResponse) SetTemplateConfiguration(v *TemplateConfiguration) *CampaignResponse {
+	s.TemplateConfiguration = v
 	return s
 }
 
@@ -10941,6 +12414,85 @@ func (s *CreateCampaignOutput) SetCampaignResponse(v *CampaignResponse) *CreateC
 	return s
 }
 
+type CreateEmailTemplateInput struct {
+	_ struct{} `type:"structure" payload:"EmailTemplateRequest"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in messages that are sent through the email channel.
+	//
+	// EmailTemplateRequest is a required field
+	EmailTemplateRequest *EmailTemplateRequest `type:"structure" required:"true"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateEmailTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateEmailTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateEmailTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateEmailTemplateInput"}
+	if s.EmailTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("EmailTemplateRequest"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEmailTemplateRequest sets the EmailTemplateRequest field's value.
+func (s *CreateEmailTemplateInput) SetEmailTemplateRequest(v *EmailTemplateRequest) *CreateEmailTemplateInput {
+	s.EmailTemplateRequest = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateEmailTemplateInput) SetTemplateName(v string) *CreateEmailTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type CreateEmailTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"CreateTemplateMessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// CreateTemplateMessageBody is a required field
+	CreateTemplateMessageBody *CreateTemplateMessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateEmailTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateEmailTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreateTemplateMessageBody sets the CreateTemplateMessageBody field's value.
+func (s *CreateEmailTemplateOutput) SetCreateTemplateMessageBody(v *CreateTemplateMessageBody) *CreateEmailTemplateOutput {
+	s.CreateTemplateMessageBody = v
+	return s
+}
+
 type CreateExportJobInput struct {
 	_ struct{} `type:"structure" payload:"ExportJobRequest"`
 
@@ -11115,6 +12667,85 @@ func (s *CreateImportJobOutput) SetImportJobResponse(v *ImportJobResponse) *Crea
 	return s
 }
 
+type CreatePushTemplateInput struct {
+	_ struct{} `type:"structure" payload:"PushNotificationTemplateRequest"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in messages that are sent through a push notification channel.
+	//
+	// PushNotificationTemplateRequest is a required field
+	PushNotificationTemplateRequest *PushNotificationTemplateRequest `type:"structure" required:"true"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreatePushTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreatePushTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreatePushTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreatePushTemplateInput"}
+	if s.PushNotificationTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("PushNotificationTemplateRequest"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPushNotificationTemplateRequest sets the PushNotificationTemplateRequest field's value.
+func (s *CreatePushTemplateInput) SetPushNotificationTemplateRequest(v *PushNotificationTemplateRequest) *CreatePushTemplateInput {
+	s.PushNotificationTemplateRequest = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreatePushTemplateInput) SetTemplateName(v string) *CreatePushTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type CreatePushTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"CreateTemplateMessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// CreateTemplateMessageBody is a required field
+	CreateTemplateMessageBody *CreateTemplateMessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreatePushTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreatePushTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreateTemplateMessageBody sets the CreateTemplateMessageBody field's value.
+func (s *CreatePushTemplateOutput) SetCreateTemplateMessageBody(v *CreateTemplateMessageBody) *CreatePushTemplateOutput {
+	s.CreateTemplateMessageBody = v
+	return s
+}
+
 type CreateSegmentInput struct {
 	_ struct{} `type:"structure" payload:"WriteSegmentRequest"`
 
@@ -11198,6 +12829,124 @@ func (s CreateSegmentOutput) GoString() string {
 // SetSegmentResponse sets the SegmentResponse field's value.
 func (s *CreateSegmentOutput) SetSegmentResponse(v *SegmentResponse) *CreateSegmentOutput {
 	s.SegmentResponse = v
+	return s
+}
+
+type CreateSmsTemplateInput struct {
+	_ struct{} `type:"structure" payload:"SMSTemplateRequest"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in text messages that are sent through the SMS channel.
+	//
+	// SMSTemplateRequest is a required field
+	SMSTemplateRequest *SMSTemplateRequest `type:"structure" required:"true"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateSmsTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSmsTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateSmsTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateSmsTemplateInput"}
+	if s.SMSTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("SMSTemplateRequest"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSMSTemplateRequest sets the SMSTemplateRequest field's value.
+func (s *CreateSmsTemplateInput) SetSMSTemplateRequest(v *SMSTemplateRequest) *CreateSmsTemplateInput {
+	s.SMSTemplateRequest = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateSmsTemplateInput) SetTemplateName(v string) *CreateSmsTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type CreateSmsTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"CreateTemplateMessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// CreateTemplateMessageBody is a required field
+	CreateTemplateMessageBody *CreateTemplateMessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateSmsTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSmsTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreateTemplateMessageBody sets the CreateTemplateMessageBody field's value.
+func (s *CreateSmsTemplateOutput) SetCreateTemplateMessageBody(v *CreateTemplateMessageBody) *CreateSmsTemplateOutput {
+	s.CreateTemplateMessageBody = v
+	return s
+}
+
+// Provides information about an API request or response.
+type CreateTemplateMessageBody struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `type:"string"`
+
+	Message *string `type:"string"`
+
+	RequestID *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CreateTemplateMessageBody) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateTemplateMessageBody) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *CreateTemplateMessageBody) SetArn(v string) *CreateTemplateMessageBody {
+	s.Arn = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *CreateTemplateMessageBody) SetMessage(v string) *CreateTemplateMessageBody {
+	s.Message = &v
+	return s
+}
+
+// SetRequestID sets the RequestID field's value.
+func (s *CreateTemplateMessageBody) SetRequestID(v string) *CreateTemplateMessageBody {
+	s.RequestID = &v
 	return s
 }
 
@@ -11330,6 +13079,90 @@ func (s *DefaultPushNotificationMessage) SetTitle(v string) *DefaultPushNotifica
 
 // SetUrl sets the Url field's value.
 func (s *DefaultPushNotificationMessage) SetUrl(v string) *DefaultPushNotificationMessage {
+	s.Url = &v
+	return s
+}
+
+// Specifies the settings and content for the default message template that's
+// used in messages that are sent through a push notification channel.
+type DefaultPushNotificationTemplate struct {
+	_ struct{} `type:"structure"`
+
+	// The action to occur if a recipient taps a push notification that's based
+	// on the message template. Valid values are:
+	//
+	//    * OPEN_APP - Your app opens or it becomes the foreground app if it was
+	//    sent to the background. This is the default action.
+	//
+	//    * DEEP_LINK - Your app opens and displays a designated user interface
+	//    in the app. This setting uses the deep-linking features of the iOS and
+	//    Android platforms.
+	//
+	//    * URL - The default mobile browser on the recipient's device opens and
+	//    loads the web page at a URL that you specify.
+	Action *string `type:"string" enum:"Action"`
+
+	// The message body to use in push notifications that are based on the message
+	// template.
+	Body *string `type:"string"`
+
+	// The sound to play when a recipient receives a push notification that's based
+	// on the message template. You can use the default stream or specify the file
+	// name of a sound resource that's bundled in your app. On an Android platform,
+	// the sound file must reside in /res/raw/.
+	//
+	// For an iOS platform, this value is the key for the name of a sound file in
+	// your app's main bundle or the Library/Sounds folder in your app's data container.
+	// If the sound file can't be found or you specify default for the value, the
+	// system plays the default alert sound.
+	Sound *string `type:"string"`
+
+	// The title to use in push notifications that are based on the message template.
+	// This title appears above the notification message on a recipient's device.
+	Title *string `type:"string"`
+
+	// The URL to open in a recipient's default mobile browser, if a recipient taps
+	// a push notification that's based on the message template and the value of
+	// the Action property is URL.
+	Url *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DefaultPushNotificationTemplate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DefaultPushNotificationTemplate) GoString() string {
+	return s.String()
+}
+
+// SetAction sets the Action field's value.
+func (s *DefaultPushNotificationTemplate) SetAction(v string) *DefaultPushNotificationTemplate {
+	s.Action = &v
+	return s
+}
+
+// SetBody sets the Body field's value.
+func (s *DefaultPushNotificationTemplate) SetBody(v string) *DefaultPushNotificationTemplate {
+	s.Body = &v
+	return s
+}
+
+// SetSound sets the Sound field's value.
+func (s *DefaultPushNotificationTemplate) SetSound(v string) *DefaultPushNotificationTemplate {
+	s.Sound = &v
+	return s
+}
+
+// SetTitle sets the Title field's value.
+func (s *DefaultPushNotificationTemplate) SetTitle(v string) *DefaultPushNotificationTemplate {
+	s.Title = &v
+	return s
+}
+
+// SetUrl sets the Url field's value.
+func (s *DefaultPushNotificationTemplate) SetUrl(v string) *DefaultPushNotificationTemplate {
 	s.Url = &v
 	return s
 }
@@ -11933,6 +13766,70 @@ func (s *DeleteEmailChannelOutput) SetEmailChannelResponse(v *EmailChannelRespon
 	return s
 }
 
+type DeleteEmailTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteEmailTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteEmailTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteEmailTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteEmailTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DeleteEmailTemplateInput) SetTemplateName(v string) *DeleteEmailTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type DeleteEmailTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteEmailTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteEmailTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *DeleteEmailTemplateOutput) SetMessageBody(v *MessageBody) *DeleteEmailTemplateOutput {
+	s.MessageBody = v
+	return s
+}
+
 type DeleteEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12144,6 +14041,70 @@ func (s *DeleteGcmChannelOutput) SetGCMChannelResponse(v *GCMChannelResponse) *D
 	return s
 }
 
+type DeletePushTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeletePushTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePushTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeletePushTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeletePushTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DeletePushTemplateInput) SetTemplateName(v string) *DeletePushTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type DeletePushTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DeletePushTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePushTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *DeletePushTemplateOutput) SetMessageBody(v *MessageBody) *DeletePushTemplateOutput {
+	s.MessageBody = v
+	return s
+}
+
 type DeleteSegmentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12286,6 +14247,70 @@ func (s DeleteSmsChannelOutput) GoString() string {
 // SetSMSChannelResponse sets the SMSChannelResponse field's value.
 func (s *DeleteSmsChannelOutput) SetSMSChannelResponse(v *SMSChannelResponse) *DeleteSmsChannelOutput {
 	s.SMSChannelResponse = v
+	return s
+}
+
+type DeleteSmsTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteSmsTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSmsTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteSmsTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteSmsTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DeleteSmsTemplateInput) SetTemplateName(v string) *DeleteSmsTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type DeleteSmsTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteSmsTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSmsTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *DeleteSmsTemplateOutput) SetMessageBody(v *MessageBody) *DeleteSmsTemplateOutput {
+	s.MessageBody = v
 	return s
 }
 
@@ -12455,7 +14480,7 @@ type DirectMessageConfiguration struct {
 	// The default message body for all channels.
 	DefaultMessage *DefaultMessage `type:"structure"`
 
-	// The default push notification message for all push channels.
+	// The default push notification message for all push notification channels.
 	DefaultPushNotificationMessage *DefaultPushNotificationMessage `type:"structure"`
 
 	// The default message for the email channel. This message overrides the default
@@ -12870,6 +14895,177 @@ func (s *EmailMessage) SetSubstitutions(v map[string][]*string) *EmailMessage {
 	return s
 }
 
+// Specifies the content and settings for a message template that can be used
+// in messages that are sent through the email channel.
+type EmailTemplateRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The message body, in HTML format, to use in email messages that are based
+	// on the message template. We recommend using HTML format for email clients
+	// that support HTML. You can include links, formatted text, and more in an
+	// HTML message.
+	HtmlPart *string `type:"string"`
+
+	// The subject line, or title, to use in email messages that are based on the
+	// message template.
+	Subject *string `type:"string"`
+
+	// A string-to-string map of key-value pairs that defines the tags to associate
+	// with the message template. Each tag consists of a required tag key and an
+	// associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The message body, in text format, to use in email messages that are based
+	// on the message template. We recommend using text format for email clients
+	// that don't support HTML and clients that are connected to high-latency networks,
+	// such as mobile devices.
+	TextPart *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EmailTemplateRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EmailTemplateRequest) GoString() string {
+	return s.String()
+}
+
+// SetHtmlPart sets the HtmlPart field's value.
+func (s *EmailTemplateRequest) SetHtmlPart(v string) *EmailTemplateRequest {
+	s.HtmlPart = &v
+	return s
+}
+
+// SetSubject sets the Subject field's value.
+func (s *EmailTemplateRequest) SetSubject(v string) *EmailTemplateRequest {
+	s.Subject = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *EmailTemplateRequest) SetTags(v map[string]*string) *EmailTemplateRequest {
+	s.Tags = v
+	return s
+}
+
+// SetTextPart sets the TextPart field's value.
+func (s *EmailTemplateRequest) SetTextPart(v string) *EmailTemplateRequest {
+	s.TextPart = &v
+	return s
+}
+
+// Provides information about the content and settings for a message template
+// that can be used in messages that are sent through the email channel.
+type EmailTemplateResponse struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `type:"string"`
+
+	// The date when the message template was created.
+	//
+	// CreationDate is a required field
+	CreationDate *string `type:"string" required:"true"`
+
+	// The message body, in HTML format, that's used in email messages that are
+	// based on the message template.
+	HtmlPart *string `type:"string"`
+
+	// The date when the message template was last modified.
+	//
+	// LastModifiedDate is a required field
+	LastModifiedDate *string `type:"string" required:"true"`
+
+	// The subject line, or title, that's used in email messages that are based
+	// on the message template.
+	Subject *string `type:"string"`
+
+	// A string-to-string map of key-value pairs that identifies the tags that are
+	// associated with the message template. Each tag consists of a required tag
+	// key and an associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The name of the message template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+
+	// The type of channel that the message template is designed for. For an email
+	// template, this value is EMAIL.
+	//
+	// TemplateType is a required field
+	TemplateType *string `type:"string" required:"true" enum:"TemplateType"`
+
+	// The message body, in text format, that's used in email messages that are
+	// based on the message template.
+	TextPart *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EmailTemplateResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EmailTemplateResponse) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *EmailTemplateResponse) SetArn(v string) *EmailTemplateResponse {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *EmailTemplateResponse) SetCreationDate(v string) *EmailTemplateResponse {
+	s.CreationDate = &v
+	return s
+}
+
+// SetHtmlPart sets the HtmlPart field's value.
+func (s *EmailTemplateResponse) SetHtmlPart(v string) *EmailTemplateResponse {
+	s.HtmlPart = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *EmailTemplateResponse) SetLastModifiedDate(v string) *EmailTemplateResponse {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetSubject sets the Subject field's value.
+func (s *EmailTemplateResponse) SetSubject(v string) *EmailTemplateResponse {
+	s.Subject = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *EmailTemplateResponse) SetTags(v map[string]*string) *EmailTemplateResponse {
+	s.Tags = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *EmailTemplateResponse) SetTemplateName(v string) *EmailTemplateResponse {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateType sets the TemplateType field's value.
+func (s *EmailTemplateResponse) SetTemplateType(v string) *EmailTemplateResponse {
+	s.TemplateType = &v
+	return s
+}
+
+// SetTextPart sets the TextPart field's value.
+func (s *EmailTemplateResponse) SetTextPart(v string) *EmailTemplateResponse {
+	s.TextPart = &v
+	return s
+}
+
 // Specifies an endpoint to create or update and the settings and attributes
 // to set or change for the endpoint.
 type EndpointBatchItem struct {
@@ -12904,7 +15100,14 @@ type EndpointBatchItem struct {
 	// The date and time, in ISO 8601 format, when the endpoint was created or updated.
 	EffectiveDate *string `type:"string"`
 
-	// Not used.
+	// Specifies whether to send messages or push notifications to the endpoint.
+	// Valid values are: ACTIVE, messages are sent to the endpoint; and, INACTIVE,
+	// messages aren’t sent to the endpoint.
+	//
+	// Amazon Pinpoint automatically sets this value to ACTIVE when you create an
+	// endpoint or update an existing endpoint. Amazon Pinpoint automatically sets
+	// this value to INACTIVE if you update another endpoint that has the same address
+	// specified by the Address property.
 	EndpointStatus *string `type:"string"`
 
 	// The unique identifier for the endpoint in the context of the batch.
@@ -13302,7 +15505,8 @@ type EndpointMessageResult struct {
 	StatusMessage *string `type:"string"`
 
 	// For push notifications that are sent through the GCM channel, specifies whether
-	// the token was updated as part of delivering the message.
+	// the endpoint's device registration token was updated as part of delivering
+	// the message.
 	UpdatedToken *string `type:"string"`
 }
 
@@ -13385,7 +15589,14 @@ type EndpointRequest struct {
 	// The date and time, in ISO 8601 format, when the endpoint is updated.
 	EffectiveDate *string `type:"string"`
 
-	// Not used.
+	// Specifies whether to send messages or push notifications to the endpoint.
+	// Valid values are: ACTIVE, messages are sent to the endpoint; and, INACTIVE,
+	// messages aren’t sent to the endpoint.
+	//
+	// Amazon Pinpoint automatically sets this value to ACTIVE when you create an
+	// endpoint or update an existing endpoint. Amazon Pinpoint automatically sets
+	// this value to INACTIVE if you update another endpoint that has the same address
+	// specified by the Address property.
 	EndpointStatus *string `type:"string"`
 
 	// The geographic information for the endpoint.
@@ -13527,7 +15738,14 @@ type EndpointResponse struct {
 	// The date and time, in ISO 8601 format, when the endpoint was last updated.
 	EffectiveDate *string `type:"string"`
 
-	// Not used.
+	// Specifies whether messages or push notifications are sent to the endpoint.
+	// Possible values are: ACTIVE, messages are sent to the endpoint; and, INACTIVE,
+	// messages aren’t sent to the endpoint.
+	//
+	// Amazon Pinpoint automatically sets this value to ACTIVE when you create an
+	// endpoint or update an existing endpoint. Amazon Pinpoint automatically sets
+	// this value to INACTIVE if you update another endpoint that has the same address
+	// specified by the Address property.
 	EndpointStatus *string `type:"string"`
 
 	// The unique identifier that you assigned to the endpoint. The identifier should
@@ -14619,8 +16837,8 @@ func (s *ExportJobsResponse) SetNextToken(v string) *ExportJobsResponse {
 type GCMChannelRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The API key, also referred to as a server key, that you received from Google
-	// to communicate with Google services.
+	// The Web API Key, also referred to as an API_KEY or server key, that you received
+	// from Google to communicate with Google services.
 	//
 	// ApiKey is a required field
 	ApiKey *string `type:"string" required:"true"`
@@ -14677,8 +16895,8 @@ type GCMChannelResponse struct {
 	// The date and time when the GCM channel was enabled.
 	CreationDate *string `type:"string"`
 
-	// The API key, also referred to as a server key, that you received from Google
-	// to communicate with Google services.
+	// The Web API Key, also referred to as an API_KEY or server key, that you received
+	// from Google to communicate with Google services.
 	//
 	// Credential is a required field
 	Credential *string `type:"string" required:"true"`
@@ -16504,6 +18722,71 @@ func (s *GetEmailChannelOutput) SetEmailChannelResponse(v *EmailChannelResponse)
 	return s
 }
 
+type GetEmailTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetEmailTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetEmailTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetEmailTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetEmailTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *GetEmailTemplateInput) SetTemplateName(v string) *GetEmailTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type GetEmailTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"EmailTemplateResponse"`
+
+	// Provides information about the content and settings for a message template
+	// that can be used in messages that are sent through the email channel.
+	//
+	// EmailTemplateResponse is a required field
+	EmailTemplateResponse *EmailTemplateResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetEmailTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetEmailTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetEmailTemplateResponse sets the EmailTemplateResponse field's value.
+func (s *GetEmailTemplateOutput) SetEmailTemplateResponse(v *EmailTemplateResponse) *GetEmailTemplateOutput {
+	s.EmailTemplateResponse = v
+	return s
+}
+
 type GetEndpointInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17040,6 +19323,71 @@ func (s GetImportJobsOutput) GoString() string {
 // SetImportJobsResponse sets the ImportJobsResponse field's value.
 func (s *GetImportJobsOutput) SetImportJobsResponse(v *ImportJobsResponse) *GetImportJobsOutput {
 	s.ImportJobsResponse = v
+	return s
+}
+
+type GetPushTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetPushTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPushTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPushTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPushTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *GetPushTemplateInput) SetTemplateName(v string) *GetPushTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type GetPushTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"PushNotificationTemplateResponse"`
+
+	// Provides information about the content and settings for a message template
+	// that can be used in messages that are sent through a push notification channel.
+	//
+	// PushNotificationTemplateResponse is a required field
+	PushNotificationTemplateResponse *PushNotificationTemplateResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetPushTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPushTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetPushNotificationTemplateResponse sets the PushNotificationTemplateResponse field's value.
+func (s *GetPushTemplateOutput) SetPushNotificationTemplateResponse(v *PushNotificationTemplateResponse) *GetPushTemplateOutput {
+	s.PushNotificationTemplateResponse = v
 	return s
 }
 
@@ -17649,6 +19997,71 @@ func (s GetSmsChannelOutput) GoString() string {
 // SetSMSChannelResponse sets the SMSChannelResponse field's value.
 func (s *GetSmsChannelOutput) SetSMSChannelResponse(v *SMSChannelResponse) *GetSmsChannelOutput {
 	s.SMSChannelResponse = v
+	return s
+}
+
+type GetSmsTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetSmsTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSmsTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetSmsTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetSmsTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *GetSmsTemplateInput) SetTemplateName(v string) *GetSmsTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type GetSmsTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"SMSTemplateResponse"`
+
+	// Provides information about the content and settings for a message template
+	// that can be used in text messages that are sent through the SMS channel.
+	//
+	// SMSTemplateResponse is a required field
+	SMSTemplateResponse *SMSTemplateResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetSmsTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSmsTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetSMSTemplateResponse sets the SMSTemplateResponse field's value.
+func (s *GetSmsTemplateOutput) SetSMSTemplateResponse(v *SMSTemplateResponse) *GetSmsTemplateOutput {
+	s.SMSTemplateResponse = v
 	return s
 }
 
@@ -18326,7 +20739,8 @@ func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResource
 type ListTagsForResourceOutput struct {
 	_ struct{} `type:"structure" payload:"TagsModel"`
 
-	// Specifies the tags (keys and values) for an application, campaign, or segment.
+	// Specifies the tags (keys and values) for an application, campaign, message
+	// template, or segment.
 	//
 	// TagsModel is a required field
 	TagsModel *TagsModel `type:"structure" required:"true"`
@@ -18345,6 +20759,78 @@ func (s ListTagsForResourceOutput) GoString() string {
 // SetTagsModel sets the TagsModel field's value.
 func (s *ListTagsForResourceOutput) SetTagsModel(v *TagsModel) *ListTagsForResourceOutput {
 	s.TagsModel = v
+	return s
+}
+
+type ListTemplatesInput struct {
+	_ struct{} `type:"structure"`
+
+	NextToken *string `location:"querystring" locationName:"next-token" type:"string"`
+
+	PageSize *string `location:"querystring" locationName:"page-size" type:"string"`
+
+	Prefix *string `location:"querystring" locationName:"prefix" type:"string"`
+
+	TemplateType *string `location:"querystring" locationName:"template-type" type:"string"`
+}
+
+// String returns the string representation
+func (s ListTemplatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTemplatesInput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTemplatesInput) SetNextToken(v string) *ListTemplatesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListTemplatesInput) SetPageSize(v string) *ListTemplatesInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *ListTemplatesInput) SetPrefix(v string) *ListTemplatesInput {
+	s.Prefix = &v
+	return s
+}
+
+// SetTemplateType sets the TemplateType field's value.
+func (s *ListTemplatesInput) SetTemplateType(v string) *ListTemplatesInput {
+	s.TemplateType = &v
+	return s
+}
+
+type ListTemplatesOutput struct {
+	_ struct{} `type:"structure" payload:"TemplatesResponse"`
+
+	// Provides information about all the message templates that are associated
+	// with your Amazon Pinpoint account.
+	//
+	// TemplatesResponse is a required field
+	TemplatesResponse *TemplatesResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTemplatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTemplatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetTemplatesResponse sets the TemplatesResponse field's value.
+func (s *ListTemplatesOutput) SetTemplatesResponse(v *TemplatesResponse) *ListTemplatesOutput {
+	s.TemplatesResponse = v
 	return s
 }
 
@@ -18660,6 +21146,9 @@ type MessageRequest struct {
 	// MessageConfiguration is a required field
 	MessageConfiguration *DirectMessageConfiguration `type:"structure" required:"true"`
 
+	// The message template to use for the message.
+	TemplateConfiguration *TemplateConfiguration `type:"structure"`
+
 	// The unique identifier for tracing the message. This identifier is visible
 	// to message recipients.
 	TraceId *string `type:"string"`
@@ -18709,6 +21198,12 @@ func (s *MessageRequest) SetEndpoints(v map[string]*EndpointSendConfiguration) *
 // SetMessageConfiguration sets the MessageConfiguration field's value.
 func (s *MessageRequest) SetMessageConfiguration(v *DirectMessageConfiguration) *MessageRequest {
 	s.MessageConfiguration = v
+	return s
+}
+
+// SetTemplateConfiguration sets the TemplateConfiguration field's value.
+func (s *MessageRequest) SetTemplateConfiguration(v *TemplateConfiguration) *MessageRequest {
+	s.TemplateConfiguration = v
 	return s
 }
 
@@ -18822,7 +21317,8 @@ type MessageResult struct {
 	StatusMessage *string `type:"string"`
 
 	// For push notifications that are sent through the GCM channel, specifies whether
-	// the token was updated as part of delivering the message.
+	// the endpoint's device registration token was updated as part of delivering
+	// the message.
 	UpdatedToken *string `type:"string"`
 }
 
@@ -19196,8 +21692,14 @@ type PublicEndpoint struct {
 	// The date and time, in ISO 8601 format, when the endpoint was last updated.
 	EffectiveDate *string `type:"string"`
 
-	// The status of the update request for the endpoint. Possible values are: INACTIVE,
-	// the update failed; and, ACTIVE, the endpoint was updated successfully.
+	// Specifies whether to send messages or push notifications to the endpoint.
+	// Valid values are: ACTIVE, messages are sent to the endpoint; and, INACTIVE,
+	// messages aren’t sent to the endpoint.
+	//
+	// Amazon Pinpoint automatically sets this value to ACTIVE when you create an
+	// endpoint or update an existing endpoint. Amazon Pinpoint automatically sets
+	// this value to INACTIVE if you update another endpoint that has the same address
+	// specified by the Address property.
 	EndpointStatus *string `type:"string"`
 
 	// The geographic information for the endpoint.
@@ -19295,6 +21797,221 @@ func (s *PublicEndpoint) SetRequestId(v string) *PublicEndpoint {
 // SetUser sets the User field's value.
 func (s *PublicEndpoint) SetUser(v *EndpointUser) *PublicEndpoint {
 	s.User = v
+	return s
+}
+
+// Specifies the content and settings for a message template that can be used
+// in messages that are sent through a push notification channel.
+type PushNotificationTemplateRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The message template to use for the ADM (Amazon Device Messaging) channel.
+	// This message template overrides the default template for push notification
+	// channels (DefaultPushNotificationTemplate).
+	ADM *AndroidPushNotificationTemplate `type:"structure"`
+
+	// The message template to use for the APNs (Apple Push Notification service)
+	// channel. This message template overrides the default template for push notification
+	// channels (DefaultPushNotificationTemplate).
+	APNS *APNSPushNotificationTemplate `type:"structure"`
+
+	// The message template to use for the Baidu (Baidu Cloud Push) channel. This
+	// message template overrides the default template for push notification channels
+	// (DefaultPushNotificationTemplate).
+	Baidu *AndroidPushNotificationTemplate `type:"structure"`
+
+	// The default message template to use for push notification channels.
+	Default *DefaultPushNotificationTemplate `type:"structure"`
+
+	// The message template to use for the GCM channel, which is used to send notifications
+	// through the Firebase Cloud Messaging (FCM), formerly Google Cloud Messaging
+	// (GCM), service. This message template overrides the default template for
+	// push notification channels (DefaultPushNotificationTemplate).
+	GCM *AndroidPushNotificationTemplate `type:"structure"`
+
+	// A string-to-string map of key-value pairs that defines the tags to associate
+	// with the message template. Each tag consists of a required tag key and an
+	// associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s PushNotificationTemplateRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PushNotificationTemplateRequest) GoString() string {
+	return s.String()
+}
+
+// SetADM sets the ADM field's value.
+func (s *PushNotificationTemplateRequest) SetADM(v *AndroidPushNotificationTemplate) *PushNotificationTemplateRequest {
+	s.ADM = v
+	return s
+}
+
+// SetAPNS sets the APNS field's value.
+func (s *PushNotificationTemplateRequest) SetAPNS(v *APNSPushNotificationTemplate) *PushNotificationTemplateRequest {
+	s.APNS = v
+	return s
+}
+
+// SetBaidu sets the Baidu field's value.
+func (s *PushNotificationTemplateRequest) SetBaidu(v *AndroidPushNotificationTemplate) *PushNotificationTemplateRequest {
+	s.Baidu = v
+	return s
+}
+
+// SetDefault sets the Default field's value.
+func (s *PushNotificationTemplateRequest) SetDefault(v *DefaultPushNotificationTemplate) *PushNotificationTemplateRequest {
+	s.Default = v
+	return s
+}
+
+// SetGCM sets the GCM field's value.
+func (s *PushNotificationTemplateRequest) SetGCM(v *AndroidPushNotificationTemplate) *PushNotificationTemplateRequest {
+	s.GCM = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PushNotificationTemplateRequest) SetTags(v map[string]*string) *PushNotificationTemplateRequest {
+	s.Tags = v
+	return s
+}
+
+// Provides information about the content and settings for a message template
+// that can be used in messages that are sent through a push notification channel.
+type PushNotificationTemplateResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The message template that's used for the ADM (Amazon Device Messaging) channel.
+	// This message template overrides the default template for push notification
+	// channels (DefaultPushNotificationTemplate).
+	ADM *AndroidPushNotificationTemplate `type:"structure"`
+
+	// The message template that's used for the APNs (Apple Push Notification service)
+	// channel. This message template overrides the default template for push notification
+	// channels (DefaultPushNotificationTemplate).
+	APNS *APNSPushNotificationTemplate `type:"structure"`
+
+	Arn *string `type:"string"`
+
+	// The message template that's used for the Baidu (Baidu Cloud Push) channel.
+	// This message template overrides the default template for push notification
+	// channels (DefaultPushNotificationTemplate).
+	Baidu *AndroidPushNotificationTemplate `type:"structure"`
+
+	// The date when the message template was created.
+	//
+	// CreationDate is a required field
+	CreationDate *string `type:"string" required:"true"`
+
+	// The default message template that's used for push notification channels.
+	Default *DefaultPushNotificationTemplate `type:"structure"`
+
+	// The message template that's used for the GCM channel, which is used to send
+	// notifications through the Firebase Cloud Messaging (FCM), formerly Google
+	// Cloud Messaging (GCM), service. This message template overrides the default
+	// template for push notification channels (DefaultPushNotificationTemplate).
+	GCM *AndroidPushNotificationTemplate `type:"structure"`
+
+	// The date when the message template was last modified.
+	//
+	// LastModifiedDate is a required field
+	LastModifiedDate *string `type:"string" required:"true"`
+
+	// A string-to-string map of key-value pairs that identifies the tags that are
+	// associated with the message template. Each tag consists of a required tag
+	// key and an associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The name of the message template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+
+	// The type of channel that the message template is designed for. For a push
+	// notification template, this value is PUSH.
+	//
+	// TemplateType is a required field
+	TemplateType *string `type:"string" required:"true" enum:"TemplateType"`
+}
+
+// String returns the string representation
+func (s PushNotificationTemplateResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PushNotificationTemplateResponse) GoString() string {
+	return s.String()
+}
+
+// SetADM sets the ADM field's value.
+func (s *PushNotificationTemplateResponse) SetADM(v *AndroidPushNotificationTemplate) *PushNotificationTemplateResponse {
+	s.ADM = v
+	return s
+}
+
+// SetAPNS sets the APNS field's value.
+func (s *PushNotificationTemplateResponse) SetAPNS(v *APNSPushNotificationTemplate) *PushNotificationTemplateResponse {
+	s.APNS = v
+	return s
+}
+
+// SetArn sets the Arn field's value.
+func (s *PushNotificationTemplateResponse) SetArn(v string) *PushNotificationTemplateResponse {
+	s.Arn = &v
+	return s
+}
+
+// SetBaidu sets the Baidu field's value.
+func (s *PushNotificationTemplateResponse) SetBaidu(v *AndroidPushNotificationTemplate) *PushNotificationTemplateResponse {
+	s.Baidu = v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *PushNotificationTemplateResponse) SetCreationDate(v string) *PushNotificationTemplateResponse {
+	s.CreationDate = &v
+	return s
+}
+
+// SetDefault sets the Default field's value.
+func (s *PushNotificationTemplateResponse) SetDefault(v *DefaultPushNotificationTemplate) *PushNotificationTemplateResponse {
+	s.Default = v
+	return s
+}
+
+// SetGCM sets the GCM field's value.
+func (s *PushNotificationTemplateResponse) SetGCM(v *AndroidPushNotificationTemplate) *PushNotificationTemplateResponse {
+	s.GCM = v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *PushNotificationTemplateResponse) SetLastModifiedDate(v string) *PushNotificationTemplateResponse {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PushNotificationTemplateResponse) SetTags(v map[string]*string) *PushNotificationTemplateResponse {
+	s.Tags = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *PushNotificationTemplateResponse) SetTemplateName(v string) *PushNotificationTemplateResponse {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateType sets the TemplateType field's value.
+func (s *PushNotificationTemplateResponse) SetTemplateType(v string) *PushNotificationTemplateResponse {
+	s.TemplateType = &v
 	return s
 }
 
@@ -19989,10 +22706,10 @@ type SMSMessage struct {
 	// a marketing message.
 	MessageType *string `type:"string" enum:"MessageType"`
 
-	// The number that the SMS message originates from. This should be one of the
-	// dedicated long codes or short codes that you requested from AWS Support and
-	// is assigned to your AWS account. If you don't specify a long or short code,
-	// Amazon Pinpoint assigns a random long code to the SMS message.
+	// The number to send the SMS message from. This value should be one of the
+	// dedicated long or short codes that's assigned to your AWS account. If you
+	// don't specify a long or short code, Amazon Pinpoint assigns a random long
+	// code to the SMS message and sends the message from that code.
 	OriginationNumber *string `type:"string"`
 
 	// The sender ID to display as the sender of the message on a recipient's device.
@@ -20047,6 +22764,132 @@ func (s *SMSMessage) SetSenderId(v string) *SMSMessage {
 // SetSubstitutions sets the Substitutions field's value.
 func (s *SMSMessage) SetSubstitutions(v map[string][]*string) *SMSMessage {
 	s.Substitutions = v
+	return s
+}
+
+// Specifies the content and settings for a message template that can be used
+// in text messages that are sent through the SMS channel.
+type SMSTemplateRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The message body to use in text messages that are based on the message template.
+	Body *string `type:"string"`
+
+	// A string-to-string map of key-value pairs that defines the tags to associate
+	// with the message template. Each tag consists of a required tag key and an
+	// associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s SMSTemplateRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SMSTemplateRequest) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *SMSTemplateRequest) SetBody(v string) *SMSTemplateRequest {
+	s.Body = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *SMSTemplateRequest) SetTags(v map[string]*string) *SMSTemplateRequest {
+	s.Tags = v
+	return s
+}
+
+// Provides information about the content and settings for a message template
+// that can be used in text messages that are sent through the SMS channel.
+type SMSTemplateResponse struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `type:"string"`
+
+	// The message body that's used in text messages that are based on the message
+	// template.
+	Body *string `type:"string"`
+
+	// The date when the message template was created.
+	//
+	// CreationDate is a required field
+	CreationDate *string `type:"string" required:"true"`
+
+	// The date when the message template was last modified.
+	//
+	// LastModifiedDate is a required field
+	LastModifiedDate *string `type:"string" required:"true"`
+
+	// A string-to-string map of key-value pairs that identifies the tags that are
+	// associated with the message template. Each tag consists of a required tag
+	// key and an associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The name of the message template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+
+	// The type of channel that the message template is designed for. For an SMS
+	// template, this value is SMS.
+	//
+	// TemplateType is a required field
+	TemplateType *string `type:"string" required:"true" enum:"TemplateType"`
+}
+
+// String returns the string representation
+func (s SMSTemplateResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SMSTemplateResponse) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *SMSTemplateResponse) SetArn(v string) *SMSTemplateResponse {
+	s.Arn = &v
+	return s
+}
+
+// SetBody sets the Body field's value.
+func (s *SMSTemplateResponse) SetBody(v string) *SMSTemplateResponse {
+	s.Body = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *SMSTemplateResponse) SetCreationDate(v string) *SMSTemplateResponse {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *SMSTemplateResponse) SetLastModifiedDate(v string) *SMSTemplateResponse {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *SMSTemplateResponse) SetTags(v map[string]*string) *SMSTemplateResponse {
+	s.Tags = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *SMSTemplateResponse) SetTemplateName(v string) *SMSTemplateResponse {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateType sets the TemplateType field's value.
+func (s *SMSTemplateResponse) SetTemplateType(v string) *SMSTemplateResponse {
+	s.TemplateType = &v
 	return s
 }
 
@@ -21076,6 +23919,9 @@ type SendUsersMessageRequest struct {
 	// MessageConfiguration is a required field
 	MessageConfiguration *DirectMessageConfiguration `type:"structure" required:"true"`
 
+	// The message template to use for the message.
+	TemplateConfiguration *TemplateConfiguration `type:"structure"`
+
 	// The unique identifier for tracing the message. This identifier is visible
 	// to message recipients.
 	TraceId *string `type:"string"`
@@ -21123,6 +23969,12 @@ func (s *SendUsersMessageRequest) SetContext(v map[string]*string) *SendUsersMes
 // SetMessageConfiguration sets the MessageConfiguration field's value.
 func (s *SendUsersMessageRequest) SetMessageConfiguration(v *DirectMessageConfiguration) *SendUsersMessageRequest {
 	s.MessageConfiguration = v
+	return s
+}
+
+// SetTemplateConfiguration sets the TemplateConfiguration field's value.
+func (s *SendUsersMessageRequest) SetTemplateConfiguration(v *TemplateConfiguration) *SendUsersMessageRequest {
+	s.TemplateConfiguration = v
 	return s
 }
 
@@ -21392,7 +24244,7 @@ func (s *SetDimension) SetValues(v []*string) *SetDimension {
 	return s
 }
 
-// Specifies the content of an email message, composed of a subject, a text
+// Specifies the contents of an email message, composed of a subject, a text
 // part, and an HTML part.
 type SimpleEmail struct {
 	_ struct{} `type:"structure"`
@@ -21479,7 +24331,8 @@ type TagResourceInput struct {
 	// ResourceArn is a required field
 	ResourceArn *string `location:"uri" locationName:"resource-arn" type:"string" required:"true"`
 
-	// Specifies the tags (keys and values) for an application, campaign, or segment.
+	// Specifies the tags (keys and values) for an application, campaign, message
+	// template, or segment.
 	//
 	// TagsModel is a required field
 	TagsModel *TagsModel `type:"structure" required:"true"`
@@ -21545,13 +24398,14 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
-// Specifies the tags (keys and values) for an application, campaign, or segment.
+// Specifies the tags (keys and values) for an application, campaign, message
+// template, or segment.
 type TagsModel struct {
 	_ struct{} `type:"structure"`
 
 	// A string-to-string map of key-value pairs that defines the tags for an application,
-	// campaign, or segment. A project, campaign, or segment can have a maximum
-	// of 50 tags.
+	// campaign, message template, or segment. Each project, campaign, message template,
+	// or segment can have a maximum of 50 tags.
 	//
 	// Each tag consists of a required tag key and an associated tag value. The
 	// maximum length of a tag key is 128 characters. The maximum length of a tag
@@ -21590,6 +24444,192 @@ func (s *TagsModel) SetTags(v map[string]*string) *TagsModel {
 	return s
 }
 
+// Specifies the name of the message template to use for the message.
+type Template struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the message template to use for the message. If specified, this
+	// value must match the name of an existing message template.
+	Name *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Template) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Template) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *Template) SetName(v string) *Template {
+	s.Name = &v
+	return s
+}
+
+// Specifies the message template to use for the message, for each type of channel.
+type TemplateConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The email template to use for the message.
+	EmailTemplate *Template `type:"structure"`
+
+	// The push notification template to use for the message.
+	PushTemplate *Template `type:"structure"`
+
+	// The SMS template to use for the message.
+	SMSTemplate *Template `type:"structure"`
+}
+
+// String returns the string representation
+func (s TemplateConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TemplateConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetEmailTemplate sets the EmailTemplate field's value.
+func (s *TemplateConfiguration) SetEmailTemplate(v *Template) *TemplateConfiguration {
+	s.EmailTemplate = v
+	return s
+}
+
+// SetPushTemplate sets the PushTemplate field's value.
+func (s *TemplateConfiguration) SetPushTemplate(v *Template) *TemplateConfiguration {
+	s.PushTemplate = v
+	return s
+}
+
+// SetSMSTemplate sets the SMSTemplate field's value.
+func (s *TemplateConfiguration) SetSMSTemplate(v *Template) *TemplateConfiguration {
+	s.SMSTemplate = v
+	return s
+}
+
+// Provides information about a message template that's associated with your
+// Amazon Pinpoint account.
+type TemplateResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the message template.
+	Arn *string `type:"string"`
+
+	// The date when the message template was created.
+	//
+	// CreationDate is a required field
+	CreationDate *string `type:"string" required:"true"`
+
+	// The date when the message template was last modified.
+	//
+	// LastModifiedDate is a required field
+	LastModifiedDate *string `type:"string" required:"true"`
+
+	// A string-to-string map of key-value pairs that identifies the tags that are
+	// associated with the message template. Each tag consists of a required tag
+	// key and an associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The name of the message template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+
+	// The type of channel that the message template is designed for.
+	//
+	// TemplateType is a required field
+	TemplateType *string `type:"string" required:"true" enum:"TemplateType"`
+}
+
+// String returns the string representation
+func (s TemplateResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TemplateResponse) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *TemplateResponse) SetArn(v string) *TemplateResponse {
+	s.Arn = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *TemplateResponse) SetCreationDate(v string) *TemplateResponse {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *TemplateResponse) SetLastModifiedDate(v string) *TemplateResponse {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TemplateResponse) SetTags(v map[string]*string) *TemplateResponse {
+	s.Tags = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *TemplateResponse) SetTemplateName(v string) *TemplateResponse {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateType sets the TemplateType field's value.
+func (s *TemplateResponse) SetTemplateType(v string) *TemplateResponse {
+	s.TemplateType = &v
+	return s
+}
+
+// Provides information about all the message templates that are associated
+// with your Amazon Pinpoint account.
+type TemplatesResponse struct {
+	_ struct{} `type:"structure"`
+
+	// An array of responses, one for each message template that's associated with
+	// your Amazon Pinpoint account and meets any filter criteria that you specified
+	// in the request.
+	//
+	// Item is a required field
+	Item []*TemplateResponse `type:"list" required:"true"`
+
+	// The string to use in a subsequent request to get the next page of results
+	// in a paginated response. This value is null if there are no additional pages.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s TemplatesResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TemplatesResponse) GoString() string {
+	return s.String()
+}
+
+// SetItem sets the Item field's value.
+func (s *TemplatesResponse) SetItem(v []*TemplateResponse) *TemplatesResponse {
+	s.Item = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *TemplatesResponse) SetNextToken(v string) *TemplatesResponse {
+	s.NextToken = &v
+	return s
+}
+
 // Specifies the settings for a campaign treatment. A treatment is a variation
 // of a campaign that's used for A/B testing of a campaign.
 type TreatmentResource struct {
@@ -21614,6 +24654,9 @@ type TreatmentResource struct {
 
 	// The status of the treatment.
 	State *CampaignState `type:"structure"`
+
+	// The message template that’s used for the treatment.
+	TemplateConfiguration *TemplateConfiguration `type:"structure"`
 
 	// The custom description of the treatment.
 	TreatmentDescription *string `type:"string"`
@@ -21660,6 +24703,12 @@ func (s *TreatmentResource) SetSizePercent(v int64) *TreatmentResource {
 // SetState sets the State field's value.
 func (s *TreatmentResource) SetState(v *CampaignState) *TreatmentResource {
 	s.State = v
+	return s
+}
+
+// SetTemplateConfiguration sets the TemplateConfiguration field's value.
+func (s *TreatmentResource) SetTemplateConfiguration(v *TemplateConfiguration) *TreatmentResource {
+	s.TemplateConfiguration = v
 	return s
 }
 
@@ -22520,6 +25569,85 @@ func (s *UpdateEmailChannelOutput) SetEmailChannelResponse(v *EmailChannelRespon
 	return s
 }
 
+type UpdateEmailTemplateInput struct {
+	_ struct{} `type:"structure" payload:"EmailTemplateRequest"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in messages that are sent through the email channel.
+	//
+	// EmailTemplateRequest is a required field
+	EmailTemplateRequest *EmailTemplateRequest `type:"structure" required:"true"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateEmailTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateEmailTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateEmailTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateEmailTemplateInput"}
+	if s.EmailTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("EmailTemplateRequest"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEmailTemplateRequest sets the EmailTemplateRequest field's value.
+func (s *UpdateEmailTemplateInput) SetEmailTemplateRequest(v *EmailTemplateRequest) *UpdateEmailTemplateInput {
+	s.EmailTemplateRequest = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *UpdateEmailTemplateInput) SetTemplateName(v string) *UpdateEmailTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type UpdateEmailTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateEmailTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateEmailTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *UpdateEmailTemplateOutput) SetMessageBody(v *MessageBody) *UpdateEmailTemplateOutput {
+	s.MessageBody = v
+	return s
+}
+
 type UpdateEndpointInput struct {
 	_ struct{} `type:"structure" payload:"EndpointRequest"`
 
@@ -22785,6 +25913,85 @@ func (s *UpdateGcmChannelOutput) SetGCMChannelResponse(v *GCMChannelResponse) *U
 	return s
 }
 
+type UpdatePushTemplateInput struct {
+	_ struct{} `type:"structure" payload:"PushNotificationTemplateRequest"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in messages that are sent through a push notification channel.
+	//
+	// PushNotificationTemplateRequest is a required field
+	PushNotificationTemplateRequest *PushNotificationTemplateRequest `type:"structure" required:"true"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdatePushTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdatePushTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdatePushTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdatePushTemplateInput"}
+	if s.PushNotificationTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("PushNotificationTemplateRequest"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPushNotificationTemplateRequest sets the PushNotificationTemplateRequest field's value.
+func (s *UpdatePushTemplateInput) SetPushNotificationTemplateRequest(v *PushNotificationTemplateRequest) *UpdatePushTemplateInput {
+	s.PushNotificationTemplateRequest = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *UpdatePushTemplateInput) SetTemplateName(v string) *UpdatePushTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type UpdatePushTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdatePushTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdatePushTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *UpdatePushTemplateOutput) SetMessageBody(v *MessageBody) *UpdatePushTemplateOutput {
+	s.MessageBody = v
+	return s
+}
+
 type UpdateSegmentInput struct {
 	_ struct{} `type:"structure" payload:"WriteSegmentRequest"`
 
@@ -22962,6 +26169,85 @@ func (s UpdateSmsChannelOutput) GoString() string {
 // SetSMSChannelResponse sets the SMSChannelResponse field's value.
 func (s *UpdateSmsChannelOutput) SetSMSChannelResponse(v *SMSChannelResponse) *UpdateSmsChannelOutput {
 	s.SMSChannelResponse = v
+	return s
+}
+
+type UpdateSmsTemplateInput struct {
+	_ struct{} `type:"structure" payload:"SMSTemplateRequest"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in text messages that are sent through the SMS channel.
+	//
+	// SMSTemplateRequest is a required field
+	SMSTemplateRequest *SMSTemplateRequest `type:"structure" required:"true"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateSmsTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSmsTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateSmsTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateSmsTemplateInput"}
+	if s.SMSTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("SMSTemplateRequest"))
+	}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSMSTemplateRequest sets the SMSTemplateRequest field's value.
+func (s *UpdateSmsTemplateInput) SetSMSTemplateRequest(v *SMSTemplateRequest) *UpdateSmsTemplateInput {
+	s.SMSTemplateRequest = v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *UpdateSmsTemplateInput) SetTemplateName(v string) *UpdateSmsTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type UpdateSmsTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateSmsTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSmsTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *UpdateSmsTemplateOutput) SetMessageBody(v *MessageBody) *UpdateSmsTemplateOutput {
+	s.MessageBody = v
 	return s
 }
 
@@ -23199,9 +26485,10 @@ type VoiceMessage struct {
 	// languages, see the Amazon Polly Developer Guide (AmazonPollyDG.html).
 	LanguageCode *string `type:"string"`
 
-	// The phone number from the pool or messaging service to send the message from.
-	// Although it isn't required, we recommend that you specify the phone number
-	// in E.164 format to ensure prompt and accurate delivery.
+	// The long code to send the voice message from. This value should be one of
+	// the dedicated long codes that's assigned to your AWS account. Although it
+	// isn't required, we recommend that you specify the long code in E.164 format,
+	// for example +12065550100, to ensure prompt and accurate delivery of the message.
 	OriginationNumber *string `type:"string"`
 
 	// The default message variables to use in the voice message. You can override
@@ -23373,6 +26660,9 @@ type WriteCampaignRequest struct {
 	// tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
+	// The message template to use for the campaign.
+	TemplateConfiguration *TemplateConfiguration `type:"structure"`
+
 	// The custom description of a variation of the campaign to use for A/B testing.
 	TreatmentDescription *string `type:"string"`
 
@@ -23489,6 +26779,12 @@ func (s *WriteCampaignRequest) SetSegmentVersion(v int64) *WriteCampaignRequest 
 // SetTags sets the Tags field's value.
 func (s *WriteCampaignRequest) SetTags(v map[string]*string) *WriteCampaignRequest {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateConfiguration sets the TemplateConfiguration field's value.
+func (s *WriteCampaignRequest) SetTemplateConfiguration(v *TemplateConfiguration) *WriteCampaignRequest {
+	s.TemplateConfiguration = v
 	return s
 }
 
@@ -23660,6 +26956,9 @@ type WriteTreatmentResource struct {
 	// SizePercent is a required field
 	SizePercent *int64 `type:"integer" required:"true"`
 
+	// The message template to use for the treatment.
+	TemplateConfiguration *TemplateConfiguration `type:"structure"`
+
 	// The custom description of the treatment.
 	TreatmentDescription *string `type:"string"`
 
@@ -23716,6 +27015,12 @@ func (s *WriteTreatmentResource) SetSchedule(v *Schedule) *WriteTreatmentResourc
 // SetSizePercent sets the SizePercent field's value.
 func (s *WriteTreatmentResource) SetSizePercent(v int64) *WriteTreatmentResource {
 	s.SizePercent = &v
+	return s
+}
+
+// SetTemplateConfiguration sets the TemplateConfiguration field's value.
+func (s *WriteTreatmentResource) SetTemplateConfiguration(v *TemplateConfiguration) *WriteTreatmentResource {
+	s.TemplateConfiguration = v
 	return s
 }
 
@@ -23961,6 +27266,17 @@ const (
 
 	// SourceTypeNone is a SourceType enum value
 	SourceTypeNone = "NONE"
+)
+
+const (
+	// TemplateTypeEmail is a TemplateType enum value
+	TemplateTypeEmail = "EMAIL"
+
+	// TemplateTypeSms is a TemplateType enum value
+	TemplateTypeSms = "SMS"
+
+	// TemplateTypePush is a TemplateType enum value
+	TemplateTypePush = "PUSH"
 )
 
 const (

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/mitchellh/go-homedir"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -487,7 +487,14 @@ func resourceAwsS3BucketObjectDelete(d *schema.ResourceData, meta interface{}) e
 	// We are effectively ignoring any leading '/' in the key name as aws.Config.DisableRestProtocolURICleaning is false
 	key = strings.TrimPrefix(key, "/")
 
-	if err := deleteAllS3ObjectVersions(s3conn, bucket, key, d.Get("force_destroy").(bool), false); err != nil {
+	var err error
+	if _, ok := d.GetOk("version_id"); ok {
+		err = deleteAllS3ObjectVersions(s3conn, bucket, key, d.Get("force_destroy").(bool), false)
+	} else {
+		err = deleteS3ObjectVersion(s3conn, bucket, key, "", false)
+	}
+
+	if err != nil {
 		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
@@ -656,10 +663,14 @@ func deleteAllS3ObjectVersions(conn *s3.S3, bucketName, key string, force, ignor
 // Set force to true to override any S3 object lock protections.
 func deleteS3ObjectVersion(conn *s3.S3, b, k, v string, force bool) error {
 	input := &s3.DeleteObjectInput{
-		Bucket:    aws.String(b),
-		Key:       aws.String(k),
-		VersionId: aws.String(v),
+		Bucket: aws.String(b),
+		Key:    aws.String(k),
 	}
+
+	if v != "" {
+		input.VersionId = aws.String(v)
+	}
+
 	if force {
 		input.BypassGovernanceRetention = aws.Bool(true)
 	}

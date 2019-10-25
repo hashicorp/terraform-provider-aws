@@ -43,9 +43,11 @@ var serviceNames = []string{
 	"directoryservice",
 	"docdb",
 	"dynamodb",
+	"ec2",
 	"ecr",
 	"ecs",
 	"efs",
+	"eks",
 	"elasticache",
 	"elasticsearchservice",
 	"emr",
@@ -100,14 +102,16 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                keyvaluetags.ServiceClientType,
-		"TagFunction":               ServiceTagFunction,
-		"TagInputIdentifierField":   ServiceTagInputIdentifierField,
-		"TagInputResourceTypeField": ServiceTagInputResourceTypeField,
-		"TagInputTagsField":         ServiceTagInputTagsField,
-		"Title":                     strings.Title,
-		"UntagFunction":             ServiceUntagFunction,
-		"UntagInputTagsField":       ServiceUntagInputTagsField,
+		"ClientType":                      keyvaluetags.ServiceClientType,
+		"TagFunction":                     ServiceTagFunction,
+		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
+		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
+		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
+		"TagInputTagsField":               ServiceTagInputTagsField,
+		"Title":                           strings.Title,
+		"UntagFunction":                   ServiceUntagFunction,
+		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
+		"UntagInputTagsField":             ServiceUntagInputTagsField,
 	}
 
 	tmpl, err := template.New("updatetags").Funcs(templateFuncMap).Parse(templateBody)
@@ -168,11 +172,19 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &{{ . }}.{{ . | UntagFunction }}Input{
+			{{- if . | TagInputIdentifierRequiresSlice }}
+			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+			{{- else }}
 			{{ . | TagInputIdentifierField }}:   aws.String(identifier),
+			{{- end }}
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
+			{{- if . | UntagInputRequiresTagType }}
+			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{- else }}
 			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.Keys()),
+			{{- end }}
 		}
 
 		_, err := conn.{{ . | UntagFunction }}(input)
@@ -184,7 +196,11 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &{{ . }}.{{ . | TagFunction }}Input{
+			{{- if . | TagInputIdentifierRequiresSlice }}
+			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+			{{- else }}
 			{{ . | TagInputIdentifierField }}:   aws.String(identifier),
+			{{- end }}
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
@@ -214,6 +230,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "docdb":
 		return "AddTagsToResource"
+	case "ec2":
+		return "CreateTags"
 	case "efs":
 		return "CreateTags"
 	case "elasticache":
@@ -268,6 +286,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceId"
 	case "docdb":
 		return "ResourceName"
+	case "ec2":
+		return "Resources"
 	case "efs":
 		return "FileSystemId"
 	case "elasticache":
@@ -321,6 +341,16 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	}
 }
 
+// ServiceTagInputIdentifierRequiresSlice determines if the service tagging resource field requires a slice.
+func ServiceTagInputIdentifierRequiresSlice(serviceName string) string {
+	switch serviceName {
+	case "ec2":
+		return "yes"
+	default:
+		return ""
+	}
+}
+
 // ServiceTagInputTagsField determines the service tagging tags field.
 func ServiceTagInputTagsField(serviceName string) string {
 	switch serviceName {
@@ -356,6 +386,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "docdb":
 		return "RemoveTagsFromResource"
+	case "ec2":
+		return "DeleteTags"
 	case "efs":
 		return "DeleteTags"
 	case "elasticache":
@@ -389,6 +421,16 @@ func ServiceUntagFunction(serviceName string) string {
 	}
 }
 
+// ServiceUntagInputRequiresTagType determines if the service untagging requires full Tag type.
+func ServiceUntagInputRequiresTagType(serviceName string) string {
+	switch serviceName {
+	case "ec2":
+		return "yes"
+	default:
+		return ""
+	}
+}
+
 // ServiceUntagInputTagsField determines the service untagging tags field.
 func ServiceUntagInputTagsField(serviceName string) string {
 	switch serviceName {
@@ -398,6 +440,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "TagKeyList"
 	case "datasync":
 		return "Keys"
+	case "ec2":
+		return "Tags"
 	case "glue":
 		return "TagsToRemove"
 	default:
