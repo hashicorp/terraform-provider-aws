@@ -2501,6 +2501,42 @@ func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier st
 	return nil
 }
 
+// ResourcegroupsUpdateTags updates resourcegroups service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &resourcegroups.UntagInput{
+			Arn:  aws.String(identifier),
+			Keys: aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.Untag(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &resourcegroups.TagInput{
+			Arn:  aws.String(identifier),
+			Tags: updatedTags.IgnoreAws().ResourcegroupsTags(),
+		}
+
+		_, err := conn.Tag(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // Route53resolverUpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.

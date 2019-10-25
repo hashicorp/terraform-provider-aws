@@ -270,6 +270,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(wafregional.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
+	case "resourcegroups":
+		funcType = reflect.TypeOf(resourcegroups.New)
 	default:
 		panic(fmt.Sprintf("unrecognized ServiceClientType: %s", serviceName))
 	}
