@@ -12,7 +12,7 @@ Allow to add IoT Thing to IoT Thing Group.
 ## Example Usage
 
 ```hcl
-resource "aws_iot_thing_group_attachment_attachment" "test_attachment" {
+resource "aws_iot_thing_group_attachment" "test_attachment" {
 	thing_name = "test_thing_name"
 	thing_group_name = "test_thing_group_name"
 	override_dynamics_group = false
