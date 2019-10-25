@@ -30,6 +30,7 @@ resource "aws_iot_thing_group" "group" {
 
 * `name` - (Required, Forces New Resource). The thing group name to create.
 * `parent_group_name` - (Optional, Forces New Resource). The name of the parent thing group.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the thing group.
 * `properties` - (Optional). The thing group properties.
 
 Arguments of `properties`:

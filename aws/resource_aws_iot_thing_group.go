@@ -57,6 +57,7 @@ func resourceAwsIotThingGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -93,6 +94,10 @@ func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) er
 	name := d.Get("name").(string)
 	params := &iot.CreateThingGroupInput{
 		ThingGroupName: aws.String(name),
+	}
+
+	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
+		params.Tags = tagsFromMapIot(tags)
 	}
 
 	if v, ok := d.GetOk("parent_group_name"); ok {
@@ -154,6 +159,10 @@ func resourceAwsIotThingGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("properties", properties)
 	d.Set("version", out.Version)
 
+	if err := getTagsIot(conn, d); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -176,7 +185,9 @@ func resourceAwsIotThingGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	d.SetId(name)
+	if err := setTagsIot(conn, d); err != nil {
+		return err
+	}
 
 	return resourceAwsIotThingGroupRead(d, meta)
 }

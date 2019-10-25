@@ -25,6 +25,7 @@ func TestAccAWSIotThingGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotThingGroupExists_basic("aws_iot_thing_group.group"),
 					resource.TestCheckResourceAttr("aws_iot_thing_group.group", "name", fmt.Sprintf("test_group_%s", rString)),
+					resource.TestCheckResourceAttr("aws_iot_thing_group.group", "tags.tagKey", "tagValue"),
 					resource.TestCheckResourceAttrSet("aws_iot_thing_group.group", "arn"),
 					resource.TestCheckResourceAttrSet("aws_iot_thing_group.group", "version"),
 					testAccCheckAWSIotThingGroup_basic,
@@ -174,6 +175,10 @@ func testAccAWSIotThingGroup_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_thing_group" "group" {
 	name = "test_group_%[1]s"
+
+	tags = {
+		"tagKey" = "tagValue",
+	}
 
 	properties {
 		description = "test description"
