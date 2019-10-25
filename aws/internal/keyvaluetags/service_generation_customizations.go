@@ -34,9 +34,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
@@ -146,12 +148,16 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(docdb.New)
 	case "dynamodb":
 		funcType = reflect.TypeOf(dynamodb.New)
+	case "ec2":
+		funcType = reflect.TypeOf(ec2.New)
 	case "ecr":
 		funcType = reflect.TypeOf(ecr.New)
 	case "ecs":
 		funcType = reflect.TypeOf(ecs.New)
 	case "efs":
 		funcType = reflect.TypeOf(efs.New)
+	case "eks":
+		funcType = reflect.TypeOf(eks.New)
 	case "elasticache":
 		funcType = reflect.TypeOf(elasticache.New)
 	case "elasticbeanstalk":

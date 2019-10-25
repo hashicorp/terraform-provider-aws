@@ -101,6 +101,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `es`
 - `firehose`
 - `fms`
+- `forecast`
 - `fsx`
 - `gamelift`
 - `glacier`
@@ -138,6 +139,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `personalize`
 - `pinpoint`
 - `pricing`
+- `qldb`
 - `quicksight`
 - `r53` (**DEPRECATED** Use `route53` instead)
 - `ram`

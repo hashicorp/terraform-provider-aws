@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLBListener_basic(t *testing.T) {
@@ -107,17 +107,18 @@ func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 
 func TestAccAWSLBListener_https(t *testing.T) {
 	var conf elbv2.Listener
-	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.front_end",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_https(lbName, targetGroupName),
+				Config: testAccAWSLBListenerConfig_https(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.front_end", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.front_end", "load_balancer_arn"),
@@ -140,16 +141,18 @@ func TestAccAWSLBListener_https(t *testing.T) {
 
 func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 	var listener1 elbv2.Listener
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_Protocol_Tls(rName),
+				Config: testAccAWSLBListenerConfig_Protocol_Tls(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &listener1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
@@ -230,16 +233,18 @@ func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 
 func TestAccAWSLBListener_cognito(t *testing.T) {
 	var conf elbv2.Listener
-	rName := acctest.RandString(5)
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.test",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_cognito(rName),
+				Config: testAccAWSLBListenerConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "load_balancer_arn"),
@@ -265,16 +270,18 @@ func TestAccAWSLBListener_cognito(t *testing.T) {
 
 func TestAccAWSLBListener_oidc(t *testing.T) {
 	var conf elbv2.Listener
-	rName := acctest.RandString(5)
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.test",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_oidc(rName),
+				Config: testAccAWSLBListenerConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "load_balancer_arn"),
@@ -303,16 +310,18 @@ func TestAccAWSLBListener_oidc(t *testing.T) {
 
 func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 	var listener elbv2.Listener
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName),
+				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
@@ -327,16 +336,18 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
 func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
 	var listener elbv2.Listener
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName),
+				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
@@ -711,7 +722,7 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName)
 }
 
-func testAccAWSLBListenerConfig_https(lbName, targetGroupName string) string {
+func testAccAWSLBListenerConfig_https(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
@@ -727,7 +738,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = "%[1]s"
   internal        = false
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
@@ -743,7 +754,7 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.alb_test.id}"
@@ -820,63 +831,20 @@ resource "aws_security_group" "alb_test" {
 }
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name             = "terraform-test-cert-%d"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-`, lbName, targetGroupName, acctest.RandInt())
-}
-
-func testAccAWSLBListenerConfig_Protocol_Tls(rName string) string {
+func testAccAWSLBListenerConfig_Protocol_Tls(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-}
-
 resource "aws_acm_certificate" "test" {
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_vpc" "test" {
@@ -902,7 +870,7 @@ resource "aws_subnet" "test" {
 resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
-  name               = %q
+  name               = %[1]q
   subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   tags = {
@@ -911,7 +879,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = %q
+  name     = %[1]q
   port     = 443
   protocol = "TCP"
   vpc_id   = "${aws_vpc.test.id}"
@@ -941,7 +909,7 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
 func testAccAWSLBListenerConfig_redirect(lbName string) string {
@@ -1114,10 +1082,10 @@ resource "aws_security_group" "alb_test" {
 `, lbName)
 }
 
-func testAccAWSLBListenerConfig_cognito(rName string) string {
+func testAccAWSLBListenerConfig_cognito(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name                       = "%s"
+  name                       = "%[1]s"
   internal                   = false
   security_groups            = ["${aws_security_group.test.id}"]
   subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
@@ -1125,7 +1093,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.test.id}"
@@ -1166,7 +1134,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "%s"
+  name        = "%[1]s"
   description = "Used for ALB Testing"
   vpc_id      = "${aws_vpc.test.id}"
 
@@ -1186,11 +1154,11 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_cognito_user_pool" "test" {
-  name = "%s"
+  name = "%[1]s"
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-  name                                 = "%s"
+  name                                 = "%[1]s"
   user_pool_id                         = "${aws_cognito_user_pool.test.id}"
   generate_secret                      = true
   allowed_oauth_flows_user_pool_client = true
@@ -1202,36 +1170,14 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 
 resource "aws_cognito_user_pool_domain" "test" {
-  domain       = "%s"
+  domain       = "%[1]s"
   user_pool_id = "${aws_cognito_user_pool.test.id}"
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name             = "terraform-test-cert-%s"
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.test.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {
@@ -1260,13 +1206,13 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, rName, rName, rName, rName, rName, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccAWSLBListenerConfig_oidc(rName string) string {
+func testAccAWSLBListenerConfig_oidc(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name                       = "%s"
+  name                       = "%[1]s"
   internal                   = false
   security_groups            = ["${aws_security_group.test.id}"]
   subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
@@ -1274,7 +1220,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.test.id}"
@@ -1315,7 +1261,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "%s"
+  name        = "%[1]s"
   description = "Used for ALB Testing"
   vpc_id      = "${aws_vpc.test.id}"
 
@@ -1335,31 +1281,9 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name             = "terraform-test-cert-%s"
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.test.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {
@@ -1391,13 +1315,13 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, rName, rName, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccAWSLBListenerConfig_DefaultAction_Order(rName string) string {
+func testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 variable "rName" {
-  default = %q
+  default = %[1]q
 }
 
 data "aws_availability_zones" "available" {}
@@ -1435,30 +1359,9 @@ resource "aws_lb_listener" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  certificate_body = "%[2]s"
   name             = "${var.rName}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb" "test" {
@@ -1529,5 +1432,5 @@ resource "aws_security_group" "test" {
     Name = "${var.rName}"
   }
 }
-`, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
