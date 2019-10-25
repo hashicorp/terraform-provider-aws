@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsBackupPlan() *schema.Resource {
@@ -94,9 +95,7 @@ func resourceAwsBackupPlanCreate(d *schema.ResourceData, meta interface{}) error
 			BackupPlanName: aws.String(d.Get("name").(string)),
 			Rules:          expandBackupPlanRules(d.Get("rule").(*schema.Set)),
 		},
-	}
-	if v, ok := d.GetOk("tags"); ok {
-		input.BackupPlanTags = tagsFromMapGeneric(v.(map[string]interface{}))
+		BackupPlanTags: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().BackupTags(),
 	}
 
 	log.Printf("[DEBUG] Creating Backup Plan: %#v", input)
@@ -125,24 +124,21 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error reading Backup Plan (%s): %s", d.Id(), err)
 	}
 
+	d.Set("arn", resp.BackupPlanArn)
 	d.Set("name", resp.BackupPlan.BackupPlanName)
+	d.Set("version", resp.VersionId)
+
 	if err := d.Set("rule", flattenBackupPlanRules(resp.BackupPlan.Rules)); err != nil {
 		return fmt.Errorf("error setting rule: %s", err)
 	}
 
-	tagsOutput, err := conn.ListTags(&backup.ListTagsInput{
-		ResourceArn: resp.BackupPlanArn,
-	})
+	tags, err := keyvaluetags.BackupListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("error listing tags AWS Backup plan %s: %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for Backup Plan (%s): %s", d.Id(), err)
 	}
-
-	if err := d.Set("tags", tagsToMapGeneric(tagsOutput.Tags)); err != nil {
-		return fmt.Errorf("error setting tags on AWS Backup plan %s: %s", d.Id(), err)
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-
-	d.Set("arn", resp.BackupPlanArn)
-	d.Set("version", resp.VersionId)
 
 	return nil
 }
@@ -167,44 +163,9 @@ func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("tags") {
-		resourceArn := d.Get("arn").(string)
-		oraw, nraw := d.GetChange("tags")
-		create, remove := diffTagsGeneric(oraw.(map[string]interface{}), nraw.(map[string]interface{}))
-
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			keys := make([]*string, 0, len(remove))
-			for k := range remove {
-				keys = append(keys, aws.String(k))
-			}
-
-			_, err := conn.UntagResource(&backup.UntagResourceInput{
-				ResourceArn: aws.String(resourceArn),
-				TagKeyList:  keys,
-			})
-			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-				log.Printf("[WARN] Backup Plan %s not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			if err != nil {
-				return fmt.Errorf("Error removing tags for (%s): %s", d.Id(), err)
-			}
-		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags: %#v", create)
-			_, err := conn.TagResource(&backup.TagResourceInput{
-				ResourceArn: aws.String(resourceArn),
-				Tags:        create,
-			})
-			if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
-				log.Printf("[WARN] Backup Plan %s not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
-			if err != nil {
-				return fmt.Errorf("Error setting tags for (%s): %s", d.Id(), err)
-			}
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.BackupUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for Backup Plan (%s): %s", d.Id(), err)
 		}
 	}
 
