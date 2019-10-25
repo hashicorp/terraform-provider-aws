@@ -71,7 +71,7 @@ func resourceAwsBackupPlan() *schema.Resource {
 						"recovery_point_tags": tagsSchema(),
 					},
 				},
-				Set: backupBackuPlanHash,
+				Set: backupBackupPlanHash,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -150,18 +150,20 @@ func resourceAwsBackupPlanRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsBackupPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
 
-	input := &backup.UpdateBackupPlanInput{
-		BackupPlanId: aws.String(d.Id()),
-		BackupPlan: &backup.PlanInput{
-			BackupPlanName: aws.String(d.Get("name").(string)),
-			Rules:          expandBackupPlanRules(d.Get("rule").(*schema.Set)),
-		},
-	}
+	if d.HasChange("rule") {
+		input := &backup.UpdateBackupPlanInput{
+			BackupPlanId: aws.String(d.Id()),
+			BackupPlan: &backup.PlanInput{
+				BackupPlanName: aws.String(d.Get("name").(string)),
+				Rules:          expandBackupPlanRules(d.Get("rule").(*schema.Set)),
+			},
+		}
 
-	log.Printf("[DEBUG] Updating Backup Plan: %#v", input)
-	_, err := conn.UpdateBackupPlan(input)
-	if err != nil {
-		return fmt.Errorf("error updating Backup Plan (%s): %s", d.Id(), err)
+		log.Printf("[DEBUG] Updating Backup Plan: %#v", input)
+		_, err := conn.UpdateBackupPlan(input)
+		if err != nil {
+			return fmt.Errorf("error updating Backup Plan (%s): %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
@@ -237,6 +239,8 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 
 		if vRuleName, ok := mRule["rule_name"].(string); ok && vRuleName != "" {
 			rule.RuleName = aws.String(vRuleName)
+		} else {
+			continue
 		}
 		if vTargetVaultName, ok := mRule["target_vault_name"].(string); ok && vTargetVaultName != "" {
 			rule.TargetBackupVaultName = aws.String(vTargetVaultName)
@@ -301,49 +305,43 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 		vRules = append(vRules, mRule)
 	}
 
-	return schema.NewSet(backupBackuPlanHash, vRules)
+	return schema.NewSet(backupBackupPlanHash, vRules)
 }
 
-func backupBackuPlanHash(v interface{}) int {
+func backupBackupPlanHash(vRule interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
 
-	if v.(map[string]interface{})["lifecycle"] != nil {
-		lcRaw := v.(map[string]interface{})["lifecycle"].([]interface{})
-		if len(lcRaw) == 1 {
-			l := lcRaw[0].(map[string]interface{})
-			if w, ok := l["delete_after"]; ok {
-				buf.WriteString(fmt.Sprintf("%v-", w))
-			}
+	mRule := vRule.(map[string]interface{})
 
-			if w, ok := l["cold_storage_after"]; ok {
-				buf.WriteString(fmt.Sprintf("%v-", w))
-			}
+	if v, ok := mRule["rule_name"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+	if v, ok := mRule["target_vault_name"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+	if v, ok := mRule["schedule"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", v))
+	}
+	if v, ok := mRule["start_window"].(int); ok {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
+	if v, ok := mRule["completion_window"].(int); ok {
+		buf.WriteString(fmt.Sprintf("%d-", v))
+	}
+
+	if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
+		buf.WriteString(fmt.Sprintf("%d-", tagsMapToHash(vRecoveryPointTags)))
+	}
+
+	if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {
+		mLifecycle := vLifecycle[0].(map[string]interface{})
+
+		if v, ok := mLifecycle["delete_after"].(int); ok {
+			buf.WriteString(fmt.Sprintf("%d-", v))
 		}
-	}
-
-	if v, ok := m["completion_window"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(interface{})))
-	}
-
-	if v, ok := m["recovery_point_tags"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", v))
-	}
-
-	if v, ok := m["rule_name"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	if v, ok := m["schedule"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	if v, ok := m["start_window"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(interface{})))
-	}
-
-	if v, ok := m["target_vault_name"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		if v, ok := mLifecycle["cold_storage_after"].(int); ok {
+			buf.WriteString(fmt.Sprintf("%d-", v))
+		}
 	}
 
 	return hashcode.String(buf.String())
