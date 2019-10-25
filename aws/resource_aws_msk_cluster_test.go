@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -91,7 +91,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS_PLAINTEXT"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringDefault),
-					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.1.0"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.2.1"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "zookeeper_connect_string", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+$`)),
@@ -595,7 +595,7 @@ func testAccMskClusterConfig_basic(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -612,7 +612,7 @@ func testAccMskClusterConfigBrokerNodeGroupInfoEbsVolumeSize(rName string, ebsVo
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -640,7 +640,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -668,7 +668,7 @@ resource "aws_msk_cluster" "test" {
 func testAccMskClusterConfigConfigurationInfoRevision1(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions = ["2.1.0"]
+  kafka_versions = ["2.2.1"]
   name           = "%[1]s-1"
 
   server_properties = <<PROPERTIES
@@ -678,7 +678,7 @@ PROPERTIES
 
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -699,7 +699,7 @@ resource "aws_msk_cluster" "test" {
 func testAccMskClusterConfigConfigurationInfoRevision2(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_configuration" "test" {
-  kafka_versions = ["2.1.0"]
+  kafka_versions = ["2.2.1"]
   name           = "%[1]s-2"
 
   server_properties = <<PROPERTIES
@@ -709,7 +709,7 @@ PROPERTIES
 
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -739,7 +739,7 @@ resource "aws_kms_key" "example_key" {
 
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -761,7 +761,7 @@ func testAccMskClusterConfigEncryptionInfoEncryptionInTransitClientBroker(rName,
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -784,7 +784,7 @@ func testAccMskClusterConfigEncryptionInfoEncryptionInTransitInCluster(rName str
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -808,7 +808,7 @@ func testAccMskClusterConfigEnhancedMonitoring(rName, enhancedMonitoring string)
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   enhanced_monitoring    = %[2]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -826,7 +826,7 @@ func testAccMskClusterConfigNumberOfBrokerNodes(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 6
 
   broker_node_group_info {
@@ -844,7 +844,7 @@ func testAccMskClusterConfigTags1(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
@@ -865,7 +865,7 @@ func testAccMskClusterConfigTags2(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {

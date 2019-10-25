@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_user_policy_attachment"
-sidebar_current: "docs-aws-resource-iam-user-policy-attachment"
 description: |-
   Attaches a Managed IAM Policy to an IAM user
 ---

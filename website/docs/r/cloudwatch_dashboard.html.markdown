@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_dashboard"
-sidebar_current: "docs-aws-resource-cloudwatch-dashboard"
 description: |-
   Provides a CloudWatch Dashboard resource.
 ---

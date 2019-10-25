@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_storagegateway_cached_iscsi_volume"
-sidebar_current: "docs-aws-resource-storagegateway-cached-iscsi-volume"
 description: |-
   Manages an AWS Storage Gateway cached iSCSI volume
 ---

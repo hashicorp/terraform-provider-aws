@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule"
-sidebar_current: "docs-aws-resource-route53-resolver-rule"
 description: |-
   Provides a Route53 Resolver rule.
 ---

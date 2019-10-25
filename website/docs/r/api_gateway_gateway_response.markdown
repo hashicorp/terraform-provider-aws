@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_gateway_response"
-sidebar_current: "docs-aws-resource-api-gateway-gateway-response"
 description: |-
   Provides an API Gateway Gateway Response for a REST API Gateway.
 ---
