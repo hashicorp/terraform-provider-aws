@@ -34,6 +34,11 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"mac_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"private_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -178,6 +183,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 
 	d.Set("description", eni.Description)
 	d.Set("private_dns_name", eni.PrivateDnsName)
+	d.Set("mac_address", eni.MacAddress)
 	d.Set("private_ip", eni.PrivateIpAddress)
 
 	if err := d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
