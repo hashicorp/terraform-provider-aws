@@ -417,7 +417,7 @@ github.com/hashicorp/hil/ast
 github.com/hashicorp/logutils
 # github.com/hashicorp/terraform-config-inspect v0.0.0-20190821133035-82a99dc22ef4
 github.com/hashicorp/terraform-config-inspect/tfconfig
-# github.com/hashicorp/terraform-plugin-sdk v1.1.1
+# github.com/hashicorp/terraform-plugin-sdk v1.1.2-0.20191010205150-2f2253642038
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff
 github.com/hashicorp/terraform-plugin-sdk/helper/encryption
