@@ -158,7 +158,7 @@ func TestAccAWSVpc_ignoreTags(t *testing.T) {
 				Config: testAccVpcConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists(resourceName, &vpc),
-					testAccCheckEc2UpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -364,7 +364,7 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckEc2UpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
+func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
