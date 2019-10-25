@@ -51,6 +51,24 @@ func testSweepInstances(region string) error {
 
 				log.Printf("[INFO] Terminating EC2 Instance: %s", id)
 				err := awsTerminateInstance(conn, id, 5*time.Minute)
+
+				if isAWSErr(err, "OperationNotPermitted", "Modify its 'disableApiTermination' instance attribute and try again.") {
+					log.Printf("[INFO] Enabling API Termination on EC2 Instance: %s", id)
+
+					input := &ec2.ModifyInstanceAttributeInput{
+						InstanceId: instance.InstanceId,
+						DisableApiTermination: &ec2.AttributeBooleanValue{
+							Value: aws.Bool(false),
+						},
+					}
+
+					_, err = conn.ModifyInstanceAttribute(input)
+
+					if err == nil {
+						err = awsTerminateInstance(conn, id, 5*time.Minute)
+					}
+				}
+
 				if err != nil {
 					log.Printf("[ERROR] Error terminating EC2 Instance (%s): %s", id, err)
 				}
