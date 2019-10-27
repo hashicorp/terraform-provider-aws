@@ -66,6 +66,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -1122,6 +1123,23 @@ func TransferListTags(conn *transfer.Transfer, identifier string) (KeyValueTags,
 	}
 
 	return TransferKeyValueTags(output.Tags), nil
+}
+
+// WafListTags lists waf service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WafListTags(conn *waf.WAF, identifier string) (KeyValueTags, error) {
+	input := &waf.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return WafKeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

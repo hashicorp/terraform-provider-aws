@@ -150,13 +150,11 @@ func resourceAwsWafRateBasedRuleRead(d *schema.ResourceData, meta interface{}) e
 	}.String()
 	d.Set("arn", arn)
 
-	tagList, err := conn.ListTagsForResource(&waf.ListTagsForResourceInput{
-		ResourceARN: aws.String(arn),
-	})
+	tagList, err := keyvaluetags.WafListTags(conn, arn)
 	if err != nil {
 		return fmt.Errorf("Failed to get WAF Rated Based Rule parameter tags for %s: %s", d.Get("name"), err)
 	}
-	if err := d.Set("tags", keyvaluetags.WafKeyValueTags(tagList.TagInfoForResource.TagList).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tagList.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
