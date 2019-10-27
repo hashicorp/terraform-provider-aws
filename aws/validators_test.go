@@ -1408,6 +1408,7 @@ func TestValidateDocDBIdentifier(t *testing.T) {
 		"a",
 		"hello-world",
 		"hello-world-0123456789",
+		strings.Repeat("W", 63),
 	}
 	for _, v := range validNames {
 		_, errors := validateDocDBIdentifier(v, "name")
@@ -1425,6 +1426,7 @@ func TestValidateDocDBIdentifier(t *testing.T) {
 		"0-first-numeric",
 		"-first-hyphen",
 		"end-hyphen-",
+		strings.Repeat("W", 64),
 	}
 	for _, v := range invalidNames {
 		_, errors := validateDocDBIdentifier(v, "name")
