@@ -247,6 +247,59 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_PrivateVPCEndpoint(t *testing.T) {
+	var restApi apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					// Ensure region supports PRIVATE endpoint
+					// This can eventually be moved to a PreCheck function
+					conn := testAccProvider.Meta().(*AWSClient).apigateway
+					output, err := conn.CreateRestApi(&apigateway.CreateRestApiInput{
+						Name: aws.String(acctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
+						EndpointConfiguration: &apigateway.EndpointConfiguration{
+							Types: []*string{aws.String("PRIVATE")},
+						},
+					})
+					if err != nil {
+						if isAWSErr(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
+							t.Skip("Region does not support PRIVATE endpoint type")
+						}
+						t.Fatal(err)
+					}
+
+					// Be kind and rewind. :)
+					_, err = conn.DeleteRestApi(&apigateway.DeleteRestApiInput{
+						RestApiId: output.Id,
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config: testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists("aws_api_gateway_rest_api.test", &restApi),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.types.0", "PRIVATE"),
+					resource.TestCheckResourceAttr("aws_api_gateway_rest_api.test", "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_rest_api.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 	expectedAPIKeySource := "HEADER"
 	expectedUpdateAPIKeySource := "AUTHORIZER"
@@ -505,6 +558,47 @@ resource "aws_api_gateway_rest_api" "test" {
   }
 }
 `, rName, endpointType)
+}
+
+func testAccAWSAPIGatewayRestAPIConfig_VPCEndpointConfiguration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block = "10.0.1.0/24"
+}
+
+data "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  name   = "default"
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id       = "${aws_vpc.test.id}"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.execute-api"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [
+    "${data.aws_security_group.test.id}",
+  ]
+  subnet_ids = [
+    "${aws_subnet.test.id}",
+  ]
+}
+
+resource "aws_api_gateway_rest_api" "test" {
+  name = "%s"
+
+  endpoint_configuration {
+    types = ["PRIVATE"]
+    vpc_endpoint_ids = ["${aws_vpc_endpoint.test.id}"]
+  }
+}
+`, rName)
 }
 
 func testAccAWSAPIGatewayRestAPIConfig_Name(rName string) string {
