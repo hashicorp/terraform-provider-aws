@@ -343,27 +343,27 @@ func resourceAwsApiGatewayRestApiUpdateOperations(d *schema.ResourceData) []*api
 		}
 	}
 
-	if d.HasChange("endpoint_configuration.1.vpc_endpoint_ids") {
-		o, n := d.GetChange("endpoint_configuration.1.vpc_endpoint_ids")
-		prefix := "/endpointConfiguration/vpc_endpoint_ids"
+	if d.HasChange("endpoint_configuration.0.vpc_endpoint_ids") {
+		o, n := d.GetChange("endpoint_configuration.0.vpc_endpoint_ids")
+		prefix := "/endpointConfiguration/vpcEndpointIds"
 
 		old := o.([]interface{})
 		new := n.([]interface{})
 
 		for _, v := range old {
 			operations = append(operations, &apigateway.PatchOperation{
-				Op:   aws.String("remove"),
-				Path: aws.String(fmt.Sprintf("%s/%s", prefix, escapeJsonPointer(v.(string)))),
+				Op:    aws.String("remove"),
+				Path:  aws.String(prefix),
+				Value: aws.String(v.(string)),
 			})
 		}
 
-		if len(new) > 0 {
-			for _, v := range new {
-				operations = append(operations, &apigateway.PatchOperation{
-					Op:   aws.String("add"),
-					Path: aws.String(fmt.Sprintf("%s/%s", prefix, escapeJsonPointer(v.(string)))),
-				})
-			}
+		for _, v := range new {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String("add"),
+				Path:  aws.String(prefix),
+				Value: aws.String(v.(string)),
+			})
 		}
 	}
 
@@ -446,8 +446,11 @@ func flattenApiGatewayEndpointConfiguration(endpointConfiguration *apigateway.En
 	}
 
 	m := map[string]interface{}{
-		"types":            flattenStringList(endpointConfiguration.Types),
-		"vpc_endpoint_ids": flattenStringList(endpointConfiguration.VpcEndpointIds),
+		"types": flattenStringList(endpointConfiguration.Types),
+	}
+
+	if len(endpointConfiguration.VpcEndpointIds) > 0 {
+		m["vpc_endpoint_ids"] = flattenStringList(endpointConfiguration.VpcEndpointIds)
 	}
 
 	return []interface{}{m}
