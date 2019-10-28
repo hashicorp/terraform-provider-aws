@@ -20,9 +20,9 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 		Update: resourceAwsGuardDutyFilterUpdate,
 		Delete: resourceAwsGuardDutyFilterDelete,
 
-		// Importer: &schema.ResourceImporter{
-		// 	State: schema.ImportStatePassthrough,
-		// },
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"detector_id": {
 				Type:     schema.TypeString,
@@ -171,7 +171,7 @@ func conditionAllowedForCriterion(criterion map[string]interface{}) bool {
 	return false
 }
 
-func buildFindingCriteria(findingCriteria map[string]interface{}) (*guardduty.FindingCriteria, error) {
+func serializeFindingCriteria(findingCriteria map[string]interface{}) (*guardduty.FindingCriteria, error) {
 	inputFindingCriteria := findingCriteria["criterion"].(*schema.Set).List()
 	criteria := map[string]*guardduty.Condition{}
 	for _, criterion := range inputFindingCriteria {
@@ -251,7 +251,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
 
 	var err error
-	input.FindingCriteria, err = buildFindingCriteria(findingCriteria)
+	input.FindingCriteria, err = serializeFindingCriteria(findingCriteria)
 	if err != nil {
 		return err
 	}
@@ -311,9 +311,12 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Reading GuardDuty Filter '%s' failed: %s", name, err.Error())
 	}
 
+	// Setting the findingCriteria on import currently is not yet implemented.
+	//  It shall be manually "flattened" or deserialized. As an example
+	//  `resource_aws_appautoscaling_policy` can be taken.
+	// d.Set("finding_criteria", filter.Action)
 	d.Set("action", filter.Action)
 	d.Set("description", filter.Description)
-	d.Set("finding_criteria", filter.FindingCriteria)
 	d.Set("name", filter.Name)
 	d.Set("detector_id", detectorId)
 	d.Set("rank", filter.Rank)
@@ -338,7 +341,7 @@ func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) 
 	findingCriteria := d.Get("finding_criteria").([]interface{})[0].(map[string]interface{})
 
 	var err error
-	input.FindingCriteria, err = buildFindingCriteria(findingCriteria)
+	input.FindingCriteria, err = serializeFindingCriteria(findingCriteria)
 
 	if err != nil {
 		return err
