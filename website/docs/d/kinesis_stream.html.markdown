@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kinesis_stream"
-sidebar_current: "docs-aws-datasource-kinesis-stream"
 description: |-
   Provides a Kinesis Stream data source.
 ---

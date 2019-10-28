@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_redshift_subnet_group"
-sidebar_current: "docs-aws-resource-redshift-subnet-group"
 description: |-
   Provides a Redshift Subnet Group resource.
 ---
@@ -60,6 +59,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the Redshift Subnet group name
 * `id` - The Redshift Subnet group ID.
 
 ## Import

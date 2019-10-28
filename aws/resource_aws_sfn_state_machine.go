@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSfnStateMachine() *schema.Resource {
@@ -65,6 +65,7 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(d.Get("name").(string)),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
+		Tags:       tagsFromMapSfn(d.Get("tags").(map[string]interface{})),
 	}
 
 	var activity *sfn.CreateStateMachineOutput
@@ -86,6 +87,9 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		activity, err = conn.CreateStateMachine(params)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error creating Step Function State Machine: %s", err)
@@ -93,17 +97,6 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(*activity.StateMachineArn)
 
-	if v, ok := d.GetOk("tags"); ok {
-		input := &sfn.TagResourceInput{
-			ResourceArn: aws.String(d.Id()),
-			Tags:        tagsFromMapSfn(v.(map[string]interface{})),
-		}
-		log.Printf("[DEBUG] Tagging SFN State Machine: %s", input)
-		_, err := conn.TagResource(input)
-		if err != nil {
-			return fmt.Errorf("error tagging SFN State Machine (%s): %s", d.Id(), input)
-		}
-	}
 	return resourceAwsSfnStateMachineRead(d, meta)
 }
 
@@ -212,7 +205,6 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	}
-
 	return resourceAwsSfnStateMachineRead(d, meta)
 }
 
@@ -220,10 +212,11 @@ func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).sfnconn
 	log.Printf("[DEBUG] Deleting Step Function State Machine: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteStateMachine(&sfn.DeleteStateMachineInput{
-			StateMachineArn: aws.String(d.Id()),
-		})
+	input := &sfn.DeleteStateMachineInput{
+		StateMachineArn: aws.String(d.Id()),
+	}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteStateMachine(input)
 
 		if err == nil {
 			return nil
@@ -231,4 +224,11 @@ func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) 
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteStateMachine(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting SFN state machine: %s", err)
+	}
+	return nil
 }

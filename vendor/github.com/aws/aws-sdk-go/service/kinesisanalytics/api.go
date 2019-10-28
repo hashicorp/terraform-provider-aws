@@ -58,6 +58,7 @@ func (c *KinesisAnalytics) AddApplicationCloudWatchLoggingOptionRequest(input *A
 
 // AddApplicationCloudWatchLoggingOption API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -159,6 +160,7 @@ func (c *KinesisAnalytics) AddApplicationInputRequest(input *AddApplicationInput
 }
 
 // AddApplicationInput API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -277,6 +279,7 @@ func (c *KinesisAnalytics) AddApplicationInputProcessingConfigurationRequest(inp
 
 // AddApplicationInputProcessingConfiguration API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -379,6 +382,7 @@ func (c *KinesisAnalytics) AddApplicationOutputRequest(input *AddApplicationOutp
 }
 
 // AddApplicationOutput API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -503,6 +507,7 @@ func (c *KinesisAnalytics) AddApplicationReferenceDataSourceRequest(input *AddAp
 
 // AddApplicationReferenceDataSource API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -615,6 +620,7 @@ func (c *KinesisAnalytics) CreateApplicationRequest(input *CreateApplicationInpu
 }
 
 // CreateApplication API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -745,6 +751,7 @@ func (c *KinesisAnalytics) DeleteApplicationRequest(input *DeleteApplicationInpu
 
 // DeleteApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -846,6 +853,7 @@ func (c *KinesisAnalytics) DeleteApplicationCloudWatchLoggingOptionRequest(input
 }
 
 // DeleteApplicationCloudWatchLoggingOption API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -949,6 +957,7 @@ func (c *KinesisAnalytics) DeleteApplicationInputProcessingConfigurationRequest(
 
 // DeleteApplicationInputProcessingConfiguration API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1049,6 +1058,7 @@ func (c *KinesisAnalytics) DeleteApplicationOutputRequest(input *DeleteApplicati
 }
 
 // DeleteApplicationOutput API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -1154,6 +1164,7 @@ func (c *KinesisAnalytics) DeleteApplicationReferenceDataSourceRequest(input *De
 }
 
 // DeleteApplicationReferenceDataSource API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -1263,6 +1274,7 @@ func (c *KinesisAnalytics) DescribeApplicationRequest(input *DescribeApplication
 
 // DescribeApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1359,6 +1371,7 @@ func (c *KinesisAnalytics) DiscoverInputSchemaRequest(input *DiscoverInputSchema
 
 // DiscoverInputSchema API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1397,8 +1410,8 @@ func (c *KinesisAnalytics) DiscoverInputSchemaRequest(input *DiscoverInputSchema
 //   * ErrCodeResourceProvisionedThroughputExceededException "ResourceProvisionedThroughputExceededException"
 //   Discovery failed to get a record from the streaming source because of the
 //   Amazon Kinesis Streams ProvisionedThroughputExceededException. For more information,
-//   see GetRecords (kinesis/latest/APIReference/API_GetRecords.html) in the Amazon
-//   Kinesis Streams API Reference.
+//   see GetRecords (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
+//   in the Amazon Kinesis Streams API Reference.
 //
 //   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
 //   The service is unavailable. Back off and retry the operation.
@@ -1468,6 +1481,7 @@ func (c *KinesisAnalytics) ListApplicationsRequest(input *ListApplicationsInput)
 }
 
 // ListApplications API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -1559,7 +1573,8 @@ func (c *KinesisAnalytics) ListTagsForResourceRequest(input *ListTagsForResource
 
 // ListTagsForResource API operation for Amazon Kinesis Analytics.
 //
-// Retrieves the list of key-value tags assigned to the application.
+// Retrieves the list of key-value tags assigned to the application. For more
+// information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1646,6 +1661,7 @@ func (c *KinesisAnalytics) StartApplicationRequest(input *StartApplicationInput)
 }
 
 // StartApplication API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -1761,6 +1777,7 @@ func (c *KinesisAnalytics) StopApplicationRequest(input *StopApplicationInput) (
 
 // StopApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1862,7 +1879,8 @@ func (c *KinesisAnalytics) TagResourceRequest(input *TagResourceInput) (req *req
 //
 // Adds one or more key-value tags to a Kinesis Analytics application. Note
 // that the maximum number of application tags includes system tags. The maximum
-// number of user-defined application tags is 50.
+// number of user-defined application tags is 50. For more information, see
+// Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1958,7 +1976,8 @@ func (c *KinesisAnalytics) UntagResourceRequest(input *UntagResourceInput) (req 
 
 // UntagResource API operation for Amazon Kinesis Analytics.
 //
-// Removes one or more tags from a Kinesis Analytics application.
+// Removes one or more tags from a Kinesis Analytics application. For more information,
+// see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2053,6 +2072,7 @@ func (c *KinesisAnalytics) UpdateApplicationRequest(input *UpdateApplicationInpu
 }
 
 // UpdateApplication API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -2620,6 +2640,7 @@ func (s AddApplicationReferenceDataSourceOutput) GoString() string {
 	return s.String()
 }
 
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -2763,6 +2784,7 @@ func (s *ApplicationDetail) SetReferenceDataSourceDescriptions(v []*ReferenceDat
 	return s
 }
 
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -3246,8 +3268,7 @@ type CreateApplicationInput struct {
 	// A list of one or more tags to assign to the application. A tag is a key-value
 	// pair that identifies an application. Note that the maximum number of application
 	// tags includes system tags. The maximum number of user-defined application
-	// tags is 50. For more information, see Using Cost Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
-	// in the AWS Billing and Cost Management Guide.
+	// tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 	Tags []*Tag `min:"1" type:"list"`
 }
 
@@ -4503,7 +4524,7 @@ func (s *InputLambdaProcessorDescription) SetRoleARN(v string) *InputLambdaProce
 type InputLambdaProcessorUpdate struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the new AWS Lambda (https://docs.aws.amazon.com/ambda/)
+	// The Amazon Resource Name (ARN) of the new AWS Lambda (https://docs.aws.amazon.com/lambda/)
 	// function that is used to preprocess the records in the stream.
 	//
 	// To specify an earlier version of the Lambda function than the latest, include
@@ -6010,7 +6031,7 @@ func (s *MappingParameters) SetJSONMappingParameters(v *JSONMappingParameters) *
 // Kinesis Firehose delivery stream.
 //
 // For limits on how many destinations an application can write and other limitations,
-// see Limits (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/limits.html)
+// see Limits (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/limits.html).
 type Output struct {
 	_ struct{} `type:"structure"`
 
@@ -7169,9 +7190,7 @@ func (s StopApplicationOutput) GoString() string {
 // AWS resources. If you specify a tag that already exists, the tag value is
 // replaced with the value that you specify in the request. Note that the maximum
 // number of application tags includes system tags. The maximum number of user-defined
-// application tags is 50. For more information, see Using Cost Allocation Tags
-// (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
-// in the AWS Billing and Cost Management Guide.
+// application tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 type Tag struct {
 	_ struct{} `type:"structure"`
 

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
@@ -16,6 +16,9 @@ func resourceAwsWafRegionalByteMatchSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalByteMatchSetRead,
 		Update: resourceAwsWafRegionalByteMatchSetUpdate,
 		Delete: resourceAwsWafRegionalByteMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_pinpoint_email_channel"
-sidebar_current: "docs-aws-resource-pinpoint-email-channel"
 description: |-
   Provides a Pinpoint SMS Channel resource.
 ---

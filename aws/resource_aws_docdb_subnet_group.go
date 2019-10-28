@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDocDBSubnetGroup() *schema.Resource {
@@ -140,7 +140,7 @@ func resourceAwsDocDBSubnetGroupRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if err != nil {
-		return fmt.Errorf("error retrieving tags for ARN: %s", aws.StringValue(subnetGroup.DBSubnetGroupArn))
+		return fmt.Errorf("error retrieving tags for ARN (%s): %s", aws.StringValue(subnetGroup.DBSubnetGroupArn), err)
 	}
 
 	if err := d.Set("tags", tagsToMapDocDB(resp.TagList)); err != nil {
@@ -203,7 +203,7 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 		DBSubnetGroupName: aws.String(name),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBSubnetGroups(params)
 
 		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
@@ -216,4 +216,14 @@ func waitForDocDBSubnetGroupDeletion(conn *docdb.DocDB, name string) error {
 
 		return resource.RetryableError(fmt.Errorf("DocDB Subnet Group (%s) still exists", name))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeDBSubnetGroups(params)
+		if isAWSErr(err, docdb.ErrCodeDBSubnetGroupNotFoundFault, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting DocDB subnet group: %s", err)
+	}
+	return nil
 }

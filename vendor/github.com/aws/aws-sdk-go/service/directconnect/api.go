@@ -257,6 +257,12 @@ func (c *DirectConnect) AllocateHostedConnectionRequest(input *AllocateHostedCon
 // API operation AllocateHostedConnection for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -343,6 +349,12 @@ func (c *DirectConnect) AllocatePrivateVirtualInterfaceRequest(input *AllocatePr
 // API operation AllocatePrivateVirtualInterface for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -437,6 +449,12 @@ func (c *DirectConnect) AllocatePublicVirtualInterfaceRequest(input *AllocatePub
 // API operation AllocatePublicVirtualInterface for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -529,6 +547,12 @@ func (c *DirectConnect) AllocateTransitVirtualInterfaceRequest(input *AllocateTr
 // API operation AllocateTransitVirtualInterface for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -1343,6 +1367,12 @@ func (c *DirectConnect) CreateConnectionRequest(input *CreateConnectionInput) (r
 // API operation CreateConnection for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -1707,6 +1737,12 @@ func (c *DirectConnect) CreateInterconnectRequest(input *CreateInterconnectInput
 // API operation CreateInterconnect for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -1813,6 +1849,12 @@ func (c *DirectConnect) CreateLagRequest(input *CreateLagInput) (req *request.Re
 // API operation CreateLag for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -1901,6 +1943,12 @@ func (c *DirectConnect) CreatePrivateVirtualInterfaceRequest(input *CreatePrivat
 // API operation CreatePrivateVirtualInterface for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -1989,6 +2037,12 @@ func (c *DirectConnect) CreatePublicVirtualInterfaceRequest(input *CreatePublicV
 // API operation CreatePublicVirtualInterface for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -2061,10 +2115,16 @@ func (c *DirectConnect) CreateTransitVirtualInterfaceRequest(input *CreateTransi
 
 // CreateTransitVirtualInterface API operation for AWS Direct Connect.
 //
-// Creates a transit virtual interface. A transit virtual interface is a VLAN
-// that transports traffic from a Direct Connect gateway to one or more transit
+// Creates a transit virtual interface. A transit virtual interface should be
+// used to access one or more transit gateways associated with Direct Connect
 // gateways. A transit virtual interface enables the connection of multiple
 // VPCs attached to a transit gateway to a Direct Connect gateway.
+//
+// If you associate your transit gateway with one or more Direct Connect gateways,
+// the Autonomous System Number (ASN) used by the transit gateway and the Direct
+// Connect gateway must be different. For example, if you use the default ASN
+// 64512 for both your the transit gateway and Direct Connect gateway, the association
+// request fails.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2074,6 +2134,12 @@ func (c *DirectConnect) CreateTransitVirtualInterfaceRequest(input *CreateTransi
 // API operation CreateTransitVirtualInterface for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeDuplicateTagKeysException "DuplicateTagKeysException"
+//   A tag key was specified more than once.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   You have reached the limit on the number of tags that can be assigned.
+//
 //   * ErrCodeServerException "DirectConnectServerException"
 //   A server-side error occurred.
 //
@@ -2320,8 +2386,7 @@ func (c *DirectConnect) DeleteDirectConnectGatewayRequest(input *DeleteDirectCon
 //
 // Deletes the specified Direct Connect gateway. You must first delete all virtual
 // interfaces that are attached to the Direct Connect gateway and disassociate
-// all virtual private gateways that are associated with the Direct Connect
-// gateway.
+// all virtual private gateways associated with the Direct Connect gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2405,6 +2470,11 @@ func (c *DirectConnect) DeleteDirectConnectGatewayAssociationRequest(input *Dele
 //
 // Deletes the association between the specified Direct Connect gateway and
 // virtual private gateway.
+//
+// We recommend that you specify the associationID to delete the association.
+// Alternatively, if you own virtual gateway and a Direct Connect gateway association,
+// you can specify the virtualGatewayId and directConnectGatewayId to delete
+// an association.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4720,8 +4790,10 @@ type AcceptDirectConnectGatewayAssociationProposalInput struct {
 	// DirectConnectGatewayId is a required field
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string" required:"true"`
 
-	// Overrides the existing Amazon VPC prefixes advertised to the Direct Connect
-	// gateway.
+	// Overrides the Amazon VPC prefixes advertised to the Direct Connect gateway.
+	//
+	// For information about how to set the prefixes, see Allowed Prefixes (https://docs.aws.amazon.com/directconnect/latest/UserGuide/multi-account-associate-vgw.html#allowed-prefixes)
+	// in the AWS Direct Connect User Guide.
 	OverrideAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"overrideAllowedPrefixesToDirectConnectGateway" type:"list"`
 
 	// The ID of the request proposal.
@@ -4931,6 +5003,9 @@ type AllocateHostedConnectionInput struct {
 	// OwnerAccount is a required field
 	OwnerAccount *string `locationName:"ownerAccount" type:"string" required:"true"`
 
+	// The tags associated with the connection.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
+
 	// The dedicated VLAN provisioned to the hosted connection.
 	//
 	// Vlan is a required field
@@ -4962,8 +5037,21 @@ func (s *AllocateHostedConnectionInput) Validate() error {
 	if s.OwnerAccount == nil {
 		invalidParams.Add(request.NewErrParamRequired("OwnerAccount"))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.Vlan == nil {
 		invalidParams.Add(request.NewErrParamRequired("Vlan"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4993,6 +5081,12 @@ func (s *AllocateHostedConnectionInput) SetConnectionName(v string) *AllocateHos
 // SetOwnerAccount sets the OwnerAccount field's value.
 func (s *AllocateHostedConnectionInput) SetOwnerAccount(v string) *AllocateHostedConnectionInput {
 	s.OwnerAccount = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *AllocateHostedConnectionInput) SetTags(v []*Tag) *AllocateHostedConnectionInput {
+	s.Tags = v
 	return s
 }
 
@@ -5184,6 +5278,11 @@ func (s *AllocateTransitVirtualInterfaceInput) Validate() error {
 	}
 	if s.OwnerAccount == nil {
 		invalidParams.Add(request.NewErrParamRequired("OwnerAccount"))
+	}
+	if s.NewTransitVirtualInterfaceAllocation != nil {
+		if err := s.NewTransitVirtualInterfaceAllocation.Validate(); err != nil {
+			invalidParams.AddNested("NewTransitVirtualInterfaceAllocation", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5454,7 +5553,8 @@ type BGPPeer struct {
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The Direct Connect endpoint on which the BGP peer terminates.
@@ -5649,7 +5749,7 @@ type ConfirmPrivateVirtualInterfaceInput struct {
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the virtual interface.
 	//
@@ -6011,8 +6111,14 @@ type Connection struct {
 	// The name of the AWS Direct Connect service provider associated with the connection.
 	PartnerName *string `locationName:"partnerName" type:"string"`
 
+	// The name of the service provider associated with the connection.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
 	// The AWS Region where the connection is located.
 	Region *string `locationName:"region" type:"string"`
+
+	// The tags associated with the connection.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The ID of the VLAN.
 	Vlan *int64 `locationName:"vlan" type:"integer"`
@@ -6106,9 +6212,21 @@ func (s *Connection) SetPartnerName(v string) *Connection {
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *Connection) SetProviderName(v string) *Connection {
+	s.ProviderName = &v
+	return s
+}
+
 // SetRegion sets the Region field's value.
 func (s *Connection) SetRegion(v string) *Connection {
 	s.Region = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Connection) SetTags(v []*Tag) *Connection {
+	s.Tags = v
 	return s
 }
 
@@ -6216,6 +6334,12 @@ type CreateConnectionInput struct {
 	//
 	// Location is a required field
 	Location *string `locationName:"location" type:"string" required:"true"`
+
+	// The name of the service provider associated with the requested connection.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
+	// The tags to associate with the lag.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -6239,6 +6363,19 @@ func (s *CreateConnectionInput) Validate() error {
 	}
 	if s.Location == nil {
 		invalidParams.Add(request.NewErrParamRequired("Location"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6271,10 +6408,27 @@ func (s *CreateConnectionInput) SetLocation(v string) *CreateConnectionInput {
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *CreateConnectionInput) SetProviderName(v string) *CreateConnectionInput {
+	s.ProviderName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateConnectionInput) SetTags(v []*Tag) *CreateConnectionInput {
+	s.Tags = v
+	return s
+}
+
 type CreateDirectConnectGatewayAssociationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon VPC prefixes to advertise to the Direct Connect gateway
+	//
+	// This parameter is required when you create an association to a transit gateway.
+	//
+	// For information about how to set the prefixes, see Allowed Prefixes (https://docs.aws.amazon.com/directconnect/latest/UserGuide/multi-account-associate-vgw.html#allowed-prefixes)
+	// in the AWS Direct Connect User Guide.
 	AddAllowedPrefixesToDirectConnectGateway []*RouteFilterPrefix `locationName:"addAllowedPrefixesToDirectConnectGateway" type:"list"`
 
 	// The ID of the Direct Connect gateway.
@@ -6286,7 +6440,7 @@ type CreateDirectConnectGatewayAssociationInput struct {
 	GatewayId *string `locationName:"gatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 }
 
 // String returns the string representation
@@ -6559,6 +6713,12 @@ type CreateInterconnectInput struct {
 	//
 	// Location is a required field
 	Location *string `locationName:"location" type:"string" required:"true"`
+
+	// The name of the service provider associated with the interconnect.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
+	// The tags to associate with the interconnect.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -6582,6 +6742,19 @@ func (s *CreateInterconnectInput) Validate() error {
 	}
 	if s.Location == nil {
 		invalidParams.Add(request.NewErrParamRequired("Location"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6614,8 +6787,23 @@ func (s *CreateInterconnectInput) SetLocation(v string) *CreateInterconnectInput
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *CreateInterconnectInput) SetProviderName(v string) *CreateInterconnectInput {
+	s.ProviderName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateInterconnectInput) SetTags(v []*Tag) *CreateInterconnectInput {
+	s.Tags = v
+	return s
+}
+
 type CreateLagInput struct {
 	_ struct{} `type:"structure"`
+
+	// The tags to associate with the automtically created LAGs.
+	ChildConnectionTags []*Tag `locationName:"childConnectionTags" min:"1" type:"list"`
 
 	// The ID of an existing connection to migrate to the LAG.
 	ConnectionId *string `locationName:"connectionId" type:"string"`
@@ -6642,6 +6830,12 @@ type CreateLagInput struct {
 	//
 	// NumberOfConnections is a required field
 	NumberOfConnections *int64 `locationName:"numberOfConnections" type:"integer" required:"true"`
+
+	// The name of the service provider associated with the LAG.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
+	// The tags to associate with the LAG.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -6657,6 +6851,9 @@ func (s CreateLagInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateLagInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateLagInput"}
+	if s.ChildConnectionTags != nil && len(s.ChildConnectionTags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChildConnectionTags", 1))
+	}
 	if s.ConnectionsBandwidth == nil {
 		invalidParams.Add(request.NewErrParamRequired("ConnectionsBandwidth"))
 	}
@@ -6669,11 +6866,40 @@ func (s *CreateLagInput) Validate() error {
 	if s.NumberOfConnections == nil {
 		invalidParams.Add(request.NewErrParamRequired("NumberOfConnections"))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.ChildConnectionTags != nil {
+		for i, v := range s.ChildConnectionTags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ChildConnectionTags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetChildConnectionTags sets the ChildConnectionTags field's value.
+func (s *CreateLagInput) SetChildConnectionTags(v []*Tag) *CreateLagInput {
+	s.ChildConnectionTags = v
+	return s
 }
 
 // SetConnectionId sets the ConnectionId field's value.
@@ -6703,6 +6929,18 @@ func (s *CreateLagInput) SetLocation(v string) *CreateLagInput {
 // SetNumberOfConnections sets the NumberOfConnections field's value.
 func (s *CreateLagInput) SetNumberOfConnections(v int64) *CreateLagInput {
 	s.NumberOfConnections = &v
+	return s
+}
+
+// SetProviderName sets the ProviderName field's value.
+func (s *CreateLagInput) SetProviderName(v string) *CreateLagInput {
+	s.ProviderName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateLagInput) SetTags(v []*Tag) *CreateLagInput {
+	s.Tags = v
 	return s
 }
 
@@ -6852,6 +7090,11 @@ func (s *CreateTransitVirtualInterfaceInput) Validate() error {
 	}
 	if s.NewTransitVirtualInterface == nil {
 		invalidParams.Add(request.NewErrParamRequired("NewTransitVirtualInterface"))
+	}
+	if s.NewTransitVirtualInterface != nil {
+		if err := s.NewTransitVirtualInterface.Validate(); err != nil {
+			invalidParams.AddNested("NewTransitVirtualInterface", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -7016,7 +7259,7 @@ type DeleteDirectConnectGatewayAssociationInput struct {
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 }
 
 // String returns the string representation
@@ -7658,7 +7901,7 @@ type DescribeDirectConnectGatewayAssociationsInput struct {
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 }
 
 // String returns the string representation
@@ -8529,7 +8772,7 @@ type GatewayAssociation struct {
 	StateChangeError *string `locationName:"stateChangeError" type:"string"`
 
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the AWS account that owns the virtual private gateway.
 	VirtualGatewayOwnerAccount *string `locationName:"virtualGatewayOwnerAccount" type:"string"`
@@ -8842,8 +9085,14 @@ type Interconnect struct {
 	// The location of the connection.
 	Location *string `locationName:"location" type:"string"`
 
+	// The name of the service provider associated with the interconnect.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
 	// The AWS Region where the connection is located.
 	Region *string `locationName:"region" type:"string"`
+
+	// The tags associated with the interconnect.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -8922,9 +9171,21 @@ func (s *Interconnect) SetLocation(v string) *Interconnect {
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *Interconnect) SetProviderName(v string) *Interconnect {
+	s.ProviderName = &v
+	return s
+}
+
 // SetRegion sets the Region field's value.
 func (s *Interconnect) SetRegion(v string) *Interconnect {
 	s.Region = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Interconnect) SetTags(v []*Tag) *Interconnect {
+	s.Tags = v
 	return s
 }
 
@@ -8994,8 +9255,14 @@ type Lag struct {
 	// The ID of the AWS account that owns the LAG.
 	OwnerAccount *string `locationName:"ownerAccount" type:"string"`
 
+	// The name of the service provider associated with the LAG.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
 	// The AWS Region where the connection is located.
 	Region *string `locationName:"region" type:"string"`
+
+	// The tags associated with the LAG.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -9092,9 +9359,21 @@ func (s *Lag) SetOwnerAccount(v string) *Lag {
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *Lag) SetProviderName(v string) *Lag {
+	s.ProviderName = &v
+	return s
+}
+
 // SetRegion sets the Region field's value.
 func (s *Lag) SetRegion(v string) *Lag {
 	s.Region = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Lag) SetTags(v []*Tag) *Lag {
+	s.Tags = v
 	return s
 }
 
@@ -9142,6 +9421,9 @@ type Location struct {
 	// The available port speeds for the location.
 	AvailablePortSpeeds []*string `locationName:"availablePortSpeeds" type:"list"`
 
+	// The name of the service provider for the location.
+	AvailableProviders []*string `locationName:"availableProviders" type:"list"`
+
 	// The code for the location.
 	LocationCode *string `locationName:"locationCode" type:"string"`
 
@@ -9166,6 +9448,12 @@ func (s Location) GoString() string {
 // SetAvailablePortSpeeds sets the AvailablePortSpeeds field's value.
 func (s *Location) SetAvailablePortSpeeds(v []*string) *Location {
 	s.AvailablePortSpeeds = v
+	return s
+}
+
+// SetAvailableProviders sets the AvailableProviders field's value.
+func (s *Location) SetAvailableProviders(v []*string) *Location {
+	s.AvailableProviders = v
 	return s
 }
 
@@ -9200,7 +9488,8 @@ type NewBGPPeer struct {
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -9259,10 +9548,13 @@ type NewPrivateVirtualInterface struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -9275,8 +9567,11 @@ type NewPrivateVirtualInterface struct {
 	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
 
+	// The tags associated with the private virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
+
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The name of the virtual interface assigned by the customer network.
 	//
@@ -9305,11 +9600,24 @@ func (s *NewPrivateVirtualInterface) Validate() error {
 	if s.Asn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Asn"))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.VirtualInterfaceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualInterfaceName"))
 	}
 	if s.Vlan == nil {
 		invalidParams.Add(request.NewErrParamRequired("Vlan"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9360,6 +9668,12 @@ func (s *NewPrivateVirtualInterface) SetMtu(v int64) *NewPrivateVirtualInterface
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *NewPrivateVirtualInterface) SetTags(v []*Tag) *NewPrivateVirtualInterface {
+	s.Tags = v
+	return s
+}
+
 // SetVirtualGatewayId sets the VirtualGatewayId field's value.
 func (s *NewPrivateVirtualInterface) SetVirtualGatewayId(v string) *NewPrivateVirtualInterface {
 	s.VirtualGatewayId = &v
@@ -9390,10 +9704,13 @@ type NewPrivateVirtualInterfaceAllocation struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -9402,6 +9719,9 @@ type NewPrivateVirtualInterfaceAllocation struct {
 	// The maximum transmission unit (MTU), in bytes. The supported values are 1500
 	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
+
+	// The tags associated with the private virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
 	//
@@ -9430,11 +9750,24 @@ func (s *NewPrivateVirtualInterfaceAllocation) Validate() error {
 	if s.Asn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Asn"))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.VirtualInterfaceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualInterfaceName"))
 	}
 	if s.Vlan == nil {
 		invalidParams.Add(request.NewErrParamRequired("Vlan"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9479,6 +9812,12 @@ func (s *NewPrivateVirtualInterfaceAllocation) SetMtu(v int64) *NewPrivateVirtua
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *NewPrivateVirtualInterfaceAllocation) SetTags(v []*Tag) *NewPrivateVirtualInterfaceAllocation {
+	s.Tags = v
+	return s
+}
+
 // SetVirtualInterfaceName sets the VirtualInterfaceName field's value.
 func (s *NewPrivateVirtualInterfaceAllocation) SetVirtualInterfaceName(v string) *NewPrivateVirtualInterfaceAllocation {
 	s.VirtualInterfaceName = &v
@@ -9503,10 +9842,13 @@ type NewPublicVirtualInterface struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -9515,6 +9857,9 @@ type NewPublicVirtualInterface struct {
 	// The routes to be advertised to the AWS network in this Region. Applies to
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
+
+	// The tags associated with the public virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
 	//
@@ -9543,11 +9888,24 @@ func (s *NewPublicVirtualInterface) Validate() error {
 	if s.Asn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Asn"))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.VirtualInterfaceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualInterfaceName"))
 	}
 	if s.Vlan == nil {
 		invalidParams.Add(request.NewErrParamRequired("Vlan"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9592,6 +9950,12 @@ func (s *NewPublicVirtualInterface) SetRouteFilterPrefixes(v []*RouteFilterPrefi
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *NewPublicVirtualInterface) SetTags(v []*Tag) *NewPublicVirtualInterface {
+	s.Tags = v
+	return s
+}
+
 // SetVirtualInterfaceName sets the VirtualInterfaceName field's value.
 func (s *NewPublicVirtualInterface) SetVirtualInterfaceName(v string) *NewPublicVirtualInterface {
 	s.VirtualInterfaceName = &v
@@ -9616,10 +9980,13 @@ type NewPublicVirtualInterfaceAllocation struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -9628,6 +9995,9 @@ type NewPublicVirtualInterfaceAllocation struct {
 	// The routes to be advertised to the AWS network in this Region. Applies to
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
+
+	// The tags associated with the public virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
 	//
@@ -9656,11 +10026,24 @@ func (s *NewPublicVirtualInterfaceAllocation) Validate() error {
 	if s.Asn == nil {
 		invalidParams.Add(request.NewErrParamRequired("Asn"))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.VirtualInterfaceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualInterfaceName"))
 	}
 	if s.Vlan == nil {
 		invalidParams.Add(request.NewErrParamRequired("Vlan"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -9705,6 +10088,12 @@ func (s *NewPublicVirtualInterfaceAllocation) SetRouteFilterPrefixes(v []*RouteF
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *NewPublicVirtualInterfaceAllocation) SetTags(v []*Tag) *NewPublicVirtualInterfaceAllocation {
+	s.Tags = v
+	return s
+}
+
 // SetVirtualInterfaceName sets the VirtualInterfaceName field's value.
 func (s *NewPublicVirtualInterfaceAllocation) SetVirtualInterfaceName(v string) *NewPublicVirtualInterfaceAllocation {
 	s.VirtualInterfaceName = &v
@@ -9728,9 +10117,12 @@ type NewTransitVirtualInterface struct {
 	AmazonAddress *string `locationName:"amazonAddress" type:"string"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -9742,6 +10134,9 @@ type NewTransitVirtualInterface struct {
 	// The maximum transmission unit (MTU), in bytes. The supported values are 1500
 	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
+
+	// The tags associated with the transitive virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
 	VirtualInterfaceName *string `locationName:"virtualInterfaceName" type:"string"`
@@ -9758,6 +10153,29 @@ func (s NewTransitVirtualInterface) String() string {
 // GoString returns the string representation
 func (s NewTransitVirtualInterface) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NewTransitVirtualInterface) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NewTransitVirtualInterface"}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAddressFamily sets the AddressFamily field's value.
@@ -9802,6 +10220,12 @@ func (s *NewTransitVirtualInterface) SetMtu(v int64) *NewTransitVirtualInterface
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *NewTransitVirtualInterface) SetTags(v []*Tag) *NewTransitVirtualInterface {
+	s.Tags = v
+	return s
+}
+
 // SetVirtualInterfaceName sets the VirtualInterfaceName field's value.
 func (s *NewTransitVirtualInterface) SetVirtualInterfaceName(v string) *NewTransitVirtualInterface {
 	s.VirtualInterfaceName = &v
@@ -9825,9 +10249,12 @@ type NewTransitVirtualInterfaceAllocation struct {
 	AmazonAddress *string `locationName:"amazonAddress" type:"string"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -9836,6 +10263,9 @@ type NewTransitVirtualInterfaceAllocation struct {
 	// The maximum transmission unit (MTU), in bytes. The supported values are 1500
 	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
+
+	// The tags associated with the transitive virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
 	VirtualInterfaceName *string `locationName:"virtualInterfaceName" type:"string"`
@@ -9852,6 +10282,29 @@ func (s NewTransitVirtualInterfaceAllocation) String() string {
 // GoString returns the string representation
 func (s NewTransitVirtualInterfaceAllocation) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NewTransitVirtualInterfaceAllocation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NewTransitVirtualInterfaceAllocation"}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAddressFamily sets the AddressFamily field's value.
@@ -9887,6 +10340,12 @@ func (s *NewTransitVirtualInterfaceAllocation) SetCustomerAddress(v string) *New
 // SetMtu sets the Mtu field's value.
 func (s *NewTransitVirtualInterfaceAllocation) SetMtu(v int64) *NewTransitVirtualInterfaceAllocation {
 	s.Mtu = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *NewTransitVirtualInterfaceAllocation) SetTags(v []*Tag) *NewTransitVirtualInterfaceAllocation {
+	s.Tags = v
 	return s
 }
 
@@ -10341,9 +10800,12 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	AmazonSideAsn *int64 `locationName:"amazonSideAsn" type:"long"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The Direct Connect endpoint on which the virtual interface terminates.
@@ -10384,8 +10846,11 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
+	// The tags associated with the virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
+
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the virtual interface.
 	VirtualInterfaceId *string `locationName:"virtualInterfaceId" type:"string"`
@@ -10544,6 +11009,12 @@ func (s *UpdateVirtualInterfaceAttributesOutput) SetRouteFilterPrefixes(v []*Rou
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *UpdateVirtualInterfaceAttributesOutput) SetTags(v []*Tag) *UpdateVirtualInterfaceAttributesOutput {
+	s.Tags = v
+	return s
+}
+
 // SetVirtualGatewayId sets the VirtualGatewayId field's value.
 func (s *UpdateVirtualInterfaceAttributesOutput) SetVirtualGatewayId(v string) *UpdateVirtualInterfaceAttributesOutput {
 	s.VirtualGatewayId = &v
@@ -10585,7 +11056,7 @@ type VirtualGateway struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The state of the virtual private gateway. The following are the possible
 	// values:
@@ -10637,9 +11108,12 @@ type VirtualInterface struct {
 	AmazonSideAsn *int64 `locationName:"amazonSideAsn" type:"long"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The Direct Connect endpoint on which the virtual interface terminates.
@@ -10680,8 +11154,11 @@ type VirtualInterface struct {
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
+	// The tags associated with the virtual interface.
+	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
+
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the virtual interface.
 	VirtualInterfaceId *string `locationName:"virtualInterfaceId" type:"string"`
@@ -10837,6 +11314,12 @@ func (s *VirtualInterface) SetRegion(v string) *VirtualInterface {
 // SetRouteFilterPrefixes sets the RouteFilterPrefixes field's value.
 func (s *VirtualInterface) SetRouteFilterPrefixes(v []*RouteFilterPrefix) *VirtualInterface {
 	s.RouteFilterPrefixes = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *VirtualInterface) SetTags(v []*Tag) *VirtualInterface {
+	s.Tags = v
 	return s
 }
 

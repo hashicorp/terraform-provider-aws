@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_parameter"
-sidebar_current: "docs-aws-datasource-ssm-parameter"
 description: |-
   Provides a SSM Parameter datasource
 ---
@@ -39,3 +38,4 @@ In addition to all arguments above, the following attributes are exported:
 * `name` - The name of the parameter.
 * `type` - The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - The value of the parameter.
+* `version` - The version of the parameter.

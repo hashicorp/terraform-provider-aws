@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_application"
-sidebar_current: "docs-aws-resource-elastic-beanstalk-application"
 description: |-
   Provides an Elastic Beanstalk Application Resource
 ---
@@ -36,6 +35,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the application, must be unique within your account
 * `description` - (Optional) Short description of the application
+* `tags` - (Optional) Key-value mapping of tags for the Elastic Beanstalk Application.
 
 Application version lifecycle (`appversion_lifecycle`) supports the following settings.  Only one of either `max_count` or `max_age_in_days` can be provided:
 
@@ -48,8 +48,7 @@ Application version lifecycle (`appversion_lifecycle`) supports the following se
 
 In addition to all arguments above, the following attributes are exported:
 
-* `name`
-* `description`
+* `arn` - The ARN assigned by AWS for this Elastic Beanstalk Application.
 
 
 ## Import

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsRdsCluster() *schema.Resource {
@@ -133,6 +133,11 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 			},
 
 			"reader_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

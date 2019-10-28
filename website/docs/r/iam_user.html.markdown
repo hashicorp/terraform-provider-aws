@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_user"
-sidebar_current: "docs-aws-resource-iam-user"
 description: |-
   Provides an IAM user.
 ---
@@ -10,12 +9,15 @@ description: |-
 
 Provides an IAM user.
 
+~> *NOTE:* If policies are attached to the user via the [`aws_iam_policy_attachment` resource](/docs/providers/aws/r/iam_policy_attachment.html) and you are modifying the user `name` or `path`, the `force_destroy` argument must be set to `true` and applied before attempting the operation otherwise you will encounter a `DeleteConflict` error. The [`aws_iam_user_policy_attachment` resource (recommended)](/docs/providers/aws/r/iam_user_policy_attachment.html) does not have this requirement.
+
 ## Example Usage
 
 ```hcl
 resource "aws_iam_user" "lb" {
   name = "loadbalancer"
   path = "/system/"
+
   tags = {
     tag-key = "tag-value"
   }

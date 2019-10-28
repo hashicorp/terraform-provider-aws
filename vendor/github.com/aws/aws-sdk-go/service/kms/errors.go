@@ -44,11 +44,9 @@ const (
 	//
 	//    * The cluster must contain at least as many HSMs as the operation requires.
 	//    To add HSMs, use the AWS CloudHSM CreateHsm (https://docs.aws.amazon.com/cloudhsm/latest/APIReference/API_CreateHsm.html)
-	//    operation.
-	//
-	// For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey operations,
-	//    the AWS CloudHSM cluster must have at least two active HSMs, each in a
-	//    different Availability Zone. For the ConnectCustomKeyStore operation,
+	//    operation. For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey
+	//    operations, the AWS CloudHSM cluster must have at least two active HSMs,
+	//    each in a different Availability Zone. For the ConnectCustomKeyStore operation,
 	//    the AWS CloudHSM must contain at least one active HSM.
 	//
 	// For information about the requirements for an AWS CloudHSM cluster that is
@@ -58,7 +56,7 @@ const (
 	// Subnet (https://docs.aws.amazon.com/cloudhsm/latest/userguide/create-subnets.html)
 	// in the AWS CloudHSM User Guide. For information about cluster security groups,
 	// see Configure a Default Security Group (https://docs.aws.amazon.com/cloudhsm/latest/userguide/configure-sg.html)
-	// in the AWS CloudHSM User Guide.
+	// in the AWS CloudHSM User Guide .
 	ErrCodeCloudHsmClusterInvalidConfigurationException = "CloudHsmClusterInvalidConfigurationException"
 
 	// ErrCodeCloudHsmClusterNotActiveException for service response error code

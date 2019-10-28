@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsWafRegionalWebAcl() *schema.Resource {
@@ -18,6 +18,9 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 		Read:   resourceAwsWafRegionalWebAclRead,
 		Update: resourceAwsWafRegionalWebAclUpdate,
 		Delete: resourceAwsWafRegionalWebAclDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {

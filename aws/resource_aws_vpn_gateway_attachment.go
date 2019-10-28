@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsVpnGatewayAttachment() *schema.Resource {
@@ -101,7 +101,7 @@ func resourceAwsVpnGatewayAttachmentRead(d *schema.ResourceData, meta interface{
 	}
 
 	vga := vpnGatewayGetAttachment(vgw)
-	if len(vgw.VpcAttachments) == 0 || *vga.State == "detached" {
+	if vga == nil {
 		d.Set("vpc_id", "")
 		return nil
 	}
@@ -163,12 +163,9 @@ func resourceAwsVpnGatewayAttachmentDelete(d *schema.ResourceData, meta interfac
 func vpnGatewayAttachmentStateRefresh(conn *ec2.EC2, vpcId, vgwId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeVpnGateways(&ec2.DescribeVpnGatewaysInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("attachment.vpc-id"),
-					Values: []*string{aws.String(vpcId)},
-				},
-			},
+			Filters: buildEC2AttributeFilterList(map[string]string{
+				"attachment.vpc-id": vpcId,
+			}),
 			VpnGatewayIds: []*string{aws.String(vgwId)},
 		})
 
@@ -187,15 +184,19 @@ func vpnGatewayAttachmentStateRefresh(conn *ec2.EC2, vpcId, vgwId string) resour
 		}
 
 		vgw := resp.VpnGateways[0]
-		if len(vgw.VpcAttachments) == 0 {
-			return vgw, "detached", nil
-		}
 
-		vga := vpnGatewayGetAttachment(vgw)
-
-		log.Printf("[DEBUG] VPN Gateway %q attachment status: %s", vgwId, *vga.State)
-		return vgw, *vga.State, nil
+		return vgw, vpnGatewayGetAttachmentState(vgw, vpcId), nil
 	}
+}
+
+// vpnGatewayGetAttachmentState returns the state of any VGW attachment to the specified VPC or "detached".
+func vpnGatewayGetAttachmentState(vgw *ec2.VpnGateway, vpcId string) string {
+	for _, vpcAttachment := range vgw.VpcAttachments {
+		if aws.StringValue(vpcAttachment.VpcId) == vpcId {
+			return aws.StringValue(vpcAttachment.State)
+		}
+	}
+	return ec2.AttachmentStatusDetached
 }
 
 func vpnGatewayAttachmentId(vpcId, vgwId string) string {

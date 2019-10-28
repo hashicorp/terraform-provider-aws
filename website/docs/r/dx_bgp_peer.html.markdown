@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dx_bgp_peer"
-sidebar_current: "docs-aws-resource-dx-bgp-peer"
 description: |-
   Provides a Direct Connect BGP peer resource.
 ---

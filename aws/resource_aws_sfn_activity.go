@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSfnActivity() *schema.Resource {
@@ -46,6 +46,7 @@ func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) erro
 
 	params := &sfn.CreateActivityInput{
 		Name: aws.String(d.Get("name").(string)),
+		Tags: tagsFromMapSfn(d.Get("tags").(map[string]interface{})),
 	}
 
 	activity, err := conn.CreateActivity(params)
@@ -55,17 +56,6 @@ func resourceAwsSfnActivityCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(*activity.ActivityArn)
 
-	if v, ok := d.GetOk("tags"); ok {
-		input := &sfn.TagResourceInput{
-			ResourceArn: aws.String(d.Id()),
-			Tags:        tagsFromMapSfn(v.(map[string]interface{})),
-		}
-		log.Printf("[DEBUG] Tagging SFN Activity: %s", input)
-		_, err := conn.TagResource(input)
-		if err != nil {
-			return fmt.Errorf("error tagging SFN Activity (%s): %s", d.Id(), input)
-		}
-	}
 	return resourceAwsSfnActivityRead(d, meta)
 }
 
@@ -153,10 +143,11 @@ func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*AWSClient).sfnconn
 	log.Printf("[DEBUG] Deleting Step Functions Activity: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteActivity(&sfn.DeleteActivityInput{
-			ActivityArn: aws.String(d.Id()),
-		})
+	input := &sfn.DeleteActivityInput{
+		ActivityArn: aws.String(d.Id()),
+	}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteActivity(input)
 
 		if err == nil {
 			return nil
@@ -164,4 +155,11 @@ func resourceAwsSfnActivityDelete(d *schema.ResourceData, meta interface{}) erro
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteActivity(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting SFN Activity: %s", err)
+	}
+	return nil
 }

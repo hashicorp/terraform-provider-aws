@@ -417,6 +417,17 @@ Token:
 		p.recoverAfterBodyItem()
 	}
 
+	// We must never produce a nil body, since the caller may attempt to
+	// do analysis of a partial result when there's an error, so we'll
+	// insert a placeholder if we otherwise failed to produce a valid
+	// body due to one of the syntax error paths above.
+	if body == nil && diags.HasErrors() {
+		body = &Body{
+			SrcRange: hcl.RangeBetween(oBrace.Range, cBraceRange),
+			EndRange: cBraceRange,
+		}
+	}
+
 	return &Block{
 		Type:   blockType,
 		Labels: labels,
@@ -836,6 +847,14 @@ Traversal:
 
 				if lit, isLit := keyExpr.(*LiteralValueExpr); isLit {
 					litKey, _ := lit.Value(nil)
+					rng := hcl.RangeBetween(open.Range, close.Range)
+					step := hcl.TraverseIndex{
+						Key:      litKey,
+						SrcRange: rng,
+					}
+					ret = makeRelativeTraversal(ret, step, rng)
+				} else if tmpl, isTmpl := keyExpr.(*TemplateExpr); isTmpl && tmpl.IsStringLiteral() {
+					litKey, _ := tmpl.Value(nil)
 					rng := hcl.RangeBetween(open.Range, close.Range)
 					step := hcl.TraverseIndex{
 						Key:      litKey,

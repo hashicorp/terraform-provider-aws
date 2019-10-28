@@ -1,7 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: sns_topic_policy"
-sidebar_current: "docs-aws-resource-sns-topic-policy"
+page_title: "AWS: aws_sns_topic_policy"
 description: |-
   Provides an SNS topic policy resource.
 ---
@@ -72,3 +71,12 @@ The following arguments are supported:
 
 * `arn` - (Required) The ARN of the SNS topic
 * `policy` - (Required) The fully-formed AWS policy as JSON. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
+
+## Import
+
+SNS Topic Policy can be imported using the topic ARN, e.g.
+
+```
+$ terraform import aws_sns_topic.user_updates arn:aws:sns:us-west-2:0123456789012:my-topic
+```
+

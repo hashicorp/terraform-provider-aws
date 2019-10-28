@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSsmActivation() *schema.Resource {
@@ -108,6 +108,10 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = ssmconn.CreateActivation(activationInput)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error creating SSM activation: %s", err)

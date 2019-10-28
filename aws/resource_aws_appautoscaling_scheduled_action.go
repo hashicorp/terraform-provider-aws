@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const awsAppautoscalingScheduleTimeLayout = "2006-01-02T15:04:05Z"
@@ -133,9 +133,12 @@ func resourceAwsAppautoscalingScheduledActionPut(d *schema.ResourceData, meta in
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutScheduledAction(input)
+	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error putting scheduled action: %s", err)
 	}
 
 	d.SetId(d.Get("name").(string) + "-" + d.Get("service_namespace").(string) + "-" + d.Get("resource_id").(string))

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -207,6 +207,7 @@ func testAccSagemakerEndpointConfig_Base(rName string) string {
 data "aws_iam_policy_document" "access" {
   statement {
     effect = "Allow"
+
     actions = [
       "cloudwatch:PutMetricData",
       "logs:CreateLogStream",
@@ -219,23 +220,25 @@ data "aws_iam_policy_document" "access" {
       "ecr:BatchGetImage",
       "s3:GetObject",
     ]
+
     resources = ["*"]
   }
 }
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
-  path = "/"
+  name               = %[1]q
+  path               = "/"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
 }
 

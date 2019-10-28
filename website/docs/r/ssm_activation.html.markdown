@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_activation"
-sidebar_current: "docs-aws-resource-ssm-activation"
 description: |-
   Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 ---
@@ -57,6 +56,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The activation ID.
 * `activation_code` - The code the system generates when it processes the activation.
 * `name` - The default name of the registered managed instance.
 * `description` - The description of the resource that was registered.

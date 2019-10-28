@@ -10,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
@@ -99,6 +99,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
+									"kms_key_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -159,8 +165,20 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Default:  true,
 										ForceNew: true,
 									},
+									"encrypted": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 									"iops": {
 										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
+									"kms_key_id": {
+										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
@@ -388,6 +406,14 @@ func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{
 		opts.Placement = placement
 	}
 
+	if v, ok := d["placement_group"]; ok {
+		if v.(string) != "" {
+			// If instanceInterruptionBehavior is set to STOP, this can't be set at all, even to an empty string, so check for "" to avoid those errors
+			placement.GroupName = aws.String(v.(string))
+			opts.Placement = placement
+		}
+	}
+
 	if v, ok := d["ebs_optimized"]; ok {
 		opts.EbsOptimized = aws.Bool(v.(bool))
 	}
@@ -512,6 +538,10 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 				ebs.Encrypted = aws.Bool(v)
 			}
 
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -551,6 +581,14 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
+			}
+
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
 			}
 
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
@@ -703,21 +741,20 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
 	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
+			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
+		}
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				// IAM is eventually consistent :/
-				if awsErr.Code() == "InvalidSpotFleetRequestConfig" {
-					return resource.RetryableError(
-						fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
-				}
-			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotFleet(spotFleetOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot fleet: %s", err)
@@ -934,25 +971,30 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 			aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
 	}
 
+	launchSpec, err := launchSpecsToSet(config.LaunchSpecifications, conn)
+	if err != nil {
+		return fmt.Errorf("error occurred while reading launch specification: %s", err)
+	}
+
 	d.Set("replace_unhealthy_instances", config.ReplaceUnhealthyInstances)
 	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("fleet_type", config.Type)
-	d.Set("launch_specification", launchSpecsToSet(config.LaunchSpecifications, conn))
+	d.Set("launch_specification", launchSpec)
 
 	return nil
 }
 
-func launchSpecsToSet(launchSpecs []*ec2.SpotFleetLaunchSpecification, conn *ec2.EC2) *schema.Set {
+func launchSpecsToSet(launchSpecs []*ec2.SpotFleetLaunchSpecification, conn *ec2.EC2) (*schema.Set, error) {
 	specSet := &schema.Set{F: hashLaunchSpecification}
 	for _, spec := range launchSpecs {
 		rootDeviceName, err := fetchRootDeviceName(aws.StringValue(spec.ImageId), conn)
 		if err != nil {
-			log.Panic(err)
+			return nil, err
 		}
 
 		specSet.Add(launchSpecToMap(spec, rootDeviceName))
 	}
-	return specSet
+	return specSet, nil
 }
 
 func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) map[string]interface{} {
@@ -1066,6 +1108,10 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				m["encrypted"] = aws.BoolValue(ebs.Encrypted)
 			}
 
+			if ebs.KmsKeyId != nil {
+				m["kms_key_id"] = aws.StringValue(ebs.KmsKeyId)
+			}
+
 			if ebs.VolumeSize != nil {
 				m["volume_size"] = aws.Int64Value(ebs.VolumeSize)
 			}
@@ -1116,6 +1162,14 @@ func rootBlockDeviceToSet(
 				m := make(map[string]interface{})
 				if val.Ebs.DeleteOnTermination != nil {
 					m["delete_on_termination"] = aws.BoolValue(val.Ebs.DeleteOnTermination)
+				}
+
+				if val.Ebs.Encrypted != nil {
+					m["encrypted"] = aws.BoolValue(val.Ebs.Encrypted)
+				}
+
+				if val.Ebs.KmsKeyId != nil {
+					m["kms_key_id"] = aws.StringValue(val.Ebs.KmsKeyId)
 				}
 
 				if val.Ebs.VolumeSize != nil {

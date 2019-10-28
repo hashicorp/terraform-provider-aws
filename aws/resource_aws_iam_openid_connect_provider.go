@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
@@ -28,7 +28,6 @@ func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
 			},
 			"url": {
 				Type:             schema.TypeString,
-				Computed:         false,
 				Required:         true,
 				ForceNew:         true,
 				ValidateFunc:     validateOpenIdURL,

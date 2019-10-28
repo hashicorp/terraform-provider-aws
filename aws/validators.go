@@ -15,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 // FloatAtLeast returns a SchemaValidateFunc which tests if the provided value
@@ -37,6 +37,29 @@ func FloatAtLeast(min float64) schema.SchemaValidateFunc {
 		}
 
 		return
+	}
+}
+
+// validateStringNotMatch returns a SchemaValidateFunc which tests if the provided value
+// does not match a given regexp. Optionally an error message can be provided to
+// return something friendlier than "must match some globby regexp".
+// This function is an inverse copy of validation.StringMatch and will be
+// migrated to the Terraform Provider SDK.
+func validateStringNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) ([]string, []error) {
+		v, ok := i.(string)
+		if !ok {
+			return nil, []error{fmt.Errorf("expected type of %s to be string", k)}
+		}
+
+		if ok := r.MatchString(v); ok {
+			if message != "" {
+				return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
+
+			}
+			return nil, []error{fmt.Errorf("expected value of %s to not match regular expression %q", k, r)}
+		}
+		return nil, nil
 	}
 }
 
@@ -193,31 +216,6 @@ func validateNeptuneEngine() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"neptune",
 	}, false)
-}
-
-func validateElastiCacheClusterId(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) < 1) || (len(value) > 20) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) must contain from 1 to 20 alphanumeric characters or hyphens", k, value))
-	}
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q (%q)", k, value))
-	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q (%q) must be a letter", k, value))
-	}
-	if regexp.MustCompile(`--`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) cannot contain two consecutive hyphens", k, value))
-	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) cannot end with a hyphen", k, value))
-	}
-	return
 }
 
 func validateASGScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {
@@ -1701,16 +1699,6 @@ func validateCognitoUserPoolInviteTemplateSmsMessage(v interface{}, k string) (w
 
 	if !regexp.MustCompile(`.*\{username\}.*`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q does not contain {username}", k))
-	}
-	return
-}
-
-func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`, k))
 	}
 	return
 }

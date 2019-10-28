@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // setTags is a helper to set the tags for a resource. It expects the
@@ -105,12 +105,12 @@ func saveTagsCloudWatchEvents(conn *events.CloudWatchEvents, d *schema.ResourceD
 		ResourceARN: aws.String(arn),
 	})
 
-	if err != nil {
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "") {
 		return fmt.Errorf("Error retreiving tags for %s: %s", arn, err)
 	}
 
 	var tagList []*events.Tag
-	if len(resp.Tags) > 0 {
+	if resp != nil && len(resp.Tags) > 0 {
 		tagList = resp.Tags
 	}
 

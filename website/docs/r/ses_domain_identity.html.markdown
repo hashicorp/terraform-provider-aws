@@ -1,7 +1,6 @@
 ---
 layout: "aws"
-page_title: "AWS: ses_domain_identity"
-sidebar_current: "docs-aws-resource-ses-domain-identity"
+page_title: "AWS: aws_ses_domain_identity"
 description: |-
   Provides an SES domain identity resource
 ---

@@ -15,10 +15,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsInstance() *schema.Resource {
@@ -336,6 +336,13 @@ func resourceAwsInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
 						"iops": {
 							Type:             schema.TypeInt,
 							Optional:         true,
@@ -429,6 +436,20 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
+							ForceNew: true,
+						},
+
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 
@@ -597,6 +618,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		runResp, err = conn.RunInstances(runOpts)
+	}
 	// Warn if the AWS Error involves group ids, to help identify situation
 	// where a user uses group ids in security_groups for the Default VPC.
 	//   See https://github.com/hashicorp/terraform/issues/3798
@@ -931,13 +955,14 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if _, ok := d.GetOk("iam_instance_profile"); ok {
 			// Does not have an Iam Instance Profile associated with it, need to associate
 			if len(resp.IamInstanceProfileAssociations) == 0 {
+				input := &ec2.AssociateIamInstanceProfileInput{
+					InstanceId: aws.String(d.Id()),
+					IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+						Name: aws.String(d.Get("iam_instance_profile").(string)),
+					},
+				}
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AssociateIamInstanceProfile(&ec2.AssociateIamInstanceProfileInput{
-						InstanceId: aws.String(d.Id()),
-						IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-							Name: aws.String(d.Get("iam_instance_profile").(string)),
-						},
-					})
+					_, err := conn.AssociateIamInstanceProfile(input)
 					if err != nil {
 						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 							return resource.RetryableError(err)
@@ -946,21 +971,24 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AssociateIamInstanceProfile(input)
+				}
 				if err != nil {
-					return err
+					return fmt.Errorf("Error associating instance with instance profile: %s", err)
 				}
 
 			} else {
 				// Has an Iam Instance Profile associated with it, need to replace the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
-
+				input := &ec2.ReplaceIamInstanceProfileAssociationInput{
+					AssociationId: associationId,
+					IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+						Name: aws.String(d.Get("iam_instance_profile").(string)),
+					},
+				}
 				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.ReplaceIamInstanceProfileAssociation(&ec2.ReplaceIamInstanceProfileAssociationInput{
-						AssociationId: associationId,
-						IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
-							Name: aws.String(d.Get("iam_instance_profile").(string)),
-						},
-					})
+					_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 					if err != nil {
 						if isAWSErr(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 							return resource.RetryableError(err)
@@ -969,8 +997,11 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.ReplaceIamInstanceProfileAssociation(input)
+				}
 				if err != nil {
-					return err
+					return fmt.Errorf("Error replacing instance profile association: %s", err)
 				}
 			}
 			// An Iam Instance Profile has _not_ been provided but is pending a change. This means there is a pending removal
@@ -1173,7 +1204,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("credit_specification") && !d.IsNewResource() {
-		if v, ok := d.GetOk("credit_specification"); ok {
+		if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			creditSpecification := v.([]interface{})[0].(map[string]interface{})
 			log.Printf("[DEBUG] Modifying credit specification for Instance (%s)", d.Id())
 			_, err := conn.ModifyInstanceCreditSpecification(&ec2.ModifyInstanceCreditSpecificationInput{
@@ -1328,15 +1359,18 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 		if vol.Iops != nil {
 			bd["iops"] = *vol.Iops
 		}
+		if vol.Encrypted != nil {
+			bd["encrypted"] = *vol.Encrypted
+		}
+		if vol.KmsKeyId != nil {
+			bd["kms_key_id"] = *vol.KmsKeyId
+		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
 		} else {
 			if instanceBd.DeviceName != nil {
 				bd["device_name"] = *instanceBd.DeviceName
-			}
-			if vol.Encrypted != nil {
-				bd["encrypted"] = *vol.Encrypted
 			}
 			if vol.SnapshotId != nil {
 				bd["snapshot_id"] = *vol.SnapshotId
@@ -1370,7 +1404,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// For a bad image, we just return nil so we don't block a refresh
 	if len(res.Images) == 0 {
-		return nil, nil
+		return nil, fmt.Errorf("No images found for AMI %s", ami)
 	}
 
 	image := res.Images[0]
@@ -1378,7 +1412,7 @@ func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
 
 	// Instance store backed AMIs do not provide a root device name.
 	if *image.RootDeviceType == ec2.DeviceTypeInstanceStore {
-		return nil, nil
+		return nil, fmt.Errorf("Instance store backed AMIs do not provide a root device name - Use an EBS AMI")
 	}
 
 	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
@@ -1498,6 +1532,10 @@ func readBlockDeviceMappingsFromConfig(
 				ebs.Encrypted = aws.Bool(v)
 			}
 
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(v)
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -1555,6 +1593,14 @@ func readBlockDeviceMappingsFromConfig(
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
+			if v, ok := bd["encrypted"].(bool); ok && v {
+				ebs.Encrypted = aws.Bool(v)
+			}
+
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(bd["kms_key_id"].(string))
+			}
+
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -1575,20 +1621,15 @@ func readBlockDeviceMappingsFromConfig(
 				log.Print("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
 			}
 
-			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {
-				if dn == nil {
-					return nil, fmt.Errorf(
-						"Expected 1 AMI for ID: %s, got none",
-						d.Get("ami").(string))
-				}
-
-				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-					DeviceName: dn,
-					Ebs:        ebs,
-				})
-			} else {
-				return nil, err
+			dn, err := fetchRootDeviceName(d.Get("ami").(string), conn)
+			if err != nil {
+				return nil, fmt.Errorf("Expected 1 AMI for ID: %s (%s)", d.Get("ami").(string), err)
 			}
+
+			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+				DeviceName: dn,
+				Ebs:        ebs,
+			})
 		}
 	}
 
@@ -1691,11 +1732,13 @@ func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, er
 	log.Printf("[INFO] Reading password data for instance %s", instanceID)
 
 	var passwordData string
-
+	var resp *ec2.GetPasswordDataOutput
+	input := &ec2.GetPasswordDataInput{
+		InstanceId: aws.String(instanceID),
+	}
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		resp, err := conn.GetPasswordData(&ec2.GetPasswordDataInput{
-			InstanceId: aws.String(instanceID),
-		})
+		var err error
+		resp, err = conn.GetPasswordData(input)
 
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1710,7 +1753,16 @@ func getAwsEc2InstancePasswordData(instanceID string, conn *ec2.EC2) (string, er
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		resp, err = conn.GetPasswordData(input)
+		if err != nil {
+			return "", fmt.Errorf("Error getting password data: %s", err)
+		}
+		if resp.PasswordData == nil || *resp.PasswordData == "" {
+			return "", fmt.Errorf("Password data is blank for instance ID: %s", instanceID)
+		}
+		passwordData = strings.TrimSpace(*resp.PasswordData)
+	}
 	if err != nil {
 		return "", err
 	}
@@ -1764,9 +1816,12 @@ func buildAwsInstanceOpts(
 	if v, ok := d.GetOk("credit_specification"); ok {
 		// Only T2 and T3 are burstable performance instance types and supports Unlimited
 		if strings.HasPrefix(instanceType, "t2") || strings.HasPrefix(instanceType, "t3") {
-			cs := v.([]interface{})[0].(map[string]interface{})
-			opts.CreditSpecification = &ec2.CreditSpecificationRequest{
-				CpuCredits: aws.String(cs["cpu_credits"].(string)),
+			if cs, ok := v.([]interface{})[0].(map[string]interface{}); ok {
+				opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+					CpuCredits: aws.String(cs["cpu_credits"].(string)),
+				}
+			} else {
+				log.Print("[WARN] credit_specification is defined but the value of cpu_credits is missing, default value will be used.")
 			}
 		} else {
 			log.Print("[WARN] credit_specification is defined but instance type is not T2/T3. Ignoring...")

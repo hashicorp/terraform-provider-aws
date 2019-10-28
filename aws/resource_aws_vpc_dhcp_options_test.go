@@ -2,26 +2,114 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSDHCPOptions_importBasic(t *testing.T) {
-	resourceName := "aws_vpc_dhcp_options.foo"
+func init() {
+	resource.AddTestSweepers("aws_vpc_dhcp_options", &resource.Sweeper{
+		Name: "aws_vpc_dhcp_options",
+		F:    testSweepVpcDhcpOptions,
+	})
+}
+
+func testSweepVpcDhcpOptions(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).ec2conn
+
+	input := &ec2.DescribeDhcpOptionsInput{}
+
+	err = conn.DescribeDhcpOptionsPages(input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
+		for _, dhcpOption := range page.DhcpOptions {
+			var defaultDomainNameFound, defaultDomainNameServersFound bool
+
+			domainName := region + ".compute.internal"
+			if region == "us-east-1" {
+				domainName = "ec2.internal"
+			}
+
+			// This skips the default dhcp configurations so they don't get deleted
+			for _, dhcpConfiguration := range dhcpOption.DhcpConfigurations {
+				if aws.StringValue(dhcpConfiguration.Key) == "domain-name" {
+					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
+						continue
+					}
+
+					if aws.StringValue(dhcpConfiguration.Values[0].Value) == domainName {
+						defaultDomainNameFound = true
+					}
+				} else if aws.StringValue(dhcpConfiguration.Key) == "domain-name-servers" {
+					if len(dhcpConfiguration.Values) != 1 || dhcpConfiguration.Values[0] == nil {
+						continue
+					}
+
+					if aws.StringValue(dhcpConfiguration.Values[0].Value) == "AmazonProvidedDNS" {
+						defaultDomainNameServersFound = true
+					}
+				}
+			}
+
+			if defaultDomainNameFound && defaultDomainNameServersFound {
+				continue
+			}
+
+			input := &ec2.DeleteDhcpOptionsInput{
+				DhcpOptionsId: dhcpOption.DhcpOptionsId,
+			}
+
+			_, err := conn.DeleteDhcpOptions(input)
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting EC2 DHCP Option (%s): %s", aws.StringValue(dhcpOption.DhcpOptionsId), err)
+			}
+		}
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 DHCP Option sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error describing DHCP Options: %s", err)
+	}
+
+	return nil
+}
+
+func TestAccAWSDHCPOptions_basic(t *testing.T) {
+	var d ec2.DhcpOptions
+	resourceName := "aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDHCPOptionsDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDHCPOptionsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDHCPOptionsExists(resourceName, &d),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", "service.consul"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.0", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.1", "10.0.0.2"),
+					resource.TestCheckResourceAttr(resourceName, "ntp_servers.0", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.0", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-name"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -31,34 +119,9 @@ func TestAccAWSDHCPOptions_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDHCPOptions_basic(t *testing.T) {
-	var d ec2.DhcpOptions
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDHCPOptionsDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDHCPOptionsConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.foo", &d),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "domain_name", "service.consul"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "domain_name_servers.0", "127.0.0.1"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "domain_name_servers.1", "10.0.0.2"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "ntp_servers.0", "127.0.0.1"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "netbios_name_servers.0", "127.0.0.1"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "netbios_node_type", "2"),
-					resource.TestCheckResourceAttr("aws_vpc_dhcp_options.foo", "tags.Name", "foo-name"),
-					testAccCheckResourceAttrAccountID("aws_vpc_dhcp_options.foo", "owner_id"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDHCPOptions_deleteOptions(t *testing.T) {
 	var d ec2.DhcpOptions
+	resourceName := "aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -68,8 +131,8 @@ func TestAccAWSDHCPOptions_deleteOptions(t *testing.T) {
 			{
 				Config: testAccDHCPOptionsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDHCPOptionsExists("aws_vpc_dhcp_options.foo", &d),
-					testAccCheckDHCPOptionsDelete("aws_vpc_dhcp_options.foo"),
+					testAccCheckDHCPOptionsExists(resourceName, &d),
+					testAccCheckDHCPOptionsDelete(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -166,7 +229,7 @@ func testAccCheckDHCPOptionsDelete(n string) resource.TestCheckFunc {
 }
 
 const testAccDHCPOptionsConfig = `
-resource "aws_vpc_dhcp_options" "foo" {
+resource "aws_vpc_dhcp_options" "test" {
 	domain_name = "service.consul"
 	domain_name_servers = ["127.0.0.1", "10.0.0.2"]
 	ntp_servers = ["127.0.0.1"]
@@ -174,7 +237,7 @@ resource "aws_vpc_dhcp_options" "foo" {
 	netbios_node_type = 2
 
 	tags = {
-		Name = "foo-name"
+		Name = "test-name"
 	}
 }
 `

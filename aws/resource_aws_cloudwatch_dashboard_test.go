@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCloudWatchDashboard_importBasic(t *testing.T) {
@@ -165,20 +165,24 @@ func testAccAWSCloudWatchDashboardConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_dashboard" "foobar" {
   dashboard_name = "terraform-test-dashboard-%d"
+
   dashboard_body = <<EOF
   %s
   EOF
-}`, rInt, basicWidget)
+}
+`, rInt, basicWidget)
 }
 
 func testAccAWSCloudWatchDashboardConfig_updateBody(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_dashboard" "foobar" {
   dashboard_name = "terraform-test-dashboard-%d"
+
   dashboard_body = <<EOF
   %s
   EOF
-}`, rInt, updatedWidget)
+}
+`, rInt, updatedWidget)
 }
 
 func testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, expected string) resource.TestCheckFunc {

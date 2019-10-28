@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_parameter"
-sidebar_current: "docs-aws-resource-ssm-parameter"
 description: |-
   Provides a SSM Parameter resource
 ---
@@ -76,6 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - (Required) The description of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
+* `version` - The version of the parameter.
 
 ## Import
 

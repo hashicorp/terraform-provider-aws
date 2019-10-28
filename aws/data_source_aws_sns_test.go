@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsSnsTopic(t *testing.T) {
@@ -50,10 +50,6 @@ func testAccDataSourceAwsSnsTopicCheck(name string) resource.TestCheckFunc {
 }
 
 const testAccDataSourceAwsSnsTopicConfig = `
-provider "aws" {
-  region = "us-west-2"
-}
-
 resource "aws_sns_topic" "tf_wrong1" {
   name = "wrong1"
 }
