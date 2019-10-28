@@ -311,10 +311,7 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Reading GuardDuty Filter '%s' failed: %s", name, err.Error())
 	}
 
-	// Setting the findingCriteria on import currently is not yet implemented.
-	//  It shall be manually "flattened" or deserialized. As an example
-	//  `resource_aws_appautoscaling_policy` can be taken.
-	// d.Set("finding_criteria", filter.Action)
+	d.Set("finding_criteria", flattenFindingCriteria()) //filter.FindingCriteria))
 	d.Set("action", filter.Action)
 	d.Set("description", filter.Description)
 	d.Set("name", filter.Name)
@@ -324,6 +321,44 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	d.SetId(strings.Join([]string{detectorId, name}, "_"))
 
 	return nil
+}
+
+func criterionResource() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"field": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"condition": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"values": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+		},
+	}
+}
+
+func flattenFindingCriteria() []interface{} { //findingCriteriaRemote filter.FindingCriteria) []interface{} {
+	var result []interface{}
+	var flatCriteria []interface{}
+	criteria := make(map[string]*schema.Set)
+
+	flatCriterion := make(map[string]interface{})
+	flatCriterion["field"] = "region"
+	flatCriterion["condition"] = "equals"
+	flatCriterion["values"] = make([]interface{}, 1)
+	flatCriterion["values"] = append(flatCriterion["values"].([]interface{}), "eu-west-1")
+
+	flatCriteria = append(flatCriteria, flatCriterion)
+
+	criteria["criterion"] = schema.NewSet(schema.HashResource(criterionResource()), flatCriteria)
+	result = append(result, criteria)
+	return result
 }
 
 func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) error {
