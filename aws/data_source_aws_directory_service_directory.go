@@ -93,8 +93,14 @@ func dataSourceDirectoryServiceRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("short_name", directoryDescriptionFound.ShortName)
 	d.Set("access_url", directoryDescriptionFound.AccessUrl)
 	d.Set("dns_ip_addresses", directoryDescriptionFound.DnsIpAddrs)
-	d.Set("owner_dns_ip_addresses", directoryDescriptionFound.OwnerDirectoryDescription.DnsIpAddrs)
-	d.Set("owner_directory_id", directoryDescriptionFound.OwnerDirectoryDescription.DirectoryId)
+
+	if directoryDescriptionFound.OwnerDirectoryDescription == nil {
+		d.Set("owner_dns_ip_addresses", make([]string, 0))
+		d.Set("owner_directory_id", "")
+	} else {
+		d.Set("owner_dns_ip_addresses", directoryDescriptionFound.OwnerDirectoryDescription.DnsIpAddrs)
+		d.Set("owner_directory_id", directoryDescriptionFound.OwnerDirectoryDescription.DirectoryId)
+	}
 
 	return nil
 }
