@@ -41,4 +41,12 @@ const (
 	//
 	// The request has failed because the AWS Transfer for SFTP service is not available.
 	ErrCodeServiceUnavailableException = "ServiceUnavailableException"
+
+	// ErrCodeThrottlingException for service response error code
+	// "ThrottlingException".
+	//
+	// The request was denied due to request throttling.
+	//
+	// HTTP Status Code: 400
+	ErrCodeThrottlingException = "ThrottlingException"
 )
