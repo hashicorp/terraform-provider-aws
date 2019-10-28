@@ -327,92 +327,6 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func criterionResource() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"field": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"condition": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"values": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-		},
-	}
-}
-
-func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []interface{} {
-	var result []interface{}
-	var flatCriteria []interface{}
-
-	for field, conditions := range findingCriteriaRemote.Criterion {
-		if len(conditions.Equals) > 0 {
-			flatCriterion := make(map[string]interface{})
-			flatCriterion["field"] = field
-			flatCriterion["condition"] = "equals"
-			flatCriterion["values"] = make([]interface{}, len(conditions.Equals))
-			for i, value := range conditions.Equals {
-				flatCriterion["values"].([]interface{})[i] = string(*value)
-			}
-			flatCriteria = append(flatCriteria, flatCriterion)
-		}
-		if len(conditions.NotEquals) > 0 {
-			flatCriterion := make(map[string]interface{})
-			flatCriterion["field"] = field
-			flatCriterion["condition"] = "not_equals"
-			flatCriterion["values"] = make([]interface{}, len(conditions.NotEquals))
-			for i, value := range conditions.NotEquals {
-				flatCriterion["values"].([]interface{})[i] = string(*value)
-			}
-			flatCriteria = append(flatCriteria, flatCriterion)
-		}
-		if conditions.GreaterThan != nil {
-			flatCriterion := make(map[string]interface{})
-			flatCriterion["field"] = field
-			flatCriterion["condition"] = "greater_than"
-			flatCriterion["values"] = make([]interface{}, 1)
-			flatCriterion["values"].([]interface{})[0] = strconv.FormatInt(*conditions.GreaterThan, 10)
-			flatCriteria = append(flatCriteria, flatCriterion)
-		}
-		if conditions.GreaterThanOrEqual != nil {
-			flatCriterion := make(map[string]interface{})
-			flatCriterion["field"] = field
-			flatCriterion["condition"] = "greater_than_or_equal"
-			flatCriterion["values"] = make([]interface{}, 1)
-			flatCriterion["values"].([]interface{})[0] = strconv.FormatInt(*conditions.GreaterThanOrEqual, 10)
-			flatCriteria = append(flatCriteria, flatCriterion)
-		}
-		if conditions.LessThan != nil {
-			flatCriterion := make(map[string]interface{})
-			flatCriterion["field"] = field
-			flatCriterion["condition"] = "less_than"
-			flatCriterion["values"] = make([]interface{}, 1)
-			flatCriterion["values"].([]interface{})[0] = strconv.FormatInt(*conditions.LessThan, 10)
-			flatCriteria = append(flatCriteria, flatCriterion)
-		}
-		if conditions.LessThanOrEqual != nil {
-			flatCriterion := make(map[string]interface{})
-			flatCriterion["field"] = field
-			flatCriterion["condition"] = "less_than_or_equal"
-			flatCriterion["values"] = make([]interface{}, 1)
-			flatCriterion["values"].([]interface{})[0] = strconv.FormatInt(*conditions.LessThanOrEqual, 10)
-			flatCriteria = append(flatCriteria, flatCriterion)
-		}
-	}
-
-	criteria := make(map[string]*schema.Set)
-
-	criteria["criterion"] = schema.NewSet(schema.HashResource(criterionResource()), flatCriteria)
-	result = append(result, criteria)
-	return result
-}
-
 func resourceAwsGuardDutyFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
 
@@ -470,4 +384,76 @@ func parseImportedId(importedId string) (string, string, error) {
 		return "", "", fmt.Errorf("Error Importing aws_guardduty_filter record: '%s' Please make sure the record ID is in the form detectorId_name.", importedId)
 	}
 	return parts[0], parts[1], nil
+}
+
+func criterionResource() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"field": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"condition": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"values": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+		},
+	}
+}
+
+func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []interface{} {
+	var result []interface{}
+	var flatCriteria []interface{}
+
+	for field, conditions := range findingCriteriaRemote.Criterion {
+		if len(conditions.Equals) > 0 {
+			flatCriteria = append(flatCriteria, flattenStringCondition(field, "equals", conditions.Equals))
+		}
+		if len(conditions.NotEquals) > 0 {
+			flatCriteria = append(flatCriteria, flattenStringCondition(field, "not_equals", conditions.NotEquals))
+		}
+		if conditions.GreaterThan != nil {
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than_or_equal", conditions.GreaterThan))
+		}
+		if conditions.GreaterThanOrEqual != nil {
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than_or_equal", conditions.GreaterThanOrEqual))
+		}
+		if conditions.LessThan != nil {
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "less_than", conditions.LessThan))
+		}
+		if conditions.LessThanOrEqual != nil {
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "less_than_or_equal", conditions.LessThanOrEqual))
+		}
+	}
+
+	criteria := make(map[string]*schema.Set)
+
+	criteria["criterion"] = schema.NewSet(schema.HashResource(criterionResource()), flatCriteria)
+	result = append(result, criteria)
+	return result
+}
+
+func flattenIntCondition(field string, conditionName string, conditionValue *int64) map[string]interface{} {
+	flatCriterion := make(map[string]interface{})
+	flatCriterion["field"] = field
+	flatCriterion["condition"] = conditionName
+	flatCriterion["values"] = make([]interface{}, 1)
+	flatCriterion["values"].([]interface{})[0] = strconv.FormatInt(*conditionValue, 10)
+	return flatCriterion
+}
+
+func flattenStringCondition(field string, conditionName string, conditionValues []*string) map[string]interface{} {
+	flatCriterion := make(map[string]interface{})
+	flatCriterion["field"] = field
+	flatCriterion["condition"] = conditionName
+	flatCriterion["values"] = make([]interface{}, len(conditionValues))
+	for i, value := range conditionValues {
+		flatCriterion["values"].([]interface{})[i] = string(*value)
+	}
+	return flatCriterion
 }
