@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsDirectoryServiceDefinition(t *testing.T) {
 	rInt := acctest.RandInt()
-	directoryResourceName := "aws_directory_service_directory.test"
-	directoryName := "corp.test"
-	// directoryPass := "corp-pass"
-	// directorySize := "small"
+	simpleDirectoryResourceName := "aws_directory_service_directory.simple"
+	microsoftDirectoryResourceName := "aws_directory_service_directory.microsoft"
+	simpleDirectoryName := "simple.corp.test"
+	microsoftDirectoryName := "microsoft.corp.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -24,7 +24,9 @@ func TestAccDataSourceAwsDirectoryServiceDefinition(t *testing.T) {
 				Config: testAccDataSourceAwsDirectoryServiceDefinitionConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsDirectoryServiceDefinitionCheck(
-						directoryResourceName, "data.aws_ds_directory.by_name", directoryName),
+						simpleDirectoryResourceName, "data.aws_ds_directory.simple_by_name", simpleDirectoryName),
+					testAccDataSourceAwsDirectoryServiceDefinitionCheck(
+						microsoftDirectoryResourceName, "data.aws_ds_directory.microsoft_by_name", microsoftDirectoryName),
 				),
 			},
 		},
@@ -88,10 +90,11 @@ func testAccDataSourceAwsDirectoryServiceDefinitionConfig(rInt int) string {
 		}
 	}
 
-	resource "aws_directory_service_directory" "test" {
-		name     = "corp.test"
-		password = "SuperSecretPassw0rd"
-		size     = "Small"
+	resource "aws_directory_service_directory" "simple" {
+		name       = "simple.corp.test"
+		short_name = "SIMPLE"
+		password   = "SuperSecretPassw0rd"
+		size       = "Small"
 
 		vpc_settings {
 			vpc_id     = "${aws_vpc.test.id}"
@@ -103,7 +106,27 @@ func testAccDataSourceAwsDirectoryServiceDefinitionConfig(rInt int) string {
 		}
 	}
 
-	data "aws_ds_directory" "by_name" {
-		name = "${aws_directory_service_directory.test.name}"
-	}`, rInt, rInt, rInt)
+	resource "aws_directory_service_directory" "microsoft" {
+		name       = "microsoft.corp.test"
+		short_name = "MICROSOFT"
+		password   = "SuperSecretPassw0rd"
+		type       = "MicrosoftAD"
+
+		vpc_settings {
+			vpc_id     = "${aws_vpc.test.id}"
+			subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+		}
+
+		tags = {
+			Environment = "dev-%d"
+		}
+	}
+
+	data "aws_ds_directory" "simple_by_name" {
+		name = "${aws_directory_service_directory.simple.name}"
+	}
+	data "aws_ds_directory" "microsoft_by_name" {
+		name = "${aws_directory_service_directory.microsoft.name}"
+	}
+`, rInt, rInt, rInt, rInt)
 }

@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceDirectoryService() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceDirectoryServiceRead,
+
 		Schema: map[string]*schema.Schema{
 			"filter": dataSourceFiltersSchema(),
 			"directory_id": {
@@ -20,11 +21,25 @@ func dataSourceDirectoryService() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"shortname": {
+			"short_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"access_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dns_ip_addresses": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"owner_dns_ip_addresses": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"owner_directory_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,8 +90,11 @@ func dataSourceDirectoryServiceRead(d *schema.ResourceData, meta interface{}) er
 	idDirectoryService := (*directoryDescriptionFound.DirectoryId)
 	d.SetId(idDirectoryService)
 	d.Set("name", directoryDescriptionFound.Name)
-	d.Set("shortname", directoryDescriptionFound.ShortName)
+	d.Set("short_name", directoryDescriptionFound.ShortName)
 	d.Set("access_url", directoryDescriptionFound.AccessUrl)
+	d.Set("dns_ip_addresses", directoryDescriptionFound.DnsIpAddrs)
+	d.Set("owner_dns_ip_addresses", directoryDescriptionFound.OwnerDirectoryDescription.DnsIpAddrs)
+	d.Set("owner_directory_id", directoryDescriptionFound.OwnerDirectoryDescription.DirectoryId)
 
 	return nil
 }
