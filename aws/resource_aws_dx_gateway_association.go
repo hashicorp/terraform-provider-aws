@@ -28,7 +28,13 @@ func resourceAwsDxGatewayAssociation() *schema.Resource {
 		},
 
 		SchemaVersion: 1,
-		MigrateState:  resourceAwsDxGatewayAssociationMigrateState,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceAwsDxGatewayAssociationResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceAwsDxGatewayAssociationStateUpgradeV0,
+				Version: 0,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"allowed_prefixes": {

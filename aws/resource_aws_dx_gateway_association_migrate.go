@@ -6,27 +6,85 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceAwsDxGatewayAssociationMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
-	switch v {
-	case 0:
-		log.Println("[INFO] Found Direct Connect gateway association state v0; migrating to v1")
-		return migrateDxGatewayAssociationStateV0toV1(is, meta)
-	default:
-		return is, fmt.Errorf("Unexpected schema version: %d", v)
+func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"allowed_prefixes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+
+			"associated_gateway_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"associated_gateway_owner_account_id", "proposal_id", "vpn_gateway_id"},
+			},
+
+			"associated_gateway_owner_account_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ValidateFunc:  validateAwsAccountId,
+				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
+			},
+
+			"associated_gateway_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"dx_gateway_association_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"dx_gateway_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+
+			"dx_gateway_owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"proposal_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"associated_gateway_id", "vpn_gateway_id"},
+			},
+
+			"vpn_gateway_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"associated_gateway_id", "associated_gateway_owner_account_id", "proposal_id"},
+				Deprecated:    "use 'associated_gateway_id' argument instead",
+			},
+		},
 	}
 }
 
-func migrateDxGatewayAssociationStateV0toV1(is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+func resourceAwsDxGatewayAssociationStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	conn := meta.(*AWSClient).dxconn
 
+	log.Println("[INFO] Found Direct Connect gateway association state v0; migrating to v1")
+
 	// dx_gateway_association_id was introduced in v2.8.0. Handle the case where it's not yet present.
-	if _, ok := is.Attributes["dx_gateway_association_id"]; !ok {
+	if _, ok := rawState["dx_gateway_association_id"]; !ok {
 		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
-			DirectConnectGatewayId: aws.String(is.Attributes["dx_gateway_id"]),
-			VirtualGatewayId:       aws.String(is.Attributes["vpn_gateway_id"]),
+			DirectConnectGatewayId: aws.String(rawState["dx_gateway_id"].(string)),
+			VirtualGatewayId:       aws.String(rawState["vpn_gateway_id"].(string)),
 		})
 		if err != nil {
 			return nil, err
@@ -36,8 +94,8 @@ func migrateDxGatewayAssociationStateV0toV1(is *terraform.InstanceState, meta in
 			return nil, fmt.Errorf("Direct Connect gateway association not found, remove from state using 'terraform state rm'")
 		}
 
-		is.Attributes["dx_gateway_association_id"] = aws.StringValue(resp.DirectConnectGatewayAssociations[0].AssociationId)
+		rawState["dx_gateway_association_id"] = aws.StringValue(resp.DirectConnectGatewayAssociations[0].AssociationId)
 	}
 
-	return is, nil
+	return rawState, nil
 }
