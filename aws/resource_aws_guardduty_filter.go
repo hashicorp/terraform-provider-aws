@@ -45,7 +45,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"criterion": &schema.Schema{
+						"criterion": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
