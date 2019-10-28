@@ -250,14 +250,14 @@ func criteriaFields() []string {
 
 func criteriaMap() map[string][]string {
 	return map[string][]string{
-		"confidence": {"equals", "not_equals"},
-		"id":         {"equals", "not_equals"},
-		"account_id": {"equals", "not_equals"},
-		"region":     {"equals", "not_equals"},
-		"resource.accessKeyDetails.accessKeyId":                                          {"equals", "not_equals"},
-		"resource.accessKeyDetails.principalId":                                          {"equals", "not_equals"},
-		"resource.accessKeyDetails.userName":                                             {"equals", "not_equals"},
-		"resource.accessKeyDetails.userType":                                             {"equals", "not_equals"},
+		"confidence":                            {"equals", "not_equals"},
+		"id":                                    {"equals", "not_equals"},
+		"account_id":                            {"equals", "not_equals"},
+		"region":                                {"equals", "not_equals"},
+		"resource.accessKeyDetails.accessKeyId": {"equals", "not_equals"},
+		"resource.accessKeyDetails.principalId": {"equals", "not_equals"},
+		"resource.accessKeyDetails.userName":    {"equals", "not_equals"},
+		"resource.accessKeyDetails.userType":    {"equals", "not_equals"},
 		"resource.instanceDetails.iamInstanceProfile.id":                                 {"equals", "not_equals"},
 		"resource.instanceDetails.imageId":                                               {"equals", "not_equals"},
 		"resource.instanceDetails.instanceId":                                            {"equals", "not_equals"},
@@ -329,20 +329,38 @@ func serializeFindingCriteria(findingCriteria map[string]interface{}) (*guarddut
 				Equals: aws.StringSlice(conditionValueToStrings(typedCriterion["values"].([]interface{}))),
 			}
 		case "greater_than":
-			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-				GreaterThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+			// Here and below we need this complex condition because for one field we may have
+			//  a combination of these filters.
+			if criteria[typedCriterion["field"].(string)] == nil {
+				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+					GreaterThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+				}
+			} else {
+				criteria[typedCriterion["field"].(string)].GreaterThan = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
 			}
-		case "greater_than_or_equals":
-			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-				GreaterThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+		case "greater_than_or_equal":
+			if criteria[typedCriterion["field"].(string)] == nil {
+				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+					GreaterThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+				}
+			} else {
+				criteria[typedCriterion["field"].(string)].GreaterThanOrEqual = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
 			}
 		case "less_than":
-			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-				LessThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+			if criteria[typedCriterion["field"].(string)] == nil {
+				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+					LessThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+				}
+			} else {
+				criteria[typedCriterion["field"].(string)].LessThan = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
 			}
-		case "less_than_or_equals":
-			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-				LessThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+		case "less_than_or_equal":
+			if criteria[typedCriterion["field"].(string)] == nil {
+				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
+					LessThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+				}
+			} else {
+				criteria[typedCriterion["field"].(string)].LessThanOrEqual = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
 			}
 		case "not_equals":
 			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
@@ -418,7 +436,7 @@ func flattenFindingCriteria(findingCriteriaRemote *guardduty.FindingCriteria) []
 			flatCriteria = append(flatCriteria, flattenStringCondition(field, "not_equals", conditions.NotEquals))
 		}
 		if conditions.GreaterThan != nil {
-			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than_or_equal", conditions.GreaterThan))
+			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than", conditions.GreaterThan))
 		}
 		if conditions.GreaterThanOrEqual != nil {
 			flatCriteria = append(flatCriteria, flattenIntCondition(field, "greater_than_or_equal", conditions.GreaterThanOrEqual))
