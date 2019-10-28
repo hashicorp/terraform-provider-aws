@@ -1,23 +1,30 @@
-## 2.33.0 (Unreleased)
-
-FEATURES:
-
-* **New Data Source:** `aws_waf_rate_based_rule` [GH-10124]
-* **New Data Source:** `aws_wafregional_rate_based_rule` [GH-10125]
-* **New Resource:** `aws_quicksight_user` [GH-10401]
-
-ENHANCEMENTS:
-
-* resource/aws_glue_classifier: Add `csv_classifier` configuration block (support CSV classifiers) [GH-9824]
-* resource/aws_waf_byte_match_set: Support resource import [GH-10477]
-* resource/aws_waf_rate_based_rule: Support resource import [GH-10475]
-* resource/aws_waf_rule: Add `tags` argument [GH-10408]
-* resource/aws_waf_rule_group: Add `tags` argument [GH-10408]
-* resource/aws_waf_web_acl: Add `tags` argument [GH-10408]
+## 2.34.0 (Unreleased)
 
 BUG FIXES:
 
-* resource/aws_gamelift_fleet: Increase default deletion timeout to 20 minutes to match service timing [GH-10443]
+* resource/aws_cloudhsm_v2_cluster: Ensure multiple tag configurations are applied correctly [GH-10309]
+* resource/aws_cloudhsm_v2_cluster: Perform drift detection with tags [GH-10309]
+
+## 2.33.0 (October 17, 2019)
+
+FEATURES:
+
+* **New Data Source:** `aws_waf_rate_based_rule` ([#10124](https://github.com/terraform-providers/terraform-provider-aws/issues/10124))
+* **New Data Source:** `aws_wafregional_rate_based_rule` ([#10125](https://github.com/terraform-providers/terraform-provider-aws/issues/10125))
+* **New Resource:** `aws_quicksight_user` ([#10401](https://github.com/terraform-providers/terraform-provider-aws/issues/10401))
+
+ENHANCEMENTS:
+
+* resource/aws_glue_classifier: Add `csv_classifier` configuration block (support CSV classifiers) ([#9824](https://github.com/terraform-providers/terraform-provider-aws/issues/9824))
+* resource/aws_waf_byte_match_set: Support resource import ([#10477](https://github.com/terraform-providers/terraform-provider-aws/issues/10477))
+* resource/aws_waf_rate_based_rule: Support resource import ([#10475](https://github.com/terraform-providers/terraform-provider-aws/issues/10475))
+* resource/aws_waf_rule: Add `tags` argument ([#10408](https://github.com/terraform-providers/terraform-provider-aws/issues/10408))
+* resource/aws_waf_rule_group: Add `tags` argument ([#10408](https://github.com/terraform-providers/terraform-provider-aws/issues/10408))
+* resource/aws_waf_web_acl: Add `tags` argument ([#10408](https://github.com/terraform-providers/terraform-provider-aws/issues/10408))
+
+BUG FIXES:
+
+* resource/aws_gamelift_fleet: Increase default deletion timeout to 20 minutes to match service timing ([#10443](https://github.com/terraform-providers/terraform-provider-aws/issues/10443))
 
 ## 2.32.0 (October 10, 2019)
 
