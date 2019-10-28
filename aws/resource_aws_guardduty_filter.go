@@ -108,14 +108,14 @@ func criteriaFields() []string {
 
 func criteriaMap() map[string][]string {
 	return map[string][]string{
-		"confidence": {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
-		"id":         {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
-		"account_id": {"equals", "not_equals"},
-		"region":     {"equals", "not_equals"},
-		"resource.accessKeyDetails.accessKeyId":                                          {"equals", "not_equals"},
-		"resource.accessKeyDetails.principalId":                                          {"equals", "not_equals"},
-		"resource.accessKeyDetails.userName":                                             {"equals", "not_equals"},
-		"resource.accessKeyDetails.userType":                                             {"equals", "not_equals"},
+		"confidence":                            {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
+		"id":                                    {"equals", "not_equals", "greater_than", "greater_than_or_equal", "less_than", "less_than_or_equal"},
+		"account_id":                            {"equals", "not_equals"},
+		"region":                                {"equals", "not_equals"},
+		"resource.accessKeyDetails.accessKeyId": {"equals", "not_equals"},
+		"resource.accessKeyDetails.principalId": {"equals", "not_equals"},
+		"resource.accessKeyDetails.userName":    {"equals", "not_equals"},
+		"resource.accessKeyDetails.userType":    {"equals", "not_equals"},
 		"resource.instanceDetails.iamInstanceProfile.id":                                 {"equals", "not_equals"},
 		"resource.instanceDetails.imageId":                                               {"equals", "not_equals"},
 		"resource.instanceDetails.instanceId":                                            {"equals", "not_equals"},
@@ -217,7 +217,7 @@ func serializeFindingCriteria(findingCriteria map[string]interface{}) (*guarddut
 func conditionValueToStrings(untypedValues []interface{}) []string {
 	values := make([]string, len(untypedValues))
 	for i, v := range untypedValues {
-		values[i] = string(v.(string))
+		values[i] = v.(string)
 	}
 	return values
 }
