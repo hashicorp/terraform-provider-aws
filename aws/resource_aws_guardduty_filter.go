@@ -331,36 +331,52 @@ func serializeFindingCriteria(findingCriteria map[string]interface{}) (*guarddut
 		case "greater_than":
 			// Here and below we need this complex condition because for one field we may have
 			//  a combination of these filters.
+			value, err := conditionValueToInt(typedCriterion["values"].([]interface{}))
+			if err != nil {
+				return nil, fmt.Errorf("Value seems to be not an integer: %v", typedCriterion["values"].([]interface{})[0])
+			}
 			if criteria[typedCriterion["field"].(string)] == nil {
 				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-					GreaterThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+					GreaterThan: aws.Int64(value.(int64)),
 				}
 			} else {
-				criteria[typedCriterion["field"].(string)].GreaterThan = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
+				criteria[typedCriterion["field"].(string)].GreaterThan = aws.Int64(value.(int64))
 			}
 		case "greater_than_or_equal":
+			value, err := conditionValueToInt(typedCriterion["values"].([]interface{}))
+			if err != nil {
+				return nil, fmt.Errorf("Value seems to be not an integer: %v", typedCriterion["values"].([]interface{})[0])
+			}
 			if criteria[typedCriterion["field"].(string)] == nil {
 				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-					GreaterThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+					GreaterThanOrEqual: aws.Int64(value.(int64)),
 				}
 			} else {
-				criteria[typedCriterion["field"].(string)].GreaterThanOrEqual = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
+				criteria[typedCriterion["field"].(string)].GreaterThanOrEqual = aws.Int64(value.(int64))
 			}
 		case "less_than":
+			value, err := conditionValueToInt(typedCriterion["values"].([]interface{}))
+			if err != nil {
+				return nil, fmt.Errorf("Value seems to be not an integer: %v", typedCriterion["values"].([]interface{})[0])
+			}
 			if criteria[typedCriterion["field"].(string)] == nil {
 				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-					LessThan: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+					LessThan: aws.Int64(value.(int64)),
 				}
 			} else {
-				criteria[typedCriterion["field"].(string)].LessThan = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
+				criteria[typedCriterion["field"].(string)].LessThan = aws.Int64(value.(int64))
 			}
 		case "less_than_or_equal":
+			value, err := conditionValueToInt(typedCriterion["values"].([]interface{}))
+			if err != nil {
+				return nil, fmt.Errorf("Value seems to be not an integer: %v", typedCriterion["values"].([]interface{})[0])
+			}
 			if criteria[typedCriterion["field"].(string)] == nil {
 				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
-					LessThanOrEqual: aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64)),
+					LessThanOrEqual: aws.Int64(value.(int64)),
 				}
 			} else {
-				criteria[typedCriterion["field"].(string)].LessThanOrEqual = aws.Int64(conditionValueToInt(typedCriterion["values"].([]interface{})).(int64))
+				criteria[typedCriterion["field"].(string)].LessThanOrEqual = aws.Int64(value.(int64))
 			}
 		case "not_equals":
 			criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
@@ -382,18 +398,18 @@ func conditionValueToStrings(untypedValues []interface{}) []string {
 	return values
 }
 
-func conditionValueToInt(untypedValues []interface{}) interface{} {
+func conditionValueToInt(untypedValues []interface{}) (interface{}, error) {
 	if len(untypedValues) != 1 {
-		return fmt.Errorf("Exactly one value must be given for conditions like less_ or greater_than. Instead given: %v", untypedValues)
+		return nil, fmt.Errorf("Exactly one value must be given for conditions like less_ or greater_than. Instead given: %v", untypedValues)
 	}
 
 	untypedValue := untypedValues[0]
 	typedValue, err := strconv.ParseInt(untypedValue.(string), 10, 64)
 	if err != nil {
-		return fmt.Errorf("Parsing condition value failed: %s", err.Error())
+		return nil, fmt.Errorf("Parsing condition value failed: %s", err.Error())
 	}
 
-	return typedValue
+	return typedValue, nil
 }
 
 func parseImportedId(importedId string) (string, string, error) {
