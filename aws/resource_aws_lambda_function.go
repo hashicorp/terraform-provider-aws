@@ -192,6 +192,15 @@ func resourceAwsLambdaFunction() *schema.Resource {
 						},
 					},
 				},
+				DiffSuppressFunc: func(k, old, neww string, d *schema.ResourceData) bool {
+					if old == "1" && neww == "0" {
+						_, ok := d.GetOk("environment.0.variables.%")
+						if !ok {
+							return true
+						}
+					}
+					return old == neww
+				},
 			},
 			"tracing_config": {
 				Type:     schema.TypeList,
