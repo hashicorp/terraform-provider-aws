@@ -75,15 +75,15 @@ func TestAccAWSElasticacheReplicationGroup_basic(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "cluster_mode.#", "0"),
+						resourceName, "cluster_mode.#", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "2"),
+						resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "member_clusters.#", "2"),
+						resourceName, "member_clusters.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "auto_minor_version_upgrade", "false"),
+						resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
 			{
@@ -109,9 +109,9 @@ func TestAccAWSElasticacheReplicationGroup_Uppercase(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfig_Uppercase(strings.ToUpper(rName)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "replication_group_id", rName),
+						resourceName, "replication_group_id", rName),
 				),
 			},
 			{
@@ -141,13 +141,13 @@ func TestAccAWSElasticacheReplicationGroup_updateDescription(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "2"),
+						resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "replication_group_description", "test description"),
+						resourceName, "replication_group_description", "test description"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "auto_minor_version_upgrade", "false"),
+						resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
 			{
@@ -159,13 +159,13 @@ func TestAccAWSElasticacheReplicationGroup_updateDescription(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfigUpdatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "2"),
+						resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "replication_group_description", "updated description"),
+						resourceName, "replication_group_description", "updated description"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "auto_minor_version_upgrade", "true"),
+						resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
 		},
@@ -189,9 +189,9 @@ func TestAccAWSElasticacheReplicationGroup_updateMaintenanceWindow(t *testing.T)
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "maintenance_window", "tue:06:30-tue:07:30"),
+						resourceName, "maintenance_window", "tue:06:30-tue:07:30"),
 				),
 			},
 			{
@@ -203,9 +203,9 @@ func TestAccAWSElasticacheReplicationGroup_updateMaintenanceWindow(t *testing.T)
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfigUpdatedMaintenanceWindow(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "maintenance_window", "wed:03:00-wed:06:00"),
+						resourceName, "maintenance_window", "wed:03:00-wed:06:00"),
 				),
 			},
 		},
@@ -229,11 +229,11 @@ func TestAccAWSElasticacheReplicationGroup_updateNodeSize(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "2"),
+						resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "node_type", "cache.m1.small"),
+						resourceName, "node_type", "cache.m1.small"),
 				),
 			},
 			{
@@ -245,11 +245,11 @@ func TestAccAWSElasticacheReplicationGroup_updateNodeSize(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfigUpdatedNodeSize(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "2"),
+						resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "node_type", "cache.m1.medium"),
+						resourceName, "node_type", "cache.m1.medium"),
 				),
 			},
 		},
@@ -305,11 +305,11 @@ func TestAccAWSElasticacheReplicationGroup_vpc(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupInVPCConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "1"),
+						resourceName, "number_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "auto_minor_version_upgrade", "false"),
+						resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
 			{
@@ -334,17 +334,17 @@ func TestAccAWSElasticacheReplicationGroup_multiAzInVpc(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupMultiAZInVPCConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "2"),
+						resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "automatic_failover_enabled", "true"),
+						resourceName, "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "snapshot_window", "02:00-03:00"),
+						resourceName, "snapshot_window", "02:00-03:00"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "snapshot_retention_limit", "7"),
+						resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(
-						"aws_elasticache_replication_group.test", "primary_endpoint_address"),
+						resourceName, "primary_endpoint_address"),
 				),
 			},
 			{
@@ -369,17 +369,17 @@ func TestAccAWSElasticacheReplicationGroup_redisClusterInVpc2(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "number_cache_clusters", "2"),
+						resourceName, "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "automatic_failover_enabled", "false"),
+						resourceName, "automatic_failover_enabled", "false"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "snapshot_window", "02:00-03:00"),
+						resourceName, "snapshot_window", "02:00-03:00"),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "snapshot_retention_limit", "7"),
+						resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(
-						"aws_elasticache_replication_group.test", "primary_endpoint_address"),
+						resourceName, "primary_endpoint_address"),
 				),
 			},
 			{
@@ -508,9 +508,9 @@ func TestAccAWSElasticacheReplicationGroup_enableSnapshotting(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "snapshot_retention_limit", "0"),
+						resourceName, "snapshot_retention_limit", "0"),
 				),
 			},
 			{
@@ -522,9 +522,9 @@ func TestAccAWSElasticacheReplicationGroup_enableSnapshotting(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheReplicationGroupConfigEnableSnapshotting(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "snapshot_retention_limit", "2"),
+						resourceName, "snapshot_retention_limit", "2"),
 				),
 			},
 		},
@@ -543,9 +543,9 @@ func TestAccAWSElasticacheReplicationGroup_enableAuthTokenTransitEncryption(t *t
 			{
 				Config: testAccAWSElasticacheReplicationGroup_EnableAuthTokenTransitEncryptionConfig(acctest.RandInt(), acctest.RandString(10), acctest.RandString(16)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "transit_encryption_enabled", "true"),
+						resourceName, "transit_encryption_enabled", "true"),
 				),
 			},
 			{
@@ -570,9 +570,9 @@ func TestAccAWSElasticacheReplicationGroup_enableAtRestEncryption(t *testing.T) 
 			{
 				Config: testAccAWSElasticacheReplicationGroup_EnableAtRestEncryptionConfig(acctest.RandInt(), acctest.RandString(10)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheReplicationGroupExists("aws_elasticache_replication_group.test", &rg),
+					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_replication_group.test", "at_rest_encryption_enabled", "true"),
+						resourceName, "at_rest_encryption_enabled", "true"),
 				),
 			},
 			{
