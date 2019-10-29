@@ -193,7 +193,6 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: func(k, old, neww string, d *schema.ResourceData) bool {
-					ioutil.WriteFile("awslog", []byte(fmt.Sprintf("%v %v %v", k, old, neww)), 0644)
 					if old == "1" && neww == "0" {
 						_, ok := d.GetOk("environment.0.variables.%")
 						if !ok {
