@@ -7,6 +7,7 @@ BUG FIXES:
 * resource/aws_cloudhsm_v2_cluster: Ensure multiple tag configurations are applied correctly [GH-10309]
 * resource/aws_cloudhsm_v2_cluster: Perform drift detection with tags [GH-10309]
 * resource/aws_dx_gateway_association: Fix backwards compatibility issue with missing `dx_gateway_association_id` attribute [GH-8776]
+* resource/aws_s3_bucket: Bypass `MethodNotAllowed` errors for Object Lock Configuration on read (support AWS C2S) [GH-10657]
 
 ## 2.33.0 (October 17, 2019)
 
