@@ -206,7 +206,7 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.1216997074", "10.255.255.0/28"),
-					testAccCheckAwsDxGatewayAssociationMigrateState(resourceName),
+					testAccCheckAwsDxGatewayAssociationStateUpgradeV0(resourceName),
 				),
 			},
 		},
@@ -523,7 +523,8 @@ func testAccCheckAwsDxGatewayAssociationExists(name string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckAwsDxGatewayAssociationMigrateState(name string) resource.TestCheckFunc {
+// Perform check in acceptance testing as this StateUpgrader requires an API call
+func testAccCheckAwsDxGatewayAssociationStateUpgradeV0(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -533,23 +534,18 @@ func testAccCheckAwsDxGatewayAssociationMigrateState(name string) resource.TestC
 			return fmt.Errorf("No ID is set")
 		}
 
-		is := &terraform.InstanceState{
-			ID: rs.Primary.ID,
-			Attributes: map[string]string{
-				"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
-				"vpn_gateway_id": rs.Primary.Attributes["vpn_gateway_id"],
-			},
+		rawState := map[string]interface{}{
+			"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
+			"vpn_gateway_id": rs.Primary.Attributes["vpn_gateway_id"],
 		}
 
-		is, err := resourceAwsDxGatewayAssociation().MigrateState(0, is, testAccProvider.Meta())
+		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(rawState, testAccProvider.Meta())
 		if err != nil {
 			return err
 		}
 
-		if is.Attributes["dx_gateway_association_id"] != rs.Primary.Attributes["dx_gateway_association_id"] {
-			return fmt.Errorf("Invalid dx_gateway_association_id attribute in migrated state. Expected %s, got %s",
-				rs.Primary.Attributes["dx_gateway_association_id"],
-				is.Attributes["dx_gateway_association_id"])
+		if got, want := updatedRawState["dx_gateway_association_id"], rs.Primary.Attributes["dx_gateway_association_id"]; got != want {
+			return fmt.Errorf("Invalid dx_gateway_association_id attribute in migrated state. Expected %s, got %s", want, got)
 		}
 
 		return nil

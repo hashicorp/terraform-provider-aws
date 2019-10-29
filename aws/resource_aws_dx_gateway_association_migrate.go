@@ -81,7 +81,7 @@ func resourceAwsDxGatewayAssociationStateUpgradeV0(rawState map[string]interface
 	log.Println("[INFO] Found Direct Connect gateway association state v0; migrating to v1")
 
 	// dx_gateway_association_id was introduced in v2.8.0. Handle the case where it's not yet present.
-	if _, ok := rawState["dx_gateway_association_id"]; !ok {
+	if v, ok := rawState["dx_gateway_association_id"]; !ok || v == nil {
 		resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
 			DirectConnectGatewayId: aws.String(rawState["dx_gateway_id"].(string)),
 			VirtualGatewayId:       aws.String(rawState["vpn_gateway_id"].(string)),
