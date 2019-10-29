@@ -24,9 +24,9 @@ func TestAccDataSourceAwsDirectoryServiceDefinition(t *testing.T) {
 				Config: testAccDataSourceAwsDirectoryServiceDefinitionConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsDirectoryServiceDefinitionCheck(
-						simpleDirectoryResourceName, "data.aws_ds_directory.simple_by_name", simpleDirectoryName),
+						simpleDirectoryResourceName, "data.aws_directory_service_directory.simple_by_name", simpleDirectoryName),
 					testAccDataSourceAwsDirectoryServiceDefinitionCheck(
-						microsoftDirectoryResourceName, "data.aws_ds_directory.microsoft_by_name", microsoftDirectoryName),
+						microsoftDirectoryResourceName, "data.aws_directory_service_directory.microsoft_by_name", microsoftDirectoryName),
 				),
 			},
 		},
@@ -122,10 +122,10 @@ func testAccDataSourceAwsDirectoryServiceDefinitionConfig(rInt int) string {
 		}
 	}
 
-	data "aws_ds_directory" "simple_by_name" {
+	data "aws_directory_service_directory" "simple_by_name" {
 		name = "${aws_directory_service_directory.simple.name}"
 	}
-	data "aws_ds_directory" "microsoft_by_name" {
+	data "aws_directory_service_directory" "microsoft_by_name" {
 		name = "${aws_directory_service_directory.microsoft.name}"
 	}
 `, rInt, rInt, rInt, rInt)
