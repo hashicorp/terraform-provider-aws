@@ -36,8 +36,7 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	})
 }
 
-//lintignore: AT002
-func TestAccAWSLightsailKeyPair_imported(t *testing.T) {
+func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 	var conf lightsail.KeyPair
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
