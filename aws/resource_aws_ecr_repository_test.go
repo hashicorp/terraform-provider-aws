@@ -96,6 +96,54 @@ func TestAccAWSEcrRepository_immutability(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcrRepository_image_scanning_configuration(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecr_repository.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcrRepositoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcrRepositoryConfig_image_scanning_configuration(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Test that the removal of the non-default image_scanning_configuration causes plan changes
+				Config:             testAccAWSEcrRepositoryConfig(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				// Test attribute update
+				Config: testAccAWSEcrRepositoryConfig_image_scanning_configuration(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcrRepositoryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "false"),
+				),
+			},
+			{
+				// Test that the removal of the default image_scanning_configuration doesn't cause any plan changes
+				Config:             testAccAWSEcrRepositoryConfig(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEcrRepositoryDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ecrconn
 
@@ -193,4 +241,15 @@ resource "aws_ecr_repository" "default" {
   image_tag_mutability = "IMMUTABLE"
 }
 `, rName)
+}
+
+func testAccAWSEcrRepositoryConfig_image_scanning_configuration(rName string, scanOnPush bool) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "default" {
+  name = %q
+  image_scanning_configuration {
+    scan_on_push = %t
+  }
+}
+`, rName, scanOnPush)
 }
