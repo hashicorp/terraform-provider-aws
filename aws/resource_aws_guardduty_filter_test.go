@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,20 +32,13 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccGuardDutyFilterConfig_basic,
+				Config: testAccGuardDutyFilterConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
-					resource.TestCheckResourceAttr(resourceName, "detector_id", "123456271278c0df5e089123480d8765"),
-				),
-			},
-			{
-				Config: testAccGuardDutyFilterConfig_full,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
-					resource.TestCheckResourceAttr(resourceName, "detector_id", "123456271278c0df5e089123480d8765"),
-					// add more fields to test!
+					resource.TestCheckResourceAttr(resourceName, "action", "Archive"),
+					resource.TestCheckResourceAttr(resourceName, "rank", "2"),
 				),
 			},
 		},
@@ -60,7 +54,7 @@ func testAccAwsGuardDutyFilter_import(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_basic,
+				Config: testAccGuardDutyFilterConfig_full(),
 			},
 
 			{
@@ -80,9 +74,11 @@ func testAccCheckAwsGuardDutyFilterDestroy(s *terraform.State) error {
 			continue
 		}
 
+		parts := strings.SplitN(rs.Primary.ID, "_", 2)
+
 		input := &guardduty.GetFilterInput{
-			FilterName: aws.String(rs.Primary.Attributes["filter_name"]),
-			DetectorId: aws.String(rs.Primary.Attributes["detector_id"]),
+			DetectorId: aws.String(parts[0]),
+			FilterName: aws.String(parts[1]),
 		}
 
 		_, err := conn.GetFilter(input)
@@ -121,24 +117,13 @@ func testAccCheckAwsGuardDutyFilterDoesNotExist(name string) resource.TestCheckF
 	}
 }
 
-const testAccGuardDutyFilterConfig_to_fail_1 = `
-resource "aws_guardduty_filter" "test" {}`
+func testAccGuardDutyFilterConfig_full() string {
+	return fmt.Sprintf(`
+%[1]s
 
-const testAccGuardDutyFilterConfig_to_fail_2 = `
 resource "aws_guardduty_filter" "test" {
-	detector_id = "123456271278c0df5e089123480d8765"
-	}`
-
-const testAccGuardDutyFilterConfig_basic = `
-resource "aws_guardduty_filter" "test" {
-  detector_id = "123456271278c0df5e089123480d8765"
-	name = "test-filter"
-}`
-
-const testAccGuardDutyFilterConfig_full = `
-resource "aws_guardduty_filter" "test" {
-  detector_id = "123456271278c0df5e089123480d8765"
-	name = "test-filter"
+  detector_id = "${aws_guardduty_detector.test.id}"
+	name        = "test-filter"
 	action      = "ARCHIVE"
 	rank        = 2
 
@@ -167,4 +152,13 @@ resource "aws_guardduty_filter" "test" {
       condition = "greater_than"
     }
   }
+}`, testAccGuardDutyDetectorConfig_basic3)
+}
+
+const testAccGuardDutyFilterConfig_to_fail_1 = `
+resource "aws_guardduty_filter" "test" {}`
+
+const testAccGuardDutyFilterConfig_to_fail_2 = `
+resource "aws_guardduty_filter" "test" {
+	detector_id = "123456271278c0df5e089123480d8765"
 }`
