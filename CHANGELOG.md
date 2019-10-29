@@ -2,6 +2,8 @@
 
 BUG FIXES:
 
+* resource/aws_backup_plan: Correctly handle changes to `recovery_point_tags` arguments [GH-10641]
+* resource/aws_backup_plan: Prevent `diffs didn't match` errors with `rule` configuration blocks [GH-10641]
 * resource/aws_cloudhsm_v2_cluster: Ensure multiple tag configurations are applied correctly [GH-10309]
 * resource/aws_cloudhsm_v2_cluster: Perform drift detection with tags [GH-10309]
 * resource/aws_dx_gateway_association: Fix backwards compatibility issue with missing `dx_gateway_association_id` attribute [GH-8776]
