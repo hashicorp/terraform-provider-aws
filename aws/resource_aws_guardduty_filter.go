@@ -487,7 +487,7 @@ func flattenStringCondition(field string, conditionName string, conditionValues 
 	flatCriterion["condition"] = conditionName
 	flatCriterion["values"] = make([]interface{}, len(conditionValues))
 	for i, value := range conditionValues {
-		flatCriterion["values"].([]interface{})[i] = string(*value)
+		flatCriterion["values"].([]interface{})[i] = *value
 	}
 	return flatCriterion
 }
