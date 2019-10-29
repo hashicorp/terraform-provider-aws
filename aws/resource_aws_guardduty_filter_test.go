@@ -37,7 +37,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					testAccCheckAwsGuardDutyFilterExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
-					resource.TestCheckResourceAttr(resourceName, "action", "Archive"),
+					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, "rank", "2"),
 				),
 			},
