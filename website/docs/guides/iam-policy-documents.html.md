@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS IAM Policy Documents with Terraform"
-sidebar_current: "docs-aws-guide-iam-policy-documents"
 description: |-
   Using Terraform to configure AWS IAM policy documents.
 ---

@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -252,6 +252,8 @@ func TestAccAWSMqBroker_basic(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "configuration.0.revision", regexp.MustCompile(`^[0-9]+$`)),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "deployment_mode", "SINGLE_INSTANCE"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "encryption_options.#", "1"),
+					resource.TestCheckResourceAttr("aws_mq_broker.test", "encryption_options.0.use_aws_owned_key", "true"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "engine_type", "ActiveMQ"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "engine_version", "5.15.0"),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "host_instance_type", "mq.t2.micro"),
@@ -501,6 +503,71 @@ func TestAccAWSMqBroker_allFieldsCustomVpc(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "configuration.#", "1"),
 					resource.TestMatchResourceAttr("aws_mq_broker.test", "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
 					resource.TestCheckResourceAttr("aws_mq_broker.test", "configuration.0.revision", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSMqBroker_EncryptionOptions_KmsKeyId(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfigEncryptionOptionsKmsKeyId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_options.0.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Disabled(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfigEncryptionOptionsUseAwsOwnedKey(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSMqBroker_EncryptionOptions_UseAwsOwnedKey_Enabled(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMq(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMqBrokerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMqBrokerConfigEncryptionOptionsUseAwsOwnedKey(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMqBrokerExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
 				),
 			},
 		},
@@ -844,6 +911,70 @@ resource "aws_mq_broker" "test" {
   depends_on = ["aws_internet_gateway.test"]
 }
 `, sgName, sgName, cfgName, cfgBody, brokerName)
+}
+
+func testAccMqBrokerConfigEncryptionOptionsKmsKeyId(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+  security_groups    = ["${aws_security_group.test.id}"]
+
+  encryption_options {
+    kms_key_id        = "${aws_kms_key.test.arn}"
+    use_aws_owned_key = false
+  }
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName)
+}
+
+func testAccMqBrokerConfigEncryptionOptionsUseAwsOwnedKey(rName string, useAwsOwnedKey bool) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.0"
+  host_instance_type = "mq.t2.micro"
+  security_groups    = ["${aws_security_group.test.id}"]
+
+  encryption_options {
+    use_aws_owned_key = %[2]t
+  }
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, useAwsOwnedKey)
 }
 
 func testAccMqBrokerConfig_updateUsers1(sgName, brokerName string) string {

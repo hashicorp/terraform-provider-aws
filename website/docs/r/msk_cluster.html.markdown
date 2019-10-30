@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_msk_cluster"
-sidebar_current: "docs-aws-resource-msk-cluster"
 description: |-
   Terraform resource for managing an AWS Managed Streaming for Kafka cluster
 ---
@@ -114,7 +113,7 @@ The following arguments are supported:
 
 * `tls` - (Optional) Configuration block for specifying TLS client authentication. See below.
 
-#### client_authenication tls Argument Reference
+#### client_authentication tls Argument Reference
 
 * `certificate_authority_arns` - (Optional) List of ACM Certificate Authority Amazon Resource Names (ARNs).
 

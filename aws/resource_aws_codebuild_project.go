@@ -10,11 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -33,14 +33,24 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Computed: true,
 			},
 			"artifacts": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"artifact_identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == d.Get("name") && new == "" {
+									return true
+								}
+								return false
+							},
 						},
 						"encryption_disabled": {
 							Type:     schema.TypeBool,
@@ -54,6 +64,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"namespace_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if d.Get("artifacts.0.type") == codebuild.ArtifactsTypeS3 {
+									return old == codebuild.ArtifactNamespaceNone && new == ""
+								}
+								return false
+							},
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.ArtifactNamespaceNone,
 								codebuild.ArtifactNamespaceBuildId,
@@ -62,6 +78,19 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"packaging": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								switch d.Get("artifacts.0.type") {
+								case codebuild.ArtifactsTypeCodepipeline:
+									return new == ""
+								case codebuild.ArtifactsTypeS3:
+									return old == codebuild.ArtifactPackagingNone && new == ""
+								}
+								return false
+							},
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactPackagingNone,
+								codebuild.ArtifactPackagingZip,
+							}, false),
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -76,9 +105,13 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ArtifactsTypeNoArtifacts,
 							}, false),
 						},
+						"override_artifact_name": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
-				Set: resourceAwsCodeBuildProjectArtifactsHash,
 			},
 			"cache": {
 				Type:     schema.TypeList,
@@ -319,10 +352,21 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ArtifactNamespaceNone,
 								codebuild.ArtifactNamespaceBuildId,
 							}, false),
+							Default: codebuild.ArtifactNamespaceNone,
+						},
+						"override_artifact_name": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"packaging": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactPackagingNone,
+								codebuild.ArtifactPackagingZip,
+							}, false),
+							Default: codebuild.ArtifactPackagingNone,
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -336,9 +380,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactsTypeCodepipeline,
 								codebuild.ArtifactsTypeS3,
-								codebuild.ArtifactsTypeNoArtifacts,
 							}, false),
 						},
 					},
@@ -619,9 +661,11 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		}
 
 		return nil
-
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateProject(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating CodeBuild project: %s", err)
 	}
@@ -649,7 +693,7 @@ func expandProjectSecondaryArtifacts(d *schema.ResourceData) []*codebuild.Projec
 }
 
 func expandProjectArtifacts(d *schema.ResourceData) codebuild.ProjectArtifacts {
-	configs := d.Get("artifacts").(*schema.Set).List()
+	configs := d.Get("artifacts").([]interface{})
 	data := configs[0].(map[string]interface{})
 
 	return expandProjectArtifactData(data)
@@ -682,6 +726,10 @@ func expandProjectArtifactData(data map[string]interface{}) codebuild.ProjectArt
 
 	if data["namespace_type"].(string) != "" {
 		projectArtifacts.NamespaceType = aws.String(data["namespace_type"].(string))
+	}
+
+	if v, ok := data["override_artifact_name"]; ok {
+		projectArtifacts.OverrideArtifactName = aws.Bool(v.(bool))
 	}
 
 	if data["packaging"].(string) != "" {
@@ -1123,9 +1171,11 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		}
 
 		return nil
-
 	})
 
+	if isResourceTimeoutError(err) {
+		_, err = conn.UpdateProject(params)
+	}
 	if err != nil {
 		return fmt.Errorf(
 			"[ERROR] Error updating CodeBuild project (%s): %s",
@@ -1201,17 +1251,8 @@ func flattenAwsCodeBuildProjectSecondaryArtifacts(artifactsList []*codebuild.Pro
 	return &artifactSet
 }
 
-func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) *schema.Set {
-
-	artifactSet := schema.Set{
-		F: resourceAwsCodeBuildProjectArtifactsHash,
-	}
-
-	values := flattenAwsCodeBuildProjectArtifactsData(*artifacts)
-
-	artifactSet.Add(values)
-
-	return &artifactSet
+func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) []interface{} {
+	return []interface{}{flattenAwsCodeBuildProjectArtifactsData(*artifacts)}
 }
 
 func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifacts) map[string]interface{} {
@@ -1226,6 +1267,11 @@ func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifact
 	if artifacts.EncryptionDisabled != nil {
 		values["encryption_disabled"] = *artifacts.EncryptionDisabled
 	}
+
+	if artifacts.OverrideArtifactName != nil {
+		values["override_artifact_name"] = *artifacts.OverrideArtifactName
+	}
+
 	if artifacts.Location != nil {
 		values["location"] = *artifacts.Location
 	}
@@ -1350,11 +1396,38 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-
 	if v, ok := m["artifact_identifier"]; ok {
-		buf.WriteString(fmt.Sprintf("%s:", v.(string)))
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
+
+	if v, ok := m["encryption_disabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := m["location"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["namespace_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["override_artifact_name"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := m["packaging"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["path"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
 	return hashcode.String(buf.String())
 }
 

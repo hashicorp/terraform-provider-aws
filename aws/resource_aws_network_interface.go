@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsNetworkInterface() *schema.Resource {
@@ -443,4 +443,135 @@ func resourceAwsEniAttachmentHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["instance"].(string)))
 	buf.WriteString(fmt.Sprintf("%d-", m["device_index"].(int)))
 	return hashcode.String(buf.String())
+}
+
+func deleteNetworkInterface(conn *ec2.EC2, eniId string) error {
+	_, err := conn.DeleteNetworkInterface(&ec2.DeleteNetworkInterfaceInput{
+		NetworkInterfaceId: aws.String(eniId),
+	})
+
+	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting ENI (%s): %s", eniId, err)
+	}
+
+	return nil
+}
+
+func detachNetworkInterface(conn *ec2.EC2, eni *ec2.NetworkInterface, timeout time.Duration) error {
+	if eni == nil {
+		return nil
+	}
+
+	eniId := aws.StringValue(eni.NetworkInterfaceId)
+	if eni.Attachment == nil {
+		log.Printf("[DEBUG] ENI %s is already detached", eniId)
+		return nil
+	}
+
+	_, err := conn.DetachNetworkInterface(&ec2.DetachNetworkInterfaceInput{
+		AttachmentId: eni.Attachment.AttachmentId,
+		Force:        aws.Bool(true),
+	})
+
+	if isAWSErr(err, "InvalidAttachmentID.NotFound", "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error detaching ENI (%s): %s", eniId, err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.AttachmentStatusAttaching,
+			ec2.AttachmentStatusAttached,
+			ec2.AttachmentStatusDetaching,
+		},
+		Target: []string{
+			ec2.AttachmentStatusDetached,
+		},
+		Refresh:        networkInterfaceAttachmentStateRefresh(conn, eniId),
+		Timeout:        timeout,
+		Delay:          10 * time.Second,
+		MinTimeout:     5 * time.Second,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", eniId)
+	_, err = stateConf.WaitForState()
+
+	if isResourceNotFoundError(err) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error waiting for ENI (%s) to become detached: %s", eniId, err)
+	}
+
+	return nil
+}
+
+func networkInterfaceAttachmentStateRefresh(conn *ec2.EC2, eniId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
+		})
+
+		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+			return nil, ec2.AttachmentStatusDetached, nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error describing ENI (%s): %s", eniId, err)
+		}
+
+		n := len(resp.NetworkInterfaces)
+		switch n {
+		case 0:
+			return nil, ec2.AttachmentStatusDetached, nil
+
+		case 1:
+			attachment := resp.NetworkInterfaces[0].Attachment
+			if attachment == nil {
+				return nil, ec2.AttachmentStatusDetached, nil
+			}
+			return attachment, aws.StringValue(attachment.Status), nil
+
+		default:
+			return nil, "", fmt.Errorf("found %d ENIs for %s, expected 1", n, eniId)
+		}
+	}
+}
+
+func networkInterfaceStateRefresh(conn *ec2.EC2, eniId string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+			NetworkInterfaceIds: aws.StringSlice([]string{eniId}),
+		})
+
+		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error describing ENI (%s): %s", eniId, err)
+		}
+
+		n := len(resp.NetworkInterfaces)
+		switch n {
+		case 0:
+			return nil, "", nil
+
+		case 1:
+			eni := resp.NetworkInterfaces[0]
+			return eni, aws.StringValue(eni.Status), nil
+
+		default:
+			return nil, "", fmt.Errorf("found %d ENIs for %s, expected 1", n, eniId)
+		}
+	}
 }

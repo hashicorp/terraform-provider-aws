@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_appsync_api_key"
-sidebar_current: "docs-aws-resource-appsync-api-key"
 description: |-
   Provides an AppSync API Key.
 ---

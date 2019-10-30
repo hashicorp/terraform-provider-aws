@@ -974,6 +974,91 @@ func (c *EMR) DescribeStepWithContext(ctx aws.Context, input *DescribeStepInput,
 	return out, req.Send()
 }
 
+const opGetBlockPublicAccessConfiguration = "GetBlockPublicAccessConfiguration"
+
+// GetBlockPublicAccessConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the GetBlockPublicAccessConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetBlockPublicAccessConfiguration for more information on using the GetBlockPublicAccessConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetBlockPublicAccessConfigurationRequest method.
+//    req, resp := client.GetBlockPublicAccessConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetBlockPublicAccessConfiguration
+func (c *EMR) GetBlockPublicAccessConfigurationRequest(input *GetBlockPublicAccessConfigurationInput) (req *request.Request, output *GetBlockPublicAccessConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opGetBlockPublicAccessConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetBlockPublicAccessConfigurationInput{}
+	}
+
+	output = &GetBlockPublicAccessConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetBlockPublicAccessConfiguration API operation for Amazon Elastic MapReduce.
+//
+// Returns the Amazon EMR block public access configuration for your AWS account
+// in the current Region. For more information see Configure Block Public Access
+// for Amazon EMR (https://docs.aws.amazon.com/emr/latest/ManagementGuide/configure-block-public-access.html)
+// in the Amazon EMR Management Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation GetBlockPublicAccessConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerException "InternalServerException"
+//   This exception occurs when there is an internal failure in the EMR service.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/GetBlockPublicAccessConfiguration
+func (c *EMR) GetBlockPublicAccessConfiguration(input *GetBlockPublicAccessConfigurationInput) (*GetBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.GetBlockPublicAccessConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// GetBlockPublicAccessConfigurationWithContext is the same as GetBlockPublicAccessConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetBlockPublicAccessConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) GetBlockPublicAccessConfigurationWithContext(ctx aws.Context, input *GetBlockPublicAccessConfigurationInput, opts ...request.Option) (*GetBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.GetBlockPublicAccessConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListBootstrapActions = "ListBootstrapActions"
 
 // ListBootstrapActionsRequest generates a "aws/request.Request" representing the
@@ -2203,6 +2288,92 @@ func (c *EMR) PutAutoScalingPolicyWithContext(ctx aws.Context, input *PutAutoSca
 	return out, req.Send()
 }
 
+const opPutBlockPublicAccessConfiguration = "PutBlockPublicAccessConfiguration"
+
+// PutBlockPublicAccessConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the PutBlockPublicAccessConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutBlockPublicAccessConfiguration for more information on using the PutBlockPublicAccessConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutBlockPublicAccessConfigurationRequest method.
+//    req, resp := client.PutBlockPublicAccessConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutBlockPublicAccessConfiguration
+func (c *EMR) PutBlockPublicAccessConfigurationRequest(input *PutBlockPublicAccessConfigurationInput) (req *request.Request, output *PutBlockPublicAccessConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opPutBlockPublicAccessConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutBlockPublicAccessConfigurationInput{}
+	}
+
+	output = &PutBlockPublicAccessConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutBlockPublicAccessConfiguration API operation for Amazon Elastic MapReduce.
+//
+// Creates or updates an Amazon EMR block public access configuration for your
+// AWS account in the current Region. For more information see Configure Block
+// Public Access for Amazon EMR (https://docs.aws.amazon.com/emr/latest/ManagementGuide/configure-block-public-access.html)
+// in the Amazon EMR Management Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation PutBlockPublicAccessConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerException "InternalServerException"
+//   This exception occurs when there is an internal failure in the EMR service.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/PutBlockPublicAccessConfiguration
+func (c *EMR) PutBlockPublicAccessConfiguration(input *PutBlockPublicAccessConfigurationInput) (*PutBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.PutBlockPublicAccessConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// PutBlockPublicAccessConfigurationWithContext is the same as PutBlockPublicAccessConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutBlockPublicAccessConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) PutBlockPublicAccessConfigurationWithContext(ctx aws.Context, input *PutBlockPublicAccessConfigurationInput, opts ...request.Option) (*PutBlockPublicAccessConfigurationOutput, error) {
+	req, out := c.PutBlockPublicAccessConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRemoveAutoScalingPolicy = "RemoveAutoScalingPolicy"
 
 // RemoveAutoScalingPolicyRequest generates a "aws/request.Request" representing the
@@ -2613,6 +2784,8 @@ func (c *EMR) SetVisibleToAllUsersRequest(input *SetVisibleToAllUsersInput) (req
 }
 
 // SetVisibleToAllUsers API operation for Amazon Elastic MapReduce.
+//
+// This member will be deprecated.
 //
 // Sets whether all AWS Identity and Access Management (IAM) users under your
 // account can access the specified clusters (job flows). This action works
@@ -3341,6 +3514,117 @@ func (s *AutoScalingPolicyStatus) SetStateChangeReason(v *AutoScalingPolicyState
 	return s
 }
 
+// A configuration for Amazon EMR block public access. When BlockPublicSecurityGroupRules
+// is set to true, Amazon EMR prevents cluster creation if one of the cluster's
+// security groups has a rule that allows inbound traffic from 0.0.0.0/0 or
+// ::/0 on a port, unless the port is specified as an exception using PermittedPublicSecurityGroupRuleRanges.
+type BlockPublicAccessConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether EMR block public access is enabled (true) or disabled (false).
+	// By default, the value is false for accounts that have created EMR clusters
+	// before July 2019. For accounts created after this, the default is true.
+	//
+	// BlockPublicSecurityGroupRules is a required field
+	BlockPublicSecurityGroupRules *bool `type:"boolean" required:"true"`
+
+	// Specifies ports and port ranges that are permitted to have security group
+	// rules that allow inbound traffic from all public sources. For example, if
+	// Port 23 (Telnet) is specified for PermittedPublicSecurityGroupRuleRanges,
+	// Amazon EMR allows cluster creation if a security group associated with the
+	// cluster has a rule that allows inbound traffic on Port 23 from IPv4 0.0.0.0/0
+	// or IPv6 port ::/0 as the source.
+	//
+	// By default, Port 22, which is used for SSH access to the cluster EC2 instances,
+	// is in the list of PermittedPublicSecurityGroupRuleRanges.
+	PermittedPublicSecurityGroupRuleRanges []*PortRange `type:"list"`
+}
+
+// String returns the string representation
+func (s BlockPublicAccessConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlockPublicAccessConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BlockPublicAccessConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BlockPublicAccessConfiguration"}
+	if s.BlockPublicSecurityGroupRules == nil {
+		invalidParams.Add(request.NewErrParamRequired("BlockPublicSecurityGroupRules"))
+	}
+	if s.PermittedPublicSecurityGroupRuleRanges != nil {
+		for i, v := range s.PermittedPublicSecurityGroupRuleRanges {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PermittedPublicSecurityGroupRuleRanges", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBlockPublicSecurityGroupRules sets the BlockPublicSecurityGroupRules field's value.
+func (s *BlockPublicAccessConfiguration) SetBlockPublicSecurityGroupRules(v bool) *BlockPublicAccessConfiguration {
+	s.BlockPublicSecurityGroupRules = &v
+	return s
+}
+
+// SetPermittedPublicSecurityGroupRuleRanges sets the PermittedPublicSecurityGroupRuleRanges field's value.
+func (s *BlockPublicAccessConfiguration) SetPermittedPublicSecurityGroupRuleRanges(v []*PortRange) *BlockPublicAccessConfiguration {
+	s.PermittedPublicSecurityGroupRuleRanges = v
+	return s
+}
+
+// Properties that describe the AWS principal that created the BlockPublicAccessConfiguration
+// using the PutBlockPublicAccessConfiguration action as well as the date and
+// time that the configuration was created. Each time a configuration for block
+// public access is updated, Amazon EMR updates this metadata.
+type BlockPublicAccessConfigurationMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name that created or last modified the configuration.
+	//
+	// CreatedByArn is a required field
+	CreatedByArn *string `min:"20" type:"string" required:"true"`
+
+	// The date and time that the configuration was created.
+	//
+	// CreationDateTime is a required field
+	CreationDateTime *time.Time `type:"timestamp" required:"true"`
+}
+
+// String returns the string representation
+func (s BlockPublicAccessConfigurationMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BlockPublicAccessConfigurationMetadata) GoString() string {
+	return s.String()
+}
+
+// SetCreatedByArn sets the CreatedByArn field's value.
+func (s *BlockPublicAccessConfigurationMetadata) SetCreatedByArn(v string) *BlockPublicAccessConfigurationMetadata {
+	s.CreatedByArn = &v
+	return s
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *BlockPublicAccessConfigurationMetadata) SetCreationDateTime(v time.Time) *BlockPublicAccessConfigurationMetadata {
+	s.CreationDateTime = &v
+	return s
+}
+
 // Configuration of a bootstrap action.
 type BootstrapActionConfig struct {
 	_ struct{} `type:"structure"`
@@ -3731,11 +4015,11 @@ type Cluster struct {
 
 	// The Amazon EMR release label, which determines the version of open-source
 	// application packages installed on the cluster. Release labels are in the
-	// form emr-x.x.x, where x.x.x is an Amazon EMR release version, for example,
-	// emr-5.14.0. For more information about Amazon EMR release versions and included
-	// application versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
+	// form emr-x.x.x, where x.x.x is an Amazon EMR release version such as emr-5.14.0.
+	// For more information about Amazon EMR release versions and included application
+	// versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
 	// (https://docs.aws.amazon.com/emr/latest/ReleaseGuide/). The release label
-	// applies only to Amazon EMR releases versions 4.x and later. Earlier versions
+	// applies only to Amazon EMR releases version 4.0 and later. Earlier versions
 	// use AmiVersion.
 	ReleaseLabel *string `type:"string"`
 
@@ -3782,6 +4066,8 @@ type Cluster struct {
 	// of a cluster error.
 	TerminationProtected *bool `type:"boolean"`
 
+	// This member will be deprecated.
+	//
 	// Indicates whether the cluster is visible to all IAM users of the AWS account
 	// associated with the cluster. If this value is set to true, all IAM users
 	// of that AWS account can view and manage the cluster if they have the proper
@@ -4849,14 +5135,9 @@ type Ec2InstanceAttributes struct {
 	// the master node as a user named "hadoop".
 	Ec2KeyName *string `type:"string"`
 
-	// To launch the cluster in Amazon VPC, set this parameter to the identifier
-	// of the Amazon VPC subnet where you want the cluster to launch. If you do
-	// not specify this value, the cluster is launched in the normal AWS cloud,
-	// outside of a VPC.
-	//
-	// Amazon VPC currently does not support cluster compute quadruple extra large
-	// (cc1.4xlarge) instances. Thus, you cannot specify the cc1.4xlarge instance
-	// type for nodes of a cluster launched in a VPC.
+	// Set this parameter to the identifier of the Amazon VPC subnet where you want
+	// the cluster to launch. If you do not specify this value, and your account
+	// supports EC2-Classic, the cluster launches in EC2-Classic.
 	Ec2SubnetId *string `type:"string"`
 
 	// The identifier of the Amazon EC2 security group for the master node.
@@ -4884,7 +5165,7 @@ type Ec2InstanceAttributes struct {
 	// EC2 cluster instances. Subnets must exist within the same VPC. Amazon EMR
 	// chooses the EC2 subnet with the best fit from among the list of RequestedEc2SubnetIds,
 	// and then launches all cluster instances within that Subnet. If this value
-	// is not specified, and the account and region support EC2-Classic networks,
+	// is not specified, and the account and Region support EC2-Classic networks,
 	// the cluster launches instances in the EC2-Classic network and uses RequestedEc2AvailabilityZones
 	// instead of this setting. If EC2-Classic is not supported, and no Subnet is
 	// specified, Amazon EMR chooses the subnet for you. RequestedEc2SubnetIDs and
@@ -5017,6 +5298,67 @@ func (s *FailureDetails) SetMessage(v string) *FailureDetails {
 // SetReason sets the Reason field's value.
 func (s *FailureDetails) SetReason(v string) *FailureDetails {
 	s.Reason = &v
+	return s
+}
+
+type GetBlockPublicAccessConfigurationInput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetBlockPublicAccessConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetBlockPublicAccessConfigurationInput) GoString() string {
+	return s.String()
+}
+
+type GetBlockPublicAccessConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A configuration for Amazon EMR block public access. The configuration applies
+	// to all clusters created in your account for the current Region. The configuration
+	// specifies whether block public access is enabled. If block public access
+	// is enabled, security groups associated with the cluster cannot have rules
+	// that allow inbound traffic from 0.0.0.0/0 or ::/0 on a port, unless the port
+	// is specified as an exception using PermittedPublicSecurityGroupRuleRanges
+	// in the BlockPublicAccessConfiguration. By default, Port 22 (SSH) is an exception,
+	// and public access is allowed on this port. You can change this by updating
+	// the block public access configuration to remove the exception.
+	//
+	// BlockPublicAccessConfiguration is a required field
+	BlockPublicAccessConfiguration *BlockPublicAccessConfiguration `type:"structure" required:"true"`
+
+	// Properties that describe the AWS principal that created the BlockPublicAccessConfiguration
+	// using the PutBlockPublicAccessConfiguration action as well as the date and
+	// time that the configuration was created. Each time a configuration for block
+	// public access is updated, Amazon EMR updates this metadata.
+	//
+	// BlockPublicAccessConfigurationMetadata is a required field
+	BlockPublicAccessConfigurationMetadata *BlockPublicAccessConfigurationMetadata `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetBlockPublicAccessConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetBlockPublicAccessConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetBlockPublicAccessConfiguration sets the BlockPublicAccessConfiguration field's value.
+func (s *GetBlockPublicAccessConfigurationOutput) SetBlockPublicAccessConfiguration(v *BlockPublicAccessConfiguration) *GetBlockPublicAccessConfigurationOutput {
+	s.BlockPublicAccessConfiguration = v
+	return s
+}
+
+// SetBlockPublicAccessConfigurationMetadata sets the BlockPublicAccessConfigurationMetadata field's value.
+func (s *GetBlockPublicAccessConfigurationOutput) SetBlockPublicAccessConfigurationMetadata(v *BlockPublicAccessConfigurationMetadata) *GetBlockPublicAccessConfigurationOutput {
+	s.BlockPublicAccessConfigurationMetadata = v
 	return s
 }
 
@@ -6932,6 +7274,8 @@ type JobFlowDetail struct {
 	// is empty.
 	SupportedProducts []*string `type:"list"`
 
+	// This member will be deprecated.
+	//
 	// Specifies whether the cluster is visible to all IAM users of the AWS account
 	// associated with the cluster. If this value is set to true, all IAM users
 	// of that AWS account can view and (if they have the proper policy permissions
@@ -7131,14 +7475,8 @@ type JobFlowInstancesConfig struct {
 	// Applies to clusters that use the uniform instance group configuration. To
 	// launch the cluster in Amazon Virtual Private Cloud (Amazon VPC), set this
 	// parameter to the identifier of the Amazon VPC subnet where you want the cluster
-	// to launch. If you do not specify this value, the cluster launches in the
-	// normal Amazon Web Services cloud, outside of an Amazon VPC, if the account
-	// launching the cluster supports EC2 Classic networks in the region where the
-	// cluster launches.
-	//
-	// Amazon VPC currently does not support cluster compute quadruple extra large
-	// (cc1.4xlarge) instances. Thus you cannot specify the cc1.4xlarge instance
-	// type for clusters launched in an Amazon VPC.
+	// to launch. If you do not specify this value and your account supports EC2-Classic,
+	// the cluster launches in EC2-Classic.
 	Ec2SubnetId *string `type:"string"`
 
 	// Applies to clusters that use the instance fleet configuration. When multiple
@@ -8450,6 +8788,56 @@ func (s *PlacementType) SetAvailabilityZones(v []*string) *PlacementType {
 	return s
 }
 
+// A list of port ranges that are permitted to allow inbound traffic from all
+// public IP addresses. To specify a single port, use the same value for MinRange
+// and MaxRange.
+type PortRange struct {
+	_ struct{} `type:"structure"`
+
+	// The smallest port number in a specified range of port numbers.
+	MaxRange *int64 `type:"integer"`
+
+	// The smallest port number in a specified range of port numbers.
+	//
+	// MinRange is a required field
+	MinRange *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s PortRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PortRange) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PortRange) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PortRange"}
+	if s.MinRange == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinRange"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxRange sets the MaxRange field's value.
+func (s *PortRange) SetMaxRange(v int64) *PortRange {
+	s.MaxRange = &v
+	return s
+}
+
+// SetMinRange sets the MinRange field's value.
+func (s *PortRange) SetMinRange(v int64) *PortRange {
+	s.MinRange = &v
+	return s
+}
+
 type PutAutoScalingPolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8563,6 +8951,71 @@ func (s *PutAutoScalingPolicyOutput) SetClusterId(v string) *PutAutoScalingPolic
 func (s *PutAutoScalingPolicyOutput) SetInstanceGroupId(v string) *PutAutoScalingPolicyOutput {
 	s.InstanceGroupId = &v
 	return s
+}
+
+type PutBlockPublicAccessConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// A configuration for Amazon EMR block public access. The configuration applies
+	// to all clusters created in your account for the current Region. The configuration
+	// specifies whether block public access is enabled. If block public access
+	// is enabled, security groups associated with the cluster cannot have rules
+	// that allow inbound traffic from 0.0.0.0/0 or ::/0 on a port, unless the port
+	// is specified as an exception using PermittedPublicSecurityGroupRuleRanges
+	// in the BlockPublicAccessConfiguration. By default, Port 22 (SSH) is an exception,
+	// and public access is allowed on this port. You can change this by updating
+	// BlockPublicSecurityGroupRules to remove the exception.
+	//
+	// BlockPublicAccessConfiguration is a required field
+	BlockPublicAccessConfiguration *BlockPublicAccessConfiguration `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s PutBlockPublicAccessConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutBlockPublicAccessConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutBlockPublicAccessConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutBlockPublicAccessConfigurationInput"}
+	if s.BlockPublicAccessConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("BlockPublicAccessConfiguration"))
+	}
+	if s.BlockPublicAccessConfiguration != nil {
+		if err := s.BlockPublicAccessConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("BlockPublicAccessConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBlockPublicAccessConfiguration sets the BlockPublicAccessConfiguration field's value.
+func (s *PutBlockPublicAccessConfigurationInput) SetBlockPublicAccessConfiguration(v *BlockPublicAccessConfiguration) *PutBlockPublicAccessConfigurationInput {
+	s.BlockPublicAccessConfiguration = v
+	return s
+}
+
+type PutBlockPublicAccessConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutBlockPublicAccessConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutBlockPublicAccessConfigurationOutput) GoString() string {
+	return s.String()
 }
 
 type RemoveAutoScalingPolicyInput struct {
@@ -8805,11 +9258,11 @@ type RunJobFlowInput struct {
 
 	// The Amazon EMR release label, which determines the version of open-source
 	// application packages installed on the cluster. Release labels are in the
-	// form emr-x.x.x, where x.x.x is an Amazon EMR release version, for example,
-	// emr-5.14.0. For more information about Amazon EMR release versions and included
-	// application versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
+	// form emr-x.x.x, where x.x.x is an Amazon EMR release version such as emr-5.14.0.
+	// For more information about Amazon EMR release versions and included application
+	// versions and features, see https://docs.aws.amazon.com/emr/latest/ReleaseGuide/
 	// (https://docs.aws.amazon.com/emr/latest/ReleaseGuide/). The release label
-	// applies only to Amazon EMR releases versions 4.x and later. Earlier versions
+	// applies only to Amazon EMR releases version 4.0 and later. Earlier versions
 	// use AmiVersion.
 	ReleaseLabel *string `type:"string"`
 
@@ -8860,6 +9313,8 @@ type RunJobFlowInput struct {
 	// A list of tags to associate with a cluster and propagate to Amazon EC2 instances.
 	Tags []*Tag `type:"list"`
 
+	// This member will be deprecated.
+	//
 	// Whether the cluster is visible to all IAM users of the AWS account associated
 	// with the cluster. If this value is set to true, all IAM users of that AWS
 	// account can view and (if they have the proper policy permissions set) manage
@@ -9489,6 +9944,8 @@ func (s SetTerminationProtectionOutput) GoString() string {
 	return s.String()
 }
 
+// This member will be deprecated.
+//
 // The input to the SetVisibleToAllUsers action.
 type SetVisibleToAllUsersInput struct {
 	_ struct{} `type:"structure"`
@@ -9498,6 +9955,8 @@ type SetVisibleToAllUsersInput struct {
 	// JobFlowIds is a required field
 	JobFlowIds []*string `type:"list" required:"true"`
 
+	// This member will be deprecated.
+	//
 	// Whether the specified clusters are visible to all IAM users of the AWS account
 	// associated with the cluster. If this value is set to True, all IAM users
 	// of that AWS account can view and, if they have the proper IAM policy permissions

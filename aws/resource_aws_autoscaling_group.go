@@ -6,10 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -255,6 +255,8 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Optional: true,
 			},
 
+			// DEPRECATED: Computed: true should be removed in a major version release
+			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"load_balancers": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -327,6 +329,8 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Default:  false,
 			},
 
+			// DEPRECATED: Computed: true should be removed in a major version release
+			// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/9513
 			"target_group_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -592,6 +596,9 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateAutoScalingGroup(&createOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating AutoScaling Group: %s", err)
 	}
@@ -760,6 +767,78 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgRemoving bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Removing" {
+				tgRemoving = true
+				break
+			}
+		}
+
+		if tgRemoving {
+			tgRemoving = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
+func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgAdding bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Adding" {
+				tgAdding = true
+				break
+			}
+		}
+
+		if tgAdding {
+			tgAdding = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
 func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).autoscalingconn
 	shouldWaitForCapacity := false
@@ -913,22 +992,55 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		add := expandStringList(ns.Difference(os).List())
 
 		if len(remove) > 0 {
-			_, err := conn.DetachLoadBalancerTargetGroups(&autoscaling.DetachLoadBalancerTargetGroupsInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				TargetGroupARNs:      remove,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+			// AWS API only supports adding/removing 10 at a time
+			var batches [][]*string
+
+			batchSize := 10
+
+			for batchSize < len(remove) {
+				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
 			}
+			batches = append(batches, remove)
+
+			for _, batch := range batches {
+				_, err := conn.DetachLoadBalancerTargetGroups(&autoscaling.DetachLoadBalancerTargetGroupsInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					TargetGroupARNs:      batch,
+				})
+				if err != nil {
+					return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancer Target Groups being removed: %s", d.Id(), err)
+				}
+			}
+
 		}
 
 		if len(add) > 0 {
-			_, err := conn.AttachLoadBalancerTargetGroups(&autoscaling.AttachLoadBalancerTargetGroupsInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				TargetGroupARNs:      add,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+			batchSize := 10
+
+			var batches [][]*string
+
+			for batchSize < len(add) {
+				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			}
+			batches = append(batches, add)
+
+			for _, batch := range batches {
+				_, err := conn.AttachLoadBalancerTargetGroups(&autoscaling.AttachLoadBalancerTargetGroupsInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					TargetGroupARNs:      batch,
+				})
+
+				if err != nil {
+					return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancer Target Groups being added: %s", d.Id(), err)
+				}
 			}
 		}
 	}
@@ -1001,23 +1113,38 @@ func resourceAwsAutoscalingGroupDelete(d *schema.ResourceData, meta interface{})
 		// Successful delete
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteAutoScalingGroup(&deleteopts)
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			return nil
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting autoscaling group: %s", err)
 	}
 
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		if g, _ = getAwsAutoscalingGroup(d.Id(), conn); g != nil {
-			return resource.RetryableError(
-				fmt.Errorf("Auto Scaling Group still exists"))
+	var group *autoscaling.Group
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+
+		if group != nil {
+			return resource.RetryableError(fmt.Errorf("Auto Scaling Group still exists"))
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		group, err = getAwsAutoscalingGroup(d.Id(), conn)
+		if group != nil {
+			return fmt.Errorf("Auto Scaling Group still exists")
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting autoscaling group: %s", err)
+	}
+	return nil
 }
 
-func getAwsAutoscalingGroup(
-	asgName string,
-	conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
-
+func getAwsAutoscalingGroup(asgName string, conn *autoscaling.AutoScaling) (*autoscaling.Group, error) {
 	describeOpts := autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{aws.String(asgName)},
 	}
@@ -1065,7 +1192,8 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 
 	// Next, wait for the autoscale group to drain
 	log.Printf("[DEBUG] Waiting for group to have zero instances")
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	var g *autoscaling.Group
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		g, err := getAwsAutoscalingGroup(d.Id(), conn)
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -1081,8 +1209,21 @@ func resourceAwsAutoscalingGroupDrain(d *schema.ResourceData, meta interface{}) 
 		}
 
 		return resource.RetryableError(
-			fmt.Errorf("group still has %d instances", len(g.Instances)))
+			fmt.Errorf("Group still has %d instances", len(g.Instances)))
 	})
+	if isResourceTimeoutError(err) {
+		g, err = getAwsAutoscalingGroup(d.Id(), conn)
+		if err != nil {
+			return fmt.Errorf("Error getting autoscaling group info when draining: %s", err)
+		}
+		if g != nil && len(g.Instances) > 0 {
+			return fmt.Errorf("Group still has %d instances", len(g.Instances))
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error draining autoscaling group: %s", err)
+	}
+	return nil
 }
 
 func enableASGSuspendedProcesses(d *schema.ResourceData, conn *autoscaling.AutoScaling) error {

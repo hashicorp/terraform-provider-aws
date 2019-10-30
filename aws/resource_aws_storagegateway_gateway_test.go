@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -391,6 +391,12 @@ func testAccCheckAWSStorageGatewayGatewayExists(resourceName string, gateway *st
 // and security group, suitable for Storage Gateway EC2 instances of any type
 func testAccAWSStorageGateway_VPCBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # Error launching source instance: Unsupported: Your requested instance type (m4.xlarge) is not supported in your requested Availability Zone (us-west-2d).
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -400,8 +406,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
     Name = %q
@@ -577,7 +584,11 @@ resource "aws_storagegateway_gateway" "test" {
 
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  # Error launching source instance: Unsupported: Your requested instance type (m4.xlarge) is not supported in your requested Availability Zone (us-west-2d).
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -655,7 +666,7 @@ resource "aws_directory_service_directory" "test" {
   size     = "Small"
 
   vpc_settings {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = aws_subnet.test[*].id
     vpc_id     = "${aws_vpc.test.id}"
   }
 
@@ -666,7 +677,7 @@ resource "aws_directory_service_directory" "test" {
 
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = "${aws_directory_service_directory.test.name}"
-  domain_name_servers = ["${aws_directory_service_directory.test.dns_ip_addresses}"]
+  domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
 
   tags = {
     Name = %q
