@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccAwsGuardDutyFilter_basic(t *testing.T) {
@@ -20,25 +20,13 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsGuardDutyFilterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGuardDutyFilterConfig_to_fail_1,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterDoesNotExist(resourceName),
-				),
-			},
-			{
-				Config: testAccGuardDutyFilterConfig_to_fail_2,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsGuardDutyFilterDoesNotExist(resourceName),
-				),
-			},
-			{
 				Config: testAccGuardDutyFilterConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
-					resource.TestCheckResourceAttr(resourceName, "rank", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
 				),
 			},
 		},
@@ -106,17 +94,6 @@ func testAccCheckAwsGuardDutyFilterExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsGuardDutyFilterDoesNotExist(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return nil
-		}
-
-		return fmt.Errorf("Not found: %s", name)
-	}
-}
-
 func testAccGuardDutyFilterConfig_full() string {
 	return fmt.Sprintf(`
 %[1]s
@@ -125,7 +102,7 @@ resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
 	name        = "test-filter"
 	action      = "ARCHIVE"
-	rank        = 2
+	rank        = 1
 
   finding_criteria {
     criterion {

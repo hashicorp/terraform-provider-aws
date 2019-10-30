@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsGuardDutyFilter() *schema.Resource {
@@ -38,7 +38,7 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": tagsSchemaForceNew(),
+			"tags": tagsSchema(),
 			"finding_criteria": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -131,7 +131,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
 	output, err := conn.CreateFilter(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty Filter failed: %s", err.Error())
+		return fmt.Errorf("Creating GuardDuty Filter %s failed: %s", input, err.Error())
 	}
 
 	d.SetId(strings.Join([]string{d.Get("detector_id").(string), *output.Name}, "_"))
