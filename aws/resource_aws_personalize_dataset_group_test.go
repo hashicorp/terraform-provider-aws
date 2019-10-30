@@ -15,7 +15,7 @@ func TestAccPersonalizeDatasetGroup_basic(t *testing.T) {
 	resourceName := "aws_personalize_dataset_group.group"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPersonalizeDatasetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +46,7 @@ func TestAccPersonalizeDatasetGroup_kms(t *testing.T) {
 	resourceName := "aws_personalize_dataset_group.group"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckPersonalizeDatasetGroupDestroy,
 		Steps: []resource.TestStep{
