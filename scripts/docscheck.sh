@@ -14,12 +14,7 @@ for doc in $docs; do
       continue
       ;;
 
-    "d")
-      # Data sources have no requirements
-      continue
-      ;;
-
-    "r")
+    "d" | "r")
       # Resources and datasources require a subcategory
       grep "^subcategory: " "$doc" > /dev/null
       if [[ "$?" == "1" ]]; then
