@@ -94,7 +94,7 @@ func TestAccAWSBatchComputeEnvironment_createWithNamePrefix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
 					resource.TestMatchResourceAttr(
-						"aws_batch_compute_environment.ec2", "compute_environment_name", regexp.MustCompile("^tf_acc_test-"),
+						"aws_batch_compute_environment.ec2", "compute_environment_name", regexp.MustCompile("^tf_acc_test"),
 					),
 				),
 			},

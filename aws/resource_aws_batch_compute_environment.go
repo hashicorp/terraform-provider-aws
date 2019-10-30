@@ -21,19 +21,19 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
-				Type:         schema.TypeString,
+				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:     true,
+				ForceNew:      true,
 				ConflictsWith: []string{"compute_environment_name_prefix"},
-				ValidateFunc: validateBatchName,
+				ValidateFunc:  validateBatchName,
 			},
 			"compute_environment_name_prefix": {
-				Type:         schema.TypeString,
+				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"compute_environment_name"},
-				ValidateFunc: validateBatchPrefix,
+				ValidateFunc:  validateBatchPrefix,
 			},
 			"compute_resources": {
 				Type:     schema.TypeList,
