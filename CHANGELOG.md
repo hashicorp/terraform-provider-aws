@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_elasticache_replication_group: Add `kms_key_id` argument (support KMS encryption) [GH-10380]
 * resource/aws_glue_job: Add `glue_version` argument [GH-10237]
 * resource/aws_storagegateway_smb_file_share: Add `tags` argument [GH-10620]
 
