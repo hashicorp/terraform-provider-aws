@@ -63,8 +63,9 @@ func TestNormalizeAwsAliasName(t *testing.T) {
 	}{
 		{"www.nonexample.com", "www.nonexample.com"},
 		{"www.nonexample.com.", "www.nonexample.com"},
-		{"dualstack.name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
-		{"dualstack.test-987654321.region.elb.amazonaws.com", "test-987654321.region.elb.amazonaws.com"},
+		{"name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+		{"ipv6.name-123456789.region.elb.amazonaws.com", "ipv6.name-123456789.region.elb.amazonaws.com"},
+		{"dualstack.name-123456789.region.elb.amazonaws.com", "dualstack.name-123456789.region.elb.amazonaws.com"},
 		{"dualstacktest.com", "dualstacktest.com"},
 		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 	}
