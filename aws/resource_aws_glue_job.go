@@ -66,6 +66,10 @@ func resourceAwsGlueJob() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"glue_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"execution_property": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -155,6 +159,10 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("glue_version"); ok {
+		input.GlueVersion = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("execution_property"); ok {
 		input.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
 	}
@@ -213,6 +221,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting default_arguments: %s", err)
 	}
 	d.Set("description", job.Description)
+	d.Set("glue_version", job.GlueVersion)
 	if err := d.Set("execution_property", flattenGlueExecutionProperty(job.ExecutionProperty)); err != nil {
 		return fmt.Errorf("error setting execution_property: %s", err)
 	}
@@ -265,6 +274,10 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("description"); ok {
 		jobUpdate.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("glue_version"); ok {
+		jobUpdate.GlueVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("execution_property"); ok {
