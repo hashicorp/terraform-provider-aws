@@ -34,6 +34,9 @@ fmtcheck:
 websitefmtcheck:
 	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
 
+docscheck:
+	@sh -c "'$(CURDIR)/scripts/docscheck.sh'"
+
 lint:
 	@echo "==> Checking source code against linters..."
 	@golangci-lint run ./$(PKG_NAME)/...
@@ -91,5 +94,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test
+.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test docscheck
 
