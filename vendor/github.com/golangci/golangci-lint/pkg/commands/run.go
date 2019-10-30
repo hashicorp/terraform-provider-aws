@@ -54,6 +54,8 @@ func wh(text string) string {
 	return color.GreenString(text)
 }
 
+const defaultTimeout = time.Minute
+
 //nolint:funlen
 func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, isFinalInit bool) {
 	hideFlag := func(name string) {
@@ -82,12 +84,17 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 
 	// Run config
 	rc := &cfg.Run
+	fs.StringVar(&rc.ModulesDownloadMode, "modules-download-mode", "",
+		"Modules download mode. If not empty, passed as -mod=<mode> to go tools")
 	fs.IntVar(&rc.ExitCodeIfIssuesFound, "issues-exit-code",
 		exitcodes.IssuesFound, wh("Exit code when issues were found"))
 	fs.StringSliceVar(&rc.BuildTags, "build-tags", nil, wh("Build tags"))
-	fs.DurationVar(&rc.Timeout, "deadline", time.Minute, wh("Deadline for total work"))
-	hideFlag("deadline")
-	fs.DurationVar(&rc.Timeout, "timeout", time.Minute, wh("Timeout for total work"))
+
+	fs.DurationVar(&rc.Timeout, "deadline", defaultTimeout, wh("Deadline for total work"))
+	if err := fs.MarkHidden("deadline"); err != nil {
+		panic(err)
+	}
+	fs.DurationVar(&rc.Timeout, "timeout", defaultTimeout, wh("Timeout for total work"))
 
 	fs.BoolVar(&rc.AnalyzeTests, "tests", true, wh("Analyze tests (*_test.go)"))
 	fs.BoolVar(&rc.PrintResourcesUsage, "print-resources-usage", false,
@@ -166,6 +173,11 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	fs.StringSliceVarP(&lc.Enable, "enable", "E", nil, wh("Enable specific linter"))
 	fs.StringSliceVarP(&lc.Disable, "disable", "D", nil, wh("Disable specific linter"))
 	fs.BoolVar(&lc.EnableAll, "enable-all", false, wh("Enable all linters"))
+	if err := fs.MarkHidden("enable-all"); err != nil {
+		panic(err)
+	}
+	// TODO: run hideFlag("enable-all") to print deprecation message.
+
 	fs.BoolVar(&lc.DisableAll, "disable-all", false, wh("Disable all linters"))
 	fs.StringSliceVarP(&lc.Presets, "presets", "p", nil,
 		wh(fmt.Sprintf("Enable presets (%s) of linters. Run 'golangci-lint linters' to see "+
@@ -390,6 +402,7 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 		}
 	}()
 
+	e.setTimeoutToDeadlineIfOnlyDeadlineIsSet()
 	ctx, cancel := context.WithTimeout(context.Background(), e.cfg.Run.Timeout)
 	defer cancel()
 
@@ -409,6 +422,15 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 	}
 
 	e.setupExitCode(ctx)
+}
+
+// to be removed when deadline is finally decommissioned
+func (e *Executor) setTimeoutToDeadlineIfOnlyDeadlineIsSet() {
+	//lint:ignore SA1019 We want to promoted the deprecated config value when needed
+	deadlineValue := e.cfg.Run.Deadline // nolint: staticcheck
+	if deadlineValue != 0 && e.cfg.Run.Timeout == defaultTimeout {
+		e.cfg.Run.Timeout = deadlineValue
+	}
 }
 
 func (e *Executor) setupExitCode(ctx context.Context) {
@@ -448,7 +470,6 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 	const MB = 1024 * 1024
 
 	track := func() {
-		debugf("Starting memory tracing iteration ...")
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
 

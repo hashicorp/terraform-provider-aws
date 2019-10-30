@@ -1,9 +1,19 @@
 ## 2.34.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_elasticache_replication_group: Add `kms_key_id` argument (support KMS encryption) [GH-10380]
+* resource/aws_glue_job: Add `glue_version` argument [GH-10237]
+* resource/aws_storagegateway_smb_file_share: Add `tags` argument [GH-10620]
+
 BUG FIXES:
 
+* resource/aws_backup_plan: Correctly handle changes to `recovery_point_tags` arguments [GH-10641]
+* resource/aws_backup_plan: Prevent `diffs didn't match` errors with `rule` configuration blocks [GH-10641]
 * resource/aws_cloudhsm_v2_cluster: Ensure multiple tag configurations are applied correctly [GH-10309]
 * resource/aws_cloudhsm_v2_cluster: Perform drift detection with tags [GH-10309]
+* resource/aws_dx_gateway_association: Fix backwards compatibility issue with missing `dx_gateway_association_id` attribute [GH-8776]
+* resource/aws_s3_bucket: Bypass `MethodNotAllowed` errors for Object Lock Configuration on read (support AWS C2S) [GH-10657]
 
 ## 2.33.0 (October 17, 2019)
 
