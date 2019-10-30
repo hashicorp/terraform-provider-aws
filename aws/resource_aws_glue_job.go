@@ -69,6 +69,7 @@ func resourceAwsGlueJob() *schema.Resource {
 			"glue_version": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"execution_property": {
 				Type:     schema.TypeList,
