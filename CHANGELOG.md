@@ -1,5 +1,9 @@
 ## 2.34.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_glue_job: Add `glue_version` argument [GH-10237]
+
 BUG FIXES:
 
 * resource/aws_backup_plan: Correctly handle changes to `recovery_point_tags` arguments [GH-10641]
