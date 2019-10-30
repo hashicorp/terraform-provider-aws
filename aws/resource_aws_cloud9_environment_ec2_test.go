@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
@@ -18,7 +18,6 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 	rString := acctest.RandString(8)
 	envName := fmt.Sprintf("tf_acc_env_basic_%s", rString)
 	uEnvName := fmt.Sprintf("tf_acc_env_basic_updated_%s", rString)
-
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,6 +34,12 @@ func TestAccAWSCloud9EnvironmentEc2_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:cloud9:[^:]+:[^:]+:environment:.+$`)),
 					resource.TestMatchResourceAttr(resourceName, "owner_arn", regexp.MustCompile(`^arn:`)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type"},
 			},
 			{
 				Config: testAccAWSCloud9EnvironmentEc2Config(uEnvName),
@@ -59,7 +64,6 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 	description := fmt.Sprintf("Tf Acc Test %s", rString)
 	uDescription := fmt.Sprintf("Tf Acc Test Updated %s", rString)
 	userName := fmt.Sprintf("tf_acc_cloud9_env_%s", rString)
-
 	resourceName := "aws_cloud9_environment_ec2.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -79,6 +83,12 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type", "automatic_stop_time_minutes", "subnet_id"},
+			},
+			{
 				Config: testAccAWSCloud9EnvironmentEc2AllFieldsConfig(uEnvName, uDescription, userName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloud9EnvironmentEc2Exists(resourceName, &conf),
@@ -88,30 +98,6 @@ func TestAccAWSCloud9EnvironmentEc2_allFields(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "owner_arn", regexp.MustCompile(`^arn:`)),
 					resource.TestCheckResourceAttr(resourceName, "type", "ec2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSCloud9EnvironmentEc2_importBasic(t *testing.T) {
-	rString := acctest.RandString(8)
-	name := fmt.Sprintf("tf_acc_api_doc_part_import_%s", rString)
-
-	resourceName := "aws_cloud9_environment_ec2.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloud9(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloud9EnvironmentEc2Destroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloud9EnvironmentEc2Config(name),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type"},
 			},
 		},
 	})

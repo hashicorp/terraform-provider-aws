@@ -1,15 +1,16 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"time"
 
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEcrRepository() *schema.Resource {
@@ -32,6 +33,15 @@ func resourceAwsEcrRepository() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"image_tag_mutability": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  ecr.ImageTagMutabilityMutable,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecr.ImageTagMutabilityMutable,
+					ecr.ImageTagMutabilityImmutable,
+				}, false),
+			},
 			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
@@ -53,8 +63,9 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*AWSClient).ecrconn
 
 	input := ecr.CreateRepositoryInput{
-		RepositoryName: aws.String(d.Get("name").(string)),
-		Tags:           tagsFromMapECR(d.Get("tags").(map[string]interface{})),
+		ImageTagMutability: aws.String(d.Get("image_tag_mutability").(string)),
+		RepositoryName:     aws.String(d.Get("name").(string)),
+		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcrTags(),
 	}
 
 	log.Printf("[DEBUG] Creating ECR repository: %#v", input)
@@ -108,24 +119,43 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	repository := out.Repositories[0]
+	arn := aws.StringValue(repository.RepositoryArn)
 
-	d.Set("arn", repository.RepositoryArn)
+	d.Set("arn", arn)
 	d.Set("name", repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
+	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
-	if err := getTagsECR(conn, d); err != nil {
-		return fmt.Errorf("error getting ECR repository tags: %s", err)
+	tags, err := keyvaluetags.EcrListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for ECR Repository (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
 }
 
 func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+	arn := d.Get("arn").(string)
 	conn := meta.(*AWSClient).ecrconn
 
-	if err := setTagsECR(conn, d); err != nil {
-		return fmt.Errorf("error setting ECR repository tags: %s", err)
+	if d.HasChange("image_tag_mutability") {
+		if err := resourceAwsEcrRepositoryUpdateImageTagMutability(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.EcrUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsEcrRepositoryRead(d, meta)
@@ -174,6 +204,21 @@ func resourceAwsEcrRepositoryDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] repository %q deleted.", d.Get("name").(string))
+
+	return nil
+}
+
+func resourceAwsEcrRepositoryUpdateImageTagMutability(conn *ecr.ECR, d *schema.ResourceData) error {
+	input := &ecr.PutImageTagMutabilityInput{
+		ImageTagMutability: aws.String(d.Get("image_tag_mutability").(string)),
+		RepositoryName:     aws.String(d.Id()),
+		RegistryId:         aws.String(d.Get("registry_id").(string)),
+	}
+
+	_, err := conn.PutImageTagMutability(input)
+	if err != nil {
+		return fmt.Errorf("Error setting image tag mutability: %s", err.Error())
+	}
 
 	return nil
 }

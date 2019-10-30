@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_transfer_ssh_key"
-sidebar_current: "docs-aws-resource-transfer-ssh-key"
 description: |-
   Provides a AWS Transfer SSH Public Key resource.
 ---

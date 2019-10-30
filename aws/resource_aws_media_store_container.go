@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsMediaStoreContainer() *schema.Resource {
@@ -132,10 +132,10 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 		return err
 	}
 
+	dcinput := &mediastore.DescribeContainerInput{
+		ContainerName: aws.String(d.Id()),
+	}
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		dcinput := &mediastore.DescribeContainerInput{
-			ContainerName: aws.String(d.Id()),
-		}
 		_, err := conn.DescribeContainer(dcinput)
 		if err != nil {
 			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
@@ -145,6 +145,9 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 		}
 		return resource.RetryableError(fmt.Errorf("Media Store Container (%s) still exists", d.Id()))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeContainer(dcinput)
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for Media Store Container (%s) deletion: %s", d.Id(), err)
 	}

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codebuild_project"
-sidebar_current: "docs-aws-resource-codebuild-project"
 description: |-
   Provides a CodeBuild Project resource.
 ---
@@ -71,6 +70,24 @@ resource "aws_iam_role_policy" "example" {
     {
       "Effect": "Allow",
       "Action": [
+        "ec2:CreateNetworkInterfacePermission"
+      ],
+      "Resource": [
+        "arn:aws:ec2:us-east-1:123456789012:network-interface/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "ec2:Subnet": [
+            "${aws_subnet.example1.arn}",
+            "${aws_subnet.example2.arn}"
+          ],
+          "ec2:AuthorizedService": "codebuild.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
         "s3:*"
       ],
       "Resource": [
@@ -135,16 +152,16 @@ resource "aws_codebuild_project" "example" {
   }
 
   vpc_config {
-    vpc_id = "vpc-725fca"
+    vpc_id = "${aws_vpc.example.id}"
 
     subnets = [
-      "subnet-ba35d2e0",
-      "subnet-ab129af1",
+      "${aws_subnet.example1.id}",
+      "${aws_subnet.example2.id}",
     ]
 
     security_group_ids = [
-      "sg-f9f27d91",
-      "sg-e4f48g23",
+      "${aws_security_group.example1.id}",
+      "${aws_security_group.example2.id}",
     ]
   }
 
@@ -215,8 +232,10 @@ The following arguments are supported:
 `artifacts` supports the following:
 
 * `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
+* `artifact_identifier` - (Optional) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec.
 * `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
-* `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
+* `override_artifact_name` (Optional) If set to true, a name specified in the build spec file overrides the artifact name.
+* `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket.
 * `name` - (Optional) The name of the project. If `type` is set to `S3`, this is the name of the output artifact object
 * `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.
 * `packaging` - (Optional) The type of build output artifact to create. If `type` is set to `S3`, valid values for this parameter are: `NONE` or `ZIP`
@@ -293,6 +312,7 @@ The following arguments are supported:
 * `type` - (Required) The build output artifact's type. Valid values for this parameter are: `CODEPIPELINE`, `NO_ARTIFACTS` or `S3`.
 * `artifact_identifier` - (Required) The artifact identifier. Must be the same specified inside AWS CodeBuild buildspec.
 * `encryption_disabled` - (Optional) If set to true, output artifacts will not be encrypted. If `type` is set to `NO_ARTIFACTS` then this value will be ignored. Defaults to `false`.
+* `override_artifact_name` (Optional) If set to true, a name specified in the build spec file overrides the artifact name.
 * `location` - (Optional) Information about the build output artifact location. If `type` is set to `CODEPIPELINE` or `NO_ARTIFACTS` then this value will be ignored. If `type` is set to `S3`, this is the name of the output bucket. If `path` is not also specified, then `location` can also specify the path of the output artifact in the output bucket.
 * `name` - (Optional) The name of the project. If `type` is set to `S3`, this is the name of the output artifact object
 * `namespace_type` - (Optional) The namespace to use in storing build artifacts. If `type` is set to `S3`, then valid values for this parameter are: `BUILD_ID` or `NONE`.

@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsEcsService() *schema.Resource {
@@ -152,7 +152,6 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"elb_name": {
@@ -487,6 +486,9 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateService(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("%s %q", err, d.Get("name").(string))
 	}
@@ -536,11 +538,17 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeServices(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error reading ECS service: %s", err)
 	}
 
 	if len(out.Services) < 1 {
+		if d.IsNewResource() {
+			return fmt.Errorf("ECS service not created: %q", d.Id())
+		}
 		log.Printf("[WARN] Removing ECS service %s (%s) because it's gone", d.Get("name").(string), d.Id())
 		d.SetId("")
 		return nil
@@ -838,7 +846,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-			out, err := conn.UpdateService(&input)
+			_, err := conn.UpdateService(&input)
 			if err != nil {
 				if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Please verify that the ECS service role being passed has the proper permissions.") {
 					return resource.RetryableError(err)
@@ -848,12 +856,13 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 				}
 				return resource.NonRetryableError(err)
 			}
-
-			log.Printf("[DEBUG] Updated ECS service %s", out.Service)
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateService(&input)
+		}
 		if err != nil {
-			return fmt.Errorf("error updating ECS Service (%s): %s", d.Id(), err)
+			return fmt.Errorf("Error updating ECS Service (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -952,9 +961,11 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteService(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting ECS service: %s", err)
 	}
 
 	// Wait until it's deleted

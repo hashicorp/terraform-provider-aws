@@ -1,12 +1,14 @@
 package session
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/defaults"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 )
 
 // EnvProviderName provides a name of the provider when config is loaded from environment.
@@ -99,10 +101,10 @@ type envConfig struct {
 	CustomCABundle string
 
 	csmEnabled  string
-	CSMEnabled  bool
+	CSMEnabled  *bool
 	CSMPort     string
-	CSMClientID string
 	CSMHost     string
+	CSMClientID string
 
 	// Enables endpoint discovery via environment variables.
 	//
@@ -125,6 +127,12 @@ type envConfig struct {
 	//
 	//  AWS_ROLE_SESSION_NAME=session_name
 	RoleSessionName string
+
+	// Specifies the Regional Endpoint flag for the sdk to resolve the endpoint for a service
+	//
+	// AWS_STS_REGIONAL_ENDPOINTS =sts_regional_endpoint
+	// This can take value as `regional` or `legacy`
+	STSRegionalEndpoint endpoints.STSRegionalEndpoint
 }
 
 var (
@@ -179,6 +187,9 @@ var (
 	roleSessionNameEnvKey = []string{
 		"AWS_ROLE_SESSION_NAME",
 	}
+	stsRegionalEndpointKey = []string{
+		"AWS_STS_REGIONAL_ENDPOINTS",
+	}
 )
 
 // loadEnvConfig retrieves the SDK's environment configuration.
@@ -187,7 +198,7 @@ var (
 // If the environment variable `AWS_SDK_LOAD_CONFIG` is set to a truthy value
 // the shared SDK config will be loaded in addition to the SDK's specific
 // configuration values.
-func loadEnvConfig() envConfig {
+func loadEnvConfig() (envConfig, error) {
 	enableSharedConfig, _ := strconv.ParseBool(os.Getenv("AWS_SDK_LOAD_CONFIG"))
 	return envConfigLoad(enableSharedConfig)
 }
@@ -198,11 +209,11 @@ func loadEnvConfig() envConfig {
 // Loads the shared configuration in addition to the SDK's specific configuration.
 // This will load the same values as `loadEnvConfig` if the `AWS_SDK_LOAD_CONFIG`
 // environment variable is set.
-func loadSharedEnvConfig() envConfig {
+func loadSharedEnvConfig() (envConfig, error) {
 	return envConfigLoad(true)
 }
 
-func envConfigLoad(enableSharedConfig bool) envConfig {
+func envConfigLoad(enableSharedConfig bool) (envConfig, error) {
 	cfg := envConfig{}
 
 	cfg.EnableSharedConfig = enableSharedConfig
@@ -230,7 +241,11 @@ func envConfigLoad(enableSharedConfig bool) envConfig {
 	setFromEnvVal(&cfg.CSMHost, csmHostEnvKey)
 	setFromEnvVal(&cfg.CSMPort, csmPortEnvKey)
 	setFromEnvVal(&cfg.CSMClientID, csmClientIDEnvKey)
-	cfg.CSMEnabled = len(cfg.csmEnabled) > 0
+
+	if len(cfg.csmEnabled) != 0 {
+		v, _ := strconv.ParseBool(cfg.csmEnabled)
+		cfg.CSMEnabled = &v
+	}
 
 	regionKeys := regionEnvKeys
 	profileKeys := profileEnvKeys
@@ -260,12 +275,23 @@ func envConfigLoad(enableSharedConfig bool) envConfig {
 
 	cfg.CustomCABundle = os.Getenv("AWS_CA_BUNDLE")
 
-	return cfg
+	// STS Regional Endpoint variable
+	for _, k := range stsRegionalEndpointKey {
+		if v := os.Getenv(k); len(v) != 0 {
+			STSRegionalEndpoint, err := endpoints.GetSTSRegionalEndpoint(v)
+			if err != nil {
+				return cfg, fmt.Errorf("failed to load, %v from env config, %v", k, err)
+			}
+			cfg.STSRegionalEndpoint = STSRegionalEndpoint
+		}
+	}
+
+	return cfg, nil
 }
 
 func setFromEnvVal(dst *string, keys []string) {
 	for _, k := range keys {
-		if v := os.Getenv(k); len(v) > 0 {
+		if v := os.Getenv(k); len(v) != 0 {
 			*dst = v
 			break
 		}

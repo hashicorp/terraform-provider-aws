@@ -1,15 +1,14 @@
 package aws
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsLbListenerCertificate() *schema.Resource {
@@ -46,13 +45,28 @@ func resourceAwsLbListenerCertificateCreate(d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", d.Get("certificate_arn").(string), d.Get("listener_arn").(string))
-	resp, err := conn.AddListenerCertificates(params)
-	if err != nil {
-		return fmt.Errorf("Error creating LB Listener Certificate: %s", err)
+
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.AddListenerCertificates(params)
+
+		// Retry for IAM Server Certificate eventual consistency
+		if isAWSErr(err, elbv2.ErrCodeCertificateNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.AddListenerCertificates(params)
 	}
 
-	if len(resp.Certificates) == 0 {
-		return errors.New("Error creating LB Listener Certificate: no certificates returned in response")
+	if err != nil {
+		return fmt.Errorf("error adding LB Listener Certificate: %s", err)
 	}
 
 	d.SetId(d.Get("listener_arn").(string) + "_" + d.Get("certificate_arn").(string))
@@ -86,6 +100,9 @@ func resourceAwsLbListenerCertificateRead(d *schema.ResourceData, meta interface
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		certificate, err = findAwsLbListenerCertificate(certificateArn, listenerArn, true, nil, conn)
+	}
 	if err != nil {
 		if certificate == nil {
 			log.Printf("[WARN] %s - removing from state", err)

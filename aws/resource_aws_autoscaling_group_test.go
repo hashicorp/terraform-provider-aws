@@ -15,9 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -459,6 +459,86 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 	})
 }
 
+func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfigWithLoadBalancer,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "0"),
+				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccAWSAutoScalingGroupConfigWithTargetGroup,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "1"),
+					// DEPRECATED: This value will be 0 when Computed: true is removed
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
+				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccAWSAutoScalingGroupConfigWithLoadBalancer,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
+					// DEPRECATED: This value will be 0 when Computed: true is removed
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "1"),
+				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	var group autoscaling.Group
 
@@ -743,6 +823,118 @@ func TestAccAWSAutoScalingGroup_ALB_TargetGroups(t *testing.T) {
 			},
 		},
 	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/256
+func TestAccAWSAutoScalingGroup_TargetGroupArns(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfig_TargetGroupArns(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "11"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccAWSAutoScalingGroupConfig_TargetGroupArns(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSAutoScalingGroupConfig_TargetGroupArns(rName, 11),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "11"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSAutoScalingGroupConfig_TargetGroupArns(rName string, tgCount int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.micro"
+  name          = %[1]q
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  count = %[2]d
+
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.test.id}"
+}
+
+resource "aws_autoscaling_group" "test" {
+  force_delete        = true
+  max_size            = 0
+  min_size            = 0
+  target_group_arns   = length(aws_lb_target_group.test) > 0 ? aws_lb_target_group.test[*].arn : []
+  vpc_zone_identifier = [aws_subnet.test.id]
+
+  launch_template {
+    id = aws_launch_template.test.id
+  }
+}
+`, rName, tgCount)
 }
 
 func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
@@ -1668,7 +1860,7 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_LaunchTempla
 				},
 			},
 			{
-				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, "$$Latest"),
+				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_LaunchTemplateSpecification_Version(rName, "$Latest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
@@ -2064,6 +2256,105 @@ resource "aws_autoscaling_group" "bar" {
 
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   load_balancers = ["${aws_elb.bar.name}"]
+}
+`
+
+const testAccAWSAutoScalingGroupConfigWithTargetGroup = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = "terraform-testacc-autoscaling-group-with-lb"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.foo.id}"
+}
+
+resource "aws_subnet" "foo" {
+	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.foo.id}"
+	tags = {
+		Name = "tf-acc-autoscaling-group-with-load-balancer"
+	}
+}
+
+resource "aws_security_group" "foo" {
+  vpc_id="${aws_vpc.foo.id}"
+
+  ingress {
+    protocol = "-1"
+    from_port = 0
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    protocol = "-1"
+    from_port = 0
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_lb_target_group" "foo" {
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.foo.id}"
+}
+
+resource "aws_elb" "bar" {
+  subnets = ["${aws_subnet.foo.id}"]
+	security_groups = ["${aws_security_group.foo.id}"]
+
+  listener {
+    instance_port = 80
+    instance_protocol = "http"
+    lb_port = 80
+    lb_protocol = "http"
+  }
+
+  health_check {
+    healthy_threshold = 2
+    unhealthy_threshold = 2
+    target = "HTTP:80/"
+    interval = 5
+    timeout = 2
+  }
+
+	depends_on = ["aws_internet_gateway.gw"]
+}
+
+// need an AMI that listens on :80 at boot, this is:
+data "aws_ami" "test_ami" {
+  most_recent = true
+
+  owners     = ["979382823631"]
+
+  filter {
+    name   = "name"
+    values = ["bitnami-nginxstack-*-linux-debian-9-x86_64-hvm-ebs"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+	security_groups = ["${aws_security_group.foo.id}"]
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["${aws_subnet.foo.availability_zone}"]
+  vpc_zone_identifier = ["${aws_subnet.foo.id}"]
+  max_size = 2
+  min_size = 2
+  health_check_grace_period = 300
+  health_check_type = "ELB"
+  wait_for_elb_capacity = 2
+  force_delete = true
+
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+	target_group_arns = ["${aws_lb_target_group.foo.arn}"]
 }
 `
 
@@ -3053,7 +3344,7 @@ resource "aws_autoscaling_group" "bar" {
   min_size = 0
   launch_template {
     id = "${aws_launch_template.foobar.id}"
-    version = "$$Latest"
+    version = "$Latest"
   }
 }
 `

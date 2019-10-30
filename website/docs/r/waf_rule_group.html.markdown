@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_waf_rule_group"
-sidebar_current: "docs-aws-resource-waf-rule-group"
 description: |-
   Provides a AWS WAF rule group resource.
 ---
@@ -40,6 +39,7 @@ The following arguments are supported:
 * `name` - (Required) A friendly name of the rule group
 * `metric_name` - (Required) A friendly name for the metrics from the rule group
 * `activated_rule` - (Optional) A list of activated rules, see below
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Nested Blocks
 
@@ -51,7 +51,7 @@ The following arguments are supported:
   * `type` - (Required) e.g. `BLOCK`, `ALLOW`, or `COUNT`
 * `priority` - (Required) Specifies the order in which the rules are evaluated. Rules with a lower value are evaluated before rules with a higher value.
 * `rule_id` - (Required) The ID of a [rule](/docs/providers/aws/r/waf_rule.html)
-* `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/waf_rule.html), [`RATE_BASED`]((/docs/providers/aws/r/waf_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
+* `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/waf_rule.html), [`RATE_BASED`](/docs/providers/aws/r/waf_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
 
 ## Attributes Reference
 

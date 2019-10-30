@@ -800,6 +800,13 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //
 // Creates a new maintenance window.
 //
+// The value you specify for Duration determines the specific end time for the
+// maintenance window based on the time it begins. No maintenance window tasks
+// are permitted to start after the resulting endtime minus the number of hours
+// you specify for Cutoff. For example, if the maintenance window starts at
+// 3 PM, the duration is three hours, and the value you specify for Cutoff is
+// one hour, no maintenance window tasks can start after 5 PM.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10449,6 +10456,9 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 // For information, see Install the Session Manager Plugin for the AWS CLI (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 // in the AWS Systems Manager User Guide.
 //
+// AWS Tools for PowerShell usage: Start-SSMSession is not currently supported
+// by AWS Tools for PowerShell on Windows local machines.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10712,6 +10722,13 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //
 // Updates an association. You can update the association name and version,
 // the document version, schedule, parameters, and Amazon S3 output.
+//
+// In order to call this API action, your IAM user account, group, or role must
+// be configured with permission to call the DescribeAssociation API action.
+// If you don't have permission to call DescribeAssociation, then you receive
+// the following error: An error occurred (AccessDeniedException) when calling
+// the UpdateAssociation operation: User: <user_arn> is not authorized to perform:
+// ssm:DescribeAssociation on resource: <resource_arn>
 //
 // When you update an association, the association immediately runs against
 // the specified targets.
@@ -11137,6 +11154,13 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 // UpdateMaintenanceWindow API operation for Amazon Simple Systems Manager (SSM).
 //
 // Updates an existing maintenance window. Only specified parameters are modified.
+//
+// The value you specify for Duration determines the specific end time for the
+// maintenance window based on the time it begins. No maintenance window tasks
+// are permitted to start after the resulting endtime minus the number of hours
+// you specify for Cutoff. For example, if the maintenance window starts at
+// 3 PM, the duration is three hours, and the value you specify for Cutoff is
+// one hour, no maintenance window tasks can start after 5 PM.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -15424,6 +15448,12 @@ type CreateAssociationInput struct {
 	DocumentVersion *string `type:"string"`
 
 	// The instance ID.
+	//
+	// InstanceId has been deprecated. To specify an instance ID for an association,
+	// use the Targets parameter. If you use the parameter InstanceId, you cannot
+	// use the parameters AssociationName, DocumentVersion, MaxErrors, MaxConcurrency,
+	// OutputLocation, or ScheduleExpression. To use these parameters, you must
+	// use the Targets parameter.
 	InstanceId *string `type:"string"`
 
 	// The maximum number of targets allowed to run the association at the same
@@ -15483,7 +15513,8 @@ type CreateAssociationInput struct {
 	// A cron expression when the association will be applied to the target(s).
 	ScheduleExpression *string `min:"1" type:"string"`
 
-	// The targets (either instances or tags) for the association.
+	// The targets (either instances or tags) for the association. You must specify
+	// a value for Targets if you don't specify a value for InstanceId.
 	Targets []*Target `type:"list"`
 }
 
@@ -19094,11 +19125,9 @@ func (s *DescribeInstancePatchStatesOutput) SetNextToken(v string) *DescribeInst
 type DescribeInstancePatchesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Each entry in the array is a structure containing:
-	//
-	// Key (string, between 1 and 128 characters)
-	//
-	// Values (array of strings, each string between 1 and 256 characters)
+	// An array of structures. Each entry in the array is a structure containing
+	// a Key, Value combination. Valid values for Key are Classification | KBId
+	// | Severity | State.
 	Filters []*PatchOrchestratorFilter `type:"list"`
 
 	// The ID of the instance whose patch state information should be retrieved.
@@ -25096,10 +25125,10 @@ type InstanceInformation struct {
 	// The instance ID.
 	InstanceId *string `type:"string"`
 
-	// Indicates whether latest version of SSM Agent is running on your instance.
-	// Some older versions of Windows Server use the EC2Config service to process
-	// SSM requests. For this reason, this field does not indicate whether or not
-	// the latest version is installed on Windows managed instances.
+	// Indicates whether the latest version of SSM Agent is running on your Linux
+	// Managed Instance. This field does not indicate whether or not the latest
+	// version is installed on Windows managed instances, because some older versions
+	// of Windows Server use the EC2Config service to process SSM requests.
 	IsLatestVersion *bool `type:"boolean"`
 
 	// The date the association was last run.
@@ -26370,7 +26399,7 @@ type LabelParameterVersionInput struct {
 
 	// The specific version of the parameter on which you want to attach one or
 	// more labels. If no version is specified, the system attaches the label to
-	// the latest version.)
+	// the latest version.
 	ParameterVersion *int64 `type:"long"`
 }
 
@@ -26431,6 +26460,9 @@ type LabelParameterVersionOutput struct {
 	// label requirements, see Labeling Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
 	// in the AWS Systems Manager User Guide.
 	InvalidLabels []*string `min:"1" type:"list"`
+
+	// The version of the parameter that has been labeled.
+	ParameterVersion *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -26446,6 +26478,12 @@ func (s LabelParameterVersionOutput) GoString() string {
 // SetInvalidLabels sets the InvalidLabels field's value.
 func (s *LabelParameterVersionOutput) SetInvalidLabels(v []*string) *LabelParameterVersionOutput {
 	s.InvalidLabels = v
+	return s
+}
+
+// SetParameterVersion sets the ParameterVersion field's value.
+func (s *LabelParameterVersionOutput) SetParameterVersion(v int64) *LabelParameterVersionOutput {
+	s.ParameterVersion = &v
 	return s
 }
 
@@ -31524,29 +31562,66 @@ type PutParameterInput struct {
 	// action.
 	Tags []*Tag `type:"list"`
 
+	// The parameter tier to assign to a parameter.
+	//
 	// Parameter Store offers a standard tier and an advanced tier for parameters.
-	// Standard parameters have a value limit of 4 KB and can't be configured to
-	// use parameter policies. You can create a maximum of 10,000 standard parameters
-	// per account and per Region. Standard parameters are offered at no additional
-	// cost.
+	// Standard parameters have a content size limit of 4 KB and can't be configured
+	// to use parameter policies. You can create a maximum of 10,000 standard parameters
+	// for each Region in an AWS account. Standard parameters are offered at no
+	// additional cost.
 	//
-	// Advanced parameters have a value limit of 8 KB and can be configured to use
-	// parameter policies. You can create a maximum of 100,000 advanced parameters
-	// per account and per Region. Advanced parameters incur a charge.
+	// Advanced parameters have a content size limit of 8 KB and can be configured
+	// to use parameter policies. You can create a maximum of 100,000 advanced parameters
+	// for each Region in an AWS account. Advanced parameters incur a charge. For
+	// more information, see About Advanced Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+	// in the AWS Systems Manager User Guide.
 	//
-	// If you don't specify a parameter tier when you create a new parameter, the
-	// parameter defaults to using the standard tier. You can change a standard
-	// parameter to an advanced parameter at any time. But you can't revert an advanced
-	// parameter to a standard parameter. Reverting an advanced parameter to a standard
-	// parameter would result in data loss because the system would truncate the
-	// size of the parameter from 8 KB to 4 KB. Reverting would also remove any
-	// policies attached to the parameter. Lastly, advanced parameters use a different
-	// form of encryption than standard parameters.
+	// You can change a standard parameter to an advanced parameter any time. But
+	// you can't revert an advanced parameter to a standard parameter. Reverting
+	// an advanced parameter to a standard parameter would result in data loss because
+	// the system would truncate the size of the parameter from 8 KB to 4 KB. Reverting
+	// would also remove any policies attached to the parameter. Lastly, advanced
+	// parameters use a different form of encryption than standard parameters.
 	//
 	// If you no longer need an advanced parameter, or if you no longer want to
 	// incur charges for an advanced parameter, you must delete it and recreate
-	// it as a new standard parameter. For more information, see About Advanced
-	// Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+	// it as a new standard parameter.
+	//
+	// Using the Default Tier Configuration
+	//
+	// In PutParameter requests, you can specify the tier to create the parameter
+	// in. Whenever you specify a tier in the request, Parameter Store creates or
+	// updates the parameter according to that request. However, if you do not specify
+	// a tier in a request, Parameter Store assigns the tier based on the current
+	// Parameter Store default tier configuration.
+	//
+	// The default tier when you begin using Parameter Store is the standard-parameter
+	// tier. If you use the advanced-parameter tier, you can specify one of the
+	// following as the default:
+	//
+	//    * Advanced: With this option, Parameter Store evaluates all requests as
+	//    advanced parameters.
+	//
+	//    * Intelligent-Tiering: With this option, Parameter Store evaluates each
+	//    request to determine if the parameter is standard or advanced. If the
+	//    request doesn't include any options that require an advanced parameter,
+	//    the parameter is created in the standard-parameter tier. If one or more
+	//    options requiring an advanced parameter are included in the request, Parameter
+	//    Store create a parameter in the advanced-parameter tier. This approach
+	//    helps control your parameter-related costs by always creating standard
+	//    parameters unless an advanced parameter is necessary.
+	//
+	// Options that require an advanced parameter include the following:
+	//
+	//    * The content size of the parameter is more than 4 KB.
+	//
+	//    * The parameter uses a parameter policy.
+	//
+	//    * More than 10,000 parameters already exist in your AWS account in the
+	//    current Region.
+	//
+	// For more information about configuring the default tier option, see Specifying
+	// a Default Parameter Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/ps-default-tier.html)
 	// in the AWS Systems Manager User Guide.
 	Tier *string `type:"string" enum:"ParameterTier"`
 
@@ -31680,6 +31755,9 @@ func (s *PutParameterInput) SetValue(v string) *PutParameterInput {
 type PutParameterOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The tier assigned to the parameter.
+	Tier *string `type:"string" enum:"ParameterTier"`
+
 	// The new version number of a parameter. If you edit a parameter value, Parameter
 	// Store automatically creates a new version and assigns this new version a
 	// unique ID. You can reference a parameter version ID in API actions or in
@@ -31697,6 +31775,12 @@ func (s PutParameterOutput) String() string {
 // GoString returns the string representation
 func (s PutParameterOutput) GoString() string {
 	return s.String()
+}
+
+// SetTier sets the Tier field's value.
+func (s *PutParameterOutput) SetTier(v string) *PutParameterOutput {
+	s.Tier = &v
+	return s
 }
 
 // SetVersion sets the Version field's value.
@@ -35285,7 +35369,7 @@ type UpdateDocumentInput struct {
 	// supports JSON and YAML documents. JSON is the default format.
 	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
-	// The version of the document that you want to update.
+	// (Required) The version of the document that you want to update.
 	DocumentVersion *string `type:"string"`
 
 	// The name of the document that you want to update.
@@ -37610,6 +37694,9 @@ const (
 
 	// ParameterTierAdvanced is a ParameterTier enum value
 	ParameterTierAdvanced = "Advanced"
+
+	// ParameterTierIntelligentTiering is a ParameterTier enum value
+	ParameterTierIntelligentTiering = "Intelligent-Tiering"
 )
 
 const (

@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -136,6 +136,7 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -162,6 +163,7 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 
 	input := configservice.PutConfigRuleInput{
 		ConfigRule: &ruleInput,
+		Tags:       tagsFromMapConfigService(d.Get("tags").(map[string]interface{})),
 	}
 	log.Printf("[DEBUG] Creating AWSConfig config rule: %s", input)
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
@@ -189,6 +191,17 @@ func resourceAwsConfigConfigRulePut(d *schema.ResourceData, meta interface{}) er
 	d.SetId(name)
 
 	log.Printf("[DEBUG] AWSConfig config rule %q created", name)
+
+	if !d.IsNewResource() {
+		if err := setTagsConfigService(conn, d, d.Get("arn").(string)); err != nil {
+			if isAWSErr(err, configservice.ErrCodeResourceNotFoundException, "") {
+				log.Printf("[WARN] Config Rule not found: %s, removing from state", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return fmt.Errorf("Error updating tags for %s: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsConfigConfigRuleRead(d, meta)
 }
@@ -235,6 +248,15 @@ func resourceAwsConfigConfigRuleRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("source", flattenConfigRuleSource(rule.Source))
+
+	if err := saveTagsConfigService(conn, d, aws.StringValue(rule.ConfigRuleArn)); err != nil {
+		if isAWSErr(err, configservice.ErrCodeResourceNotFoundException, "") {
+			log.Printf("[WARN] Config Rule not found: %s, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error setting tags for %s: %s", d.Id(), err)
+	}
 
 	return nil
 }

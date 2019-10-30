@@ -13,10 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSecurityGroup() *schema.Resource {
@@ -448,8 +448,8 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Security Group destroy: %v", d.Id())
 
-	if err := deleteLingeringLambdaENIs(conn, d, "group-id"); err != nil {
-		return fmt.Errorf("Failed to delete Lambda ENIs: %s", err)
+	if err := deleteLingeringLambdaENIs(conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error deleting Lambda ENIs using Security Group (%s): %s", d.Id(), err)
 	}
 
 	// conditionally revoke rules first before attempting to delete the group
@@ -458,31 +458,33 @@ func resourceAwsSecurityGroupDelete(d *schema.ResourceData, meta interface{}) er
 			return err
 		}
 	}
-
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteSecurityGroup(&ec2.DeleteSecurityGroupInput{
-			GroupId: aws.String(d.Id()),
-		})
+	input := &ec2.DeleteSecurityGroupInput{
+		GroupId: aws.String(d.Id()),
+	}
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteSecurityGroup(input)
 		if err != nil {
-			ec2err, ok := err.(awserr.Error)
-			if !ok {
-				return resource.RetryableError(err)
-			}
-
-			switch ec2err.Code() {
-			case "InvalidGroup.NotFound":
+			if isAWSErr(err, "InvalidGroup.NotFound", "") {
 				return nil
-			case "DependencyViolation":
+			}
+			if isAWSErr(err, "DependencyViolation", "") {
 				// If it is a dependency violation, we want to retry
 				return resource.RetryableError(err)
-			default:
-				// Any other error, we want to quit the retry loop immediately
-				return resource.NonRetryableError(err)
 			}
+			return resource.NonRetryableError(err)
 		}
-
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteSecurityGroup(input)
+		if isAWSErr(err, "InvalidGroup.NotFound", "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting security group: %s", err)
+	}
+	return nil
 }
 
 // Revoke all ingress/egress rules that a Security Group has
@@ -1400,98 +1402,72 @@ func sgProtocolIntegers() map[string]int {
 
 // The AWS Lambda service creates ENIs behind the scenes and keeps these around for a while
 // which would prevent SGs attached to such ENIs from being destroyed
-func deleteLingeringLambdaENIs(conn *ec2.EC2, d *schema.ResourceData, filterName string) error {
-	// Here we carefully find the offenders
-	params := &ec2.DescribeNetworkInterfacesInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String(filterName),
-				Values: []*string{aws.String(d.Id())},
-			},
-			{
-				Name:   aws.String("description"),
-				Values: []*string{aws.String("AWS Lambda VPC ENI: *")},
-			},
-		},
+func deleteLingeringLambdaENIs(conn *ec2.EC2, filterName, resourceId string, timeout time.Duration) error {
+	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
+	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
 	}
-	networkInterfaceResp, err := conn.DescribeNetworkInterfaces(params)
 
-	if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
-		return nil
-	}
+	resp, err := conn.DescribeNetworkInterfaces(&ec2.DescribeNetworkInterfacesInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			filterName:    resourceId,
+			"description": "AWS Lambda VPC ENI*",
+		}),
+	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing ENIs: %s", err)
 	}
 
-	// Then we detach and finally delete those
-	v := networkInterfaceResp.NetworkInterfaces
-	for _, eni := range v {
-		if eni.Attachment != nil {
-			detachNetworkInterfaceParams := &ec2.DetachNetworkInterfaceInput{
-				AttachmentId: eni.Attachment.AttachmentId,
-			}
-			_, detachNetworkInterfaceErr := conn.DetachNetworkInterface(detachNetworkInterfaceParams)
+	for _, eni := range resp.NetworkInterfaces {
+		eniId := aws.StringValue(eni.NetworkInterfaceId)
 
-			if isAWSErr(detachNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
-				return nil
-			}
-
-			if detachNetworkInterfaceErr != nil {
-				return detachNetworkInterfaceErr
-			}
-
-			log.Printf("[DEBUG] Waiting for ENI (%s) to become detached", *eni.NetworkInterfaceId)
+		if eni.Attachment != nil && aws.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
+			// Hyperplane attached ENI.
+			// Wait for it to be moved into a removable state.
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"true"},
-				Target:  []string{"false"},
-				Refresh: networkInterfaceAttachedRefreshFunc(conn, *eni.NetworkInterfaceId),
-				Timeout: d.Timeout(schema.TimeoutDelete),
+				Pending: []string{
+					ec2.NetworkInterfaceStatusInUse,
+				},
+				Target: []string{
+					ec2.NetworkInterfaceStatusAvailable,
+				},
+				Refresh:    networkInterfaceStateRefresh(conn, eniId),
+				Timeout:    timeout,
+				Delay:      10 * time.Second,
+				MinTimeout: 10 * time.Second,
+				// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
+				ContinuousTargetOccurence: 18,
+				NotFoundChecks:            1,
 			}
-			if _, err := stateConf.WaitForState(); err != nil {
-				return fmt.Errorf(
-					"Error waiting for ENI (%s) to become detached: %s", *eni.NetworkInterfaceId, err)
+
+			eniRaw, err := stateConf.WaitForState()
+
+			if isResourceNotFoundError(err) {
+				continue
 			}
+
+			if err != nil {
+				return fmt.Errorf("error waiting for Lambda V2N ENI (%s) to become available for detachment: %s", eniId, err)
+			}
+
+			eni = eniRaw.(*ec2.NetworkInterface)
 		}
 
-		deleteNetworkInterfaceParams := &ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: eni.NetworkInterfaceId,
-		}
-		_, deleteNetworkInterfaceErr := conn.DeleteNetworkInterface(deleteNetworkInterfaceParams)
+		err = detachNetworkInterface(conn, eni, timeout)
 
-		if isAWSErr(deleteNetworkInterfaceErr, "InvalidNetworkInterfaceID.NotFound", "") {
-			return nil
+		if err != nil {
+			return fmt.Errorf("error detaching Lambda ENI (%s): %s", eniId, err)
 		}
 
-		if deleteNetworkInterfaceErr != nil {
-			return deleteNetworkInterfaceErr
+		err = deleteNetworkInterface(conn, eniId)
+
+		if err != nil {
+			return fmt.Errorf("error deleting Lambda ENI (%s): %s", eniId, err)
 		}
 	}
 
 	return nil
-}
-
-func networkInterfaceAttachedRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
-			NetworkInterfaceIds: []*string{aws.String(id)},
-		}
-		describeResp, err := conn.DescribeNetworkInterfaces(describe_network_interfaces_request)
-
-		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
-			return 42, "false", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		eni := describeResp.NetworkInterfaces[0]
-		hasAttachment := strconv.FormatBool(eni.Attachment != nil)
-		log.Printf("[DEBUG] ENI %s has attachment state %s", id, hasAttachment)
-		return eni, hasAttachment, nil
-	}
 }
 
 func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.IpPermission, desc string) map[string]interface{} {

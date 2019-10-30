@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
-sidebar_current: "docs-aws-resource-elasticsearch-domain"
 description: |-
   Terraform resource for managing an AWS Elasticsearch Domain.
 ---
@@ -148,7 +147,7 @@ resource "aws_security_group" "es" {
     protocol  = "tcp"
 
     cidr_blocks = [
-      "${data.aws_vpc.selected.cidr_blocks}",
+      "${data.aws_vpc.selected.cidr_block}",
     ]
   }
 }
@@ -228,7 +227,7 @@ The following arguments are supported:
 
 **ebs_options** supports the following attributes:
 
-* `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain
+* `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
 * `volume_type` - (Optional) The type of EBS volumes attached to data nodes.
 * `volume_size` - The size of EBS volumes attached to data nodes (in GB).
 **Required** if `ebs_enabled` is set to `true`.

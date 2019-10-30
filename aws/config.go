@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/applicationinsights"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
@@ -64,6 +66,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fms"
+	"github.com/aws/aws-sdk-go/service/forecastservice"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glacier"
@@ -73,12 +76,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/aws/aws-sdk-go/service/iotanalytics"
+	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -95,8 +101,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/personalize"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -130,8 +138,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
-	"github.com/hashicorp/terraform/helper/logging"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 )
 
 type Config struct {
@@ -160,17 +167,21 @@ type Config struct {
 	SkipRequestingAccountId bool
 	SkipMetadataApiCheck    bool
 	S3ForcePathStyle        bool
+
+	terraformVersion string
 }
 
 type AWSClient struct {
 	accountid                           string
 	acmconn                             *acm.ACM
 	acmpcaconn                          *acmpca.ACMPCA
+	amplifyconn                         *amplify.Amplify
 	apigateway                          *apigateway.APIGateway
 	apigatewayv2conn                    *apigatewayv2.ApiGatewayV2
 	appautoscalingconn                  *applicationautoscaling.ApplicationAutoScaling
 	applicationinsightsconn             *applicationinsights.ApplicationInsights
 	appmeshconn                         *appmesh.AppMesh
+	appstreamconn                       *appstream.AppStream
 	appsyncconn                         *appsync.AppSync
 	athenaconn                          *athena.Athena
 	autoscalingconn                     *autoscaling.AutoScaling
@@ -201,6 +212,7 @@ type AWSClient struct {
 	devicefarmconn                      *devicefarm.DeviceFarm
 	dlmconn                             *dlm.DLM
 	dmsconn                             *databasemigrationservice.DatabaseMigrationService
+	dnsSuffix                           string
 	docdbconn                           *docdb.DocDB
 	dsconn                              *directoryservice.DirectoryService
 	dxconn                              *directconnect.DirectConnect
@@ -219,6 +231,7 @@ type AWSClient struct {
 	esconn                              *elasticsearch.ElasticsearchService
 	firehoseconn                        *firehose.Firehose
 	fmsconn                             *fms.FMS
+	forecastconn                        *forecastservice.ForecastService
 	fsxconn                             *fsx.FSx
 	gameliftconn                        *gamelift.GameLift
 	glacierconn                         *glacier.Glacier
@@ -228,12 +241,15 @@ type AWSClient struct {
 	iamconn                             *iam.IAM
 	inspectorconn                       *inspector.Inspector
 	iotconn                             *iot.IoT
+	iotanalyticsconn                    *iotanalytics.IoTAnalytics
+	ioteventsconn                       *iotevents.IoTEvents
 	kafkaconn                           *kafka.Kafka
 	kinesisanalyticsconn                *kinesisanalytics.KinesisAnalytics
 	kinesisanalyticsv2conn              *kinesisanalyticsv2.KinesisAnalyticsV2
 	kinesisconn                         *kinesis.Kinesis
 	kinesisvideoconn                    *kinesisvideo.KinesisVideo
 	kmsconn                             *kms.KMS
+	lakeformationconn                   *lakeformation.LakeFormation
 	lambdaconn                          *lambda.Lambda
 	lexmodelconn                        *lexmodelbuildingservice.LexModelBuildingService
 	licensemanagerconn                  *licensemanager.LicenseManager
@@ -251,8 +267,10 @@ type AWSClient struct {
 	opsworksconn                        *opsworks.OpsWorks
 	organizationsconn                   *organizations.Organizations
 	partition                           string
+	personalizeconn                     *personalize.Personalize
 	pinpointconn                        *pinpoint.Pinpoint
 	pricingconn                         *pricing.Pricing
+	qldbconn                            *qldb.QLDB
 	quicksightconn                      *quicksight.QuickSight
 	r53conn                             *route53.Route53
 	ramconn                             *ram.RAM
@@ -262,6 +280,7 @@ type AWSClient struct {
 	resourcegroupsconn                  *resourcegroups.ResourceGroups
 	route53resolverconn                 *route53resolver.Route53Resolver
 	s3conn                              *s3.S3
+	s3connUriCleaningDisabled           *s3.S3
 	s3controlconn                       *s3control.S3Control
 	sagemakerconn                       *sagemaker.SageMaker
 	scconn                              *servicecatalog.ServiceCatalog
@@ -281,6 +300,7 @@ type AWSClient struct {
 	stsconn                             *sts.STS
 	supportedplatforms                  []string
 	swfconn                             *swf.SWF
+	terraformVersion                    string
 	transferconn                        *transfer.Transfer
 	wafconn                             *waf.WAF
 	wafregionalconn                     *wafregional.WAFRegional
@@ -322,7 +342,8 @@ func (c *Config) Client() (interface{}, error) {
 		UserAgentProducts: []*awsbase.UserAgentProduct{
 			{Name: "APN", Version: "1.0"},
 			{Name: "HashiCorp", Version: "1.0"},
-			{Name: "Terraform", Version: terraform.VersionString()},
+			{Name: "Terraform", Version: c.terraformVersion,
+				Extra: []string{"+https://www.terraform.io"}},
 		},
 	}
 
@@ -339,15 +360,22 @@ func (c *Config) Client() (interface{}, error) {
 		return nil, err
 	}
 
+	dnsSuffix := "amazonaws.com"
+	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
+		dnsSuffix = p.DNSSuffix()
+	}
+
 	client := &AWSClient{
 		accountid:                           accountID,
 		acmconn:                             acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acm"])})),
 		acmpcaconn:                          acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acmpca"])})),
+		amplifyconn:                         amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["amplify"])})),
 		apigateway:                          apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
 		apigatewayv2conn:                    apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
 		appautoscalingconn:                  applicationautoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationautoscaling"])})),
 		applicationinsightsconn:             applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationinsights"])})),
 		appmeshconn:                         appmesh.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appmesh"])})),
+		appstreamconn:                       appstream.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appstream"])})),
 		appsyncconn:                         appsync.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["appsync"])})),
 		athenaconn:                          athena.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["athena"])})),
 		autoscalingconn:                     autoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["autoscaling"])})),
@@ -378,6 +406,7 @@ func (c *Config) Client() (interface{}, error) {
 		devicefarmconn:                      devicefarm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["devicefarm"])})),
 		dlmconn:                             dlm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dlm"])})),
 		dmsconn:                             databasemigrationservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["dms"])})),
+		dnsSuffix:                           dnsSuffix,
 		docdbconn:                           docdb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["docdb"])})),
 		dsconn:                              directoryservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ds"])})),
 		dxconn:                              directconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["directconnect"])})),
@@ -396,6 +425,7 @@ func (c *Config) Client() (interface{}, error) {
 		esconn:                              elasticsearch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["es"])})),
 		firehoseconn:                        firehose.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["firehose"])})),
 		fmsconn:                             fms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fms"])})),
+		forecastconn:                        forecastservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["forecast"])})),
 		fsxconn:                             fsx.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["fsx"])})),
 		gameliftconn:                        gamelift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["gamelift"])})),
 		glacierconn:                         glacier.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["glacier"])})),
@@ -404,12 +434,15 @@ func (c *Config) Client() (interface{}, error) {
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
 		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
 		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
+		iotanalyticsconn:                    iotanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotanalytics"])})),
+		ioteventsconn:                       iotevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotevents"])})),
 		kafkaconn:                           kafka.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kafka"])})),
 		kinesisanalyticsconn:                kinesisanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalytics"])})),
 		kinesisanalyticsv2conn:              kinesisanalyticsv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisanalytics"])})),
 		kinesisconn:                         kinesis.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesis"])})),
 		kinesisvideoconn:                    kinesisvideo.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kinesisvideo"])})),
 		kmsconn:                             kms.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["kms"])})),
+		lakeformationconn:                   lakeformation.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lakeformation"])})),
 		lambdaconn:                          lambda.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lambda"])})),
 		lexmodelconn:                        lexmodelbuildingservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lexmodels"])})),
 		licensemanagerconn:                  licensemanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["licensemanager"])})),
@@ -427,8 +460,10 @@ func (c *Config) Client() (interface{}, error) {
 		opsworksconn:                        opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["opsworks"])})),
 		organizationsconn:                   organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["organizations"])})),
 		partition:                           partition,
+		personalizeconn:                     personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["personalize"])})),
 		pinpointconn:                        pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
 		pricingconn:                         pricing.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pricing"])})),
+		qldbconn:                            qldb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["qldb"])})),
 		quicksightconn:                      quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),
 		ramconn:                             ram.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ram"])})),
 		rdsconn:                             rds.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["rds"])})),
@@ -436,7 +471,6 @@ func (c *Config) Client() (interface{}, error) {
 		region:                              c.Region,
 		resourcegroupsconn:                  resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
-		s3conn:                              s3.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3"]), S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle)})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
 		scconn:                              servicecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicecatalog"])})),
@@ -454,6 +488,7 @@ func (c *Config) Client() (interface{}, error) {
 		storagegatewayconn:                  storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["storagegateway"])})),
 		stsconn:                             sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sts"])})),
 		swfconn:                             swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["swf"])})),
+		terraformVersion:                    c.terraformVersion,
 		transferconn:                        transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["transfer"])})),
 		wafconn:                             waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["waf"])})),
 		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
@@ -472,6 +507,17 @@ func (c *Config) Client() (interface{}, error) {
 	shieldConfig := &aws.Config{
 		Endpoint: aws.String(c.Endpoints["shield"]),
 	}
+
+	// Services that require multiple client configurations
+	s3Config := &aws.Config{
+		Endpoint:         aws.String(c.Endpoints["s3"]),
+		S3ForcePathStyle: aws.Bool(c.S3ForcePathStyle),
+	}
+
+	client.s3conn = s3.New(sess.Copy(s3Config))
+
+	s3Config.DisableRestProtocolURICleaning = aws.Bool(true)
+	client.s3connUriCleaningDisabled = s3.New(sess.Copy(s3Config))
 
 	// Handle deprecated endpoint configurations
 	if c.Endpoints["kinesis_analytics"] != "" {
@@ -495,31 +541,12 @@ func (c *Config) Client() (interface{}, error) {
 		}
 		route53Config.Region = aws.String(endpoints.CnNorthwest1RegionID)
 	case endpoints.AwsUsGovPartitionID:
-		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS GovCloud (US) partition.
-		// This can likely be removed in the future.
-		if aws.StringValue(route53Config.Endpoint) == "" {
-			route53Config.Endpoint = aws.String("https://route53.us-gov.amazonaws.com")
-		}
 		route53Config.Region = aws.String(endpoints.UsGovWest1RegionID)
 	}
 
 	client.globalacceleratorconn = globalaccelerator.New(sess.Copy(globalAcceleratorConfig))
 	client.r53conn = route53.New(sess.Copy(route53Config))
 	client.shieldconn = shield.New(sess.Copy(shieldConfig))
-
-	// Workaround for https://github.com/aws/aws-sdk-go/issues/1376
-	client.kinesisconn.Handlers.Retry.PushBack(func(r *request.Request) {
-		if !strings.HasPrefix(r.Operation.Name, "Describe") && !strings.HasPrefix(r.Operation.Name, "List") {
-			return
-		}
-		err, ok := r.Error.(awserr.Error)
-		if !ok || err == nil {
-			return
-		}
-		if err.Code() == kinesis.ErrCodeLimitExceededException {
-			r.Retryable = aws.Bool(true)
-		}
-	})
 
 	// Workaround for https://github.com/aws/aws-sdk-go/issues/1472
 	client.appautoscalingconn.Handlers.Retry.PushBack(func(r *request.Request) {
@@ -543,6 +570,29 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.configconn.Handlers.Retry.PushBack(func(r *request.Request) {
+		// When calling Config Organization Rules API actions immediately
+		// after Organization creation, the API can randomly return the
+		// OrganizationAccessDeniedException error for a few minutes, even
+		// after succeeding a few requests.
+		switch r.Operation.Name {
+		case "DeleteOrganizationConfigRule", "DescribeOrganizationConfigRules", "DescribeOrganizationConfigRuleStatuses", "PutOrganizationConfigRule":
+			if !isAWSErr(r.Error, configservice.ErrCodeOrganizationAccessDeniedException, "This action can be only made by AWS Organization's master account.") {
+				return
+			}
+
+			// We only want to retry briefly as the default max retry count would
+			// excessively retry when the error could be legitimate.
+			// We currently depend on the DefaultRetryer exponential backoff here.
+			// ~10 retries gives a fair backoff of a few seconds.
+			if r.RetryCount < 9 {
+				r.Retryable = aws.Bool(true)
+			} else {
+				r.Retryable = aws.Bool(false)
+			}
+		}
+	})
+
 	// See https://github.com/aws/aws-sdk-go/pull/1276
 	client.dynamodbconn.Handlers.Retry.PushBack(func(r *request.Request) {
 		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
@@ -554,6 +604,12 @@ func (c *Config) Client() (interface{}, error) {
 	})
 
 	client.ec2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if r.Operation.Name == "CreateClientVpnEndpoint" {
+			if isAWSErr(r.Error, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+
 		if r.Operation.Name == "CreateVpnConnection" {
 			if isAWSErr(r.Error, "VpnConnectionLimitExceeded", "maximum number of mutating objects has been reached") {
 				r.Retryable = aws.Bool(true)
@@ -562,6 +618,12 @@ func (c *Config) Client() (interface{}, error) {
 
 		if r.Operation.Name == "CreateVpnGateway" {
 			if isAWSErr(r.Error, "VpnGatewayLimitExceeded", "maximum number of mutating objects has been reached") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+
+		if r.Operation.Name == "AttachVpnGateway" {
+			if isAWSErr(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				r.Retryable = aws.Bool(true)
 			}
 		}

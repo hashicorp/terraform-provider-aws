@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsEbsSnapshotCopy() *schema.Resource {
@@ -141,12 +141,11 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		request := &ec2.DeleteSnapshotInput{
-			SnapshotId: aws.String(d.Id()),
-		}
-		_, err := conn.DeleteSnapshot(request)
+	input := &ec2.DeleteSnapshotInput{
+		SnapshotId: aws.String(d.Id()),
+	}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteSnapshot(input)
 		if err == nil {
 			return nil
 		}
@@ -161,6 +160,16 @@ func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) 
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteSnapshot(input)
+		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting EBS snapshot copy: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsEbsSnapshotCopyWaitForAvailable(id string, conn *ec2.EC2) error {

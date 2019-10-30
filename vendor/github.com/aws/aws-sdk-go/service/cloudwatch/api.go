@@ -58,7 +58,8 @@ func (c *CloudWatch) DeleteAlarmsRequest(input *DeleteAlarmsInput) (req *request
 
 // DeleteAlarms API operation for Amazon CloudWatch.
 //
-// Deletes the specified alarms. In the event of an error, no alarms are deleted.
+// Deletes the specified alarms. You can delete up to 50 alarms in one operation.
+// In the event of an error, no alarms are deleted.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1032,6 +1033,13 @@ func (c *CloudWatch) GetMetricDataRequest(input *GetMetricDataInput) (req *reque
 // resolution. After 15 days, this data is still available, but is aggregated
 // and retrievable only with a resolution of 5 minutes. After 63 days, the data
 // is further aggregated and is available with a resolution of 1 hour.
+//
+// If you omit Unit in your request, all data that was collected with any unit
+// is returned, along with the corresponding units that were specified when
+// the data was reported to CloudWatch. If you specify a unit, the operation
+// returns only data data that was collected with that unit specified. If you
+// specify a unit that does not match the data collected, the results of the
+// operation are null. CloudWatch does not perform unit conversions.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2296,19 +2304,20 @@ func (c *CloudWatch) TagResourceRequest(input *TagResourceInput) (req *request.R
 // TagResource API operation for Amazon CloudWatch.
 //
 // Assigns one or more tags (key-value pairs) to the specified CloudWatch resource.
+// Currently, the only CloudWatch resources that can be tagged are alarms.
+//
 // Tags can help you organize and categorize your resources. You can also use
 // them to scope user permissions, by granting a user permission to access or
-// change only resources with certain tag values. In CloudWatch, alarms can
-// be tagged.
+// change only resources with certain tag values.
 //
 // Tags don't have any semantic meaning to AWS and are interpreted strictly
 // as strings of characters.
 //
-// You can use the TagResource action with a resource that already has tags.
-// If you specify a new tag key for the resource, this tag is appended to the
-// list of tags associated with the resource. If you specify a tag key that
-// is already associated with the resource, the new tag value that you specify
-// replaces the previous value for that tag.
+// You can use the TagResource action with an alarm that already has tags. If
+// you specify a new tag key for the alarm, this tag is appended to the list
+// of tags associated with the alarm. If you specify a tag key that is already
+// associated with the alarm, the new tag value that you specify replaces the
+// previous value for that tag.
 //
 // You can associate as many as 50 tags with a resource.
 //
@@ -3828,6 +3837,9 @@ type GetMetricDataInput struct {
 
 	// The time stamp indicating the latest data to be returned.
 	//
+	// The value specified is exclusive; results include data points up to the specified
+	// time stamp.
+	//
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
 	// an hour. For example, if the Period of a metric is 5 minutes, specifying
@@ -3860,6 +3872,28 @@ type GetMetricDataInput struct {
 	ScanBy *string `type:"string" enum:"ScanBy"`
 
 	// The time stamp indicating the earliest data to be returned.
+	//
+	// The value specified is inclusive; results include data points with the specified
+	// time stamp.
+	//
+	// CloudWatch rounds the specified time stamp as follows:
+	//
+	//    * Start time less than 15 days ago - Round down to the nearest whole minute.
+	//    For example, 12:32:34 is rounded down to 12:32:00.
+	//
+	//    * Start time between 15 and 63 days ago - Round down to the nearest 5-minute
+	//    clock interval. For example, 12:32:34 is rounded down to 12:30:00.
+	//
+	//    * Start time greater than 63 days ago - Round down to the nearest 1-hour
+	//    clock interval. For example, 12:32:34 is rounded down to 12:00:00.
+	//
+	// If you set Period to 5, 10, or 30, the start time of your request is rounded
+	// down to the nearest time that corresponds to even 5-, 10-, or 30-second divisions
+	// of a minute. For example, if you make a query at (HH:mm:ss) 01:05:23 for
+	// the previous 10-second period, the start time of your request is rounded
+	// down and you receive data from 01:05:10 to 01:05:20. If you make a query
+	// at 15:07:17 for the previous 5 minutes of data, using a period of 5 seconds,
+	// you receive data timestamped between 15:02:15 and 15:07:15.
 	//
 	// For better performance, specify StartTime and EndTime values that align with
 	// the value of the metric's Period and sync up with the beginning and end of
@@ -4089,9 +4123,12 @@ type GetMetricStatisticsInput struct {
 	// either Statistics or ExtendedStatistics, but not both.
 	Statistics []*string `min:"1" type:"list"`
 
-	// The unit for a given metric. Metrics may be reported in multiple units. Not
-	// supplying a unit results in all units being returned. If you specify only
-	// a unit that the metric does not report, the results of the call are null.
+	// The unit for a given metric. If you omit Unit, all data that was collected
+	// with any unit is returned, along with the corresponding units that were specified
+	// when the data was reported to CloudWatch. If you specify a unit, the operation
+	// returns only data data that was collected with that unit specified. If you
+	// specify a unit that does not match the data collected, the results of the
+	// operation are null. CloudWatch does not perform unit conversions.
 	Unit *string `type:"string" enum:"StandardUnit"`
 }
 
@@ -5032,6 +5069,19 @@ type MetricDataQuery struct {
 	// MetricStat but not both.
 	MetricStat *MetricStat `type:"structure"`
 
+	// The granularity, in seconds, of the returned data points. For metrics with
+	// regular resolution, a period can be as short as one minute (60 seconds) and
+	// must be a multiple of 60. For high-resolution metrics that are collected
+	// at intervals of less than one minute, the period can be 1, 5, 10, 30, 60,
+	// or any multiple of 60. High-resolution metrics are those metrics stored by
+	// a PutMetricData operation that includes a StorageResolution of 1 second.
+	//
+	// Use this field only when you are performing a GetMetricData operation, and
+	// only when you are specifying the Expression field. Do not use this field
+	// with a PutMetricAlarm operation or when you are specifying a MetricStat in
+	// a GetMetricData operation.
+	Period *int64 `min:"1" type:"integer"`
+
 	// When used in GetMetricData, this option indicates whether to return the timestamps
 	// and raw data values of this metric. If you are performing this call just
 	// to do math expressions and do not also need the raw data returned, you can
@@ -5064,6 +5114,9 @@ func (s *MetricDataQuery) Validate() error {
 	}
 	if s.Id != nil && len(*s.Id) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.Period != nil && *s.Period < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Period", 1))
 	}
 	if s.MetricStat != nil {
 		if err := s.MetricStat.Validate(); err != nil {
@@ -5098,6 +5151,12 @@ func (s *MetricDataQuery) SetLabel(v string) *MetricDataQuery {
 // SetMetricStat sets the MetricStat field's value.
 func (s *MetricDataQuery) SetMetricStat(v *MetricStat) *MetricDataQuery {
 	s.MetricStat = v
+	return s
+}
+
+// SetPeriod sets the Period field's value.
+func (s *MetricDataQuery) SetPeriod(v int64) *MetricDataQuery {
+	s.Period = &v
 	return s
 }
 
@@ -5228,8 +5287,9 @@ type MetricDatum struct {
 	Timestamp *time.Time `type:"timestamp"`
 
 	// When you are using a Put operation, this defines what unit you want to use
-	// when storing the metric. In a Get operation, this displays the unit that
-	// is used for the metric.
+	// when storing the metric.
+	//
+	// In a Get operation, this displays the unit that is used for the metric.
 	Unit *string `type:"string" enum:"StandardUnit"`
 
 	// The value for the metric.
@@ -5363,7 +5423,25 @@ type MetricStat struct {
 	// Metric is a required field
 	Metric *Metric `type:"structure" required:"true"`
 
-	// The period, in seconds, to use when retrieving the metric.
+	// The granularity, in seconds, of the returned data points. For metrics with
+	// regular resolution, a period can be as short as one minute (60 seconds) and
+	// must be a multiple of 60. For high-resolution metrics that are collected
+	// at intervals of less than one minute, the period can be 1, 5, 10, 30, 60,
+	// or any multiple of 60. High-resolution metrics are those metrics stored by
+	// a PutMetricData call that includes a StorageResolution of 1 second.
+	//
+	// If the StartTime parameter specifies a time stamp that is greater than 3
+	// hours ago, you must specify the period as follows or no data points in that
+	// time range is returned:
+	//
+	//    * Start time between 3 hours and 15 days ago - Use a multiple of 60 seconds
+	//    (1 minute).
+	//
+	//    * Start time between 15 and 63 days ago - Use a multiple of 300 seconds
+	//    (5 minutes).
+	//
+	//    * Start time greater than 63 days ago - Use a multiple of 3600 seconds
+	//    (1 hour).
 	//
 	// Period is a required field
 	Period *int64 `min:"1" type:"integer" required:"true"`
@@ -5375,8 +5453,14 @@ type MetricStat struct {
 	Stat *string `type:"string" required:"true"`
 
 	// When you are using a Put operation, this defines what unit you want to use
-	// when storing the metric. In a Get operation, this displays the unit that
-	// is used for the metric.
+	// when storing the metric.
+	//
+	// In a Get operation, if you omit Unit then all data that was collected with
+	// any unit is returned, along with the corresponding units that were specified
+	// when the data was reported to CloudWatch. If you specify a unit, the operation
+	// returns only data data that was collected with that unit specified. If you
+	// specify a unit that does not match the data collected, the results of the
+	// operation are null. CloudWatch does not perform unit conversions.
 	Unit *string `type:"string" enum:"StandardUnit"`
 }
 
@@ -5742,7 +5826,8 @@ type PutMetricAlarmInput struct {
 	// | arn:aws:swf:region:account-id:action/actions/AWS_EC2.InstanceId.Reboot/1.0
 	InsufficientDataActions []*string `type:"list"`
 
-	// The name for the metric associated with the alarm.
+	// The name for the metric associated with the alarm. For each PutMetricAlarm
+	// operation, you must specify either MetricName or a Metrics array.
 	//
 	// If you are creating an alarm based on a math expression, you cannot specify
 	// this parameter, or any of the Dimensions, Period, Namespace, Statistic, or
@@ -5751,8 +5836,11 @@ type PutMetricAlarmInput struct {
 	MetricName *string `min:"1" type:"string"`
 
 	// An array of MetricDataQuery structures that enable you to create an alarm
-	// based on the result of a metric math expression. Each item in the Metrics
-	// array either retrieves a metric or performs a math expression.
+	// based on the result of a metric math expression. For each PutMetricAlarm
+	// operation, you must specify either MetricName or a Metrics array.
+	//
+	// Each item in the Metrics array either retrieves a metric or performs a math
+	// expression.
 	//
 	// One item in the Metrics array is the expression that the alarm watches. You
 	// designate this expression by setting ReturnValue to true for this object
@@ -5781,6 +5869,10 @@ type PutMetricAlarmInput struct {
 
 	// The length, in seconds, used each time the metric specified in MetricName
 	// is evaluated. Valid values are 10, 30, and any multiple of 60.
+	//
+	// Period is required for alarms based on static thresholds. If you are creating
+	// an alarm based on a metric math expression, you specify the period for each
+	// metric within the objects in the Metrics array.
 	//
 	// Be sure to specify 10 or 30 only for metrics that are stored by a PutMetricData
 	// call with a StorageResolution of 1. If you specify a period of 10 or 30 for
@@ -5811,6 +5903,9 @@ type PutMetricAlarmInput struct {
 	Tags []*Tag `type:"list"`
 
 	// The value against which the specified statistic is compared.
+	//
+	// This parameter is required for alarms based on static thresholds, but should
+	// not be used for alarms based on anomaly detection models.
 	Threshold *float64 `type:"double"`
 
 	// If this is an alarm based on an anomaly detection model, make this value
@@ -5836,8 +5931,17 @@ type PutMetricAlarmInput struct {
 	// to your data. Metric data points that specify a unit of measure, such as
 	// Percent, are aggregated separately.
 	//
-	// If you specify a unit, you must use a unit that is appropriate for the metric.
-	// Otherwise, the CloudWatch alarm can get stuck in the INSUFFICIENT DATA state.
+	// If you don't specify Unit, CloudWatch retrieves all unit types that have
+	// been published for the metric and attempts to evaluate the alarm. Usually
+	// metrics are published with only one unit, so the alarm will work as intended.
+	//
+	// However, if the metric is published with multiple types of units and you
+	// don't specify a unit, the alarm's behavior is not defined and will behave
+	// un-predictably.
+	//
+	// We recommend omitting Unit so that you don't inadvertently specify an incorrect
+	// unit that is not published for this metric. Doing so causes the alarm to
+	// be stuck in the INSUFFICIENT DATA state.
 	Unit *string `type:"string" enum:"StandardUnit"`
 }
 
@@ -6084,8 +6188,8 @@ type PutMetricDataInput struct {
 
 	// The namespace for the metric data.
 	//
-	// You cannot specify a namespace that begins with "AWS/". Namespaces that begin
-	// with "AWS/" are reserved for use by Amazon Web Services products.
+	// To avoid conflicts with AWS service namespaces, you should not specify a
+	// namespace that begins with AWS/
 	//
 	// Namespace is a required field
 	Namespace *string `min:"1" type:"string" required:"true"`
@@ -6446,14 +6550,13 @@ func (s *Tag) SetValue(v string) *Tag {
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the CloudWatch resource that you're adding tags to. For more information
-	// on ARN format, see Example ARNs (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#arn-syntax-cloudwatch)
-	// in the Amazon Web Services General Reference.
+	// The ARN of the CloudWatch alarm that you're adding tags to. The ARN format
+	// is arn:aws:cloudwatch:Region:account-id:alarm:alarm-name
 	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
 
-	// The list of key-value pairs to associate with the resource.
+	// The list of key-value pairs to associate with the alarm.
 	//
 	// Tags is a required field
 	Tags []*Tag `type:"list" required:"true"`
