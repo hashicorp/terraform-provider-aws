@@ -24704,6 +24704,9 @@ const (
 
 	// InventoryOptionalFieldObjectLockLegalHoldStatus is a InventoryOptionalField enum value
 	InventoryOptionalFieldObjectLockLegalHoldStatus = "ObjectLockLegalHoldStatus"
+
+	// InventoryOptionalFieldIntelligentTieringAccessTier is a InventoryOptionalField enum value
+	InventoryOptionalFieldIntelligentTieringAccessTier = "IntelligentTieringAccessTier"
 )
 
 const (
