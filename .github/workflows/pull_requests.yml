@@ -1,6 +1,6 @@
 name: PR triage
 on:
-  pull_requests:
+  pull_request:
     types: [opened]
 jobs:
   markPRsForTriage:
