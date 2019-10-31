@@ -10,6 +10,10 @@ ENHANCEMENTS
 * resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 * resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Batch ELB attachments and detachments by 10 to prevent API and rate limiting errors [GH-10445]
+
 ## 2.34.0 (October 31, 2019)
 
 ENHANCEMENTS:
