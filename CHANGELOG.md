@@ -13,6 +13,7 @@ ENHANCEMENTS
 BUG FIXES:
 
 * resource/aws_autoscaling_group: Batch ELB attachments and detachments by 10 to prevent API and rate limiting errors [GH-10445]
+* resource/aws_s3_bucket_public_access_block: Remove from Terraform state when S3 Bucket is already destroyed [GH-10534]
 
 ## 2.34.0 (October 31, 2019)
 
