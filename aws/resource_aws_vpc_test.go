@@ -73,6 +73,10 @@ func testSweepVPCs(region string) error {
 				return nil
 			})
 
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteVpc(input)
+			}
+
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting EC2 VPC (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)

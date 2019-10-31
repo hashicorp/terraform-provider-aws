@@ -93,6 +93,10 @@ func testSweepSubnets(region string) error {
 				return nil
 			})
 
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteSubnet(input)
+			}
+
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting EC2 Subnet (%s): %w", id, err)
 				log.Printf("[ERROR] %s", sweeperErr)
