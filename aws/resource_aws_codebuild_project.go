@@ -651,7 +651,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			// InvalidInputException: CodeBuild is not authorized to perform
 			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
+			if isAWSErr(err, codebuild.ErrCodeInvalidInputException, "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 
