@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -58,56 +59,66 @@ func testSweepSubnets(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeSubnetsInput{}
+	var sweeperErrs *multierror.Error
 
-	req := &ec2.DescribeSubnetsInput{}
-	resp, err := conn.DescribeSubnets(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing subnets: %s", err)
-	}
+	err = conn.DescribeSubnetsPages(input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
+		for _, subnet := range page.Subnets {
+			if subnet == nil {
+				continue
+			}
 
-	if len(resp.Subnets) == 0 {
-		log.Print("[DEBUG] No aws subnets to sweep")
-		return nil
-	}
+			id := aws.StringValue(subnet.SubnetId)
+			input := &ec2.DeleteSubnetInput{
+				SubnetId: subnet.SubnetId,
+			}
 
-	for _, subnet := range resp.Subnets {
-		if subnet == nil {
-			continue
-		}
+			if aws.BoolValue(subnet.DefaultForAz) {
+				log.Printf("[DEBUG] Skipping default EC2 Subnet: %s", id)
+				continue
+			}
 
-		if aws.BoolValue(subnet.DefaultForAz) {
-			continue
-		}
+			log.Printf("[INFO] Deleting EC2 Subnet: %s", id)
 
-		input := &ec2.DeleteSubnetInput{
-			SubnetId: subnet.SubnetId,
-		}
+			// Handle eventual consistency, especially with lingering ENIs from Load Balancers and Lambda
+			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteSubnet(input)
 
-		// Handle eventual consistency, especially with lingering ENIs from Load Balancers and Lambda
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteSubnet(input)
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
 
-			if isAWSErr(err, "DependencyViolation", "") {
-				return resource.RetryableError(err)
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteSubnet(input)
 			}
 
 			if err != nil {
-				return resource.NonRetryableError(err)
+				sweeperErr := fmt.Errorf("error deleting EC2 Subnet (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			}
-
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting Subnet (%s): %s", aws.StringValue(subnet.SubnetId), err)
 		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return nil
+	if err != nil {
+		return fmt.Errorf("Error describing subnets: %s", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSSubnet_basic(t *testing.T) {

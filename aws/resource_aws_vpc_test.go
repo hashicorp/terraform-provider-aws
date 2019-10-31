@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -41,51 +42,63 @@ func testSweepVPCs(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcsInput{}
+	var sweeperErrs *multierror.Error
 
-	req := &ec2.DescribeVpcsInput{}
-	resp, err := conn.DescribeVpcs(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeVpcsPages(input, func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
+		for _, vpc := range page.Vpcs {
+			if vpc == nil {
+				continue
+			}
+
+			id := aws.StringValue(vpc.VpcId)
+			input := &ec2.DeleteVpcInput{
+				VpcId: vpc.VpcId,
+			}
+
+			if aws.BoolValue(vpc.IsDefault) {
+				log.Printf("[DEBUG] Skipping default EC2 VPC: %s", id)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC: %s", id)
+
+			// Handle EC2 eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteVpc(input)
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteVpc(input)
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting EC2 VPC (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
 		}
-		return fmt.Errorf("Error describing vpcs: %s", err)
-	}
 
-	if len(resp.Vpcs) == 0 {
-		log.Print("[DEBUG] No aws vpcs to sweep")
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, vpc := range resp.Vpcs {
-		if aws.BoolValue(vpc.IsDefault) {
-			log.Printf("[DEBUG] Skipping Default VPC: %s", aws.StringValue(vpc.VpcId))
-			continue
-		}
-
-		input := &ec2.DeleteVpcInput{
-			VpcId: vpc.VpcId,
-		}
-		log.Printf("[DEBUG] Deleting VPC: %s", input)
-
-		// Handle EC2 eventual consistency
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteVpc(input)
-			if isAWSErr(err, "DependencyViolation", "") {
-				return resource.RetryableError(err)
-			}
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting VPC (%s): %s", aws.StringValue(vpc.VpcId), err)
-		}
+	if err != nil {
+		return fmt.Errorf("Error describing vpcs: %s", err)
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSVpc_basic(t *testing.T) {
