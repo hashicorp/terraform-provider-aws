@@ -1591,6 +1591,7 @@ func TestValidateElbName(t *testing.T) {
 		"tf-test-elb-tf-test-elb-tf-test-elb",
 		"-tf-test-elb",
 		"tf-test-elb-",
+		"internal-tf-test-elb",
 	}
 
 	for _, s := range invalidNames {
