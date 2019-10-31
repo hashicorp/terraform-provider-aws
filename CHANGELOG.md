@@ -1,4 +1,15 @@
 ## 2.35.0 (Unreleased)
+
+NOTES
+
+* provider: New `ignore_tag_prefixes` and `ignore_tags` arguments are being tested as a public preview for ignoring tags across all resources under a provider. Support for the functionality must be added to individual resources in the codebase and is only implemented for the `aws_subnet` and `aws_vpc` resources at this time. Until a general availability announcement, no compatibility promises are made with these provider arguments and their functionality. [GH-10418]
+
+ENHANCEMENTS
+
+* provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
+* resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
+* resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
+
 ## 2.34.0 (October 31, 2019)
 
 ENHANCEMENTS:
