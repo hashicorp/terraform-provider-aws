@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -688,12 +689,8 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 		return
 	}
 
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:(.*)$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't look like a valid ARN (%q): %q",
-			k, pattern, value))
+	if _, err := arn.Parse(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q doesn't look like a valid ARN: %q", k, value))
 	}
 
 	return
