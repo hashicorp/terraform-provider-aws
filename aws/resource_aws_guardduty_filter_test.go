@@ -131,11 +131,3 @@ resource "aws_guardduty_filter" "test" {
   }
 }`, testAccGuardDutyDetectorConfig_basic3)
 }
-
-const testAccGuardDutyFilterConfig_to_fail_1 = `
-resource "aws_guardduty_filter" "test" {}`
-
-const testAccGuardDutyFilterConfig_to_fail_2 = `
-resource "aws_guardduty_filter" "test" {
-	detector_id = "123456271278c0df5e089123480d8765"
-}`
