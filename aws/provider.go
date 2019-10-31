@@ -158,6 +158,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_batch_job_queue":                           dataSourceAwsBatchJobQueue(),
 			"aws_billing_service_account":                   dataSourceAwsBillingServiceAccount(),
 			"aws_caller_identity":                           dataSourceAwsCallerIdentity(),
+			"aws_provider_credentials":                      dataSourceAwsProviderCredentials(),
 			"aws_canonical_user_id":                         dataSourceAwsCanonicalUserId(),
 			"aws_cloudformation_export":                     dataSourceAwsCloudFormationExport(),
 			"aws_cloudformation_stack":                      dataSourceAwsCloudFormationStack(),
