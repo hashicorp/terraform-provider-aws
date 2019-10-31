@@ -202,7 +202,7 @@ BUG FIXES:
 
 * resource/aws_ec2_capacity_reservation: Fixes error handling when an EC2 Capacity Reservation is deleted manually but is still in state ([#9862](https://github.com/terraform-providers/terraform-provider-aws/issues/9862))
 * resource/aws_s3_bucket: Final retries after timeouts creating, updating and updating replication configuration for s3 buckets ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
-* resource/aws_s3_bucket_inventory: Final retries after timeous reading and putting bucket inventories ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
+* resource/aws_s3_bucket_inventory: Final retries after timeout reading and putting bucket inventories ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
 * resource/aws_s3_bucket_metric: Final retry after timeout putting bucket metric ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
 * resource/aws_s3_bucket_notification: Final retry after timeout putting notification ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
 * resource/aws_s3_bucket_policy: Final retry after timeout putting policy ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
