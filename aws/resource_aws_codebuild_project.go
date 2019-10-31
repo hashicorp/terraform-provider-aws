@@ -642,10 +642,6 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		params.BadgeEnabled = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CodebuildTags()
-	}
-
 	var resp *codebuild.CreateProjectOutput
 	// Handle IAM eventual consistency
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -1155,7 +1151,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	// The documentation clearly says "The replacement set of tags for this build project."
 	// But its a slice of pointers so if not set for every update, they get removed.
-	params.Tags = tagsFromMapCodeBuild(d.Get("tags").(map[string]interface{}))
+	params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodebuildTags()
 
 	// Handle IAM eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
@@ -1165,7 +1161,7 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			// InvalidInputException: CodeBuild is not authorized to perform
 			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
-			if isAWSErr(err, "InvalidInputException", "ot authorized to perform") {
+			if isAWSErr(err, codebuild.ErrCodeInvalidInputException, "ot authorized to perform") {
 				return resource.RetryableError(err)
 			}
 
