@@ -1277,6 +1277,12 @@ var awsPartition = partition{
 						Region: "eu-west-2",
 					},
 				},
+				"eu-west-3": endpoint{
+					Hostname: "rds.eu-west-3.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-3",
+					},
+				},
 				"us-east-1": endpoint{
 					Hostname: "rds.us-east-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -3246,6 +3252,9 @@ var awsPartition = partition{
 					Protocols: []string{"https"},
 				},
 				"eu-west-3": endpoint{
+					Protocols: []string{"https"},
+				},
+				"me-south-1": endpoint{
 					Protocols: []string{"https"},
 				},
 				"sa-east-1": endpoint{

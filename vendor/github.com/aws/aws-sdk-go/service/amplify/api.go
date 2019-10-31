@@ -998,7 +998,6 @@ func (c *Amplify) GenerateAccessLogsRequest(input *GenerateAccessLogsInput) (req
 // GenerateAccessLogs API operation for AWS Amplify.
 //
 // Retrieve website access logs for a specific time range via a pre-signed URL.
-// Optionally, deliver the logs to a given S3 bucket.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3315,6 +3314,9 @@ type AutoBranchCreationConfig struct {
 	// Framework for the auto created branch.
 	Framework *string `locationName:"framework" type:"string"`
 
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
+
 	// Stage for the auto created branch.
 	Stage *string `locationName:"stage" type:"string" enum:"Stage"`
 }
@@ -3384,6 +3386,12 @@ func (s *AutoBranchCreationConfig) SetFramework(v string) *AutoBranchCreationCon
 	return s
 }
 
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *AutoBranchCreationConfig) SetPullRequestEnvironmentName(v string) *AutoBranchCreationConfig {
+	s.PullRequestEnvironmentName = &v
+	return s
+}
+
 // SetStage sets the Stage field's value.
 func (s *AutoBranchCreationConfig) SetStage(v string) *AutoBranchCreationConfig {
 	s.Stage = &v
@@ -3401,6 +3409,9 @@ type Branch struct {
 
 	// List of custom resources that are linked to this branch.
 	AssociatedResources []*string `locationName:"associatedResources" type:"list"`
+
+	// ARN for a Backend Environment, part of an Amplify App.
+	BackendEnvironmentArn *string `locationName:"backendEnvironmentArn" min:"1" type:"string"`
 
 	// Basic Authorization credentials for a branch, part of an Amplify App.
 	BasicAuthCredentials *string `locationName:"basicAuthCredentials" type:"string"`
@@ -3471,6 +3482,9 @@ type Branch struct {
 	// Framework is a required field
 	Framework *string `locationName:"framework" type:"string" required:"true"`
 
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
+
 	// The source branch if the branch is a pull request branch.
 	SourceBranch *string `locationName:"sourceBranch" min:"1" type:"string"`
 
@@ -3520,6 +3534,12 @@ func (s *Branch) SetActiveJobId(v string) *Branch {
 // SetAssociatedResources sets the AssociatedResources field's value.
 func (s *Branch) SetAssociatedResources(v []*string) *Branch {
 	s.AssociatedResources = v
+	return s
+}
+
+// SetBackendEnvironmentArn sets the BackendEnvironmentArn field's value.
+func (s *Branch) SetBackendEnvironmentArn(v string) *Branch {
+	s.BackendEnvironmentArn = &v
 	return s
 }
 
@@ -3610,6 +3630,12 @@ func (s *Branch) SetEnvironmentVariables(v map[string]*string) *Branch {
 // SetFramework sets the Framework field's value.
 func (s *Branch) SetFramework(v string) *Branch {
 	s.Framework = &v
+	return s
+}
+
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *Branch) SetPullRequestEnvironmentName(v string) *Branch {
+	s.PullRequestEnvironmentName = &v
 	return s
 }
 
@@ -3906,6 +3932,9 @@ type CreateBranchInput struct {
 	// AppId is a required field
 	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
 
+	// ARN for a Backend Environment, part of an Amplify App.
+	BackendEnvironmentArn *string `locationName:"backendEnvironmentArn" min:"1" type:"string"`
+
 	// Basic Authorization credentials for the branch.
 	BasicAuthCredentials *string `locationName:"basicAuthCredentials" type:"string"`
 
@@ -3941,6 +3970,9 @@ type CreateBranchInput struct {
 	// Framework for the branch.
 	Framework *string `locationName:"framework" type:"string"`
 
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
+
 	// Stage for the branch.
 	Stage *string `locationName:"stage" type:"string" enum:"Stage"`
 
@@ -3970,6 +4002,9 @@ func (s *CreateBranchInput) Validate() error {
 	if s.AppId != nil && len(*s.AppId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
 	}
+	if s.BackendEnvironmentArn != nil && len(*s.BackendEnvironmentArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BackendEnvironmentArn", 1))
+	}
 	if s.BranchName == nil {
 		invalidParams.Add(request.NewErrParamRequired("BranchName"))
 	}
@@ -3992,6 +4027,12 @@ func (s *CreateBranchInput) Validate() error {
 // SetAppId sets the AppId field's value.
 func (s *CreateBranchInput) SetAppId(v string) *CreateBranchInput {
 	s.AppId = &v
+	return s
+}
+
+// SetBackendEnvironmentArn sets the BackendEnvironmentArn field's value.
+func (s *CreateBranchInput) SetBackendEnvironmentArn(v string) *CreateBranchInput {
+	s.BackendEnvironmentArn = &v
 	return s
 }
 
@@ -4058,6 +4099,12 @@ func (s *CreateBranchInput) SetEnvironmentVariables(v map[string]*string) *Creat
 // SetFramework sets the Framework field's value.
 func (s *CreateBranchInput) SetFramework(v string) *CreateBranchInput {
 	s.Framework = &v
+	return s
+}
+
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *CreateBranchInput) SetPullRequestEnvironmentName(v string) *CreateBranchInput {
+	s.PullRequestEnvironmentName = &v
 	return s
 }
 
@@ -4237,7 +4284,7 @@ type CreateDomainAssociationInput struct {
 	// DomainName is a required field
 	DomainName *string `locationName:"domainName" type:"string" required:"true"`
 
-	// Enables automated creation of Subdomains for branches.
+	// Enables automated creation of Subdomains for branches. (Currently not supported)
 	EnableAutoSubDomain *bool `locationName:"enableAutoSubDomain" type:"boolean"`
 
 	// Setting structure for the Subdomain.
@@ -4947,7 +4994,7 @@ type DomainAssociation struct {
 	// DomainStatus is a required field
 	DomainStatus *string `locationName:"domainStatus" type:"string" required:"true" enum:"DomainStatus"`
 
-	// Enables automated creation of Subdomains for branches.
+	// Enables automated creation of Subdomains for branches. (Currently not supported)
 	//
 	// EnableAutoSubDomain is a required field
 	EnableAutoSubDomain *bool `locationName:"enableAutoSubDomain" type:"boolean" required:"true"`
@@ -5260,7 +5307,7 @@ func (s *GetArtifactUrlOutput) SetArtifactUrl(v string) *GetArtifactUrlOutput {
 	return s
 }
 
-// Result structure for get branch request.
+// Request structure for get branch request.
 type GetBranchInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5842,9 +5889,6 @@ type ListArtifactsInput struct {
 	// AppId is a required field
 	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
 
-	// Type for an artifact.
-	ArtifactType *string `locationName:"artifactType" type:"string" enum:"ArtifactType"`
-
 	// Name for a branch, part of an Amplify App.
 	//
 	// BranchName is a required field
@@ -5908,12 +5952,6 @@ func (s *ListArtifactsInput) Validate() error {
 // SetAppId sets the AppId field's value.
 func (s *ListArtifactsInput) SetAppId(v string) *ListArtifactsInput {
 	s.AppId = &v
-	return s
-}
-
-// SetArtifactType sets the ArtifactType field's value.
-func (s *ListArtifactsInput) SetArtifactType(v string) *ListArtifactsInput {
-	s.ArtifactType = &v
 	return s
 }
 
@@ -7493,6 +7531,9 @@ type UpdateBranchInput struct {
 	// AppId is a required field
 	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
 
+	// ARN for a Backend Environment, part of an Amplify App.
+	BackendEnvironmentArn *string `locationName:"backendEnvironmentArn" min:"1" type:"string"`
+
 	// Basic Authorization credentials for the branch.
 	BasicAuthCredentials *string `locationName:"basicAuthCredentials" type:"string"`
 
@@ -7528,6 +7569,9 @@ type UpdateBranchInput struct {
 	// Framework for the branch.
 	Framework *string `locationName:"framework" type:"string"`
 
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
+
 	// Stage for the branch.
 	Stage *string `locationName:"stage" type:"string" enum:"Stage"`
 
@@ -7554,6 +7598,9 @@ func (s *UpdateBranchInput) Validate() error {
 	if s.AppId != nil && len(*s.AppId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
 	}
+	if s.BackendEnvironmentArn != nil && len(*s.BackendEnvironmentArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BackendEnvironmentArn", 1))
+	}
 	if s.BranchName == nil {
 		invalidParams.Add(request.NewErrParamRequired("BranchName"))
 	}
@@ -7573,6 +7620,12 @@ func (s *UpdateBranchInput) Validate() error {
 // SetAppId sets the AppId field's value.
 func (s *UpdateBranchInput) SetAppId(v string) *UpdateBranchInput {
 	s.AppId = &v
+	return s
+}
+
+// SetBackendEnvironmentArn sets the BackendEnvironmentArn field's value.
+func (s *UpdateBranchInput) SetBackendEnvironmentArn(v string) *UpdateBranchInput {
+	s.BackendEnvironmentArn = &v
 	return s
 }
 
@@ -7642,6 +7695,12 @@ func (s *UpdateBranchInput) SetFramework(v string) *UpdateBranchInput {
 	return s
 }
 
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *UpdateBranchInput) SetPullRequestEnvironmentName(v string) *UpdateBranchInput {
+	s.PullRequestEnvironmentName = &v
+	return s
+}
+
 // SetStage sets the Stage field's value.
 func (s *UpdateBranchInput) SetStage(v string) *UpdateBranchInput {
 	s.Stage = &v
@@ -7694,7 +7753,7 @@ type UpdateDomainAssociationInput struct {
 	// DomainName is a required field
 	DomainName *string `location:"uri" locationName:"domainName" type:"string" required:"true"`
 
-	// Enables automated creation of Subdomains for branches.
+	// Enables automated creation of Subdomains for branches. (Currently not supported)
 	EnableAutoSubDomain *bool `locationName:"enableAutoSubDomain" type:"boolean"`
 
 	// Setting structure for the Subdomain.
@@ -7978,11 +8037,6 @@ func (s *Webhook) SetWebhookUrl(v string) *Webhook {
 	s.WebhookUrl = &v
 	return s
 }
-
-const (
-	// ArtifactTypeTest is a ArtifactType enum value
-	ArtifactTypeTest = "TEST"
-)
 
 const (
 	// DomainStatusPendingVerification is a DomainStatus enum value
