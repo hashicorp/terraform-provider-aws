@@ -3,11 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoIdentityProvider() *schema.Resource {
@@ -25,6 +27,11 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			"attribute_mapping": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringLenBetween(1, 32),
+				},
 			},
 
 			"idp_identifiers": {
@@ -32,6 +39,10 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 40),
+						validation.StringMatch(regexp.MustCompile(`^[\w\s+=.@-]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
+					),
 				},
 			},
 
@@ -43,11 +54,24 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 			"provider_name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 32),
+					validation.StringMatch(regexp.MustCompile(`^[^_][\p{L}\p{M}\p{S}\p{N}\p{P}][^_]+$`), "see https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#API_CreateIdentityProvider_RequestSyntax"),
+				),
 			},
 
 			"provider_type": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					cognitoidentityprovider.IdentityProviderTypeTypeSaml,
+					cognitoidentityprovider.IdentityProviderTypeTypeFacebook,
+					cognitoidentityprovider.IdentityProviderTypeTypeGoogle,
+					cognitoidentityprovider.IdentityProviderTypeTypeLoginWithAmazon,
+					cognitoidentityprovider.IdentityProviderTypeTypeOidc,
+				}, false),
 			},
 
 			"user_pool_id": {
