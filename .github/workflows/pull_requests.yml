@@ -3,13 +3,11 @@ on:
   pull_request:
     types: [opened]
 jobs:
-  markPRsForTriage:
+  labelPRsForTriage:
+    name: Apply PR Triage Label
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1.0.0
-    - name: Apply PR Triage Label
-      uses: actions/github@v1.0.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
-      with:
-        args: label needs-triage
+      - uses: actions/github@v1.0.0
+        with:
+          args: label needs-triage
+          repo-token: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
