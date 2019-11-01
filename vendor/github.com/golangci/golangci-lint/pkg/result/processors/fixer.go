@@ -8,58 +8,66 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golangci/golangci-lint/pkg/fsutils"
-
-	"github.com/golangci/golangci-lint/pkg/logutils"
-
 	"github.com/pkg/errors"
 
 	"github.com/golangci/golangci-lint/pkg/config"
+	"github.com/golangci/golangci-lint/pkg/fsutils"
+	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
+	"github.com/golangci/golangci-lint/pkg/timeutils"
 )
 
 type Fixer struct {
 	cfg       *config.Config
 	log       logutils.Log
 	fileCache *fsutils.FileCache
+	sw        *timeutils.Stopwatch
 }
 
 func NewFixer(cfg *config.Config, log logutils.Log, fileCache *fsutils.FileCache) *Fixer {
-	return &Fixer{cfg: cfg, log: log, fileCache: fileCache}
+	return &Fixer{
+		cfg:       cfg,
+		log:       log,
+		fileCache: fileCache,
+		sw:        timeutils.NewStopwatch("fixer", log),
+	}
 }
 
-func (f Fixer) Process(issues <-chan result.Issue) <-chan result.Issue {
+func (f Fixer) printStat() {
+	f.sw.PrintStages()
+}
+
+func (f Fixer) Process(issues []result.Issue) []result.Issue {
 	if !f.cfg.Issues.NeedFix {
 		return issues
 	}
 
-	outCh := make(chan result.Issue, 1024)
-
-	go func() {
-		issuesToFixPerFile := map[string][]result.Issue{}
-		for issue := range issues {
-			if issue.Replacement == nil {
-				outCh <- issue
-				continue
-			}
-
-			issuesToFixPerFile[issue.FilePath()] = append(issuesToFixPerFile[issue.FilePath()], issue)
+	outIssues := make([]result.Issue, 0, len(issues))
+	issuesToFixPerFile := map[string][]result.Issue{}
+	for _, issue := range issues {
+		if issue.Replacement == nil {
+			outIssues = append(outIssues, issue)
+			continue
 		}
 
-		for file, issuesToFix := range issuesToFixPerFile {
-			if err := f.fixIssuesInFile(file, issuesToFix); err != nil {
-				f.log.Errorf("Failed to fix issues in file %s: %s", file, err)
+		issuesToFixPerFile[issue.FilePath()] = append(issuesToFixPerFile[issue.FilePath()], issue)
+	}
 
-				// show issues only if can't fix them
-				for _, issue := range issuesToFix {
-					outCh <- issue
-				}
-			}
+	for file, issuesToFix := range issuesToFixPerFile {
+		var err error
+		f.sw.TrackStage("all", func() {
+			err = f.fixIssuesInFile(file, issuesToFix) //nolint:scopelint
+		})
+		if err != nil {
+			f.log.Errorf("Failed to fix issues in file %s: %s", file, err)
+
+			// show issues only if can't fix them
+			outIssues = append(outIssues, issuesToFix...)
 		}
-		close(outCh)
-	}()
+	}
 
-	return outCh
+	f.printStat()
+	return outIssues
 }
 
 func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
@@ -107,7 +115,6 @@ func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
 	return nil
 }
 
-//nolint:gocyclo
 func (f Fixer) mergeLineIssues(lineNum int, lineIssues []result.Issue, origFileLines [][]byte) *result.Issue {
 	origLine := origFileLines[lineNum-1] // lineNum is 1-based
 

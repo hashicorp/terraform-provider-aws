@@ -37,6 +37,7 @@ ability to merge PRs and respond to issues.
         - [Running an Acceptance Test](#running-an-acceptance-test)
         - [Writing an Acceptance Test](#writing-an-acceptance-test)
         - [Writing and running Cross-Account Acceptance Tests](#writing-and-running-cross-account-acceptance-tests)
+        - [Writing and running Cross-Region Acceptance Tests](#writing-and-running-cross-region-acceptance-tests)
 
 <!-- /TOC -->
 
@@ -290,6 +291,35 @@ into Terraform.
     `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
   - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
+  - In `.hashibot.hcl`: Add the new service to automated issue and pull request labeling. e.g. with the `quicksight` service
+
+  ```hcl
+  behavior "regexp_issue_labeler_v2" "service_labels" {
+    # ... other configuration ...
+
+    label_map = {
+      # ... other services ...
+      "service/quicksight" = [
+        "aws_quicksight_",
+      ],
+      # ... other services ...
+    }
+  }
+
+  behavior "pull_request_path_labeler" "service_labels"
+    # ... other configuration ...
+
+    label_map = {
+      # ... other services ...
+      "service/quicksight" = [
+        "**/*_quicksight_*",
+        "**/quicksight_*",
+      ],
+      # ... other services ...
+    }
+  }
+  ```
+
   - Run the following then submit the pull request:
 
   ```sh
@@ -316,9 +346,9 @@ manually sourced values from documentation.
 
  - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
  - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
- - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
+ - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
- - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
+ - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
  - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
 
 ### Common Review Items
@@ -340,7 +370,7 @@ The following Go language resources provide common coding preferences that may b
 
 #### Resource Contribution Guidelines
 
-The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. 
+The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge.
 
 - [ ] __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - [ ] __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
@@ -448,7 +478,7 @@ The below are location-based items that _may_ be noted during review and are rec
   ```
 
 - [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). A common pattern is declaring `data "aws_availability_zones" "current" {}` and referencing it via `data.aws_availability_zones.current.names[0]` or `data.aws_availability_zones.current.names[count.index]` in resources utilizing `count`.
-- [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g. `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "cname}` and referencing it via `data.aws_region.current.name`
+- [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g. `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
 - [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`
 - [ ] __Uses Builtin ARN Check Functions__: Tests should utilize available ARN check functions, e.g. `testAccMatchResourceAttrRegionalARN()`, to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
 - [ ] __Uses testAccCheckResourceAttrAccountID()__: Tests should utilize the available AWS Account ID check function, `testAccCheckResourceAttrAccountID()` to validate account ID attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
@@ -746,6 +776,77 @@ export AWS_ALTERNATE_PROFILE=...
 # Otherwise
 export AWS_ALTERNATE_ACCESS_KEY_ID=...
 export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
+```
+
+#### Writing and running Cross-Region Acceptance Tests
+
+When testing requires AWS infrastructure in a second AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
+
+- In the `PreCheck` function, include `testAccMultipleRegionsPreCheck(t)` and `testAccAlternateRegionPreCheck(t)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
+- Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
+- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
+- Add `testAccAlternateRegionProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
+
+An example acceptance test implementation can be seen below:
+
+```go
+func TestAccAwsExample_basic(t *testing.T) {
+  var providers []*schema.Provider
+  resourceName := "aws_example.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck: func() {
+      testAccPreCheck(t)
+      testAccMultipleRegionsPreCheck(t)
+      testAccAlternateRegionPreCheck(t)
+    },
+    ProviderFactories: testAccProviderFactories(&providers),
+    CheckDestroy:      testAccCheckAwsExampleDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleConfig(),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleExists(resourceName),
+          // ... additional checks ...
+        ),
+      },
+      {
+        Config:            testAccAwsExampleConfig(),
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+func testAccAwsExampleConfig() string {
+  return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+# Cross region resources should be handled by the cross region provider.
+# The standardized provider alias is aws.alternate as seen below.
+resource "aws_cross_region_example" "test" {
+  provider = "aws.alternate"
+
+  # ... configuration ...
+}
+
+# The resource that is the focus of the testing should be handled by the default provider,
+# which is automatically done by not specifying the provider configuration in the resource.
+resource "aws_example" "test" {
+  # ... configuration ...
+}
+`)
+}
+```
+
+Searching for usage of `testAccAlternateRegionPreCheck` in the codebase will yield real world examples of this setup in action.
+
+Running these acceptance tests is the same as before, except if an AWS region other than the default alternate region - `us-east-1` - is required,
+in which case the following additional configuration information is required:
+
+```sh
+export AWS_ALTERNATE_REGION=...
 ```
 
 [website]: https://github.com/terraform-providers/terraform-provider-aws/tree/master/website

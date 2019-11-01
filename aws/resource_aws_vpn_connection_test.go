@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -73,49 +73,34 @@ func testSweepEc2VpnConnections(region string) error {
 	return nil
 }
 
-func TestAccAWSVpnConnection_importBasic(t *testing.T) {
-	resourceName := "aws_vpn_connection.foo"
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccAwsVpnConnectionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSVpnConnection_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpn_connection.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists("aws_vpn_connection.foo", &vpn),
-					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "transit_gateway_attachment_id", ""),
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists("aws_vpn_connection.foo", &vpn),
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
 				),
 			},
 		},
@@ -144,17 +129,23 @@ func TestAccAWSVpnConnection_TransitGatewayID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpn_connection.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
@@ -223,16 +214,17 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 			{
 				Config: testAccAwsVpnConnectionConfigTunnelOptions(rBgpAsn, "12345678", "169.254.8.0/30", "abcdefgh", "169.254.9.0/30"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists("aws_vpn_connection.foo", &vpn),
-					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "static_routes_only", "false"),
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
 
-					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel1_inside_cidr", "169.254.8.0/30"),
-					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel1_preshared_key", "12345678"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_cidr", "169.254.8.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_preshared_key", "12345678"),
 
-					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel2_inside_cidr", "169.254.9.0/30"),
-					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "tunnel2_preshared_key", "abcdefgh"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_cidr", "169.254.9.0/30"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_preshared_key", "abcdefgh"),
 				),
 			},
+			// TODO: Once #396, #3359, #5809 are fixed, an import test step should be added here
 		},
 	})
 }
@@ -240,20 +232,26 @@ func TestAccAWSVpnConnection_tunnelOptions(t *testing.T) {
 func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 	rInt := acctest.RandInt()
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpn_connection.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccAwsVpnConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsVpnConnectionConfigUpdate(rInt, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists("aws_vpn_connection.foo", &vpn),
-					resource.TestCheckResourceAttr("aws_vpn_connection.foo", "static_routes_only", "false"),
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
+					resource.TestCheckResourceAttr(resourceName, "static_routes_only", "false"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -261,6 +259,7 @@ func TestAccAWSVpnConnection_withoutStaticRoutes(t *testing.T) {
 
 func TestAccAWSVpnConnection_disappears(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	resourceName := "aws_vpn_connection.test"
 	var vpn ec2.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -271,7 +270,7 @@ func TestAccAWSVpnConnection_disappears(t *testing.T) {
 			{
 				Config: testAccAwsVpnConnectionConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionExists("aws_vpn_connection.foo", &vpn),
+					testAccAwsVpnConnectionExists(resourceName, &vpn),
 					testAccAWSVpnConnectionDisappears(&vpn),
 				),
 				ExpectNonEmptyPlan: true,
@@ -454,7 +453,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   }
 }
 
-resource "aws_vpn_connection" "foo" {
+resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
   type                = "ipsec.1"
@@ -482,7 +481,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   }
 }
 
-resource "aws_vpn_connection" "foo" {
+resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
   type                = "ipsec.1"
@@ -509,7 +508,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   }
 }
 
-resource "aws_vpn_connection" "foo" {
+resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
   type                = "ipsec.1"
@@ -561,7 +560,7 @@ resource "aws_customer_gateway" "customer_gateway" {
   }
 }
 
-resource "aws_vpn_connection" "foo" {
+resource "aws_vpn_connection" "test" {
   vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
   customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
   type                = "ipsec.1"

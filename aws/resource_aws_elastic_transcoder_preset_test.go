@@ -7,34 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-func TestAccAWSElasticTranscoderPreset_import(t *testing.T) {
-	resourceName := "aws_elastictranscoder_preset.bar"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: awsElasticTranscoderPresetConfig,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	preset := &elastictranscoder.Preset{}
-	name := "aws_elastictranscoder_preset.bar"
+	name := "aws_elastictranscoder_preset.test"
 
 	// make sure the old preset was destroyed on each intermediate step
 	// these are very easy to leak
@@ -148,7 +127,7 @@ func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
 }
 
 const awsElasticTranscoderPresetConfig = `
-resource "aws_elastictranscoder_preset" "bar" {
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 1"
   name        = "aws_elastictranscoder_preset_tf_test_"
@@ -164,7 +143,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 `
 
 const awsElasticTranscoderPresetConfig2 = `
-resource "aws_elastictranscoder_preset" "bar" {
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 2"
   name        = "aws_elastictranscoder_preset_tf_test_"
@@ -214,7 +193,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 `
 
 const awsElasticTranscoderPresetConfig3 = `
-resource "aws_elastictranscoder_preset" "bar" {
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 3"
   name        = "aws_elastictranscoder_preset_tf_test_"

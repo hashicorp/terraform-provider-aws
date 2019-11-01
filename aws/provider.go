@@ -3,9 +3,9 @@ package aws
 import (
 	"log"
 
-	"github.com/hashicorp/terraform/helper/mutexkv"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -15,7 +15,7 @@ func Provider() terraform.ResourceProvider {
 	// TODO: Move the configuration to this, requires validation
 
 	// The actual provider
-	return &schema.Provider{
+	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:        schema.TypeString,
@@ -279,9 +279,11 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpn_gateway":                               dataSourceAwsVpnGateway(),
 			"aws_waf_ipset":                                 dataSourceAwsWafIpSet(),
 			"aws_waf_rule":                                  dataSourceAwsWafRule(),
+			"aws_waf_rate_based_rule":                       dataSourceAwsWafRateBasedRule(),
 			"aws_waf_web_acl":                               dataSourceAwsWafWebAcl(),
 			"aws_wafregional_ipset":                         dataSourceAwsWafRegionalIpSet(),
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
+			"aws_wafregional_rate_based_rule":               dataSourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
@@ -635,6 +637,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
+			"aws_quicksight_user":                                     resourceAwsQuickSightUser(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
 			"aws_ram_resource_association":                            resourceAwsRamResourceAssociation(),
 			"aws_ram_resource_share":                                  resourceAwsRamResourceShare(),
@@ -827,8 +830,19 @@ func Provider() terraform.ResourceProvider {
 			"aws_alb_target_group_attachment": resourceAwsLbTargetGroupAttachment(),
 			"aws_lb_target_group_attachment":  resourceAwsLbTargetGroupAttachment(),
 		},
-		ConfigureFunc: providerConfigure,
 	}
+
+	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+		terraformVersion := provider.TerraformVersion
+		if terraformVersion == "" {
+			// Terraform 0.12 introduced this field to the protocol
+			// We can therefore assume that if it's missing it's 0.10 or 0.11
+			terraformVersion = "0.11+compatible"
+		}
+		return providerConfigure(d, terraformVersion)
+	}
+
+	return provider
 }
 
 var descriptions map[string]string
@@ -952,6 +966,7 @@ func init() {
 		"es",
 		"firehose",
 		"fms",
+		"forecast",
 		"fsx",
 		"gamelift",
 		"glacier",
@@ -989,6 +1004,7 @@ func init() {
 		"personalize",
 		"pinpoint",
 		"pricing",
+		"qldb",
 		"quicksight",
 		"r53",
 		"ram",
@@ -1025,7 +1041,7 @@ func init() {
 	}
 }
 
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	config := Config{
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
@@ -1041,6 +1057,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
 		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
 		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
+		terraformVersion:        terraformVersion,
 	}
 
 	// Set CredsFilename, expanding home directory

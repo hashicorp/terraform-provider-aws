@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_internet_gateway"
-sidebar_current: "docs-aws-datasource-internet_gateway"
 description: |-
     Provides details about a specific Internet Gateway
 ---

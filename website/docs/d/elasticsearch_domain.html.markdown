@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
-sidebar_current: "docs-aws-datasource-elasticsearch-domain"
 description: |-
   Get information on an ElasticSearch Domain resource.
 ---

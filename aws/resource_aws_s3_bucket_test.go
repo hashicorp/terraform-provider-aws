@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -61,7 +61,7 @@ func testSweepS3Buckets(region string) error {
 		name := aws.StringValue(bucket.Name)
 
 		hasPrefix := false
-		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test"}
+		prefixes := []string{"mybucket.", "mylogs.", "tf-acc", "tf-object-test", "tf-test", "tf-emr-bootstrap"}
 
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(name, prefix) {
@@ -134,6 +134,24 @@ func testS3BucketRegion(conn *s3.S3, bucket string) (string, error) {
 	}
 
 	return aws.StringValue(output.LocationConstraint), nil
+}
+
+func testS3BucketObjectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
+	input := &s3.GetObjectLockConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+
+	output, err := conn.GetObjectLockConfiguration(input)
+
+	if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return aws.StringValue(output.ObjectLockConfiguration.ObjectLockEnabled) == s3.ObjectLockEnabledEnabled, nil
 }
 
 func TestAccAWSS3Bucket_basic(t *testing.T) {
@@ -1884,6 +1902,74 @@ func TestAccAWSS3Bucket_objectLock(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3Bucket_forceDestroy(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig_forceDestroy(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					testAccCheckAWSS3BucketAddObjects(resourceName, "data.txt", "prefix/more_data.txt"),
+				),
+			},
+		},
+	})
+}
+
+// By default, the AWS Go SDK cleans up URIs by removing extra slashes
+// when the service API requests use the URI as part of making a request.
+// While the aws_s3_bucket_object resource automatically cleans the key
+// to not contain these extra slashes, out-of-band handling and other AWS
+// services may create keys with extra slashes (empty "directory" prefixes).
+func TestAccAWSS3Bucket_forceDestroyWithEmptyPrefixes(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig_forceDestroy(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					testAccCheckAWSS3BucketAddObjects(resourceName, "data.txt", "/extraleadingslash.txt"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_forceDestroyWithObjectLockEnabled(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	rInt := acctest.RandInt()
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketConfig_forceDestroyWithObjectLockEnabled(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					testAccCheckAWSS3BucketAddObjectsWithLegalHold(resourceName, "data.txt", "prefix/more_data.txt"),
+				),
+			},
+		},
+	})
+}
+
 func TestAWSS3BucketName(t *testing.T) {
 	validDnsNames := []string{
 		"foobar",
@@ -2094,6 +2180,47 @@ func testAccCheckAWSS3DestroyBucket(n string) resource.TestCheckFunc {
 		if err != nil {
 			return fmt.Errorf("Error destroying Bucket (%s) in testAccCheckAWSS3DestroyBucket: %s", rs.Primary.ID, err)
 		}
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketAddObjects(n string, keys ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3connUriCleaningDisabled
+
+		for _, key := range keys {
+			_, err := conn.PutObject(&s3.PutObjectInput{
+				Bucket: aws.String(rs.Primary.ID),
+				Key:    aws.String(key),
+			})
+
+			if err != nil {
+				return fmt.Errorf("PutObject error: %s", err)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSS3BucketAddObjectsWithLegalHold(n string, keys ...string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		for _, key := range keys {
+			_, err := conn.PutObject(&s3.PutObjectInput{
+				Bucket:                    aws.String(rs.Primary.ID),
+				Key:                       aws.String(key),
+				ObjectLockLegalHoldStatus: aws.String(s3.ObjectLockLegalHoldStatusOn),
+			})
+
+			if err != nil {
+				return fmt.Errorf("PutObject error: %s", err)
+			}
+		}
+
 		return nil
 	}
 }
@@ -3695,6 +3822,34 @@ resource "aws_s3_bucket" "arbitrary" {
   }
 }
 `, randInt)
+}
+
+func testAccAWSS3BucketConfig_forceDestroy(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "%s"
+  acl = "private"
+  force_destroy = true
+}
+`, bucketName)
+}
+
+func testAccAWSS3BucketConfig_forceDestroyWithObjectLockEnabled(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "bucket" {
+  bucket = "%s"
+  acl = "private"
+  force_destroy = true
+
+  versioning {
+    enabled = true
+  }
+
+  object_lock_configuration {
+    object_lock_enabled = "Enabled"
+  }
+}
+`, bucketName)
 }
 
 const testAccAWSS3BucketConfigBucketEmptyString = `
