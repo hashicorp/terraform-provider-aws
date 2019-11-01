@@ -364,8 +364,8 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 
 func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
-	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
-	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
+	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Sid":"Test","Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"execute-api:/*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
+	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Sid":"Test","Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"execute-api:/*"}]}`
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -385,10 +385,22 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				// Test that there are no spurious plan changes
+				Config:             testAccAWSAPIGatewayRestAPIConfigWithPolicy(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+			{
 				Config: testAccAWSAPIGatewayRestAPIConfigUpdatePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "policy", expectedUpdatePolicyText),
 				),
+			},
+			{
+				// Test that there are no spurious plan changes
+				Config:             testAccAWSAPIGatewayRestAPIConfigUpdatePolicy(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
 			},
 			{
 				Config: testAccAWSAPIGatewayRestAPIConfig(rName),
@@ -662,28 +674,31 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayRestAPIConfigWithPolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name                     = "%s"
   minimum_compression_size = 0
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "execute-api:Invoke",
-      "Resource": "*",
-      "Condition": {
-        "IpAddress": {
-          "aws:SourceIp": "123.123.123.123/32"
-        }
-      }
-    }
-  ]
+  policy                   = data.aws_iam_policy_document.test.json
 }
-EOF
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid    = "Test"
+    effect = "Allow"
+
+    actions = ["execute-api:Invoke"]
+
+    resources = ["execute-api:/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = ["123.123.123.123/32"]
+    }
+  }
 }
 `, rName)
 }
@@ -691,23 +706,25 @@ EOF
 func testAccAWSAPIGatewayRestAPIConfigUpdatePolicy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name                     = "%s"
   minimum_compression_size = 0
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Deny",
-            "Principal": {
-                "AWS": "*"
-            },
-            "Action": "execute-api:Invoke",
-            "Resource": "*"
-        }
-    ]
+  policy                   = data.aws_iam_policy_document.test.json
 }
-EOF
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid    = "Test"
+    effect = "Deny"
+
+    actions = ["execute-api:Invoke"]
+
+    resources = ["execute-api:/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+  }
 }
 `, rName)
 }

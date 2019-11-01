@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -217,6 +218,15 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("description", api.Description)
 	d.Set("api_key_source", api.ApiKeySource)
 
+	execution_arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  d.Id(),
+	}.String()
+	d.Set("execution_arn", execution_arn)
+
 	// The API returns policy as an escaped JSON string
 	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
 	// The string must be normalized before unquoting as it may contain escaped
@@ -231,18 +241,21 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("error unescaping policy: %s", err)
 	}
+
+	// The AWS API also allows specifying a shorthand reference to the current resource as, for example,
+	// "execute-api:/*" instead of "arn:aws:execute-api:us-west-2:123456789012:abcdefghij/*".
+	// This is because the ARN of the enclosing gateway API resource is not known until it is created.
+	// However GetRestApi always returns the full ARN, which results in plan differences.
+	// We need to sanitize the policy and replace full ARNs with the shorthand notation.
+	// An alternative would be to implement a DiffSuppressFunc, but it seems like a better idea
+	// to import a pre-processed policy into the state.
+	// This is consistent with the way AWS Console UI works: the user always sees shorthand resources.
+
+	policy = strings.ReplaceAll(policy, execution_arn, "execute-api:")
+
 	d.Set("policy", policy)
 
 	d.Set("binary_media_types", api.BinaryMediaTypes)
-
-	execution_arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "execute-api",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  d.Id(),
-	}.String()
-	d.Set("execution_arn", execution_arn)
 
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
