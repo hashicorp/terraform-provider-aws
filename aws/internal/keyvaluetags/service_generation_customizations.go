@@ -68,6 +68,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -216,6 +217,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(organizations.New)
 	case "pinpoint":
 		funcType = reflect.TypeOf(pinpoint.New)
+	case "qldb":
+		funcType = reflect.TypeOf(qldb.New)
 	case "ram":
 		funcType = reflect.TypeOf(ram.New)
 	case "rds":

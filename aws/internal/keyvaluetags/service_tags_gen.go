@@ -317,6 +317,16 @@ func PinpointKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// QldbTags returns qldb service tags.
+func (tags KeyValueTags) QldbTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// QldbKeyValueTags creates KeyValueTags from qldb service tags.
+func QldbKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // ResourcegroupsTags returns resourcegroups service tags.
 func (tags KeyValueTags) ResourcegroupsTags() map[string]*string {
 	return aws.StringMap(tags.Map())
