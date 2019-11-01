@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,10 +48,24 @@ func resourceAwsApiGatewayRestApi() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsJSON,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// The AWS API also allows specifying a shorthand reference to the current resource as, for example,
+					// "execute-api:/*" instead of "arn:aws:execute-api:us-west-2:123456789012:abcdefghij/*".
+					// This is because the ARN of the enclosing gateway API resource is not known until it is created.
+					// However GetRestApi always returns the full ARN, which results in plan differences.
+					// We need to sanitize the policy and replace full ARNs with the shorthand notation.
+					if v, ok := d.GetOk("execution_arn"); ok {
+						arn := v.(string)
+						normalizedOld := strings.ReplaceAll(old, arn, "execute-api:")
+						normalizedNew := strings.ReplaceAll(new, arn, "execute-api:")
+						return suppressEquivalentAwsPolicyDiffs(k, normalizedOld, normalizedNew, d)
+					}
+
+					return suppressEquivalentAwsPolicyDiffs(k, old, new, d)
+				},
 			},
 
 			"binary_media_types": {
