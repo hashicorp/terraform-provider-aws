@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsRouteTableAssociation() *schema.Resource {
@@ -51,8 +51,10 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 	}
 
 	var associationID string
+	var resp *ec2.AssociateRouteTableOutput
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		resp, err := conn.AssociateRouteTable(&associationOpts)
+		var err error
+		resp, err = conn.AssociateRouteTable(&associationOpts)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "InvalidRouteTableID.NotFound" {
@@ -64,8 +66,11 @@ func resourceAwsRouteTableAssociationCreate(d *schema.ResourceData, meta interfa
 		associationID = *resp.AssociationId
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.AssociateRouteTable(&associationOpts)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating route table association: %s", err)
 	}
 
 	// Set the ID and return

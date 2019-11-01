@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_pool"
-sidebar_current: "docs-aws-resource-cognito-identity-pool"
 description: |-
   Provides an AWS Cognito Identity Pool.
 ---

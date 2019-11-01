@@ -6,13 +6,14 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -123,6 +124,26 @@ func TestAccAWSEMRCluster_additionalInfo(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps", "additional_info"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_disappears(t *testing.T) {
+	var cluster emr.Cluster
+	r := acctest.RandInt()
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
+					testAccCheckAWSEmrClusterDisappears(&cluster),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1471,6 +1492,64 @@ func testAccCheckAWSEmrClusterExists(n string, v *emr.Cluster) resource.TestChec
 	}
 }
 
+func testAccCheckAWSEmrClusterDisappears(cluster *emr.Cluster) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).emrconn
+		id := aws.StringValue(cluster.Id)
+
+		terminateJobFlowsInput := &emr.TerminateJobFlowsInput{
+			JobFlowIds: []*string{cluster.Id},
+		}
+
+		_, err := conn.TerminateJobFlows(terminateJobFlowsInput)
+
+		if err != nil {
+			return err
+		}
+
+		input := &emr.ListInstancesInput{
+			ClusterId: cluster.Id,
+		}
+		var output *emr.ListInstancesOutput
+		var instanceCount int
+
+		err = resource.Retry(20*time.Minute, func() *resource.RetryError {
+			var err error
+			output, err = conn.ListInstances(input)
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			instanceCount = countEMRRemainingInstances(output, id)
+
+			if instanceCount != 0 {
+				return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", id, instanceCount))
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			output, err = conn.ListInstances(input)
+
+			if err == nil {
+				instanceCount = countEMRRemainingInstances(output, id)
+			}
+		}
+
+		if instanceCount != 0 {
+			return fmt.Errorf("EMR Cluster (%s) has (%d) Instances remaining", id, instanceCount)
+		}
+
+		if err != nil {
+			return fmt.Errorf("error waiting for EMR Cluster (%s) Instances to drain: %s", id, err)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSEmrClusterNotRecreated(i, j *emr.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.Id) != aws.StringValue(j.Id) {
@@ -1593,7 +1672,7 @@ resource "aws_emr_cluster" "test" {
   }
 
   bootstrap_action {
-    path = "s3://${aws_s3_bucket.tester.bucket}/testscript.sh"
+    path = "s3://${aws_s3_bucket_object.testobject.bucket}/${aws_s3_bucket_object.testobject.key}"
     name = "test"
 
     args = ["1",
@@ -1848,17 +1927,11 @@ resource "aws_s3_bucket" "tester" {
 resource "aws_s3_bucket_object" "testobject" {
   bucket = "${aws_s3_bucket.tester.bucket}"
   key    = "testscript.sh"
-
-  #source = "testscript.sh"
-  content = "${data.template_file.testscript.rendered}"
-  acl     = "public-read"
-}
-
-data "template_file" "testscript" {
-  template = <<POLICY
+  content = <<EOF
 #!/bin/bash
 echo $@
-POLICY
+EOF
+  acl     = "public-read"
 }
 `, r, r, r, r, r, r, r)
 }

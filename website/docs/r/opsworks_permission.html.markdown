@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_opsworks_permission"
-sidebar_current: "docs-aws-resource-opsworks-permission"
 description: |-
   Provides an OpsWorks permission resource.
 ---

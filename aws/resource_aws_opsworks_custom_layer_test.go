@@ -8,17 +8,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // These tests assume the existence of predefined Opsworks IAM roles named `aws-opsworks-ec2-role`
-// and `aws-opsworks-service-role`.
+// and `aws-opsworks-service-role`, and Opsworks stacks named `tf-acc`.
 
-func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
+func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 	name := acctest.RandString(10)
-
+	var opslayer opsworks.Layer
 	resourceName := "aws_opsworks_custom_layer.tf-acc"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -28,8 +28,24 @@ func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigVpcCreate(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSOpsworksCustomLayerExists(resourceName, &opslayer),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.1368285564", "git"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.2937857443", "golang"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -39,9 +55,11 @@ func TestAccAWSOpsworksCustomLayer_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
+func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 	stackName := fmt.Sprintf("tf-%d", acctest.RandInt())
 	var opslayer opsworks.Layer
+	resourceName := "aws_opsworks_custom_layer.tf-acc"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -50,116 +68,47 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigNoVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksCustomLayerExists(
-						"aws_opsworks_custom_layer.tf-acc", &opslayer),
+					testAccCheckAWSOpsworksCustomLayerExists(resourceName, &opslayer),
 					testAccCheckAWSOpsworksCreateLayerAttributes(&opslayer, stackName),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "name", stackName,
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "auto_assign_elastic_ips", "false",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "auto_healing", "true",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "drain_elb_on_shutdown", "true",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "instance_shutdown_timeout", "300",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "custom_security_group_ids.#", "2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "system_packages.#", "2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "system_packages.1368285564", "git",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "system_packages.2937857443", "golang",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.#", "1",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.type", "gp2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.number_of_disks", "2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.mount_point", "/home",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.size", "100",
-					),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.1368285564", "git"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.2937857443", "golang"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
 				),
 			},
 			{
 				Config: testAccAwsOpsworksCustomLayerConfigUpdate(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "name", stackName,
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "drain_elb_on_shutdown", "false",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "instance_shutdown_timeout", "120",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "custom_security_group_ids.#", "3",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "system_packages.#", "3",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "system_packages.1368285564", "git",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "system_packages.2937857443", "golang",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "system_packages.4101929740", "subversion",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.#", "2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.type", "gp2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.number_of_disks", "2",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.mount_point", "/home",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.3575749636.size", "100",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.1266957920.type", "io1",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.1266957920.number_of_disks", "4",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.1266957920.mount_point", "/var",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.1266957920.size", "100",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.1266957920.raid_level", "1",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "ebs_volume.1266957920.iops", "3000",
-					),
-					resource.TestCheckResourceAttr(
-						"aws_opsworks_custom_layer.tf-acc", "custom_json", `{"layer_key":"layer_value2"}`,
-					),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "false"),
+					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "custom_security_group_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.1368285564", "git"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.2937857443", "golang"),
+					resource.TestCheckResourceAttr(resourceName, "system_packages.4101929740", "subversion"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.type", "io1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.number_of_disks", "4"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.mount_point", "/var"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.raid_level", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", `{"layer_key":"layer_value2"}`),
 				),
 			},
 		},

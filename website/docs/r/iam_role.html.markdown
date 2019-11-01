@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_role"
-sidebar_current: "docs-aws-resource-iam-role"
 description: |-
   Provides an IAM role.
 ---

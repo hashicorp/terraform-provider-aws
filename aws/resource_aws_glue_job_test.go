@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -233,6 +233,40 @@ func TestAccAWSGlueJob_Description(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueJob_GlueVersion(t *testing.T) {
+	var job glue.Job
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueJobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "0.9"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "0.9"),
+				),
+			},
+			{
+				Config: testAccAWSGlueJobConfig_GlueVersion(rName, "1.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueJob_ExecutionProperty(t *testing.T) {
 	var job glue.Job
 
@@ -404,6 +438,31 @@ func TestAccAWSGlueJob_PythonShell(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueJobConfig_PythonShellWithVersion(rName, "2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSGlueJobConfig_PythonShellWithVersion(rName, "3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueJobExists(resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3"),
+					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
+				),
 			},
 		},
 	})
@@ -620,6 +679,25 @@ resource "aws_glue_job" "test" {
 `, testAccAWSGlueJobConfig_Base(rName), description, rName)
 }
 
+func testAccAWSGlueJobConfig_GlueVersion(rName, glueVersion string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  glue_version       = "%s"
+  name               = "%s"
+  role_arn           = "${aws_iam_role.test.arn}"
+  allocated_capacity = 10
+
+  command {
+    script_location = "testscriptlocation"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), glueVersion, rName)
+}
+
 func testAccAWSGlueJobConfig_ExecutionProperty(rName string, maxConcurrentRuns int) string {
 	return fmt.Sprintf(`
 %s
@@ -734,6 +812,26 @@ resource "aws_glue_job" "test" {
   depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, testAccAWSGlueJobConfig_Base(rName), rName)
+}
+
+func testAccAWSGlueJobConfig_PythonShellWithVersion(rName string, pythonVersion string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_job" "test" {
+  name         = "%s"
+  role_arn     = "${aws_iam_role.test.arn}"
+  max_capacity = 0.0625
+
+  command {
+    name            = "pythonshell"
+    script_location = "testscriptlocation"
+		python_version  = "%s"
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, testAccAWSGlueJobConfig_Base(rName), rName, pythonVersion)
 }
 
 func testAccAWSGlueJobConfig_MaxCapacity(rName string, maxCapacity float64) string {

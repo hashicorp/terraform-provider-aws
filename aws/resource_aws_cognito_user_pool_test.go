@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -70,17 +70,27 @@ func testSweepCognitoUserPools(region string) error {
 	return nil
 }
 
-func TestAccAWSCognitoUserPool_importBasic(t *testing.T) {
-	resourceName := "aws_cognito_user_pool.pool"
+func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
+		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCognitoUserPoolConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "arn",
+						regexp.MustCompile(`^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\w-]+_[0-9a-zA-Z]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "endpoint",
+						regexp.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", "terraform-test-pool-"+name),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -91,33 +101,9 @@ func TestAccAWSCognitoUserPool_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCognitoUserPool_basic(t *testing.T) {
-	name := acctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCognitoUserPoolConfig_basic(name),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "arn",
-						regexp.MustCompile(`^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\w-]+_[0-9a-zA-Z]+$`)),
-					resource.TestMatchResourceAttr("aws_cognito_user_pool.pool", "endpoint",
-						regexp.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "name", "terraform-test-pool-"+name),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "creation_date"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "last_modified_date"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -127,22 +113,27 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfiguration(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.unused_account_validity_days", "6"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.allow_admin_create_user_only", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.unused_account_validity_days", "7"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.allow_admin_create_user_only", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and constant password is {####}."),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "false"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and constant password is {####}."),
 				),
 			},
 		},
@@ -151,6 +142,7 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -160,20 +152,25 @@ func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "OFF"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "OFF"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "OFF"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name, "ENFORCED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 				),
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "user_pool_add_ons.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.#", "0"),
 				),
 			},
 		},
@@ -182,6 +179,7 @@ func TestAccAWSCognitoUserPool_withAdvancedSecurityMode(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -191,16 +189,21 @@ func TestAccAWSCognitoUserPool_withDeviceConfiguration(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.challenge_required_on_new_device", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.challenge_required_on_new_device", "true"),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withDeviceConfigurationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.challenge_required_on_new_device", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.device_only_remembered_on_user_prompt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.challenge_required_on_new_device", "false"),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.device_only_remembered_on_user_prompt", "true"),
 				),
 			},
 		},
@@ -213,6 +216,7 @@ func TestAccAWSCognitoUserPool_withEmailVerificationMessage(t *testing.T) {
 	updatedSubject := acctest.RandString(10)
 	message := fmt.Sprintf("%s {####}", acctest.RandString(10))
 	upatedMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -222,16 +226,21 @@ func TestAccAWSCognitoUserPool_withEmailVerificationMessage(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withEmailVerificationMessage(name, subject, message),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_subject", subject),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_message", message),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", subject),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", message),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withEmailVerificationMessage(name, updatedSubject, upatedMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_subject", updatedSubject),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_message", upatedMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", updatedSubject),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", upatedMessage),
 				),
 			},
 		},
@@ -244,6 +253,7 @@ func TestAccAWSCognitoUserPool_withSmsVerificationMessage(t *testing.T) {
 	updatedAuthenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 	verificationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 	upatedVerificationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -253,16 +263,21 @@ func TestAccAWSCognitoUserPool_withSmsVerificationMessage(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSmsVerificationMessage(name, authenticationMessage, verificationMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_authentication_message", authenticationMessage),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_verification_message", verificationMessage),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", authenticationMessage),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", verificationMessage),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSmsVerificationMessage(name, updatedAuthenticationMessage, upatedVerificationMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_authentication_message", updatedAuthenticationMessage),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_verification_message", upatedVerificationMessage),
+					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", updatedAuthenticationMessage),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", upatedVerificationMessage),
 				),
 			},
 		},
@@ -272,6 +287,7 @@ func TestAccAWSCognitoUserPool_withSmsVerificationMessage(t *testing.T) {
 func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
 	replyTo := fmt.Sprintf("tf-acc-reply-%s@terraformtesting.com", name)
+	resourceName := "aws_cognito_user_pool.test"
 
 	sourceARN, ok := os.LookupEnv("TEST_AWS_SES_VERIFIED_EMAIL_ARN")
 	if !ok {
@@ -286,18 +302,23 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, "", "", "COGNITO_DEFAULT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.reply_to_email_address", ""),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.email_sending_account", "COGNITO_DEFAULT"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "COGNITO_DEFAULT"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, replyTo, sourceARN, "DEVELOPER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.reply_to_email_address", replyTo),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.email_sending_account", "DEVELOPER"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_configuration.0.source_arn", sourceARN),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", replyTo),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "DEVELOPER"),
+					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.source_arn", sourceARN),
 				),
 			},
 		},
@@ -308,6 +329,7 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 // taking some time.
 func TestAccAWSCognitoUserPool_withSmsConfiguration(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -317,10 +339,15 @@ func TestAccAWSCognitoUserPool_withSmsConfiguration(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSmsConfiguration(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.external_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.sns_caller_arn"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.external_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.sns_caller_arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -329,6 +356,7 @@ func TestAccAWSCognitoUserPool_withSmsConfiguration(t *testing.T) {
 // Ensure we can update a User Pool, handling IAM role propagation.
 func TestAccAWSCognitoUserPool_withSmsConfigurationUpdated(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -338,16 +366,21 @@ func TestAccAWSCognitoUserPool_withSmsConfigurationUpdated(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "0"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSmsConfiguration(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.external_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.sns_caller_arn"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.external_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.sns_caller_arn"),
 				),
 			},
 		},
@@ -356,6 +389,7 @@ func TestAccAWSCognitoUserPool_withSmsConfigurationUpdated(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -365,15 +399,20 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withTags(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "tags.Name", "Foo"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withTagsUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "tags.Name", "FooBar"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "tags.Project", "Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "FooBar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Project", "Terraform"),
 				),
 			},
 		},
@@ -382,6 +421,7 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -391,20 +431,25 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAliasAttributes(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1888159429", "preferred_username"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "0"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "alias_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alias_attributes.1888159429", "preferred_username"),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAliasAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.#", "2"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.881205744", "email"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "alias_attributes.1888159429", "preferred_username"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.881205744", "email"),
+					resource.TestCheckResourceAttr(resourceName, "alias_attributes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "alias_attributes.881205744", "email"),
+					resource.TestCheckResourceAttr(resourceName, "alias_attributes.1888159429", "preferred_username"),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.881205744", "email"),
 				),
 			},
 		},
@@ -413,6 +458,7 @@ func TestAccAWSCognitoUserPool_withAliasAttributes(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -422,24 +468,29 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withPasswordPolicy(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.minimum_length", "7"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_lowercase", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_numbers", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_symbols", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_uppercase", "false"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", "7"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_lowercase", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_numbers", "false"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_symbols", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_uppercase", "false"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withPasswordPolicyUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.minimum_length", "9"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_lowercase", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_numbers", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_symbols", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "password_policy.0.require_uppercase", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", "9"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_lowercase", "false"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_numbers", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_symbols", "false"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_uppercase", "true"),
 				),
 			},
 		},
@@ -448,6 +499,7 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -457,34 +509,39 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withLambdaConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.main"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "lambda_config.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.create_auth_challenge"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.custom_message"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.define_auth_challenge"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_authentication"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.user_migration"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.create_auth_challenge"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_message"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.define_auth_challenge"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_authentication"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_confirmation"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_authentication"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_token_generation"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.user_migration"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.verify_auth_challenge_response"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withLambdaConfigUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "lambda_config.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.create_auth_challenge"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.custom_message"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.define_auth_challenge"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_authentication"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.post_confirmation"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_authentication"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_sign_up"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.pre_token_generation"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.user_migration"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.main", "lambda_config.0.verify_auth_challenge_response"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.create_auth_challenge"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.custom_message"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.define_auth_challenge"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_authentication"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.post_confirmation"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_authentication"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_sign_up"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.pre_token_generation"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.user_migration"),
+					resource.TestCheckResourceAttrSet(resourceName, "lambda_config.0.verify_auth_challenge_response"),
 				),
 			},
 		},
@@ -493,6 +550,7 @@ func TestAccAWSCognitoUserPool_withLambdaConfig(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -502,61 +560,66 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSchemaAttributes(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.main"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "2"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.attribute_data_type", "String"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.developer_only_attribute", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.mutable", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.name", "email"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.number_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.required", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.string_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.string_attribute_constraints.0.min_length", "5"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.145451252.string_attribute_constraints.0.max_length", "10"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.770828826.attribute_data_type", "Boolean"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.770828826.developer_only_attribute", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.770828826.mutable", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.770828826.name", "mybool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.770828826.number_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.770828826.required", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.770828826.string_attribute_constraints.#", "0"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.attribute_data_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.developer_only_attribute", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.mutable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.name", "email"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.number_attribute_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.string_attribute_constraints.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.string_attribute_constraints.0.min_length", "5"),
+					resource.TestCheckResourceAttr(resourceName, "schema.145451252.string_attribute_constraints.0.max_length", "10"),
+					resource.TestCheckResourceAttr(resourceName, "schema.770828826.attribute_data_type", "Boolean"),
+					resource.TestCheckResourceAttr(resourceName, "schema.770828826.developer_only_attribute", "true"),
+					resource.TestCheckResourceAttr(resourceName, "schema.770828826.mutable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.770828826.name", "mybool"),
+					resource.TestCheckResourceAttr(resourceName, "schema.770828826.number_attribute_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema.770828826.required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.770828826.string_attribute_constraints.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withSchemaAttributesUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.#", "3"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.attribute_data_type", "String"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.developer_only_attribute", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.mutable", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.name", "email"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.number_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.required", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.string_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.string_attribute_constraints.0.min_length", "7"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2078884933.string_attribute_constraints.0.max_length", "15"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.attribute_data_type", "Number"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.developer_only_attribute", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.mutable", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.name", "mynumber"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.number_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.number_attribute_constraints.0.min_value", "2"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.number_attribute_constraints.0.max_value", "6"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.required", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2718111653.string_attribute_constraints.#", "0"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.attribute_data_type", "Number"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.developer_only_attribute", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.mutable", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.name", "mynondevnumber"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.0.min_value", "2"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.number_attribute_constraints.0.max_value", "6"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.required", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.main", "schema.2753746449.string_attribute_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.attribute_data_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.developer_only_attribute", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.mutable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.name", "email"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.number_attribute_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.string_attribute_constraints.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.string_attribute_constraints.0.min_length", "7"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2078884933.string_attribute_constraints.0.max_length", "15"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.attribute_data_type", "Number"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.developer_only_attribute", "true"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.mutable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.name", "mynumber"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.number_attribute_constraints.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.number_attribute_constraints.0.min_value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.number_attribute_constraints.0.max_value", "6"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2718111653.string_attribute_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.attribute_data_type", "Number"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.developer_only_attribute", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.mutable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.name", "mynondevnumber"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.number_attribute_constraints.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.number_attribute_constraints.0.min_value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.number_attribute_constraints.0.max_value", "6"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "schema.2753746449.string_attribute_constraints.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_cognito_user_pool.main",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -566,6 +629,7 @@ func TestAccAWSCognitoUserPool_withSchemaAttributes(t *testing.T) {
 
 func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 	name := acctest.RandString(5)
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -575,19 +639,41 @@ func TestAccAWSCognitoUserPool_withVerificationMessageTemplate(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message", "Foo {####} Bar"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_message_by_link", "{##foobar##}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.email_subject_by_link", "foobar"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.sms_message", "{####} Baz"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", "foo {####} bar"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message_by_link", "{##foobar##}"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", "foobar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject_by_link", "foobar"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", "{####} baz"),
+
+					/* Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
+					will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes.
+					*/
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "foo {####} bar"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "foobar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} baz"),
 				),
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplateUpdated(name),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate_DefaultEmailOption(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "{####} Baz"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "BazBaz {####}"),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} BazBazBar?"),
+
+					/* Setting EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes
+					will implicitly set verification template attributes like EmailMessage, EmailSubject or SmsMessage.
+					*/
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", "{####} Baz"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", "BazBaz {####}"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", "{####} BazBazBar?"),
 				),
 			},
 		},
@@ -600,6 +686,7 @@ func TestAccAWSCognitoUserPool_update(t *testing.T) {
 	offMfa := "OFF"
 	authenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
 	updatedAuthenticationMessage := fmt.Sprintf("%s {####}", acctest.RandString(10))
+	resourceName := "aws_cognito_user_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
@@ -609,73 +696,78 @@ func TestAccAWSCognitoUserPool_update(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_update(name, optionalMfa, authenticationMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "mfa_configuration", optionalMfa),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_message", "Foo {####} Bar"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_verification_message", "{####} Baz"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_authentication_message", authenticationMessage),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.unused_account_validity_days", "6"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.allow_admin_create_user_only", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.challenge_required_on_new_device", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.external_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.sns_caller_arn"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "tags.Name", "Foo"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", optionalMfa),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "Foo {####} Bar"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} Baz"),
+					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", authenticationMessage),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.challenge_required_on_new_device", "true"),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.external_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.sns_caller_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_update(name, optionalMfa, updatedAuthenticationMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "mfa_configuration", optionalMfa),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_message", "Foo {####} Bar"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_verification_message", "{####} Baz"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_authentication_message", updatedAuthenticationMessage),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.unused_account_validity_days", "6"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.allow_admin_create_user_only", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.challenge_required_on_new_device", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.external_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.sns_caller_arn"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "tags.Name", "Foo"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", optionalMfa),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "Foo {####} Bar"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} Baz"),
+					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", updatedAuthenticationMessage),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.challenge_required_on_new_device", "true"),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.external_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.sns_caller_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
 				),
 			},
 			{
 				Config: testAccAWSCognitoUserPoolConfig_update(name, offMfa, updatedAuthenticationMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSCognitoUserPoolExists("aws_cognito_user_pool.pool"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "auto_verified_attributes.#", "1"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "mfa_configuration", offMfa),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_message", "Foo {####} Bar"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "email_verification_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_verification_message", "{####} Baz"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_authentication_message", updatedAuthenticationMessage),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.unused_account_validity_days", "6"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.allow_admin_create_user_only", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.challenge_required_on_new_device", "true"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "sms_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.external_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_user_pool.pool", "sms_configuration.0.sns_caller_arn"),
-					resource.TestCheckResourceAttr("aws_cognito_user_pool.pool", "tags.Name", "Foo"),
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", offMfa),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "Foo {####} Bar"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} Baz"),
+					resource.TestCheckResourceAttr(resourceName, "sms_authentication_message", updatedAuthenticationMessage),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "true"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and temporary password is {####}. "),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "FooBar {####}"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.sms_message", "Your username is {username} and temporary password is {####}."),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.challenge_required_on_new_device", "true"),
+					resource.TestCheckResourceAttr(resourceName, "device_configuration.0.device_only_remembered_on_user_prompt", "false"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.external_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "sms_configuration.0.sns_caller_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
 				),
 			},
 		},
@@ -750,7 +842,7 @@ func testAccPreCheckAWSCognitoIdentityProvider(t *testing.T) {
 
 func testAccAWSCognitoUserPoolConfig_basic(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 }
 `, name)
@@ -758,7 +850,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfiguration(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   admin_create_user_config {
@@ -777,7 +869,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   admin_create_user_config {
@@ -796,7 +888,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withAdvancedSecurityMode(name string, mode string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   user_pool_add_ons {
@@ -808,7 +900,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withDeviceConfiguration(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   device_configuration {
@@ -821,7 +913,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withDeviceConfigurationUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   device_configuration {
@@ -834,7 +926,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withEmailVerificationMessage(name, subject, message string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name                       = "terraform-test-pool-%s"
   email_verification_subject = "%s"
   email_verification_message = "%s"
@@ -848,7 +940,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withSmsVerificationMessage(name, authenticationMessage, verificationMessage string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name                       = "terraform-test-pool-%s"
   sms_authentication_message = "%s"
   sms_verification_message   = "%s"
@@ -858,7 +950,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withTags(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   tags = {
@@ -870,7 +962,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, email, arn, account string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
     name = "terraform-test-pool-%[1]s"
 
 
@@ -886,7 +978,7 @@ func testAccAWSCognitoUserPoolConfig_withSmsConfiguration(name string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-resource "aws_iam_role" "main" {
+resource "aws_iam_role" "test" {
   name = "test-role-%[1]s"
   path = "/service-role/"
 
@@ -912,9 +1004,9 @@ resource "aws_iam_role" "main" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "main" {
+resource "aws_iam_role_policy" "test" {
   name = "test-role-policy-%[1]s"
-  role = "${aws_iam_role.main.id}"
+  role = "${aws_iam_role.test.id}"
 
   policy = <<EOF
 {
@@ -934,12 +1026,12 @@ resource "aws_iam_role_policy" "main" {
 EOF
 }
 
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%[1]s"
 
   sms_configuration {
     external_id    = "${data.aws_caller_identity.current.account_id}"
-    sns_caller_arn = "${aws_iam_role.main.arn}"
+    sns_caller_arn = "${aws_iam_role.test.arn}"
   }
 }
 `, name)
@@ -947,7 +1039,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withTagsUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   tags = {
@@ -960,7 +1052,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withAliasAttributes(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   alias_attributes = ["preferred_username"]
@@ -970,7 +1062,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withAliasAttributesUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   alias_attributes         = ["email", "preferred_username"]
@@ -981,7 +1073,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withPasswordPolicy(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   password_policy {
@@ -997,7 +1089,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withPasswordPolicyUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   password_policy {
@@ -1013,7 +1105,7 @@ resource "aws_cognito_user_pool" "pool" {
 
 func testAccAWSCognitoUserPoolConfig_withLambdaConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "main" {
+resource "aws_iam_role" "test" {
   name = "%s"
 
   assume_role_policy = <<EOF
@@ -1033,28 +1125,28 @@ resource "aws_iam_role" "main" {
 EOF
 }
 
-resource "aws_lambda_function" "main" {
+resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s"
-  role          = "${aws_iam_role.main.arn}"
+  role          = "${aws_iam_role.test.arn}"
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
 
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   lambda_config {
-    create_auth_challenge          = "${aws_lambda_function.main.arn}"
-    custom_message                 = "${aws_lambda_function.main.arn}"
-    define_auth_challenge          = "${aws_lambda_function.main.arn}"
-    post_authentication            = "${aws_lambda_function.main.arn}"
-    post_confirmation              = "${aws_lambda_function.main.arn}"
-    pre_authentication             = "${aws_lambda_function.main.arn}"
-    pre_sign_up                    = "${aws_lambda_function.main.arn}"
-    pre_token_generation           = "${aws_lambda_function.main.arn}"
-    user_migration                 = "${aws_lambda_function.main.arn}"
-    verify_auth_challenge_response = "${aws_lambda_function.main.arn}"
+    create_auth_challenge          = "${aws_lambda_function.test.arn}"
+    custom_message                 = "${aws_lambda_function.test.arn}"
+    define_auth_challenge          = "${aws_lambda_function.test.arn}"
+    post_authentication            = "${aws_lambda_function.test.arn}"
+    post_confirmation              = "${aws_lambda_function.test.arn}"
+    pre_authentication             = "${aws_lambda_function.test.arn}"
+    pre_sign_up                    = "${aws_lambda_function.test.arn}"
+    pre_token_generation           = "${aws_lambda_function.test.arn}"
+    user_migration                 = "${aws_lambda_function.test.arn}"
+    verify_auth_challenge_response = "${aws_lambda_function.test.arn}"
   }
 }
 `, name)
@@ -1062,7 +1154,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccAWSCognitoUserPoolConfig_withLambdaConfigUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "main" {
+resource "aws_iam_role" "test" {
   name = "%s"
 
   assume_role_policy = <<EOF
@@ -1082,10 +1174,10 @@ resource "aws_iam_role" "main" {
 EOF
 }
 
-resource "aws_lambda_function" "main" {
+resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s"
-  role          = "${aws_iam_role.main.arn}"
+  role          = "${aws_iam_role.test.arn}"
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
@@ -1093,12 +1185,12 @@ resource "aws_lambda_function" "main" {
 resource "aws_lambda_function" "second" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[1]s_second"
-  role          = "${aws_iam_role.main.arn}"
+  role          = "${aws_iam_role.test.arn}"
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
 
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   lambda_config {
@@ -1119,7 +1211,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccAWSCognitoUserPoolConfig_withSchemaAttributes(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   schema {
@@ -1148,7 +1240,7 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccAWSCognitoUserPoolConfig_withSchemaAttributesUpdated(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "main" {
+resource "aws_cognito_user_pool" "test" {
   name = "%[1]s"
 
   schema {
@@ -1195,33 +1287,32 @@ resource "aws_cognito_user_pool" "main" {
 
 func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
-
-  email_verification_message = "Foo {####} Bar"
-  email_verification_subject = "FooBar {####}"
-  sms_verification_message   = "{####} Baz"
 
   # Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
   # will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage
   # attributes.
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
+    email_message = "foo {####} bar"
     email_message_by_link = "{##foobar##}"
+    email_subject = "foobar {####}"
     email_subject_by_link = "foobar"
+    sms_message           = "{####} baz"
   }
 }
 `, name)
 }
 
-func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplateUpdated(name string) string {
+func testAccAWSCognitoUserPoolConfig_withVerificationMessageTemplate_DefaultEmailOption(name string) string {
 	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
-  email_verification_message = "Foo {####} Bar"
-  email_verification_subject = "FooBar {####}"
-  sms_verification_message   = "{####} Baz"
+  email_verification_message = "{####} Baz"
+  email_verification_subject = "BazBaz {####}"
+  sms_verification_message   = "{####} BazBazBar?"
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
@@ -1234,7 +1325,7 @@ func testAccAWSCognitoUserPoolConfig_update(name string, mfaconfig, smsAuthMsg s
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-resource "aws_iam_role" "main" {
+resource "aws_iam_role" "test" {
   name = "test-role-%s"
   path = "/service-role/"
 
@@ -1260,9 +1351,9 @@ resource "aws_iam_role" "main" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "main" {
+resource "aws_iam_role_policy" "test" {
   name = "test-role-policy-%s"
-  role = "${aws_iam_role.main.id}"
+  role = "${aws_iam_role.test.id}"
 
   policy = <<EOF
 {
@@ -1282,7 +1373,7 @@ resource "aws_iam_role_policy" "main" {
 EOF
 }
 
-resource "aws_cognito_user_pool" "pool" {
+resource "aws_cognito_user_pool" "test" {
   name                     = "terraform-test-pool-%s"
   auto_verified_attributes = ["email"]
   mfa_configuration        = "%s"
@@ -1314,7 +1405,7 @@ resource "aws_cognito_user_pool" "pool" {
 
   sms_configuration {
     external_id    = "${data.aws_caller_identity.current.account_id}"
-    sns_caller_arn = "${aws_iam_role.main.arn}"
+    sns_caller_arn = "${aws_iam_role.test.arn}"
   }
 
   tags = {

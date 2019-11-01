@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_group_policy"
-sidebar_current: "docs-aws-resource-iam-group-policy"
 description: |-
   Provides an IAM policy attached to a group.
 ---

@@ -10,11 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCodeBuildProject() *schema.Resource {
@@ -38,6 +38,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"artifact_identifier": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -83,6 +87,10 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								}
 								return false
 							},
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactPackagingNone,
+								codebuild.ArtifactPackagingZip,
+							}, false),
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -344,6 +352,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ArtifactNamespaceNone,
 								codebuild.ArtifactNamespaceBuildId,
 							}, false),
+							Default: codebuild.ArtifactNamespaceNone,
 						},
 						"override_artifact_name": {
 							Type:     schema.TypeBool,
@@ -353,6 +362,11 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						"packaging": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								codebuild.ArtifactPackagingNone,
+								codebuild.ArtifactPackagingZip,
+							}, false),
+							Default: codebuild.ArtifactPackagingNone,
 						},
 						"path": {
 							Type:     schema.TypeString,
@@ -366,9 +380,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								codebuild.ArtifactsTypeCodepipeline,
 								codebuild.ArtifactsTypeS3,
-								codebuild.ArtifactsTypeNoArtifacts,
 							}, false),
 						},
 					},
@@ -1384,14 +1396,36 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-
 	if v, ok := m["artifact_identifier"]; ok {
-		buf.WriteString(fmt.Sprintf("%s:", v.(string)))
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["encryption_disabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := m["location"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["namespace_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	if v, ok := m["override_artifact_name"]; ok {
 		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := m["packaging"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["path"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := m["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
 	return hashcode.String(buf.String())

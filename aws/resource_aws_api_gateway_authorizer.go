@@ -8,9 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
+
+const defaultAuthorizerTTL = 300
 
 func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 	return &schema.Resource{
@@ -57,6 +59,7 @@ func resourceAwsApiGatewayAuthorizer() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 3600),
+				Default:      defaultAuthorizerTTL,
 			},
 			"identity_validation_expression": {
 				Type:     schema.TypeString,
@@ -132,7 +135,13 @@ func resourceAwsApiGatewayAuthorizerRead(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Received API Gateway Authorizer: %s", authorizer)
 
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
-	d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
+
+	if authorizer.AuthorizerResultTtlInSeconds != nil {
+		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
+	} else {
+		d.Set("authorizer_result_ttl_in_seconds", defaultAuthorizerTTL)
+	}
+
 	d.Set("authorizer_uri", authorizer.AuthorizerUri)
 	d.Set("identity_source", authorizer.IdentitySource)
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)

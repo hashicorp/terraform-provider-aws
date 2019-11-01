@@ -3,9 +3,9 @@ package aws
 import (
 	"log"
 
-	"github.com/hashicorp/terraform/helper/mutexkv"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -15,7 +15,7 @@ func Provider() terraform.ResourceProvider {
 	// TODO: Move the configuration to this, requires validation
 
 	// The actual provider
-	return &schema.Provider{
+	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"access_key": {
 				Type:        schema.TypeString,
@@ -89,6 +89,22 @@ func Provider() terraform.ResourceProvider {
 			},
 
 			"endpoints": endpointsSchema(),
+
+			"ignore_tag_prefixes": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag key prefixes to ignore across all resources.",
+			},
+
+			"ignore_tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag keys to ignore across all resources.",
+			},
 
 			"insecure": {
 				Type:        schema.TypeBool,
@@ -199,6 +215,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elastic_beanstalk_hosted_zone":             dataSourceAwsElasticBeanstalkHostedZone(),
 			"aws_elastic_beanstalk_solution_stack":          dataSourceAwsElasticBeanstalkSolutionStack(),
 			"aws_elasticache_cluster":                       dataSourceAwsElastiCacheCluster(),
+			"aws_elasticsearch_domain":                      dataSourceAwsElasticSearchDomain(),
 			"aws_elb":                                       dataSourceAwsElb(),
 			"aws_elasticache_replication_group":             dataSourceAwsElasticacheReplicationGroup(),
 			"aws_elb_hosted_zone_id":                        dataSourceAwsElbHostedZoneId(),
@@ -249,6 +266,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_route_table":                               dataSourceAwsRouteTable(),
 			"aws_route_tables":                              dataSourceAwsRouteTables(),
 			"aws_route53_delegation_set":                    dataSourceAwsDelegationSet(),
+			"aws_route53_resolver_rule":                     dataSourceAwsRoute53ResolverRule(),
+			"aws_route53_resolver_rules":                    dataSourceAwsRoute53ResolverRules(),
 			"aws_route53_zone":                              dataSourceAwsRoute53Zone(),
 			"aws_s3_bucket":                                 dataSourceAwsS3Bucket(),
 			"aws_s3_bucket_object":                          dataSourceAwsS3BucketObject(),
@@ -276,9 +295,11 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpn_gateway":                               dataSourceAwsVpnGateway(),
 			"aws_waf_ipset":                                 dataSourceAwsWafIpSet(),
 			"aws_waf_rule":                                  dataSourceAwsWafRule(),
+			"aws_waf_rate_based_rule":                       dataSourceAwsWafRateBasedRule(),
 			"aws_waf_web_acl":                               dataSourceAwsWafWebAcl(),
 			"aws_wafregional_ipset":                         dataSourceAwsWafRegionalIpSet(),
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
+			"aws_wafregional_rate_based_rule":               dataSourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
@@ -373,6 +394,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_config_configuration_recorder":                       resourceAwsConfigConfigurationRecorder(),
 			"aws_config_configuration_recorder_status":                resourceAwsConfigConfigurationRecorderStatus(),
 			"aws_config_delivery_channel":                             resourceAwsConfigDeliveryChannel(),
+			"aws_config_organization_custom_rule":                     resourceAwsConfigOrganizationCustomRule(),
+			"aws_config_organization_managed_rule":                    resourceAwsConfigOrganizationManagedRule(),
 			"aws_cognito_identity_pool":                               resourceAwsCognitoIdentityPool(),
 			"aws_cognito_identity_pool_roles_attachment":              resourceAwsCognitoIdentityPoolRolesAttachment(),
 			"aws_cognito_identity_provider":                           resourceAwsCognitoIdentityProvider(),
@@ -494,6 +517,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_emr_instance_group":                                  resourceAwsEMRInstanceGroup(),
 			"aws_emr_security_configuration":                          resourceAwsEMRSecurityConfiguration(),
 			"aws_flow_log":                                            resourceAwsFlowLog(),
+			"aws_fsx_lustre_file_system":                              resourceAwsFsxLustreFileSystem(),
+			"aws_fsx_windows_file_system":                             resourceAwsFsxWindowsFileSystem(),
 			"aws_fms_admin_account":                                   resourceAwsFmsAdminAccount(),
 			"aws_gamelift_alias":                                      resourceAwsGameliftAlias(),
 			"aws_gamelift_build":                                      resourceAwsGameliftBuild(),
@@ -628,9 +653,11 @@ func Provider() terraform.ResourceProvider {
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
+			"aws_quicksight_user":                                     resourceAwsQuickSightUser(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
 			"aws_ram_resource_association":                            resourceAwsRamResourceAssociation(),
 			"aws_ram_resource_share":                                  resourceAwsRamResourceShare(),
+			"aws_ram_resource_share_accepter":                         resourceAwsRamResourceShareAccepter(),
 			"aws_rds_cluster":                                         resourceAwsRDSCluster(),
 			"aws_rds_cluster_endpoint":                                resourceAwsRDSClusterEndpoint(),
 			"aws_rds_cluster_instance":                                resourceAwsRDSClusterInstance(),
@@ -819,8 +846,19 @@ func Provider() terraform.ResourceProvider {
 			"aws_alb_target_group_attachment": resourceAwsLbTargetGroupAttachment(),
 			"aws_lb_target_group_attachment":  resourceAwsLbTargetGroupAttachment(),
 		},
-		ConfigureFunc: providerConfigure,
 	}
+
+	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+		terraformVersion := provider.TerraformVersion
+		if terraformVersion == "" {
+			// Terraform 0.12 introduced this field to the protocol
+			// We can therefore assume that if it's missing it's 0.10 or 0.11
+			terraformVersion = "0.11+compatible"
+		}
+		return providerConfigure(d, terraformVersion)
+	}
+
+	return provider
 }
 
 var descriptions map[string]string
@@ -891,10 +929,12 @@ func init() {
 	endpointServiceNames = []string{
 		"acm",
 		"acmpca",
+		"amplify",
 		"apigateway",
 		"applicationautoscaling",
 		"applicationinsights",
 		"appmesh",
+		"appstream",
 		"appsync",
 		"athena",
 		"autoscaling",
@@ -942,6 +982,7 @@ func init() {
 		"es",
 		"firehose",
 		"fms",
+		"forecast",
 		"fsx",
 		"gamelift",
 		"glacier",
@@ -951,12 +992,15 @@ func init() {
 		"iam",
 		"inspector",
 		"iot",
+		"iotanalytics",
+		"iotevents",
 		"kafka",
 		"kinesis_analytics",
 		"kinesis",
 		"kinesisanalytics",
 		"kinesisvideo",
 		"kms",
+		"lakeformation",
 		"lambda",
 		"lexmodels",
 		"licensemanager",
@@ -973,8 +1017,10 @@ func init() {
 		"neptune",
 		"opsworks",
 		"organizations",
+		"personalize",
 		"pinpoint",
 		"pricing",
+		"qldb",
 		"quicksight",
 		"r53",
 		"ram",
@@ -1011,7 +1057,7 @@ func init() {
 	}
 }
 
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	config := Config{
 		AccessKey:               d.Get("access_key").(string),
 		SecretKey:               d.Get("secret_key").(string),
@@ -1027,6 +1073,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SkipRequestingAccountId: d.Get("skip_requesting_account_id").(bool),
 		SkipMetadataApiCheck:    d.Get("skip_metadata_api_check").(bool),
 		S3ForcePathStyle:        d.Get("s3_force_path_style").(bool),
+		terraformVersion:        terraformVersion,
 	}
 
 	// Set CredsFilename, expanding home directory
@@ -1059,6 +1106,18 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		endpoints := endpointsSetI.(map[string]interface{})
 		for _, endpointServiceName := range endpointServiceNames {
 			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tag_prefixes"); ok {
+		for _, ignoreTagPrefixRaw := range v.(*schema.Set).List() {
+			config.IgnoreTagPrefixes = append(config.IgnoreTagPrefixes, ignoreTagPrefixRaw.(string))
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok {
+		for _, ignoreTagRaw := range v.(*schema.Set).List() {
+			config.IgnoreTags = append(config.IgnoreTags, ignoreTagRaw.(string))
 		}
 	}
 

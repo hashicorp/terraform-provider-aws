@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_msk_cluster"
-sidebar_current: "docs-aws-resource-msk-cluster"
 description: |-
   Terraform resource for managing an AWS Managed Streaming for Kafka cluster
 ---
