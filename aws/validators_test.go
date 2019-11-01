@@ -345,7 +345,6 @@ func TestValidateArn(t *testing.T) {
 		"123456789012",
 		"arn:aws",
 		"arn:aws:logs",
-		"arn:aws:logs:region:*:*",
 	}
 	for _, v := range invalidNames {
 		_, errors := validateArn(v, "arn")
