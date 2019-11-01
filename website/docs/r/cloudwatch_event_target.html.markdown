@@ -203,7 +203,7 @@ resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
         {
             "Effect": "Allow",
             "Action": "ecs:RunTask",
-            "Resource": "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", ":*")}"
+            "Resource": "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", "")}"
         }
     ]
 }
