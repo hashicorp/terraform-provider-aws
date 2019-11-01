@@ -500,6 +500,23 @@ resource "aws_appautoscaling_policy" "test" {
 func testAccAWSAppautoscalingPolicySpotFleetRequestConfig(
 	randPolicyName string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "fleet_role" {
   assume_role_policy = <<EOF
 {
@@ -509,8 +526,8 @@ resource "aws_iam_role" "fleet_role" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
+          "spotfleet.${data.aws_partition.current.dns_suffix}",
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -522,7 +539,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
   role       = "${aws_iam_role.fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -534,7 +551,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.medium"
-    ami           = "ami-d06a90b0"
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   }
 }
 
