@@ -10,8 +10,12 @@ for doc in $docs; do
 
   case "$category" in
     "guides")
-      # Guides have no requirements
-      continue
+      # Guides require a page_title
+      grep "^page_title: " "$doc" > /dev/null
+      if [[ "$?" == "1" ]]; then
+        echo "Guide is missing a page_title: $doc"
+        error=true
+      fi
       ;;
 
     "d" | "r")
@@ -24,7 +28,6 @@ for doc in $docs; do
       ;;
 
     *)
-      # Docs 
       error=true
       echo "Unknown category \"$category\". " \
         "Docs can only exist in r/, d/, or guides/ folders."
