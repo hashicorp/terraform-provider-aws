@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -281,11 +282,15 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Updating Lambda event source mapping: %s", d.Id())
 
 	params := &lambda.UpdateEventSourceMappingInput{
-		UUID:                           aws.String(d.Id()),
-		BatchSize:                      aws.Int64(int64(d.Get("batch_size").(int))),
-		MaximumBatchingWindowInSeconds: aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int))),
-		FunctionName:                   aws.String(d.Get("function_name").(string)),
-		Enabled:                        aws.Bool(d.Get("enabled").(bool)),
+		UUID:         aws.String(d.Id()),
+		BatchSize:    aws.Int64(int64(d.Get("batch_size").(int))),
+		FunctionName: aws.String(d.Get("function_name").(string)),
+		Enabled:      aws.Bool(d.Get("enabled").(bool)),
+	}
+
+	// AWS API will fail if this parameter is set (even as default value) for sqs event source.  Ideally this should be implemented in GO SDK or AWS API itself.
+	if !strings.Contains(d.Get("event_source_arn").(string), "sqs") {
+		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
 	}
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
