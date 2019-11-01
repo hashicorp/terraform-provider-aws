@@ -79,7 +79,6 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
-					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

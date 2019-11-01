@@ -2148,7 +2148,7 @@ func QldbUpdateTags(conn *qldb.QLDB, identifier string, oldTagsMap interface{}, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2161,7 +2161,7 @@ func QldbUpdateTags(conn *qldb.QLDB, identifier string, oldTagsMap interface{}, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
