@@ -25,8 +25,6 @@ func resourceAwsQLDBLedger() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 
-		SchemaVersion: 1,
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -42,14 +40,6 @@ func resourceAwsQLDBLedger() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
-			},
-
-			"permissions_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{qldb.PermissionsModeAllowAll}, false),
-				Default:      qldb.PermissionsModeAllowAll, // Delete this line when AWS will support fetching permissions_mode
 			},
 
 			"deletion_protection": {
@@ -78,9 +68,10 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Create the QLDB Ledger
+	// The qldb.PermissionsModeAllowAll is currently hardcoded because AWS doesn't support changing the mode.
 	createOpts := &qldb.CreateLedgerInput{
 		Name:               aws.String(d.Get("name").(string)),
-		PermissionsMode:    aws.String(d.Get("permissions_mode").(string)),
+		PermissionsMode:    aws.String(qldb.PermissionsModeAllowAll),
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().QldbTags(),
 	}
@@ -106,7 +97,6 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		d.SetId("")
 		return fmt.Errorf("Error waiting for QLDB Ledger status to be \"%s\": %s", qldb.LedgerStateActive, err)
 	}
 
@@ -157,12 +147,6 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
-	}
-
-	// Setting the permissions_mode manually because GO AWS SDK currently
-	// does not return the set permissions_mode
-	if err := d.Set("permissions_mode", qldb.PermissionsModeAllowAll); err != nil {
-		return fmt.Errorf("error setting permissions mode: %s", err)
 	}
 
 	return nil
@@ -236,7 +220,7 @@ func resourceAwsQLDBLedgerDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := waitForQLDBLedgerDeletion(conn, d.Id()); err != nil {
-		log.Printf("[ERROR] Error waiting for QLDB Ledger (%s) deletion: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for QLDB Ledger (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
@@ -251,7 +235,7 @@ func qldbLedgerRefreshStatusFunc(conn *qldb.QLDB, ledger string) resource.StateR
 		if err != nil {
 			return nil, "failed", err
 		}
-		return resp, *resp.State, nil
+		return resp, aws.StringValue(resp.State), nil
 	}
 }
 

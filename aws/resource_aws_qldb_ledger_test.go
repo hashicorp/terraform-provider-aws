@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -78,7 +77,7 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 				Config: testAccAWSQLDBLedgerConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSQLDBLedgerExists(resourceName, &qldbCluster),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:qldb:[^:]+:\d{12}:ledger/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexp.MustCompile(`ledger/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("test-ledger-[0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
@@ -95,14 +94,7 @@ func TestAccAWSQLDBLedger_basic(t *testing.T) {
 }
 
 func testAccCheckAWSQLDBLedgerDestroy(s *terraform.State) error {
-	err := testAccCheckAWSLedgerDestroyWithProvider(s, testAccProvider)
-	if isAWSErr(err, qldb.ErrCodeResourceInUseException, "") {
-		log.Println("Ledger is in creating state. Retrying in 10 seconds...")
-		time.Sleep(time.Second * 10)
-		return testAccCheckAWSQLDBLedgerDestroy(s)
-	}
-
-	return err
+	return testAccCheckAWSLedgerDestroyWithProvider(s, testAccProvider)
 }
 
 func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
@@ -128,7 +120,7 @@ func testAccCheckAWSLedgerDestroyWithProvider(s *terraform.State, provider *sche
 
 		// Return nil if the cluster is already destroyed
 		if isAWSErr(err, qldb.ErrCodeResourceNotFoundException, "") {
-			return nil
+			continue
 		}
 
 		if err != nil {

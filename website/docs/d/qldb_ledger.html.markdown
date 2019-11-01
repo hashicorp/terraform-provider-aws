@@ -1,4 +1,5 @@
 ---
+subcategory: "Quantum Ledger Database (QLDB)"
 layout: "aws"
 page_title: "AWS: aws_qldb_ledger"
 description: |-
@@ -7,9 +8,7 @@ description: |-
 
 # Data Source: aws_qldb_ledger
 
-Use this data source to get the ARN, deletion protection and permissions mode of a ledger in AWS Quantum Ledger Database 
-(QLDB). By using this data source, you can reference QLDB Ledgers
-without having to hard code the ARNs as input.
+Use this data source to fetch information about a Quantum Ledger Database.
 
 ## Example Usage
 
@@ -25,5 +24,5 @@ data "aws_qldb_ledger" "example" {
 
 ## Attributes Reference
 
-* `arn` - Set to the ARN of the found topic, suitable for referencing in other resources that support QLDB ledgers.
+* `arn` - Amazon Resource Name (ARN) of the ledger.
 * `deletion_protection` - Deletion protection on the QLDB Ledger instance. Set to `true` by default. 

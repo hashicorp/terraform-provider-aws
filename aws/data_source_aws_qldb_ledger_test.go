@@ -36,12 +36,12 @@ resource "aws_qldb_ledger" "tf_wrong1" {
 }
 
 resource "aws_qldb_ledger" "tf_test" {
-  name = "%[1]s1"
+  name = "%[1]s2"
   deletion_protection = false
 }
 
 resource "aws_qldb_ledger" "tf_wrong2" {
- name = "%[1]s1"
+ name = "%[1]s3"
  deletion_protection = false
 }
 
