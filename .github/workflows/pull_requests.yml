@@ -10,6 +10,6 @@ jobs:
     - name: Apply PR Triage Label
       uses: actions/github@v1.0.0
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_ACTIONS_TOKEN }}
       with:
         args: label needs-triage
