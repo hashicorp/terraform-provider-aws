@@ -1033,14 +1033,12 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	tagList, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-		ResourceName: aws.String(aws.StringValue(dbc.DBClusterArn)),
-	})
+	tags, err := keyvaluetags.RdsListTags(conn, aws.StringValue(dbc.DBClusterArn))
 	if err != nil {
-		return fmt.Errorf("Failed to get RDS Cluster parameter tags for %s: %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterArn), err)
 	}
-	if err := d.Set("tags", keyvaluetags.RdsKeyValueTags(tagList.TagList).IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("[WARN] Failed to save tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	// Fetch and save Global Cluster if engine mode global
