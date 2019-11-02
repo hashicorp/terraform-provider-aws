@@ -245,9 +245,8 @@ resource "aws_iam_policy" "replication" {
 POLICY
 }
 
-resource "aws_iam_policy_attachment" "replication" {
-  name       = "tf-iam-role-attachment-replication-12345"
-  roles      = ["${aws_iam_role.replication.name}"]
+resource "aws_iam_role_policy_attachment" "replication" {
+  role       = "${aws_iam_role.replication.name}"
   policy_arn = "${aws_iam_policy.replication.arn}"
 }
 

@@ -5953,6 +5953,9 @@ type CacheCluster struct {
 	// Default: false
 	AuthTokenEnabled *bool `type:"boolean"`
 
+	// The date the auth token was last modified
+	AuthTokenLastModifiedDate *time.Time `type:"timestamp"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
@@ -6130,6 +6133,12 @@ func (s *CacheCluster) SetAtRestEncryptionEnabled(v bool) *CacheCluster {
 // SetAuthTokenEnabled sets the AuthTokenEnabled field's value.
 func (s *CacheCluster) SetAuthTokenEnabled(v bool) *CacheCluster {
 	s.AuthTokenEnabled = &v
+	return s
+}
+
+// SetAuthTokenLastModifiedDate sets the AuthTokenLastModifiedDate field's value.
+func (s *CacheCluster) SetAuthTokenLastModifiedDate(v time.Time) *CacheCluster {
+	s.AuthTokenLastModifiedDate = &v
 	return s
 }
 
@@ -7226,7 +7235,9 @@ type CreateCacheClusterInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or '@'.
+	//    * The only permitted printable special characters are !, &, #, $, ^, <,
+	//    >, and -. Other printable special characters cannot be used in the AUTH
+	//    token.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
 	// http://redis.io/commands/AUTH.
@@ -7952,7 +7963,9 @@ type CreateReplicationGroupInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or '@'.
+	//    * The only permitted printable special characters are !, &, #, $, ^, <,
+	//    >, and -. Other printable special characters cannot be used in the AUTH
+	//    token.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
 	// http://redis.io/commands/AUTH.
@@ -11167,10 +11180,7 @@ type ModifyCacheClusterInput struct {
 	// in different Availability Zones. If cross-az is specified, existing Memcached
 	// nodes remain in their current Availability Zone.
 	//
-	// Only newly created nodes are located in different Availability Zones. For
-	// instructions on how to move existing Memcached nodes to different Availability
-	// Zones, see the Availability Zone Considerations section of Cache Node Considerations
-	// for Memcached (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html).
+	// Only newly created nodes are located in different Availability Zones.
 	AZMode *string `type:"string" enum:"AZMode"`
 
 	// If true, this parameter causes the modifications in this request and any
@@ -11187,6 +11197,29 @@ type ModifyCacheClusterInput struct {
 	//
 	// Default: false
 	ApplyImmediately *bool `type:"boolean"`
+
+	// Reserved parameter. The password used to access a password protected server.
+	// This parameter must be specified with the auth-token-update parameter. Password
+	// constraints:
+	//
+	//    * Must be only printable ASCII characters
+	//
+	//    * Must be at least 16 characters and no more than 128 characters in length
+	//
+	//    * Cannot contain any of the following characters: '/', '"', or '@', '%'
+	//
+	// For more information, see AUTH password at AUTH (http://redis.io/commands/AUTH).
+	AuthToken *string `type:"string"`
+
+	// Specifies the strategy to use to update the AUTH token. This parameter must
+	// be specified with the auth-token parameter. Possible values:
+	//
+	//    * Rotate
+	//
+	//    * Set
+	//
+	// For more information, see Authenticating Users with Redis AUTH (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html)
+	AuthTokenUpdateStrategy *string `type:"string" enum:"AuthTokenUpdateStrategyType"`
 
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
@@ -11404,6 +11437,18 @@ func (s *ModifyCacheClusterInput) SetAZMode(v string) *ModifyCacheClusterInput {
 // SetApplyImmediately sets the ApplyImmediately field's value.
 func (s *ModifyCacheClusterInput) SetApplyImmediately(v bool) *ModifyCacheClusterInput {
 	s.ApplyImmediately = &v
+	return s
+}
+
+// SetAuthToken sets the AuthToken field's value.
+func (s *ModifyCacheClusterInput) SetAuthToken(v string) *ModifyCacheClusterInput {
+	s.AuthToken = &v
+	return s
+}
+
+// SetAuthTokenUpdateStrategy sets the AuthTokenUpdateStrategy field's value.
+func (s *ModifyCacheClusterInput) SetAuthTokenUpdateStrategy(v string) *ModifyCacheClusterInput {
+	s.AuthTokenUpdateStrategy = &v
 	return s
 }
 
@@ -11681,6 +11726,29 @@ type ModifyReplicationGroupInput struct {
 	// Default: false
 	ApplyImmediately *bool `type:"boolean"`
 
+	// Reserved parameter. The password used to access a password protected server.
+	// This parameter must be specified with the auth-token-update-strategy parameter.
+	// Password constraints:
+	//
+	//    * Must be only printable ASCII characters
+	//
+	//    * Must be at least 16 characters and no more than 128 characters in length
+	//
+	//    * Cannot contain any of the following characters: '/', '"', or '@', '%'
+	//
+	// For more information, see AUTH password at AUTH (http://redis.io/commands/AUTH).
+	AuthToken *string `type:"string"`
+
+	// Specifies the strategy to use to update the AUTH token. This parameter must
+	// be specified with the auth-token parameter. Possible values:
+	//
+	//    * Rotate
+	//
+	//    * Set
+	//
+	// For more information, see Authenticating Users with Redis AUTH (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html)
+	AuthTokenUpdateStrategy *string `type:"string" enum:"AuthTokenUpdateStrategyType"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
@@ -11839,6 +11907,18 @@ func (s *ModifyReplicationGroupInput) Validate() error {
 // SetApplyImmediately sets the ApplyImmediately field's value.
 func (s *ModifyReplicationGroupInput) SetApplyImmediately(v bool) *ModifyReplicationGroupInput {
 	s.ApplyImmediately = &v
+	return s
+}
+
+// SetAuthToken sets the AuthToken field's value.
+func (s *ModifyReplicationGroupInput) SetAuthToken(v string) *ModifyReplicationGroupInput {
+	s.AuthToken = &v
+	return s
+}
+
+// SetAuthTokenUpdateStrategy sets the AuthTokenUpdateStrategy field's value.
+func (s *ModifyReplicationGroupInput) SetAuthTokenUpdateStrategy(v string) *ModifyReplicationGroupInput {
+	s.AuthTokenUpdateStrategy = &v
 	return s
 }
 
@@ -12722,6 +12802,9 @@ func (s *ParameterNameValue) SetParameterValue(v string) *ParameterNameValue {
 type PendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
+	// The auth token status
+	AuthTokenStatus *string `type:"string" enum:"AuthTokenUpdateStatus"`
+
 	// A list of cache node IDs that are being removed (or will be removed) from
 	// the cluster. A node ID is a 4-digit numeric identifier (0001, 0002, etc.).
 	CacheNodeIdsToRemove []*string `locationNameList:"CacheNodeId" type:"list"`
@@ -12747,6 +12830,12 @@ func (s PendingModifiedValues) String() string {
 // GoString returns the string representation
 func (s PendingModifiedValues) GoString() string {
 	return s.String()
+}
+
+// SetAuthTokenStatus sets the AuthTokenStatus field's value.
+func (s *PendingModifiedValues) SetAuthTokenStatus(v string) *PendingModifiedValues {
+	s.AuthTokenStatus = &v
+	return s
 }
 
 // SetCacheNodeIdsToRemove sets the CacheNodeIdsToRemove field's value.
@@ -13104,6 +13193,9 @@ type ReplicationGroup struct {
 	// Default: false
 	AuthTokenEnabled *bool `type:"boolean"`
 
+	// The date the auth token was last modified
+	AuthTokenLastModifiedDate *time.Time `type:"timestamp"`
+
 	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
 	// group.
 	//
@@ -13216,6 +13308,12 @@ func (s *ReplicationGroup) SetAuthTokenEnabled(v bool) *ReplicationGroup {
 	return s
 }
 
+// SetAuthTokenLastModifiedDate sets the AuthTokenLastModifiedDate field's value.
+func (s *ReplicationGroup) SetAuthTokenLastModifiedDate(v time.Time) *ReplicationGroup {
+	s.AuthTokenLastModifiedDate = &v
+	return s
+}
+
 // SetAutomaticFailover sets the AutomaticFailover field's value.
 func (s *ReplicationGroup) SetAutomaticFailover(v string) *ReplicationGroup {
 	s.AutomaticFailover = &v
@@ -13311,6 +13409,9 @@ func (s *ReplicationGroup) SetTransitEncryptionEnabled(v bool) *ReplicationGroup
 type ReplicationGroupPendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
+	// The auth token status
+	AuthTokenStatus *string `type:"string" enum:"AuthTokenUpdateStatus"`
+
 	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
 	// group.
 	//
@@ -13340,6 +13441,12 @@ func (s ReplicationGroupPendingModifiedValues) String() string {
 // GoString returns the string representation
 func (s ReplicationGroupPendingModifiedValues) GoString() string {
 	return s.String()
+}
+
+// SetAuthTokenStatus sets the AuthTokenStatus field's value.
+func (s *ReplicationGroupPendingModifiedValues) SetAuthTokenStatus(v string) *ReplicationGroupPendingModifiedValues {
+	s.AuthTokenStatus = &v
+	return s
 }
 
 // SetAutomaticFailoverStatus sets the AutomaticFailoverStatus field's value.
@@ -14922,6 +15029,22 @@ const (
 
 	// AZModeCrossAz is a AZMode enum value
 	AZModeCrossAz = "cross-az"
+)
+
+const (
+	// AuthTokenUpdateStatusSetting is a AuthTokenUpdateStatus enum value
+	AuthTokenUpdateStatusSetting = "SETTING"
+
+	// AuthTokenUpdateStatusRotating is a AuthTokenUpdateStatus enum value
+	AuthTokenUpdateStatusRotating = "ROTATING"
+)
+
+const (
+	// AuthTokenUpdateStrategyTypeSet is a AuthTokenUpdateStrategyType enum value
+	AuthTokenUpdateStrategyTypeSet = "SET"
+
+	// AuthTokenUpdateStrategyTypeRotate is a AuthTokenUpdateStrategyType enum value
+	AuthTokenUpdateStrategyTypeRotate = "ROTATE"
 )
 
 const (

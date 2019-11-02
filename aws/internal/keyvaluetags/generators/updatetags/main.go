@@ -74,6 +74,7 @@ var serviceNames = []string{
 	"neptune",
 	"opsworks",
 	"organizations",
+	"qldb",
 	"ram",
 	"rds",
 	"redshift",
@@ -190,7 +191,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		_, err := conn.{{ . | UntagFunction }}(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -210,7 +211,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		_, err := conn.{{ . | TagFunction }}(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 

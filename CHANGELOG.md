@@ -1,19 +1,52 @@
-## 2.34.0 (Unreleased)
+## 2.35.0 (Unreleased)
+
+NOTES:
+
+* provider: New `ignore_tag_prefixes` and `ignore_tags` arguments are being tested as a public preview for ignoring tags across all resources under a provider. Support for the functionality must be added to individual resources in the codebase and is only implemented for the `aws_subnet` and `aws_vpc` resources at this time. Until a general availability announcement, no compatibility promises are made with these provider arguments and their functionality. [GH-10418]
+
+FEATURES:
+
+* **New Data Source:** `aws_qldb_ledger` [GH-10394]
+* **New Resource:** `aws_qldb_ledger` [GH-10394]
 
 ENHANCEMENTS:
 
-* resource/aws_elasticache_replication_group: Add `kms_key_id` argument (support KMS encryption) [GH-10380]
-* resource/aws_glue_job: Add `glue_version` argument [GH-10237]
-* resource/aws_storagegateway_smb_file_share: Add `tags` argument [GH-10620]
+* data-source/aws_db_cluster_snapshot: Add `tags` attribute [GH-10488]
+* data-source/aws_db_instance: Add `tags` attribute [GH-10550]
+* data-source/aws_vpc_endpoint: Add `filter` and `tags` arguments [GH-10503]
+* provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
+* resource/aws_db_cluster_snapshot: Add `tags` argument [GH-10488]
+* resource/aws_mq_broker: Support in-place `security_groups` updates [GH-10442]
+* resource/aws_storagegateway_cached_iscsi_volume: Add `tags` argument [GH-10613]
+* resource/aws_storagegateway_gateway: Add `tags` argument [GH-10588]
+* resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
+* resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
+* resource/aws_waf_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10479]
 
 BUG FIXES:
 
-* resource/aws_backup_plan: Correctly handle changes to `recovery_point_tags` arguments [GH-10641]
-* resource/aws_backup_plan: Prevent `diffs didn't match` errors with `rule` configuration blocks [GH-10641]
-* resource/aws_cloudhsm_v2_cluster: Ensure multiple tag configurations are applied correctly [GH-10309]
-* resource/aws_cloudhsm_v2_cluster: Perform drift detection with tags [GH-10309]
-* resource/aws_dx_gateway_association: Fix backwards compatibility issue with missing `dx_gateway_association_id` attribute [GH-8776]
-* resource/aws_s3_bucket: Bypass `MethodNotAllowed` errors for Object Lock Configuration on read (support AWS C2S) [GH-10657]
+* resource/aws_api_gateway_authorizer: Set `authorizer_result_ttl_in_seconds` argument default to 300 to match API default which properly allows setting to 0 for disabling caching [GH-9605]
+* resource/aws_autoscaling_group: Batch ELB attachments and detachments by 10 to prevent API and rate limiting errors [GH-10445]
+* resource/aws_s3_bucket_public_access_block: Remove from Terraform state when S3 Bucket is already destroyed [GH-10534]
+
+## 2.34.0 (October 31, 2019)
+
+ENHANCEMENTS:
+
+* resource/aws_ecr_repository: Add `image_scanning_configuration` configuration block (support image scanning on push) ([#10671](https://github.com/terraform-providers/terraform-provider-aws/issues/10671))
+* resource/aws_elasticache_replication_group: Add `kms_key_id` argument (support KMS encryption) ([#10380](https://github.com/terraform-providers/terraform-provider-aws/issues/10380))
+* resource/aws_flow_log: Add `log_format` argument ([#10374](https://github.com/terraform-providers/terraform-provider-aws/issues/10374))
+* resource/aws_glue_job: Add `glue_version` argument ([#10237](https://github.com/terraform-providers/terraform-provider-aws/issues/10237))
+* resource/aws_storagegateway_smb_file_share: Add `tags` argument ([#10620](https://github.com/terraform-providers/terraform-provider-aws/issues/10620))
+
+BUG FIXES:
+
+* resource/aws_backup_plan: Correctly handle changes to `recovery_point_tags` arguments ([#10641](https://github.com/terraform-providers/terraform-provider-aws/issues/10641))
+* resource/aws_backup_plan: Prevent `diffs didn't match` errors with `rule` configuration blocks ([#10641](https://github.com/terraform-providers/terraform-provider-aws/issues/10641))
+* resource/aws_cloudhsm_v2_cluster: Ensure multiple tag configurations are applied correctly ([#10309](https://github.com/terraform-providers/terraform-provider-aws/issues/10309))
+* resource/aws_cloudhsm_v2_cluster: Perform drift detection with tags ([#10309](https://github.com/terraform-providers/terraform-provider-aws/issues/10309))
+* resource/aws_dx_gateway_association: Fix backwards compatibility issue with missing `dx_gateway_association_id` attribute ([#8776](https://github.com/terraform-providers/terraform-provider-aws/issues/8776))
+* resource/aws_s3_bucket: Bypass `MethodNotAllowed` errors for Object Lock Configuration on read (support AWS C2S) ([#10657](https://github.com/terraform-providers/terraform-provider-aws/issues/10657))
 
 ## 2.33.0 (October 17, 2019)
 
@@ -184,7 +217,7 @@ BUG FIXES:
 
 * resource/aws_ec2_capacity_reservation: Fixes error handling when an EC2 Capacity Reservation is deleted manually but is still in state ([#9862](https://github.com/terraform-providers/terraform-provider-aws/issues/9862))
 * resource/aws_s3_bucket: Final retries after timeouts creating, updating and updating replication configuration for s3 buckets ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
-* resource/aws_s3_bucket_inventory: Final retries after timeous reading and putting bucket inventories ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
+* resource/aws_s3_bucket_inventory: Final retries after timeout reading and putting bucket inventories ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
 * resource/aws_s3_bucket_metric: Final retry after timeout putting bucket metric ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
 * resource/aws_s3_bucket_notification: Final retry after timeout putting notification ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
 * resource/aws_s3_bucket_policy: Final retry after timeout putting policy ([#9861](https://github.com/terraform-providers/terraform-provider-aws/issues/9861))
