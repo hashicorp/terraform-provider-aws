@@ -11,7 +11,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_db_cluster_snapshot: Add `tags` attribute [GH-10488]
 * provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
+* resource/aws_db_cluster_snapshot: Add `tags` argument [GH-10488]
 * resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 * resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 * resource/aws_waf_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10479]
