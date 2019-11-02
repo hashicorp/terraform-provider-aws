@@ -12,6 +12,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_db_cluster_snapshot: Add `tags` attribute [GH-10488]
+* data-source/aws_db_instance: Add `tags` attribute [GH-10550]
 * data-source/aws_vpc_endpoint: Add `filter` and `tags` arguments [GH-10503]
 * provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
 * resource/aws_db_cluster_snapshot: Add `tags` argument [GH-10488]
