@@ -320,6 +320,14 @@ resource "aws_appautoscaling_target" "bar" {
 
 func testAccAWSAppautoscalingTargetEmrClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # The requested instance type m3.xlarge is not supported in the requested availability zone.
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "emr-test-%d"
   release_label = "emr-4.6.0"
@@ -405,8 +413,9 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
-  vpc_id     = "${aws_vpc.main.id}"
-  cidr_block = "168.31.0.0/20"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "168.31.0.0/20"
+  vpc_id            = "${aws_vpc.main.id}"
 
   tags = {
     Name = "tf-acc-appautoscaling-target-emr-cluster"
@@ -442,7 +451,7 @@ resource "aws_iam_role" "iam_emr_default_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "elasticmapreduce.amazonaws.com"
+        "Service": "elasticmapreduce.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -537,7 +546,7 @@ resource "aws_iam_role" "iam_emr_profile_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -607,14 +616,14 @@ data "aws_iam_policy_document" "emr-autoscaling-role-policy" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}", "application-autoscaling.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
 
 resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   role       = "${aws_iam_role.emr-autoscaling-role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 
 resource "aws_appautoscaling_target" "bar" {
@@ -629,6 +638,23 @@ resource "aws_appautoscaling_target" "bar" {
 }
 
 var testAccAWSAppautoscalingTargetSpotFleetRequestConfig = fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "fleet_role" {
   assume_role_policy = <<EOF
 {
@@ -651,7 +677,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
   role = "${aws_iam_role.fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -663,7 +689,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.medium"
-    ami = "ami-d06a90b0"
+    ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   }
 }
 

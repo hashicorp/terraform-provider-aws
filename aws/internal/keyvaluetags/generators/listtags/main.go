@@ -69,6 +69,7 @@ var serviceNames = []string{
 	"neptune",
 	"opsworks",
 	"organizations",
+	"qldb",
 	"rds",
 	"route53resolver",
 	"sagemaker",
@@ -79,6 +80,7 @@ var serviceNames = []string{
 	"storagegateway",
 	"swf",
 	"transfer",
+	"waf",
 	"workspaces",
 }
 
@@ -268,6 +270,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "Arn"
 	case "workspaces":
 		return "ResourceId"
+	case "waf":
+		return "ResourceARN"
 	default:
 		return "ResourceArn"
 	}
@@ -286,6 +290,8 @@ func ServiceListTagsInputResourceTypeField(serviceName string) string {
 // ServiceListTagsOutputTagsField determines the service tag field.
 func ServiceListTagsOutputTagsField(serviceName string) string {
 	switch serviceName {
+	case "waf":
+		return "TagInfoForResource.TagList"
 	case "cloudhsmv2":
 		return "TagList"
 	case "databasemigrationservice":
