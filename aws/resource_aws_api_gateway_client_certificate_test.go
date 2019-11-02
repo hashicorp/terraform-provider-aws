@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 	var conf apigateway.ClientCertificate
-	resourceName := "aws_api_gateway_client_certificate.cow"
+	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -30,6 +30,11 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic_updated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
@@ -43,7 +48,7 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 
 func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 	var conf apigateway.ClientCertificate
-	resourceName := "aws_api_gateway_client_certificate.cow"
+	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -57,6 +62,11 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayClientCertificateConfigTags2("key1", "value1updated", "key2", "value2"),
@@ -74,27 +84,6 @@ func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayClientCertificate_importBasic(t *testing.T) {
-	resourceName := "aws_api_gateway_client_certificate.cow"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -158,13 +147,13 @@ func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error
 }
 
 const testAccAWSAPIGatewayClientCertificateConfig_basic = `
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 }
 `
 
 const testAccAWSAPIGatewayClientCertificateConfig_basic_updated = `
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `
@@ -183,7 +172,7 @@ resource "aws_api_gateway_client_certificate" "cow" {
 
 func testAccAWSAPIGatewayClientCertificateConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {
