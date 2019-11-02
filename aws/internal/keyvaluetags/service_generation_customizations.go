@@ -43,7 +43,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
@@ -171,8 +170,6 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(elasticbeanstalk.New)
 	case "elasticsearchservice":
 		funcType = reflect.TypeOf(elasticsearchservice.New)
-	case "elb":
-		funcType = reflect.TypeOf(elb.New)
 	case "elbv2":
 		funcType = reflect.TypeOf(elbv2.New)
 	case "emr":

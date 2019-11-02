@@ -52,6 +52,7 @@ var serviceNames = []string{
 	"eks",
 	"elasticache",
 	"elasticsearchservice",
+	"elbv2",
 	"emr",
 	"firehose",
 	"fsx",
@@ -246,6 +247,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "elasticsearchservice":
 		return "AddTags"
+	case "elbv2":
+		return "AddTags"
 	case "emr":
 		return "AddTags"
 	case "firehose":
@@ -308,6 +311,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
+	case "elbv2":
+		return "ResourceArns"
 	case "emr":
 		return "ResourceId"
 	case "firehose":
@@ -362,6 +367,8 @@ func ServiceTagInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "ec2":
 		return "yes"
+	case "elbv2":
+		return "yes"
 	default:
 		return ""
 	}
@@ -413,6 +420,8 @@ func ServiceUntagFunction(serviceName string) string {
 	case "elasticache":
 		return "RemoveTagsFromResource"
 	case "elasticsearchservice":
+		return "RemoveTags"
+	case "elbv2":
 		return "RemoveTags"
 	case "emr":
 		return "RemoveTags"

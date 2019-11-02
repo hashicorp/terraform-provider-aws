@@ -48,6 +48,7 @@ var serviceNames = []string{
 	"elasticache",
 	"elasticbeanstalk",
 	"elasticsearchservice",
+	"elbv2",
 	"firehose",
 	"fsx",
 	"glue",
@@ -98,12 +99,13 @@ func main() {
 		ServiceNames: serviceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"ClientType":                     keyvaluetags.ServiceClientType,
-		"ListTagsFunction":               ServiceListTagsFunction,
-		"ListTagsInputIdentifierField":   ServiceListTagsInputIdentifierField,
-		"ListTagsInputResourceTypeField": ServiceListTagsInputResourceTypeField,
-		"ListTagsOutputTagsField":        ServiceListTagsOutputTagsField,
-		"Title":                          strings.Title,
+		"ClientType":                           keyvaluetags.ServiceClientType,
+		"ListTagsFunction":                     ServiceListTagsFunction,
+		"ListTagsInputIdentifierField":         ServiceListTagsInputIdentifierField,
+		"ListTagsInputIdentifierRequiresSlice": ServiceListTagsInputIdentifierRequiresSlice,
+		"ListTagsInputResourceTypeField":       ServiceListTagsInputResourceTypeField,
+		"ListTagsOutputTagsField":              ServiceListTagsOutputTagsField,
+		"Title":                                strings.Title,
 	}
 
 	tmpl, err := template.New("listtags").Funcs(templateFuncMap).Parse(templateBody)
@@ -158,7 +160,11 @@ import (
 // it may also be a different identifier depending on the service.
 func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | ListTagsInputResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
 	input := &{{ . }}.{{ . | ListTagsFunction }}Input{
+		{{- if . | ListTagsInputIdentifierRequiresSlice }}
+		{{ . | ListTagsInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+		{{- else }}
 		{{ . | ListTagsInputIdentifierField }}:   aws.String(identifier),
+		{{- end }}
 		{{- if . | ListTagsInputResourceTypeField }}
 		{{ . | ListTagsInputResourceTypeField }}: aws.String(resourceType),
 		{{- end }}
@@ -194,7 +200,7 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "elasticsearchservice":
 		return "ListTags"
-	case "elb":
+	case "elbv2":
 		return "DescribeTags"
 	case "firehose":
 		return "ListTagsForDeliveryStream"
@@ -250,8 +256,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
-	case "elb":
-		return "LoadBalancerNames"
+	case "elbv2":
+		return "ResourceArns"
 	case "firehose":
 		return "DeliveryStreamName"
 	case "fsx":
@@ -291,6 +297,16 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 	}
 }
 
+// ServiceTagInputIdentifierRequiresSlice determines if the service tagging resource field requires a slice.
+func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
+	switch serviceName {
+	case "elbv2":
+		return "yes"
+	default:
+		return ""
+	}
+}
+
 // ServiceListTagsInputResourceTypeField determines the service tagging resource type field.
 func ServiceListTagsInputResourceTypeField(serviceName string) string {
 	switch serviceName {
@@ -318,8 +334,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "ResourceTags"
 	case "elasticsearchservice":
 		return "TagList"
-	case "elb":
-		return "TagDescriptions.Tags"
+	case "elbv2":
+		return "TagDescriptions[0].Tags"
 	case "neptune":
 		return "TagList"
 	case "rds":
