@@ -17,6 +17,7 @@ import (
 const filename = `list_tags_gen.go`
 
 var serviceNames = []string{
+	"acm",
 	"acmpca",
 	"amplify",
 	"appmesh",
@@ -71,6 +72,7 @@ var serviceNames = []string{
 	"organizations",
 	"qldb",
 	"rds",
+	"resourcegroups",
 	"route53resolver",
 	"sagemaker",
 	"securityhub",
@@ -176,6 +178,8 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 // ServiceListTagsFunction determines the service tagging function.
 func ServiceListTagsFunction(serviceName string) string {
 	switch serviceName {
+	case "acm":
+		return "ListTagsForCertificate"
 	case "acmpca":
 		return "ListTags"
 	case "backup":
@@ -190,6 +194,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "elasticsearchservice":
 		return "ListTags"
+	case "elb":
+		return "DescribeTags"
 	case "firehose":
 		return "ListTagsForDeliveryStream"
 	case "glue":
@@ -204,6 +210,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTags"
 	case "redshift":
 		return "DescribeTags"
+	case "resourcegroups":
+		return "GetTags"
 	case "sagemaker":
 		return "ListTags"
 	case "workspaces":
@@ -216,6 +224,8 @@ func ServiceListTagsFunction(serviceName string) string {
 // ServiceListTagsInputIdentifierField determines the service tag identifier field.
 func ServiceListTagsInputIdentifierField(serviceName string) string {
 	switch serviceName {
+	case "acm":
+		return "CertificateArn"
 	case "acmpca":
 		return "CertificateAuthorityArn"
 	case "athena":
@@ -240,6 +250,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
+	case "elb":
+		return "LoadBalancerNames"
 	case "firehose":
 		return "DeliveryStreamName"
 	case "fsx":
@@ -262,6 +274,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "redshift":
 		return "ResourceName"
+	case "resourcegroups":
+		return "Arn"
 	case "ssm":
 		return "ResourceId"
 	case "storagegateway":
@@ -304,6 +318,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "ResourceTags"
 	case "elasticsearchservice":
 		return "TagList"
+	case "elb":
+		return "TagDescriptions.Tags"
 	case "neptune":
 		return "TagList"
 	case "rds":
