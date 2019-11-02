@@ -160,7 +160,7 @@ resource "aws_api_gateway_client_certificate" "test" {
 
 func testAccAWSAPIGatewayClientCertificateConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 
   tags = {

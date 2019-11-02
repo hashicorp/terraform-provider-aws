@@ -22464,6 +22464,41 @@ func (s SSES3) GoString() string {
 	return s.String()
 }
 
+type ScanRange struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the end of the byte range. This parameter is optional. Valid values:
+	// non-negative integers. The default value is one less than the size of the
+	// object being queried.
+	End *int64 `type:"long"`
+
+	// Specifies the start of the byte range. This parameter is optional. Valid
+	// values: non-negative integers. The default value is 0.
+	Start *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s ScanRange) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScanRange) GoString() string {
+	return s.String()
+}
+
+// SetEnd sets the End field's value.
+func (s *ScanRange) SetEnd(v int64) *ScanRange {
+	s.End = &v
+	return s
+}
+
+// SetStart sets the Start field's value.
+func (s *ScanRange) SetStart(v int64) *ScanRange {
+	s.Start = &v
+	return s
+}
+
 // SelectObjectContentEventStream provides handling of EventStreams for
 // the SelectObjectContent API.
 //
@@ -22503,6 +22538,8 @@ type SelectObjectContentEventStream struct {
 // may result in resource leaks.
 func (es *SelectObjectContentEventStream) Close() (err error) {
 	es.Reader.Close()
+	es.StreamCloser.Close()
+
 	return es.Err()
 }
 
@@ -22512,8 +22549,6 @@ func (es *SelectObjectContentEventStream) Err() error {
 	if err := es.Reader.Err(); err != nil {
 		return err
 	}
-	es.StreamCloser.Close()
-
 	return nil
 }
 
@@ -22738,6 +22773,12 @@ type SelectObjectContentInput struct {
 	// The SSE Customer Key MD5. For more information, see Server-Side Encryption
 	// (Using Customer-Provided Encryption Keys (https://docs.aws.amazon.com/AmazonS3/latest/dev/ServerSideEncryptionCustomerKeys.html).
 	SSECustomerKeyMD5 *string `location:"header" locationName:"x-amz-server-side-encryption-customer-key-MD5" type:"string"`
+
+	// Specifies the byte range of the object to get the records from. A record
+	// is processed when its first byte is contained by the range. This parameter
+	// is optional, but when specified, it must not be empty. See RFC 2616, Section
+	// 14.35.1 about how to specify the start and end of the range.
+	ScanRange *ScanRange `type:"structure"`
 }
 
 // String returns the string representation
@@ -22855,6 +22896,12 @@ func (s *SelectObjectContentInput) getSSECustomerKey() (v string) {
 // SetSSECustomerKeyMD5 sets the SSECustomerKeyMD5 field's value.
 func (s *SelectObjectContentInput) SetSSECustomerKeyMD5(v string) *SelectObjectContentInput {
 	s.SSECustomerKeyMD5 = &v
+	return s
+}
+
+// SetScanRange sets the ScanRange field's value.
+func (s *SelectObjectContentInput) SetScanRange(v *ScanRange) *SelectObjectContentInput {
+	s.ScanRange = v
 	return s
 }
 
@@ -24657,6 +24704,9 @@ const (
 
 	// InventoryOptionalFieldObjectLockLegalHoldStatus is a InventoryOptionalField enum value
 	InventoryOptionalFieldObjectLockLegalHoldStatus = "ObjectLockLegalHoldStatus"
+
+	// InventoryOptionalFieldIntelligentTieringAccessTier is a InventoryOptionalField enum value
+	InventoryOptionalFieldIntelligentTieringAccessTier = "IntelligentTieringAccessTier"
 )
 
 const (

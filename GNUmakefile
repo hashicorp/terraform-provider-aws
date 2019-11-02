@@ -40,6 +40,7 @@ lint:
 	@tfproviderlint \
 		-c 1 \
 		-AT001 \
+		-AT002 \
 		-S001 \
 		-S002 \
 		-S003 \

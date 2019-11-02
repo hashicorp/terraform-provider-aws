@@ -56,6 +56,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -66,6 +67,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -953,6 +955,23 @@ func OrganizationsListTags(conn *organizations.Organizations, identifier string)
 	return OrganizationsKeyValueTags(output.Tags), nil
 }
 
+// QldbListTags lists qldb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func QldbListTags(conn *qldb.QLDB, identifier string) (KeyValueTags, error) {
+	input := &qldb.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return QldbKeyValueTags(output.Tags), nil
+}
+
 // RdsListTags lists rds service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1122,6 +1141,23 @@ func TransferListTags(conn *transfer.Transfer, identifier string) (KeyValueTags,
 	}
 
 	return TransferKeyValueTags(output.Tags), nil
+}
+
+// WafListTags lists waf service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WafListTags(conn *waf.WAF, identifier string) (KeyValueTags, error) {
+	input := &waf.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return WafKeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

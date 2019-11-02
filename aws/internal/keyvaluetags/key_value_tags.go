@@ -57,6 +57,30 @@ func (tags KeyValueTags) IgnoreElasticbeanstalk() KeyValueTags {
 	return result
 }
 
+// IgnorePrefixes returns non-matching tag key prefixes.
+func (tags KeyValueTags) IgnorePrefixes(ignoreTagPrefixes KeyValueTags) KeyValueTags {
+	result := make(KeyValueTags)
+
+	for k, v := range tags {
+		var ignore bool
+
+		for ignoreTagPrefix := range ignoreTagPrefixes {
+			if strings.HasPrefix(k, ignoreTagPrefix) {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
+			continue
+		}
+
+		result[k] = v
+	}
+
+	return result
+}
+
 // IgnoreRDS returns non-AWS and non-RDS tag keys.
 func (tags KeyValueTags) IgnoreRds() KeyValueTags {
 	result := make(KeyValueTags)
@@ -176,6 +200,14 @@ func New(i interface{}) KeyValueTags {
 		for k, v := range value {
 			str := v.(string)
 			kvtm[k] = &str
+		}
+
+		return kvtm
+	case []string:
+		kvtm := make(KeyValueTags, len(value))
+
+		for _, v := range value {
+			kvtm[v] = nil
 		}
 
 		return kvtm
