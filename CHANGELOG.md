@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_mq_broker: Support in-place `security_groups` updates [GH-10442]
 * resource/aws_storagegateway_cached_iscsi_volume: Add `tags` argument [GH-10613]
 * resource/aws_storagegateway_gateway: Add `tags` argument [GH-10588]
+* resource/aws_storagegateway_nfs_file_share: Add `tags` argument [GH-10722]
 * resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 * resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 * resource/aws_waf_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10479]
