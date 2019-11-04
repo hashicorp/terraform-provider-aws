@@ -536,7 +536,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigateway" = [
       "**/*_api_gateway_[^v][^2][^_]*",
-      "**/api_gateway_[^v][^2][^_]*"
+      "**/*_api_gateway_vpc_link*",
+      "**/api_gateway_[^v][^2][^_]*",
+      "**/api_gateway_vpc_link*"
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
