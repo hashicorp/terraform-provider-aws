@@ -88,6 +88,7 @@ var serviceNames = []string{
 	"securityhub",
 	"sfn",
 	"sns",
+	"sqs",
 	"ssm",
 	"storagegateway",
 	"swf",
@@ -270,6 +271,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "Tag"
 	case "sagemaker":
 		return "AddTags"
+	case "sqs":
+		return "TagQueue"
 	case "ssm":
 		return "AddTagsToResource"
 	case "storagegateway":
@@ -352,6 +355,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "Arn"
 	case "secretsmanager":
 		return "SecretId"
+	case "sqs":
+		return "QueueUrl"
 	case "ssm":
 		return "ResourceId"
 	case "storagegateway":
@@ -448,6 +453,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "Untag"
 	case "sagemaker":
 		return "DeleteTags"
+	case "sqs":
+		return "UntagQueue"
 	case "ssm":
 		return "RemoveTagsFromResource"
 	case "storagegateway":

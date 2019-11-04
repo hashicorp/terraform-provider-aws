@@ -82,6 +82,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
@@ -249,6 +250,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(sfn.New)
 	case "sns":
 		funcType = reflect.TypeOf(sns.New)
+	case "sqs":
+		funcType = reflect.TypeOf(sqs.New)
 	case "ssm":
 		funcType = reflect.TypeOf(ssm.New)
 	case "storagegateway":

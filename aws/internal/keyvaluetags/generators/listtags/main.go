@@ -80,6 +80,7 @@ var serviceNames = []string{
 	"securityhub",
 	"sfn",
 	"sns",
+	"sqs",
 	"ssm",
 	"storagegateway",
 	"swf",
@@ -223,6 +224,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "GetTags"
 	case "sagemaker":
 		return "ListTags"
+	case "sqs":
+		return "ListQueueTags"
 	case "workspaces":
 		return "DescribeTags"
 	default:
@@ -287,6 +290,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "resourcegroups":
 		return "Arn"
+	case "sqs":
+		return "QueueUrl"
 	case "ssm":
 		return "ResourceId"
 	case "storagegateway":
