@@ -140,8 +140,12 @@ func parseChannelStorage(rawChannelStorage map[string]interface{}) *iotanalytics
 
 	var serviceManagedS3 *iotanalytics.ServiceManagedChannelS3Storage
 	if list := rawChannelStorage["service_managed_s3"].([]interface{}); len(list) > 0 {
-		rawServiceManagedS3 := list[0].(map[string]interface{})
-		serviceManagedS3 = parseChannelServiceManagedS3(rawServiceManagedS3)
+		switch rawServiceManagedS3 := list[0].(type) {
+		case nil:
+			serviceManagedS3 = parseChannelServiceManagedS3(make(map[string]interface{}))
+		case map[string]interface{}:
+			serviceManagedS3 = parseChannelServiceManagedS3(rawServiceManagedS3)
+		}
 	}
 
 	return &iotanalytics.ChannelStorage{
