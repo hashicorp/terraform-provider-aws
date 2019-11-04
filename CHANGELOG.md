@@ -25,6 +25,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_route53_resolver_rule: Do not retrieve tags for rules shared with the AWS account that owns the data source [GH-10348]
 * resource/aws_api_gateway_authorizer: Set `authorizer_result_ttl_in_seconds` argument default to 300 to match API default which properly allows setting to 0 for disabling caching [GH-9605]
 * resource/aws_autoscaling_group: Batch ELB attachments and detachments by 10 to prevent API and rate limiting errors [GH-10445]
 * resource/aws_s3_bucket_public_access_block: Remove from Terraform state when S3 Bucket is already destroyed [GH-10534]
