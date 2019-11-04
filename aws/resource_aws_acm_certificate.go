@@ -175,15 +175,9 @@ func resourceAwsAcmCertificateCreateImported(d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(*resp.CertificateArn)
-	if v, ok := d.GetOk("tags"); ok {
-		params := &acm.AddTagsToCertificateInput{
-			CertificateArn: resp.CertificateArn,
-			Tags:           tagsFromMapACM(v.(map[string]interface{})),
-		}
-		_, err := acmconn.AddTagsToCertificate(params)
-
-		if err != nil {
-			return fmt.Errorf("Error requesting certificate: %s", err)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.AcmUpdateTags(acmconn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
 
