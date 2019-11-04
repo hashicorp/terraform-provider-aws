@@ -977,6 +977,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/qldb" = [
+      "**/*_qldb_*",
+      "**/qldb_*"
+    ]
     "service/quicksight" = [
       "**/*_quicksight_*",
       "**/quicksight_*"
