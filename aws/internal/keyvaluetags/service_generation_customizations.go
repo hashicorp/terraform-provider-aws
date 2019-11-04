@@ -89,7 +89,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -266,8 +265,6 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
 		funcType = reflect.TypeOf(waf.New)
-	case "wafregional":
-		funcType = reflect.TypeOf(wafregional.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
 	default:
