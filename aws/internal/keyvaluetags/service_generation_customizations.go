@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
@@ -119,8 +118,6 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(athena.New)
 	case "backup":
 		funcType = reflect.TypeOf(backup.New)
-	case "batch":
-		funcType = reflect.TypeOf(batch.New)
 	case "cloudformation":
 		funcType = reflect.TypeOf(cloudformation.New)
 	case "cloudfront":
