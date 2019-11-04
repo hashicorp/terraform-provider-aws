@@ -140,8 +140,12 @@ func parseDatastoreStorage(rawDatastoreStorage map[string]interface{}) *iotanaly
 
 	var serviceManagedS3 *iotanalytics.ServiceManagedDatastoreS3Storage
 	if list := rawDatastoreStorage["service_managed_s3"].([]interface{}); len(list) > 0 {
-		rawServiceManagedS3 := list[0].(map[string]interface{})
-		serviceManagedS3 = parseDatastoreServiceManagedS3(rawServiceManagedS3)
+		switch rawServiceManagedS3 := list[0].(type) {
+		case nil:
+			serviceManagedS3 = parseDatastoreServiceManagedS3(make(map[string]interface{}))
+		case map[string]interface{}:
+			serviceManagedS3 = parseDatastoreServiceManagedS3(rawServiceManagedS3)
+		}
 	}
 
 	return &iotanalytics.DatastoreStorage{
