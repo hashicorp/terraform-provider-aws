@@ -28,6 +28,7 @@ var serviceNames = []string{
 	"cloudhsmv2",
 	"cloudwatch",
 	"cloudwatchevents",
+	"cloudwatchlogs",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
@@ -192,6 +193,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTags"
 	case "cloudhsmv2":
 		return "ListTags"
+	case "cloudwatchlogs":
+		return "ListTagsLogGroup"
 	case "dax":
 		return "ListTags"
 	case "dynamodb":
@@ -242,6 +245,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchevents":
 		return "ResourceARN"
+	case "cloudwatchlogs":
+		return "LogGroupName"
 	case "dax":
 		return "ResourceName"
 	case "devicefarm":

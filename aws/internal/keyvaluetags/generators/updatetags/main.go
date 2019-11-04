@@ -30,6 +30,7 @@ var serviceNames = []string{
 	"cloudhsmv2",
 	"cloudwatch",
 	"cloudwatchevents",
+	"cloudwatchlogs",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
@@ -231,6 +232,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToCertificate"
 	case "acmpca":
 		return "TagCertificateAuthority"
+	case "cloudwatchlogs":
+		return "TagLogGroup"
 	case "databasemigrationservice":
 		return "AddTagsToResource"
 	case "datapipeline":
@@ -293,6 +296,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchevents":
 		return "ResourceARN"
+	case "cloudwatchlogs":
+		return "LogGroupName"
 	case "datapipeline":
 		return "PipelineId"
 	case "dax":
@@ -405,6 +410,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromCertificate"
 	case "acmpca":
 		return "UntagCertificateAuthority"
+	case "cloudwatchlogs":
+		return "UntagLogGroup"
 	case "databasemigrationservice":
 		return "RemoveTagsFromResource"
 	case "datapipeline":
@@ -477,6 +484,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "TagKeyList"
 	case "cloudhsmv2":
 		return "TagKeyList"
+	case "cloudwatchlogs":
+		return "Tags"
 	case "datasync":
 		return "Keys"
 	case "ec2":

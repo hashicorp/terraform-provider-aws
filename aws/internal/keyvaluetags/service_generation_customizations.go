@@ -16,10 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -86,6 +89,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -116,6 +120,10 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(athena.New)
 	case "backup":
 		funcType = reflect.TypeOf(backup.New)
+	case "batch":
+		funcType = reflect.TypeOf(batch.New)
+	case "cloudformation":
+		funcType = reflect.TypeOf(cloudformation.New)
 	case "cloudfront":
 		funcType = reflect.TypeOf(cloudfront.New)
 	case "cloudhsmv2":
@@ -124,6 +132,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(cloudwatch.New)
 	case "cloudwatchevents":
 		funcType = reflect.TypeOf(cloudwatchevents.New)
+	case "cloudwatchlogs":
+		funcType = reflect.TypeOf(cloudwatchlogs.New)
 	case "codecommit":
 		funcType = reflect.TypeOf(codecommit.New)
 	case "codedeploy":
@@ -256,6 +266,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
 		funcType = reflect.TypeOf(waf.New)
+	case "wafregional":
+		funcType = reflect.TypeOf(wafregional.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
 	default:
