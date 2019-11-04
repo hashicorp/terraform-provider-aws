@@ -17,6 +17,8 @@ import (
 const filename = `update_tags_gen.go`
 
 var serviceNames = []string{
+	"acm",
+	"acmpca",
 	"amplify",
 	"apigateway",
 	"apigatewayv2",
@@ -50,6 +52,7 @@ var serviceNames = []string{
 	"eks",
 	"elasticache",
 	"elasticsearchservice",
+	"elbv2",
 	"emr",
 	"firehose",
 	"fsx",
@@ -78,6 +81,7 @@ var serviceNames = []string{
 	"ram",
 	"rds",
 	"redshift",
+	"resourcegroups",
 	"route53resolver",
 	"secretsmanager",
 	"securityhub",
@@ -223,6 +227,10 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 // ServiceTagFunction determines the service tagging function.
 func ServiceTagFunction(serviceName string) string {
 	switch serviceName {
+	case "acm":
+		return "AddTagsToCertificate"
+	case "acmpca":
+		return "TagCertificateAuthority"
 	case "databasemigrationservice":
 		return "AddTagsToResource"
 	case "datapipeline":
@@ -239,6 +247,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "elasticsearchservice":
 		return "AddTags"
+	case "elbv2":
+		return "AddTags"
 	case "emr":
 		return "AddTags"
 	case "firehose":
@@ -253,6 +263,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "redshift":
 		return "CreateTags"
+	case "resourcegroups":
+		return "Tag"
 	case "sagemaker":
 		return "AddTags"
 	case "ssm":
@@ -269,6 +281,10 @@ func ServiceTagFunction(serviceName string) string {
 // ServiceTagInputIdentifierField determines the service tag identifier field.
 func ServiceTagInputIdentifierField(serviceName string) string {
 	switch serviceName {
+	case "acm":
+		return "CertificateArn"
+	case "acmpca":
+		return "CertificateAuthorityArn"
 	case "athena":
 		return "ResourceARN"
 	case "cloudhsmv2":
@@ -295,6 +311,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
+	case "elbv2":
+		return "ResourceArns"
 	case "emr":
 		return "ResourceId"
 	case "firehose":
@@ -325,6 +343,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "redshift":
 		return "ResourceName"
+	case "resourcegroups":
+		return "Arn"
 	case "secretsmanager":
 		return "SecretId"
 	case "ssm":
@@ -346,6 +366,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 func ServiceTagInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "ec2":
+		return "yes"
+	case "elbv2":
 		return "yes"
 	default:
 		return ""
@@ -379,6 +401,10 @@ func ServiceTagInputResourceTypeField(serviceName string) string {
 // ServiceUntagFunction determines the service untagging function.
 func ServiceUntagFunction(serviceName string) string {
 	switch serviceName {
+	case "acm":
+		return "RemoveTagsFromCertificate"
+	case "acmpca":
+		return "UntagCertificateAuthority"
 	case "databasemigrationservice":
 		return "RemoveTagsFromResource"
 	case "datapipeline":
@@ -395,6 +421,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "elasticsearchservice":
 		return "RemoveTags"
+	case "elbv2":
+		return "RemoveTags"
 	case "emr":
 		return "RemoveTags"
 	case "firehose":
@@ -409,6 +437,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "redshift":
 		return "DeleteTags"
+	case "resourcegroups":
+		return "Untag"
 	case "sagemaker":
 		return "DeleteTags"
 	case "ssm":
@@ -425,6 +455,10 @@ func ServiceUntagFunction(serviceName string) string {
 // ServiceUntagInputRequiresTagType determines if the service untagging requires full Tag type.
 func ServiceUntagInputRequiresTagType(serviceName string) string {
 	switch serviceName {
+	case "acm":
+		return "yes"
+	case "acmpca":
+		return "yes"
 	case "ec2":
 		return "yes"
 	default:
@@ -435,6 +469,10 @@ func ServiceUntagInputRequiresTagType(serviceName string) string {
 // ServiceUntagInputTagsField determines the service untagging tags field.
 func ServiceUntagInputTagsField(serviceName string) string {
 	switch serviceName {
+	case "acm":
+		return "Tags"
+	case "acmpca":
+		return "Tags"
 	case "backup":
 		return "TagKeyList"
 	case "cloudhsmv2":
@@ -445,6 +483,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "Tags"
 	case "glue":
 		return "TagsToRemove"
+	case "resourcegroups":
+		return "Keys"
 	default:
 		return "TagKeys"
 	}

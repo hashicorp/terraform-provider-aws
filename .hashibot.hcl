@@ -295,6 +295,12 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iot" = [
       "aws_iot_",
     ],
+    "service/iotanalytics" = [
+      "aws_iotanalytics_",
+    ],
+    "service/iotevents" = [
+      "aws_iotevents_",
+    ],
     "service/kafka" = [
       "aws_msk_",
     ],
@@ -866,6 +872,14 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/iot" = [
       "**/*_iot_*",
       "**/iot_*"
+    ]
+    "service/iotanalytics" = [
+      "**/*_iotanalytics_*",
+      "**/iotanalytics_*"
+    ]
+    "service/iotevents" = [
+      "**/*_iotevents_*",
+      "**/iotevents_*"
     ]
     "service/kafka" = [
       "**/*_msk_*",
