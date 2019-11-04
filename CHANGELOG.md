@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * data-source/aws_vpc_endpoint: Add `filter` and `tags` arguments [GH-10503]
 * provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
 * resource/aws_api_gateway_client_certificate: Add `tags` argument and `arn` attribute [GH-10569]
+* resource/aws_api_gateway_domain_name: Add `tags` argument and `arn` attribute [GH-10567]
 * resource/aws_api_gateway_vpc_link: Add `tags` argument and `arn` attribute [GH-10561]
 * resource/aws_db_cluster_snapshot: Add `tags` argument [GH-10488]
 * resource/aws_mq_broker: Support in-place `security_groups` updates [GH-10442]
