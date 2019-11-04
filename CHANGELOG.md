@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * data-source/aws_db_instance: Add `tags` attribute [GH-10550]
 * data-source/aws_vpc_endpoint: Add `filter` and `tags` arguments [GH-10503]
 * provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
+* resource/aws_acmpca_certificate_authority: Support tagging on creation [GH-10736]
 * resource/aws_api_gateway_api_key: Add `tags` argument and `arn` attribute [GH-10568]
 * resource/aws_api_gateway_client_certificate: Add `tags` argument and `arn` attribute [GH-10569]
 * resource/aws_api_gateway_domain_name: Add `tags` argument and `arn` attribute [GH-10567]
