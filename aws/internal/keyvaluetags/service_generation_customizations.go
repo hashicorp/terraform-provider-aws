@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
@@ -42,6 +43,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -72,6 +74,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -93,6 +96,8 @@ func ServiceClientType(serviceName string) string {
 	var funcType reflect.Type
 
 	switch serviceName {
+	case "acm":
+		funcType = reflect.TypeOf(acm.New)
 	case "acmpca":
 		funcType = reflect.TypeOf(acmpca.New)
 	case "amplify":
@@ -165,6 +170,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(elasticbeanstalk.New)
 	case "elasticsearchservice":
 		funcType = reflect.TypeOf(elasticsearchservice.New)
+	case "elbv2":
+		funcType = reflect.TypeOf(elbv2.New)
 	case "emr":
 		funcType = reflect.TypeOf(emr.New)
 	case "firehose":
@@ -225,6 +232,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(rds.New)
 	case "redshift":
 		funcType = reflect.TypeOf(redshift.New)
+	case "resourcegroups":
+		funcType = reflect.TypeOf(resourcegroups.New)
 	case "route53resolver":
 		funcType = reflect.TypeOf(route53resolver.New)
 	case "sagemaker":
