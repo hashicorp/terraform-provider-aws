@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -66,6 +67,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
@@ -259,6 +261,23 @@ func CloudwatcheventsListTags(conn *cloudwatchevents.CloudWatchEvents, identifie
 	}
 
 	return CloudwatcheventsKeyValueTags(output.Tags), nil
+}
+
+// CloudwatchlogsListTags lists cloudwatchlogs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string) (KeyValueTags, error) {
+	input := &cloudwatchlogs.ListTagsLogGroupInput{
+		LogGroupName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsLogGroup(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudwatchlogsKeyValueTags(output.Tags), nil
 }
 
 // CodecommitListTags lists codecommit service tags.
@@ -1126,6 +1145,23 @@ func SnsListTags(conn *sns.SNS, identifier string) (KeyValueTags, error) {
 	}
 
 	return SnsKeyValueTags(output.Tags), nil
+}
+
+// SqsListTags lists sqs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SqsListTags(conn *sqs.SQS, identifier string) (KeyValueTags, error) {
+	input := &sqs.ListQueueTagsInput{
+		QueueUrl: aws.String(identifier),
+	}
+
+	output, err := conn.ListQueueTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SqsKeyValueTags(output.Tags), nil
 }
 
 // SsmListTags lists ssm service tags.
