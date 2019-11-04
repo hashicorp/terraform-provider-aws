@@ -567,7 +567,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/appsync_*"
     ]
     "service/athena" = [
-      "service/athena",
+      "**/*_athena_*",
       "**/athena_*"
     ]
     "service/autoscaling" = [
