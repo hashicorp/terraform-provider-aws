@@ -134,7 +134,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_cloudsearch_",
     ],
     "service/cloudtrail" = [
-      "aws_cloudtrail_",
+      "aws_cloudtrail",
     ],
     "service/cloudwatch" = [
       "aws_cloudwatch_([^e]|e[^v]|ev[^e]|eve[^n]|even[^t]|event[^_]|[^l]|l[^o]|lo[^g]|log[^_])",
@@ -617,8 +617,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/cloudsearch_*"
     ]
     "service/cloudtrail" = [
-      "**/*_cloudtrail_*",
-      "**/cloudtrail_*"
+      "**/*_cloudtrail*",
+      "**/cloudtrail*"
     ]
     "service/cloudwatch" = [
       "**/*_cloudwatch_dashboard*",
