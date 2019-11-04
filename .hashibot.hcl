@@ -1020,8 +1020,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_domains_*"
     ]
     "service/route53resolver" = [
-      "**/*_route53resolver_*",
-      "**/route53resolver_*"
+      "**/*_route53_resolver_*",
+      "**/route53_resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",
