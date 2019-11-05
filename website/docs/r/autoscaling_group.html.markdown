@@ -158,13 +158,13 @@ resource "aws_autoscaling_group" "bar" {
     },
   ]
 
-  tags = ["${concat(
+  tags = "${concat(
     list(
       map("key", "interpolation1", "value", "value3", "propagate_at_launch", true),
       map("key", "interpolation2", "value", "value4", "propagate_at_launch", true)
     ),
     var.extra_tags)
-  }"]
+  }"
 }
 ```
 
