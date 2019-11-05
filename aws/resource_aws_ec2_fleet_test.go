@@ -783,7 +783,6 @@ func TestAccAWSEc2Fleet_Tags(t *testing.T) {
 				Config: testAccAWSEc2FleetConfig_Tags(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2FleetExists(resourceName, &fleet2),
-					testAccCheckAWSEc2FleetRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 				),
