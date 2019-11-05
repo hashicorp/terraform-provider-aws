@@ -31,7 +31,7 @@ func resourceAwsIotThingGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"properties": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -104,7 +104,7 @@ func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) er
 		params.ParentGroupName = aws.String(v.(string))
 	}
 
-	if v := d.Get("properties").(*schema.Set).List(); len(v) >= 1 {
+	if v := d.Get("properties").([]interface{}); len(v) >= 1 {
 		params.ThingGroupProperties = parseProperties(v[0].(map[string]interface{}))
 	}
 
@@ -121,15 +121,16 @@ func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func flattenProperties(properties *iot.ThingGroupProperties) map[string]interface{} {
-	attributes := properties.AttributePayload.Attributes
-	rawAttributes := make(map[string]interface{})
-	for key, value := range attributes {
-		rawAttributes[key] = aws.StringValue(value)
-	}
+	groupProperties := make(map[string]interface{})
 
-	var groupProperties = map[string]interface{}{
-		"attributes": rawAttributes,
-		"merge":      aws.BoolValue(properties.AttributePayload.Merge),
+	if properties.AttributePayload != nil {
+		rawAttributes := make(map[string]interface{})
+		attributes := properties.AttributePayload.Attributes
+		for key, value := range attributes {
+			rawAttributes[key] = aws.StringValue(value)
+		}
+		groupProperties["attributes"] = rawAttributes
+		groupProperties["merge"] = aws.BoolValue(properties.AttributePayload.Merge)
 	}
 
 	if properties.ThingGroupDescription != nil {
@@ -174,7 +175,7 @@ func resourceAwsIotThingGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		ThingGroupName: aws.String(name),
 	}
 
-	if v := d.Get("properties").(*schema.Set).List(); len(v) >= 1 {
+	if v := d.Get("properties").([]interface{}); len(v) >= 1 {
 		params.ThingGroupProperties = parseProperties(v[0].(map[string]interface{}))
 	}
 
