@@ -8,16 +8,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/golangci/golangci-lint/pkg/timeutils"
-
-	"github.com/golangci/golangci-lint/pkg/fsutils"
-
-	"github.com/golangci/golangci-lint/pkg/logutils"
-
 	"github.com/pkg/errors"
 
 	"github.com/golangci/golangci-lint/pkg/config"
+	"github.com/golangci/golangci-lint/pkg/fsutils"
+	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
+	"github.com/golangci/golangci-lint/pkg/timeutils"
 )
 
 type Fixer struct {
@@ -40,43 +37,38 @@ func (f Fixer) printStat() {
 	f.sw.PrintStages()
 }
 
-func (f Fixer) Process(issues <-chan result.Issue) <-chan result.Issue {
+func (f Fixer) Process(issues []result.Issue) []result.Issue {
 	if !f.cfg.Issues.NeedFix {
 		return issues
 	}
 
-	outCh := make(chan result.Issue, 1024)
-
-	go func() {
-		issuesToFixPerFile := map[string][]result.Issue{}
-		for issue := range issues {
-			if issue.Replacement == nil {
-				outCh <- issue
-				continue
-			}
-
-			issuesToFixPerFile[issue.FilePath()] = append(issuesToFixPerFile[issue.FilePath()], issue)
+	outIssues := make([]result.Issue, 0, len(issues))
+	issuesToFixPerFile := map[string][]result.Issue{}
+	for i := range issues {
+		issue := &issues[i]
+		if issue.Replacement == nil {
+			outIssues = append(outIssues, *issue)
+			continue
 		}
 
-		for file, issuesToFix := range issuesToFixPerFile {
-			var err error
-			f.sw.TrackStage("all", func() {
-				err = f.fixIssuesInFile(file, issuesToFix) //nolint:scopelint
-			})
-			if err != nil {
-				f.log.Errorf("Failed to fix issues in file %s: %s", file, err)
+		issuesToFixPerFile[issue.FilePath()] = append(issuesToFixPerFile[issue.FilePath()], *issue)
+	}
 
-				// show issues only if can't fix them
-				for _, issue := range issuesToFix {
-					outCh <- issue
-				}
-			}
+	for file, issuesToFix := range issuesToFixPerFile {
+		var err error
+		f.sw.TrackStage("all", func() {
+			err = f.fixIssuesInFile(file, issuesToFix) //nolint:scopelint
+		})
+		if err != nil {
+			f.log.Errorf("Failed to fix issues in file %s: %s", file, err)
+
+			// show issues only if can't fix them
+			outIssues = append(outIssues, issuesToFix...)
 		}
-		f.printStat()
-		close(outCh)
-	}()
+	}
 
-	return outCh
+	f.printStat()
+	return outIssues
 }
 
 func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
@@ -96,8 +88,9 @@ func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
 
 	// merge multiple issues per line into one issue
 	issuesPerLine := map[int][]result.Issue{}
-	for _, i := range issues {
-		issuesPerLine[i.Line()] = append(issuesPerLine[i.Line()], i)
+	for i := range issues {
+		issue := &issues[i]
+		issuesPerLine[issue.Line()] = append(issuesPerLine[issue.Line()], *issue)
 	}
 
 	issues = issues[:0] // reuse the same memory
@@ -124,7 +117,6 @@ func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
 	return nil
 }
 
-//nolint:gocyclo
 func (f Fixer) mergeLineIssues(lineNum int, lineIssues []result.Issue, origFileLines [][]byte) *result.Issue {
 	origLine := origFileLines[lineNum-1] // lineNum is 1-based
 
@@ -133,7 +125,8 @@ func (f Fixer) mergeLineIssues(lineNum int, lineIssues []result.Issue, origFileL
 	}
 
 	// check issues first
-	for _, i := range lineIssues {
+	for ind := range lineIssues {
+		i := &lineIssues[ind]
 		if i.LineRange != nil {
 			f.log.Infof("Line %d has multiple issues but at least one of them is ranged: %#v", lineNum, lineIssues)
 			return &lineIssues[0]
@@ -166,8 +159,8 @@ func (f Fixer) applyInlineFixes(lineIssues []result.Issue, origLine []byte, line
 	// example: origLine="it's becouse of them", StartCol=5, Length=7, NewString="because"
 
 	curOrigLinePos := 0
-	for _, i := range lineIssues {
-		fix := i.Replacement.Inline
+	for i := range lineIssues {
+		fix := lineIssues[i].Replacement.Inline
 		if fix.StartCol < curOrigLinePos {
 			f.log.Warnf("Line %d has multiple intersecting issues: %#v", lineNum, lineIssues)
 			return nil
@@ -198,14 +191,15 @@ func (f Fixer) findNotIntersectingIssues(issues []result.Issue) []result.Issue {
 
 	var ret []result.Issue
 	var currentEnd int
-	for _, issue := range issues {
+	for i := range issues {
+		issue := &issues[i]
 		rng := issue.GetLineRange()
 		if rng.From <= currentEnd {
 			f.log.Infof("Skip issue %#v: intersects with end %d", issue, currentEnd)
 			continue // skip intersecting issue
 		}
 		f.log.Infof("Fix issue %#v with range %v", issue, issue.GetLineRange())
-		ret = append(ret, issue)
+		ret = append(ret, *issue)
 		currentEnd = rng.To
 	}
 

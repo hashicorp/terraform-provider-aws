@@ -13,7 +13,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "schemaresource",
-	Doc:  "find github.com/hashicorp/terraform/helper/schema.Resource literals for later passes",
+	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/helper/schema.Resource literals for later passes",
 	Requires: []*analysis.Analyzer{
 		inspect.Analyzer,
 	},
@@ -54,7 +54,7 @@ func isSchemaResource(pass *analysis.Pass, cl *ast.CompositeLit) bool {
 				return false
 			}
 			// HasSuffix here due to vendoring
-			if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform/helper/schema") {
+			if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform-plugin-sdk/helper/schema") {
 				return false
 			}
 		}

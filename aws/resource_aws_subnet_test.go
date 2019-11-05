@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // add sweeper to delete known test subnets
@@ -43,6 +43,7 @@ func init() {
 			"aws_network_interface",
 			"aws_redshift_cluster",
 			"aws_route53_resolver_endpoint",
+			"aws_sagemaker_notebook_instance",
 			"aws_spot_fleet_request",
 			"aws_vpc_endpoint",
 		},

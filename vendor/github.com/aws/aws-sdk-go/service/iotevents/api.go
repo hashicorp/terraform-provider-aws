@@ -1557,7 +1557,7 @@ type ActionData struct {
 	ClearTimer *ClearTimerAction `locationName:"clearTimer" type:"structure"`
 
 	// Sends information about the detector model instance and the event which triggered
-	// the action to a Kinesis Data Firehose stream.
+	// the action to a Kinesis Data Firehose delivery stream.
 	Firehose *FirehoseAction `locationName:"firehose" type:"structure"`
 
 	// Sends an IoT Events input, passing in information about the detector model
@@ -1567,7 +1567,7 @@ type ActionData struct {
 	// Publishes an MQTT message with the given topic to the AWS IoT message broker.
 	IotTopicPublish *IotTopicPublishAction `locationName:"iotTopicPublish" type:"structure"`
 
-	// Calls a Lambda function, passing in information about the detector model
+	// Calls an AWS Lambda function, passing in information about the detector model
 	// instance and the event which triggered the action.
 	Lambda *LambdaAction `locationName:"lambda" type:"structure"`
 
@@ -1584,7 +1584,7 @@ type ActionData struct {
 	Sns *SNSTopicPublishAction `locationName:"sns" type:"structure"`
 
 	// Sends information about the detector model instance and the event which triggered
-	// the action to an AWS SQS queue.
+	// the action to an Amazon SQS queue.
 	Sqs *SqsAction `locationName:"sqs" type:"structure"`
 }
 
@@ -1829,11 +1829,16 @@ type CreateDetectorModelInput struct {
 	// DetectorModelName is a required field
 	DetectorModelName *string `locationName:"detectorModelName" min:"1" type:"string" required:"true"`
 
-	// The input attribute key used to identify a device or system in order to create
-	// a detector (an instance of the detector model) and then to route each input
-	// received to the appropriate detector (instance). This parameter uses a JSON-path
-	// expression to specify the attribute-value pair in the message payload of
-	// each input that is used to identify the device associated with the input.
+	// When set to SERIAL, variables are updated and event conditions evaluated
+	// in the order that the events are defined. When set to BATCH, variables are
+	// updated and events performed only after all event conditions are evaluated.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
+	// The input attribute key used to identify a device or system to create a detector
+	// (an instance of the detector model) and then to route each input received
+	// to the appropriate detector (instance). This parameter uses a JSON-path expression
+	// to specify the attribute-value pair in the message payload of each input
+	// that is used to identify the device associated with the input.
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The ARN of the role that grants permission to AWS IoT Events to perform its
@@ -1914,6 +1919,12 @@ func (s *CreateDetectorModelInput) SetDetectorModelDescription(v string) *Create
 // SetDetectorModelName sets the DetectorModelName field's value.
 func (s *CreateDetectorModelInput) SetDetectorModelName(v string) *CreateDetectorModelInput {
 	s.DetectorModelName = &v
+	return s
+}
+
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *CreateDetectorModelInput) SetEvaluationMethod(v string) *CreateDetectorModelInput {
+	s.EvaluationMethod = &v
 	return s
 }
 
@@ -2464,11 +2475,16 @@ type DetectorModelConfiguration struct {
 	// The version of the detector model.
 	DetectorModelVersion *string `locationName:"detectorModelVersion" min:"1" type:"string"`
 
-	// The input attribute key used to identify a device or system in order to create
-	// a detector (an instance of the detector model) and then to route each input
-	// received to the appropriate detector (instance). This parameter uses a JSON-path
-	// expression to specify the attribute-value pair in the message payload of
-	// each input that is used to identify the device associated with the input.
+	// When set to SERIAL, variables are updated and event conditions evaluated
+	// in the order that the events are defined. When set to BATCH, variables are
+	// updated and events performed only after all event conditions are evaluated.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
+	// The input attribute key used to identify a device or system to create a detector
+	// (an instance of the detector model) and then to route each input received
+	// to the appropriate detector (instance). This parameter uses a JSON-path expression
+	// to specify the attribute-value pair in the message payload of each input
+	// that is used to identify the device associated with the input.
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The time the detector model was last updated.
@@ -2519,6 +2535,12 @@ func (s *DetectorModelConfiguration) SetDetectorModelName(v string) *DetectorMod
 // SetDetectorModelVersion sets the DetectorModelVersion field's value.
 func (s *DetectorModelConfiguration) SetDetectorModelVersion(v string) *DetectorModelConfiguration {
 	s.DetectorModelVersion = &v
+	return s
+}
+
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *DetectorModelConfiguration) SetEvaluationMethod(v string) *DetectorModelConfiguration {
+	s.EvaluationMethod = &v
 	return s
 }
 
@@ -2673,6 +2695,11 @@ type DetectorModelVersionSummary struct {
 	// The ID of the detector model version.
 	DetectorModelVersion *string `locationName:"detectorModelVersion" min:"1" type:"string"`
 
+	// When set to SERIAL, variables are updated and event conditions evaluated
+	// in the order that the events are defined. When set to BATCH, variables are
+	// updated and events performed only after all event conditions are evaluated.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
 	// The last time the detector model version was updated.
 	LastUpdateTime *time.Time `locationName:"lastUpdateTime" type:"timestamp"`
 
@@ -2715,6 +2742,12 @@ func (s *DetectorModelVersionSummary) SetDetectorModelName(v string) *DetectorMo
 // SetDetectorModelVersion sets the DetectorModelVersion field's value.
 func (s *DetectorModelVersionSummary) SetDetectorModelVersion(v string) *DetectorModelVersionSummary {
 	s.DetectorModelVersion = &v
+	return s
+}
+
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *DetectorModelVersionSummary) SetEvaluationMethod(v string) *DetectorModelVersionSummary {
+	s.EvaluationMethod = &v
 	return s
 }
 
@@ -2807,18 +2840,18 @@ func (s *Event) SetEventName(v string) *Event {
 }
 
 // Sends information about the detector model instance and the event which triggered
-// the action to a Kinesis Data Firehose stream.
+// the action to a Kinesis Data Firehose delivery stream.
 type FirehoseAction struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Kinesis Data Firehose stream where the data is written.
+	// The name of the Kinesis Data Firehose delivery stream where the data is written.
 	//
 	// DeliveryStreamName is a required field
 	DeliveryStreamName *string `locationName:"deliveryStreamName" type:"string" required:"true"`
 
 	// A character separator that is used to separate records written to the Kinesis
-	// Data Firehose stream. Valid values are: '\n' (newline), '\t' (tab), '\r\n'
-	// (Windows newline), ',' (comma).
+	// Data Firehose delivery stream. Valid values are: '\n' (newline), '\t' (tab),
+	// '\r\n' (Windows newline), ',' (comma).
 	Separator *string `locationName:"separator" type:"string"`
 }
 
@@ -3137,12 +3170,12 @@ func (s *IotTopicPublishAction) SetMqttTopic(v string) *IotTopicPublishAction {
 	return s
 }
 
-// Calls a Lambda function, passing in information about the detector model
+// Calls an AWS Lambda function, passing in information about the detector model
 // instance and the event which triggered the action.
 type LambdaAction struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the Lambda function which is executed.
+	// The ARN of the AWS Lambda function which is executed.
 	//
 	// FunctionArn is a required field
 	FunctionArn *string `locationName:"functionArn" min:"1" type:"string" required:"true"`
@@ -4001,11 +4034,11 @@ func (s *SetVariableAction) SetVariableName(v string) *SetVariableAction {
 }
 
 // Sends information about the detector model instance and the event which triggered
-// the action to an AWS SQS queue.
+// the action to an Amazon SQS queue.
 type SqsAction struct {
 	_ struct{} `type:"structure"`
 
-	// The URL of the SQS queue where the data is written.
+	// The URL of the Amazon SQS queue where the data is written.
 	//
 	// QueueUrl is a required field
 	QueueUrl *string `locationName:"queueUrl" type:"string" required:"true"`
@@ -4447,6 +4480,11 @@ type UpdateDetectorModelInput struct {
 	// DetectorModelName is a required field
 	DetectorModelName *string `location:"uri" locationName:"detectorModelName" min:"1" type:"string" required:"true"`
 
+	// When set to SERIAL, variables are updated and event conditions evaluated
+	// in the order that the events are defined. When set to BATCH, variables are
+	// updated and events performed only after all event conditions are evaluated.
+	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
+
 	// The ARN of the role that grants permission to AWS IoT Events to perform its
 	// operations.
 	//
@@ -4509,6 +4547,12 @@ func (s *UpdateDetectorModelInput) SetDetectorModelDescription(v string) *Update
 // SetDetectorModelName sets the DetectorModelName field's value.
 func (s *UpdateDetectorModelInput) SetDetectorModelName(v string) *UpdateDetectorModelInput {
 	s.DetectorModelName = &v
+	return s
+}
+
+// SetEvaluationMethod sets the EvaluationMethod field's value.
+func (s *UpdateDetectorModelInput) SetEvaluationMethod(v string) *UpdateDetectorModelInput {
+	s.EvaluationMethod = &v
 	return s
 }
 
@@ -4654,6 +4698,14 @@ const (
 
 	// DetectorModelVersionStatusFailed is a DetectorModelVersionStatus enum value
 	DetectorModelVersionStatusFailed = "FAILED"
+)
+
+const (
+	// EvaluationMethodBatch is a EvaluationMethod enum value
+	EvaluationMethodBatch = "BATCH"
+
+	// EvaluationMethodSerial is a EvaluationMethod enum value
+	EvaluationMethodSerial = "SERIAL"
 )
 
 const (

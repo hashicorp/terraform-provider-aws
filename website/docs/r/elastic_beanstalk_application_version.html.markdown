@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_application_version"
-sidebar_current: "docs-aws-resource-elastic-beanstalk-application-version"
 description: |-
   Provides an Elastic Beanstalk Application Version Resource
 ---

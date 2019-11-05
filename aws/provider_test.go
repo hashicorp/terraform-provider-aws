@@ -12,16 +12,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/terraform-providers/terraform-provider-tls/tls"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 var testAccProviders map[string]terraform.ResourceProvider
-var testAccProvidersWithTLS map[string]terraform.ResourceProvider
 var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
 var testAccProvider *schema.Provider
+var testAccProviderFunc func() *schema.Provider
 
 func init() {
 	testAccProvider = Provider().(*schema.Provider)
@@ -35,20 +34,9 @@ func init() {
 				*providers = append(*providers, p.(*schema.Provider))
 				return p, nil
 			},
-			"tls": func() (terraform.ResourceProvider, error) {
-				p := tls.Provider()
-				*providers = append(*providers, p.(*schema.Provider))
-				return p, nil
-			},
 		}
 	}
-	testAccProvidersWithTLS = map[string]terraform.ResourceProvider{
-		"tls": tls.Provider(),
-	}
-
-	for k, v := range testAccProviders {
-		testAccProvidersWithTLS[k] = v
-	}
+	testAccProviderFunc = func() *schema.Provider { return testAccProvider }
 }
 
 func TestProvider(t *testing.T) {
@@ -187,6 +175,14 @@ func testAccGetRegion() string {
 	return v
 }
 
+func testAccGetAlternateRegion() string {
+	v := os.Getenv("AWS_ALTERNATE_REGION")
+	if v == "" {
+		return "us-east-1"
+	}
+	return v
+}
+
 func testAccGetPartition() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		return partition.ID()
@@ -204,12 +200,28 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 	}
 }
 
+func testAccAlternateRegionPreCheck(t *testing.T) {
+	if testAccGetRegion() == testAccGetAlternateRegion() {
+		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
+	}
+}
+
 func testAccEC2ClassicPreCheck(t *testing.T) {
 	client := testAccProvider.Meta().(*AWSClient)
 	platforms := client.supportedplatforms
 	region := client.region
 	if !hasEc2Classic(platforms) {
 		t.Skipf("This test can only run in EC2 Classic, platforms available in %s: %q",
+			region, platforms)
+	}
+}
+
+func testAccEC2VPCOnlyPreCheck(t *testing.T) {
+	client := testAccProvider.Meta().(*AWSClient)
+	platforms := client.supportedplatforms
+	region := client.region
+	if hasEc2Classic(platforms) {
+		t.Skipf("This test can only in regions without EC2 Classic, platforms available in %s: %q",
 			region, platforms)
 	}
 }
@@ -252,6 +264,27 @@ provider "aws" {
   secret_key = %[3]q
 }
 `, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
+func testAccAlternateAccountAlternateRegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  access_key = %[1]q
+  alias      = "alternate"
+  profile    = %[2]q
+  region     = %[3]q
+  secret_key = %[4]q
+}
+`, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), testAccGetAlternateRegion(), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
+}
+
+func testAccAlternateRegionProviderConfig() string {
+	return fmt.Sprintf(`
+provider "aws" {
+  alias  = "alternate"
+  region = %[1]q
+}
+`, testAccGetAlternateRegion())
 }
 
 // Provider configuration hardcoded for us-east-1.
@@ -437,8 +470,7 @@ func TestAccAWSProvider_Endpoints_Deprecated(t *testing.T) {
 			{
 				Config: testAccAWSProviderConfigEndpoints(endpointsDeprecated.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSProviderEndpointsDeprecated(&providers),
-				),
+					testAccCheckAWSProviderEndpointsDeprecated(&providers)),
 			},
 		},
 	})
@@ -716,4 +748,22 @@ data "aws_arn" "test" {
   arn = "arn:aws:s3:::test"
 }
 `, region)
+}
+
+func testAccAssumeRoleARNPreCheck(t *testing.T) {
+	v := os.Getenv("TF_ACC_ASSUME_ROLE_ARN")
+	if v == "" {
+		t.Skip("skipping tests; TF_ACC_ASSUME_ROLE_ARN must be set")
+	}
+}
+
+func testAccProviderConfigAssumeRolePolicy(policy string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+	assume_role {
+		role_arn = %q
+		policy   = %q
+	}
+}
+`, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }
