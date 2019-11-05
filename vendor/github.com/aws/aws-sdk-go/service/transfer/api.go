@@ -368,6 +368,11 @@ func (c *Transfer) DeleteSshPublicKeyRequest(input *DeleteSshPublicKeyInput) (re
 //   This exception is thrown when a resource is not found by the AWS Transfer
 //   for SFTP service.
 //
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The request was denied due to request throttling.
+//
+//   HTTP Status Code: 400
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/DeleteSshPublicKey
 func (c *Transfer) DeleteSshPublicKey(input *DeleteSshPublicKeyInput) (*DeleteSshPublicKeyOutput, error) {
 	req, out := c.DeleteSshPublicKeyRequest(input)
@@ -745,6 +750,11 @@ func (c *Transfer) ImportSshPublicKeyRequest(input *ImportSshPublicKeyInput) (re
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   This exception is thrown when a resource is not found by the AWS Transfer
 //   for SFTP service.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The request was denied due to request throttling.
+//
+//   HTTP Status Code: 400
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/ImportSshPublicKey
 func (c *Transfer) ImportSshPublicKey(input *ImportSshPublicKeyInput) (*ImportSshPublicKeyOutput, error) {
@@ -1286,6 +1296,11 @@ func (c *Transfer) StartServerRequest(input *StartServerInput) (req *request.Req
 //   This exception is thrown when a resource is not found by the AWS Transfer
 //   for SFTP service.
 //
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The request was denied due to request throttling.
+//
+//   HTTP Status Code: 400
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/StartServer
 func (c *Transfer) StartServer(input *StartServerInput) (*StartServerOutput, error) {
 	req, out := c.StartServerRequest(input)
@@ -1387,6 +1402,11 @@ func (c *Transfer) StopServerRequest(input *StopServerInput) (req *request.Reque
 //   This exception is thrown when a resource is not found by the AWS Transfer
 //   for SFTP service.
 //
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The request was denied due to request throttling.
+//
+//   HTTP Status Code: 400
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/StopServer
 func (c *Transfer) StopServer(input *StopServerInput) (*StopServerOutput, error) {
 	req, out := c.StopServerRequest(input)
@@ -1476,6 +1496,10 @@ func (c *Transfer) TagResourceRequest(input *TagResourceInput) (req *request.Req
 //
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   This exception is thrown when the client submits a malformed request.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   This exception is thrown when a resource is not found by the AWS Transfer
+//   for SFTP service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/TagResource
 func (c *Transfer) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -1661,6 +1685,10 @@ func (c *Transfer) UntagResourceRequest(input *UntagResourceInput) (req *request
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   This exception is thrown when the client submits a malformed request.
 //
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   This exception is thrown when a resource is not found by the AWS Transfer
+//   for SFTP service.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/UntagResource
 func (c *Transfer) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
 	req, out := c.UntagResourceRequest(input)
@@ -1750,9 +1778,17 @@ func (c *Transfer) UpdateServerRequest(input *UpdateServerInput) (req *request.R
 //   * ErrCodeInvalidRequestException "InvalidRequestException"
 //   This exception is thrown when the client submits a malformed request.
 //
+//   * ErrCodeResourceExistsException "ResourceExistsException"
+//   The requested resource does not exist.
+//
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
 //   This exception is thrown when a resource is not found by the AWS Transfer
 //   for SFTP service.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The request was denied due to request throttling.
+//
+//   HTTP Status Code: 400
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/UpdateServer
 func (c *Transfer) UpdateServer(input *UpdateServerInput) (*UpdateServerOutput, error) {
@@ -1848,6 +1884,11 @@ func (c *Transfer) UpdateUserRequest(input *UpdateUserInput) (req *request.Reque
 //   This exception is thrown when a resource is not found by the AWS Transfer
 //   for SFTP service.
 //
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The request was denied due to request throttling.
+//
+//   HTTP Status Code: 400
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/transfer-2018-11-05/UpdateUser
 func (c *Transfer) UpdateUser(input *UpdateUserInput) (*UpdateUserOutput, error) {
 	req, out := c.UpdateUserRequest(input)
@@ -1890,7 +1931,7 @@ type CreateServerInput struct {
 	// to a new AWS SFTP server, don't update the host key. Accidentally changing
 	// a server's host key can be disruptive.
 	//
-	// For more information, see "https://docs.aws.amazon.com/transfer/latest/userguide/change-host-key"
+	// For more information, see "https://alpha-docs-aws.amazon.com/transfer/latest/userguide/configuring-servers.html#change-host-key"
 	// in the AWS SFTP User Guide.
 	HostKey *string `type:"string" sensitive:"true"`
 
@@ -1910,7 +1951,7 @@ type CreateServerInput struct {
 
 	// A value that allows the service to write your SFTP users' activity to your
 	// Amazon CloudWatch logs for monitoring and auditing purposes.
-	LoggingRole *string `type:"string"`
+	LoggingRole *string `min:"20" type:"string"`
 
 	// Key-value pairs that can be used to group and search for servers.
 	Tags []*Tag `min:"1" type:"list"`
@@ -1929,8 +1970,21 @@ func (s CreateServerInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateServerInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateServerInput"}
+	if s.LoggingRole != nil && len(*s.LoggingRole) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("LoggingRole", 20))
+	}
 	if s.Tags != nil && len(s.Tags) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.EndpointDetails != nil {
+		if err := s.EndpointDetails.Validate(); err != nil {
+			invalidParams.AddNested("EndpointDetails", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.IdentityProviderDetails != nil {
+		if err := s.IdentityProviderDetails.Validate(); err != nil {
+			invalidParams.AddNested("IdentityProviderDetails", err.(request.ErrInvalidParams))
+		}
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -1997,7 +2051,7 @@ type CreateServerOutput struct {
 	// The service-assigned ID of the SFTP server that is created.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2020,8 +2074,32 @@ type CreateUserInput struct {
 	_ struct{} `type:"structure"`
 
 	// The landing directory (folder) for a user when they log in to the server
-	// using their SFTP client. An example is /home/username .
+	// using their SFTP client.
+	//
+	// An example is <your-Amazon-S3-bucket-name>/home/username.
 	HomeDirectory *string `type:"string"`
+
+	// Logical directory mappings that specify what S3 paths and keys should be
+	// visible to your user and how you want to make them visible. You will need
+	// to specify the "Entry" and "Target" pair, where Entry shows how the path
+	// is made visible and Target is the actual S3 path. If you only specify a target,
+	// it will be displayed as is. You will need to also make sure that your AWS
+	// IAM Role provides access to paths in Target. The following is an example.
+	//
+	// '[ "/bucket2/documentation", { "Entry": "your-personal-report.pdf", "Target":
+	// "/bucket3/customized-reports/${transfer:UserName}.pdf" } ]'
+	//
+	// In most cases, you can use this value instead of the scope down policy to
+	// lock your user down to the designated home directory ("chroot"). To do this,
+	// you can set Entry to '/' and set Target to the HomeDirectory parameter value.
+	HomeDirectoryMappings []*HomeDirectoryMapEntry `min:"1" type:"list"`
+
+	// The type of landing directory (folder) you want your users' home directory
+	// to be when they log into the SFTP server. If you set it to PATH, the user
+	// will see the absolute Amazon S3 bucket paths as is in their SFTP clients.
+	// If you set it LOGICAL, you will need to provide mappings in the HomeDirectoryMappings
+	// for how you want to make S3 paths visible to your user.
+	HomeDirectoryType *string `type:"string" enum:"HomeDirectoryType"`
 
 	// A scope-down policy for your user so you can use the same IAM role across
 	// multiple users. This policy scopes down user access to portions of their
@@ -2047,13 +2125,13 @@ type CreateUserInput struct {
 	// SFTP user's transfer requests.
 	//
 	// Role is a required field
-	Role *string `type:"string" required:"true"`
+	Role *string `min:"20" type:"string" required:"true"`
 
 	// A system-assigned unique identifier for an SFTP server instance. This is
 	// the specific SFTP server that you added your user to.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// The public portion of the Secure Shell (SSH) key used to authenticate the
 	// user to the SFTP server.
@@ -2069,7 +2147,7 @@ type CreateUserInput struct {
 	// underscore, and hyphen. The user name can't start with a hyphen.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2085,17 +2163,39 @@ func (s CreateUserInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateUserInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateUserInput"}
+	if s.HomeDirectoryMappings != nil && len(s.HomeDirectoryMappings) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HomeDirectoryMappings", 1))
+	}
 	if s.Role == nil {
 		invalidParams.Add(request.NewErrParamRequired("Role"))
 	}
+	if s.Role != nil && len(*s.Role) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("Role", 20))
+	}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
+	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
 	}
 	if s.Tags != nil && len(s.Tags) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
 	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 3))
+	}
+	if s.HomeDirectoryMappings != nil {
+		for i, v := range s.HomeDirectoryMappings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "HomeDirectoryMappings", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
@@ -2117,6 +2217,18 @@ func (s *CreateUserInput) Validate() error {
 // SetHomeDirectory sets the HomeDirectory field's value.
 func (s *CreateUserInput) SetHomeDirectory(v string) *CreateUserInput {
 	s.HomeDirectory = &v
+	return s
+}
+
+// SetHomeDirectoryMappings sets the HomeDirectoryMappings field's value.
+func (s *CreateUserInput) SetHomeDirectoryMappings(v []*HomeDirectoryMapEntry) *CreateUserInput {
+	s.HomeDirectoryMappings = v
+	return s
+}
+
+// SetHomeDirectoryType sets the HomeDirectoryType field's value.
+func (s *CreateUserInput) SetHomeDirectoryType(v string) *CreateUserInput {
+	s.HomeDirectoryType = &v
 	return s
 }
 
@@ -2162,12 +2274,12 @@ type CreateUserOutput struct {
 	// The ID of the SFTP server that the user is attached to.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// A unique string that identifies a user account associated with an SFTP server.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2198,7 +2310,7 @@ type DeleteServerInput struct {
 	// A unique system-assigned identifier for an SFTP server instance.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2216,6 +2328,9 @@ func (s *DeleteServerInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DeleteServerInput"}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
+	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2251,17 +2366,17 @@ type DeleteSshPublicKeyInput struct {
 	// server instance that has the user assigned to it.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// A unique identifier used to reference your user's specific SSH key.
 	//
 	// SshPublicKeyId is a required field
-	SshPublicKeyId *string `type:"string" required:"true"`
+	SshPublicKeyId *string `min:"21" type:"string" required:"true"`
 
 	// A unique string that identifies a user whose public key is being deleted.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2280,11 +2395,20 @@ func (s *DeleteSshPublicKeyInput) Validate() error {
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
 	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
+	}
 	if s.SshPublicKeyId == nil {
 		invalidParams.Add(request.NewErrParamRequired("SshPublicKeyId"))
 	}
+	if s.SshPublicKeyId != nil && len(*s.SshPublicKeyId) < 21 {
+		invalidParams.Add(request.NewErrParamMinLen("SshPublicKeyId", 21))
+	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 3))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2332,12 +2456,12 @@ type DeleteUserInput struct {
 	// the user assigned to it.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// A unique string that identifies a user that is being deleted from the server.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2356,8 +2480,14 @@ func (s *DeleteUserInput) Validate() error {
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
 	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
+	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 3))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2398,7 +2528,7 @@ type DescribeServerInput struct {
 	// A system-assigned unique identifier for an SFTP server.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2416,6 +2546,9 @@ func (s *DescribeServerInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DescribeServerInput"}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
+	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2462,14 +2595,14 @@ type DescribeUserInput struct {
 	// assigned.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// The name of the user assigned to one or more servers. User names are part
 	// of the sign-in credentials to use the AWS Transfer for SFTP service and perform
 	// file transfer tasks.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2488,8 +2621,14 @@ func (s *DescribeUserInput) Validate() error {
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
 	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
+	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 3))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2517,7 +2656,7 @@ type DescribeUserOutput struct {
 	// assigned.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// An array containing the properties of the user account for the ServerID value
 	// that you specified.
@@ -2588,11 +2727,11 @@ type DescribedServer struct {
 	// This property is an AWS Identity and Access Management (IAM) entity that
 	// allows the server to turn on Amazon CloudWatch logging for Amazon S3 events.
 	// When set, user activity can be viewed in your CloudWatch logs.
-	LoggingRole *string `type:"string"`
+	LoggingRole *string `min:"20" type:"string"`
 
 	// This property is a unique system-assigned identifier for the SFTP server
 	// that you instantiate.
-	ServerId *string `type:"string"`
+	ServerId *string `min:"19" type:"string"`
 
 	// The condition of the SFTP server for the server that was described. A value
 	// of ONLINE indicates that the server can accept jobs and transfer files. A
@@ -2701,8 +2840,31 @@ type DescribedUser struct {
 
 	// This property specifies the landing directory (or folder), which is the location
 	// that files are written to or read from in an Amazon S3 bucket for the described
-	// user. An example is /bucket_name/home/username .
+	// user. An example is /your s3 bucket name/home/username .
 	HomeDirectory *string `type:"string"`
+
+	// Logical directory mappings that you specified for what S3 paths and keys
+	// should be visible to your user and how you want to make them visible. You
+	// will need to specify the "Entry" and "Target" pair, where Entry shows how
+	// the path is made visible and Target is the actual S3 path. If you only specify
+	// a target, it will be displayed as is. You will need to also make sure that
+	// your AWS IAM Role provides access to paths in Target.
+	//
+	// In most cases, you can use this value instead of the scope down policy to
+	// lock your user down to the designated home directory ("chroot"). To do this,
+	// you can set Entry to '/' and set Target to the HomeDirectory parameter value.
+	//
+	// In most cases, you can use this value instead of the scope down policy to
+	// lock your user down to the designated home directory ("chroot"). To do this,
+	// you can set Entry to '/' and set Target to the HomeDirectory parameter value.
+	HomeDirectoryMappings []*HomeDirectoryMapEntry `min:"1" type:"list"`
+
+	// The type of landing directory (folder) you mapped for your users' to see
+	// when they log into the SFTP server. If you set it to PATH, the user will
+	// see the absolute Amazon S3 bucket paths as is in their SFTP clients. If you
+	// set it LOGICAL, you will need to provide mappings in the HomeDirectoryMappings
+	// for how you want to make S3 paths visible to your user.
+	HomeDirectoryType *string `type:"string" enum:"HomeDirectoryType"`
 
 	// Specifies the name of the policy in use for the described user.
 	Policy *string `type:"string"`
@@ -2713,7 +2875,7 @@ type DescribedUser struct {
 	// into and out of your Amazon S3 bucket or buckets. The IAM role should also
 	// contain a trust relationship that allows the SFTP server to access your resources
 	// when servicing your SFTP user's transfer requests.
-	Role *string `type:"string"`
+	Role *string `min:"20" type:"string"`
 
 	// This property contains the public key portion of the Secure Shell (SSH) keys
 	// stored for the described user.
@@ -2726,7 +2888,7 @@ type DescribedUser struct {
 	// This property is the name of the user that was requested to be described.
 	// User names are used for authentication purposes. This is the string that
 	// will be used by your user when they log in to your SFTP server.
-	UserName *string `type:"string"`
+	UserName *string `min:"3" type:"string"`
 }
 
 // String returns the string representation
@@ -2748,6 +2910,18 @@ func (s *DescribedUser) SetArn(v string) *DescribedUser {
 // SetHomeDirectory sets the HomeDirectory field's value.
 func (s *DescribedUser) SetHomeDirectory(v string) *DescribedUser {
 	s.HomeDirectory = &v
+	return s
+}
+
+// SetHomeDirectoryMappings sets the HomeDirectoryMappings field's value.
+func (s *DescribedUser) SetHomeDirectoryMappings(v []*HomeDirectoryMapEntry) *DescribedUser {
+	s.HomeDirectoryMappings = v
+	return s
+}
+
+// SetHomeDirectoryType sets the HomeDirectoryType field's value.
+func (s *DescribedUser) SetHomeDirectoryType(v string) *DescribedUser {
+	s.HomeDirectoryType = &v
 	return s
 }
 
@@ -2787,7 +2961,7 @@ type EndpointDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the VPC endpoint.
-	VpcEndpointId *string `type:"string"`
+	VpcEndpointId *string `min:"22" type:"string"`
 }
 
 // String returns the string representation
@@ -2800,9 +2974,75 @@ func (s EndpointDetails) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EndpointDetails) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EndpointDetails"}
+	if s.VpcEndpointId != nil && len(*s.VpcEndpointId) < 22 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcEndpointId", 22))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetVpcEndpointId sets the VpcEndpointId field's value.
 func (s *EndpointDetails) SetVpcEndpointId(v string) *EndpointDetails {
 	s.VpcEndpointId = &v
+	return s
+}
+
+// Represents an object that contains entries and a targets for HomeDirectoryMappings.
+type HomeDirectoryMapEntry struct {
+	_ struct{} `type:"structure"`
+
+	// Represents an entry and a target for HomeDirectoryMappings.
+	//
+	// Entry is a required field
+	Entry *string `type:"string" required:"true"`
+
+	// Represents the map target that is used in a HomeDirectorymapEntry.
+	//
+	// Target is a required field
+	Target *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HomeDirectoryMapEntry) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HomeDirectoryMapEntry) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HomeDirectoryMapEntry) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HomeDirectoryMapEntry"}
+	if s.Entry == nil {
+		invalidParams.Add(request.NewErrParamRequired("Entry"))
+	}
+	if s.Target == nil {
+		invalidParams.Add(request.NewErrParamRequired("Target"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEntry sets the Entry field's value.
+func (s *HomeDirectoryMapEntry) SetEntry(v string) *HomeDirectoryMapEntry {
+	s.Entry = &v
+	return s
+}
+
+// SetTarget sets the Target field's value.
+func (s *HomeDirectoryMapEntry) SetTarget(v string) *HomeDirectoryMapEntry {
+	s.Target = &v
 	return s
 }
 
@@ -2813,7 +3053,7 @@ type IdentityProviderDetails struct {
 
 	// The InvocationRole parameter provides the type of InvocationRole used to
 	// authenticate the user account.
-	InvocationRole *string `type:"string"`
+	InvocationRole *string `min:"20" type:"string"`
 
 	// The Url parameter provides contains the location of the service endpoint
 	// used to authenticate users.
@@ -2828,6 +3068,19 @@ func (s IdentityProviderDetails) String() string {
 // GoString returns the string representation
 func (s IdentityProviderDetails) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *IdentityProviderDetails) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "IdentityProviderDetails"}
+	if s.InvocationRole != nil && len(*s.InvocationRole) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("InvocationRole", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetInvocationRole sets the InvocationRole field's value.
@@ -2848,7 +3101,7 @@ type ImportSshPublicKeyInput struct {
 	// A system-assigned unique identifier for an SFTP server.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// The public key portion of an SSH key pair.
 	//
@@ -2858,7 +3111,7 @@ type ImportSshPublicKeyInput struct {
 	// The name of the user account that is assigned to one or more servers.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -2877,11 +3130,17 @@ func (s *ImportSshPublicKeyInput) Validate() error {
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
 	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
+	}
 	if s.SshPublicKeyBody == nil {
 		invalidParams.Add(request.NewErrParamRequired("SshPublicKeyBody"))
 	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 3))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -2917,18 +3176,18 @@ type ImportSshPublicKeyOutput struct {
 	// A system-assigned unique identifier for an SFTP server.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// This identifier is the name given to a public key by the system that was
 	// imported.
 	//
 	// SshPublicKeyId is a required field
-	SshPublicKeyId *string `type:"string" required:"true"`
+	SshPublicKeyId *string `min:"21" type:"string" required:"true"`
 
 	// A user name assigned to the ServerID value that you specified.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3175,7 +3434,7 @@ type ListUsersInput struct {
 	// server that has users assigned to it.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3199,6 +3458,9 @@ func (s *ListUsersInput) Validate() error {
 	}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
+	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3237,7 +3499,7 @@ type ListUsersOutput struct {
 	// assigned to.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// Returns the user accounts and their properties for the ServerId value that
 	// you specify.
@@ -3296,11 +3558,11 @@ type ListedServer struct {
 
 	// The AWS Identity and Access Management entity that allows the server to turn
 	// on Amazon CloudWatch logging.
-	LoggingRole *string `type:"string"`
+	LoggingRole *string `min:"20" type:"string"`
 
 	// This value is the unique system assigned identifier for the SFTP servers
 	// that were listed.
-	ServerId *string `type:"string"`
+	ServerId *string `min:"19" type:"string"`
 
 	// This property describes the condition of the SFTP server for the server that
 	// was described. A value of ONLINE> indicates that the server can accept jobs
@@ -3383,18 +3645,25 @@ type ListedUser struct {
 	// an Amazon S3 bucket for the user you specify by their ARN.
 	HomeDirectory *string `type:"string"`
 
+	// The type of landing directory (folder) you mapped for your users' home directory.
+	// If you set it to PATH, the user will see the absolute Amazon S3 bucket paths
+	// as is in their SFTP clients. If you set it LOGICAL, you will need to provide
+	// mappings in the HomeDirectoryMappings for how you want to make S3 paths visible
+	// to your user.
+	HomeDirectoryType *string `type:"string" enum:"HomeDirectoryType"`
+
 	// The role in use by this user. A role is an AWS Identity and Access Management
 	// (IAM) entity that, in this case, allows the SFTP server to act on a user's
 	// behalf. It allows the server to inherit the trust relationship that enables
 	// that user to perform file operations to their Amazon S3 bucket.
-	Role *string `type:"string"`
+	Role *string `min:"20" type:"string"`
 
 	// This value is the number of SSH public keys stored for the user you specified.
 	SshPublicKeyCount *int64 `type:"integer"`
 
 	// The name of the user whose ARN was specified. User names are used for authentication
 	// purposes.
-	UserName *string `type:"string"`
+	UserName *string `min:"3" type:"string"`
 }
 
 // String returns the string representation
@@ -3416,6 +3685,12 @@ func (s *ListedUser) SetArn(v string) *ListedUser {
 // SetHomeDirectory sets the HomeDirectory field's value.
 func (s *ListedUser) SetHomeDirectory(v string) *ListedUser {
 	s.HomeDirectory = &v
+	return s
+}
+
+// SetHomeDirectoryType sets the HomeDirectoryType field's value.
+func (s *ListedUser) SetHomeDirectoryType(v string) *ListedUser {
+	s.HomeDirectoryType = &v
 	return s
 }
 
@@ -3458,7 +3733,7 @@ type SshPublicKey struct {
 	// The SshPublicKeyId parameter contains the identifier of the public key.
 	//
 	// SshPublicKeyId is a required field
-	SshPublicKeyId *string `type:"string" required:"true"`
+	SshPublicKeyId *string `min:"21" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3495,7 +3770,7 @@ type StartServerInput struct {
 	// A system-assigned unique identifier for an SFTP server that you start.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3513,6 +3788,9 @@ func (s *StartServerInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "StartServerInput"}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
+	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3547,7 +3825,7 @@ type StopServerInput struct {
 	// A system-assigned unique identifier for an SFTP server that you stopped.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3565,6 +3843,9 @@ func (s *StopServerInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "StopServerInput"}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
+	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3744,12 +4025,12 @@ type TestIdentityProviderInput struct {
 	// method is tested with a user name and password.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// This request parameter is the name of the user account to be tested.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 
 	// The password of the user account to be tested.
 	UserPassword *string `type:"string" sensitive:"true"`
@@ -3771,8 +4052,14 @@ func (s *TestIdentityProviderInput) Validate() error {
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
 	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
+	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 3))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3966,7 +4253,7 @@ type UpdateServerInput struct {
 	// user account is assigned to.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3984,6 +4271,19 @@ func (s *UpdateServerInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateServerInput"}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
+	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
+	}
+	if s.EndpointDetails != nil {
+		if err := s.EndpointDetails.Validate(); err != nil {
+			invalidParams.AddNested("EndpointDetails", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.IdentityProviderDetails != nil {
+		if err := s.IdentityProviderDetails.Validate(); err != nil {
+			invalidParams.AddNested("IdentityProviderDetails", err.(request.ErrInvalidParams))
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4035,7 +4335,7 @@ type UpdateServerOutput struct {
 	// is assigned to.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -4058,8 +4358,32 @@ type UpdateUserInput struct {
 	_ struct{} `type:"structure"`
 
 	// A parameter that specifies the landing directory (folder) for a user when
-	// they log in to the server using their client. An example is /home/username .
+	// they log in to the server using their client.
+	//
+	// An example is <your-Amazon-S3-bucket-name>/home/username.
 	HomeDirectory *string `type:"string"`
+
+	// Logical directory mappings that specify what S3 paths and keys should be
+	// visible to your user and how you want to make them visible. You will need
+	// to specify the "Entry" and "Target" pair, where Entry shows how the path
+	// is made visible and Target is the actual S3 path. If you only specify a target,
+	// it will be displayed as is. You will need to also make sure that your AWS
+	// IAM Role provides access to paths in Target. The following is an example.
+	//
+	// '[ "/bucket2/documentation", { "Entry": "your-personal-report.pdf", "Target":
+	// "/bucket3/customized-reports/${transfer:UserName}.pdf" } ]'
+	//
+	// In most cases, you can use this value instead of the scope down policy to
+	// lock your user down to the designated home directory ("chroot"). To do this,
+	// you can set Entry to '/' and set Target to the HomeDirectory parameter value.
+	HomeDirectoryMappings []*HomeDirectoryMapEntry `min:"1" type:"list"`
+
+	// The type of landing directory (folder) you want your users' home directory
+	// to be when they log into the SFTP serve. If you set it to PATH, the user
+	// will see the absolute Amazon S3 bucket paths as is in their SFTP clients.
+	// If you set it LOGICAL, you will need to provide mappings in the HomeDirectoryMappings
+	// for how you want to make S3 paths visible to your user.
+	HomeDirectoryType *string `type:"string" enum:"HomeDirectoryType"`
 
 	// Allows you to supply a scope-down policy for your user so you can use the
 	// same AWS Identity and Access Management (IAM) role across multiple users.
@@ -4084,13 +4408,13 @@ type UpdateUserInput struct {
 	// S3 bucket or buckets. The IAM role should also contain a trust relationship
 	// that allows the Secure File Transfer Protocol (SFTP) server to access your
 	// resources when servicing your SFTP user's transfer requests.
-	Role *string `type:"string"`
+	Role *string `min:"20" type:"string"`
 
 	// A system-assigned unique identifier for an SFTP server instance that the
 	// user account is assigned to.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// A unique string that identifies a user and is associated with a server as
 	// specified by the ServerId. This is the string that will be used by your user
@@ -4099,7 +4423,7 @@ type UpdateUserInput struct {
 	// A-Z, 0-9, underscore, and hyphen. The user name can't start with a hyphen.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -4115,11 +4439,33 @@ func (s UpdateUserInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateUserInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateUserInput"}
+	if s.HomeDirectoryMappings != nil && len(s.HomeDirectoryMappings) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HomeDirectoryMappings", 1))
+	}
+	if s.Role != nil && len(*s.Role) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("Role", 20))
+	}
 	if s.ServerId == nil {
 		invalidParams.Add(request.NewErrParamRequired("ServerId"))
 	}
+	if s.ServerId != nil && len(*s.ServerId) < 19 {
+		invalidParams.Add(request.NewErrParamMinLen("ServerId", 19))
+	}
 	if s.UserName == nil {
 		invalidParams.Add(request.NewErrParamRequired("UserName"))
+	}
+	if s.UserName != nil && len(*s.UserName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("UserName", 3))
+	}
+	if s.HomeDirectoryMappings != nil {
+		for i, v := range s.HomeDirectoryMappings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "HomeDirectoryMappings", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -4131,6 +4477,18 @@ func (s *UpdateUserInput) Validate() error {
 // SetHomeDirectory sets the HomeDirectory field's value.
 func (s *UpdateUserInput) SetHomeDirectory(v string) *UpdateUserInput {
 	s.HomeDirectory = &v
+	return s
+}
+
+// SetHomeDirectoryMappings sets the HomeDirectoryMappings field's value.
+func (s *UpdateUserInput) SetHomeDirectoryMappings(v []*HomeDirectoryMapEntry) *UpdateUserInput {
+	s.HomeDirectoryMappings = v
+	return s
+}
+
+// SetHomeDirectoryType sets the HomeDirectoryType field's value.
+func (s *UpdateUserInput) SetHomeDirectoryType(v string) *UpdateUserInput {
+	s.HomeDirectoryType = &v
 	return s
 }
 
@@ -4167,13 +4525,13 @@ type UpdateUserOutput struct {
 	// user account is assigned to.
 	//
 	// ServerId is a required field
-	ServerId *string `type:"string" required:"true"`
+	ServerId *string `min:"19" type:"string" required:"true"`
 
 	// The unique identifier for a user that is assigned to the SFTP server instance
 	// that was specified in the request.
 	//
 	// UserName is a required field
-	UserName *string `type:"string" required:"true"`
+	UserName *string `min:"3" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -4204,6 +4562,14 @@ const (
 
 	// EndpointTypeVpcEndpoint is a EndpointType enum value
 	EndpointTypeVpcEndpoint = "VPC_ENDPOINT"
+)
+
+const (
+	// HomeDirectoryTypePath is a HomeDirectoryType enum value
+	HomeDirectoryTypePath = "PATH"
+
+	// HomeDirectoryTypeLogical is a HomeDirectoryType enum value
+	HomeDirectoryTypeLogical = "LOGICAL"
 )
 
 // Returns information related to the type of user authentication that is in

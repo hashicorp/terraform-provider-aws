@@ -525,6 +525,7 @@ func TestAccAWSAcmCertificate_tags(t *testing.T) {
 	})
 }
 
+//lintignore:AT002
 func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 	resourceName := "aws_acm_certificate.test"
 
@@ -575,8 +576,8 @@ func TestAccAWSAcmCertificate_imported_DomainName(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7103
-func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) {
+//lintignore:AT002
+func TestAccAWSAcmCertificate_imported_IpAddress(t *testing.T) { // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7103
 	resourceName := "aws_acm_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{

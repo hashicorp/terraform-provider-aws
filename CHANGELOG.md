@@ -1,3 +1,22 @@
+## 2.34.0 (October 31, 2019)
+
+ENHANCEMENTS:
+
+* resource/aws_ecr_repository: Add `image_scanning_configuration` configuration block (support image scanning on push) ([#10671](https://github.com/terraform-providers/terraform-provider-aws/issues/10671))
+* resource/aws_elasticache_replication_group: Add `kms_key_id` argument (support KMS encryption) ([#10380](https://github.com/terraform-providers/terraform-provider-aws/issues/10380))
+* resource/aws_flow_log: Add `log_format` argument ([#10374](https://github.com/terraform-providers/terraform-provider-aws/issues/10374))
+* resource/aws_glue_job: Add `glue_version` argument ([#10237](https://github.com/terraform-providers/terraform-provider-aws/issues/10237))
+* resource/aws_storagegateway_smb_file_share: Add `tags` argument ([#10620](https://github.com/terraform-providers/terraform-provider-aws/issues/10620))
+
+BUG FIXES:
+
+* resource/aws_backup_plan: Correctly handle changes to `recovery_point_tags` arguments ([#10641](https://github.com/terraform-providers/terraform-provider-aws/issues/10641))
+* resource/aws_backup_plan: Prevent `diffs didn't match` errors with `rule` configuration blocks ([#10641](https://github.com/terraform-providers/terraform-provider-aws/issues/10641))
+* resource/aws_cloudhsm_v2_cluster: Ensure multiple tag configurations are applied correctly ([#10309](https://github.com/terraform-providers/terraform-provider-aws/issues/10309))
+* resource/aws_cloudhsm_v2_cluster: Perform drift detection with tags ([#10309](https://github.com/terraform-providers/terraform-provider-aws/issues/10309))
+* resource/aws_dx_gateway_association: Fix backwards compatibility issue with missing `dx_gateway_association_id` attribute ([#8776](https://github.com/terraform-providers/terraform-provider-aws/issues/8776))
+* resource/aws_s3_bucket: Bypass `MethodNotAllowed` errors for Object Lock Configuration on read (support AWS C2S) ([#10657](https://github.com/terraform-providers/terraform-provider-aws/issues/10657))
+
 ## 2.33.0 (October 17, 2019)
 
 FEATURES:

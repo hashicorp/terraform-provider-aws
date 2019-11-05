@@ -49,11 +49,11 @@ func New(p client.ConfigProvider, cfgs ...*aws.Config) *Pricing {
 	if c.SigningNameDerived || len(c.SigningName) == 0 {
 		c.SigningName = "pricing"
 	}
-	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
+	return newClient(*c.Config, c.Handlers, c.PartitionID, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
-func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *Pricing {
+func newClient(cfg aws.Config, handlers request.Handlers, partitionID, endpoint, signingRegion, signingName string) *Pricing {
 	svc := &Pricing{
 		Client: client.New(
 			cfg,
@@ -62,6 +62,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
+				PartitionID:   partitionID,
 				Endpoint:      endpoint,
 				APIVersion:    "2017-10-15",
 				JSONVersion:   "1.1",
