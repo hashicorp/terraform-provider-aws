@@ -41,8 +41,10 @@ func TestAccAWSGreengrassCoreDefinition_DefinitionVersion(t *testing.T) {
 	rString := acctest.RandString(8)
 	resourceName := "aws_greengrass_core_definition.test"
 
-	// core := map[string]interface{}{
-	// }
+	core := map[string]interface{}{
+		"sync_shadow": false,
+		"id":          "core_id",
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,7 +56,7 @@ func TestAccAWSGreengrassCoreDefinition_DefinitionVersion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("core_definition_%s", rString)),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					// testAccCheckGreengrassCore_checkCore(resourceName, core),
+					testAccCheckGreengrassCore_checkCore(resourceName, core),
 				),
 			},
 			{
@@ -66,38 +68,64 @@ func TestAccAWSGreengrassCoreDefinition_DefinitionVersion(t *testing.T) {
 	})
 }
 
-// func testAccCheckGreengrassCore_checkCore(n string, expectedCore map[string]interface{}) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[n]
-// 		if !ok {
-// 			return fmt.Errorf("Not found: %s", n)
-// 		}
+func testAccCheckGreengrassCore_checkCore(n string, expectedCore map[string]interface{}) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-// 		if rs.Primary.ID == "" {
-// 			return fmt.Errorf("No Greengrass Core Definition ID is set")
-// 		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Greengrass Core Definition ID is set")
+		}
 
-// 		conn := testAccProvider.Meta().(*AWSClient).greengrassconn
+		conn := testAccProvider.Meta().(*AWSClient).greengrassconn
 
-// 		getCoreInput := &greengrass.GetCoreDefinitionInput{
-// 			CoreDefinitionId: aws.String(rs.Primary.ID),
-// 		}
-// 		definitionOut, err := conn.GetCoreDefinition(getCoreInput)
+		getCoreInput := &greengrass.GetCoreDefinitionInput{
+			CoreDefinitionId: aws.String(rs.Primary.ID),
+		}
+		definitionOut, err := conn.GetCoreDefinition(getCoreInput)
 
-// 		if err != nil {
-// 			return err
-// 		}
+		if err != nil {
+			return err
+		}
 
-// 		getVersionInput := &greengrass.GetCoreDefinitionVersionInput{
-// 			CoreDefinitionId:        aws.String(rs.Primary.ID),
-// 			CoreDefinitionVersionId: definitionOut.LatestVersion,
-// 		}
-// 		versionOut, err := conn.GetCoreDefinitionVersion(getVersionInput)
-// 		core := versionOut.Definition.Cores[0]
+		getVersionInput := &greengrass.GetCoreDefinitionVersionInput{
+			CoreDefinitionId:        aws.String(rs.Primary.ID),
+			CoreDefinitionVersionId: definitionOut.LatestVersion,
+		}
+		versionOut, err := conn.GetCoreDefinitionVersion(getVersionInput)
+		core := versionOut.Definition.Cores[0]
 
-// 		return nil
-// 	}
-// }
+		expectedSyncShadow := expectedCore["sync_shadow"].(bool)
+		if *core.SyncShadow != expectedSyncShadow {
+			return fmt.Errorf("Sync Shadow %t is not equal expected %t", *core.SyncShadow, expectedSyncShadow)
+		}
+
+		expectedCoreId := expectedCore["id"].(string)
+		if *core.Id != expectedCoreId {
+			return fmt.Errorf("Core Id %s is not equal expected %s", *core.Id, expectedCoreId)
+		}
+
+		expectedCertArn, err := getAttrFromResourceState("aws_iot_certificate.foo_cert", "arn", s)
+		if err != nil {
+			return err
+		}
+		if *core.CertificateArn != expectedCertArn {
+			return fmt.Errorf("Core Certificate Arn %s is not equal expected %s", *core.CertificateArn, expectedCertArn)
+		}
+
+		expectedThingArn, err := getAttrFromResourceState("aws_iot_thing.test", "arn", s)
+		if err != nil {
+			return err
+		}
+		if *core.ThingArn != expectedThingArn {
+			return fmt.Errorf("Core Thing Arn %s is not equal expected %s", *core.ThingArn, expectedThingArn)
+		}
+
+		return nil
+	}
+}
 
 func testAccCheckAWSGreengrassCoreDefinitionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).greengrassconn
