@@ -2141,19 +2141,35 @@ func (s *ComputeEnvironmentOrder) SetOrder(v int64) *ComputeEnvironmentOrder {
 type ComputeResource struct {
 	_ struct{} `type:"structure"`
 
+	// The allocation strategy to use for the compute resource in case not enough
+	// instances of the best fitting instance type can be allocated. This could
+	// be due to availability of the instance type in the region or Amazon EC2 service
+	// limits (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html).
+	// If this is not specified, the default is BEST_FIT, which will use only the
+	// best fitting instance type, waiting for additional capacity if it's not available.
+	// This allocation strategy keeps costs lower but can limit scaling. BEST_FIT_PROGRESSIVE
+	// will select an additional instance type that is large enough to meet the
+	// requirements of the jobs in the queue, with a preference for an instance
+	// type with a lower cost. SPOT_CAPACITY_OPTIMIZED is only available for Spot
+	// Instance compute resources and will select an additional instance type that
+	// is large enough to meet the requirements of the jobs in the queue, with a
+	// preference for an instance type that is less likely to be interrupted.
+	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"CRAllocationStrategy"`
+
 	// The maximum percentage that a Spot Instance price can be when compared with
 	// the On-Demand price for that instance type before instances are launched.
 	// For example, if your maximum percentage is 20%, then the Spot price must
-	// be below 20% of the current On-Demand price for that EC2 instance. You always
-	// pay the lowest (market) price and never more than your maximum percentage.
-	// If you leave this field empty, the default value is 100% of the On-Demand
-	// price.
+	// be below 20% of the current On-Demand price for that Amazon EC2 instance.
+	// You always pay the lowest (market) price and never more than your maximum
+	// percentage. If you leave this field empty, the default value is 100% of the
+	// On-Demand price.
 	BidPercentage *int64 `locationName:"bidPercentage" type:"integer"`
 
-	// The desired number of EC2 vCPUS in the compute environment.
+	// The desired number of Amazon EC2 vCPUS in the compute environment.
 	DesiredvCpus *int64 `locationName:"desiredvCpus" type:"integer"`
 
-	// The EC2 key pair that is used for instances launched in the compute environment.
+	// The Amazon EC2 key pair that is used for instances launched in the compute
+	// environment.
 	Ec2KeyPair *string `locationName:"ec2KeyPair" type:"string"`
 
 	// The Amazon Machine Image (AMI) ID used for instances launched in the compute
@@ -2170,8 +2186,8 @@ type ComputeResource struct {
 	InstanceRole *string `locationName:"instanceRole" type:"string" required:"true"`
 
 	// The instances types that may be launched. You can specify instance families
-	// to launch any instance type within those families (for example, c4 or p3),
-	// or you can specify specific sizes within a family (such as c4.8xlarge). You
+	// to launch any instance type within those families (for example, c5 or p3),
+	// or you can specify specific sizes within a family (such as c5.8xlarge). You
 	// can also choose optimal to pick instance types (from the C, M, and R instance
 	// families) on the fly that match the demand of your job queues.
 	//
@@ -2186,13 +2202,13 @@ type ComputeResource struct {
 	// in the AWS Batch User Guide.
 	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
 
-	// The maximum number of EC2 vCPUs that an environment can reach.
+	// The maximum number of Amazon EC2 vCPUs that an environment can reach.
 	//
 	// MaxvCpus is a required field
 	MaxvCpus *int64 `locationName:"maxvCpus" type:"integer" required:"true"`
 
-	// The minimum number of EC2 vCPUs that an environment should maintain (even
-	// if the compute environment is DISABLED).
+	// The minimum number of Amazon EC2 vCPUs that an environment should maintain
+	// (even if the compute environment is DISABLED).
 	//
 	// MinvCpus is a required field
 	MinvCpus *int64 `locationName:"minvCpus" type:"integer" required:"true"`
@@ -2206,8 +2222,11 @@ type ComputeResource struct {
 	// in the Amazon EC2 User Guide for Linux Instances.
 	PlacementGroup *string `locationName:"placementGroup" type:"string"`
 
-	// The EC2 security group that is associated with instances launched in the
-	// compute environment.
+	// The Amazon EC2 security groups associated with instances launched in the
+	// compute environment. One or more security groups must be specified, either
+	// in securityGroupIds or using a launch template referenced in launchTemplate.
+	// If security groups are specified using both securityGroupIds and launchTemplate,
+	// the values in securityGroupIds will be used.
 	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied
@@ -2271,6 +2290,12 @@ func (s *ComputeResource) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *ComputeResource) SetAllocationStrategy(v string) *ComputeResource {
+	s.AllocationStrategy = &v
+	return s
 }
 
 // SetBidPercentage sets the BidPercentage field's value.
@@ -2368,13 +2393,13 @@ func (s *ComputeResource) SetType(v string) *ComputeResource {
 type ComputeResourceUpdate struct {
 	_ struct{} `type:"structure"`
 
-	// The desired number of EC2 vCPUS in the compute environment.
+	// The desired number of Amazon EC2 vCPUS in the compute environment.
 	DesiredvCpus *int64 `locationName:"desiredvCpus" type:"integer"`
 
-	// The maximum number of EC2 vCPUs that an environment can reach.
+	// The maximum number of Amazon EC2 vCPUs that an environment can reach.
 	MaxvCpus *int64 `locationName:"maxvCpus" type:"integer"`
 
-	// The minimum number of EC2 vCPUs that an environment should maintain.
+	// The minimum number of Amazon EC2 vCPUs that an environment should maintain.
 	MinvCpus *int64 `locationName:"minvCpus" type:"integer"`
 }
 
@@ -6061,6 +6086,17 @@ const (
 
 	// CETypeUnmanaged is a CEType enum value
 	CETypeUnmanaged = "UNMANAGED"
+)
+
+const (
+	// CRAllocationStrategyBestFit is a CRAllocationStrategy enum value
+	CRAllocationStrategyBestFit = "BEST_FIT"
+
+	// CRAllocationStrategyBestFitProgressive is a CRAllocationStrategy enum value
+	CRAllocationStrategyBestFitProgressive = "BEST_FIT_PROGRESSIVE"
+
+	// CRAllocationStrategySpotCapacityOptimized is a CRAllocationStrategy enum value
+	CRAllocationStrategySpotCapacityOptimized = "SPOT_CAPACITY_OPTIMIZED"
 )
 
 const (
