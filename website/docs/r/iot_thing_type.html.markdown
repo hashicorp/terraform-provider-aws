@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iot_thing_type"
-sidebar_current: "docs-aws-resource-iot-thing-type"
 description: |-
     Creates and manages an AWS IoT Thing Type.
 ---

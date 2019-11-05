@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ses_identity_policy"
-sidebar_current: "docs-aws-resource-ses-identity-policy"
 description: |-
   Manages a SES Identity Policy
 ---
@@ -20,7 +19,7 @@ resource "aws_ses_domain_identity" "example" {
 data "aws_iam_policy_document" "example" {
   statement {
     actions   = ["SES:SendEmail", "SES:SendRawEmail"]
-    resources = ["${aws_ses_domain_identity.test.arn}"]
+    resources = ["${aws_ses_domain_identity.example.arn}"]
 
     principals {
       identifiers = ["*"]
@@ -49,5 +48,5 @@ The following arguments are supported:
 SES Identity Policies can be imported using the identity and policy name, separated by a pipe character (`|`), e.g.
 
 ```
-$ terraform import aws_ses_identity_policy.test 'example.com|example'
+$ terraform import aws_ses_identity_policy.example 'example.com|example'
 ```

@@ -71,7 +71,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 						continue
 					case *types.Named:
 						// HasSuffix here due to vendoring
-						if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform/helper/schema") {
+						if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform-plugin-sdk/helper/schema") {
 							continue
 						}
 

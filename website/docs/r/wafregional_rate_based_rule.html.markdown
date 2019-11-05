@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_wafregional_rate_based_rule"
-sidebar_current: "docs-aws-resource-wafregional-rate-based-rule"
 description: |-
   Provides a AWS WAF Regional rate based rule resource.
 ---

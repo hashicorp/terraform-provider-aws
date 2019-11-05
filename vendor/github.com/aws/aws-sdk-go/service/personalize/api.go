@@ -5160,6 +5160,18 @@ type CreateSolutionVersionInput struct {
 	//
 	// SolutionArn is a required field
 	SolutionArn *string `locationName:"solutionArn" type:"string" required:"true"`
+
+	// The scope of training to be performed when creating the solution version.
+	// The FULL option trains the solution version based on the entirety of the
+	// input solution's training data, while the UPDATE option processes only the
+	// data that has changed in comparison to the input solution. Choose UPDATE
+	// when you want to incrementally update your solution version instead of creating
+	// an entirely new one.
+	//
+	// The UPDATE option can only be used when you already have an active solution
+	// version created from the input solution using the FULL option and the input
+	// solution was trained with the native-recipe-hrnn-coldstart recipe.
+	TrainingMode *string `locationName:"trainingMode" type:"string" enum:"TrainingMode"`
 }
 
 // String returns the string representation
@@ -5188,6 +5200,12 @@ func (s *CreateSolutionVersionInput) Validate() error {
 // SetSolutionArn sets the SolutionArn field's value.
 func (s *CreateSolutionVersionInput) SetSolutionArn(v string) *CreateSolutionVersionInput {
 	s.SolutionArn = &v
+	return s
+}
+
+// SetTrainingMode sets the TrainingMode field's value.
+func (s *CreateSolutionVersionInput) SetTrainingMode(v string) *CreateSolutionVersionInput {
+	s.TrainingMode = &v
 	return s
 }
 
@@ -7492,10 +7510,12 @@ func (s *HPOObjective) SetType(v string) *HPOObjective {
 type HPOResourceConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of training jobs.
+	// The maximum number of training jobs when you create a solution version. The
+	// maximum value for maxNumberOfTrainingJobs is 40.
 	MaxNumberOfTrainingJobs *string `locationName:"maxNumberOfTrainingJobs" type:"string"`
 
-	// The maximum number of parallel training jobs.
+	// The maximum number of parallel training jobs when you create a solution version.
+	// The maximum value for maxParallelTrainingJobs is 10.
 	MaxParallelTrainingJobs *string `locationName:"maxParallelTrainingJobs" type:"string"`
 }
 
@@ -8891,15 +8911,15 @@ type SolutionVersion struct {
 	// the model.
 	EventType *string `locationName:"eventType" type:"string"`
 
-	// If training a solution version fails, the reason behind the failure.
+	// If training a solution version fails, the reason for the failure.
 	FailureReason *string `locationName:"failureReason" type:"string"`
 
 	// The date and time (in Unix time) that the solution was last updated.
 	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
 
-	// When true, Amazon Personalize performs a search for the most optimal recipe
-	// according to the solution configuration. When false (the default), Amazon
-	// Personalize uses recipeArn.
+	// When true, Amazon Personalize searches for the most optimal recipe according
+	// to the solution configuration. When false (the default), Amazon Personalize
+	// uses recipeArn.
 	PerformAutoML *bool `locationName:"performAutoML" type:"boolean"`
 
 	// Whether to perform hyperparameter optimization (HPO) on the chosen recipe.
@@ -8922,11 +8942,30 @@ type SolutionVersion struct {
 	//
 	// A solution version can be in one of the following states:
 	//
-	//    * CREATE PENDING > CREATE IN_PROGRESS > ACTIVE -or- CREATE FAILED
+	//    * CREATE PENDING
+	//
+	//    * CREATE IN_PROGRESS
+	//
+	//    * ACTIVE
+	//
+	//    * CREATE FAILED
 	Status *string `locationName:"status" type:"string"`
 
-	// The time used to train the model.
+	// The time used to train the model. You are billed for the time it takes to
+	// train a model. This field is visible only after Amazon Personalize successfully
+	// trains a model.
 	TrainingHours *float64 `locationName:"trainingHours" type:"double"`
+
+	// The scope of training used to create the solution version. The FULL option
+	// trains the solution version based on the entirety of the input solution's
+	// training data, while the UPDATE option processes only the training data that
+	// has changed since the creation of the last solution version. Choose UPDATE
+	// when you want to start recommending items added to the dataset without retraining
+	// the model.
+	//
+	// The UPDATE option can only be used after you've created a solution version
+	// with the FULL option and the training solution uses the native-recipe-hrnn-coldstart.
+	TrainingMode *string `locationName:"trainingMode" type:"string" enum:"TrainingMode"`
 }
 
 // String returns the string representation
@@ -9014,6 +9053,12 @@ func (s *SolutionVersion) SetStatus(v string) *SolutionVersion {
 // SetTrainingHours sets the TrainingHours field's value.
 func (s *SolutionVersion) SetTrainingHours(v float64) *SolutionVersion {
 	s.TrainingHours = &v
+	return s
+}
+
+// SetTrainingMode sets the TrainingMode field's value.
+func (s *SolutionVersion) SetTrainingMode(v string) *SolutionVersion {
+	s.TrainingMode = &v
 	return s
 }
 
@@ -9168,4 +9213,12 @@ func (s *UpdateCampaignOutput) SetCampaignArn(v string) *UpdateCampaignOutput {
 const (
 	// RecipeProviderService is a RecipeProvider enum value
 	RecipeProviderService = "SERVICE"
+)
+
+const (
+	// TrainingModeFull is a TrainingMode enum value
+	TrainingModeFull = "FULL"
+
+	// TrainingModeUpdate is a TrainingMode enum value
+	TrainingModeUpdate = "UPDATE"
 )

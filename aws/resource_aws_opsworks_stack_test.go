@@ -4,19 +4,23 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 )
 
-func TestAccAWSOpsworksStack_ImportBasic(t *testing.T) {
-	name := acctest.RandString(10)
+///////////////////////////////
+//// Tests for the No-VPC case
+///////////////////////////////
 
+func TestAccAWSOpsworksStack_noVpcBasic(t *testing.T) {
+	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
 	resourceName := "aws_opsworks_stack.tf-acc"
+	var opsstack opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,9 +28,13 @@ func TestAccAWSOpsworksStack_ImportBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksStackConfigVpcCreate(name),
+				Config: testAccAwsOpsworksStackConfigNoVpcCreate(stackName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSOpsworksStackExists(resourceName, false, &opsstack),
+					testAccCheckAWSOpsworksCreateStackAttributes(&opsstack, "us-east-1a", stackName),
+					testAccAwsOpsworksStackCheckResourceAttrsCreate("us-east-1a", stackName),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -36,13 +44,11 @@ func TestAccAWSOpsworksStack_ImportBasic(t *testing.T) {
 	})
 }
 
-///////////////////////////////
-//// Tests for the No-VPC case
-///////////////////////////////
-
-func TestAccAWSOpsworksStack_NoVpc(t *testing.T) {
+func TestAccAWSOpsworksStack_noVpcChangeServiceRoleForceNew(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
-	var opsstack opsworks.Stack
+	resourceName := "aws_opsworks_stack.tf-acc"
+	var before, after opsworks.Stack
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -51,38 +57,18 @@ func TestAccAWSOpsworksStack_NoVpc(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksStackConfigNoVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.tf-acc", false, &opsstack),
-					testAccCheckAWSOpsworksCreateStackAttributes(
-						&opsstack, "us-east-1a", stackName),
-					testAccAwsOpsworksStackCheckResourceAttrsCreate(
-						"us-east-1a", stackName),
+					testAccCheckAWSOpsworksStackExists(resourceName, false, &before),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSOpsworksStack_NoVpcChangeServiceRoleForceNew(t *testing.T) {
-	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
-	var before, after opsworks.Stack
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsOpsworksStackDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsOpsworksStackConfigNoVpcCreate(stackName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.tf-acc", false, &before),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsOpsworksStackConfigNoVpcCreateUpdateServiceRole(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.tf-acc", false, &after),
+					testAccCheckAWSOpsworksStackExists(resourceName, false, &after),
 					testAccCheckAWSOpsworksStackRecreated(t, &before, &after),
 				),
 			},
@@ -90,9 +76,11 @@ func TestAccAWSOpsworksStack_NoVpcChangeServiceRoleForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAWSOpsworksStack_Vpc(t *testing.T) {
+func TestAccAWSOpsworksStack_vpc(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -101,32 +89,33 @@ func TestAccAWSOpsworksStack_Vpc(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksStackConfigVpcCreate(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.tf-acc", true, &opsstack),
-					testAccCheckAWSOpsworksCreateStackAttributes(
-						&opsstack, "us-west-2a", stackName),
-					testAccAwsOpsworksStackCheckResourceAttrsCreate(
-						"us-west-2a", stackName),
+					testAccCheckAWSOpsworksStackExists(resourceName, true, &opsstack),
+					testAccCheckAWSOpsworksCreateStackAttributes(&opsstack, "us-west-2a", stackName),
+					testAccAwsOpsworksStackCheckResourceAttrsCreate("us-west-2a", stackName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSOpsworksStackConfigVpcUpdate(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.tf-acc", true, &opsstack),
-					testAccCheckAWSOpsworksUpdateStackAttributes(
-						&opsstack, "us-west-2a", stackName),
-					testAccAwsOpsworksStackCheckResourceAttrsUpdate(
-						"us-west-2a", stackName),
+					testAccCheckAWSOpsworksStackExists(resourceName, true, &opsstack),
+					testAccCheckAWSOpsworksUpdateStackAttributes(&opsstack, "us-west-2a", stackName),
+					testAccAwsOpsworksStackCheckResourceAttrsUpdate("us-west-2a", stackName),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSOpsworksStack_NoVpcCreateTags(t *testing.T) {
+func TestAccAWSOpsworksStack_noVpcCreateTags(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	resourceName := "aws_opsworks_stack.tf-acc"
 	var opsstack opsworks.Stack
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -135,19 +124,23 @@ func TestAccAWSOpsworksStack_NoVpcCreateTags(t *testing.T) {
 			{
 				Config: testAccAwsOpsworksStackConfigNoVpcCreateTags(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.tf-acc", false, &opsstack),
-					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.foo", "bar"),
+					testAccCheckAWSOpsworksStackExists(resourceName, false, &opsstack),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"tags"},
 			},
 			{
 				Config: testAccAwsOpsworksStackConfigNoVpcUpdateTags(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.tf-acc", false, &opsstack),
-					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_opsworks_stack.tf-acc", "tags.wut", "asdf"),
+					testAccCheckAWSOpsworksStackExists(resourceName, false, &opsstack),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.wut", "asdf"),
 				),
 			},
 		},
@@ -157,10 +150,12 @@ func TestAccAWSOpsworksStack_NoVpcCreateTags(t *testing.T) {
 // Tests the addition of regional endpoints and supporting the classic link used
 // to create Stack's prior to v0.9.0.
 // See https://github.com/hashicorp/terraform/issues/12842
-func TestAccAWSOpsWorksStack_classic_endpoints(t *testing.T) {
+func TestAccAWSOpsWorksStack_classicEndpoints(t *testing.T) {
 	stackName := fmt.Sprintf("tf-opsworks-acc-%d", acctest.RandInt())
+	resourceName := "aws_opsworks_stack.main"
 	rInt := acctest.RandInt()
 	var opsstack opsworks.Stack
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -169,9 +164,13 @@ func TestAccAWSOpsWorksStack_classic_endpoints(t *testing.T) {
 			{
 				Config: testAccAwsOpsWorksStack_classic_endpoint(stackName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSOpsworksStackExists(
-						"aws_opsworks_stack.main", false, &opsstack),
+					testAccCheckAWSOpsworksStackExists(resourceName, false, &opsstack),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Ensure that changing to us-west-2 region results in no plan
 			{

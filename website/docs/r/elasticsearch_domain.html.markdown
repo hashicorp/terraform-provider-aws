@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
-sidebar_current: "docs-aws-resource-elasticsearch-domain"
 description: |-
   Terraform resource for managing an AWS Elasticsearch Domain.
 ---
@@ -148,7 +147,7 @@ resource "aws_security_group" "es" {
     protocol  = "tcp"
 
     cidr_blocks = [
-      "${data.aws_vpc.selected.cidr_blocks}",
+      "${data.aws_vpc.selected.cidr_block}",
     ]
   }
 }

@@ -619,10 +619,10 @@ func (c *IoTAnalytics) CreatePipelineRequest(input *CreatePipelineInput) (req *r
 
 // CreatePipeline API operation for AWS IoT Analytics.
 //
-// Creates a pipeline. A pipeline consumes messages from one or more channels
-// and allows you to process the messages before storing them in a data store.
-// You must specify both a channel and a datastore activity and, optionally,
-// as many as 23 additional activities in the pipelineActivities array.
+// Creates a pipeline. A pipeline consumes messages from a channel and allows
+// you to process the messages before storing them in a data store. You must
+// specify both a channel and a datastore activity and, optionally, as many
+// as 23 additional activities in the pipelineActivities array.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3754,7 +3754,9 @@ type Channel struct {
 	// The status of the channel.
 	Status *string `locationName:"status" type:"string" enum:"ChannelStatus"`
 
-	// Where channel data is stored.
+	// Where channel data is stored. You may choose one of "serviceManagedS3" or
+	// "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+	// This cannot be changed after creation of the channel.
 	Storage *ChannelStorage `locationName:"storage" type:"structure"`
 }
 
@@ -3905,15 +3907,21 @@ func (s *ChannelStatistics) SetSize(v *EstimatedResourceSize) *ChannelStatistics
 	return s
 }
 
-// Where channel data is stored.
+// Where channel data is stored. You may choose one of "serviceManagedS3" or
+// "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+// This cannot be changed after creation of the channel.
 type ChannelStorage struct {
 	_ struct{} `type:"structure"`
 
-	// Use this to store channel data in an S3 bucket that you manage.
+	// Use this to store channel data in an S3 bucket that you manage. If customer
+	// managed storage is selected, the "retentionPeriod" parameter is ignored.
+	// The choice of service-managed or customer-managed S3 storage cannot be changed
+	// after creation of the channel.
 	CustomerManagedS3 *CustomerManagedChannelS3Storage `locationName:"customerManagedS3" type:"structure"`
 
 	// Use this to store channel data in an S3 bucket managed by the AWS IoT Analytics
-	// service.
+	// service. The choice of service-managed or customer-managed S3 storage cannot
+	// be changed after creation of the channel.
 	ServiceManagedS3 *ServiceManagedChannelS3Storage `locationName:"serviceManagedS3" type:"structure"`
 }
 
@@ -4158,10 +4166,13 @@ type CreateChannelInput struct {
 	// ChannelName is a required field
 	ChannelName *string `locationName:"channelName" min:"1" type:"string" required:"true"`
 
-	// Where channel data is stored.
+	// Where channel data is stored. You may choose one of "serviceManagedS3" or
+	// "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+	// This cannot be changed after creation of the channel.
 	ChannelStorage *ChannelStorage `locationName:"channelStorage" type:"structure"`
 
-	// How long, in days, message data is kept for the channel.
+	// How long, in days, message data is kept for the channel. When "customerManagedS3"
+	// storage is selected, this parameter is ignored.
 	RetentionPeriod *RetentionPeriod `locationName:"retentionPeriod" type:"structure"`
 
 	// Metadata which can be used to manage the channel.
@@ -4561,10 +4572,13 @@ type CreateDatastoreInput struct {
 	// DatastoreName is a required field
 	DatastoreName *string `locationName:"datastoreName" min:"1" type:"string" required:"true"`
 
-	// Where data store data is stored.
+	// Where data store data is stored. You may choose one of "serviceManagedS3"
+	// or "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+	// This cannot be changed after the data store is created.
 	DatastoreStorage *DatastoreStorage `locationName:"datastoreStorage" type:"structure"`
 
-	// How long, in days, message data is kept for the data store.
+	// How long, in days, message data is kept for the data store. When "customerManagedS3"
+	// storage is selected, this parameter is ignored.
 	RetentionPeriod *RetentionPeriod `locationName:"retentionPeriod" type:"structure"`
 
 	// Metadata which can be used to manage the data store.
@@ -4818,7 +4832,10 @@ func (s *CreatePipelineOutput) SetPipelineName(v string) *CreatePipelineOutput {
 	return s
 }
 
-// Use this to store channel data in an S3 bucket that you manage.
+// Use this to store channel data in an S3 bucket that you manage. If customer
+// managed storage is selected, the "retentionPeriod" parameter is ignored.
+// The choice of service-managed or customer-managed S3 storage cannot be changed
+// after creation of the channel.
 type CustomerManagedChannelS3Storage struct {
 	_ struct{} `type:"structure"`
 
@@ -4827,9 +4844,10 @@ type CustomerManagedChannelS3Storage struct {
 	// Bucket is a required field
 	Bucket *string `locationName:"bucket" min:"3" type:"string" required:"true"`
 
-	// The prefix used to create the keys of the channel data objects. Each object
-	// in an Amazon S3 bucket has a key that is its unique identifier within the
-	// bucket (each object in a bucket has exactly one key).
+	// [Optional] The prefix used to create the keys of the channel data objects.
+	// Each object in an Amazon S3 bucket has a key that is its unique identifier
+	// within the bucket (each object in a bucket has exactly one key). The prefix
+	// must end with a '/'.
 	KeyPrefix *string `locationName:"keyPrefix" min:"1" type:"string"`
 
 	// The ARN of the role which grants AWS IoT Analytics permission to interact
@@ -4899,9 +4917,10 @@ type CustomerManagedChannelS3StorageSummary struct {
 	// The name of the Amazon S3 bucket in which channel data is stored.
 	Bucket *string `locationName:"bucket" min:"3" type:"string"`
 
-	// The prefix used to create the keys of the channel data objects. Each object
-	// in an Amazon S3 bucket has a key that is its unique identifier within the
-	// bucket (each object in a bucket has exactly one key).
+	// [Optional] The prefix used to create the keys of the channel data objects.
+	// Each object in an Amazon S3 bucket has a key that is its unique identifier
+	// within the bucket (each object in a bucket has exactly one key). The prefix
+	// must end with a '/'.
 	KeyPrefix *string `locationName:"keyPrefix" min:"1" type:"string"`
 
 	// The ARN of the role which grants AWS IoT Analytics permission to interact
@@ -4937,7 +4956,10 @@ func (s *CustomerManagedChannelS3StorageSummary) SetRoleArn(v string) *CustomerM
 	return s
 }
 
-// Use this to store data store data in an S3 bucket that you manage.
+// Use this to store data store data in an S3 bucket that you manage. When customer
+// managed storage is selected, the "retentionPeriod" parameter is ignored.
+// The choice of service-managed or customer-managed S3 storage cannot be changed
+// after creation of the data store.
 type CustomerManagedDatastoreS3Storage struct {
 	_ struct{} `type:"structure"`
 
@@ -4946,9 +4968,10 @@ type CustomerManagedDatastoreS3Storage struct {
 	// Bucket is a required field
 	Bucket *string `locationName:"bucket" min:"3" type:"string" required:"true"`
 
-	// The prefix used to create the keys of the data store data objects. Each object
-	// in an Amazon S3 bucket has a key that is its unique identifier within the
-	// bucket (each object in a bucket has exactly one key).
+	// [Optional] The prefix used to create the keys of the data store data objects.
+	// Each object in an Amazon S3 bucket has a key that is its unique identifier
+	// within the bucket (each object in a bucket has exactly one key). The prefix
+	// must end with a '/'.
 	KeyPrefix *string `locationName:"keyPrefix" min:"1" type:"string"`
 
 	// The ARN of the role which grants AWS IoT Analytics permission to interact
@@ -5018,9 +5041,10 @@ type CustomerManagedDatastoreS3StorageSummary struct {
 	// The name of the Amazon S3 bucket in which data store data is stored.
 	Bucket *string `locationName:"bucket" min:"3" type:"string"`
 
-	// The prefix used to create the keys of the data store data objects. Each object
-	// in an Amazon S3 bucket has a key that is its unique identifier within the
-	// bucket (each object in a bucket has exactly one key).
+	// [Optional] The prefix used to create the keys of the data store data objects.
+	// Each object in an Amazon S3 bucket has a key that is its unique identifier
+	// within the bucket (each object in a bucket has exactly one key). The prefix
+	// must end with a '/'.
 	KeyPrefix *string `locationName:"keyPrefix" min:"1" type:"string"`
 
 	// The ARN of the role which grants AWS IoT Analytics permission to interact
@@ -5414,6 +5438,9 @@ func (s *DatasetContentStatus) SetState(v string) *DatasetContentStatus {
 type DatasetContentSummary struct {
 	_ struct{} `type:"structure"`
 
+	// The time the dataset content status was updated to SUCCEEDED or FAILED.
+	CompletionTime *time.Time `locationName:"completionTime" type:"timestamp"`
+
 	// The actual time the creation of the data set contents was started.
 	CreationTime *time.Time `locationName:"creationTime" type:"timestamp"`
 
@@ -5435,6 +5462,12 @@ func (s DatasetContentSummary) String() string {
 // GoString returns the string representation
 func (s DatasetContentSummary) GoString() string {
 	return s.String()
+}
+
+// SetCompletionTime sets the CompletionTime field's value.
+func (s *DatasetContentSummary) SetCompletionTime(v time.Time) *DatasetContentSummary {
+	s.CompletionTime = &v
+	return s
 }
 
 // SetCreationTime sets the CreationTime field's value.
@@ -5673,7 +5706,8 @@ type Datastore struct {
 	// The name of the data store.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
-	// How long, in days, message data is kept for the data store.
+	// How long, in days, message data is kept for the data store. When "customerManagedS3"
+	// storage is selected, this parameter is ignored.
 	RetentionPeriod *RetentionPeriod `locationName:"retentionPeriod" type:"structure"`
 
 	// The status of a data store:
@@ -5691,7 +5725,9 @@ type Datastore struct {
 	// The data store is being deleted.
 	Status *string `locationName:"status" type:"string" enum:"DatastoreStatus"`
 
-	// Where data store data is stored.
+	// Where data store data is stored. You may choose one of "serviceManagedS3"
+	// or "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+	// This cannot be changed after the data store is created.
 	Storage *DatastoreStorage `locationName:"storage" type:"structure"`
 }
 
@@ -5830,15 +5866,21 @@ func (s *DatastoreStatistics) SetSize(v *EstimatedResourceSize) *DatastoreStatis
 	return s
 }
 
-// Where data store data is stored.
+// Where data store data is stored. You may choose one of "serviceManagedS3"
+// or "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+// This cannot be changed after the data store is created.
 type DatastoreStorage struct {
 	_ struct{} `type:"structure"`
 
-	// Use this to store data store data in an S3 bucket that you manage.
+	// Use this to store data store data in an S3 bucket that you manage. When customer
+	// managed storage is selected, the "retentionPeriod" parameter is ignored.
+	// The choice of service-managed or customer-managed S3 storage cannot be changed
+	// after creation of the data store.
 	CustomerManagedS3 *CustomerManagedDatastoreS3Storage `locationName:"customerManagedS3" type:"structure"`
 
 	// Use this to store data store data in an S3 bucket managed by the AWS IoT
-	// Analytics service.
+	// Analytics service. The choice of service-managed or customer-managed S3 storage
+	// cannot be changed after creation of the data store.
 	ServiceManagedS3 *ServiceManagedDatastoreS3Storage `locationName:"serviceManagedS3" type:"structure"`
 }
 
@@ -6335,7 +6377,8 @@ type DescribeChannelInput struct {
 	ChannelName *string `location:"uri" locationName:"channelName" min:"1" type:"string" required:"true"`
 
 	// If true, additional statistical information about the channel is included
-	// in the response.
+	// in the response. This feature cannot be used with a channel whose S3 storage
+	// is customer-managed.
 	IncludeStatistics *bool `location:"querystring" locationName:"includeStatistics" type:"boolean"`
 }
 
@@ -6482,8 +6525,9 @@ type DescribeDatastoreInput struct {
 	// DatastoreName is a required field
 	DatastoreName *string `location:"uri" locationName:"datastoreName" min:"1" type:"string" required:"true"`
 
-	// If true, additional statistical information about the datastore is included
-	// in the response.
+	// If true, additional statistical information about the data store is included
+	// in the response. This feature cannot be used with a data store whose S3 storage
+	// is customer-managed.
 	IncludeStatistics *bool `location:"querystring" locationName:"includeStatistics" type:"boolean"`
 }
 
@@ -8764,7 +8808,9 @@ type S3DestinationConfiguration struct {
 
 	// The key of the data set contents object. Each object in an Amazon S3 bucket
 	// has a key that is its unique identifier within the bucket (each object in
-	// a bucket has exactly one key).
+	// a bucket has exactly one key). To produce a unique key, you can use "!{iotanalytics:scheduledTime}"
+	// to insert the time of the scheduled SQL query run, or "!{iotanalytics:versioned}
+	// to insert a unique hash identifying the data set, for example: "/DataSet/!{iotanalytics:scheduledTime}/!{iotanalytics:versioned}.csv".
 	//
 	// Key is a required field
 	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
@@ -9038,7 +9084,8 @@ func (s *SelectAttributesActivity) SetNext(v string) *SelectAttributesActivity {
 }
 
 // Use this to store channel data in an S3 bucket managed by the AWS IoT Analytics
-// service.
+// service. The choice of service-managed or customer-managed S3 storage cannot
+// be changed after creation of the channel.
 type ServiceManagedChannelS3Storage struct {
 	_ struct{} `type:"structure"`
 }
@@ -9070,7 +9117,8 @@ func (s ServiceManagedChannelS3StorageSummary) GoString() string {
 }
 
 // Use this to store data store data in an S3 bucket managed by the AWS IoT
-// Analytics service.
+// Analytics service. The choice of service-managed or customer-managed S3 storage
+// cannot be changed after creation of the data store.
 type ServiceManagedDatastoreS3Storage struct {
 	_ struct{} `type:"structure"`
 }
@@ -9506,10 +9554,13 @@ type UpdateChannelInput struct {
 	// ChannelName is a required field
 	ChannelName *string `location:"uri" locationName:"channelName" min:"1" type:"string" required:"true"`
 
-	// Where channel data is stored.
+	// Where channel data is stored. You may choose one of "serviceManagedS3" or
+	// "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+	// This cannot be changed after creation of the channel.
 	ChannelStorage *ChannelStorage `locationName:"channelStorage" type:"structure"`
 
-	// How long, in days, message data is kept for the channel.
+	// How long, in days, message data is kept for the channel. The retention period
+	// cannot be updated if the channel's S3 storage is customer-managed.
 	RetentionPeriod *RetentionPeriod `locationName:"retentionPeriod" type:"structure"`
 }
 
@@ -9742,10 +9793,13 @@ type UpdateDatastoreInput struct {
 	// DatastoreName is a required field
 	DatastoreName *string `location:"uri" locationName:"datastoreName" min:"1" type:"string" required:"true"`
 
-	// Where data store data is stored.
+	// Where data store data is stored. You may choose one of "serviceManagedS3"
+	// or "customerManagedS3" storage. If not specified, the default is "serviceManagedS3".
+	// This cannot be changed after the data store is created.
 	DatastoreStorage *DatastoreStorage `locationName:"datastoreStorage" type:"structure"`
 
-	// How long, in days, message data is kept for the data store.
+	// How long, in days, message data is kept for the data store. The retention
+	// period cannot be updated if the data store's S3 storage is customer-managed.
 	RetentionPeriod *RetentionPeriod `locationName:"retentionPeriod" type:"structure"`
 }
 

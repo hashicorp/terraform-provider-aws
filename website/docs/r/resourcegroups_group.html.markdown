@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_resourcegroups_group"
-sidebar_current: "docs-aws-resource-resourcegroups-group"
 description: |-
   Provides a Resource Group.
 ---

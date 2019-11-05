@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ebs_volume"
-sidebar_current: "docs-aws-resource-ebs-volume"
 description: |-
   Provides an elastic block storage resource.
 ---
