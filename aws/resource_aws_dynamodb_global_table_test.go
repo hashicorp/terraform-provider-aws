@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
@@ -43,6 +43,11 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 						regexp.MustCompile("^arn:aws:dynamodb::[0-9]{12}:global-table/[a-z0-9-]+$")),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -68,6 +73,11 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccDynamoDbGlobalTableConfig_multipleRegions2(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
@@ -84,28 +94,6 @@ func TestAccAWSDynamoDbGlobalTable_multipleRegions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.2896117718.region_name", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceName, "replica.3965887460.region_name", "us-west-2"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSDynamoDbGlobalTable_import(t *testing.T) {
-	resourceName := "aws_dynamodb_global_table.test"
-	tableName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDynamodbGlobalTable(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSesTemplateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDynamoDbGlobalTableConfig_basic(tableName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

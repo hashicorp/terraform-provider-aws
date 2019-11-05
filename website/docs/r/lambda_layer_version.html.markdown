@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lambda_layer_version"
-sidebar_current: "docs-aws-resource-lambda-layer-version"
 description: |-
   Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse shared bits of code across multiple lambda functions.
 ---

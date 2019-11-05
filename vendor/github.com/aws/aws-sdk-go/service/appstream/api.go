@@ -5014,7 +5014,13 @@ type CreateFleetInput struct {
 	// The Amazon Resource Name (ARN) of the IAM role to apply to the fleet. To
 	// assume a role, a fleet instance calls the AWS Security Token Service (STS)
 	// AssumeRole API operation and passes the ARN of the role to use. The operation
-	// creates a new session with temporary credentials.
+	// creates a new session with temporary credentials. AppStream 2.0 retrieves
+	// the temporary credentials and creates the AppStream_Machine_Role credential
+	// profile on the instance.
+	//
+	// For more information, see Using an IAM Role to Grant Permissions to Applications
+	// and Scripts Running on AppStream 2.0 Streaming Instances (https://docs.aws.amazon.com/appstream2/latest/developerguide/using-iam-roles-to-grant-permissions-to-applications-scripts-streaming-instances.html)
+	// in the Amazon AppStream 2.0 Administration Guide.
 	IamRoleArn *string `type:"string"`
 
 	// The amount of time that users can be idle (inactive) before they are disconnected
@@ -5315,7 +5321,13 @@ type CreateImageBuilderInput struct {
 	// The Amazon Resource Name (ARN) of the IAM role to apply to the image builder.
 	// To assume a role, the image builder calls the AWS Security Token Service
 	// (STS) AssumeRole API operation and passes the ARN of the role to use. The
-	// operation creates a new session with temporary credentials.
+	// operation creates a new session with temporary credentials. AppStream 2.0
+	// retrieves the temporary credentials and creates the AppStream_Machine_Role
+	// credential profile on the instance.
+	//
+	// For more information, see Using an IAM Role to Grant Permissions to Applications
+	// and Scripts Running on AppStream 2.0 Streaming Instances (https://docs.aws.amazon.com/appstream2/latest/developerguide/using-iam-roles-to-grant-permissions-to-applications-scripts-streaming-instances.html)
+	// in the Amazon AppStream 2.0 Administration Guide.
 	IamRoleArn *string `type:"string"`
 
 	// The ARN of the public, private, or shared image to use.
@@ -5324,7 +5336,48 @@ type CreateImageBuilderInput struct {
 	// The name of the image used to create the image builder.
 	ImageName *string `min:"1" type:"string"`
 
-	// The instance type to use when launching the image builder.
+	// The instance type to use when launching the image builder. The following
+	// instance types are available:
+	//
+	//    * stream.standard.medium
+	//
+	//    * stream.standard.large
+	//
+	//    * stream.compute.large
+	//
+	//    * stream.compute.xlarge
+	//
+	//    * stream.compute.2xlarge
+	//
+	//    * stream.compute.4xlarge
+	//
+	//    * stream.compute.8xlarge
+	//
+	//    * stream.memory.large
+	//
+	//    * stream.memory.xlarge
+	//
+	//    * stream.memory.2xlarge
+	//
+	//    * stream.memory.4xlarge
+	//
+	//    * stream.memory.8xlarge
+	//
+	//    * stream.graphics-design.large
+	//
+	//    * stream.graphics-design.xlarge
+	//
+	//    * stream.graphics-design.2xlarge
+	//
+	//    * stream.graphics-design.4xlarge
+	//
+	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics-pro.4xlarge
+	//
+	//    * stream.graphics-pro.8xlarge
+	//
+	//    * stream.graphics-pro.16xlarge
 	//
 	// InstanceType is a required field
 	InstanceType *string `min:"1" type:"string" required:"true"`
@@ -5606,6 +5659,11 @@ type CreateStackInput struct {
 	// The stack name to display.
 	DisplayName *string `type:"string"`
 
+	// The domains where AppStream 2.0 streaming sessions can be embedded in an
+	// iframe. You must approve the domains that you want to host embedded AppStream
+	// 2.0 streaming sessions.
+	EmbedHostDomains []*string `min:"1" type:"list"`
+
 	// The URL that users are redirected to after they click the Send Feedback link.
 	// If no URL is specified, no Send Feedback link is displayed.
 	FeedbackURL *string `type:"string"`
@@ -5656,6 +5714,9 @@ func (s *CreateStackInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateStackInput"}
 	if s.AccessEndpoints != nil && len(s.AccessEndpoints) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AccessEndpoints", 1))
+	}
+	if s.EmbedHostDomains != nil && len(s.EmbedHostDomains) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EmbedHostDomains", 1))
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
@@ -5729,6 +5790,12 @@ func (s *CreateStackInput) SetDescription(v string) *CreateStackInput {
 // SetDisplayName sets the DisplayName field's value.
 func (s *CreateStackInput) SetDisplayName(v string) *CreateStackInput {
 	s.DisplayName = &v
+	return s
+}
+
+// SetEmbedHostDomains sets the EmbedHostDomains field's value.
+func (s *CreateStackInput) SetEmbedHostDomains(v []*string) *CreateStackInput {
+	s.EmbedHostDomains = v
 	return s
 }
 
@@ -7947,7 +8014,13 @@ type Fleet struct {
 	// The ARN of the IAM role that is applied to the fleet. To assume a role, the
 	// fleet instance calls the AWS Security Token Service (STS) AssumeRole API
 	// operation and passes the ARN of the role to use. The operation creates a
-	// new session with temporary credentials.
+	// new session with temporary credentials. AppStream 2.0 retrieves the temporary
+	// credentials and creates the AppStream_Machine_Role credential profile on
+	// the instance.
+	//
+	// For more information, see Using an IAM Role to Grant Permissions to Applications
+	// and Scripts Running on AppStream 2.0 Streaming Instances (https://docs.aws.amazon.com/appstream2/latest/developerguide/using-iam-roles-to-grant-permissions-to-applications-scripts-streaming-instances.html)
+	// in the Amazon AppStream 2.0 Administration Guide.
 	IamRoleArn *string `type:"string"`
 
 	// The amount of time that users can be idle (inactive) before they are disconnected
@@ -7980,7 +8053,48 @@ type Fleet struct {
 	// The name of the image used to create the fleet.
 	ImageName *string `min:"1" type:"string"`
 
-	// The instance type to use when launching fleet instances.
+	// The instance type to use when launching fleet instances. The following instance
+	// types are available:
+	//
+	//    * stream.standard.medium
+	//
+	//    * stream.standard.large
+	//
+	//    * stream.compute.large
+	//
+	//    * stream.compute.xlarge
+	//
+	//    * stream.compute.2xlarge
+	//
+	//    * stream.compute.4xlarge
+	//
+	//    * stream.compute.8xlarge
+	//
+	//    * stream.memory.large
+	//
+	//    * stream.memory.xlarge
+	//
+	//    * stream.memory.2xlarge
+	//
+	//    * stream.memory.4xlarge
+	//
+	//    * stream.memory.8xlarge
+	//
+	//    * stream.graphics-design.large
+	//
+	//    * stream.graphics-design.xlarge
+	//
+	//    * stream.graphics-design.2xlarge
+	//
+	//    * stream.graphics-design.4xlarge
+	//
+	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics-pro.4xlarge
+	//
+	//    * stream.graphics-pro.8xlarge
+	//
+	//    * stream.graphics-pro.16xlarge
 	//
 	// InstanceType is a required field
 	InstanceType *string `min:"1" type:"string" required:"true"`
@@ -8365,7 +8479,13 @@ type ImageBuilder struct {
 	// The ARN of the IAM role that is applied to the image builder. To assume a
 	// role, the image builder calls the AWS Security Token Service (STS) AssumeRole
 	// API operation and passes the ARN of the role to use. The operation creates
-	// a new session with temporary credentials.
+	// a new session with temporary credentials. AppStream 2.0 retrieves the temporary
+	// credentials and creates the AppStream_Machine_Role credential profile on
+	// the instance.
+	//
+	// For more information, see Using an IAM Role to Grant Permissions to Applications
+	// and Scripts Running on AppStream 2.0 Streaming Instances (https://docs.aws.amazon.com/appstream2/latest/developerguide/using-iam-roles-to-grant-permissions-to-applications-scripts-streaming-instances.html)
+	// in the Amazon AppStream 2.0 Administration Guide.
 	IamRoleArn *string `type:"string"`
 
 	// The ARN of the image from which this builder was created.
@@ -8374,7 +8494,48 @@ type ImageBuilder struct {
 	// The image builder errors.
 	ImageBuilderErrors []*ResourceError `type:"list"`
 
-	// The instance type for the image builder.
+	// The instance type for the image builder. The following instance types are
+	// available:
+	//
+	//    * stream.standard.medium
+	//
+	//    * stream.standard.large
+	//
+	//    * stream.compute.large
+	//
+	//    * stream.compute.xlarge
+	//
+	//    * stream.compute.2xlarge
+	//
+	//    * stream.compute.4xlarge
+	//
+	//    * stream.compute.8xlarge
+	//
+	//    * stream.memory.large
+	//
+	//    * stream.memory.xlarge
+	//
+	//    * stream.memory.2xlarge
+	//
+	//    * stream.memory.4xlarge
+	//
+	//    * stream.memory.8xlarge
+	//
+	//    * stream.graphics-design.large
+	//
+	//    * stream.graphics-design.xlarge
+	//
+	//    * stream.graphics-design.2xlarge
+	//
+	//    * stream.graphics-design.4xlarge
+	//
+	//    * stream.graphics-desktop.2xlarge
+	//
+	//    * stream.graphics-pro.4xlarge
+	//
+	//    * stream.graphics-pro.8xlarge
+	//
+	//    * stream.graphics-pro.16xlarge
 	InstanceType *string `min:"1" type:"string"`
 
 	// The name of the image builder.
@@ -9208,6 +9369,11 @@ type Stack struct {
 	// The stack name to display.
 	DisplayName *string `min:"1" type:"string"`
 
+	// The domains where AppStream 2.0 streaming sessions can be embedded in an
+	// iframe. You must approve the domains that you want to host embedded AppStream
+	// 2.0 streaming sessions.
+	EmbedHostDomains []*string `min:"1" type:"list"`
+
 	// The URL that users are redirected to after they click the Send Feedback link.
 	// If no URL is specified, no Send Feedback link is displayed.
 	FeedbackURL *string `type:"string"`
@@ -9274,6 +9440,12 @@ func (s *Stack) SetDescription(v string) *Stack {
 // SetDisplayName sets the DisplayName field's value.
 func (s *Stack) SetDisplayName(v string) *Stack {
 	s.DisplayName = &v
+	return s
+}
+
+// SetEmbedHostDomains sets the EmbedHostDomains field's value.
+func (s *Stack) SetEmbedHostDomains(v []*string) *Stack {
+	s.EmbedHostDomains = v
 	return s
 }
 
@@ -9927,7 +10099,13 @@ type UpdateFleetInput struct {
 	// The Amazon Resource Name (ARN) of the IAM role to apply to the fleet. To
 	// assume a role, a fleet instance calls the AWS Security Token Service (STS)
 	// AssumeRole API operation and passes the ARN of the role to use. The operation
-	// creates a new session with temporary credentials.
+	// creates a new session with temporary credentials. AppStream 2.0 retrieves
+	// the temporary credentials and creates the AppStream_Machine_Role credential
+	// profile on the instance.
+	//
+	// For more information, see Using an IAM Role to Grant Permissions to Applications
+	// and Scripts Running on AppStream 2.0 Streaming Instances (https://docs.aws.amazon.com/appstream2/latest/developerguide/using-iam-roles-to-grant-permissions-to-applications-scripts-streaming-instances.html)
+	// in the Amazon AppStream 2.0 Administration Guide.
 	IamRoleArn *string `type:"string"`
 
 	// The amount of time that users can be idle (inactive) before they are disconnected
@@ -10280,6 +10458,11 @@ type UpdateStackInput struct {
 	// The stack name to display.
 	DisplayName *string `type:"string"`
 
+	// The domains where AppStream 2.0 streaming sessions can be embedded in an
+	// iframe. You must approve the domains that you want to host embedded AppStream
+	// 2.0 streaming sessions.
+	EmbedHostDomains []*string `min:"1" type:"list"`
+
 	// The URL that users are redirected to after they choose the Send Feedback
 	// link. If no URL is specified, no Send Feedback link is displayed.
 	FeedbackURL *string `type:"string"`
@@ -10315,6 +10498,9 @@ func (s *UpdateStackInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateStackInput"}
 	if s.AccessEndpoints != nil && len(s.AccessEndpoints) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AccessEndpoints", 1))
+	}
+	if s.EmbedHostDomains != nil && len(s.EmbedHostDomains) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EmbedHostDomains", 1))
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
@@ -10400,6 +10586,12 @@ func (s *UpdateStackInput) SetDescription(v string) *UpdateStackInput {
 // SetDisplayName sets the DisplayName field's value.
 func (s *UpdateStackInput) SetDisplayName(v string) *UpdateStackInput {
 	s.DisplayName = &v
+	return s
+}
+
+// SetEmbedHostDomains sets the EmbedHostDomains field's value.
+func (s *UpdateStackInput) SetEmbedHostDomains(v []*string) *UpdateStackInput {
+	s.EmbedHostDomains = v
 	return s
 }
 
@@ -11127,6 +11319,9 @@ const (
 
 	// StackAttributeUserSettings is a StackAttribute enum value
 	StackAttributeUserSettings = "USER_SETTINGS"
+
+	// StackAttributeEmbedHostDomains is a StackAttribute enum value
+	StackAttributeEmbedHostDomains = "EMBED_HOST_DOMAINS"
 
 	// StackAttributeIamRoleArn is a StackAttribute enum value
 	StackAttributeIamRoleArn = "IAM_ROLE_ARN"

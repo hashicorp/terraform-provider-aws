@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dms_endpoint"
-sidebar_current: "docs-aws-resource-dms-endpoint"
 description: |-
   Provides a DMS (Data Migration Service) endpoint resource.
 ---

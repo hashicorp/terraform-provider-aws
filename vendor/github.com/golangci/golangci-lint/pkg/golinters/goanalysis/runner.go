@@ -28,20 +28,18 @@ import (
 	"sync/atomic"
 	"time"
 
-	"golang.org/x/tools/go/types/objectpath"
+	"github.com/golangci/golangci-lint/pkg/timeutils"
 
+	"github.com/pkg/errors"
+	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/gcexportdata"
+	"golang.org/x/tools/go/packages"
+	"golang.org/x/tools/go/types/objectpath"
 
 	"github.com/golangci/golangci-lint/internal/errorutil"
 	"github.com/golangci/golangci-lint/internal/pkgcache"
-
 	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis/load"
 	"github.com/golangci/golangci-lint/pkg/logutils"
-
-	"github.com/pkg/errors"
-
-	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/packages"
 )
 
 var (
@@ -54,9 +52,7 @@ var (
 	//	v	show [v]erbose logging
 	//
 
-	debugf  = logutils.Debug("goanalysis")
-	isDebug = logutils.HaveDebugTag("goanalysis")
-
+	debugf             = logutils.Debug("goanalysis")
 	factsDebugf        = logutils.Debug("goanalysis/facts")
 	factsInheritDebugf = logutils.Debug("goanalysis/facts/inherit")
 	factsExportDebugf  = logutils.Debug("goanalysis/facts")
@@ -75,23 +71,30 @@ type Diagnostic struct {
 	analysis.Diagnostic
 	Analyzer *analysis.Analyzer
 	Position token.Position
+	Pkg      *packages.Package
 }
 
 type runner struct {
-	log              logutils.Log
-	prefix           string // ensure unique analyzer names
-	pkgCache         *pkgcache.Cache
-	loadGuard        *load.Guard
-	needWholeProgram bool
+	log            logutils.Log
+	prefix         string // ensure unique analyzer names
+	pkgCache       *pkgcache.Cache
+	loadGuard      *load.Guard
+	loadMode       LoadMode
+	passToPkg      map[*analysis.Pass]*packages.Package
+	passToPkgGuard sync.Mutex
+	sw             *timeutils.Stopwatch
 }
 
-func newRunner(prefix string, logger logutils.Log, pkgCache *pkgcache.Cache, loadGuard *load.Guard, needWholeProgram bool) *runner {
+func newRunner(prefix string, logger logutils.Log, pkgCache *pkgcache.Cache, loadGuard *load.Guard,
+	loadMode LoadMode, sw *timeutils.Stopwatch) *runner {
 	return &runner{
-		prefix:           prefix,
-		log:              logger,
-		pkgCache:         pkgCache,
-		loadGuard:        loadGuard,
-		needWholeProgram: needWholeProgram,
+		prefix:    prefix,
+		log:       logger,
+		pkgCache:  pkgCache,
+		loadGuard: loadGuard,
+		loadMode:  loadMode,
+		passToPkg: map[*analysis.Pass]*packages.Package{},
+		sw:        sw,
 	}
 }
 
@@ -101,12 +104,119 @@ func newRunner(prefix string, logger logutils.Log, pkgCache *pkgcache.Cache, loa
 // It provides most of the logic for the main functions of both the
 // singlechecker and the multi-analysis commands.
 // It returns the appropriate exit code.
-//nolint:gocyclo
-func (r *runner) run(analyzers []*analysis.Analyzer, initialPackages []*packages.Package) ([]Diagnostic, []error) {
+func (r *runner) run(analyzers []*analysis.Analyzer, initialPackages []*packages.Package) ([]Diagnostic,
+	[]error, map[*analysis.Pass]*packages.Package) {
+	debugf("Analyzing %d packages on load mode %s", len(initialPackages), r.loadMode)
 	defer r.pkgCache.Trim()
 
 	roots := r.analyze(initialPackages, analyzers)
-	return extractDiagnostics(roots)
+	diags, errs := extractDiagnostics(roots)
+	return diags, errs, r.passToPkg
+}
+
+type actKey struct {
+	*analysis.Analyzer
+	*packages.Package
+}
+
+func (r *runner) markAllActions(a *analysis.Analyzer, pkg *packages.Package, markedActions map[actKey]struct{}) {
+	k := actKey{a, pkg}
+	if _, ok := markedActions[k]; ok {
+		return
+	}
+
+	for _, req := range a.Requires {
+		r.markAllActions(req, pkg, markedActions)
+	}
+
+	if len(a.FactTypes) != 0 {
+		for path := range pkg.Imports {
+			r.markAllActions(a, pkg.Imports[path], markedActions)
+		}
+	}
+
+	markedActions[k] = struct{}{}
+}
+
+func (r *runner) makeAction(a *analysis.Analyzer, pkg *packages.Package,
+	initialPkgs map[*packages.Package]bool, actions map[actKey]*action, actAlloc *actionAllocator) *action {
+	k := actKey{a, pkg}
+	act, ok := actions[k]
+	if ok {
+		return act
+	}
+
+	act = actAlloc.alloc()
+	act.a = a
+	act.pkg = pkg
+	act.r = r
+	act.isInitialPkg = initialPkgs[pkg]
+	act.needAnalyzeSource = initialPkgs[pkg]
+	act.analysisDoneCh = make(chan struct{})
+
+	depsCount := len(a.Requires)
+	if len(a.FactTypes) > 0 {
+		depsCount += len(pkg.Imports)
+	}
+	act.deps = make([]*action, 0, depsCount)
+
+	// Add a dependency on each required analyzers.
+	for _, req := range a.Requires {
+		act.deps = append(act.deps, r.makeAction(req, pkg, initialPkgs, actions, actAlloc))
+	}
+
+	r.buildActionFactDeps(act, a, pkg, initialPkgs, actions, actAlloc)
+
+	actions[k] = act
+	return act
+}
+
+func (r *runner) buildActionFactDeps(act *action, a *analysis.Analyzer, pkg *packages.Package,
+	initialPkgs map[*packages.Package]bool, actions map[actKey]*action, actAlloc *actionAllocator) {
+	// An analysis that consumes/produces facts
+	// must run on the package's dependencies too.
+	if len(a.FactTypes) == 0 {
+		return
+	}
+
+	act.objectFacts = make(map[objectFactKey]analysis.Fact)
+	act.packageFacts = make(map[packageFactKey]analysis.Fact)
+
+	paths := make([]string, 0, len(pkg.Imports))
+	for path := range pkg.Imports {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths) // for determinism
+	for _, path := range paths {
+		dep := r.makeAction(a, pkg.Imports[path], initialPkgs, actions, actAlloc)
+		act.deps = append(act.deps, dep)
+	}
+
+	// Need to register fact types for pkgcache proper gob encoding.
+	for _, f := range a.FactTypes {
+		gob.Register(f)
+	}
+}
+
+type actionAllocator struct {
+	allocatedActions []action
+	nextFreeIndex    int
+}
+
+func newActionAllocator(maxCount int) *actionAllocator {
+	return &actionAllocator{
+		allocatedActions: make([]action, maxCount),
+		nextFreeIndex:    0,
+	}
+}
+
+func (actAlloc *actionAllocator) alloc() *action {
+	if actAlloc.nextFreeIndex == len(actAlloc.allocatedActions) {
+		panic(fmt.Sprintf("Made too many allocations of actions: %d allowed", len(actAlloc.allocatedActions)))
+	}
+	act := &actAlloc.allocatedActions[actAlloc.nextFreeIndex]
+	actAlloc.nextFreeIndex++
+	return act
 }
 
 //nolint:gocritic
@@ -117,70 +227,30 @@ func (r *runner) prepareAnalysis(pkgs []*packages.Package,
 	// Each graph node (action) is one unit of analysis.
 	// Edges express package-to-package (vertical) dependencies,
 	// and analysis-to-analysis (horizontal) dependencies.
-	type key struct {
-		*analysis.Analyzer
-		*packages.Package
-	}
-	actions := make(map[key]*action)
 
-	initialPkgs := map[*packages.Package]bool{}
+	// This place is memory-intensive: e.g. Istio project has 120k total actions.
+	// Therefore optimize it carefully.
+	markedActions := make(map[actKey]struct{}, len(analyzers)*len(pkgs))
+	for _, a := range analyzers {
+		for _, pkg := range pkgs {
+			r.markAllActions(a, pkg, markedActions)
+		}
+	}
+	totalActionsCount := len(markedActions)
+
+	actions := make(map[actKey]*action, totalActionsCount)
+	actAlloc := newActionAllocator(totalActionsCount)
+
+	initialPkgs := make(map[*packages.Package]bool, len(pkgs))
 	for _, pkg := range pkgs {
 		initialPkgs[pkg] = true
 	}
 
-	var mkAction func(a *analysis.Analyzer, pkg *packages.Package) *action
-	mkAction = func(a *analysis.Analyzer, pkg *packages.Package) *action {
-		k := key{a, pkg}
-		act, ok := actions[k]
-		if !ok {
-			act = &action{
-				a:                 a,
-				pkg:               pkg,
-				log:               r.log,
-				prefix:            r.prefix,
-				pkgCache:          r.pkgCache,
-				isInitialPkg:      initialPkgs[pkg],
-				needAnalyzeSource: initialPkgs[pkg],
-				analysisDoneCh:    make(chan struct{}),
-				objectFacts:       make(map[objectFactKey]analysis.Fact),
-				packageFacts:      make(map[packageFactKey]analysis.Fact),
-				needWholeProgram:  r.needWholeProgram,
-			}
-
-			// Add a dependency on each required analyzers.
-			for _, req := range a.Requires {
-				act.deps = append(act.deps, mkAction(req, pkg))
-			}
-
-			// An analysis that consumes/produces facts
-			// must run on the package's dependencies too.
-			if len(a.FactTypes) > 0 {
-				paths := make([]string, 0, len(pkg.Imports))
-				for path := range pkg.Imports {
-					paths = append(paths, path)
-				}
-				sort.Strings(paths) // for determinism
-				for _, path := range paths {
-					dep := mkAction(a, pkg.Imports[path])
-					act.deps = append(act.deps, dep)
-				}
-
-				// Need to register fact types for pkgcache proper gob encoding.
-				for _, f := range a.FactTypes {
-					gob.Register(f)
-				}
-			}
-
-			actions[k] = act
-		}
-		return act
-	}
-
 	// Build nodes for initial packages.
-	var roots []*action
+	roots := make([]*action, 0, len(pkgs)*len(analyzers))
 	for _, a := range analyzers {
 		for _, pkg := range pkgs {
-			root := mkAction(a, pkg)
+			root := r.makeAction(a, pkg, initialPkgs, actions, actAlloc)
 			root.isroot = true
 			roots = append(roots, root)
 		}
@@ -190,6 +260,8 @@ func (r *runner) prepareAnalysis(pkgs []*packages.Package,
 	for _, act := range actions {
 		allActions = append(allActions, act)
 	}
+
+	debugf("Built %d actions", len(actions))
 
 	return initialPkgs, allActions, roots
 }
@@ -243,7 +315,7 @@ func (r *runner) analyze(pkgs []*packages.Package, analyzers []*analysis.Analyze
 		if lp.isInitial {
 			wg.Add(1)
 			go func(lp *loadingPackage) {
-				lp.analyzeRecursive(r.needWholeProgram, loadSem)
+				lp.analyzeRecursive(r.loadMode, loadSem)
 				wg.Done()
 			}(lp)
 		}
@@ -299,7 +371,13 @@ func extractDiagnostics(roots []*action) (retDiags []Diagnostic, retErrors []err
 				}
 				seen[k] = true
 
-				retDiags = append(retDiags, Diagnostic{Diagnostic: diag, Analyzer: act.a, Position: posn})
+				retDiag := Diagnostic{
+					Diagnostic: diag,
+					Analyzer:   act.a,
+					Position:   posn,
+					Pkg:        act.pkg,
+				}
+				retDiags = append(retDiags, retDiag)
 			}
 		}
 	}
@@ -335,23 +413,19 @@ type action struct {
 	a                   *analysis.Analyzer
 	pkg                 *packages.Package
 	pass                *analysis.Pass
-	isroot              bool
-	isInitialPkg        bool
-	needAnalyzeSource   bool
 	deps                []*action
 	objectFacts         map[objectFactKey]analysis.Fact
 	packageFacts        map[packageFactKey]analysis.Fact
 	result              interface{}
 	diagnostics         []analysis.Diagnostic
 	err                 error
-	duration            time.Duration
-	log                 logutils.Log
-	prefix              string
-	pkgCache            *pkgcache.Cache
+	r                   *runner
 	analysisDoneCh      chan struct{}
 	loadCachedFactsDone bool
 	loadCachedFactsOk   bool
-	needWholeProgram    bool
+	isroot              bool
+	isInitialPkg        bool
+	needAnalyzeSource   bool
 }
 
 type objectFactKey struct {
@@ -397,6 +471,14 @@ func (act *action) waitUntilDependingAnalyzersWorked() {
 	}
 }
 
+type IllTypedError struct {
+	Pkg *packages.Package
+}
+
+func (e *IllTypedError) Error() string {
+	return fmt.Sprintf("errors in package: %v", e.Pkg.Errors)
+}
+
 func (act *action) analyzeSafe() {
 	defer func() {
 		if p := recover(); p != nil {
@@ -404,7 +486,9 @@ func (act *action) analyzeSafe() {
 				act.a.Name, act.pkg.Name, act.isInitialPkg, act.needAnalyzeSource, p), debug.Stack())
 		}
 	}()
-	act.analyze()
+	act.r.sw.TrackStage(act.a.Name, func() {
+		act.analyze()
+	})
 }
 
 func (act *action) analyze() {
@@ -414,25 +498,8 @@ func (act *action) analyze() {
 		return
 	}
 
-	// TODO(adonovan): uncomment this during profiling.
-	// It won't build pre-go1.11 but conditional compilation
-	// using build tags isn't warranted.
-	//
-	// ctx, task := trace.NewTask(context.Background(), "exec")
-	// trace.Log(ctx, "pass", act.String())
-	// defer task.End()
-
-	// Record time spent in this node but not its dependencies.
-	// In parallel mode, due to GC/scheduler contention, the
-	// time is 5x higher than in sequential mode, even with a
-	// semaphore limiting the number of threads here.
-	// So use -debug=tp.
-	if isDebug {
-		t0 := time.Now()
-		defer func() { act.duration = time.Since(t0) }()
-	}
 	defer func(now time.Time) {
-		analyzeDebugf("go/analysis: %s: %s: analyzed package %q in %s", act.prefix, act.a.Name, act.pkg.Name, time.Since(now))
+		analyzeDebugf("go/analysis: %s: %s: analyzed package %q in %s", act.r.prefix, act.a.Name, act.pkg.Name, time.Since(now))
 	}(time.Now())
 
 	// Report an error if any dependency failed.
@@ -486,10 +553,16 @@ func (act *action) analyze() {
 		AllPackageFacts:   act.allPackageFacts,
 	}
 	act.pass = pass
+	act.r.passToPkgGuard.Lock()
+	act.r.passToPkg[pass] = act.pkg
+	act.r.passToPkgGuard.Unlock()
 
 	var err error
-	if act.pkg.IllTyped && !pass.Analyzer.RunDespiteErrors {
-		err = fmt.Errorf("analysis skipped due to errors in package")
+	if act.pkg.IllTyped {
+		// It looks like there should be !pass.Analyzer.RunDespiteErrors
+		// but govet's cgocall crashes on it. Govet itself contains !pass.Analyzer.RunDespiteErrors condition here
+		// but it exit before it if packages.Load have failed.
+		err = errors.Wrap(&IllTypedError{Pkg: act.pkg}, "analysis skipped")
 	} else {
 		startedAt = time.Now()
 		act.result, err = pass.Analyzer.Run(pass)
@@ -505,7 +578,7 @@ func (act *action) analyze() {
 	pass.ExportPackageFact = nil
 
 	if err := act.persistFactsToCache(); err != nil {
-		act.log.Warnf("Failed to persist facts to cache: %s", err)
+		act.r.log.Warnf("Failed to persist facts to cache: %s", err)
 	}
 }
 
@@ -529,7 +602,7 @@ func inheritFacts(act, dep *action) {
 			var err error
 			fact, err = codeFact(fact)
 			if err != nil {
-				act.log.Panicf("internal error: encoding of %T fact failed in %v", fact, act)
+				act.r.log.Panicf("internal error: encoding of %T fact failed in %v", fact, act)
 			}
 		}
 
@@ -549,7 +622,7 @@ func inheritFacts(act, dep *action) {
 			var err error
 			fact, err = codeFact(fact)
 			if err != nil {
-				act.log.Panicf("internal error: encoding of %T fact failed in %v", fact, act)
+				act.r.log.Panicf("internal error: encoding of %T fact failed in %v", fact, act)
 			}
 		}
 
@@ -626,7 +699,7 @@ func (act *action) importObjectFact(obj types.Object, ptr analysis.Fact) bool {
 // exportObjectFact implements Pass.ExportObjectFact.
 func (act *action) exportObjectFact(obj types.Object, fact analysis.Fact) {
 	if obj.Pkg() != act.pkg.Types {
-		act.log.Panicf("internal error: in analysis %s of package %s: Fact.Set(%s, %T): can't set facts on objects belonging another package",
+		act.r.log.Panicf("internal error: in analysis %s of package %s: Fact.Set(%s, %T): can't set facts on objects belonging another package",
 			act.a, act.pkg, obj, fact)
 	}
 
@@ -687,7 +760,7 @@ func (act *action) allPackageFacts() []analysis.PackageFact {
 func (act *action) factType(fact analysis.Fact) reflect.Type {
 	t := reflect.TypeOf(fact)
 	if t.Kind() != reflect.Ptr {
-		act.log.Fatalf("invalid Fact type: got %T, want pointer", t)
+		act.r.log.Fatalf("invalid Fact type: got %T, want pointer", t)
 	}
 	return t
 }
@@ -737,15 +810,15 @@ func (act *action) persistFactsToCache() error {
 	factsCacheDebugf("Caching %d facts for package %q and analyzer %s", len(facts), act.pkg.Name, act.a.Name)
 
 	key := fmt.Sprintf("%s/facts", analyzer.Name)
-	return act.pkgCache.Put(act.pkg, key, facts)
+	return act.r.pkgCache.Put(act.pkg, pkgcache.HashModeNeedAllDeps, key, facts)
 }
 
 func (act *action) loadPersistedFacts() bool {
 	var facts []Fact
 	key := fmt.Sprintf("%s/facts", act.a.Name)
-	if err := act.pkgCache.Get(act.pkg, key, &facts); err != nil {
+	if err := act.r.pkgCache.Get(act.pkg, pkgcache.HashModeNeedAllDeps, key, &facts); err != nil {
 		if err != pkgcache.ErrMissing {
-			act.log.Warnf("Failed to get persisted facts: %s", err)
+			act.r.log.Warnf("Failed to get persisted facts: %s", err)
 		}
 
 		factsCacheDebugf("No cached facts for package %q and analyzer %s", act.pkg.Name, act.a.Name)
@@ -910,36 +983,36 @@ func (lp *loadingPackage) decUse() {
 	lp.actions = nil
 }
 
-func (lp *loadingPackage) analyzeRecursive(needWholeProgram bool, loadSem chan struct{}) {
+func (lp *loadingPackage) analyzeRecursive(loadMode LoadMode, loadSem chan struct{}) {
 	lp.analyzeOnce.Do(func() {
 		// Load the direct dependencies, in parallel.
 		var wg sync.WaitGroup
 		wg.Add(len(lp.imports))
 		for _, imp := range lp.imports {
 			go func(imp *loadingPackage) {
-				imp.analyzeRecursive(needWholeProgram, loadSem)
+				imp.analyzeRecursive(loadMode, loadSem)
 				wg.Done()
 			}(imp)
 		}
 		wg.Wait()
-		lp.analyze(needWholeProgram, loadSem)
+		lp.analyze(loadMode, loadSem)
 	})
 }
 
-func (lp *loadingPackage) analyze(needWholeProgram bool, loadSem chan struct{}) {
+func (lp *loadingPackage) analyze(loadMode LoadMode, loadSem chan struct{}) {
 	loadSem <- struct{}{}
 	defer func() {
 		<-loadSem
 	}()
 
 	defer func() {
-		if !needWholeProgram {
+		if loadMode < LoadModeWholeProgram {
 			// Save memory on unused more fields.
 			lp.decUse()
 		}
 	}()
 
-	if err := lp.loadWithFacts(needWholeProgram); err != nil {
+	if err := lp.loadWithFacts(loadMode); err != nil {
 		werr := errors.Wrapf(err, "failed to load package %s", lp.pkg.Name)
 		// Don't need to write error to errCh, it will be extracted and reported on another layer.
 		// Unblock depending actions and propagate error.
@@ -964,8 +1037,31 @@ func (lp *loadingPackage) analyze(needWholeProgram bool, loadSem chan struct{}) 
 	actsWg.Wait()
 }
 
-func (lp *loadingPackage) loadFromSource() error {
+func (lp *loadingPackage) loadFromSource(loadMode LoadMode) error {
 	pkg := lp.pkg
+
+	// Many packages have few files, much fewer than there
+	// are CPU cores. Additionally, parsing each individual file is
+	// very fast. A naive parallel implementation of this loop won't
+	// be faster, and tends to be slower due to extra scheduling,
+	// bookkeeping and potentially false sharing of cache lines.
+	pkg.Syntax = make([]*ast.File, 0, len(pkg.CompiledGoFiles))
+	for _, file := range pkg.CompiledGoFiles {
+		f, err := parser.ParseFile(pkg.Fset, file, nil, parser.ParseComments)
+		if err != nil {
+			pkg.Errors = append(pkg.Errors, lp.convertError(err)...)
+			continue
+		}
+		pkg.Syntax = append(pkg.Syntax, f)
+	}
+	if len(pkg.Errors) != 0 {
+		pkg.IllTyped = true
+		return nil
+	}
+
+	if loadMode == LoadModeSyntax {
+		return nil
+	}
 
 	// Call NewPackage directly with explicit name.
 	// This avoids skew between golist and go/types when the files'
@@ -979,20 +1075,6 @@ func (lp *loadingPackage) loadFromSource() error {
 
 	pkg.IllTyped = true
 
-	// Many packages have few files, much fewer than there
-	// are CPU cores. Additionally, parsing each individual file is
-	// very fast. A naive parallel implementation of this loop won't
-	// be faster, and tends to be slower due to extra scheduling,
-	// bookkeeping and potentially false sharing of cache lines.
-	pkg.Syntax = make([]*ast.File, len(pkg.CompiledGoFiles))
-	for i, file := range pkg.CompiledGoFiles {
-		f, err := parser.ParseFile(pkg.Fset, file, nil, parser.ParseComments)
-		if err != nil {
-			pkg.Errors = append(pkg.Errors, lp.convertError(err)...)
-			return err
-		}
-		pkg.Syntax[i] = f
-	}
 	pkg.TypesInfo = &types.Info{
 		Types:      make(map[ast.Expr]types.TypeAndValue),
 		Defs:       make(map[*ast.Ident]types.Object),
@@ -1027,11 +1109,19 @@ func (lp *loadingPackage) loadFromSource() error {
 			pkg.Errors = append(pkg.Errors, lp.convertError(err)...)
 		},
 	}
-	err := types.NewChecker(tc, pkg.Fset, pkg.Types, pkg.TypesInfo).Files(pkg.Syntax)
-	if err != nil {
-		return err
+	_ = types.NewChecker(tc, pkg.Fset, pkg.Types, pkg.TypesInfo).Files(pkg.Syntax)
+	// Don't handle error here: errors are adding by tc.Error function.
+
+	illTyped := len(pkg.Errors) != 0
+	if !illTyped {
+		for _, imp := range lp.imports {
+			if imp.pkg.IllTyped {
+				illTyped = true
+				break
+			}
+		}
 	}
-	pkg.IllTyped = false
+	pkg.IllTyped = illTyped
 	return nil
 }
 
@@ -1106,28 +1196,28 @@ func (lp *loadingPackage) loadFromExportData() error {
 	return nil
 }
 
-func (lp *loadingPackage) loadWithFacts(needWholeProgram bool) error {
+func (act *action) markDepsForAnalyzingSource() {
+	// Horizontal deps (analyzer.Requires) must be loaded from source and analyzed before analyzing
+	// this action.
+	for _, dep := range act.deps {
+		if dep.pkg == act.pkg {
+			// Analyze source only for horizontal dependencies, e.g. from "buildssa".
+			dep.needAnalyzeSource = true // can't be set in parallel
+		}
+	}
+}
+
+func (lp *loadingPackage) loadWithFacts(loadMode LoadMode) error {
 	pkg := lp.pkg
 
 	if pkg.PkgPath == unsafePkgName {
-		if !needWholeProgram { // the package wasn't loaded yet
-			// Fill in the blanks to avoid surprises.
+		// Fill in the blanks to avoid surprises.
+		pkg.Syntax = []*ast.File{}
+		if loadMode >= LoadModeTypesInfo {
 			pkg.Types = types.Unsafe
-			pkg.Syntax = []*ast.File{}
 			pkg.TypesInfo = new(types.Info)
 		}
 		return nil
-	}
-
-	markDepsForAnalyzingSource := func(act *action) {
-		// Horizontal deps (analyzer.Requires) must be loaded from source and analyzed before analyzing
-		// this action.
-		for _, dep := range act.deps {
-			if dep.pkg == act.pkg {
-				// Analyze source only for horizontal dependencies, e.g. from "buildssa".
-				dep.needAnalyzeSource = true // can't be set in parallel
-			}
-		}
 	}
 
 	if pkg.TypesInfo != nil {
@@ -1139,7 +1229,7 @@ func (lp *loadingPackage) loadWithFacts(needWholeProgram bool) error {
 				// Cached facts loading failed: analyze later the action from source.
 				act.needAnalyzeSource = true
 				factsCacheDebugf("Loading of facts for already loaded %s failed, analyze it from source later", act)
-				markDepsForAnalyzingSource(act)
+				act.markDepsForAnalyzingSource()
 			}
 		}
 		return nil
@@ -1148,32 +1238,40 @@ func (lp *loadingPackage) loadWithFacts(needWholeProgram bool) error {
 	if lp.isInitial {
 		// No need to load cached facts: the package will be analyzed from source
 		// because it's the initial.
-		return lp.loadFromSource()
+		return lp.loadFromSource(loadMode)
 	}
 
-	// Load package from export data
-	if err := lp.loadFromExportData(); err != nil {
-		// We asked Go to give us up to date export data, yet
-		// we can't load it. There must be something wrong.
-		//
-		// Attempt loading from source. This should fail (because
-		// otherwise there would be export data); we just want to
-		// get the compile errors. If loading from source succeeds
-		// we discard the result, anyway. Otherwise we'll fail
-		// when trying to reload from export data later.
+	return lp.loadImportedPackageWithFacts(loadMode)
+}
 
-		// Otherwise it panics because uses already existing (from exported data) types.
-		pkg.Types = types.NewPackage(pkg.PkgPath, pkg.Name)
-		if srcErr := lp.loadFromSource(); srcErr != nil {
-			return srcErr
+func (lp *loadingPackage) loadImportedPackageWithFacts(loadMode LoadMode) error {
+	pkg := lp.pkg
+
+	// Load package from export data
+	if loadMode >= LoadModeTypesInfo {
+		if err := lp.loadFromExportData(); err != nil {
+			// We asked Go to give us up to date export data, yet
+			// we can't load it. There must be something wrong.
+			//
+			// Attempt loading from source. This should fail (because
+			// otherwise there would be export data); we just want to
+			// get the compile errors. If loading from source succeeds
+			// we discard the result, anyway. Otherwise we'll fail
+			// when trying to reload from export data later.
+
+			// Otherwise it panics because uses already existing (from exported data) types.
+			pkg.Types = types.NewPackage(pkg.PkgPath, pkg.Name)
+			if srcErr := lp.loadFromSource(loadMode); srcErr != nil {
+				return srcErr
+			}
+			// Make sure this package can't be imported successfully
+			pkg.Errors = append(pkg.Errors, packages.Error{
+				Pos:  "-",
+				Msg:  fmt.Sprintf("could not load export data: %s", err),
+				Kind: packages.ParseError,
+			})
+			return errors.Wrap(err, "could not load export data")
 		}
-		// Make sure this package can't be imported successfully
-		pkg.Errors = append(pkg.Errors, packages.Error{
-			Pos:  "-",
-			Msg:  fmt.Sprintf("could not load export data: %s", err),
-			Kind: packages.ParseError,
-		})
-		return errors.Wrap(err, "could not load export data")
 	}
 
 	needLoadFromSource := false
@@ -1187,7 +1285,7 @@ func (lp *loadingPackage) loadWithFacts(needWholeProgram bool) error {
 		act.needAnalyzeSource = true // can't be set in parallel
 		needLoadFromSource = true
 
-		markDepsForAnalyzingSource(act)
+		act.markDepsForAnalyzingSource()
 	}
 
 	if needLoadFromSource {
@@ -1195,8 +1293,10 @@ func (lp *loadingPackage) loadWithFacts(needWholeProgram bool) error {
 		// the analysis we need to load the package from source code.
 
 		// Otherwise it panics because uses already existing (from exported data) types.
-		pkg.Types = types.NewPackage(pkg.PkgPath, pkg.Name)
-		return lp.loadFromSource()
+		if loadMode >= LoadModeTypesInfo {
+			pkg.Types = types.NewPackage(pkg.PkgPath, pkg.Name)
+		}
+		return lp.loadFromSource(loadMode)
 	}
 
 	return nil

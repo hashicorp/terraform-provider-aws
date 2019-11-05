@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_appsync_graphql_api"
-sidebar_current: "docs-aws-resource-appsync-graphql-api"
 description: |-
   Provides an AppSync GraphQL API.
 ---

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lb"
-sidebar_current: "docs-aws-resource-elbv2"
 description: |-
   Provides a Load Balancer resource.
 ---

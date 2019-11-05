@@ -7,12 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 	var conf apigateway.ClientCertificate
+	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,37 +23,21 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists("aws_api_gateway_client_certificate.cow", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_client_certificate.cow", "description", "Hello from TF acceptance test"),
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test"),
 				),
 			},
-			{
-				Config: testAccAWSAPIGatewayClientCertificateConfig_basic_updated,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists("aws_api_gateway_client_certificate.cow", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_client_certificate.cow", "description", "Hello from TF acceptance test - updated"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayClientCertificate_importBasic(t *testing.T) {
-	resourceName := "aws_api_gateway_client_certificate.cow"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAPIGatewayClientCertificateConfig_basic_updated,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test - updated"),
+				),
 			},
 		},
 	})
@@ -116,13 +101,13 @@ func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error
 }
 
 const testAccAWSAPIGatewayClientCertificateConfig_basic = `
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 }
 `
 
 const testAccAWSAPIGatewayClientCertificateConfig_basic_updated = `
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `

@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kms_grant"
-sidebar_current: "docs-aws-resource-kms-grant"
 description: |-
   Provides a resource-based access control mechanism for KMS Customer Master Keys.
 ---
