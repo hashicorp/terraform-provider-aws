@@ -7,18 +7,18 @@ const (
 	// ErrCodeAuthorizationAlreadyExistsFault for service response error code
 	// "AuthorizationAlreadyExists".
 	//
-	// The specified CIDRIP or Amazon EC2 security group is already authorized for
-	// the specified DB security group.
+	// The specified CIDR IP range or Amazon EC2 security group is already authorized
+	// for the specified DB security group.
 	ErrCodeAuthorizationAlreadyExistsFault = "AuthorizationAlreadyExists"
 
 	// ErrCodeAuthorizationNotFoundFault for service response error code
 	// "AuthorizationNotFound".
 	//
-	// The specified CIDRIP or Amazon EC2 security group isn't authorized for the
-	// specified DB security group.
+	// The specified CIDR IP range or Amazon EC2 security group might not be authorized
+	// for the specified DB security group.
 	//
-	// RDS also may not be authorized by using IAM to perform necessary actions
-	// on your behalf.
+	// Or, RDS might not be authorized to perform necessary actions using IAM on
+	// your behalf.
 	ErrCodeAuthorizationNotFoundFault = "AuthorizationNotFound"
 
 	// ErrCodeAuthorizationQuotaExceededFault for service response error code
@@ -36,6 +36,26 @@ const (
 	//
 	// CertificateIdentifier doesn't refer to an existing certificate.
 	ErrCodeCertificateNotFoundFault = "CertificateNotFound"
+
+	// ErrCodeCustomAvailabilityZoneAlreadyExistsFault for service response error code
+	// "CustomAvailabilityZoneAlreadyExists".
+	//
+	// CustomAvailabilityZoneName is already used by an existing custom Availability
+	// Zone.
+	ErrCodeCustomAvailabilityZoneAlreadyExistsFault = "CustomAvailabilityZoneAlreadyExists"
+
+	// ErrCodeCustomAvailabilityZoneNotFoundFault for service response error code
+	// "CustomAvailabilityZoneNotFound".
+	//
+	// CustomAvailabilityZoneId doesn't refer to an existing custom Availability
+	// Zone identifier.
+	ErrCodeCustomAvailabilityZoneNotFoundFault = "CustomAvailabilityZoneNotFound"
+
+	// ErrCodeCustomAvailabilityZoneQuotaExceededFault for service response error code
+	// "CustomAvailabilityZoneQuotaExceeded".
+	//
+	// You have exceeded the maximum number of custom Availability Zones.
+	ErrCodeCustomAvailabilityZoneQuotaExceededFault = "CustomAvailabilityZoneQuotaExceeded"
 
 	// ErrCodeDBClusterAlreadyExistsFault for service response error code
 	// "DBClusterAlreadyExistsFault".
@@ -156,7 +176,7 @@ const (
 	// ErrCodeDBInstanceRoleNotFoundFault for service response error code
 	// "DBInstanceRoleNotFound".
 	//
-	// The specified RoleArn value doesn't match the specifed feature for the DB
+	// The specified RoleArn value doesn't match the specified feature for the DB
 	// instance.
 	ErrCodeDBInstanceRoleNotFoundFault = "DBInstanceRoleNotFound"
 
@@ -299,6 +319,18 @@ const (
 	// ErrCodeGlobalClusterQuotaExceededFault for service response error code
 	// "GlobalClusterQuotaExceededFault".
 	ErrCodeGlobalClusterQuotaExceededFault = "GlobalClusterQuotaExceededFault"
+
+	// ErrCodeInstallationMediaAlreadyExistsFault for service response error code
+	// "InstallationMediaAlreadyExists".
+	//
+	// The specified installation media has already been imported.
+	ErrCodeInstallationMediaAlreadyExistsFault = "InstallationMediaAlreadyExists"
+
+	// ErrCodeInstallationMediaNotFoundFault for service response error code
+	// "InstallationMediaNotFound".
+	//
+	// InstallationMediaID doesn't refer to an existing installation media.
+	ErrCodeInstallationMediaNotFoundFault = "InstallationMediaNotFound"
 
 	// ErrCodeInstanceQuotaExceededFault for service response error code
 	// "InstanceQuotaExceeded".
