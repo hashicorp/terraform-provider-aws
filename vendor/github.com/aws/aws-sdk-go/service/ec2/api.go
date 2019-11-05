@@ -29541,16 +29541,24 @@ func (c *EC2) RegisterImageRequest(input *RegisterImageInput) (req *request.Requ
 // You can't register an image where a secondary (non-root) snapshot has AWS
 // Marketplace product codes.
 //
-// Some Linux distributions, such as Red Hat Enterprise Linux (RHEL) and SUSE
-// Linux Enterprise Server (SLES), use the EC2 billing product code associated
-// with an AMI to verify the subscription status for package updates. Creating
-// an AMI from an EBS snapshot does not maintain this billing code, and instances
-// launched from such an AMI are not able to connect to package update infrastructure.
-// If you purchase a Reserved Instance offering for one of these Linux distributions
-// and launch instances using an AMI that does not contain the required billing
-// code, your Reserved Instance is not applied to these instances.
+// Windows and some Linux distributions, such as Red Hat Enterprise Linux (RHEL)
+// and SUSE Linux Enterprise Server (SLES), use the EC2 billing product code
+// associated with an AMI to verify the subscription status for package updates.
+// To create a new AMI for operating systems that require a billing product
+// code, do the following:
 //
-// To create an AMI for operating systems that require a billing code, see CreateImage.
+// Launch an instance from an existing AMI with that billing product code.
+//
+// Customize the instance.
+//
+// Create a new AMI from the instance using CreateImage to preserve the billing
+// product code association.
+//
+// If you purchase a Reserved Instance to apply to an On-Demand Instance that
+// was launched from an AMI with a billing product code, make sure that the
+// Reserved Instance has the matching billing product code. If you purchase
+// a Reserved Instance without the matching billing product code, the Reserved
+// Instance will not be applied to the On-Demand Instance.
 //
 // If needed, you can deregister an AMI at any time. Any modifications you make
 // to an AMI backed by an instance store volume invalidates its registration.
@@ -40765,6 +40773,9 @@ type CreateFpgaImageInput struct {
 
 	// A name for the AFI.
 	Name *string `type:"string"`
+
+	// The tags to apply to the FPGA image during creation.
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -40823,6 +40834,12 @@ func (s *CreateFpgaImageInput) SetLogsStorageLocation(v *StorageLocation) *Creat
 // SetName sets the Name field's value.
 func (s *CreateFpgaImageInput) SetName(v string) *CreateFpgaImageInput {
 	s.Name = &v
+	return s
+}
+
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CreateFpgaImageInput) SetTagSpecifications(v []*TagSpecification) *CreateFpgaImageInput {
+	s.TagSpecifications = v
 	return s
 }
 
@@ -90564,10 +90581,11 @@ type TagSpecification struct {
 
 	// The type of resource to tag. Currently, the resource types that support tagging
 	// on creation are: capacity-reservation | client-vpn-endpoint | dedicated-host
-	// | fleet | instance | launch-template | snapshot | transit-gateway | transit-gateway-attachment
+	// | fleet | fpga-image | instance | launch-template | snapshot | traffic-mirror-filter
+	// | traffic-mirror-session | traffic-mirror-target | transit-gateway | transit-gateway-attachment
 	// | transit-gateway-route-table | volume.
 	//
-	// To tag a resource after it has been created, see CreateTags.
+	// To tag a resource after it has been created, see CreateTags (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTags.html).
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags to apply to the resource.

@@ -60,35 +60,6 @@ func testSweepAPIGatewayVpcLinks(region string) error {
 
 func TestAccAWSAPIGatewayVpcLink_basic(t *testing.T) {
 	rName := acctest.RandString(5)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsAPIGatewayVpcLinkDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAPIGatewayVpcLinkConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAPIGatewayVpcLinkExists("aws_api_gateway_vpc_link.test"),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "name", fmt.Sprintf("tf-apigateway-%s", rName)),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "description", "test"),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "1"),
-				),
-			},
-			{
-				Config: testAccAPIGatewayVpcLinkConfig_Update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAPIGatewayVpcLinkExists("aws_api_gateway_vpc_link.test"),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "name", fmt.Sprintf("tf-apigateway-update-%s", rName)),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "description", "test update"),
-					resource.TestCheckResourceAttr("aws_api_gateway_vpc_link.test", "target_arns.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayVpcLink_importBasic(t *testing.T) {
-	rName := acctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,11 +69,26 @@ func TestAccAWSAPIGatewayVpcLink_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIGatewayVpcLinkConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
+				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAPIGatewayVpcLinkConfig_Update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAPIGatewayVpcLinkExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("tf-apigateway-update-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test update"),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
+				),
 			},
 		},
 	})

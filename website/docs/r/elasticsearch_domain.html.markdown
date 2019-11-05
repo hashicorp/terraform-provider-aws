@@ -147,7 +147,7 @@ resource "aws_security_group" "es" {
     protocol  = "tcp"
 
     cidr_blocks = [
-      "${data.aws_vpc.selected.cidr_blocks}",
+      "${data.aws_vpc.selected.cidr_block}",
     ]
   }
 }

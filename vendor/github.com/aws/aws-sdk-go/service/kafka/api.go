@@ -1097,7 +1097,7 @@ func (c *Kafka) ListConfigurationRevisionsRequest(input *ListConfigurationRevisi
 
 // ListConfigurationRevisions API operation for Managed Streaming for Kafka.
 //
-// Returns a list of all the MSK configurations in this Region.
+// Returns a list of all the revisions of an MSK configuration.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1745,6 +1745,99 @@ func (c *Kafka) UntagResourceWithContext(ctx aws.Context, input *UntagResourceIn
 	return out, req.Send()
 }
 
+const opUpdateBrokerCount = "UpdateBrokerCount"
+
+// UpdateBrokerCountRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateBrokerCount operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateBrokerCount for more information on using the UpdateBrokerCount
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateBrokerCountRequest method.
+//    req, resp := client.UpdateBrokerCountRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateBrokerCount
+func (c *Kafka) UpdateBrokerCountRequest(input *UpdateBrokerCountInput) (req *request.Request, output *UpdateBrokerCountOutput) {
+	op := &request.Operation{
+		Name:       opUpdateBrokerCount,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/nodes/count",
+	}
+
+	if input == nil {
+		input = &UpdateBrokerCountInput{}
+	}
+
+	output = &UpdateBrokerCountOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateBrokerCount API operation for Managed Streaming for Kafka.
+//
+// Updates the number of broker nodes in the cluster. You can use this operation
+// to increase the number of brokers in an existing cluster. You can't decrease
+// the number of brokers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateBrokerCount for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   Returns information about an error.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Returns information about an error.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Returns information about an error.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Returns information about an error.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateBrokerCount
+func (c *Kafka) UpdateBrokerCount(input *UpdateBrokerCountInput) (*UpdateBrokerCountOutput, error) {
+	req, out := c.UpdateBrokerCountRequest(input)
+	return out, req.Send()
+}
+
+// UpdateBrokerCountWithContext is the same as UpdateBrokerCount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateBrokerCount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateBrokerCountWithContext(ctx aws.Context, input *UpdateBrokerCountInput, opts ...request.Option) (*UpdateBrokerCountOutput, error) {
+	req, out := c.UpdateBrokerCountRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateBrokerStorage = "UpdateBrokerStorage"
 
 // UpdateBrokerStorageRequest generates a "aws/request.Request" representing the
@@ -1990,13 +2083,7 @@ func (s *BrokerEBSVolumeInfo) SetVolumeSizeGB(v int64) *BrokerEBSVolumeInfo {
 type BrokerNodeGroupInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The distribution of broker nodes across Availability Zones. This is an optional
-	// parameter. If you don't specify it, Amazon MSK gives it the value DEFAULT.
-	// You can also explicitly set this parameter to the value DEFAULT. No other
-	// values are currently allowed.
-	//
-	// Amazon MSK distributes the broker nodes evenly across the Availability Zones
-	// that correspond to the subnets you provide when you create the cluster.
+	// The distribution of broker nodes across Availability Zones.
 	BrokerAZDistribution *string `locationName:"brokerAZDistribution" type:"string" enum:"BrokerAZDistribution"`
 
 	// The list of subnets to connect to in the client virtual private cloud (VPC).
@@ -2008,8 +2095,8 @@ type BrokerNodeGroupInfo struct {
 	ClientSubnets []*string `locationName:"clientSubnets" type:"list" required:"true"`
 
 	// The type of Amazon EC2 instances to use for Kafka brokers. The following
-	// instance types are allowed: kafka.m5.large, kafka.m5.xlarge, kafka.m5.2xlarge,kafka.m5.4xlarge,
-	// kafka.m5.12xlarge, and kafka.m5.24xlarge.
+	// instance types are allowed: kafka.m5.large, kafka.m5.xlarge, kafka.m5.2xlarge,
+	// kafka.m5.4xlarge, kafka.m5.12xlarge, and kafka.m5.24xlarge.
 	//
 	// InstanceType is a required field
 	InstanceType *string `locationName:"instanceType" min:"5" type:"string" required:"true"`
@@ -2017,7 +2104,9 @@ type BrokerNodeGroupInfo struct {
 	// The AWS security groups to associate with the elastic network interfaces
 	// in order to specify who can connect to and communicate with the Amazon MSK
 	// cluster. If you don't specify a security group, Amazon MSK uses the default
-	// security group associated with the VPC.
+	// security group associated with the VPC. If you specify security groups that
+	// were shared with you, you must ensure that you have permissions to them.
+	// Specifically, you need the ec2:DescribeSecurityGroups permission.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
 	// Contains information about storage volumes attached to MSK broker nodes.
@@ -2252,7 +2341,9 @@ type ClusterInfo struct {
 	// brokers in the cluster.
 	CurrentBrokerSoftwareInfo *BrokerSoftwareInfo `locationName:"currentBrokerSoftwareInfo" type:"structure"`
 
-	// The current version of the MSK cluster.
+	// The current version of the MSK cluster. Cluster versions aren't simple integers.
+	// You can obtain the current version by describing the cluster. An example
+	// version is KTVPDKIKX0DER.
 	CurrentVersion *string `locationName:"currentVersion" type:"string"`
 
 	// Includes all encryption-related information.
@@ -2505,7 +2596,8 @@ type Configuration struct {
 	// LatestRevision is a required field
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure" required:"true"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
@@ -2673,8 +2765,7 @@ type CreateClusterInput struct {
 	// ClusterName is a required field
 	ClusterName *string `locationName:"clusterName" min:"1" type:"string" required:"true"`
 
-	// Represents the configuration that you want MSK to use for the brokers in
-	// a cluster.
+	// Represents the configuration that you want MSK to use for the cluster.
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure"`
 
 	// Includes all encryption-related information.
@@ -2862,7 +2953,8 @@ type CreateConfigurationInput struct {
 	// KafkaVersions is a required field
 	KafkaVersions []*string `locationName:"kafkaVersions" type:"list" required:"true"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
@@ -2939,7 +3031,8 @@ type CreateConfigurationOutput struct {
 	// Latest revision of the configuration.
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
 }
 
@@ -3241,7 +3334,8 @@ type DescribeConfigurationOutput struct {
 	// Latest revision of the configuration.
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
 }
 
@@ -3485,7 +3579,7 @@ type EncryptionInTransit struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates the encryption setting for data in transit between clients and
-	// brokers. The following are the possible values.
+	// brokers. You must set it to one of the following values.
 	//
 	// TLS means that client-broker communication is enabled with TLS only.
 	//
@@ -3495,7 +3589,7 @@ type EncryptionInTransit struct {
 	// PLAINTEXT means that client-broker communication is enabled in plaintext
 	// only.
 	//
-	// The default value is TLS_PLAINTEXT.
+	// The default value is TLS.
 	ClientBroker *string `locationName:"clientBroker" type:"string" enum:"ClientBroker"`
 
 	// When set to true, it indicates that data communication among the broker nodes
@@ -3657,7 +3751,9 @@ type GetBootstrapBrokersOutput struct {
 	// A string containing one or more hostname:port pairs.
 	BootstrapBrokerString *string `locationName:"bootstrapBrokerString" type:"string"`
 
-	// A string containing one or more DNS names (or IP) and TLS port pairs.
+	// A string containing one or more DNS names (or IP) and TLS port pairs. The
+	// following is an example.
+	//  { "BootstrapBrokerStringTls": "b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094"}
 	BootstrapBrokerStringTls *string `locationName:"bootstrapBrokerStringTls" type:"string"`
 }
 
@@ -4497,6 +4593,111 @@ func (s UntagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// Request body for UpdateBrokerCount.
+type UpdateBrokerCountInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// The current version of the cluster.
+	//
+	// CurrentVersion is a required field
+	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
+
+	// The number of broker nodes that you want the cluster to have after this operation
+	// completes successfully.
+	//
+	// TargetNumberOfBrokerNodes is a required field
+	TargetNumberOfBrokerNodes *int64 `locationName:"targetNumberOfBrokerNodes" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateBrokerCountInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateBrokerCountInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateBrokerCountInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateBrokerCountInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.CurrentVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.TargetNumberOfBrokerNodes == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetNumberOfBrokerNodes"))
+	}
+	if s.TargetNumberOfBrokerNodes != nil && *s.TargetNumberOfBrokerNodes < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("TargetNumberOfBrokerNodes", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateBrokerCountInput) SetClusterArn(v string) *UpdateBrokerCountInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *UpdateBrokerCountInput) SetCurrentVersion(v string) *UpdateBrokerCountInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetTargetNumberOfBrokerNodes sets the TargetNumberOfBrokerNodes field's value.
+func (s *UpdateBrokerCountInput) SetTargetNumberOfBrokerNodes(v int64) *UpdateBrokerCountInput {
+	s.TargetNumberOfBrokerNodes = &v
+	return s
+}
+
+// Response body for UpdateBrokerCount.
+type UpdateBrokerCountOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateBrokerCountOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateBrokerCountOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateBrokerCountOutput) SetClusterArn(v string) *UpdateBrokerCountOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *UpdateBrokerCountOutput) SetClusterOperationArn(v string) *UpdateBrokerCountOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
 // Request object for UpdateBrokerStorage.
 type UpdateBrokerStorageInput struct {
 	_ struct{} `type:"structure"`
@@ -4512,6 +4713,11 @@ type UpdateBrokerStorageInput struct {
 
 	// Describes the target volume size and the ID of the broker to apply the update
 	// to.
+	//
+	// The value you specify for Target-Volume-in-GiB must be a whole number that
+	// is greater than 100 GiB.
+	//
+	// The storage per broker after the update operation can't exceed 16384 GiB.
 	//
 	// TargetBrokerEBSVolumeInfo is a required field
 	TargetBrokerEBSVolumeInfo []*BrokerEBSVolumeInfo `locationName:"targetBrokerEBSVolumeInfo" type:"list" required:"true"`
@@ -4617,13 +4823,12 @@ type UpdateClusterConfigurationInput struct {
 	// ClusterArn is a required field
 	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
 
-	// Represents the configuration that you want MSK to use for the brokers in
-	// a cluster.
+	// Represents the configuration that you want MSK to use for the cluster.
 	//
 	// ConfigurationInfo is a required field
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure" required:"true"`
 
-	// The version of the cluster that needs to be updated.
+	// The version of the cluster that you want to update.
 	//
 	// CurrentVersion is a required field
 	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
@@ -4777,13 +4982,10 @@ func (s *ZookeeperNodeInfo) SetZookeeperVersion(v string) *ZookeeperNodeInfo {
 	return s
 }
 
-// The distribution of broker nodes across Availability Zones. This is an optional
-// parameter. If you don't specify it, Amazon MSK gives it the value DEFAULT.
-// You can also explicitly set this parameter to the value DEFAULT. No other
-// values are currently allowed.
-//
-// Amazon MSK distributes the broker nodes evenly across the Availability Zones
-// that correspond to the subnets you provide when you create the cluster.
+// The distribution of broker nodes across Availability Zones. By default, broker
+// nodes are distributed among the Availability Zones of your Region. Currently,
+// the only supported value is DEFAULT. You can either specify this value explicitly
+// or leave it out.
 const (
 	// BrokerAZDistributionDefault is a BrokerAZDistribution enum value
 	BrokerAZDistributionDefault = "DEFAULT"
