@@ -134,7 +134,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_cloudsearch_",
     ],
     "service/cloudtrail" = [
-      "aws_cloudtrail_",
+      "aws_cloudtrail",
     ],
     "service/cloudwatch" = [
       "aws_cloudwatch_([^e]|e[^v]|ev[^e]|eve[^n]|even[^t]|event[^_]|[^l]|l[^o]|lo[^g]|log[^_])",
@@ -536,7 +536,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigateway" = [
       "**/*_api_gateway_[^v][^2][^_]*",
-      "**/api_gateway_[^v][^2][^_]*"
+      "**/*_api_gateway_vpc_link*",
+      "**/api_gateway_[^v][^2][^_]*",
+      "**/api_gateway_vpc_link*"
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
@@ -567,7 +569,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/appsync_*"
     ]
     "service/athena" = [
-      "service/athena",
+      "**/*_athena_*",
       "**/athena_*"
     ]
     "service/autoscaling" = [
@@ -617,8 +619,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/cloudsearch_*"
     ]
     "service/cloudtrail" = [
-      "**/*_cloudtrail_*",
-      "**/cloudtrail_*"
+      "**/*_cloudtrail*",
+      "**/cloudtrail*"
     ]
     "service/cloudwatch" = [
       "**/*_cloudwatch_dashboard*",
@@ -977,6 +979,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/qldb" = [
+      "**/*_qldb_*",
+      "**/qldb_*"
+    ]
     "service/quicksight" = [
       "**/*_quicksight_*",
       "**/quicksight_*"
@@ -1020,8 +1026,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_domains_*"
     ]
     "service/route53resolver" = [
-      "**/*_route53resolver_*",
-      "**/route53resolver_*"
+      "**/*_route53_resolver_*",
+      "**/route53_resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",
