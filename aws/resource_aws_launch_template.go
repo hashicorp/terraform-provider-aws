@@ -640,21 +640,21 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
-		return err
+		return fmt.Errorf("error setting block_device_mappings: %s", err)
 	}
 
 	if err := d.Set("capacity_reservation_specification", getCapacityReservationSpecification(ltData.CapacityReservationSpecification)); err != nil {
-		return err
+		return fmt.Errorf("error setting capacity_reservation_specification: %s", err)
 	}
 
 	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {
 		if err := d.Set("credit_specification", getCreditSpecification(ltData.CreditSpecification)); err != nil {
-			return err
+			return fmt.Errorf("error setting credit_specification: %s", err)
 		}
 	}
 
 	if err := d.Set("elastic_gpu_specifications", getElasticGpuSpecifications(ltData.ElasticGpuSpecifications)); err != nil {
-		return err
+		return fmt.Errorf("error setting elastic_gpu_specifications: %s", err)
 	}
 
 	if err := d.Set("elastic_inference_accelerator", flattenEc2LaunchTemplateElasticInferenceAcceleratorResponse(ltData.ElasticInferenceAccelerators)); err != nil {
@@ -662,31 +662,31 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err := d.Set("iam_instance_profile", getIamInstanceProfile(ltData.IamInstanceProfile)); err != nil {
-		return err
+		return fmt.Errorf("error setting iam_instance_profile: %s", err)
 	}
 
 	if err := d.Set("instance_market_options", getInstanceMarketOptions(ltData.InstanceMarketOptions)); err != nil {
-		return err
+		return fmt.Errorf("error setting instance_market_options: %s", err)
 	}
 
 	if err := d.Set("license_specification", getLicenseSpecifications(ltData.LicenseSpecifications)); err != nil {
-		return err
+		return fmt.Errorf("error setting license_specification: %s", err)
 	}
 
 	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
-		return err
+		return fmt.Errorf("error setting monitoring: %s", err)
 	}
 
 	if err := d.Set("network_interfaces", getNetworkInterfaces(ltData.NetworkInterfaces)); err != nil {
-		return err
+		return fmt.Errorf("error setting network_interfaces: %s", err)
 	}
 
 	if err := d.Set("placement", getPlacement(ltData.Placement)); err != nil {
-		return err
+		return fmt.Errorf("error setting placement: %s", err)
 	}
 
 	if err := d.Set("tag_specifications", getTagSpecifications(ltData.TagSpecifications)); err != nil {
-		return err
+		return fmt.Errorf("error setting tag_specifications: %s", err)
 	}
 
 	return nil
@@ -993,7 +993,7 @@ func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{}
 	for _, v := range t {
 		s = append(s, map[string]interface{}{
 			"resource_type": aws.StringValue(v.ResourceType),
-			"tags":          tagsToMap(v.Tags),
+			"tags":          keyvaluetags.Ec2KeyValueTags(v.Tags).IgnoreAws().Map(),
 		})
 	}
 	return s
@@ -1172,10 +1172,9 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 				continue
 			}
 			tsData := ts.(map[string]interface{})
-			tags := tagsFromMap(tsData["tags"].(map[string]interface{}))
 			tagSpecification := &ec2.LaunchTemplateTagSpecificationRequest{
 				ResourceType: aws.String(tsData["resource_type"].(string)),
-				Tags:         tags,
+				Tags:         keyvaluetags.New(tsData["tags"].(map[string]interface{})).IgnoreAws().Ec2Tags(),
 			}
 			tagSpecifications = append(tagSpecifications, tagSpecification)
 		}
