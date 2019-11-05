@@ -106,6 +106,10 @@ func resourceAwsCloudWatchLogGroupCreate(d *schema.ResourceData, meta interface{
 		}
 		log.Printf("[DEBUG] Setting retention for CloudWatch Log Group: %q: %s", logGroupName, input)
 		_, err = conn.PutRetentionPolicy(&input)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return resourceAwsCloudWatchLogGroupRead(d, meta)
