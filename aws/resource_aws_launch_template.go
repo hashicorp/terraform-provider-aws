@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsLaunchTemplate() *schema.Resource {
@@ -477,8 +478,8 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"instance",
-								"volume",
+								ec2.ResourceTypeInstance,
+								ec2.ResourceTypeVolume,
 							}, false),
 						},
 						"tags": tagsSchema(),
@@ -531,6 +532,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 		ClientToken:        aws.String(resource.UniqueId()),
 		LaunchTemplateName: aws.String(ltName),
 		LaunchTemplateData: launchTemplateData,
+		TagSpecifications:  ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeLaunchTemplate),
 	}
 
 	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
@@ -548,7 +550,7 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Launch Template created: %q (version %d)",
 		*launchTemplate.LaunchTemplateId, *launchTemplate.LatestVersionNumber)
 
-	return resourceAwsLaunchTemplateUpdate(d, meta)
+	return resourceAwsLaunchTemplateRead(d, meta)
 }
 
 func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
@@ -593,7 +595,9 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("default_version", lt.DefaultVersionNumber)
-	d.Set("tags", tagsToMap(lt.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(lt.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -691,37 +695,33 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if !d.IsNewResource() {
-		launchTemplateData, err := buildLaunchTemplateData(d)
-		if err != nil {
-			return err
-		}
-
-		launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
-			ClientToken:        aws.String(resource.UniqueId()),
-			LaunchTemplateId:   aws.String(d.Id()),
-			LaunchTemplateData: launchTemplateData,
-		}
-
-		if v, ok := d.GetOk("description"); ok && v.(string) != "" {
-			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
-		}
-
-		_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
-		if createErr != nil {
-			return createErr
-		}
-	}
-
-	d.Partial(true)
-
-	if err := setTags(conn, d); err != nil {
+	launchTemplateData, err := buildLaunchTemplateData(d)
+	if err != nil {
 		return err
-	} else {
-		d.SetPartial("tags")
 	}
 
-	d.Partial(false)
+	launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
+		ClientToken:        aws.String(resource.UniqueId()),
+		LaunchTemplateId:   aws.String(d.Id()),
+		LaunchTemplateData: launchTemplateData,
+	}
+
+	if v, ok := d.GetOk("description"); ok && v.(string) != "" {
+		launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
+	}
+
+	_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+	if createErr != nil {
+		return createErr
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
 
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
