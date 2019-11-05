@@ -59,7 +59,7 @@ func resourceAwsGreengrassCoreDefinition() *schema.Resource {
 									},
 									"thing_arn": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 								},
 							},
