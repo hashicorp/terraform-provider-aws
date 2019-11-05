@@ -161,7 +161,7 @@ resource "aws_codebuild_project" "example" {
 
     security_group_ids = [
       "${aws_security_group.example1.id}",
-      "${aws_security_gorup.example2.id}",
+      "${aws_security_group.example2.id}",
     ]
   }
 
