@@ -15,16 +15,21 @@ ENHANCEMENTS:
 * data-source/aws_db_instance: Add `tags` attribute [GH-10550]
 * data-source/aws_vpc_endpoint: Add `filter` and `tags` arguments [GH-10503]
 * provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
+* resource/aws_acmpca_certificate_authority: Support tagging on creation [GH-10736]
 * resource/aws_api_gateway_api_key: Add `tags` argument and `arn` attribute [GH-10568]
 * resource/aws_api_gateway_client_certificate: Add `tags` argument and `arn` attribute [GH-10569]
 * resource/aws_api_gateway_domain_name: Add `tags` argument and `arn` attribute [GH-10567]
 * resource/aws_api_gateway_vpc_link: Add `tags` argument and `arn` attribute [GH-10561]
+* resource/aws_cloudwatch_log_group: Support tagging on creation [GH-10753]
 * resource/aws_db_cluster_snapshot: Add `tags` argument [GH-10488]
+* resource/aws_ec2_fleet: Support in-place `tags` updates [GH-10761]
+* resource/aws_launch_template: Support tagging on creation [GH-10759]
 * resource/aws_mq_broker: Support in-place `security_groups` updates [GH-10442]
 * resource/aws_storagegateway_cached_iscsi_volume: Add `tags` argument [GH-10613]
 * resource/aws_storagegateway_gateway: Add `tags` argument [GH-10588]
 * resource/aws_storagegateway_nfs_file_share: Add `tags` argument [GH-10722]
 * resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
+* resource/aws_swf_domain: Add `tags` argument and `arn` attribute [GH-10763]
 * resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 * resource/aws_waf_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10479]
 
@@ -34,6 +39,7 @@ BUG FIXES:
 * resource/aws_api_gateway_authorizer: Set `authorizer_result_ttl_in_seconds` argument default to 300 to match API default which properly allows setting to 0 for disabling caching [GH-9605]
 * resource/aws_autoscaling_group: Batch ELB attachments and detachments by 10 to prevent API and rate limiting errors [GH-10445]
 * resource/aws_s3_bucket_public_access_block: Remove from Terraform state when S3 Bucket is already destroyed [GH-10534]
+* resource/aws_ssm_maintenance_window_task: Prevent crashes with empty configuration blocks [GH-10713]
 
 ## 2.34.0 (October 31, 2019)
 

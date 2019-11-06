@@ -28,6 +28,7 @@ var serviceNames = []string{
 	"cloudhsmv2",
 	"cloudwatch",
 	"cloudwatchevents",
+	"cloudwatchlogs",
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
@@ -79,6 +80,7 @@ var serviceNames = []string{
 	"securityhub",
 	"sfn",
 	"sns",
+	"sqs",
 	"ssm",
 	"storagegateway",
 	"swf",
@@ -192,6 +194,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTags"
 	case "cloudhsmv2":
 		return "ListTags"
+	case "cloudwatchlogs":
+		return "ListTagsLogGroup"
 	case "dax":
 		return "ListTags"
 	case "dynamodb":
@@ -220,6 +224,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "GetTags"
 	case "sagemaker":
 		return "ListTags"
+	case "sqs":
+		return "ListQueueTags"
 	case "workspaces":
 		return "DescribeTags"
 	default:
@@ -242,6 +248,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchevents":
 		return "ResourceARN"
+	case "cloudwatchlogs":
+		return "LogGroupName"
 	case "dax":
 		return "ResourceName"
 	case "devicefarm":
@@ -282,6 +290,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "resourcegroups":
 		return "Arn"
+	case "sqs":
+		return "QueueUrl"
 	case "ssm":
 		return "ResourceId"
 	case "storagegateway":
