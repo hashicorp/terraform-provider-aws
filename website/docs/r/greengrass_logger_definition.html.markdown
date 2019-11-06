@@ -37,7 +37,7 @@ The `logger` object has such arguments:
 * `id` - (Required) String. A descriptive or arbitrary ID for the core. This value must be unique within the core definition version. Max length is 128 characters with pattern [a-zA-Z0-9:_-]+.
 * `type` - (Required) String. The type of log output which will be used. This argument can accept such values: AWSCloudWatch, FileSystem.
 * `level` - (Required) String. The level of the logs. This argument can accept such values: TRACE, DEBUG, INFO, WARN, ERROR, FATAL.
-* `Space` - (Optional) Number. The amount of file space, in KB, to use if the local file system is used for logging purposes.
+* `space` - (Optional) Number. The amount of file space, in KB, to use if the local file system is used for logging purposes.
 
 
 ## Attributes Reference
