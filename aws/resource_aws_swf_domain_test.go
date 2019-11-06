@@ -38,6 +38,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 				Config: testAccAWSSwfDomainConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "swf", regexp.MustCompile(`domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),

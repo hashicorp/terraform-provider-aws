@@ -120,7 +120,6 @@ func resourceAwsSwfDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	arn := *resp.DomainInfo.Arn
-	println("arn is: " + arn)
 	tags, err := keyvaluetags.SwfListTags(conn, arn)
 
 	if err != nil {
