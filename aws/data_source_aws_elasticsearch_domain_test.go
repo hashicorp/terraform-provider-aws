@@ -14,7 +14,7 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -44,7 +44,7 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -72,10 +72,6 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 
 func testAccAWSElasticsearchDomainConfigWithDataSource(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-east-1"
-}
-
 locals {
 	random_name = "test-es-%d"
 }
@@ -106,7 +102,7 @@ resource "aws_elasticsearch_domain" "test" {
 POLICY
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch"
     instance_count = 2
 	dedicated_master_enabled = false
 	zone_awareness_config {
@@ -132,9 +128,11 @@ data "aws_elasticsearch_domain" "test" {
 
 func testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-east-1"
+data "aws_availability_zones" "available" {
+  state = "available"
 }
+
+data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
@@ -157,14 +155,14 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 		{
 			"Effect": "Allow",
 			"Principal": {
-				"Service": "es.amazonaws.com"
+				"Service": "es.${data.aws_partition.current.dns_suffix}"
 			},
 			"Action": [
 				"logs:PutLogEvents",
 				"logs:PutLogEventsBatch",
 				"logs:CreateLogStream"
 			],
-			"Resource": "arn:aws:logs:*"
+			"Resource": "arn:${data.aws_partition.current.partition}:logs:*"
 		}
 	]
 }
@@ -176,13 +174,15 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-	vpc_id = "${aws_vpc.test.id}"
-	cidr_block = "10.0.0.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_subnet" "test2" {
-	vpc_id = "${aws_vpc.test.id}"
-	cidr_block = "10.0.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_security_group" "test" {
@@ -212,14 +212,14 @@ resource "aws_elasticsearch_domain" "test" {
 			"Action": "es:*",
 			"Principal": "*",
 			"Effect": "Allow",
-			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*"
+			"Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*"
 		}
 	]
 }
 POLICY
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch"
     instance_count = 2
     dedicated_master_enabled = false
 	zone_awareness_config {
