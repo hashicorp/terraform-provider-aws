@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_metric_alarm"
 description: |-

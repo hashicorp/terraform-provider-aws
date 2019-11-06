@@ -1,4 +1,5 @@
 ---
+subcategory: "SWF"
 layout: "aws"
 page_title: "AWS: aws_swf_domain"
 description: |-
