@@ -30,6 +30,13 @@ func dataSourceAwsIAMGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"users": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type: schema.TypeMap,
+				},
+				Computed: true,
+			},
 		},
 	}
 }
@@ -53,11 +60,26 @@ func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	group := resp.Group
+	users := resp.Users
+
+	var usersList []map[string]*string
 
 	d.SetId(*group.GroupId)
 	d.Set("arn", group.Arn)
 	d.Set("path", group.Path)
 	d.Set("group_id", group.GroupId)
 
-	return nil
+	for _, u := range users {
+		usersList = append(usersList, map[string]*string{
+			"Arn":      u.Arn,
+			"UserId":   u.UserId,
+			"UserName": u.UserName,
+		})
+	}
+
+	if err := d.Set("users", usersList); err != nil {
+		return fmt.Errorf("Error setting users for resource %s: %s", d.Id(), err)
+	}
+
+	return err
 }
