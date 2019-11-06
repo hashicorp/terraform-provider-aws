@@ -274,7 +274,7 @@ resource "aws_ebs_volume" "foo" {
   size              = %d
 
   tags = {
-    Name = "%s"
+    Name = "%[2]s"
   }
 }
 
@@ -282,7 +282,7 @@ resource "aws_ebs_snapshot" "foo" {
   volume_id = "${aws_ebs_volume.foo.id}"
 
   tags = {
-    Name = "%s"
+    Name = "%[2]s"
   }
 }
 
@@ -290,7 +290,7 @@ resource "aws_ebs_snapshot" "foo" {
 }
 
 func testAccAmiConfig_basic(rName string, size int) string {
-	return testAccAmiConfig_base(size, rName) + fmt.Sprintf(`
+	return testAccAmiConfig_base(rName, size) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
   name                = %[1]q
@@ -306,7 +306,7 @@ resource "aws_ami" "test" {
 }
 
 func testAccAmiConfigTags1(rName, tagKey1, tagValue1 string, size int) string {
-	return testAccAmiConfig_base(size, rName) + fmt.Sprintf(`
+	return testAccAmiConfig_base(rName, size) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
   name                = %[1]q
@@ -326,7 +326,7 @@ resource "aws_ami" "test" {
 }
 
 func testAccAmiConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string, size int) string {
-	return testAccAmiConfig_base(size, rName) + fmt.Sprintf(`
+	return testAccAmiConfig_base(rName, size) + fmt.Sprintf(`
 resource "aws_ami" "test" {
   ena_support         = true
   name                = %[1]q
