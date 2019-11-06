@@ -1,4 +1,5 @@
 ---
+subcategory: "WorkSpaces"
 layout: "aws"
 page_title: "AWS: aws_workspaces_bundle"
 description: |-

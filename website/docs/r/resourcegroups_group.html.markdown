@@ -1,4 +1,5 @@
 ---
+subcategory: "Resource Groups"
 layout: "aws"
 page_title: "AWS: aws_resourcegroups_group"
 description: |-
