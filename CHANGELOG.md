@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_client_certificate: Add `tags` argument and `arn` attribute [GH-10569]
 * resource/aws_api_gateway_domain_name: Add `tags` argument and `arn` attribute [GH-10567]
 * resource/aws_api_gateway_vpc_link: Add `tags` argument and `arn` attribute [GH-10561]
+* resource/aws_cloudwatch_log_group: Support tagging on creation [GH-10753]
 * resource/aws_db_cluster_snapshot: Add `tags` argument [GH-10488]
 * resource/aws_mq_broker: Support in-place `security_groups` updates [GH-10442]
 * resource/aws_storagegateway_cached_iscsi_volume: Add `tags` argument [GH-10613]
