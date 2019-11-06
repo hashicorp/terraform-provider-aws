@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_storagegateway_gateway: Add `tags` argument [GH-10588]
 * resource/aws_storagegateway_nfs_file_share: Add `tags` argument [GH-10722]
 * resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
+* resource/aws_swf_domain: Add `tags` argument and `arn` attribute [GH-10763]
 * resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
 * resource/aws_waf_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10479]
 
