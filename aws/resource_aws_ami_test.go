@@ -265,7 +265,7 @@ func testAccCheckAmiEbsBlockDevice(bd *ec2.BlockDeviceMapping, ed *ec2.EbsBlockD
 	}
 }
 
-func testAccAmiConfig_base(size int, rName string) string {
+func testAccAmiConfig_base(rName string, size int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {}
 
