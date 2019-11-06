@@ -286,7 +286,7 @@ resource "aws_ebs_snapshot" "foo" {
   }
 }
 
-`, size, rName, rName)
+`, size, rName)
 }
 
 func testAccAmiConfig_basic(rName string, size int) string {
