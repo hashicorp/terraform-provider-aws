@@ -38,7 +38,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 				Config: testAccAWSSwfDomainConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSwfDomainExists(resourceName),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "swf", regexp.MustCompile(`domain/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -198,8 +198,8 @@ func testAccCheckAwsSwfDomainDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if *resp.DomainInfo.Status != "DEPRECATED" {
-			return fmt.Errorf(`SWF Domain %s status is %s instead of "DEPRECATED". Failing!`, name, *resp.DomainInfo.Status)
+		if *resp.DomainInfo.Status != swf.RegistrationStatusDeprecated {
+			return fmt.Errorf(`SWF Domain %s status is %s instead of %s. Failing!`, name, *resp.DomainInfo.Status, swf.RegistrationStatusDeprecated)
 		}
 	}
 
@@ -229,8 +229,8 @@ func testAccCheckAwsSwfDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SWF Domain %s not found in AWS", name)
 		}
 
-		if *resp.DomainInfo.Status != "REGISTERED" {
-			return fmt.Errorf(`SWF Domain %s status is %s instead of "REGISTERED". Failing!`, name, *resp.DomainInfo.Status)
+		if *resp.DomainInfo.Status != swf.RegistrationStatusRegistered {
+			return fmt.Errorf(`SWF Domain %s status is %s instead of %s. Failing!`, name, *resp.DomainInfo.Status, swf.RegistrationStatusRegistered)
 		}
 		return nil
 	}
