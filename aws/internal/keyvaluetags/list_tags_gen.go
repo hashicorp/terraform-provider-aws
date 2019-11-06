@@ -4,6 +4,7 @@ package keyvaluetags
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/appmesh"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -34,6 +36,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -58,11 +61,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
@@ -70,6 +75,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
+
+// AcmListTags lists acm service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AcmListTags(conn *acm.ACM, identifier string) (KeyValueTags, error) {
+	input := &acm.ListTagsForCertificateInput{
+		CertificateArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForCertificate(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AcmKeyValueTags(output.Tags), nil
+}
 
 // AcmpcaListTags lists acmpca service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
@@ -239,6 +261,23 @@ func CloudwatcheventsListTags(conn *cloudwatchevents.CloudWatchEvents, identifie
 	}
 
 	return CloudwatcheventsKeyValueTags(output.Tags), nil
+}
+
+// CloudwatchlogsListTags lists cloudwatchlogs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string) (KeyValueTags, error) {
+	input := &cloudwatchlogs.ListTagsLogGroupInput{
+		LogGroupName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsLogGroup(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudwatchlogsKeyValueTags(output.Tags), nil
 }
 
 // CodecommitListTags lists codecommit service tags.
@@ -579,6 +618,23 @@ func ElasticsearchserviceListTags(conn *elasticsearchservice.ElasticsearchServic
 	}
 
 	return ElasticsearchserviceKeyValueTags(output.TagList), nil
+}
+
+// Elbv2ListTags lists elbv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Elbv2ListTags(conn *elbv2.ELBV2, identifier string) (KeyValueTags, error) {
+	input := &elbv2.DescribeTagsInput{
+		ResourceArns: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Elbv2KeyValueTags(output.TagDescriptions[0].Tags), nil
 }
 
 // FirehoseListTags lists firehose service tags.
@@ -989,6 +1045,23 @@ func RdsListTags(conn *rds.RDS, identifier string) (KeyValueTags, error) {
 	return RdsKeyValueTags(output.TagList), nil
 }
 
+// ResourcegroupsListTags lists resourcegroups service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ResourcegroupsListTags(conn *resourcegroups.ResourceGroups, identifier string) (KeyValueTags, error) {
+	input := &resourcegroups.GetTagsInput{
+		Arn: aws.String(identifier),
+	}
+
+	output, err := conn.GetTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ResourcegroupsKeyValueTags(output.Tags), nil
+}
+
 // Route53resolverListTags lists route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1072,6 +1145,23 @@ func SnsListTags(conn *sns.SNS, identifier string) (KeyValueTags, error) {
 	}
 
 	return SnsKeyValueTags(output.Tags), nil
+}
+
+// SqsListTags lists sqs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SqsListTags(conn *sqs.SQS, identifier string) (KeyValueTags, error) {
+	input := &sqs.ListQueueTagsInput{
+		QueueUrl: aws.String(identifier),
+	}
+
+	output, err := conn.ListQueueTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return SqsKeyValueTags(output.Tags), nil
 }
 
 // SsmListTags lists ssm service tags.

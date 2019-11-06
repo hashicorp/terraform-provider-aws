@@ -1,4 +1,5 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_domain_name"
 description: |-
@@ -148,6 +149,7 @@ The following arguments are supported:
 * `domain_name` - (Required) The fully-qualified domain name to register
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. Defined below.
 * `security_policy` - (Optional) The Transport Layer Security (TLS) version + cipher suite for this DomainName. The valid values are `TLS_1_0` and `TLS_1_2`. Must be configured to perform drift detection.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 When referencing an AWS-managed certificate, the following arguments are supported:
 
@@ -187,6 +189,7 @@ In addition to the arguments, the following attributes are exported:
   that can be used to create a Route53 alias record for the distribution.
 * `regional_domain_name` - The hostname for the custom domain's regional endpoint.
 * `regional_zone_id` - The hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.
+* `arn` - Amazon Resource Name (ARN)
 
 ## Import
 

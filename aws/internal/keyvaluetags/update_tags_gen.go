@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -17,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -39,6 +42,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -67,11 +71,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
@@ -79,6 +85,78 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
+
+// AcmUpdateTags updates acm service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AcmUpdateTags(conn *acm.ACM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &acm.RemoveTagsFromCertificateInput{
+			CertificateArn: aws.String(identifier),
+			Tags:           removedTags.IgnoreAws().AcmTags(),
+		}
+
+		_, err := conn.RemoveTagsFromCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &acm.AddTagsToCertificateInput{
+			CertificateArn: aws.String(identifier),
+			Tags:           updatedTags.IgnoreAws().AcmTags(),
+		}
+
+		_, err := conn.AddTagsToCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// AcmpcaUpdateTags updates acmpca service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AcmpcaUpdateTags(conn *acmpca.ACMPCA, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &acmpca.UntagCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(identifier),
+			Tags:                    removedTags.IgnoreAws().AcmpcaTags(),
+		}
+
+		_, err := conn.UntagCertificateAuthority(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &acmpca.TagCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(identifier),
+			Tags:                    updatedTags.IgnoreAws().AcmpcaTags(),
+		}
+
+		_, err := conn.TagCertificateAuthority(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
 
 // AmplifyUpdateTags updates amplify service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
@@ -467,6 +545,42 @@ func CloudwatcheventsUpdateTags(conn *cloudwatchevents.CloudWatchEvents, identif
 		}
 
 		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// CloudwatchlogsUpdateTags updates cloudwatchlogs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudwatchlogsUpdateTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &cloudwatchlogs.UntagLogGroupInput{
+			LogGroupName: aws.String(identifier),
+			Tags:         aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagLogGroup(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &cloudwatchlogs.TagLogGroupInput{
+			LogGroupName: aws.String(identifier),
+			Tags:         updatedTags.IgnoreAws().CloudwatchlogsTags(),
+		}
+
+		_, err := conn.TagLogGroup(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
@@ -1256,6 +1370,42 @@ func ElasticsearchserviceUpdateTags(conn *elasticsearchservice.ElasticsearchServ
 		input := &elasticsearchservice.AddTagsInput{
 			ARN:     aws.String(identifier),
 			TagList: updatedTags.IgnoreAws().ElasticsearchserviceTags(),
+		}
+
+		_, err := conn.AddTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// Elbv2UpdateTags updates elbv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Elbv2UpdateTags(conn *elbv2.ELBV2, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &elbv2.RemoveTagsInput{
+			ResourceArns: aws.StringSlice([]string{identifier}),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.RemoveTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &elbv2.AddTagsInput{
+			ResourceArns: aws.StringSlice([]string{identifier}),
+			Tags:         updatedTags.IgnoreAws().Elbv2Tags(),
 		}
 
 		_, err := conn.AddTags(input)
@@ -2276,6 +2426,42 @@ func RedshiftUpdateTags(conn *redshift.Redshift, identifier string, oldTagsMap i
 	return nil
 }
 
+// ResourcegroupsUpdateTags updates resourcegroups service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &resourcegroups.UntagInput{
+			Arn:  aws.String(identifier),
+			Keys: aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.Untag(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &resourcegroups.TagInput{
+			Arn:  aws.String(identifier),
+			Tags: updatedTags.IgnoreAws().ResourcegroupsTags(),
+		}
+
+		_, err := conn.Tag(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // Route53resolverUpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -2447,6 +2633,42 @@ func SnsUpdateTags(conn *sns.SNS, identifier string, oldTagsMap interface{}, new
 		}
 
 		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// SqsUpdateTags updates sqs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SqsUpdateTags(conn *sqs.SQS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &sqs.UntagQueueInput{
+			QueueUrl: aws.String(identifier),
+			TagKeys:  aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagQueue(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &sqs.TagQueueInput{
+			QueueUrl: aws.String(identifier),
+			Tags:     updatedTags.IgnoreAws().SqsTags(),
+		}
+
+		_, err := conn.TagQueue(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
