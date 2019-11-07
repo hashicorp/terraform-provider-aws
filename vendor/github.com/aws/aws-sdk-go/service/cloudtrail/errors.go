@@ -152,8 +152,8 @@ const (
 	// ErrCodeInvalidTagParameterException for service response error code
 	// "InvalidTagParameterException".
 	//
-	// This exception is thrown when the key or value specified for the tag does
-	// not match the regular expression ^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$.
+	// This exception is thrown when the specified tag key or values are not valid.
+	// It can also occur if there are duplicate tags or too many tags on the resource.
 	ErrCodeInvalidTagParameterException = "InvalidTagParameterException"
 
 	// ErrCodeInvalidTimeRangeException for service response error code
@@ -198,7 +198,7 @@ const (
 	// ErrCodeKmsKeyDisabledException for service response error code
 	// "KmsKeyDisabledException".
 	//
-	// This exception is deprecated.
+	// This exception is no longer in use.
 	ErrCodeKmsKeyDisabledException = "KmsKeyDisabledException"
 
 	// ErrCodeKmsKeyNotFoundException for service response error code
@@ -287,7 +287,7 @@ const (
 	// ErrCodeTrailNotProvidedException for service response error code
 	// "TrailNotProvidedException".
 	//
-	// This exception is deprecated.
+	// This exception is no longer in use.
 	ErrCodeTrailNotProvidedException = "TrailNotProvidedException"
 
 	// ErrCodeUnsupportedOperationException for service response error code

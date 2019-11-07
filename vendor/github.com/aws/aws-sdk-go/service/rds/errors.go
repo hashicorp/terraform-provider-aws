@@ -323,13 +323,13 @@ const (
 	// ErrCodeInstallationMediaAlreadyExistsFault for service response error code
 	// "InstallationMediaAlreadyExists".
 	//
-	// The specified installation media has already been imported.
+	// The specified installation medium has already been imported.
 	ErrCodeInstallationMediaAlreadyExistsFault = "InstallationMediaAlreadyExists"
 
 	// ErrCodeInstallationMediaNotFoundFault for service response error code
 	// "InstallationMediaNotFound".
 	//
-	// InstallationMediaID doesn't refer to an existing installation media.
+	// InstallationMediaID doesn't refer to an existing installation medium.
 	ErrCodeInstallationMediaNotFoundFault = "InstallationMediaNotFound"
 
 	// ErrCodeInstanceQuotaExceededFault for service response error code
