@@ -1,45 +1,45 @@
-## 2.35.0 (Unreleased)
+## 2.35.0 (November 07, 2019)
 
 NOTES:
 
-* provider: New `ignore_tag_prefixes` and `ignore_tags` arguments are being tested as a public preview for ignoring tags across all resources under a provider. Support for the functionality must be added to individual resources in the codebase and is only implemented for the `aws_subnet` and `aws_vpc` resources at this time. Until a general availability announcement, no compatibility promises are made with these provider arguments and their functionality. [GH-10418]
+* provider: New `ignore_tag_prefixes` and `ignore_tags` arguments are being tested as a public preview for ignoring tags across all resources under a provider. Support for the functionality must be added to individual resources in the codebase and is only implemented for the `aws_subnet` and `aws_vpc` resources at this time. Until a general availability announcement, no compatibility promises are made with these provider arguments and their functionality. ([#10418](https://github.com/terraform-providers/terraform-provider-aws/issues/10418))
 
 FEATURES:
 
-* **New Data Source:** `aws_qldb_ledger` [GH-10394]
-* **New Resource:** `aws_qldb_ledger` [GH-10394]
+* **New Data Source:** `aws_qldb_ledger` ([#10394](https://github.com/terraform-providers/terraform-provider-aws/issues/10394))
+* **New Resource:** `aws_qldb_ledger` ([#10394](https://github.com/terraform-providers/terraform-provider-aws/issues/10394))
 
 ENHANCEMENTS:
 
-* data-source/aws_db_cluster_snapshot: Add `tags` attribute [GH-10488]
-* data-source/aws_db_instance: Add `tags` attribute [GH-10550]
-* data-source/aws_vpc_endpoint: Add `filter` and `tags` arguments [GH-10503]
-* provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) [GH-10418]
-* resource/aws_acmpca_certificate_authority: Support tagging on creation [GH-10736]
-* resource/aws_api_gateway_api_key: Add `tags` argument and `arn` attribute [GH-10568]
-* resource/aws_api_gateway_client_certificate: Add `tags` argument and `arn` attribute [GH-10569]
-* resource/aws_api_gateway_domain_name: Add `tags` argument and `arn` attribute [GH-10567]
-* resource/aws_api_gateway_vpc_link: Add `tags` argument and `arn` attribute [GH-10561]
-* resource/aws_cloudwatch_log_group: Support tagging on creation [GH-10753]
-* resource/aws_db_cluster_snapshot: Add `tags` argument [GH-10488]
-* resource/aws_ec2_fleet: Support in-place `tags` updates [GH-10761]
-* resource/aws_launch_template: Support tagging on creation [GH-10759]
-* resource/aws_mq_broker: Support in-place `security_groups` updates [GH-10442]
-* resource/aws_storagegateway_cached_iscsi_volume: Add `tags` argument [GH-10613]
-* resource/aws_storagegateway_gateway: Add `tags` argument [GH-10588]
-* resource/aws_storagegateway_nfs_file_share: Add `tags` argument [GH-10722]
-* resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
-* resource/aws_swf_domain: Add `tags` argument and `arn` attribute [GH-10763]
-* resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) [GH-10418]
-* resource/aws_waf_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10479]
+* data-source/aws_db_cluster_snapshot: Add `tags` attribute ([#10488](https://github.com/terraform-providers/terraform-provider-aws/issues/10488))
+* data-source/aws_db_instance: Add `tags` attribute ([#10550](https://github.com/terraform-providers/terraform-provider-aws/issues/10550))
+* data-source/aws_vpc_endpoint: Add `filter` and `tags` arguments ([#10503](https://github.com/terraform-providers/terraform-provider-aws/issues/10503))
+* provider: Add `ignore_tag_prefixes` and `ignore_tags` arguments (in public preview, see note above) ([#10418](https://github.com/terraform-providers/terraform-provider-aws/issues/10418))
+* resource/aws_acmpca_certificate_authority: Support tagging on creation ([#10736](https://github.com/terraform-providers/terraform-provider-aws/issues/10736))
+* resource/aws_api_gateway_api_key: Add `tags` argument and `arn` attribute ([#10568](https://github.com/terraform-providers/terraform-provider-aws/issues/10568))
+* resource/aws_api_gateway_client_certificate: Add `tags` argument and `arn` attribute ([#10569](https://github.com/terraform-providers/terraform-provider-aws/issues/10569))
+* resource/aws_api_gateway_domain_name: Add `tags` argument and `arn` attribute ([#10567](https://github.com/terraform-providers/terraform-provider-aws/issues/10567))
+* resource/aws_api_gateway_vpc_link: Add `tags` argument and `arn` attribute ([#10561](https://github.com/terraform-providers/terraform-provider-aws/issues/10561))
+* resource/aws_cloudwatch_log_group: Support tagging on creation ([#10753](https://github.com/terraform-providers/terraform-provider-aws/issues/10753))
+* resource/aws_db_cluster_snapshot: Add `tags` argument ([#10488](https://github.com/terraform-providers/terraform-provider-aws/issues/10488))
+* resource/aws_ec2_fleet: Support in-place `tags` updates ([#10761](https://github.com/terraform-providers/terraform-provider-aws/issues/10761))
+* resource/aws_launch_template: Support tagging on creation ([#10759](https://github.com/terraform-providers/terraform-provider-aws/issues/10759))
+* resource/aws_mq_broker: Support in-place `security_groups` updates ([#10442](https://github.com/terraform-providers/terraform-provider-aws/issues/10442))
+* resource/aws_storagegateway_cached_iscsi_volume: Add `tags` argument ([#10613](https://github.com/terraform-providers/terraform-provider-aws/issues/10613))
+* resource/aws_storagegateway_gateway: Add `tags` argument ([#10588](https://github.com/terraform-providers/terraform-provider-aws/issues/10588))
+* resource/aws_storagegateway_nfs_file_share: Add `tags` argument ([#10722](https://github.com/terraform-providers/terraform-provider-aws/issues/10722))
+* resource/aws_subnet: Support provider-wide ignore tags (in public preview, see note above) ([#10418](https://github.com/terraform-providers/terraform-provider-aws/issues/10418))
+* resource/aws_swf_domain: Add `tags` argument and `arn` attribute ([#10763](https://github.com/terraform-providers/terraform-provider-aws/issues/10763))
+* resource/aws_vpc: Support provider-wide ignore tags (in public preview, see note above) ([#10418](https://github.com/terraform-providers/terraform-provider-aws/issues/10418))
+* resource/aws_waf_rate_based_rule: Add `tags` argument and `arn` attribute ([#10479](https://github.com/terraform-providers/terraform-provider-aws/issues/10479))
 
 BUG FIXES:
 
-* data-source/aws_route53_resolver_rule: Do not retrieve tags for rules shared with the AWS account that owns the data source [GH-10348]
-* resource/aws_api_gateway_authorizer: Set `authorizer_result_ttl_in_seconds` argument default to 300 to match API default which properly allows setting to 0 for disabling caching [GH-9605]
-* resource/aws_autoscaling_group: Batch ELB attachments and detachments by 10 to prevent API and rate limiting errors [GH-10445]
-* resource/aws_s3_bucket_public_access_block: Remove from Terraform state when S3 Bucket is already destroyed [GH-10534]
-* resource/aws_ssm_maintenance_window_task: Prevent crashes with empty configuration blocks [GH-10713]
+* data-source/aws_route53_resolver_rule: Do not retrieve tags for rules shared with the AWS account that owns the data source ([#10348](https://github.com/terraform-providers/terraform-provider-aws/issues/10348))
+* resource/aws_api_gateway_authorizer: Set `authorizer_result_ttl_in_seconds` argument default to 300 to match API default which properly allows setting to 0 for disabling caching ([#9605](https://github.com/terraform-providers/terraform-provider-aws/issues/9605))
+* resource/aws_autoscaling_group: Batch ELB attachments and detachments by 10 to prevent API and rate limiting errors ([#10445](https://github.com/terraform-providers/terraform-provider-aws/issues/10445))
+* resource/aws_s3_bucket_public_access_block: Remove from Terraform state when S3 Bucket is already destroyed ([#10534](https://github.com/terraform-providers/terraform-provider-aws/issues/10534))
+* resource/aws_ssm_maintenance_window_task: Prevent crashes with empty configuration blocks ([#10713](https://github.com/terraform-providers/terraform-provider-aws/issues/10713))
 
 ## 2.34.0 (October 31, 2019)
 
