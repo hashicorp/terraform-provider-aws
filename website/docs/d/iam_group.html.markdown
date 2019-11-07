@@ -31,3 +31,8 @@ data "aws_iam_group" "example" {
 * `path` - The path to the group.
 
 * `group_id` - The stable and unique string identifying the group.
+
+* `users` - The list of users associated to this group.
+  * `users.#.Arn` - The Amazon Resource Name (ARN) specifying the user.
+  * `users.#.UserId` - The unique identifier for the user.
+  * `users.#.UserName` - The "friendly name" for the user.
