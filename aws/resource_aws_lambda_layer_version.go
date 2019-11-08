@@ -71,6 +71,7 @@ func resourceAwsLambdaLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  "Managed by Terraform",
 			},
 			"license_info": {
 				Type:         schema.TypeString,
