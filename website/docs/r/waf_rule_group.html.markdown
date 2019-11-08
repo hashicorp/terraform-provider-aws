@@ -58,6 +58,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule group.
+* `arn` - The ARN of the WAF rule group.
 
 ## Import
 
