@@ -82,7 +82,9 @@ func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", group.Arn)
 	d.Set("path", group.Path)
 	d.Set("group_id", group.GroupId)
-	d.Set("members", dataSourceUsersRead(resp.Users))
+	if err := d.Set("members", dataSourceUsersRead(resp.Users)); err != nil {
+		return fmt.Errorf("error setting members: %s", err)
+	}
 
 	return nil
 }
