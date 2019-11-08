@@ -229,6 +229,11 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 		},
 		SchemaVersion: 1,
 
@@ -304,6 +309,10 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("notification_topic_arn"); ok {
 		params.NotificationTopicArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		params.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
@@ -426,6 +435,8 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 			log.Printf("Unknown AutomaticFailover state %s", *rgp.AutomaticFailover)
 		}
 	}
+
+	d.Set("kms_key_id", rgp.KmsKeyId)
 
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))

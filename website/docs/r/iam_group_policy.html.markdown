@@ -1,4 +1,5 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_group_policy"
 description: |-

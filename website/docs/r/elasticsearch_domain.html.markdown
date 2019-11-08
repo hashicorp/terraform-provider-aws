@@ -1,4 +1,5 @@
 ---
+subcategory: "ElasticSearch"
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
 description: |-
@@ -147,7 +148,7 @@ resource "aws_security_group" "es" {
     protocol  = "tcp"
 
     cidr_blocks = [
-      "${data.aws_vpc.selected.cidr_blocks}",
+      "${data.aws_vpc.selected.cidr_block}",
     ]
   }
 }

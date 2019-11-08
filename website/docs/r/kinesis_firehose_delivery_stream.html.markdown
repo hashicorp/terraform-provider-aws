@@ -1,4 +1,5 @@
 ---
+subcategory: "Kinesis Firehose"
 layout: "aws"
 page_title: "AWS: aws_kinesis_firehose_delivery_stream"
 description: |-

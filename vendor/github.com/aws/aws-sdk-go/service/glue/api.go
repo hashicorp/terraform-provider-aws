@@ -14578,6 +14578,25 @@ type Connection struct {
 	//    * JDBC_ENFORCE_SSL - A Boolean string (true, false) specifying whether
 	//    Secure Sockets Layer (SSL) with hostname matching is enforced for the
 	//    JDBC connection on the client. The default is false.
+	//
+	//    * CUSTOM_JDBC_CERT - An Amazon S3 location specifying the customer's root
+	//    certificate. AWS Glue uses this root certificate to validate the customer’s
+	//    certificate when connecting to the customer database. AWS Glue only handles
+	//    X.509 certificates. The certificate provided must be DER-encoded and supplied
+	//    in Base64 encoding PEM format.
+	//
+	//    * SKIP_CUSTOM_JDBC_CERT_VALIDATION - By default, this is false. AWS Glue
+	//    validates the Signature algorithm and Subject Public Key Algorithm for
+	//    the customer certificate. The only permitted algorithms for the Signature
+	//    algorithm are SHA256withRSA, SHA384withRSA or SHA512withRSA. For the Subject
+	//    Public Key Algorithm, the key length must be at least 2048. You can set
+	//    the value of this property to true to skip AWS Glue’s validation of
+	//    the customer certificate.
+	//
+	//    * CUSTOM_JDBC_CERT_STRING - A custom JDBC certificate string which is
+	//    used for domain match or distinguished name match to prevent a man-in-the-middle
+	//    attack. In Oracle database, this is used as the SSL_SERVER_CERT_DN; in
+	//    Microsoft SQL Server, this is used as the hostNameInCertificate.
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, only JDBC is supported; SFTP is not
@@ -26492,6 +26511,11 @@ type PartitionInput struct {
 
 	// The values of the partition. Although this parameter is not required by the
 	// SDK, you must specify this parameter for a valid input.
+	//
+	// The values for the keys for the new partition must be passed as an array
+	// of String objects that must be ordered in the same order as the partition
+	// keys appearing in the Amazon S3 prefix. Otherwise AWS Glue will add the values
+	// to the wrong keys.
 	Values []*string `type:"list"`
 }
 
@@ -27696,11 +27720,14 @@ func (s *SkewedInfo) SetSkewedColumnValues(v []*string) *SkewedInfo {
 	return s
 }
 
+// Specifies a field to sort by and a sort order.
 type SortCriterion struct {
 	_ struct{} `type:"structure"`
 
+	// The name of the field on which to sort.
 	FieldName *string `type:"string"`
 
+	// An ascending or descending sort.
 	Sort *string `type:"string" enum:"Sort"`
 }
 
@@ -32467,6 +32494,15 @@ const (
 
 	// ConnectionPropertyKeyJdbcEnforceSsl is a ConnectionPropertyKey enum value
 	ConnectionPropertyKeyJdbcEnforceSsl = "JDBC_ENFORCE_SSL"
+
+	// ConnectionPropertyKeyCustomJdbcCert is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyCustomJdbcCert = "CUSTOM_JDBC_CERT"
+
+	// ConnectionPropertyKeySkipCustomJdbcCertValidation is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeySkipCustomJdbcCertValidation = "SKIP_CUSTOM_JDBC_CERT_VALIDATION"
+
+	// ConnectionPropertyKeyCustomJdbcCertString is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyCustomJdbcCertString = "CUSTOM_JDBC_CERT_STRING"
 )
 
 const (

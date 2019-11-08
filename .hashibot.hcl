@@ -1,10 +1,13 @@
-queued_behavior "release_commenter" "releases" {
-  repo_prefix = "terraform-provider-"
+poll "closed_issue_locker" "locker" {
+  schedule             = "0 50 14 * * *"
+  closed_for           = "720h" # 30 days
+  max_issues           = 500
+  sleep_between_issues = "5s"
 
   message = <<-EOF
-    This has been released in [version ${var.release_version} of the Terraform AWS provider](${var.changelog_link}). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
+    I'm going to lock this issue because it has been closed for _30 days_ ⏳. This helps our maintainers find and focus on the active issues.
 
-    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
+    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
   EOF
 }
 
@@ -29,6 +32,20 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
     Another option is to create a new branch from the current master with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
 
     We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
+  EOF
+}
+
+behavior "opened_pull_request_labeler" "triage" {
+  labels = ["needs-triage"]
+}
+
+queued_behavior "release_commenter" "releases" {
+  repo_prefix = "terraform-provider-"
+
+  message = <<-EOF
+    This has been released in [version ${var.release_version} of the Terraform AWS provider](${var.changelog_link}). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
+
+    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
   EOF
 }
 
@@ -93,6 +110,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/autoscalingplans" = [
       "aws_autoscalingplans_",
     ],
+    "service/backup" = [
+      "aws_backup_",
+    ],
     "service/batch" = [
       "aws_batch_",
     ],
@@ -118,7 +138,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_cloudsearch_",
     ],
     "service/cloudtrail" = [
-      "aws_cloudtrail_",
+      "aws_cloudtrail",
     ],
     "service/cloudwatch" = [
       "aws_cloudwatch_([^e]|e[^v]|ev[^e]|eve[^n]|even[^t]|event[^_]|[^l]|l[^o]|lo[^g]|log[^_])",
@@ -173,6 +193,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/dlm" = [
       "aws_dlm_",
+    ],
+    "service/docdb" = [
+      "aws_docdb_",
     ],
     "service/dynamodb" = [
       "aws_dynamodb_",
@@ -243,6 +266,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/fms" = [
       "aws_fms_",
     ],
+    "service/forecast" = [
+      "aws_forecast_",
+    ],
     "service/fsx" = [
       "aws_fsx_",
     ],
@@ -272,6 +298,12 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/iot" = [
       "aws_iot_",
+    ],
+    "service/iotanalytics" = [
+      "aws_iotanalytics_",
+    ],
+    "service/iotevents" = [
+      "aws_iotevents_",
     ],
     "service/kafka" = [
       "aws_msk_",
@@ -337,6 +369,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/organizations" = [
       "aws_organizations_",
     ],
+    "service/personalize" = [
+      "aws_personalize_",
+    ],
     "service/pinpoint" = [
       "aws_pinpoint_",
     ],
@@ -345,6 +380,12 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/pricing" = [
       "aws_pricing_",
+    ],
+    "service/qldb" = [
+      "aws_qldb_",
+    ],
+    "service/quicksight" = [
+      "aws_quicksight_",
     ],
     "service/ram" = [
       "aws_ram_",
@@ -440,6 +481,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/workdocs" = [
       "aws_workdocs_",
     ],
+    "service/worklink" = [
+      "aws_worklink_",
+    ],
     "service/workmail" = [
       "aws_workmail_",
     ],
@@ -496,7 +540,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigateway" = [
       "**/*_api_gateway_[^v][^2][^_]*",
-      "**/api_gateway_[^v][^2][^_]*"
+      "**/*_api_gateway_vpc_link*",
+      "**/api_gateway_[^v][^2][^_]*",
+      "**/api_gateway_vpc_link*"
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
@@ -527,7 +573,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/appsync_*"
     ]
     "service/athena" = [
-      "service/athena",
+      "**/*_athena_*",
       "**/athena_*"
     ]
     "service/autoscaling" = [
@@ -539,6 +585,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/autoscalingplans" = [
       "**/*_autoscalingplans_*",
       "**/autoscalingplans_*"
+    ]
+    "service/backup" = [
+      "**/*backup_*",
+      "**/backup_*"
     ]
     "service/batch" = [
       "**/*_batch_*",
@@ -573,8 +623,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/cloudsearch_*"
     ]
     "service/cloudtrail" = [
-      "**/*_cloudtrail_*",
-      "**/cloudtrail_*"
+      "**/*_cloudtrail*",
+      "**/cloudtrail*"
     ]
     "service/cloudwatch" = [
       "**/*_cloudwatch_dashboard*",
@@ -612,7 +662,11 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/cognito" = [
       "**/*_cognito_*",
-      "**/_cognito_*"
+      "**/cognito_*"
+    ]
+    "service/comprehend" = [
+      "**/*_comprehend_*",
+      "**/comprehend_*"
     ]
     "service/configservice" = [
       "aws/*_aws_config_*",
@@ -649,6 +703,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/dlm" = [
       "**/*_dlm_*",
       "**/dlm_*"
+    ]
+    "service/docdb" = [
+      "**/*_docdb_*",
+      "**/docdb_*"
     ]
     "service/dynamodb" = [
       "**/*_dynamodb_*",
@@ -821,6 +879,14 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iot_*",
       "**/iot_*"
     ]
+    "service/iotanalytics" = [
+      "**/*_iotanalytics_*",
+      "**/iotanalytics_*"
+    ]
+    "service/iotevents" = [
+      "**/*_iotevents_*",
+      "**/iotevents_*"
+    ]
     "service/kafka" = [
       "**/*_msk_*",
       "**/msk_*",
@@ -917,6 +983,14 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/qldb" = [
+      "**/*_qldb_*",
+      "**/qldb_*"
+    ]
+    "service/quicksight" = [
+      "**/*_quicksight_*",
+      "**/quicksight_*"
+    ]
     "service/ram" = [
       "**/*_ram_*",
       "**/ram_*"
@@ -935,6 +1009,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_resourcegroups_*",
       "**/resourcegroups_*"
     ]
+    "service/robomaker" = [
+      "**/*_robomaker_*",
+      "**/robomaker_*",
+    ]
     "service/route53" = [
       "**/*_route53_delegation_set*",
       "**/*_route53_health_check*",
@@ -947,13 +1025,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_record*",
       "**/route53_zone*"
     ]
-    "service/robomaker" = [
-      "**/*_robomaker_*",
-      "**/robomaker_*",
-    ]
     "service/route53domains" = [
       "**/*_route53_domains_*",
       "**/route53_domains_*"
+    ]
+    "service/route53resolver" = [
+      "**/*_route53_resolver_*",
+      "**/route53_resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",
@@ -1046,6 +1124,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/workdocs" = [
       "**/*_workdocs_*",
       "**/workdocs_*"
+    ]
+    "service/worklink" = [
+      "**/*_worklink_*",
+      "**/worklink_*"
     ]
     "service/workmail" = [
       "**/*_workmail_*",
