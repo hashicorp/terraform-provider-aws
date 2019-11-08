@@ -29,16 +29,16 @@ func resourceAwsGreengrassLoggerDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_definition_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"logger_definition_version": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"logger": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -154,7 +154,7 @@ func setLoggerDefinitionVersion(latestVersion string, d *schema.ResourceData, co
 	}
 
 	rawVersion := make(map[string]interface{})
-	rawVersion["arn"] = *out.Arn
+	d.Set("latest_definition_version_arn", *out.Arn)
 
 	rawLoggerList := make([]map[string]interface{}, 0)
 	for _, logger := range out.Definition.Loggers {

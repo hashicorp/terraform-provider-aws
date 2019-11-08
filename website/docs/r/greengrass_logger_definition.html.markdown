@@ -43,7 +43,7 @@ The `logger` object has such arguments:
 ## Attributes Reference
 In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the group
-* `logger_definition_version.arn` - The ARN of latest logger definition version
+* `logger_definition_version` - The ARN of latest logger definition version
 
 ## Environment variables
 If you use `logger_definition_version` object you should set `AMZN_CLIENT_TOKEN` as environmental variable.
