@@ -30,7 +30,7 @@ func dataSourceAwsIAMGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"members": {
+			"users": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -82,8 +82,8 @@ func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", group.Arn)
 	d.Set("path", group.Path)
 	d.Set("group_id", group.GroupId)
-	if err := d.Set("members", dataSourceUsersRead(resp.Users)); err != nil {
-		return fmt.Errorf("error setting members: %s", err)
+	if err := d.Set("users", dataSourceUsersRead(resp.Users)); err != nil {
+		return fmt.Errorf("error setting users: %s", err)
 	}
 
 	return nil
