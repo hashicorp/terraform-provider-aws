@@ -35,6 +35,10 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
   EOF
 }
 
+behavior "opened_pull_request_labeler" "triage" {
+  labels = ["needs-triage"]
+}
+
 queued_behavior "release_commenter" "releases" {
   repo_prefix = "terraform-provider-"
 
