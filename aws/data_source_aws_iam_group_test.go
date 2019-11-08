@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -44,7 +43,7 @@ func TestAccAWSDataSourceIAMGroup_users(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "group_id"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "path", "/"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "group_name", groupName),
-					resource.TestMatchResourceAttr("data.aws_iam_group.test", "arn", regexp.MustCompile("^arn:aws:iam::[0-9]{12}:group/"+groupName)),
+					testAccCheckResourceAttrGlobalARN("data.aws_iam_group.test", "arn", "iam", fmt.Sprintf("group/%s", groupName)),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", "1"),
 					resource.TestCheckResourceAttrPair("data.aws_iam_group.test", "users.0.arn", "aws_iam_user.user", "arn"),
 					resource.TestCheckResourceAttrPair("data.aws_iam_group.test", "users.0.user_id", "aws_iam_user.user", "unique_id"),
