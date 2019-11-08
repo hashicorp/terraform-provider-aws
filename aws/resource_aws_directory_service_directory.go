@@ -55,6 +55,7 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  "Managed by Terraform",
 			},
 			"short_name": {
 				Type:     schema.TypeString,
