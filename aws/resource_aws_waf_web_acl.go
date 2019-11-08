@@ -190,6 +190,23 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
+	rules := d.Get("rules").(*schema.Set).List()
+	if len(rules) > 0 {
+		wr := newWafRetryer(conn)
+		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+			req := &waf.UpdateWebACLInput{
+				ChangeToken:   token,
+				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				Updates:       diffWafWebAclRules([]interface{}{}, rules),
+				WebACLId:      aws.String(d.Id()),
+			}
+			return conn.UpdateWebACL(req)
+		})
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF ACL: %s", err)
+		}
+	}
+
 	return resourceAwsWafWebAclRead(d, meta)
 }
 
