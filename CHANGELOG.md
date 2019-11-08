@@ -1,4 +1,9 @@
 ## 2.36.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_apigateway_stage: Add `tags` argument and `arn` attribute [GH-10570]
+
 ## 2.35.0 (November 07, 2019)
 
 NOTES:
