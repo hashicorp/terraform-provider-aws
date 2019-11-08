@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -30,6 +31,7 @@ func TestAccAWSWafRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`rule/.+`)),
 				),
 			},
 			{
