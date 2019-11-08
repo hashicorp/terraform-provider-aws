@@ -368,7 +368,7 @@ func testAccCheckAWSWafRuleDestroy(s *terraform.State) error {
 
 		// Return nil if the Rule is already destroyed
 		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "WAFNonexistentItemException" {
+			if awsErr.Code() == waf.ErrCodeNonexistentItemException {
 				return nil
 			}
 		}
