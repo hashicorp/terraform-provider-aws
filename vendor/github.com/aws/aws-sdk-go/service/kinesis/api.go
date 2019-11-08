@@ -7379,6 +7379,8 @@ type SubscribeToShardEventStream struct {
 // may result in resource leaks.
 func (es *SubscribeToShardEventStream) Close() (err error) {
 	es.Reader.Close()
+	es.StreamCloser.Close()
+
 	return es.Err()
 }
 
@@ -7388,8 +7390,6 @@ func (es *SubscribeToShardEventStream) Err() error {
 	if err := es.Reader.Err(); err != nil {
 		return err
 	}
-	es.StreamCloser.Close()
-
 	return nil
 }
 

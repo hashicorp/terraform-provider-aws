@@ -163,7 +163,6 @@ func resourceAwsMqBroker() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
-				ForceNew: true,
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
@@ -382,6 +381,18 @@ func resourceAwsMqBrokerRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
 
+	requiresReboot := false
+
+	if d.HasChange("security_groups") {
+		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
+			BrokerId:       aws.String(d.Id()),
+			SecurityGroups: expandStringSet(d.Get("security_groups").(*schema.Set)),
+		})
+		if err != nil {
+			return fmt.Errorf("error updating MQ Broker (%s) security groups: %s", d.Id(), err)
+		}
+	}
+
 	if d.HasChange("configuration") || d.HasChange("logs") {
 		_, err := conn.UpdateBroker(&mq.UpdateBrokerRequest{
 			BrokerId:      aws.String(d.Id()),
@@ -389,25 +400,34 @@ func resourceAwsMqBrokerUpdate(d *schema.ResourceData, meta interface{}) error {
 			Logs:          expandMqLogs(d.Get("logs").([]interface{})),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating MQ Broker (%s) configuration: %s", d.Id(), err)
 		}
+		requiresReboot = true
 	}
 
 	if d.HasChange("user") {
 		o, n := d.GetChange("user")
-		err := updateAwsMqBrokerUsers(conn, d.Id(),
+		var err error
+		// d.HasChange("user") always reports a change when running resourceAwsMqBrokerUpdate
+		// updateAwsMqBrokerUsers needs to be called to know if changes to user are actually made
+		var usersUpdated bool
+		usersUpdated, err = updateAwsMqBrokerUsers(conn, d.Id(),
 			o.(*schema.Set).List(), n.(*schema.Set).List())
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating MQ Broker (%s) user: %s", d.Id(), err)
+		}
+
+		if usersUpdated {
+			requiresReboot = true
 		}
 	}
 
-	if d.Get("apply_immediately").(bool) {
+	if d.Get("apply_immediately").(bool) && requiresReboot {
 		_, err := conn.RebootBroker(&mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error rebooting MQ Broker (%s): %s", d.Id(), err)
 		}
 
 		stateConf := resource.StateChangeConf{
@@ -502,32 +522,38 @@ func waitForMqBrokerDeletion(conn *mq.MQ, id string) error {
 	return err
 }
 
-func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) error {
+func updateAwsMqBrokerUsers(conn *mq.MQ, bId string, oldUsers, newUsers []interface{}) (bool, error) {
+	// If there are any user creates/deletes/updates, updatedUsers will be set to true
+	updatedUsers := false
+
 	createL, deleteL, updateL, err := diffAwsMqBrokerUsers(bId, oldUsers, newUsers)
 	if err != nil {
-		return err
+		return updatedUsers, err
 	}
 
 	for _, c := range createL {
 		_, err := conn.CreateUser(c)
+		updatedUsers = true
 		if err != nil {
-			return err
+			return updatedUsers, err
 		}
 	}
 	for _, d := range deleteL {
 		_, err := conn.DeleteUser(d)
+		updatedUsers = true
 		if err != nil {
-			return err
+			return updatedUsers, err
 		}
 	}
 	for _, u := range updateL {
 		_, err := conn.UpdateUser(u)
+		updatedUsers = true
 		if err != nil {
-			return err
+			return updatedUsers, err
 		}
 	}
 
-	return nil
+	return updatedUsers, nil
 }
 
 func diffAwsMqBrokerUsers(bId string, oldUsers, newUsers []interface{}) (

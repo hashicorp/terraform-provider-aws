@@ -112,6 +112,7 @@ var mapServiceNames = []string{
 	"mediapackage",
 	"mq",
 	"opsworks",
+	"qldb",
 	"pinpoint",
 	"resourcegroups",
 	"securityhub",

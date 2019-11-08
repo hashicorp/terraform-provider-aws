@@ -39,7 +39,7 @@ func testAccMskClusterDataSourceConfigName(rName string) string {
 	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
-  kafka_version          = "2.1.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
