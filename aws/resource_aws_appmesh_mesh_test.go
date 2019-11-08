@@ -66,7 +66,7 @@ func testSweepAppmeshMeshes(region string) error {
 func testAccAwsAppmeshMesh_basic(t *testing.T) {
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.foo"
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -80,7 +80,7 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appmesh", regexp.MustCompile(`mesh/.+`)),
 				),
 			},
 			{
@@ -95,7 +95,7 @@ func testAccAwsAppmeshMesh_basic(t *testing.T) {
 func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.foo"
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -134,7 +134,7 @@ func testAccAwsAppmeshMesh_egressFilter(t *testing.T) {
 func testAccAwsAppmeshMesh_tags(t *testing.T) {
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.foo"
-	rName := fmt.Sprintf("tf-test-%d", acctest.RandInt())
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -144,42 +144,32 @@ func testAccAwsAppmeshMesh_tags(t *testing.T) {
 			{
 				Config: testAccAppmeshMeshConfigWithTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshMeshExists(
-						resourceName, &mesh),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.foo", "bar"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.good", "bad"),
-				),
-			},
-			{
-				Config: testAccAppmeshMeshConfigWithUpdateTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshMeshExists(
-						resourceName, &mesh),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.good", "bad2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.fizz", "buzz"),
-				),
-			},
-			{
-				Config: testAccAppmeshMeshConfigWithRemoveTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppmeshMeshExists(
-						resourceName, &mesh),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "1"),
+					testAccCheckAppmeshMeshExists(resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppmeshMeshConfigWithUpdateTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshMeshExists(resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccAppmeshMeshConfigWithRemoveTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshMeshExists(resourceName, &mesh),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+				),
 			},
 		},
 	})
