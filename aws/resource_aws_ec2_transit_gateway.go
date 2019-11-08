@@ -71,6 +71,7 @@ func resourceAwsEc2TransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  "Managed by Terraform",
 			},
 			"dns_support": {
 				Type:     schema.TypeString,
