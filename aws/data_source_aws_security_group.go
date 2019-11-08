@@ -91,7 +91,9 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", sg.GroupName)
 	d.Set("description", sg.Description)
 	d.Set("vpc_id", sg.VpcId)
-	d.Set("tags", tagsToMap(sg.Tags))
+	if err := d.Set("tags", tagsToMap(sg.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "ec2",
