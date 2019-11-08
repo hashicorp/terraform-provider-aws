@@ -29,16 +29,16 @@ func resourceAwsGreengrassConnectorDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_definition_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"connector_definition_version": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"connector": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -150,7 +150,7 @@ func setConnectorDefinitionVersion(latestVersion string, d *schema.ResourceData,
 	}
 
 	rawVersion := make(map[string]interface{})
-	rawVersion["arn"] = *out.Arn
+	d.Set("latest_definition_version_arn", *out.Arn)
 
 	rawConnectorList := make([]map[string]interface{}, 0)
 	for _, connector := range out.Definition.Connectors {
