@@ -28,6 +28,7 @@ func resourceAwsMskConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  "Managed by Terraform",
 			},
 			"kafka_versions": {
 				Type:     schema.TypeSet,
