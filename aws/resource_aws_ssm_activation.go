@@ -28,6 +28,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  "Managed by Terraform",
 			},
 			"expired": {
 				Type:     schema.TypeString,
