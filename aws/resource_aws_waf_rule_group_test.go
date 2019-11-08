@@ -385,7 +385,7 @@ func testAccCheckAWSWafRuleGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, "WAFNonexistentItemException", "") {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 			return nil
 		}
 
