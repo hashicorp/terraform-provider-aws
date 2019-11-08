@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * resource/aws_apigateway_stage: Add `arn` attribute [GH-10570]
 * resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute [GH-10566]
 * resource/aws_waf_rule: Add `arn` attribute [GH-10798]
+* resource/aws_waf_rule_group: Add `arn` attribute [GH-10799]
 
 ## 2.35.0 (November 07, 2019)
 
