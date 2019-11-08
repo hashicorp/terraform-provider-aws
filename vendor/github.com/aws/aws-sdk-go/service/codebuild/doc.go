@@ -11,7 +11,8 @@
 // Maven, Gradle, and more. You can also fully customize build environments
 // in AWS CodeBuild to use your own build tools. AWS CodeBuild scales automatically
 // to meet peak build requests. You pay only for the build time you consume.
-// For more information about AWS CodeBuild, see the AWS CodeBuild User Guide.
+// For more information about AWS CodeBuild, see the AWS CodeBuild User Guide
+// (https://docs.aws.amazon.com/codebuild/latest/userguide/welcome.html).
 //
 // AWS CodeBuild supports these operations:
 //

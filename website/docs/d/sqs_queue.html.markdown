@@ -1,4 +1,5 @@
 ---
+subcategory: "SQS"
 layout: "aws"
 page_title: "AWS: aws_sqs_queue"
 description: |-

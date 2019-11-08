@@ -210,6 +210,7 @@ var awsPartition = partition{
 				"eu-west-2":      endpoint{},
 				"eu-west-3":      endpoint{},
 				"me-south-1":     endpoint{},
+				"sa-east-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
 				"us-west-1":      endpoint{},
@@ -524,8 +525,11 @@ var awsPartition = partition{
 				"eu-north-1":     endpoint{},
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
+				"eu-west-3":      endpoint{},
+				"me-south-1":     endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
+				"us-west-1":      endpoint{},
 				"us-west-2":      endpoint{},
 			},
 		},
@@ -877,11 +881,12 @@ var awsPartition = partition{
 						Region: "ca-central-1",
 					},
 				},
-				"sa-east-1": endpoint{},
-				"us-east-1": endpoint{},
-				"us-east-2": endpoint{},
-				"us-west-1": endpoint{},
-				"us-west-2": endpoint{},
+				"me-south-1": endpoint{},
+				"sa-east-1":  endpoint{},
+				"us-east-1":  endpoint{},
+				"us-east-2":  endpoint{},
+				"us-west-1":  endpoint{},
+				"us-west-2":  endpoint{},
 			},
 		},
 		"codedeploy": service{
@@ -1306,6 +1311,7 @@ var awsPartition = partition{
 		"ds": service{
 
 			Endpoints: endpoints{
+				"ap-east-1":      endpoint{},
 				"ap-northeast-1": endpoint{},
 				"ap-northeast-2": endpoint{},
 				"ap-south-1":     endpoint{},
@@ -1671,6 +1677,7 @@ var awsPartition = partition{
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
 				"eu-west-3":      endpoint{},
+				"me-south-1":     endpoint{},
 				"sa-east-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
@@ -2162,6 +2169,9 @@ var awsPartition = partition{
 
 			Endpoints: endpoints{
 				"ap-northeast-1": endpoint{},
+				"ap-south-1":     endpoint{},
+				"ap-southeast-1": endpoint{},
+				"ap-southeast-2": endpoint{},
 				"eu-west-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},
@@ -2520,6 +2530,12 @@ var awsPartition = partition{
 						Region: "ap-southeast-2",
 					},
 				},
+				"ca-central-1": endpoint{
+					Hostname: "rds.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
 				"eu-central-1": endpoint{
 					Hostname: "rds.eu-central-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -2544,6 +2560,12 @@ var awsPartition = partition{
 						Region: "eu-west-2",
 					},
 				},
+				"me-south-1": endpoint{
+					Hostname: "rds.me-south-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "me-south-1",
+					},
+				},
 				"us-east-1": endpoint{
 					Hostname: "rds.us-east-1.amazonaws.com",
 					CredentialScope: credentialScope{
@@ -2558,6 +2580,65 @@ var awsPartition = partition{
 				},
 				"us-west-2": endpoint{
 					Hostname: "rds.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
+			},
+		},
+		"oidc": service{
+
+			Endpoints: endpoints{
+				"ap-southeast-1": endpoint{
+					Hostname: "oidc.ap-southeast-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-1",
+					},
+				},
+				"ap-southeast-2": endpoint{
+					Hostname: "oidc.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
+					},
+				},
+				"ca-central-1": endpoint{
+					Hostname: "oidc.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
+				"eu-central-1": endpoint{
+					Hostname: "oidc.eu-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-central-1",
+					},
+				},
+				"eu-west-1": endpoint{
+					Hostname: "oidc.eu-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-1",
+					},
+				},
+				"eu-west-2": endpoint{
+					Hostname: "oidc.eu-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-2",
+					},
+				},
+				"us-east-1": endpoint{
+					Hostname: "oidc.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				"us-east-2": endpoint{
+					Hostname: "oidc.us-east-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-2",
+					},
+				},
+				"us-west-2": endpoint{
+					Hostname: "oidc.us-west-2.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "us-west-2",
 					},
@@ -2645,6 +2726,65 @@ var awsPartition = partition{
 				"us-east-2":      endpoint{},
 				"us-west-1":      endpoint{},
 				"us-west-2":      endpoint{},
+			},
+		},
+		"portal.sso": service{
+
+			Endpoints: endpoints{
+				"ap-southeast-1": endpoint{
+					Hostname: "portal.sso.ap-southeast-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-1",
+					},
+				},
+				"ap-southeast-2": endpoint{
+					Hostname: "portal.sso.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
+					},
+				},
+				"ca-central-1": endpoint{
+					Hostname: "portal.sso.ca-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-central-1",
+					},
+				},
+				"eu-central-1": endpoint{
+					Hostname: "portal.sso.eu-central-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-central-1",
+					},
+				},
+				"eu-west-1": endpoint{
+					Hostname: "portal.sso.eu-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-1",
+					},
+				},
+				"eu-west-2": endpoint{
+					Hostname: "portal.sso.eu-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "eu-west-2",
+					},
+				},
+				"us-east-1": endpoint{
+					Hostname: "portal.sso.us-east-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
+					},
+				},
+				"us-east-2": endpoint{
+					Hostname: "portal.sso.us-east-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-2",
+					},
+				},
+				"us-west-2": endpoint{
+					Hostname: "portal.sso.us-west-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-west-2",
+					},
+				},
 			},
 		},
 		"projects.iot1click": service{
@@ -3121,6 +3261,19 @@ var awsPartition = partition{
 					SignatureVersions: []string{"s3v4"},
 					CredentialScope: credentialScope{
 						Region: "us-west-2",
+					},
+				},
+			},
+		},
+		"savingsplans": service{
+			PartitionEndpoint: "aws-global",
+			IsRegionalized:    boxedFalse,
+
+			Endpoints: endpoints{
+				"aws-global": endpoint{
+					Hostname: "savingsplans.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-east-1",
 					},
 				},
 			},
@@ -3732,6 +3885,7 @@ var awsPartition = partition{
 				Protocols: []string{"https"},
 			},
 			Endpoints: endpoints{
+				"ap-east-1":      endpoint{},
 				"ap-northeast-2": endpoint{},
 				"ap-south-1":     endpoint{},
 				"ap-southeast-1": endpoint{},
@@ -3741,6 +3895,7 @@ var awsPartition = partition{
 				"eu-west-1":      endpoint{},
 				"eu-west-2":      endpoint{},
 				"eu-west-3":      endpoint{},
+				"me-south-1":     endpoint{},
 				"sa-east-1":      endpoint{},
 				"us-east-1":      endpoint{},
 				"us-east-2":      endpoint{},

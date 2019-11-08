@@ -441,6 +441,13 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 //
 // Creates the replication instance using the specified parameters.
 //
+// AWS DMS requires that your account have certain roles with appropriate permissions
+// before you can create a replication instance. For information on the required
+// roles, see Creating the IAM Roles to Use With the AWS CLI and AWS DMS API
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html).
+// For information on the required permissions, see IAM Permissions Needed to
+// Use AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -6131,6 +6138,12 @@ type CreateReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
@@ -10114,6 +10127,12 @@ type ModifyReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
@@ -11925,8 +11944,25 @@ type ReplicationTaskStats struct {
 	// The elapsed time of the task, in milliseconds.
 	ElapsedTimeMillis *int64 `type:"long"`
 
+	// The date the replication task was started either with a fresh start or a
+	// target reload.
+	FreshStartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task full load was completed.
+	FullLoadFinishDate *time.Time `type:"timestamp"`
+
 	// The percent complete for the full load migration task.
 	FullLoadProgressPercent *int64 `type:"integer"`
+
+	// The date the the replication task full load was started.
+	FullLoadStartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task was started either with a fresh start or a
+	// resume. For more information, see StartReplicationTaskType (https://docs.aws.amazon.com/dms/latest/APIReference/API_StartReplicationTask.html#DMS-StartReplicationTask-request-StartReplicationTaskType).
+	StartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task was stopped.
+	StopDate *time.Time `type:"timestamp"`
 
 	// The number of errors that have occurred during this task.
 	TablesErrored *int64 `type:"integer"`
@@ -11957,9 +11993,39 @@ func (s *ReplicationTaskStats) SetElapsedTimeMillis(v int64) *ReplicationTaskSta
 	return s
 }
 
+// SetFreshStartDate sets the FreshStartDate field's value.
+func (s *ReplicationTaskStats) SetFreshStartDate(v time.Time) *ReplicationTaskStats {
+	s.FreshStartDate = &v
+	return s
+}
+
+// SetFullLoadFinishDate sets the FullLoadFinishDate field's value.
+func (s *ReplicationTaskStats) SetFullLoadFinishDate(v time.Time) *ReplicationTaskStats {
+	s.FullLoadFinishDate = &v
+	return s
+}
+
 // SetFullLoadProgressPercent sets the FullLoadProgressPercent field's value.
 func (s *ReplicationTaskStats) SetFullLoadProgressPercent(v int64) *ReplicationTaskStats {
 	s.FullLoadProgressPercent = &v
+	return s
+}
+
+// SetFullLoadStartDate sets the FullLoadStartDate field's value.
+func (s *ReplicationTaskStats) SetFullLoadStartDate(v time.Time) *ReplicationTaskStats {
+	s.FullLoadStartDate = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *ReplicationTaskStats) SetStartDate(v time.Time) *ReplicationTaskStats {
+	s.StartDate = &v
+	return s
+}
+
+// SetStopDate sets the StopDate field's value.
+func (s *ReplicationTaskStats) SetStopDate(v time.Time) *ReplicationTaskStats {
+	s.StopDate = &v
 	return s
 }
 
@@ -12435,6 +12501,12 @@ type StartReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
