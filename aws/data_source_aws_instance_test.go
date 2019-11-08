@@ -173,13 +173,14 @@ func TestAccAWSInstanceDataSource_rootInstanceStore(t *testing.T) {
 func TestAccAWSInstanceDataSource_privateIP(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_privateIP,
+				Config: testAccInstanceDataSourceConfig_privateIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -215,13 +216,14 @@ func TestAccAWSInstanceDataSource_keyPair(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_VPC,
+				Config: testAccInstanceDataSourceConfig_VPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
@@ -350,27 +352,28 @@ func TestAccAWSInstanceDataSource_getPasswordData_falseToTrue(t *testing.T) {
 
 func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(false),
+				Config: testAccInstanceDataSourceConfigGetUserData(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "user_data_base64", "IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo="),
@@ -383,13 +386,14 @@ func TestAccAWSInstanceDataSource_GetUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -397,7 +401,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(false),
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "false"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -405,7 +409,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(true),
+				Config: testAccInstanceDataSourceConfigGetUserDataNoUserData(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "get_user_data", "true"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -419,6 +423,7 @@ func TestAccAWSInstanceDataSource_GetUserData_NoUserData(t *testing.T) {
 func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -426,7 +431,7 @@ func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 
-				Config: testAccInstanceDataSourceConfig_creditSpecification,
+				Config: testAccInstanceDataSourceConfig_creditSpecification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "credit_specification.#", resourceName, "credit_specification.#"),
@@ -615,49 +620,84 @@ data "aws_instance" "test" {
 }
 `
 
-const testAccInstanceDataSourceConfig_privateIP = `
+func testAccInstanceDataSourceConfig_privateIP(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  blacklisted_names = ["us-west-2d"]
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
-    Name = "terraform-testacc-instance-ds-private-ip"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+
   tags = {
-    Name = "tf-acc-instance-ds-private-ip"
+    Name = %[1]q
+  }
+}
+
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
   }
 }
 
 resource "aws_instance" "test" {
-  ami = "ami-c5eabbf5"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.test.id}"
-  private_ip = "10.1.1.42"
+  subnet_id     = "${aws_subnet.test.id}"
+  private_ip    = "10.1.1.42"
 }
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
+`, rName)
+}
 
 func testAccInstanceDataSourceConfig_keyPair(rName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
+  }
 }
 
-resource "aws_key_pair" "debugging" {
-  key_name   = "%s"
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-408c7f28"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t1.micro"
-  key_name      = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 
   tags = {
     Name = "testAccInstanceDataSourceConfigKeyPair_TestAMI"
@@ -678,37 +718,60 @@ data "aws_instance" "test" {
 `, rName)
 }
 
-const testAccInstanceDataSourceConfig_VPC = `
+func testAccInstanceDataSourceConfig_VPC(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  blacklisted_names = ["us-west-2d"]
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
-    Name = "terraform-testacc-instance-data-source-vpc"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+
   tags = {
-   Name = "tf-acc-instance-data-source-vpc"
+    Name = %[1]q
+  }
+}
+
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name = "root-device-type"
+    values = ["ebs"]
   }
 }
 
 resource "aws_instance" "test" {
-  # us-west-2
-  ami = "ami-4fccb37f"
-  instance_type = "m1.small"
-  subnet_id = "${aws_subnet.test.id}"
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type               = "m1.small"
+  subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
-  tenancy = "dedicated"
+  tenancy                     = "dedicated"
   # pre-encoded base64 data
-  user_data = "3dc39dda39be1205215e776bad998da361a5955d"
+  user_data                   = "3dc39dda39be1205215e776bad998da361a5955d"
 }
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
+`, rName)
+}
 
 func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
 	return fmt.Sprintf(`
@@ -787,7 +850,7 @@ data "aws_instance" "test" {
 const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
- 
+
   tags = {
     Name = "terraform-testacc-instance-data-source-vpc-sgs"
   }
@@ -840,7 +903,7 @@ func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string 
 data "aws_ami" "win2016core" {
   most_recent = true
   owners      = ["amazon"]
-  
+
   filter {
     name   = "name"
     values = ["Windows_Server-2016-English-Core-Base-*"]
@@ -860,43 +923,48 @@ resource "aws_instance" "test" {
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
- 
+
   get_password_data = %t
 }
 `, rInt, val)
 }
 
-func testAccInstanceDataSourceConfigGetUserData(getUserData bool) string {
+func testAccInstanceDataSourceConfigGetUserData(rName string, getUserData bool) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
-  
+
   filter {
     name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
-  
+
   filter {
     name   = "root-device-type"
     values = ["ebs"]
   }
 }
 
+data "aws_availability_zones" "current" {
+  blacklisted_names = ["us-west-2d"]
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "172.16.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block        = "172.16.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
 
   tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
+    Name = %[1]q
   }
 }
 
@@ -904,7 +972,7 @@ resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.test.id}"
- 
+
   user_data = <<EUD
 #!/bin/bash
 
@@ -913,18 +981,18 @@ EUD
 }
 
 data "aws_instance" "test" {
-  get_user_data = %t
+  get_user_data = %[2]t
   instance_id   = "${aws_instance.test.id}"
 }
-`, getUserData)
+`, rName, getUserData)
 }
 
-func testAccInstanceDataSourceConfigGetUserDataNoUserData(getUserData bool) string {
+func testAccInstanceDataSourceConfigGetUserDataNoUserData(rName string, getUserData bool) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
-  
+
   filter {
     name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
@@ -936,20 +1004,25 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   }
 }
 
+data "aws_availability_zones" "current" {
+  blacklisted_names = ["us-west-2d"]
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "172.16.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block        = "172.16.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
 
   tags = {
-    Name = "tf-acc-test-instance-datasource-get-user-data"
+    Name = %[1]q
   }
 }
 
@@ -960,26 +1033,56 @@ resource "aws_instance" "test" {
 }
 
 data "aws_instance" "test" {
-  get_user_data = %t
+  get_user_data = %[2]t
   instance_id   = "${aws_instance.test.id}"
 }
-`, getUserData)
+`, rName, getUserData)
 }
 
-const testAccInstanceDataSourceConfig_creditSpecification = `
-resource "aws_vpc" "foo" {
+func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  blacklisted_names = ["us-west-2d"]
+}
+
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_subnet" "foo" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
+
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+	  name = "name"
+	  values = ["amzn-ami-minimal-hvm-*"]
+	}
+
+	filter {
+	  name = "root-device-type"
+	  values = ["ebs"]
+	}
+  }
 
 resource "aws_instance" "test" {
-  ami = "ami-bf4193c7"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
-  subnet_id = "${aws_subnet.foo.id}"
+  subnet_id     = "${aws_subnet.test.id}"
+
   credit_specification {
     cpu_credits = "unlimited"
   }
@@ -988,4 +1091,5 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
+`, rName)
+}
