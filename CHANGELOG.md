@@ -1,5 +1,10 @@
 ## 2.36.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
+* **New Resource:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
+
 ENHANCEMENTS:
 
 * data-source/aws_iam_group: Add `users` attribute [GH-7132]
@@ -100,11 +105,6 @@ NOTES:
 ENHANCEMENTS:
 
 * resource/aws_emr_instance_group: Add `configurations_json` argument ([#10426](https://github.com/terraform-providers/terraform-provider-aws/issues/10426))
-
-FEATURES:
-
-* **New Data Source:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
-* **New Resource:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
 
 BUG FIXES:
 
