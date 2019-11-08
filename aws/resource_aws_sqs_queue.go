@@ -418,6 +418,9 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := keyvaluetags.SqsListTags(sqsconn, d.Id())
 
 	if err != nil {
+		// Non-standard partitions (e.g. US Gov) and some local development
+		// solutions do not yet support this API call. Depending on the
+		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
 		if !isAWSErr(err, "InvalidAction", "") && !isAWSErr(err, sqs.ErrCodeUnsupportedOperation, "") {
 			return fmt.Errorf("error listing tags for SQS Queue (%s): %s", d.Id(), err)
 		}
