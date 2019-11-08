@@ -117,6 +117,7 @@ func main() {
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
 		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
 		"TagInputTagsField":               ServiceTagInputTagsField,
+		"TagInputKeyValueTagsPrefix":      ServiceTagFunctionKeyValueTagsPrefix,
 		"Title":                           strings.Title,
 		"UntagFunction":                   ServiceUntagFunction,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
@@ -213,7 +214,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
-			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | TagInputKeyValueTagsPrefix }}Tags(),
 		}
 
 		_, err := conn.{{ . | TagFunction }}(input)
@@ -234,6 +235,15 @@ func ServiceTagFunctionClass(serviceName string) string {
 		return "waf"
 	default:
 		return serviceName
+	}
+}
+
+func ServiceTagFunctionKeyValueTagsPrefix(serviceName string) string {
+	switch serviceName {
+	case "wafregional":
+		return strings.Title("waf")
+	default:
+		return strings.Title(serviceName)
 	}
 }
 
