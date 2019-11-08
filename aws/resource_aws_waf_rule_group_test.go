@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,8 +68,8 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 	var group waf.RuleGroup
 	var idx int
 
-	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
-	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	ruleName := acctest.RandomWithPrefix("tf-acc-test")
+	groupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -88,6 +89,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.action.0.type", &idx, "COUNT"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.priority", &idx, "50"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.type", &idx, waf.WafRuleTypeRegular),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`rulegroup/.+`)),
 				),
 			},
 			{
@@ -102,9 +104,9 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
 	var before, after waf.RuleGroup
 
-	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
-	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
-	newGroupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	ruleName := acctest.RandomWithPrefix("tf-acc-test")
+	groupName := acctest.RandomWithPrefix("tf-acc-test")
+	newGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -141,8 +143,8 @@ func TestAccAWSWafRuleGroup_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafRuleGroup_disappears(t *testing.T) {
 	var group waf.RuleGroup
-	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
-	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	ruleName := acctest.RandomWithPrefix("tf-acc-test")
+	groupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -167,10 +169,10 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 	var groupBefore, groupAfter waf.RuleGroup
 	var idx0, idx1, idx2, idx3 int
 
-	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
-	ruleName1 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
-	ruleName2 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
-	ruleName3 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	groupName := acctest.RandomWithPrefix("tf-acc-test")
+	ruleName1 := acctest.RandomWithPrefix("tf-acc-test")
+	ruleName2 := acctest.RandomWithPrefix("tf-acc-test")
+	ruleName3 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
