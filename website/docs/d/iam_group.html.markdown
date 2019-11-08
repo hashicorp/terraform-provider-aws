@@ -32,9 +32,9 @@ data "aws_iam_group" "example" {
 
 * `group_id` - The stable and unique string identifying the group.
 
-* `members` - The member of group. See supported fields below.
+* `users` - List of objects containing group member information. See supported fields below.
 
-### `members`
+### `users`
 
 * `arn` - The Amazon Resource Name (ARN) specifying the iam user.
 
