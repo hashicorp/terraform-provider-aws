@@ -94,6 +94,7 @@ var serviceNames = []string{
 	"swf",
 	"transfer",
 	"waf",
+	"wafregional",
 	"workspaces",
 }
 
@@ -110,6 +111,7 @@ func main() {
 	}
 	templateFuncMap := template.FuncMap{
 		"ClientType":                      keyvaluetags.ServiceClientType,
+		"TagFunctionClass":                ServiceTagFunctionClass,
 		"TagFunction":                     ServiceTagFunction,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
@@ -178,7 +180,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &{{ . }}.{{ . | UntagFunction }}Input{
+		input := &{{ . | TagFunctionClass }}.{{ . | UntagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 			{{- else }}
@@ -202,7 +204,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &{{ . }}.{{ . | TagFunction }}Input{
+		input := &{{ . | TagFunctionClass }}.{{ . | TagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 			{{- else }}
@@ -225,6 +227,15 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 }
 {{- end }}
 `
+
+func ServiceTagFunctionClass(serviceName string) string {
+	switch serviceName {
+	case "wafregional":
+		return "waf"
+	default:
+		return serviceName
+	}
+}
 
 // ServiceTagFunction determines the service tagging function.
 func ServiceTagFunction(serviceName string) string {
@@ -364,6 +375,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "transfer":
 		return "Arn"
 	case "waf":
+		return "ResourceARN"
+	case "wafregional":
 		return "ResourceARN"
 	case "workspaces":
 		return "ResourceId"
