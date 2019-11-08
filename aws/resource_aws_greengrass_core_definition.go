@@ -29,16 +29,16 @@ func resourceAwsGreengrassCoreDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_definition_version_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"core_definition_version": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"core": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -156,7 +156,7 @@ func setCoreDefinitionVersion(latestVersion string, d *schema.ResourceData, conn
 	}
 
 	rawVersion := make(map[string]interface{})
-	rawVersion["arn"] = *out.Arn
+	d.Set("latest_definition_version_arn", *out.Arn)
 
 	rawCoreList := make([]map[string]interface{}, 0)
 	for _, core := range out.Definition.Cores {
