@@ -26,6 +26,7 @@ var serviceNames = []string{
 	"athena",
 	"backup",
 	"cloudhsmv2",
+	"cloudtrail",
 	"cloudwatch",
 	"cloudwatchevents",
 	"cloudwatchlogs",
@@ -194,6 +195,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTags"
 	case "cloudhsmv2":
 		return "ListTags"
+	case "cloudtrail":
+		return "ListTags"
 	case "cloudwatchlogs":
 		return "ListTagsLogGroup"
 	case "dax":
@@ -244,6 +247,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudhsmv2":
 		return "ResourceId"
+	case "cloudtrail":
+		return "ResourceIdList"
 	case "cloudwatch":
 		return "ResourceARN"
 	case "cloudwatchevents":
@@ -310,6 +315,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 // ServiceTagInputIdentifierRequiresSlice determines if the service tagging resource field requires a slice.
 func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
+	case "cloudtrail":
+		return "yes"
 	case "elbv2":
 		return "yes"
 	default:
@@ -334,6 +341,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "TagInfoForResource.TagList"
 	case "cloudhsmv2":
 		return "TagList"
+	case "cloudtrail":
+		return "ResourceTagList[0].TagsList"
 	case "databasemigrationservice":
 		return "TagList"
 	case "docdb":
