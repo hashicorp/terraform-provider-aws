@@ -273,3 +273,12 @@ func ServiceClientType(serviceName string) string {
 
 	return funcType.Out(0).String()
 }
+
+func ServiceTagPackage(serviceName string) string {
+	switch serviceName {
+	case "wafregional":
+		return "waf"
+	default:
+		return serviceName
+	}
+}

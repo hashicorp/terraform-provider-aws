@@ -103,14 +103,13 @@ func main() {
 	}
 	templateFuncMap := template.FuncMap{
 		"ClientType":                           keyvaluetags.ServiceClientType,
-		"ListTagFunctionClass":                 ServiceListTagsFunctionClass,
+		"ListTagPackage":                       keyvaluetags.ServiceTagPackage,
 		"ListTagsFunction":                     ServiceListTagsFunction,
 		"ListTagsInputIdentifierField":         ServiceListTagsInputIdentifierField,
 		"ListTagsInputIdentifierRequiresSlice": ServiceListTagsInputIdentifierRequiresSlice,
 		"ListTagsInputResourceTypeField":       ServiceListTagsInputResourceTypeField,
 		"ListTagsOutputTagsField":              ServiceListTagsOutputTagsField,
 		"Title":                                strings.Title,
-		"KeyValueTagsPrefix":                   ServiceListTagsTitle,
 	}
 
 	tmpl, err := template.New("listtags").Funcs(templateFuncMap).Parse(templateBody)
@@ -164,7 +163,7 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | ListTagsInputResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
-	input := &{{ . | ListTagFunctionClass  }}.{{ . | ListTagsFunction }}Input{
+	input := &{{ . | ListTagPackage  }}.{{ . | ListTagsFunction }}Input{
 		{{- if . | ListTagsInputIdentifierRequiresSlice }}
 		{{ . | ListTagsInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 		{{- else }}
@@ -181,19 +180,10 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 		return New(nil), err
 	}
 
-	return {{ . | KeyValueTagsPrefix }}KeyValueTags(output.{{ . | ListTagsOutputTagsField }}), nil
+	return {{ . | Title }}KeyValueTags(output.{{ . | ListTagsOutputTagsField }}), nil
 }
 {{- end }}
 `
-
-func ServiceListTagsFunctionClass(serviceName string) string {
-	switch serviceName {
-	case "wafregional":
-		return "waf"
-	default:
-		return serviceName
-	}
-}
 
 // ServiceListTagsFunction determines the service tagging function.
 func ServiceListTagsFunction(serviceName string) string {
@@ -372,14 +362,5 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "TagList"
 	default:
 		return "Tags"
-	}
-}
-
-func ServiceListTagsTitle(serviceName string) string {
-	switch serviceName {
-	case "wafregional":
-		return strings.Title("waf")
-	default:
-		return strings.Title(serviceName)
 	}
 }

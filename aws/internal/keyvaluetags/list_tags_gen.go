@@ -1265,7 +1265,7 @@ func WafregionalListTags(conn *wafregional.WAFRegional, identifier string) (KeyV
 		return New(nil), err
 	}
 
-	return WafKeyValueTags(output.TagInfoForResource.TagList), nil
+	return WafregionalKeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

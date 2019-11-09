@@ -2195,6 +2195,33 @@ func WafKeyValueTags(tags []*waf.Tag) KeyValueTags {
 	return New(m)
 }
 
+// WafregionalTags returns wafregional service tags.
+func (tags KeyValueTags) WafregionalTags() []*waf.Tag {
+	result := make([]*waf.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &waf.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// WafregionalKeyValueTags creates KeyValueTags from wafregional service tags.
+func WafregionalKeyValueTags(tags []*waf.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
 // WorkspacesTags returns workspaces service tags.
 func (tags KeyValueTags) WorkspacesTags() []*workspaces.Tag {
 	result := make([]*workspaces.Tag, 0, len(tags))

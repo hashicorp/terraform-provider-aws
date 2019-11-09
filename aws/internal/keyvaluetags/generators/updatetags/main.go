@@ -111,13 +111,12 @@ func main() {
 	}
 	templateFuncMap := template.FuncMap{
 		"ClientType":                      keyvaluetags.ServiceClientType,
-		"TagFunctionClass":                ServiceTagFunctionClass,
+		"TagFunctionClass":                keyvaluetags.ServiceTagPackage,
 		"TagFunction":                     ServiceTagFunction,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
 		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
 		"TagInputTagsField":               ServiceTagInputTagsField,
-		"TagInputKeyValueTagsPrefix":      ServiceTagFunctionKeyValueTagsPrefix,
 		"Title":                           strings.Title,
 		"UntagFunction":                   ServiceUntagFunction,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
@@ -214,7 +213,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
-			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | TagInputKeyValueTagsPrefix }}Tags(),
+			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | Title }}Tags(),
 		}
 
 		_, err := conn.{{ . | TagFunction }}(input)
@@ -228,24 +227,6 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 }
 {{- end }}
 `
-
-func ServiceTagFunctionClass(serviceName string) string {
-	switch serviceName {
-	case "wafregional":
-		return "waf"
-	default:
-		return serviceName
-	}
-}
-
-func ServiceTagFunctionKeyValueTagsPrefix(serviceName string) string {
-	switch serviceName {
-	case "wafregional":
-		return strings.Title("waf")
-	default:
-		return strings.Title(serviceName)
-	}
-}
 
 // ServiceTagFunction determines the service tagging function.
 func ServiceTagFunction(serviceName string) string {

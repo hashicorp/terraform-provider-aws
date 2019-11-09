@@ -2884,7 +2884,7 @@ func WafregionalUpdateTags(conn *wafregional.WAFRegional, identifier string, old
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &waf.TagResourceInput{
 			ResourceARN: aws.String(identifier),
-			Tags:        updatedTags.IgnoreAws().WafTags(),
+			Tags:        updatedTags.IgnoreAws().WafregionalTags(),
 		}
 
 		_, err := conn.TagResource(input)
