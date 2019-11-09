@@ -252,6 +252,29 @@ func TestAccAWSIAMRole_testNameChange(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMRole_testNameOmission(t *testing.T) {
+	rName := acctest.RandString(10)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: resourceName,
+				Config:       testAccAWSIAMRoleConfigNameSupplied(rName),
+			},
+			{
+				ResourceName:       resourceName,
+				Config:             testAccAWSIAMRoleConfigNameOmitted(),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
 func TestAccAWSIAMRole_badJSON(t *testing.T) {
 	rName := acctest.RandString(10)
 
@@ -636,6 +659,23 @@ resource "aws_iam_role" "test" {
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 `, rName)
+}
+
+func testAccAWSIAMRoleConfigNameSupplied(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+	name               = "test-role-%s"
+	assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`, rName)
+}
+
+func testAccAWSIAMRoleConfigNameOmitted() string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+}
+`)
 }
 
 func testAccAWSIAMRoleConfigWithDescription(rName string) string {
