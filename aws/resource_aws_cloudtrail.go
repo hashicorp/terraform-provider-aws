@@ -202,7 +202,6 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
 
-	d.Set("arn", t.TrailARN)
 	d.SetId(*t.Name)
 
 	// AWS CloudTrail sets newly-created trails to false.
@@ -220,7 +219,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsCloudTrailUpdate(d, meta)
+	return resourceAwsCloudTrailRead(d, meta)
 }
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
