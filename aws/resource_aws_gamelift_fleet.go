@@ -45,6 +45,12 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
+			"instance_role_arn": {
+				Type:         schema.TypeString,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+				Optional:     true,
+			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -182,6 +188,7 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 		BuildId:         aws.String(d.Get("build_id").(string)),
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
 		Name:            aws.String(d.Get("name").(string)),
+		InstanceRoleArn: aws.String(d.Get("instance_role_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -286,6 +293,7 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("log_paths", aws.StringValueSlice(fleet.LogPaths))
 	d.Set("metric_groups", flattenStringList(fleet.MetricGroups))
 	d.Set("name", fleet.Name)
+	d.Set("instance_role_arn", fleet.InstanceRoleArn)
 	d.Set("new_game_session_protection_policy", fleet.NewGameSessionProtectionPolicy)
 	d.Set("operating_system", fleet.OperatingSystem)
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
@@ -299,7 +307,8 @@ func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Updating Gamelift Fleet: %s", d.Id())
 
 	if d.HasChange("description") || d.HasChange("metric_groups") || d.HasChange("name") ||
-		d.HasChange("new_game_session_protection_policy") || d.HasChange("resource_creation_limit_policy") {
+		d.HasChange("new_game_session_protection_policy") || d.HasChange("resource_creation_limit_policy") ||
+		d.HasChange("instance_role_arn") {
 		_, err := conn.UpdateFleetAttributes(&gamelift.UpdateFleetAttributesInput{
 			Description:                    aws.String(d.Get("description").(string)),
 			FleetId:                        aws.String(d.Id()),

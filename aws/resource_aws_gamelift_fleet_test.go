@@ -277,6 +277,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "instance_role_arn", roleArn),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "default"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "new_game_session_protection_policy", "NoProtection"),
@@ -296,6 +297,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", uFleetName),
+					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "instance_role_arn", roleArn),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "UpdatedGroup"),
@@ -503,6 +505,7 @@ func testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
+  instance_role_arn = "%s"
   name              = "%s"
 
   runtime_configuration {
@@ -516,7 +519,7 @@ resource "aws_gamelift_fleet" "test" {
 
 %s
 
-`, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+`, roleArn, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
 func testAccAWSGameliftFleetBasicUpdatedConfig(desc, fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
@@ -528,6 +531,7 @@ resource "aws_gamelift_fleet" "test" {
   name                               = "%s"
   metric_groups                      = ["UpdatedGroup"]
   new_game_session_protection_policy = "FullProtection"
+  instance_role_arn                  = "%s"
 
   resource_creation_limit_policy {
     new_game_sessions_per_creator = 2
@@ -545,7 +549,7 @@ resource "aws_gamelift_fleet" "test" {
 
 %s
 
-`, desc, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+`, desc, fleetName, roleArn, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
 func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
@@ -555,6 +559,7 @@ resource "aws_gamelift_fleet" "test" {
   ec2_instance_type = "c4.large"
   name              = "%s"
   description       = "%s"
+  instance_role_arn = "%s"
 
   ec2_inbound_permission {
     from_port = 8080
@@ -599,7 +604,7 @@ resource "aws_gamelift_fleet" "test" {
 
 %s
 
-`, fleetName, desc, launchPath, params,
+`, fleetName, desc, roleArn, launchPath, params,
 		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
@@ -610,6 +615,7 @@ resource "aws_gamelift_fleet" "test" {
   ec2_instance_type = "c4.large"
   name              = "%s"
   description       = "%s"
+  instance_role_arn = "%s"
 
   ec2_inbound_permission {
     from_port = 8888
@@ -654,7 +660,7 @@ resource "aws_gamelift_fleet" "test" {
 
 %s
 
-`, fleetName, desc, launchPath, params,
+`, fleetName, desc, roleArn, launchPath, params,
 		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
 }
 
