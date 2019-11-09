@@ -22,7 +22,7 @@ func TestAccDataSourceAwsSqsQueue_basic(t *testing.T) {
 				Config: testAccDataSourceAwsSqsQueueConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsSqsQueueCheck(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 				),
 			},
 		},
