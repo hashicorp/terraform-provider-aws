@@ -378,6 +378,21 @@ func TestAccAWSEFSFileSystem_lifecyclePolicy_removal(t *testing.T) {
 	})
 }
 
+// https://github.com/terraform-providers/terraform-provider-aws/issues/10146
+func TestAccAWSEFSFileSystem_emptyLifecyclePolicy(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEFSFileSystemConfigEmptyLifecyclePolicy,
+				ExpectError: regexp.MustCompile(regexp.QuoteMeta("The argument \"transition_to_ia\" is required, but no definition was found.")),
+			},
+		},
+	})
+}
+
 func testAccCheckEfsFileSystemDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).efsconn
 	for _, rs := range s.RootModule().Resources {
@@ -651,4 +666,10 @@ resource "aws_efs_file_system" "test" {
 
 const testAccAWSEFSFileSystemConfigRemovedLifecyclePolicy = `
 resource "aws_efs_file_system" "test" {}
+`
+
+const testAccAWSEFSFileSystemConfigEmptyLifecyclePolicy = `
+resource "aws_efs_file_system" "test" {
+  lifecycle_policy {}
+}
 `
