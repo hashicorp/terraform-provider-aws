@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsTransferServer() *schema.Resource {
@@ -110,11 +111,10 @@ func resourceAwsTransferServer() *schema.Resource {
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
-	tags := tagsFromMapTransfer(d.Get("tags").(map[string]interface{}))
 	createOpts := &transfer.CreateServerInput{}
 
-	if len(tags) != 0 {
-		createOpts.Tags = tags
+	if attr, ok := d.GetOk("tags"); ok {
+		createOpts.Tags = keyvaluetags.New(attr.(map[string]interface{})).IgnoreAws().TransferTags()
 	}
 
 	identityProviderDetails := &transfer.IdentityProviderDetails{}
@@ -192,9 +192,10 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("identity_provider_type", resp.Server.IdentityProviderType)
 	d.Set("logging_role", resp.Server.LoggingRole)
 
-	if err := d.Set("tags", tagsToMapTransfer(resp.Server.Tags)); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
+	if err := d.Set("tags", keyvaluetags.TransferKeyValueTags(resp.Server.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
+
 	return nil
 }
 
@@ -249,8 +250,12 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if err := setTagsTransfer(conn, d); err != nil {
-		return fmt.Errorf("Error update tags: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Transfer Server (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsTransferServerRead(d, meta)
