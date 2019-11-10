@@ -84,6 +84,7 @@ var serviceNames = []string{
 	"redshift",
 	"resourcegroups",
 	"route53resolver",
+	"sagemaker",
 	"secretsmanager",
 	"securityhub",
 	"sfn",
