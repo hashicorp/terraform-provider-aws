@@ -83,7 +83,6 @@ func AcmListTags(conn *acm.ACM, identifier string) (KeyValueTags, error) {
 	input := &acm.ListTagsForCertificateInput{
 		CertificateArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForCertificate(input)
 
 	if err != nil {
@@ -100,14 +99,19 @@ func AcmpcaListTags(conn *acmpca.ACMPCA, identifier string) (KeyValueTags, error
 	input := &acmpca.ListTagsInput{
 		CertificateAuthorityArn: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTags(input)
+	err := conn.ListTagsPages(input, func(page *acmpca.ListTagsOutput, isLast bool) bool {
+		tags = tags.Merge(AcmpcaKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return AcmpcaKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // AmplifyListTags lists amplify service tags.
@@ -117,7 +121,6 @@ func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, er
 	input := &amplify.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -134,14 +137,19 @@ func AppmeshListTags(conn *appmesh.AppMesh, identifier string) (KeyValueTags, er
 	input := &appmesh.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTagsForResource(input)
+	err := conn.ListTagsForResourcePages(input, func(page *appmesh.ListTagsForResourceOutput, isLast bool) bool {
+		tags = tags.Merge(AppmeshKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return AppmeshKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // AppstreamListTags lists appstream service tags.
@@ -151,7 +159,6 @@ func AppstreamListTags(conn *appstream.AppStream, identifier string) (KeyValueTa
 	input := &appstream.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -168,7 +175,6 @@ func AppsyncListTags(conn *appsync.AppSync, identifier string) (KeyValueTags, er
 	input := &appsync.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -185,7 +191,6 @@ func AthenaListTags(conn *athena.Athena, identifier string) (KeyValueTags, error
 	input := &athena.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -202,14 +207,19 @@ func BackupListTags(conn *backup.Backup, identifier string) (KeyValueTags, error
 	input := &backup.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTags(input)
+	err := conn.ListTagsPages(input, func(page *backup.ListTagsOutput, isLast bool) bool {
+		tags = tags.Merge(BackupKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return BackupKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // Cloudhsmv2ListTags lists cloudhsmv2 service tags.
@@ -219,14 +229,19 @@ func Cloudhsmv2ListTags(conn *cloudhsmv2.CloudHSMV2, identifier string) (KeyValu
 	input := &cloudhsmv2.ListTagsInput{
 		ResourceId: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTags(input)
+	err := conn.ListTagsPages(input, func(page *cloudhsmv2.ListTagsOutput, isLast bool) bool {
+		tags = tags.Merge(Cloudhsmv2KeyValueTags(page.TagList))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return Cloudhsmv2KeyValueTags(output.TagList), nil
+	return tags, nil
 }
 
 // CloudwatchListTags lists cloudwatch service tags.
@@ -236,7 +251,6 @@ func CloudwatchListTags(conn *cloudwatch.CloudWatch, identifier string) (KeyValu
 	input := &cloudwatch.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -253,7 +267,6 @@ func CloudwatcheventsListTags(conn *cloudwatchevents.CloudWatchEvents, identifie
 	input := &cloudwatchevents.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -270,7 +283,6 @@ func CloudwatchlogsListTags(conn *cloudwatchlogs.CloudWatchLogs, identifier stri
 	input := &cloudwatchlogs.ListTagsLogGroupInput{
 		LogGroupName: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsLogGroup(input)
 
 	if err != nil {
@@ -287,7 +299,6 @@ func CodecommitListTags(conn *codecommit.CodeCommit, identifier string) (KeyValu
 	input := &codecommit.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -304,7 +315,6 @@ func CodedeployListTags(conn *codedeploy.CodeDeploy, identifier string) (KeyValu
 	input := &codedeploy.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -321,14 +331,19 @@ func CodepipelineListTags(conn *codepipeline.CodePipeline, identifier string) (K
 	input := &codepipeline.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTagsForResource(input)
+	err := conn.ListTagsForResourcePages(input, func(page *codepipeline.ListTagsForResourceOutput, isLast bool) bool {
+		tags = tags.Merge(CodepipelineKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return CodepipelineKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // CognitoidentityListTags lists cognitoidentity service tags.
@@ -338,7 +353,6 @@ func CognitoidentityListTags(conn *cognitoidentity.CognitoIdentity, identifier s
 	input := &cognitoidentity.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -355,7 +369,6 @@ func CognitoidentityproviderListTags(conn *cognitoidentityprovider.CognitoIdenti
 	input := &cognitoidentityprovider.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -372,7 +385,6 @@ func ConfigserviceListTags(conn *configservice.ConfigService, identifier string)
 	input := &configservice.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -389,7 +401,6 @@ func DatabasemigrationserviceListTags(conn *databasemigrationservice.DatabaseMig
 	input := &databasemigrationservice.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -406,14 +417,19 @@ func DatasyncListTags(conn *datasync.DataSync, identifier string) (KeyValueTags,
 	input := &datasync.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTagsForResource(input)
+	err := conn.ListTagsForResourcePages(input, func(page *datasync.ListTagsForResourceOutput, isLast bool) bool {
+		tags = tags.Merge(DatasyncKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return DatasyncKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // DaxListTags lists dax service tags.
@@ -423,7 +439,6 @@ func DaxListTags(conn *dax.DAX, identifier string) (KeyValueTags, error) {
 	input := &dax.ListTagsInput{
 		ResourceName: aws.String(identifier),
 	}
-
 	output, err := conn.ListTags(input)
 
 	if err != nil {
@@ -440,7 +455,6 @@ func DevicefarmListTags(conn *devicefarm.DeviceFarm, identifier string) (KeyValu
 	input := &devicefarm.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -457,7 +471,6 @@ func DirectoryserviceListTags(conn *directoryservice.DirectoryService, identifie
 	input := &directoryservice.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -474,7 +487,6 @@ func DocdbListTags(conn *docdb.DocDB, identifier string) (KeyValueTags, error) {
 	input := &docdb.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -491,7 +503,6 @@ func DynamodbListTags(conn *dynamodb.DynamoDB, identifier string) (KeyValueTags,
 	input := &dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsOfResource(input)
 
 	if err != nil {
@@ -508,7 +519,6 @@ func EcrListTags(conn *ecr.ECR, identifier string) (KeyValueTags, error) {
 	input := &ecr.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -525,7 +535,6 @@ func EcsListTags(conn *ecs.ECS, identifier string) (KeyValueTags, error) {
 	input := &ecs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -542,7 +551,6 @@ func EfsListTags(conn *efs.EFS, identifier string) (KeyValueTags, error) {
 	input := &efs.DescribeTagsInput{
 		FileSystemId: aws.String(identifier),
 	}
-
 	output, err := conn.DescribeTags(input)
 
 	if err != nil {
@@ -559,7 +567,6 @@ func EksListTags(conn *eks.EKS, identifier string) (KeyValueTags, error) {
 	input := &eks.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -576,7 +583,6 @@ func ElasticacheListTags(conn *elasticache.ElastiCache, identifier string) (KeyV
 	input := &elasticache.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -593,7 +599,6 @@ func ElasticbeanstalkListTags(conn *elasticbeanstalk.ElasticBeanstalk, identifie
 	input := &elasticbeanstalk.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -610,7 +615,6 @@ func ElasticsearchserviceListTags(conn *elasticsearchservice.ElasticsearchServic
 	input := &elasticsearchservice.ListTagsInput{
 		ARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTags(input)
 
 	if err != nil {
@@ -627,7 +631,6 @@ func Elbv2ListTags(conn *elbv2.ELBV2, identifier string) (KeyValueTags, error) {
 	input := &elbv2.DescribeTagsInput{
 		ResourceArns: aws.StringSlice([]string{identifier}),
 	}
-
 	output, err := conn.DescribeTags(input)
 
 	if err != nil {
@@ -644,7 +647,6 @@ func FirehoseListTags(conn *firehose.Firehose, identifier string) (KeyValueTags,
 	input := &firehose.ListTagsForDeliveryStreamInput{
 		DeliveryStreamName: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForDeliveryStream(input)
 
 	if err != nil {
@@ -661,7 +663,6 @@ func FsxListTags(conn *fsx.FSx, identifier string) (KeyValueTags, error) {
 	input := &fsx.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -678,7 +679,6 @@ func GlueListTags(conn *glue.Glue, identifier string) (KeyValueTags, error) {
 	input := &glue.GetTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.GetTags(input)
 
 	if err != nil {
@@ -695,7 +695,6 @@ func GuarddutyListTags(conn *guardduty.GuardDuty, identifier string) (KeyValueTa
 	input := &guardduty.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -712,7 +711,6 @@ func InspectorListTags(conn *inspector.Inspector, identifier string) (KeyValueTa
 	input := &inspector.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -729,7 +727,6 @@ func IotListTags(conn *iot.IoT, identifier string) (KeyValueTags, error) {
 	input := &iot.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -746,7 +743,6 @@ func IotanalyticsListTags(conn *iotanalytics.IoTAnalytics, identifier string) (K
 	input := &iotanalytics.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -763,7 +759,6 @@ func IoteventsListTags(conn *iotevents.IoTEvents, identifier string) (KeyValueTa
 	input := &iotevents.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -780,7 +775,6 @@ func KafkaListTags(conn *kafka.Kafka, identifier string) (KeyValueTags, error) {
 	input := &kafka.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -797,7 +791,6 @@ func KinesisanalyticsListTags(conn *kinesisanalytics.KinesisAnalytics, identifie
 	input := &kinesisanalytics.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -814,7 +807,6 @@ func Kinesisanalyticsv2ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, ide
 	input := &kinesisanalyticsv2.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -831,7 +823,6 @@ func KmsListTags(conn *kms.KMS, identifier string) (KeyValueTags, error) {
 	input := &kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
-
 	output, err := conn.ListResourceTags(input)
 
 	if err != nil {
@@ -848,7 +839,6 @@ func LambdaListTags(conn *lambda.Lambda, identifier string) (KeyValueTags, error
 	input := &lambda.ListTagsInput{
 		Resource: aws.String(identifier),
 	}
-
 	output, err := conn.ListTags(input)
 
 	if err != nil {
@@ -865,7 +855,6 @@ func LicensemanagerListTags(conn *licensemanager.LicenseManager, identifier stri
 	input := &licensemanager.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -882,7 +871,6 @@ func MediaconnectListTags(conn *mediaconnect.MediaConnect, identifier string) (K
 	input := &mediaconnect.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -899,7 +887,6 @@ func MedialiveListTags(conn *medialive.MediaLive, identifier string) (KeyValueTa
 	input := &medialive.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -916,7 +903,6 @@ func MediapackageListTags(conn *mediapackage.MediaPackage, identifier string) (K
 	input := &mediapackage.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -933,7 +919,6 @@ func MediastoreListTags(conn *mediastore.MediaStore, identifier string) (KeyValu
 	input := &mediastore.ListTagsForResourceInput{
 		Resource: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -950,7 +935,6 @@ func MqListTags(conn *mq.MQ, identifier string) (KeyValueTags, error) {
 	input := &mq.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTags(input)
 
 	if err != nil {
@@ -967,7 +951,6 @@ func NeptuneListTags(conn *neptune.Neptune, identifier string) (KeyValueTags, er
 	input := &neptune.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -984,7 +967,6 @@ func OpsworksListTags(conn *opsworks.OpsWorks, identifier string) (KeyValueTags,
 	input := &opsworks.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTags(input)
 
 	if err != nil {
@@ -1001,14 +983,19 @@ func OrganizationsListTags(conn *organizations.Organizations, identifier string)
 	input := &organizations.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTagsForResource(input)
+	err := conn.ListTagsForResourcePages(input, func(page *organizations.ListTagsForResourceOutput, isLast bool) bool {
+		tags = tags.Merge(OrganizationsKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return OrganizationsKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // QldbListTags lists qldb service tags.
@@ -1018,7 +1005,6 @@ func QldbListTags(conn *qldb.QLDB, identifier string) (KeyValueTags, error) {
 	input := &qldb.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1035,7 +1021,6 @@ func RdsListTags(conn *rds.RDS, identifier string) (KeyValueTags, error) {
 	input := &rds.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1052,7 +1037,6 @@ func ResourcegroupsListTags(conn *resourcegroups.ResourceGroups, identifier stri
 	input := &resourcegroups.GetTagsInput{
 		Arn: aws.String(identifier),
 	}
-
 	output, err := conn.GetTags(input)
 
 	if err != nil {
@@ -1069,7 +1053,6 @@ func Route53resolverListTags(conn *route53resolver.Route53Resolver, identifier s
 	input := &route53resolver.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1086,14 +1069,19 @@ func SagemakerListTags(conn *sagemaker.SageMaker, identifier string) (KeyValueTa
 	input := &sagemaker.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTags(input)
+	err := conn.ListTagsPages(input, func(page *sagemaker.ListTagsOutput, isLast bool) bool {
+		tags = tags.Merge(SagemakerKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return SagemakerKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // SecurityhubListTags lists securityhub service tags.
@@ -1103,7 +1091,6 @@ func SecurityhubListTags(conn *securityhub.SecurityHub, identifier string) (KeyV
 	input := &securityhub.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1120,7 +1107,6 @@ func SfnListTags(conn *sfn.SFN, identifier string) (KeyValueTags, error) {
 	input := &sfn.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1137,7 +1123,6 @@ func SnsListTags(conn *sns.SNS, identifier string) (KeyValueTags, error) {
 	input := &sns.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1154,7 +1139,6 @@ func SqsListTags(conn *sqs.SQS, identifier string) (KeyValueTags, error) {
 	input := &sqs.ListQueueTagsInput{
 		QueueUrl: aws.String(identifier),
 	}
-
 	output, err := conn.ListQueueTags(input)
 
 	if err != nil {
@@ -1172,7 +1156,6 @@ func SsmListTags(conn *ssm.SSM, identifier string, resourceType string) (KeyValu
 		ResourceId:   aws.String(identifier),
 		ResourceType: aws.String(resourceType),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1189,14 +1172,19 @@ func StoragegatewayListTags(conn *storagegateway.StorageGateway, identifier stri
 	input := &storagegateway.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTagsForResource(input)
+	err := conn.ListTagsForResourcePages(input, func(page *storagegateway.ListTagsForResourceOutput, isLast bool) bool {
+		tags = tags.Merge(StoragegatewayKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return StoragegatewayKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // SwfListTags lists swf service tags.
@@ -1206,7 +1194,6 @@ func SwfListTags(conn *swf.SWF, identifier string) (KeyValueTags, error) {
 	input := &swf.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1223,14 +1210,19 @@ func TransferListTags(conn *transfer.Transfer, identifier string) (KeyValueTags,
 	input := &transfer.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
+	tags := New(nil)
 
-	output, err := conn.ListTagsForResource(input)
+	err := conn.ListTagsForResourcePages(input, func(page *transfer.ListTagsForResourceOutput, isLast bool) bool {
+		tags = tags.Merge(TransferKeyValueTags(page.Tags))
+
+		return !isLast
+	})
 
 	if err != nil {
 		return New(nil), err
 	}
 
-	return TransferKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // WafListTags lists waf service tags.
@@ -1240,7 +1232,6 @@ func WafListTags(conn *waf.WAF, identifier string) (KeyValueTags, error) {
 	input := &waf.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-
 	output, err := conn.ListTagsForResource(input)
 
 	if err != nil {
@@ -1257,7 +1248,6 @@ func WorkspacesListTags(conn *workspaces.WorkSpaces, identifier string) (KeyValu
 	input := &workspaces.DescribeTagsInput{
 		ResourceId: aws.String(identifier),
 	}
-
 	output, err := conn.DescribeTags(input)
 
 	if err != nil {

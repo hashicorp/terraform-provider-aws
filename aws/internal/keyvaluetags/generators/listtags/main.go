@@ -103,6 +103,7 @@ func main() {
 	templateFuncMap := template.FuncMap{
 		"ClientType":                           keyvaluetags.ServiceClientType,
 		"ListTagsFunction":                     ServiceListTagsFunction,
+		"ListTagsHasPaginationFunction":        ServiceListTagsHasPaginationFunction,
 		"ListTagsInputIdentifierField":         ServiceListTagsInputIdentifierField,
 		"ListTagsInputIdentifierRequiresSlice": ServiceListTagsInputIdentifierRequiresSlice,
 		"ListTagsInputResourceTypeField":       ServiceListTagsInputResourceTypeField,
@@ -172,6 +173,21 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 		{{- end }}
 	}
 
+	{{- if . | ListTagsHasPaginationFunction }}
+	tags := New(nil)
+
+	err := conn.{{ . | ListTagsFunction }}Pages(input, func (page *{{ . }}.{{ . | ListTagsFunction }}Output, isLast bool) bool {
+        tags = tags.Merge({{ . | Title }}KeyValueTags(page.{{ . | ListTagsOutputTagsField }}))
+
+        return !isLast
+	})
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return tags, nil
+	{{- else }}
 	output, err := conn.{{ . | ListTagsFunction }}(input)
 
 	if err != nil {
@@ -179,6 +195,7 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 	}
 
 	return {{ . | Title }}KeyValueTags(output.{{ . | ListTagsOutputTagsField }}), nil
+	{{- end }}
 }
 {{- end }}
 `
@@ -230,6 +247,34 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	default:
 		return "ListTagsForResource"
+	}
+}
+
+// ServiceListTagsHasPaginationFunction determines if there is a service tagging pagination function.
+func ServiceListTagsHasPaginationFunction(serviceName string) string {
+	switch serviceName {
+	case "acmpca":
+		return "yes"
+	case "appmesh":
+		return "yes"
+	case "backup":
+		return "yes"
+	case "cloudhsmv2":
+		return "yes"
+	case "codepipeline":
+		return "yes"
+	case "datasync":
+		return "yes"
+	case "organizations":
+		return "yes"
+	case "sagemaker":
+		return "yes"
+	case "storagegateway":
+		return "yes"
+	case "transfer":
+		return "yes"
+	default:
+		return ""
 	}
 }
 
