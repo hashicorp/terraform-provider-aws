@@ -89,7 +89,6 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			"require_https": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
