@@ -398,6 +398,26 @@ func TestAccAWSSQSQueue_Encryption(t *testing.T) {
 	})
 }
 
+func TestAccAWSSQSQueue_NameConflict(t *testing.T) {
+	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
+	initialConfig := testAccAWSSQSConfigWithDefaults(queueName)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: initialConfig,
+			},
+			{
+				PreConfig:   testAccWaitUntilAWSSQSQueueExists(t, queueName),
+				Config:      initialConfig + "\n" + testAccAWSSQSConfigWithResourceName(queueName, "queue2"),
+				ExpectError: regexp.MustCompile(fmt.Sprintf("Queue with name %s already exists.", queueName)),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sqsconn
 
@@ -427,6 +447,29 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 
 	return nil
 }
+
+func testAccWaitUntilAWSSQSQueueExists(t *testing.T, name string) func() {
+	return func() {
+		conn := testAccProvider.Meta().(*AWSClient).sqsconn
+
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			out, err := conn.ListQueues(&sqs.ListQueuesInput{
+				QueueNamePrefix: &name,
+			})
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			if len(out.QueueUrls) == 0 {
+				return resource.RetryableError(fmt.Errorf("Still not found any queues"))
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("Error waiting for queue: %v", err)
+		}
+	}
+}
+
 func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var actualPolicyText string
@@ -545,6 +588,14 @@ resource "aws_sqs_queue" "queue" {
   name = "%s"
 }
 `, r)
+}
+
+func testAccAWSSQSConfigWithResourceName(name string, resourceName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "%s" {
+  name = "%s"
+}
+`, resourceName, name)
 }
 
 func testAccAWSSQSConfigWithNamePrefix(r string) string {

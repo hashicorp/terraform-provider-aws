@@ -166,6 +166,10 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Content based deduplication can only be set with FIFO queues")
 	}
 
+	if err := validateQueueNameIsUnique(name, meta); err != nil {
+		return err
+	}
+
 	log.Printf("[DEBUG] SQS queue create: %s", name)
 
 	req := &sqs.CreateQueueInput{
@@ -228,6 +232,27 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		return resourceAwsSqsQueueUpdate(d, meta)
 	}
+}
+
+func validateQueueNameIsUnique(queueName string, meta interface{}) error {
+	sqsconn := meta.(*AWSClient).sqsconn
+
+	output, err := sqsconn.ListQueues(&sqs.ListQueuesInput{
+		QueueNamePrefix: &queueName,
+	})
+	if err != nil {
+		return fmt.Errorf("Unable to validate queue name is unique, failed to query existing resources: %s", err)
+	}
+
+	for _, url := range output.QueueUrls {
+		slices := strings.Split(*url, "/")
+		lastSlice := slices[len(slices)-1]
+		if lastSlice == queueName {
+			return fmt.Errorf("Queue with name %s already exists.", queueName)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
