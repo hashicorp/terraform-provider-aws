@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsTransferUser() *schema.Resource {
@@ -89,7 +90,7 @@ func resourceAwsTransferUserCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if attr, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tagsFromMapTransfer(attr.(map[string]interface{}))
+		createOpts.Tags = keyvaluetags.New(attr.(map[string]interface{})).IgnoreAws().TransferTags()
 	}
 
 	log.Printf("[DEBUG] Create Transfer User Option: %#v", createOpts)
@@ -135,8 +136,8 @@ func resourceAwsTransferUserRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("policy", resp.User.Policy)
 	d.Set("role", resp.User.Role)
 
-	if err := d.Set("tags", tagsToMapTransfer(resp.User.Tags)); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
+	if err := d.Set("tags", keyvaluetags.TransferKeyValueTags(resp.User.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 	return nil
 }
@@ -181,8 +182,12 @@ func resourceAwsTransferUserUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if err := setTagsTransfer(conn, d); err != nil {
-		return fmt.Errorf("Error update tags: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Transfer User (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsTransferUserRead(d, meta)
