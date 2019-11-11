@@ -169,7 +169,7 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 						s3.InventoryOptionalFieldIsMultipartUploaded,
 						s3.InventoryOptionalFieldReplicationStatus,
 						s3.InventoryOptionalFieldEncryptionStatus,
-						// From aws-sdk-go/service/s3/api.go
+						// From aws-sdk-go/service/s3/api.go v1.25.31
 						// // InventoryOptionalFieldObjectLockRetainUntilDate is a InventoryOptionalField enum value
 						// InventoryOptionalFieldObjectLockRetainUntilDate = "ObjectLockRetainUntilDate"
 
