@@ -169,6 +169,22 @@ func resourceAwsS3BucketInventory() *schema.Resource {
 						s3.InventoryOptionalFieldIsMultipartUploaded,
 						s3.InventoryOptionalFieldReplicationStatus,
 						s3.InventoryOptionalFieldEncryptionStatus,
+    // From aws-sdk-go/service/s3/api.go					
+	// // InventoryOptionalFieldObjectLockRetainUntilDate is a InventoryOptionalField enum value
+	// InventoryOptionalFieldObjectLockRetainUntilDate = "ObjectLockRetainUntilDate"
+
+	// // InventoryOptionalFieldObjectLockMode is a InventoryOptionalField enum value
+	// InventoryOptionalFieldObjectLockMode = "ObjectLockMode"
+
+	// // InventoryOptionalFieldObjectLockLegalHoldStatus is a InventoryOptionalField enum value
+	// InventoryOptionalFieldObjectLockLegalHoldStatus = "ObjectLockLegalHoldStatus"
+
+	// // InventoryOptionalFieldIntelligentTieringAccessTier is a InventoryOptionalField enum value
+	// InventoryOptionalFieldIntelligentTieringAccessTier = "IntelligentTieringAccessTier"
+						"ObjectLockRetainUntilDate",
+						"ObjectLockMode",
+						"ObjectLockLegalHoldStatus",
+						"IntelligentTieringAccessTier"
 					}, false),
 				},
 				Set: schema.HashString,
