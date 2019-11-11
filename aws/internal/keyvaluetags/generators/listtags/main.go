@@ -108,6 +108,7 @@ func main() {
 		"ListTagsInputIdentifierRequiresSlice": ServiceListTagsInputIdentifierRequiresSlice,
 		"ListTagsInputResourceTypeField":       ServiceListTagsInputResourceTypeField,
 		"ListTagsOutputTagsField":              ServiceListTagsOutputTagsField,
+		"ListTagsPaginationTokens":             ServiceListTagsPaginationTokens,
 		"Title":                                strings.Title,
 	}
 
@@ -184,6 +185,25 @@ func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if .
 
 	if err != nil {
 		return New(nil), err
+	}
+
+	return tags, nil
+	{{- else if $tokens := . | ListTagsPaginationTokens }}
+	tags := New(nil)
+
+	for {
+		output, err := conn.{{ . | ListTagsFunction }}(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge({{ . | Title }}KeyValueTags(output.{{ . | ListTagsOutputTagsField }}))
+
+		if output.{{ $tokens.OutputToken }} == nil {
+			break
+		}
+		input.{{ $tokens.InputToken }} = output.{{ $tokens.OutputToken }}
 	}
 
 	return tags, nil
@@ -275,6 +295,69 @@ func ServiceListTagsHasPaginationFunction(serviceName string) string {
 		return "yes"
 	default:
 		return ""
+	}
+}
+
+type PaginationTokens struct {
+	InputToken  string
+	OutputToken string
+}
+
+// ServiceListTagsPaginationTokens returns any pagination tokens.
+func ServiceListTagsPaginationTokens(serviceName string) *PaginationTokens {
+	switch serviceName {
+	case "acmpca":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "appmesh":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "athena":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "backup":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "cloudhsmv2":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "cloudtrail":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "codecommit":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "codedeploy":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "codepipeline":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "configservice":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "datasync":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "dax":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "directoryservice":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "dynamodb":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "efs":
+		return &PaginationTokens{InputToken: "Marker", OutputToken: "NextMarker"}
+	case "fsx":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "iot":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "kms":
+		return &PaginationTokens{InputToken: "Marker", OutputToken: "NextMarker"}
+	case "opsworks":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "organizations":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "route53resolver":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "sagemaker":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "transfer":
+		return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+	case "waf":
+		return &PaginationTokens{InputToken: "NextMarker", OutputToken: "NextMarker"}
+	case "wafregional":
+		return &PaginationTokens{InputToken: "NextMarker", OutputToken: "NextMarker"}
+	default:
+		return nil
 	}
 }
 

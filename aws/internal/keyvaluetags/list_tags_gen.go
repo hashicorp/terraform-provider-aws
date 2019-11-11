@@ -191,13 +191,24 @@ func AthenaListTags(conn *athena.Athena, identifier string) (KeyValueTags, error
 	input := &athena.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(AthenaKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return AthenaKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // BackupListTags lists backup service tags.
@@ -299,13 +310,24 @@ func CodecommitListTags(conn *codecommit.CodeCommit, identifier string) (KeyValu
 	input := &codecommit.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(CodecommitKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return CodecommitKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // CodedeployListTags lists codedeploy service tags.
@@ -315,13 +337,24 @@ func CodedeployListTags(conn *codedeploy.CodeDeploy, identifier string) (KeyValu
 	input := &codedeploy.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(CodedeployKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return CodedeployKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // CodepipelineListTags lists codepipeline service tags.
@@ -385,13 +418,24 @@ func ConfigserviceListTags(conn *configservice.ConfigService, identifier string)
 	input := &configservice.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(ConfigserviceKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return ConfigserviceKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // DatabasemigrationserviceListTags lists databasemigrationservice service tags.
@@ -439,13 +483,24 @@ func DaxListTags(conn *dax.DAX, identifier string) (KeyValueTags, error) {
 	input := &dax.ListTagsInput{
 		ResourceName: aws.String(identifier),
 	}
-	output, err := conn.ListTags(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTags(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(DaxKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return DaxKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // DevicefarmListTags lists devicefarm service tags.
@@ -471,13 +526,24 @@ func DirectoryserviceListTags(conn *directoryservice.DirectoryService, identifie
 	input := &directoryservice.ListTagsForResourceInput{
 		ResourceId: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(DirectoryserviceKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return DirectoryserviceKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // DocdbListTags lists docdb service tags.
@@ -503,13 +569,24 @@ func DynamodbListTags(conn *dynamodb.DynamoDB, identifier string) (KeyValueTags,
 	input := &dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output, err := conn.ListTagsOfResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsOfResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(DynamodbKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return DynamodbKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // EcrListTags lists ecr service tags.
@@ -551,13 +628,24 @@ func EfsListTags(conn *efs.EFS, identifier string) (KeyValueTags, error) {
 	input := &efs.DescribeTagsInput{
 		FileSystemId: aws.String(identifier),
 	}
-	output, err := conn.DescribeTags(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.DescribeTags(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(EfsKeyValueTags(output.Tags))
+
+		if output.NextMarker == nil {
+			break
+		}
+		input.Marker = output.NextMarker
 	}
 
-	return EfsKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // EksListTags lists eks service tags.
@@ -663,13 +751,24 @@ func FsxListTags(conn *fsx.FSx, identifier string) (KeyValueTags, error) {
 	input := &fsx.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(FsxKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return FsxKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // GlueListTags lists glue service tags.
@@ -727,13 +826,24 @@ func IotListTags(conn *iot.IoT, identifier string) (KeyValueTags, error) {
 	input := &iot.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(IotKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return IotKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // IotanalyticsListTags lists iotanalytics service tags.
@@ -823,13 +933,24 @@ func KmsListTags(conn *kms.KMS, identifier string) (KeyValueTags, error) {
 	input := &kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
-	output, err := conn.ListResourceTags(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListResourceTags(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(KmsKeyValueTags(output.Tags))
+
+		if output.NextMarker == nil {
+			break
+		}
+		input.Marker = output.NextMarker
 	}
 
-	return KmsKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // LambdaListTags lists lambda service tags.
@@ -967,13 +1088,24 @@ func OpsworksListTags(conn *opsworks.OpsWorks, identifier string) (KeyValueTags,
 	input := &opsworks.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output, err := conn.ListTags(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTags(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(OpsworksKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return OpsworksKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // OrganizationsListTags lists organizations service tags.
@@ -1053,13 +1185,24 @@ func Route53resolverListTags(conn *route53resolver.Route53Resolver, identifier s
 	input := &route53resolver.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(Route53resolverKeyValueTags(output.Tags))
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
 	}
 
-	return Route53resolverKeyValueTags(output.Tags), nil
+	return tags, nil
 }
 
 // SagemakerListTags lists sagemaker service tags.
@@ -1232,13 +1375,24 @@ func WafListTags(conn *waf.WAF, identifier string) (KeyValueTags, error) {
 	input := &waf.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
-	output, err := conn.ListTagsForResource(input)
+	tags := New(nil)
 
-	if err != nil {
-		return New(nil), err
+	for {
+		output, err := conn.ListTagsForResource(input)
+
+		if err != nil {
+			return New(nil), err
+		}
+
+		tags = tags.Merge(WafKeyValueTags(output.TagInfoForResource.TagList))
+
+		if output.NextMarker == nil {
+			break
+		}
+		input.NextMarker = output.NextMarker
 	}
 
-	return WafKeyValueTags(output.TagInfoForResource.TagList), nil
+	return tags, nil
 }
 
 // WorkspacesListTags lists workspaces service tags.
