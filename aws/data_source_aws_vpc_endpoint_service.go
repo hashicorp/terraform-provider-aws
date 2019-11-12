@@ -86,7 +86,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	}
 
 	req := &ec2.DescribeVpcEndpointServicesInput{
-		ServiceNames: aws.StringSlice([]string{serviceName}),
+		Filters: []*Filter{Name: "service-name", Values: aws.StringSlice(string{serviceName})},
 	}
 
 	log.Printf("[DEBUG] Reading VPC Endpoint Service: %s", req)
