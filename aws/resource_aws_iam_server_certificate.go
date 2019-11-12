@@ -229,9 +229,8 @@ func normalizeCert(cert interface{}) string {
 	default:
 		return ""
 	}
-
-	cleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(rawCert))))
-	return hex.EncodeToString(cleanVal[:])
+	
+	return strings.TrimSpace(rawCert)
 }
 
 // strip CRs from raw literals. Lifted from go/scanner/scanner.go
