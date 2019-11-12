@@ -616,6 +616,9 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 	})
 }
 
+// This test is to verify the existing behavior in the Lambda API where the KMS Key ARN
+// is not returned if environment variables are not in use. If the API begins saving this
+// value and the kms_key_arn check begins failing, the documentation should be updated.
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6366
 func TestAccAWSLambdaFunction_KmsKeyArn_NoEnvironmentVariables(t *testing.T) {
 	var function1 lambda.GetFunctionOutput
