@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSagemakerNotebookInstance() *schema.Resource {
@@ -72,6 +73,16 @@ func resourceAwsSagemakerNotebookInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"direct_internet_access": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					sagemaker.DirectInternetAccessDisabled,
+					sagemaker.DirectInternetAccessEnabled,
+				}, false),
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -91,6 +102,9 @@ func resourceAwsSagemakerNotebookInstanceCreate(d *schema.ResourceData, meta int
 
 	if s, ok := d.GetOk("subnet_id"); ok {
 		createOpts.SubnetId = aws.String(s.(string))
+		if dia, ok := d.GetOk("direct_internet_access"); ok {
+			createOpts.DirectInternetAccess = aws.String(dia.(string))
+		}
 	}
 
 	if k, ok := d.GetOk("kms_key_id"); ok {
@@ -177,6 +191,11 @@ func resourceAwsSagemakerNotebookInstanceRead(d *schema.ResourceData, meta inter
 	if err := d.Set("arn", notebookInstance.NotebookInstanceArn); err != nil {
 		return fmt.Errorf("error setting arn for sagemaker notebook instance (%s): %s", d.Id(), err)
 	}
+
+	if err := d.Set("direct_internet_access", notebookInstance.DirectInternetAccess); err != nil {
+		return fmt.Errorf("error setting direct_internet_access for sagemaker notebook instance (%s): %s", d.Id(), err)
+	}
+
 	tagsOutput, err := conn.ListTags(&sagemaker.ListTagsInput{
 		ResourceArn: notebookInstance.NotebookInstanceArn,
 	})
