@@ -105,7 +105,17 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 			sort.Sort(sort.Reverse(sort.StringSlice(i)))
 			raw[p.Type] = append(raw[p.Type].([]string), i...)
 		case string:
-			raw[p.Type] = i
+			switch v := raw[p.Type].(type) {
+			case nil:
+				raw[p.Type] = i
+			case string:
+				// Convert to []string to stop drop of principals
+				raw[p.Type] = make([]string, 0, 2)
+				raw[p.Type] = append(raw[p.Type].([]string), v)
+				raw[p.Type] = append(raw[p.Type].([]string), i)
+			case []string:
+				raw[p.Type] = append(raw[p.Type].([]string), i)
+			}
 		default:
 			return []byte{}, fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet", i)
 		}
