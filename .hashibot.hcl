@@ -16,8 +16,9 @@ poll "stale_issue_closer" "closer" {
     no_reply_in_last = "2160h" # 90 days
     max_issues = 500
     sleep_between_issues = "5s"
-    created_after = "2019-11-11"
-    exclude_labels = ["needs-triage"]
+    created_after = "2019-06-01"
+    exclude_labels = ["needs-triage", "technical-debt"]
+    extra_search_params = "reactions:<20 no:milestone no:assignee"
     message = <<-EOF
     I'm going to close this issue due to inactivity (_90 days_ without response ⏳ ). This helps our maintainers find and focus on the active issues.
 
