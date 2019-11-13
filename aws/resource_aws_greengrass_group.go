@@ -167,7 +167,6 @@ func readGroupVersion(latestVersion string, d *schema.ResourceData, conn *greeng
 
 	flattenGroupVersion := make(map[string]interface{})
 
-	flattenGroupVersion["amzn_client_token"] = out.Definition
 	flattenGroupVersion["connector_definition_version_arn"] = out.Definition.ConnectorDefinitionVersionArn
 	flattenGroupVersion["core_definition_version_arn"] = out.Definition.CoreDefinitionVersionArn
 	flattenGroupVersion["device_definition_version_arn"] = out.Definition.DeviceDefinitionVersionArn
