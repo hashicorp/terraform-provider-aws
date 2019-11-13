@@ -228,8 +228,7 @@ func normalizeCert(cert interface{}) string {
 		rawCert = *cert
 	default:
 		return ""
-	}
-	
+	}	
 	return strings.TrimSpace(rawCert)
 }
 
