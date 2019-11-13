@@ -168,7 +168,7 @@ resource "aws_greengrass_function_definition" "test" {
 		function {
 			function_arn = "arn:aws:lambda:us-west-2:${data.aws_caller_identity.current.account_id}:function:test_lambda_wv8l0glb:test"
 			id = "test_id"
-			function {}
+			function_configuration {}
 		}
 	}
 }
@@ -185,6 +185,25 @@ resource "aws_greengrass_subscription_definition" "test" {
 	}
 }
 
+resource "aws_greengrass_resource_definition" "test" {
+	name = "resource_definition_%[1]s"
+	resource_definition_version {
+		resource {
+			id = "test_id"
+			name = "test_name"
+			data_container {
+				local_device_resource_data {
+					source_path = "/dev/source"
+					group_owner_setting {
+						auto_add_group_owner = false
+						group_owner = "user"
+					}
+				}
+			}
+		}
+	}
+}
+
 resource "aws_greengrass_group" "test" {
   name = "group_%[1]s"
 
@@ -195,6 +214,7 @@ resource "aws_greengrass_group" "test" {
 	subscription_definition_version_arn = "${aws_greengrass_subscription_definition.test.latest_definition_version_arn}"
 	logger_definition_version_arn = "${aws_greengrass_logger_definition.test.latest_definition_version_arn}"
 	device_definition_version_arn = "${aws_greengrass_device_definition.test.latest_definition_version_arn}"
+	resource_definition_version_arn = "${aws_greengrass_resource_definition.test.latest_definition_version_arn}"
   }
 }
 `, rString)
