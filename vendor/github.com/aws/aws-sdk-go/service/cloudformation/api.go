@@ -245,10 +245,11 @@ func (c *CloudFormation) CreateChangeSetRequest(input *CreateChangeSetInput) (re
 //
 // To create a change set for a stack that doesn't exist, for the ChangeSetType
 // parameter, specify CREATE. To create a change set for an existing stack,
-// specify UPDATE for the ChangeSetType parameter. After the CreateChangeSet
-// call successfully completes, AWS CloudFormation starts creating the change
-// set. To check the status of the change set or to review it, use the DescribeChangeSet
-// action.
+// specify UPDATE for the ChangeSetType parameter. To create a change set for
+// an import operation, specify IMPORT for the ChangeSetType parameter. After
+// the CreateChangeSet call successfully completes, AWS CloudFormation starts
+// creating the change set. To check the status of the change set or to review
+// it, use the DescribeChangeSet action.
 //
 // When you are satisfied with the changes the change set will make, execute
 // the change set by using the ExecuteChangeSet action. AWS CloudFormation doesn't
@@ -4142,10 +4143,10 @@ func (c *CloudFormation) UpdateTerminationProtectionRequest(input *UpdateTermina
 // Updates termination protection for the specified stack. If a user attempts
 // to delete a stack with termination protection enabled, the operation fails
 // and the stack remains unchanged. For more information, see Protecting a Stack
-// From Being Deleted (AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html)
+// From Being Deleted (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-protect-stacks.html)
 // in the AWS CloudFormation User Guide.
 //
-// For nested stacks (AWSCloudFormation/latest/UserGuide/using-cfn-nested-stacks.html),
+// For nested stacks (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-nested-stacks.html),
 // termination protection is set on the root stack and cannot be changed directly
 // on the nested stack.
 //
@@ -4321,13 +4322,25 @@ func (s *AccountGateResult) SetStatusReason(v string) *AccountGateResult {
 	return s
 }
 
-// The AccountLimit data type. For more information about account limits, see
-// AWS CloudFormation Limits (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html)
+// The AccountLimit data type.
+//
+// CloudFormation has the following limits per account:
+//
+//    * Number of concurrent resources
+//
+//    * Number of stacks
+//
+//    * Number of stack outputs
+//
+// For more information about these account limits, and other CloudFormation
+// limits, see AWS CloudFormation Limits (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html)
 // in the AWS CloudFormation User Guide.
 type AccountLimit struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the account limit.
+	//
+	// Values: ConcurrentResourcesLimit | StackLimit | StackOutputsLimit
 	Name *string `type:"string"`
 
 	// The value that is associated with the account limit name.
@@ -4709,7 +4722,7 @@ func (s ContinueUpdateRollbackOutput) GoString() string {
 type CreateChangeSetInput struct {
 	_ struct{} `type:"structure"`
 
-	// In some cases, you must explicity acknowledge that your stack template contains
+	// In some cases, you must explicitly acknowledge that your stack template contains
 	// certain capabilities in order for AWS CloudFormation to create the stack.
 	//
 	//    * CAPABILITY_IAM and CAPABILITY_NAMED_IAM Some stack templates might include
@@ -4765,6 +4778,7 @@ type CreateChangeSetInput struct {
 
 	// The type of change set operation. To create a change set for a new stack,
 	// specify CREATE. To create a change set for an existing stack, specify UPDATE.
+	// To create a change set for an import operation, specify IMPORT.
 	//
 	// If you create a change set for a new stack, AWS Cloudformation creates a
 	// stack with a unique stack ID, but no template or resources. The stack will
@@ -4806,6 +4820,9 @@ type CreateChangeSetInput struct {
 	// (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-iam-template.html)
 	// in the AWS CloudFormation User Guide.
 	ResourceTypes []*string `type:"list"`
+
+	// The resources to import into your stack.
+	ResourcesToImport []*ResourceToImport `type:"list"`
 
 	// The Amazon Resource Name (ARN) of an AWS Identity and Access Management (IAM)
 	// role that AWS CloudFormation assumes when executing the change set. AWS CloudFormation
@@ -4897,6 +4914,16 @@ func (s *CreateChangeSetInput) Validate() error {
 	if s.TemplateURL != nil && len(*s.TemplateURL) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TemplateURL", 1))
 	}
+	if s.ResourcesToImport != nil {
+		for i, v := range s.ResourcesToImport {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResourcesToImport", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.RollbackConfiguration != nil {
 		if err := s.RollbackConfiguration.Validate(); err != nil {
 			invalidParams.AddNested("RollbackConfiguration", err.(request.ErrInvalidParams))
@@ -4964,6 +4991,12 @@ func (s *CreateChangeSetInput) SetParameters(v []*Parameter) *CreateChangeSetInp
 // SetResourceTypes sets the ResourceTypes field's value.
 func (s *CreateChangeSetInput) SetResourceTypes(v []*string) *CreateChangeSetInput {
 	s.ResourceTypes = v
+	return s
+}
+
+// SetResourcesToImport sets the ResourcesToImport field's value.
+func (s *CreateChangeSetInput) SetResourcesToImport(v []*ResourceToImport) *CreateChangeSetInput {
+	s.ResourcesToImport = v
 	return s
 }
 
@@ -5046,7 +5079,7 @@ func (s *CreateChangeSetOutput) SetStackId(v string) *CreateChangeSetOutput {
 type CreateStackInput struct {
 	_ struct{} `type:"structure"`
 
-	// In some cases, you must explicity acknowledge that your stack template contains
+	// In some cases, you must explicitly acknowledge that your stack template contains
 	// certain capabilities in order for AWS CloudFormation to create the stack.
 	//
 	//    * CAPABILITY_IAM and CAPABILITY_NAMED_IAM Some stack templates might include
@@ -5590,7 +5623,7 @@ type CreateStackSetInput struct {
 	// in the AWS CloudFormation User Guide.
 	AdministrationRoleARN *string `min:"20" type:"string"`
 
-	// In some cases, you must explicity acknowledge that your stack set template
+	// In some cases, you must explicitly acknowledge that your stack set template
 	// contains certain capabilities in order for AWS CloudFormation to create the
 	// stack set and related stack instances.
 	//
@@ -8093,6 +8126,12 @@ type GetTemplateSummaryOutput struct {
 	// parameter.
 	Parameters []*ParameterDeclaration `type:"list"`
 
+	// A list of resource identifier summaries that describe the target resources
+	// of an import operation and the properties you can provide during the import
+	// to identify the target resources. For example, BucketName is a possible identifier
+	// property for an AWS::S3::Bucket resource.
+	ResourceIdentifierSummaries []*ResourceIdentifierSummary `type:"list"`
+
 	// A list of all the template resource types that are defined in the template,
 	// such as AWS::EC2::Instance, AWS::Dynamo::Table, and Custom::MyCustomInstance.
 	ResourceTypes []*string `type:"list"`
@@ -8145,6 +8184,12 @@ func (s *GetTemplateSummaryOutput) SetMetadata(v string) *GetTemplateSummaryOutp
 // SetParameters sets the Parameters field's value.
 func (s *GetTemplateSummaryOutput) SetParameters(v []*ParameterDeclaration) *GetTemplateSummaryOutput {
 	s.Parameters = v
+	return s
+}
+
+// SetResourceIdentifierSummaries sets the ResourceIdentifierSummaries field's value.
+func (s *GetTemplateSummaryOutput) SetResourceIdentifierSummaries(v []*ResourceIdentifierSummary) *GetTemplateSummaryOutput {
+	s.ResourceIdentifierSummaries = v
 	return s
 }
 
@@ -9542,6 +9587,53 @@ func (s *ResourceChangeDetail) SetTarget(v *ResourceTargetDefinition) *ResourceC
 	return s
 }
 
+// Describes the target resources of a specific type in your import template
+// (for example, all AWS::S3::Bucket resources) and the properties you can provide
+// during the import to identify resources of that type.
+type ResourceIdentifierSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The logical IDs of the target resources of the specified ResourceType, as
+	// defined in the import template.
+	LogicalResourceIds []*string `min:"1" type:"list"`
+
+	// The resource properties you can provide during the import to identify your
+	// target resources. For example, BucketName is a possible identifier property
+	// for AWS::S3::Bucket resources.
+	ResourceIdentifiers []*string `type:"list"`
+
+	// The template resource type of the target resources, such as AWS::S3::Bucket.
+	ResourceType *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceIdentifierSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceIdentifierSummary) GoString() string {
+	return s.String()
+}
+
+// SetLogicalResourceIds sets the LogicalResourceIds field's value.
+func (s *ResourceIdentifierSummary) SetLogicalResourceIds(v []*string) *ResourceIdentifierSummary {
+	s.LogicalResourceIds = v
+	return s
+}
+
+// SetResourceIdentifiers sets the ResourceIdentifiers field's value.
+func (s *ResourceIdentifierSummary) SetResourceIdentifiers(v []*string) *ResourceIdentifierSummary {
+	s.ResourceIdentifiers = v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ResourceIdentifierSummary) SetResourceType(v string) *ResourceIdentifierSummary {
+	s.ResourceType = &v
+	return s
+}
+
 // The field that AWS CloudFormation will change, such as the name of a resource's
 // property, and whether the resource will be recreated.
 type ResourceTargetDefinition struct {
@@ -9588,6 +9680,81 @@ func (s *ResourceTargetDefinition) SetName(v string) *ResourceTargetDefinition {
 // SetRequiresRecreation sets the RequiresRecreation field's value.
 func (s *ResourceTargetDefinition) SetRequiresRecreation(v string) *ResourceTargetDefinition {
 	s.RequiresRecreation = &v
+	return s
+}
+
+// Describes the target resource of an import operation.
+type ResourceToImport struct {
+	_ struct{} `type:"structure"`
+
+	// The logical ID of the target resource as specified in the template.
+	//
+	// LogicalResourceId is a required field
+	LogicalResourceId *string `type:"string" required:"true"`
+
+	// A key-value pair that identifies the target resource. The key is an identifier
+	// property (for example, BucketName for AWS::S3::Bucket resources) and the
+	// value is the actual property value (for example, MyS3Bucket).
+	//
+	// ResourceIdentifier is a required field
+	ResourceIdentifier map[string]*string `min:"1" type:"map" required:"true"`
+
+	// The type of resource to import into your stack, such as AWS::S3::Bucket.
+	//
+	// ResourceType is a required field
+	ResourceType *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResourceToImport) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceToImport) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceToImport) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceToImport"}
+	if s.LogicalResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogicalResourceId"))
+	}
+	if s.ResourceIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceIdentifier"))
+	}
+	if s.ResourceIdentifier != nil && len(s.ResourceIdentifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceIdentifier", 1))
+	}
+	if s.ResourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLogicalResourceId sets the LogicalResourceId field's value.
+func (s *ResourceToImport) SetLogicalResourceId(v string) *ResourceToImport {
+	s.LogicalResourceId = &v
+	return s
+}
+
+// SetResourceIdentifier sets the ResourceIdentifier field's value.
+func (s *ResourceToImport) SetResourceIdentifier(v map[string]*string) *ResourceToImport {
+	s.ResourceIdentifier = v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ResourceToImport) SetResourceType(v string) *ResourceToImport {
+	s.ResourceType = &v
 	return s
 }
 
@@ -10014,7 +10181,7 @@ type Stack struct {
 	RollbackConfiguration *RollbackConfiguration `type:"structure"`
 
 	// For nested stacks--stacks created as resources for another stack--the stack
-	// ID of the the top-level stack to which the nested stack ultimately belongs.
+	// ID of the top-level stack to which the nested stack ultimately belongs.
 	//
 	// For more information, see Working with Nested Stacks (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-nested-stacks.html)
 	// in the AWS CloudFormation User Guide.
@@ -11850,7 +12017,7 @@ type StackSummary struct {
 	ParentId *string `type:"string"`
 
 	// For nested stacks--stacks created as resources for another stack--the stack
-	// ID of the the top-level stack to which the nested stack ultimately belongs.
+	// ID of the top-level stack to which the nested stack ultimately belongs.
 	//
 	// For more information, see Working with Nested Stacks (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-nested-stacks.html)
 	// in the AWS CloudFormation User Guide.
@@ -12141,7 +12308,7 @@ func (s *TemplateParameter) SetParameterKey(v string) *TemplateParameter {
 type UpdateStackInput struct {
 	_ struct{} `type:"structure"`
 
-	// In some cases, you must explicity acknowledge that your stack template contains
+	// In some cases, you must explicitly acknowledge that your stack template contains
 	// certain capabilities in order for AWS CloudFormation to update the stack.
 	//
 	//    * CAPABILITY_IAM and CAPABILITY_NAMED_IAM Some stack templates might include
@@ -12702,7 +12869,7 @@ type UpdateStackSetInput struct {
 	// same customized administrator role used with this stack set previously.
 	AdministrationRoleARN *string `min:"20" type:"string"`
 
-	// In some cases, you must explicity acknowledge that your stack template contains
+	// In some cases, you must explicitly acknowledge that your stack template contains
 	// certain capabilities in order for AWS CloudFormation to update the stack
 	// set and its associated stack instances.
 	//
@@ -13255,6 +13422,9 @@ const (
 
 	// ChangeActionRemove is a ChangeAction enum value
 	ChangeActionRemove = "Remove"
+
+	// ChangeActionImport is a ChangeAction enum value
+	ChangeActionImport = "Import"
 )
 
 const (
@@ -13280,6 +13450,9 @@ const (
 
 	// ChangeSetTypeUpdate is a ChangeSetType enum value
 	ChangeSetTypeUpdate = "UPDATE"
+
+	// ChangeSetTypeImport is a ChangeSetType enum value
+	ChangeSetTypeImport = "IMPORT"
 )
 
 const (
@@ -13434,6 +13607,24 @@ const (
 
 	// ResourceStatusUpdateComplete is a ResourceStatus enum value
 	ResourceStatusUpdateComplete = "UPDATE_COMPLETE"
+
+	// ResourceStatusImportFailed is a ResourceStatus enum value
+	ResourceStatusImportFailed = "IMPORT_FAILED"
+
+	// ResourceStatusImportComplete is a ResourceStatus enum value
+	ResourceStatusImportComplete = "IMPORT_COMPLETE"
+
+	// ResourceStatusImportInProgress is a ResourceStatus enum value
+	ResourceStatusImportInProgress = "IMPORT_IN_PROGRESS"
+
+	// ResourceStatusImportRollbackInProgress is a ResourceStatus enum value
+	ResourceStatusImportRollbackInProgress = "IMPORT_ROLLBACK_IN_PROGRESS"
+
+	// ResourceStatusImportRollbackFailed is a ResourceStatus enum value
+	ResourceStatusImportRollbackFailed = "IMPORT_ROLLBACK_FAILED"
+
+	// ResourceStatusImportRollbackComplete is a ResourceStatus enum value
+	ResourceStatusImportRollbackComplete = "IMPORT_ROLLBACK_COMPLETE"
 )
 
 const (
@@ -13590,6 +13781,21 @@ const (
 
 	// StackStatusReviewInProgress is a StackStatus enum value
 	StackStatusReviewInProgress = "REVIEW_IN_PROGRESS"
+
+	// StackStatusImportInProgress is a StackStatus enum value
+	StackStatusImportInProgress = "IMPORT_IN_PROGRESS"
+
+	// StackStatusImportComplete is a StackStatus enum value
+	StackStatusImportComplete = "IMPORT_COMPLETE"
+
+	// StackStatusImportRollbackInProgress is a StackStatus enum value
+	StackStatusImportRollbackInProgress = "IMPORT_ROLLBACK_IN_PROGRESS"
+
+	// StackStatusImportRollbackFailed is a StackStatus enum value
+	StackStatusImportRollbackFailed = "IMPORT_ROLLBACK_FAILED"
+
+	// StackStatusImportRollbackComplete is a StackStatus enum value
+	StackStatusImportRollbackComplete = "IMPORT_ROLLBACK_COMPLETE"
 )
 
 const (

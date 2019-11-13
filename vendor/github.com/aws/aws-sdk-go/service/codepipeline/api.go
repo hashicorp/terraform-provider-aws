@@ -2717,6 +2717,9 @@ func (c *CodePipeline) PutJobSuccessResultRequest(input *PutJobSuccessResultInpu
 //   * ErrCodeInvalidJobStateException "InvalidJobStateException"
 //   The job state was specified in an invalid format.
 //
+//   * ErrCodeOutputVariablesSizeExceededException "OutputVariablesSizeExceededException"
+//   Exceeded the total size limit for all variables in the pipeline.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codepipeline-2015-07-09/PutJobSuccessResult
 func (c *CodePipeline) PutJobSuccessResult(input *PutJobSuccessResultInput) (*PutJobSuccessResultOutput, error) {
 	req, out := c.PutJobSuccessResultRequest(input)
@@ -4032,6 +4035,10 @@ type ActionDeclaration struct {
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
+	// The variable namespace associated with the action. All variables produced
+	// as output by this action fall under this namespace.
+	Namespace *string `locationName:"namespace" min:"1" type:"string"`
+
 	// The name or ID of the result of the action declaration, such as a test or
 	// build artifact.
 	OutputArtifacts []*OutputArtifact `locationName:"outputArtifacts" type:"list"`
@@ -4068,6 +4075,9 @@ func (s *ActionDeclaration) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Namespace != nil && len(*s.Namespace) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Namespace", 1))
 	}
 	if s.Region != nil && len(*s.Region) < 4 {
 		invalidParams.Add(request.NewErrParamMinLen("Region", 4))
@@ -4128,6 +4138,12 @@ func (s *ActionDeclaration) SetInputArtifacts(v []*InputArtifact) *ActionDeclara
 // SetName sets the Name field's value.
 func (s *ActionDeclaration) SetName(v string) *ActionDeclaration {
 	s.Name = &v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *ActionDeclaration) SetNamespace(v string) *ActionDeclaration {
+	s.Namespace = &v
 	return s
 }
 
@@ -4401,8 +4417,16 @@ type ActionExecutionInput struct {
 	// Details of input artifacts of the action that correspond to the action execution.
 	InputArtifacts []*ArtifactDetail `locationName:"inputArtifacts" type:"list"`
 
+	// The variable namespace associated with the action. All variables produced
+	// as output by this action fall under this namespace.
+	Namespace *string `locationName:"namespace" min:"1" type:"string"`
+
 	// The AWS Region for the action, such as us-east-1.
 	Region *string `locationName:"region" min:"4" type:"string"`
+
+	// Configuration data for an action execution with all variable references replaced
+	// with their real values for the execution.
+	ResolvedConfiguration map[string]*string `locationName:"resolvedConfiguration" type:"map"`
 
 	// The ARN of the IAM service role that performs the declared action. This is
 	// assumed through the roleArn for the pipeline.
@@ -4437,9 +4461,21 @@ func (s *ActionExecutionInput) SetInputArtifacts(v []*ArtifactDetail) *ActionExe
 	return s
 }
 
+// SetNamespace sets the Namespace field's value.
+func (s *ActionExecutionInput) SetNamespace(v string) *ActionExecutionInput {
+	s.Namespace = &v
+	return s
+}
+
 // SetRegion sets the Region field's value.
 func (s *ActionExecutionInput) SetRegion(v string) *ActionExecutionInput {
 	s.Region = &v
+	return s
+}
+
+// SetResolvedConfiguration sets the ResolvedConfiguration field's value.
+func (s *ActionExecutionInput) SetResolvedConfiguration(v map[string]*string) *ActionExecutionInput {
+	s.ResolvedConfiguration = v
 	return s
 }
 
@@ -4459,6 +4495,10 @@ type ActionExecutionOutput struct {
 
 	// Details of output artifacts of the action that correspond to the action execution.
 	OutputArtifacts []*ArtifactDetail `locationName:"outputArtifacts" type:"list"`
+
+	// The outputVariables field shows the key-value pairs that were output as part
+	// of that execution.
+	OutputVariables map[string]*string `locationName:"outputVariables" type:"map"`
 }
 
 // String returns the string representation
@@ -4480,6 +4520,12 @@ func (s *ActionExecutionOutput) SetExecutionResult(v *ActionExecutionResult) *Ac
 // SetOutputArtifacts sets the OutputArtifacts field's value.
 func (s *ActionExecutionOutput) SetOutputArtifacts(v []*ArtifactDetail) *ActionExecutionOutput {
 	s.OutputArtifacts = v
+	return s
+}
+
+// SetOutputVariables sets the OutputVariables field's value.
+func (s *ActionExecutionOutput) SetOutputVariables(v map[string]*string) *ActionExecutionOutput {
+	s.OutputVariables = v
 	return s
 }
 
@@ -8777,6 +8823,11 @@ type PutJobSuccessResultInput struct {
 	//
 	// JobId is a required field
 	JobId *string `locationName:"jobId" type:"string" required:"true"`
+
+	// Key-value pairs produced as output by a job worker that can be made available
+	// to a downstream action configuration. outputVariables can be included only
+	// when there is no continuation token on the request.
+	OutputVariables map[string]*string `locationName:"outputVariables" type:"map"`
 }
 
 // String returns the string representation
@@ -8836,6 +8887,12 @@ func (s *PutJobSuccessResultInput) SetExecutionDetails(v *ExecutionDetails) *Put
 // SetJobId sets the JobId field's value.
 func (s *PutJobSuccessResultInput) SetJobId(v string) *PutJobSuccessResultInput {
 	s.JobId = &v
+	return s
+}
+
+// SetOutputVariables sets the OutputVariables field's value.
+func (s *PutJobSuccessResultInput) SetOutputVariables(v map[string]*string) *PutJobSuccessResultInput {
+	s.OutputVariables = v
 	return s
 }
 
