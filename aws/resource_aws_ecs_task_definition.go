@@ -390,9 +390,9 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 	taskDefinition := *out.TaskDefinition
 
 	log.Printf("[DEBUG] ECS task definition registered: %q (rev. %d)",
-		*taskDefinition.TaskDefinitionArn, *taskDefinition.Revision)
+		aws.StringValue(taskDefinition.TaskDefinitionArn), aws.Int64Value(taskDefinition.Revision))
 
-	d.SetId(*taskDefinition.Family)
+	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 
 	return resourceAwsEcsTaskDefinitionRead(d, meta)
@@ -420,7 +420,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 
-	d.SetId(*taskDefinition.Family)
+	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
