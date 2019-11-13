@@ -1,8 +1,6 @@
 package aws
 
-import (
-	"crypto/sha1"
-	"encoding/hex"
+import (	
 	"fmt"
 	"log"
 	"regexp"
@@ -228,8 +226,10 @@ func normalizeCert(cert interface{}) string {
 		rawCert = *cert
 	default:
 		return ""
-	}	
-	return strings.TrimSpace(rawCert)
+	}
+	
+	cleanVal := strings.TrimSpace(rawCert)
+	return cleanVal
 }
 
 // strip CRs from raw literals. Lifted from go/scanner/scanner.go
