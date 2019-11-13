@@ -104,3 +104,28 @@ The field name of the tags from the tag listing must be updated. Add an entry wi
 case "cloudhsmv2":
     return "TagList"
 ```
+
+### Pagination
+
+Some AWS services can return multiple pages of results when listing tags. Support for paged results in the AWS Go SDK is implemented in one of two ways.
+
+#### [Pagination Methods](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/making-requests.html#using-pagination-methods)
+
+The AWS Go SDK has a `ListTagsForResourcePages()` API. Add an entry within the `ServiceListTagsHasPaginationFunction()` function of the generator.
+For example:
+
+```go
+case "cloudhsmv2":
+    return "yes"
+```
+
+#### Pagination Tokens
+
+The AWS Go SDK `ListTagsForResourceInput` structure has a _NextToken_ member and the `ListTagsForResourceOutput` structure has a _NextToken_ member.
+Add an entry within the `ServiceListTagsPaginationTokens()` function of the generator.
+For example:
+
+```go
+case "route53resolver":
+    return &PaginationTokens{InputToken: "NextToken", OutputToken: "NextToken"}
+```
