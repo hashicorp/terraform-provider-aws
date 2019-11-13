@@ -2,6 +2,7 @@ package aws
 
 import (
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/greengrass"
@@ -38,10 +39,6 @@ func resourceAwsGreengrassGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"amzn_client_token": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"connector_definition_version_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -89,8 +86,8 @@ func createGroupVersion(d *schema.ResourceData, conn *greengrass.Greengrass) err
 		GroupId: aws.String(d.Id()),
 	}
 
-	if v, ok := raw["amzn_client_token"]; ok {
-		params.AmznClientToken = aws.String(v.(string))
+	if v := os.Getenv("AMZN_CLIENT_TOKEN"); v != "" {
+		params.AmznClientToken = aws.String(v)
 	}
 
 	if v, ok := raw["connector_definition_version_arn"]; ok {
