@@ -496,8 +496,8 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	service := *out.Service
 
-	log.Printf("[DEBUG] ECS service created: %s", *service.ServiceArn)
-	d.SetId(*service.ServiceArn)
+	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(service.ServiceArn))
+	d.SetId(aws.StringValue(service.ServiceArn))
 
 	return resourceAwsEcsServiceRead(d, meta)
 }
@@ -566,7 +566,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Received ECS service %s", service)
 
-	d.SetId(*service.ServiceArn)
+	d.SetId(aws.StringValue(service.ServiceArn))
 	d.Set("name", service.ServiceName)
 
 	// Save task definition in the same format
