@@ -1,6 +1,6 @@
 package aws
 
-import (	
+import (
 	"fmt"
 	"log"
 	"regexp"
@@ -227,7 +227,7 @@ func normalizeCert(cert interface{}) string {
 	default:
 		return ""
 	}
-	
+
 	cleanVal := strings.TrimSpace(rawCert)
 	return cleanVal
 }
