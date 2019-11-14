@@ -97,6 +97,9 @@ func testAccCheckGreengrassSubscription_checkSubscription(n string, expectedSubs
 			SubscriptionDefinitionVersionId: definitionOut.LatestVersion,
 		}
 		versionOut, err := conn.GetSubscriptionDefinitionVersion(getVersionInput)
+		if err != nil {
+			return err
+		}
 		subscription := versionOut.Definition.Subscriptions[0]
 
 		expectedSubscriptionId := expectedSubscription["id"].(string)
