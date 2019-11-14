@@ -3409,7 +3409,8 @@ type Action struct {
 
 	// The order for the action. This value is required for rules with multiple
 	// actions. The action with the lowest value for order is performed first. The
-	// final action to be performed must be a forward or a fixed-response action.
+	// last action to be performed must be one of the following types of actions:
+	// a forward, fixed-response, or redirect.
 	Order *int64 `min:"1" type:"integer"`
 
 	// [Application Load Balancer] Information for creating a redirect action. Specify
@@ -3420,8 +3421,7 @@ type Action struct {
 	// is forward.
 	TargetGroupArn *string `type:"string"`
 
-	// The type of action. Each rule must include exactly one of the following types
-	// of actions: forward, fixed-response, or redirect.
+	// The type of action.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"ActionTypeEnum"`
@@ -4276,8 +4276,8 @@ type CreateLoadBalancerInput struct {
 	//
 	// The nodes of an internal load balancer have only private IP addresses. The
 	// DNS name of an internal load balancer is publicly resolvable to the private
-	// IP addresses of the nodes. Therefore, internal load balancers can only route
-	// requests from clients with access to the VPC for the load balancer.
+	// IP addresses of the nodes. Therefore, internal load balancers can route requests
+	// only from clients with access to the VPC for the load balancer.
 	//
 	// The default is an Internet-facing load balancer.
 	Scheme *string `type:"string" enum:"LoadBalancerSchemeEnum"`
@@ -4425,7 +4425,8 @@ type CreateRuleInput struct {
 	_ struct{} `type:"structure"`
 
 	// The actions. Each rule must include exactly one of the following types of
-	// actions: forward, fixed-response, or redirect.
+	// actions: forward, fixed-response, or redirect, and it must be the last action
+	// to be performed.
 	//
 	// If the action type is forward, you specify a target group. The protocol of
 	// the target group must be HTTP or HTTPS for an Application Load Balancer.
@@ -6355,8 +6356,8 @@ type LoadBalancer struct {
 	//
 	// The nodes of an internal load balancer have only private IP addresses. The
 	// DNS name of an internal load balancer is publicly resolvable to the private
-	// IP addresses of the nodes. Therefore, internal load balancers can only route
-	// requests from clients with access to the VPC for the load balancer.
+	// IP addresses of the nodes. Therefore, internal load balancers can route requests
+	// only from clients with access to the VPC for the load balancer.
 	Scheme *string `type:"string" enum:"LoadBalancerSchemeEnum"`
 
 	// The IDs of the security groups for the load balancer.
@@ -6514,6 +6515,10 @@ type LoadBalancerAttribute struct {
 	//
 	//    * idle_timeout.timeout_seconds - The idle timeout value, in seconds. The
 	//    valid range is 1-4000 seconds. The default is 60 seconds.
+	//
+	//    * routing.http.drop_invalid_header_fields.enabled - Indicates whether
+	//    HTTP headers with invalid header fields are removed by the load balancer
+	//    (true) or routed to targets (false). The default is true.
 	//
 	//    * routing.http2.enabled - Indicates whether HTTP/2 is enabled. The value
 	//    is true or false. The default is true.
@@ -6854,7 +6859,8 @@ type ModifyRuleInput struct {
 	_ struct{} `type:"structure"`
 
 	// The actions. Each rule must include exactly one of the following types of
-	// actions: forward, fixed-response, or redirect.
+	// actions: forward, fixed-response, or redirect, and it must be the last action
+	// to be performed.
 	//
 	// If the action type is forward, you specify a target group. The protocol of
 	// the target group must be HTTP or HTTPS for an Application Load Balancer.
@@ -7044,7 +7050,7 @@ type ModifyTargetGroupInput struct {
 	// target. For Application Load Balancers, the range is 5 to 300 seconds. For
 	// Network Load Balancers, the supported values are 10 or 30 seconds.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	HealthCheckIntervalSeconds *int64 `min:"5" type:"integer"`
 
 	// [HTTP/HTTPS health checks] The ping path that is the destination for the
@@ -7059,13 +7065,13 @@ type ModifyTargetGroupInput struct {
 	// target group is TCP, TLS, UDP, or TCP_UDP. The TLS, UDP, and TCP_UDP protocols
 	// are not supported for health checks.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	HealthCheckProtocol *string `type:"string" enum:"ProtocolEnum"`
 
 	// [HTTP/HTTPS health checks] The amount of time, in seconds, during which no
 	// response means a failed health check.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	HealthCheckTimeoutSeconds *int64 `min:"2" type:"integer"`
 
 	// The number of consecutive health checks successes required before considering
@@ -7075,7 +7081,7 @@ type ModifyTargetGroupInput struct {
 	// [HTTP/HTTPS health checks] The HTTP codes to use when checking for a successful
 	// response from a target.
 	//
-	// If the protocol of the target group is TCP, you can't modify this setting.
+	// With Network Load Balancers, you can't modify this setting.
 	Matcher *Matcher `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the target group.
@@ -8415,7 +8421,8 @@ type TargetDescription struct {
 	// Id is a required field
 	Id *string `type:"string" required:"true"`
 
-	// The port on which the target is listening.
+	// The port on which the target is listening. Not used if the target is a Lambda
+	// function.
 	Port *int64 `min:"1" type:"integer"`
 }
 
@@ -8498,7 +8505,8 @@ type TargetGroup struct {
 	// The HTTP codes to use when checking for a successful response from a target.
 	Matcher *Matcher `type:"structure"`
 
-	// The port on which the targets are listening.
+	// The port on which the targets are listening. Not used if the target is a
+	// Lambda function.
 	Port *int64 `min:"1" type:"integer"`
 
 	// The protocol to use for routing traffic to the targets.
@@ -8731,14 +8739,16 @@ type TargetHealth struct {
 	// values:
 	//
 	//    * Target.ResponseCodeMismatch - The health checks did not return an expected
-	//    HTTP code.
+	//    HTTP code. Applies only to Application Load Balancers.
 	//
-	//    * Target.Timeout - The health check requests timed out.
+	//    * Target.Timeout - The health check requests timed out. Applies only to
+	//    Application Load Balancers.
 	//
 	//    * Target.FailedHealthChecks - The load balancer received an error while
 	//    establishing a connection to the target or the target response was malformed.
 	//
 	//    * Elb.InternalError - The health checks failed due to an internal error.
+	//    Applies only to Application Load Balancers.
 	//
 	// If the target state is unused, the reason code can be one of the following
 	// values:
@@ -8750,10 +8760,10 @@ type TargetHealth struct {
 	//    or the target is in an Availability Zone that is not enabled for its load
 	//    balancer.
 	//
+	//    * Target.InvalidState - The target is in the stopped or terminated state.
+	//
 	//    * Target.IpUnusable - The target IP address is reserved for use by a load
 	//    balancer.
-	//
-	//    * Target.InvalidState - The target is in the stopped or terminated state.
 	//
 	// If the target state is draining, the reason code can be the following value:
 	//
@@ -8764,7 +8774,10 @@ type TargetHealth struct {
 	// value:
 	//
 	//    * Target.HealthCheckDisabled - Health checks are disabled for the target
-	//    group.
+	//    group. Applies only to Application Load Balancers.
+	//
+	//    * Elb.InternalError - Target health is unavailable due to an internal
+	//    error. Applies only to Network Load Balancers.
 	Reason *string `type:"string" enum:"TargetHealthReasonEnum"`
 
 	// The state of the target.
