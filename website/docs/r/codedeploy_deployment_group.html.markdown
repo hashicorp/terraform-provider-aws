@@ -222,7 +222,7 @@ You can configure a deployment group to automatically rollback when a deployment
 * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
 * `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE` and `DEPLOYMENT_STOP_ON_ALARM`.
 
-_Only one `auto_rollback_ configuration` is allowed_.
+_Only one `auto_rollback_configuration` is allowed_.
 
 ### blue_green_deployment_config Argument Reference
 
