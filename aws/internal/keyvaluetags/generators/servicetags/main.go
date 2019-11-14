@@ -137,12 +137,11 @@ func main() {
 		SliceServiceNames: sliceServiceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"IncludeImport":     ServiceTagIncludeImport,
+		"TagPackage":        keyvaluetags.ServiceTagPackage,
 		"TagType":           ServiceTagType,
 		"TagTypeKeyField":   ServiceTagTypeKeyField,
 		"TagTypeValueField": ServiceTagTypeValueField,
 		"Title":             strings.Title,
-		"TagPackage":        keyvaluetags.ServiceTagPackage,
 	}
 
 	tmpl, err := template.New("servicetags").Funcs(templateFuncMap).Parse(templateBody)
@@ -187,7 +186,7 @@ package keyvaluetags
 import (
 	"github.com/aws/aws-sdk-go/aws"
 {{- range .SliceServiceNames }}
-{{- if . | IncludeImport }}
+{{- if eq . (. | TagPackage) }}
 	"github.com/aws/aws-sdk-go/service/{{ . }}"
 {{- end }}
 {{- end }}
@@ -272,15 +271,5 @@ func ServiceTagTypeValueField(serviceName string) string {
 		return "TagValue"
 	default:
 		return "Value"
-	}
-}
-
-// ServiceTagIncludeImport determines whether the service package is imported.
-func ServiceTagIncludeImport(serviceName string) string {
-	switch serviceName {
-	case "wafregional":
-		return ""
-	default:
-		return "yes"
 	}
 }

@@ -111,12 +111,12 @@ func main() {
 	}
 	templateFuncMap := template.FuncMap{
 		"ClientType":                      keyvaluetags.ServiceClientType,
-		"TagFunctionClass":                keyvaluetags.ServiceTagPackage,
 		"TagFunction":                     ServiceTagFunction,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
 		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
 		"TagInputTagsField":               ServiceTagInputTagsField,
+		"TagPackage":                      keyvaluetags.ServiceTagPackage,
 		"Title":                           strings.Title,
 		"UntagFunction":                   ServiceUntagFunction,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
@@ -180,7 +180,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &{{ . | TagFunctionClass }}.{{ . | UntagFunction }}Input{
+		input := &{{ . | TagPackage }}.{{ . | UntagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 			{{- else }}
@@ -204,7 +204,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &{{ . | TagFunctionClass }}.{{ . | TagFunction }}Input{
+		input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 			{{- else }}

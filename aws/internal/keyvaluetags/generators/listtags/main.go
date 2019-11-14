@@ -103,12 +103,12 @@ func main() {
 	}
 	templateFuncMap := template.FuncMap{
 		"ClientType":                           keyvaluetags.ServiceClientType,
-		"ListTagPackage":                       keyvaluetags.ServiceTagPackage,
 		"ListTagsFunction":                     ServiceListTagsFunction,
 		"ListTagsInputIdentifierField":         ServiceListTagsInputIdentifierField,
 		"ListTagsInputIdentifierRequiresSlice": ServiceListTagsInputIdentifierRequiresSlice,
 		"ListTagsInputResourceTypeField":       ServiceListTagsInputResourceTypeField,
 		"ListTagsOutputTagsField":              ServiceListTagsOutputTagsField,
+		"TagPackage":                           keyvaluetags.ServiceTagPackage,
 		"Title":                                strings.Title,
 	}
 
@@ -163,7 +163,7 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | ListTagsInputResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
-	input := &{{ . | ListTagPackage  }}.{{ . | ListTagsFunction }}Input{
+	input := &{{ . | TagPackage  }}.{{ . | ListTagsFunction }}Input{
 		{{- if . | ListTagsInputIdentifierRequiresSlice }}
 		{{ . | ListTagsInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 		{{- else }}
