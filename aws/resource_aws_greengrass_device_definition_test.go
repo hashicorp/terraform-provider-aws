@@ -95,8 +95,11 @@ func testAccCheckGreengrassDevice_checkDevice(n string, expectedDevice map[strin
 			DeviceDefinitionVersionId: definitionOut.LatestVersion,
 		}
 		versionOut, err := conn.GetDeviceDefinitionVersion(getVersionInput)
-		device := versionOut.Definition.Devices[0]
+		if err != nil {
+			return err
+		}
 
+		device := versionOut.Definition.Devices[0]
 		expectedSyncShadow := expectedDevice["sync_shadow"].(bool)
 		if *device.SyncShadow != expectedSyncShadow {
 			return fmt.Errorf("Sync Shadow %t is not equal expected %t", *device.SyncShadow, expectedSyncShadow)
