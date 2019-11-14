@@ -15,11 +15,10 @@ resource "aws_greengrass_subscription_definition" "test" {
 	name = "subscription_definition_%[1]s"
 	subscription_definition_version {
 		subscription {
-			component = "GreengrassSystem"
 			id = "test_id"
-			type = "FileSystem"
-			level = "DEBUG"
-			space = 3	
+			subject = "test_subject"
+			source = "arn:aws:iot:eu-west-1:111111111111:thing/Source"
+			target = "arn:aws:iot:eu-west-1:222222222222:thing/Target"	
 		}
 	}
 }
