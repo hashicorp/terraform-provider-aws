@@ -98,8 +98,11 @@ func testAccCheckGreengrassLogger_checkLogger(n string, expectedLogger map[strin
 			LoggerDefinitionVersionId: definitionOut.LatestVersion,
 		}
 		versionOut, err := conn.GetLoggerDefinitionVersion(getVersionInput)
-		logger := versionOut.Definition.Loggers[0]
+		if err != nil {
+			return err
+		}
 
+		logger := versionOut.Definition.Loggers[0]
 		expectedComponent := expectedLogger["component"].(string)
 		if *logger.Component != expectedComponent {
 			return fmt.Errorf("Component %s is not equal expected %s", *logger.Component, expectedLogger)
