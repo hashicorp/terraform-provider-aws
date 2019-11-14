@@ -126,8 +126,8 @@ resource "aws_cloudwatch_metric_alarm" "xxx_nlb_healthyhosts" {
   alarm_actions       = [aws_sns_topic.sns.arn]
   ok_actions          = [aws_sns_topic.sns.arn]
   dimensions = {
-    TargetGroup  = "${aws_lb_target_group.lb-tg.arn_suffix}" 
-    LoadBalancer = "${aws_lb.lb.arn_suffix}"
+    TargetGroup  = aws_lb_target_group.lb-tg.arn_suffix
+    LoadBalancer = aws_lb.lb.arn_suffix
   }
 }
 
