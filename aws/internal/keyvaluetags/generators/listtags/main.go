@@ -86,6 +86,7 @@ var serviceNames = []string{
 	"swf",
 	"transfer",
 	"waf",
+	"wafregional",
 	"workspaces",
 }
 
@@ -107,6 +108,7 @@ func main() {
 		"ListTagsInputIdentifierRequiresSlice": ServiceListTagsInputIdentifierRequiresSlice,
 		"ListTagsInputResourceTypeField":       ServiceListTagsInputResourceTypeField,
 		"ListTagsOutputTagsField":              ServiceListTagsOutputTagsField,
+		"TagPackage":                           keyvaluetags.ServiceTagPackage,
 		"Title":                                strings.Title,
 	}
 
@@ -161,7 +163,7 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func {{ . | Title }}ListTags(conn {{ . | ClientType }}, identifier string{{ if . | ListTagsInputResourceTypeField }}, resourceType string{{ end }}) (KeyValueTags, error) {
-	input := &{{ . }}.{{ . | ListTagsFunction }}Input{
+	input := &{{ . | TagPackage  }}.{{ . | ListTagsFunction }}Input{
 		{{- if . | ListTagsInputIdentifierRequiresSlice }}
 		{{ . | ListTagsInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
 		{{- else }}
@@ -302,6 +304,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceId"
 	case "waf":
 		return "ResourceARN"
+	case "wafregional":
+		return "ResourceARN"
 	default:
 		return "ResourceArn"
 	}
@@ -330,8 +334,6 @@ func ServiceListTagsInputResourceTypeField(serviceName string) string {
 // ServiceListTagsOutputTagsField determines the service tag field.
 func ServiceListTagsOutputTagsField(serviceName string) string {
 	switch serviceName {
-	case "waf":
-		return "TagInfoForResource.TagList"
 	case "cloudhsmv2":
 		return "TagList"
 	case "databasemigrationservice":
@@ -352,6 +354,10 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "TagList"
 	case "ssm":
 		return "TagList"
+	case "waf":
+		return "TagInfoForResource.TagList"
+	case "wafregional":
+		return "TagInfoForResource.TagList"
 	case "workspaces":
 		return "TagList"
 	default:
