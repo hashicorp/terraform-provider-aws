@@ -310,6 +310,9 @@ func testAccCheckGreengrassFunction_checkFunctionDefinition(n string, expectedFu
 			FunctionDefinitionVersionId: definitionOut.LatestVersion,
 		}
 		versionOut, err := conn.GetFunctionDefinitionVersion(getVersionInput)
+		if err != nil {
+			return err
+		}
 
 		function := versionOut.Definition.Functions[0]
 		expectedFunction := expectedFunctionDefinition["function"].(map[string]interface{})
