@@ -40,6 +40,7 @@ var serviceNames = []string{
 	"dax",
 	"devicefarm",
 	"directoryservice",
+	"dlm",
 	"docdb",
 	"dynamodb",
 	"ecr",

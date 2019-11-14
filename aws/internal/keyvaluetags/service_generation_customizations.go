@@ -34,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -155,6 +156,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(directconnect.New)
 	case "directoryservice":
 		funcType = reflect.TypeOf(directoryservice.New)
+	case "dlm":
+		funcType = reflect.TypeOf(dlm.New)
 	case "docdb":
 		funcType = reflect.TypeOf(docdb.New)
 	case "dynamodb":
