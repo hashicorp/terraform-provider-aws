@@ -95,8 +95,11 @@ func testAccCheckGreengrassCore_checkCore(n string, expectedCore map[string]inte
 			CoreDefinitionVersionId: definitionOut.LatestVersion,
 		}
 		versionOut, err := conn.GetCoreDefinitionVersion(getVersionInput)
-		core := versionOut.Definition.Cores[0]
+		if err != nil {
+			return err
+		}
 
+		core := versionOut.Definition.Cores[0]
 		expectedSyncShadow := expectedCore["sync_shadow"].(bool)
 		if *core.SyncShadow != expectedSyncShadow {
 			return fmt.Errorf("Sync Shadow %t is not equal expected %t", *core.SyncShadow, expectedSyncShadow)
