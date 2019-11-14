@@ -71,15 +71,6 @@ func resourceAwsGreengrassCoreDefinition() *schema.Resource {
 	}
 }
 
-func convertInterfaceMapToStringMap(interfaceMap map[string]interface{}) map[string]*string {
-	stringMap := make(map[string]*string)
-	for k, v := range interfaceMap {
-		strVal := v.(string)
-		stringMap[k] = &strVal
-	}
-	return stringMap
-}
-
 func createCoreDefinitionVersion(d *schema.ResourceData, conn *greengrass.Greengrass) error {
 	var rawData map[string]interface{}
 	if v := d.Get("core_definition_version").(*schema.Set).List(); len(v) == 0 {
