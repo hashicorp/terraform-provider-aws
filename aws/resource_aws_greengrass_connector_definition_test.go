@@ -100,8 +100,11 @@ func testAccCheckGreengrassConnector_checkConnector(n string, expectedConnector 
 			ConnectorDefinitionVersionId: definitionOut.LatestVersion,
 		}
 		versionOut, err := conn.GetConnectorDefinitionVersion(getVersionInput)
-		connector := versionOut.Definition.Connectors[0]
+		if err != nil {
+			return err
+		}
 
+		connector := versionOut.Definition.Connectors[0]
 		expectedConnectorArn := expectedConnector["connector_arn"].(string)
 		if *connector.ConnectorArn != expectedConnectorArn {
 			return fmt.Errorf("Connector Arn %s is not equal to expected %s", *connector.ConnectorArn, expectedConnectorArn)
