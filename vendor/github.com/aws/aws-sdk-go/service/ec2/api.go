@@ -11346,10 +11346,12 @@ func (c *EC2) DescribeByoipCidrsPagesWithContext(ctx aws.Context, input *Describ
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeByoipCidrsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeByoipCidrsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -11477,10 +11479,12 @@ func (c *EC2) DescribeCapacityReservationsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCapacityReservationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCapacityReservationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -11610,10 +11614,12 @@ func (c *EC2) DescribeClassicLinkInstancesPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeClassicLinkInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeClassicLinkInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -11740,10 +11746,12 @@ func (c *EC2) DescribeClientVpnAuthorizationRulesPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeClientVpnAuthorizationRulesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeClientVpnAuthorizationRulesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -11871,10 +11879,12 @@ func (c *EC2) DescribeClientVpnConnectionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeClientVpnConnectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeClientVpnConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -12001,10 +12011,12 @@ func (c *EC2) DescribeClientVpnEndpointsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeClientVpnEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeClientVpnEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -12131,10 +12143,12 @@ func (c *EC2) DescribeClientVpnRoutesPagesWithContext(ctx aws.Context, input *De
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeClientVpnRoutesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeClientVpnRoutesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -12261,10 +12275,12 @@ func (c *EC2) DescribeClientVpnTargetNetworksPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeClientVpnTargetNetworksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeClientVpnTargetNetworksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -12549,10 +12565,12 @@ func (c *EC2) DescribeDhcpOptionsPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDhcpOptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDhcpOptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -12679,10 +12697,12 @@ func (c *EC2) DescribeEgressOnlyInternetGatewaysPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEgressOnlyInternetGatewaysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEgressOnlyInternetGatewaysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -13182,10 +13202,12 @@ func (c *EC2) DescribeFleetsPagesWithContext(ctx aws.Context, input *DescribeFle
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeFleetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeFleetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -13314,10 +13336,12 @@ func (c *EC2) DescribeFlowLogsPagesWithContext(ctx aws.Context, input *DescribeF
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeFlowLogsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeFlowLogsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -13520,10 +13544,12 @@ func (c *EC2) DescribeFpgaImagesPagesWithContext(ctx aws.Context, input *Describ
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeFpgaImagesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeFpgaImagesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -13658,10 +13684,12 @@ func (c *EC2) DescribeHostReservationOfferingsPagesWithContext(ctx aws.Context, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeHostReservationOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeHostReservationOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -13788,10 +13816,12 @@ func (c *EC2) DescribeHostReservationsPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeHostReservationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeHostReservationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -13922,10 +13952,12 @@ func (c *EC2) DescribeHostsPagesWithContext(ctx aws.Context, input *DescribeHost
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeHostsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeHostsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -14052,10 +14084,12 @@ func (c *EC2) DescribeIamInstanceProfileAssociationsPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeIamInstanceProfileAssociationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeIamInstanceProfileAssociationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -14524,10 +14558,12 @@ func (c *EC2) DescribeImportImageTasksPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeImportImageTasksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeImportImageTasksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -14654,10 +14690,12 @@ func (c *EC2) DescribeImportSnapshotTasksPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeImportSnapshotTasksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeImportSnapshotTasksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -14885,10 +14923,12 @@ func (c *EC2) DescribeInstanceCreditSpecificationsPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeInstanceCreditSpecificationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstanceCreditSpecificationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15036,10 +15076,12 @@ func (c *EC2) DescribeInstanceStatusPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeInstanceStatusOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstanceStatusOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15181,10 +15223,12 @@ func (c *EC2) DescribeInstancesPagesWithContext(ctx aws.Context, input *Describe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15311,10 +15355,12 @@ func (c *EC2) DescribeInternetGatewaysPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeInternetGatewaysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInternetGatewaysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15519,10 +15565,12 @@ func (c *EC2) DescribeLaunchTemplateVersionsPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeLaunchTemplateVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeLaunchTemplateVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15649,10 +15697,12 @@ func (c *EC2) DescribeLaunchTemplatesPagesWithContext(ctx aws.Context, input *De
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeLaunchTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeLaunchTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15781,10 +15831,12 @@ func (c *EC2) DescribeMovingAddressesPagesWithContext(ctx aws.Context, input *De
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeMovingAddressesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMovingAddressesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15911,10 +15963,12 @@ func (c *EC2) DescribeNatGatewaysPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeNatGatewaysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeNatGatewaysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -16044,10 +16098,12 @@ func (c *EC2) DescribeNetworkAclsPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeNetworkAclsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeNetworkAclsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -16249,10 +16305,12 @@ func (c *EC2) DescribeNetworkInterfacePermissionsPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeNetworkInterfacePermissionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeNetworkInterfacePermissionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -16379,10 +16437,12 @@ func (c *EC2) DescribeNetworkInterfacesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeNetworkInterfacesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeNetworkInterfacesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -16590,10 +16650,12 @@ func (c *EC2) DescribePrefixListsPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribePrefixListsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribePrefixListsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -16734,10 +16796,12 @@ func (c *EC2) DescribePrincipalIdFormatPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribePrincipalIdFormatOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribePrincipalIdFormatOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -16864,10 +16928,12 @@ func (c *EC2) DescribePublicIpv4PoolsPagesWithContext(ctx aws.Context, input *De
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribePublicIpv4PoolsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribePublicIpv4PoolsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -17253,10 +17319,12 @@ func (c *EC2) DescribeReservedInstancesModificationsPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedInstancesModificationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedInstancesModificationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -17394,10 +17462,12 @@ func (c *EC2) DescribeReservedInstancesOfferingsPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedInstancesOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedInstancesOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -17532,10 +17602,12 @@ func (c *EC2) DescribeRouteTablesPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeRouteTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeRouteTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -17670,10 +17742,12 @@ func (c *EC2) DescribeScheduledInstanceAvailabilityPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScheduledInstanceAvailabilityOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScheduledInstanceAvailabilityOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -17800,10 +17874,12 @@ func (c *EC2) DescribeScheduledInstancesPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScheduledInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScheduledInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -18012,10 +18088,12 @@ func (c *EC2) DescribeSecurityGroupsPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSecurityGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSecurityGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -18267,10 +18345,12 @@ func (c *EC2) DescribeSnapshotsPagesWithContext(ctx aws.Context, input *Describe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSnapshotsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSnapshotsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -18629,10 +18709,12 @@ func (c *EC2) DescribeSpotFleetRequestsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSpotFleetRequestsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSpotFleetRequestsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -18775,10 +18857,12 @@ func (c *EC2) DescribeSpotInstanceRequestsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSpotInstanceRequestsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSpotInstanceRequestsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -18912,10 +18996,12 @@ func (c *EC2) DescribeSpotPriceHistoryPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSpotPriceHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSpotPriceHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19045,10 +19131,12 @@ func (c *EC2) DescribeStaleSecurityGroupsPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeStaleSecurityGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeStaleSecurityGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19178,10 +19266,12 @@ func (c *EC2) DescribeSubnetsPagesWithContext(ctx aws.Context, input *DescribeSu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSubnetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSubnetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19311,10 +19401,12 @@ func (c *EC2) DescribeTagsPagesWithContext(ctx aws.Context, input *DescribeTagsI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTagsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTagsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19441,10 +19533,12 @@ func (c *EC2) DescribeTrafficMirrorFiltersPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTrafficMirrorFiltersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTrafficMirrorFiltersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19572,10 +19666,12 @@ func (c *EC2) DescribeTrafficMirrorSessionsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTrafficMirrorSessionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTrafficMirrorSessionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19702,10 +19798,12 @@ func (c *EC2) DescribeTrafficMirrorTargetsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTrafficMirrorTargetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTrafficMirrorTargetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19835,10 +19933,12 @@ func (c *EC2) DescribeTransitGatewayAttachmentsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTransitGatewayAttachmentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTransitGatewayAttachmentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -19966,10 +20066,12 @@ func (c *EC2) DescribeTransitGatewayRouteTablesPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTransitGatewayRouteTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTransitGatewayRouteTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -20097,10 +20199,12 @@ func (c *EC2) DescribeTransitGatewayVpcAttachmentsPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTransitGatewayVpcAttachmentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTransitGatewayVpcAttachmentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -20228,10 +20332,12 @@ func (c *EC2) DescribeTransitGatewaysPagesWithContext(ctx aws.Context, input *De
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTransitGatewaysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTransitGatewaysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -20471,10 +20577,12 @@ func (c *EC2) DescribeVolumeStatusPagesWithContext(ctx aws.Context, input *Descr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVolumeStatusOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVolumeStatusOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -20611,10 +20719,12 @@ func (c *EC2) DescribeVolumesPagesWithContext(ctx aws.Context, input *DescribeVo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVolumesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVolumesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -20754,10 +20864,12 @@ func (c *EC2) DescribeVolumesModificationsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVolumesModificationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVolumesModificationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -21039,10 +21151,12 @@ func (c *EC2) DescribeVpcClassicLinkDnsSupportPagesWithContext(ctx aws.Context, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcClassicLinkDnsSupportOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcClassicLinkDnsSupportOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -21170,10 +21284,12 @@ func (c *EC2) DescribeVpcEndpointConnectionNotificationsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcEndpointConnectionNotificationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcEndpointConnectionNotificationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -21301,10 +21417,12 @@ func (c *EC2) DescribeVpcEndpointConnectionsPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcEndpointConnectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcEndpointConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -21431,10 +21549,12 @@ func (c *EC2) DescribeVpcEndpointServiceConfigurationsPagesWithContext(ctx aws.C
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcEndpointServiceConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcEndpointServiceConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -21562,10 +21682,12 @@ func (c *EC2) DescribeVpcEndpointServicePermissionsPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcEndpointServicePermissionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcEndpointServicePermissionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -21766,10 +21888,12 @@ func (c *EC2) DescribeVpcEndpointsPagesWithContext(ctx aws.Context, input *Descr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -21896,10 +22020,12 @@ func (c *EC2) DescribeVpcPeeringConnectionsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcPeeringConnectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcPeeringConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -22026,10 +22152,12 @@ func (c *EC2) DescribeVpcsPagesWithContext(ctx aws.Context, input *DescribeVpcsI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVpcsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVpcsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -25152,10 +25280,12 @@ func (c *EC2) GetTransitGatewayAttachmentPropagationsPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTransitGatewayAttachmentPropagationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTransitGatewayAttachmentPropagationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -25283,10 +25413,12 @@ func (c *EC2) GetTransitGatewayRouteTableAssociationsPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTransitGatewayRouteTableAssociationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTransitGatewayRouteTableAssociationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -25414,10 +25546,12 @@ func (c *EC2) GetTransitGatewayRouteTablePropagationsPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTransitGatewayRouteTablePropagationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTransitGatewayRouteTablePropagationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

@@ -954,10 +954,12 @@ func (c *MediaConvert) DescribeEndpointsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1542,10 +1544,12 @@ func (c *MediaConvert) ListJobTemplatesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1689,10 +1693,12 @@ func (c *MediaConvert) ListJobsPagesWithContext(ctx aws.Context, input *ListJobs
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1835,10 +1841,12 @@ func (c *MediaConvert) ListPresetsPagesWithContext(ctx aws.Context, input *ListP
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPresetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPresetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1981,10 +1989,12 @@ func (c *MediaConvert) ListQueuesPagesWithContext(ctx aws.Context, input *ListQu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListQueuesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListQueuesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

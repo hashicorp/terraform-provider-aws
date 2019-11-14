@@ -229,10 +229,12 @@ func (c *DynamoDB) BatchGetItemPagesWithContext(ctx aws.Context, input *BatchGet
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*BatchGetItemOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*BatchGetItemOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2687,10 +2689,12 @@ func (c *DynamoDB) ListTablesPagesWithContext(ctx aws.Context, input *ListTables
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3185,10 +3189,12 @@ func (c *DynamoDB) QueryPagesWithContext(ctx aws.Context, input *QueryInput, fn 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*QueryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*QueryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3695,10 +3701,12 @@ func (c *DynamoDB) ScanPagesWithContext(ctx aws.Context, input *ScanInput, fn fu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ScanOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ScanOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

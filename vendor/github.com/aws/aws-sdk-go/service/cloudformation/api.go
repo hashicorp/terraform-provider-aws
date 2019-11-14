@@ -1305,10 +1305,12 @@ func (c *CloudFormation) DescribeStackEventsPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeStackEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeStackEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1609,10 +1611,12 @@ func (c *CloudFormation) DescribeStackResourceDriftsPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeStackResourceDriftsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeStackResourceDriftsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1994,10 +1998,12 @@ func (c *CloudFormation) DescribeStacksPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeStacksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeStacksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2822,10 +2828,12 @@ func (c *CloudFormation) ListExportsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListExportsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListExportsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2958,10 +2966,12 @@ func (c *CloudFormation) ListImportsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListImportsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListImportsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3172,10 +3182,12 @@ func (c *CloudFormation) ListStackResourcesPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListStackResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListStackResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3542,10 +3554,12 @@ func (c *CloudFormation) ListStacksPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListStacksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListStacksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

@@ -1780,10 +1780,12 @@ func (c *AutoScaling) DescribeAutoScalingGroupsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeAutoScalingGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeAutoScalingGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1919,10 +1921,12 @@ func (c *AutoScaling) DescribeAutoScalingInstancesPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeAutoScalingInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeAutoScalingInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2138,10 +2142,12 @@ func (c *AutoScaling) DescribeLaunchConfigurationsPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeLaunchConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeLaunchConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2691,10 +2697,12 @@ func (c *AutoScaling) DescribeNotificationConfigurationsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeNotificationConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeNotificationConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2833,10 +2841,12 @@ func (c *AutoScaling) DescribePoliciesPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribePoliciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribePoliciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2972,10 +2982,12 @@ func (c *AutoScaling) DescribeScalingActivitiesPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3193,10 +3205,12 @@ func (c *AutoScaling) DescribeScheduledActionsPagesWithContext(ctx aws.Context, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScheduledActionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScheduledActionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3341,10 +3355,12 @@ func (c *AutoScaling) DescribeTagsPagesWithContext(ctx aws.Context, input *Descr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTagsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTagsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
