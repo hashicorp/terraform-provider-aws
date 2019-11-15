@@ -1,4 +1,10 @@
 ## 2.37.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_iam_policy_document: Prevent panic when combining single principal identifier with multiple principal identifiers [GH-10780]
+* data-source/aws_iam_policy_document: Prevent losing identifier elements when combining single and multiple principals identifiers [GH-10844]
+
 ## 2.36.0 (November 14, 2019)
 
 ENHANCEMENTS:
