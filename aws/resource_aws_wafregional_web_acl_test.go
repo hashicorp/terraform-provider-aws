@@ -598,13 +598,13 @@ func testAccCheckAWSWafRegionalWebAclExists(n string, v *waf.WebACL) resource.Te
 func testAccAWSWafRegionalWebAclConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -619,19 +619,19 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     rule_id  = "${aws_wafregional_rule.wafrule.id}"
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalWebAclConfigTags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -647,22 +647,22 @@ resource "aws_wafregional_web_acl" "waf_acl" {
   }
 
   tags = {
-    "%s" = "%s"
+    %[2]q = %[3]q
   }
 }
-`, name, name, name, name, tagKey1, tagValue1)
+`, name, tagKey1, tagValue1)
 }
 
 func testAccAWSWafRegionalWebAclConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -678,26 +678,26 @@ resource "aws_wafregional_web_acl" "waf_acl" {
   }
 
   tags = {
-    "%s" = "%s"
-    "%s" = "%s"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, name, name, name, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSWafRegionalWebAclConfigRateBased(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rate_based_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   rate_key   = "IP"
   rate_limit = 2000
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -713,19 +713,19 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     rule_id  = "${aws_wafregional_rate_based_rule.wafrule.id}"
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalWebAclConfigGroup(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule_group" "wafrulegroup" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -741,19 +741,19 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     rule_id  = "${aws_wafregional_rule_group.wafrulegroup.id}" # todo
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -768,19 +768,19 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     rule_id  = "${aws_wafregional_rule.wafrule.id}"
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_changeDefaultAction(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "BLOCK"
@@ -795,32 +795,32 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     rule_id  = "${aws_wafregional_rule.wafrule.id}"
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_noRules(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalWebAclConfig_changeRules(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
 
 resource "aws_wafregional_web_acl" "waf_acl" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   default_action {
     type = "ALLOW"
@@ -844,7 +844,7 @@ resource "aws_wafregional_web_acl" "waf_acl" {
     rule_id  = "${aws_wafregional_rule.wafrule.id}"
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalWebAclConfigLoggingConfiguration(rName string) string {
