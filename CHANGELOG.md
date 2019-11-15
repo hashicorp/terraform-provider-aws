@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_api_gateway_rest_api: Add `tags` argument and `arn` attribute [GH-10581]
+* resource/aws_db_instance: Add `ca_cert_identifier` argument [GH-10490]
 * resource/aws_dlm_lifecycle_policy: Add `tags` argument and `arn` attribute [GH-10864]
 * resource/aws_efs_file_system: Add `AFTER_7_DAYS` as a valid `lifecycle_policy` configuratio block `transition_to_ia` argument value [GH-10825]
 * resource/aws_glue_crawler: Add `tags` argument [GH-10805]
