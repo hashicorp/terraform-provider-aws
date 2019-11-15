@@ -239,6 +239,33 @@ func TestAccAWSGlueTrigger_Schedule(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueTrigger_WorkflowName(t *testing.T) {
+	var trigger glue.Trigger
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueTriggerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueTriggerConfig_WorkflowName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueTriggerExists(resourceName, &trigger),
+					resource.TestCheckResourceAttr(resourceName, "workflow_name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGlueTriggerExists(resourceName string, trigger *glue.Trigger) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -397,4 +424,24 @@ resource "aws_glue_trigger" "test" {
   }
 }
 `, testAccAWSGlueJobConfig_Required(rName), rName, schedule)
+}
+
+func testAccAWSGlueTriggerConfig_WorkflowName(rName string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "aws_glue_workflow" test {
+	name = "%s"
+}
+
+resource "aws_glue_trigger" "test" {
+  name          = "%s"
+  type          = "ON_DEMAND"
+  workflow_name = "${aws_glue_workflow.test.name}"
+
+  actions {
+    job_name = "${aws_glue_job.test.name}"
+  }
+}
+`, testAccAWSGlueJobConfig_Required(rName), rName, rName)
 }

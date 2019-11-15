@@ -16,8 +16,8 @@ Manages a Glue Trigger resource.
 
 ```hcl
 resource "aws_glue_trigger" "example" {
-  name = "example"
-  type = "CONDITIONAL"
+  name          = "example"
+  type          = "CONDITIONAL"
 
   actions {
     job_name = "${aws_glue_job.example1.name}"
@@ -70,6 +70,7 @@ The following arguments are supported:
 * `predicate` – (Optional) A predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. Defined below.
 * `schedule` – (Optional) A cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
 * `type` – (Required) The type of trigger. Valid values are `CONDITIONAL`, `ON_DEMAND`, and `SCHEDULED`.
+* `workflow_name` - (Optional) A workflow to which the trigger should be associated to. Every workflow graph (DAG) needs a starting trigger (`ON_DEMAND` or `SCHEDULED`) and can contain multiple additional `CONDITIONAL` triggers.
 
 ### actions Argument Reference
 
