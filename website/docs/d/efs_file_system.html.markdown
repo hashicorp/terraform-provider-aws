@@ -1,4 +1,5 @@
 ---
+subcategory: "EFS"
 layout: "aws"
 page_title: "AWS: aws_efs_file_system"
 description: |-

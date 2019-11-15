@@ -17575,6 +17575,9 @@ const (
 
 // The architecture of the cores which are the targets of an update.
 const (
+	// UpdateTargetsArchitectureArmv6l is a UpdateTargetsArchitecture enum value
+	UpdateTargetsArchitectureArmv6l = "armv6l"
+
 	// UpdateTargetsArchitectureArmv7l is a UpdateTargetsArchitecture enum value
 	UpdateTargetsArchitectureArmv7l = "armv7l"
 
