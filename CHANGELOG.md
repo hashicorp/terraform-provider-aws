@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_dlm_lifecycle_policy: Add `tags` argument and `arn` attribute [GH-10864]
+* resource/aws_glue_crawler: Add `tags` argument [GH-10805]
 
 BUG FIXES:
 
