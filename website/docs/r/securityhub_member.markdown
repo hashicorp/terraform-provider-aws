@@ -1,12 +1,12 @@
 ---
+subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_member"
-sidebar_current: "docs-aws-resource-securityhub-member"
 description: |-
   Provides a Security Hub member resource.
 ---
 
-# aws_securityhub_member
+# Resource: aws_securityhub_member
 
 Provides a Security Hub member resource.
 
