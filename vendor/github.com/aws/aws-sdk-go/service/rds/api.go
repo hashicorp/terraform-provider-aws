@@ -817,6 +817,11 @@ func (c *RDS) CopyDBClusterSnapshotRequest(input *CopyDBClusterSnapshotInput) (r
 //    To learn how to generate a Signature Version 4 signed request, see Authenticating
 //    Requests: Using Query Parameters (AWS Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
 //    and Signature Version 4 Signing Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+//    If you are using an AWS SDK tool or the AWS CLI, you can specify SourceRegion
+//    (or --source-region for the AWS CLI) instead of specifying PreSignedUrl
+//    manually. Specifying SourceRegion autogenerates a pre-signed URL that
+//    is a valid request for the operation that can be executed in the source
+//    AWS Region.
 //
 //    * TargetDBClusterSnapshotIdentifier - The identifier for the new copy
 //    of the DB cluster snapshot in the destination AWS Region.
@@ -3879,8 +3884,8 @@ func (c *RDS) DeleteInstallationMediaRequest(input *DeleteInstallationMediaInput
 
 // DeleteInstallationMedia API operation for Amazon Relational Database Service.
 //
-// Deletes the installation media for an on-premises, bring your own media (BYOM)
-// DB engine, such as Microsoft SQL Server.
+// Deletes the installation medium for a DB engine that requires an on-premises
+// customer provided license, such as Microsoft SQL Server.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3891,7 +3896,7 @@ func (c *RDS) DeleteInstallationMediaRequest(input *DeleteInstallationMediaInput
 //
 // Returned Error Codes:
 //   * ErrCodeInstallationMediaNotFoundFault "InstallationMediaNotFound"
-//   InstallationMediaID doesn't refer to an existing installation media.
+//   InstallationMediaID doesn't refer to an existing installation medium.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DeleteInstallationMedia
 func (c *RDS) DeleteInstallationMedia(input *DeleteInstallationMediaInput) (*DeleteInstallationMediaOutput, error) {
@@ -4291,10 +4296,12 @@ func (c *RDS) DescribeCustomAvailabilityZonesPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCustomAvailabilityZonesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCustomAvailabilityZonesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4948,10 +4955,12 @@ func (c *RDS) DescribeDBClustersPagesWithContext(ctx aws.Context, input *Describ
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5078,10 +5087,12 @@ func (c *RDS) DescribeDBEngineVersionsPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBEngineVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBEngineVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5219,10 +5230,12 @@ func (c *RDS) DescribeDBInstanceAutomatedBackupsPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBInstanceAutomatedBackupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBInstanceAutomatedBackupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5354,10 +5367,12 @@ func (c *RDS) DescribeDBInstancesPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5489,10 +5504,12 @@ func (c *RDS) DescribeDBLogFilesPagesWithContext(ctx aws.Context, input *Describ
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBLogFilesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBLogFilesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5626,10 +5643,12 @@ func (c *RDS) DescribeDBParameterGroupsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBParameterGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBParameterGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5761,10 +5780,12 @@ func (c *RDS) DescribeDBParametersPagesWithContext(ctx aws.Context, input *Descr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBParametersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBParametersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5898,10 +5919,12 @@ func (c *RDS) DescribeDBSecurityGroupsPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBSecurityGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBSecurityGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6123,10 +6146,12 @@ func (c *RDS) DescribeDBSnapshotsPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBSnapshotsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBSnapshotsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6261,10 +6286,12 @@ func (c *RDS) DescribeDBSubnetGroupsPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBSubnetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBSubnetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6470,10 +6497,12 @@ func (c *RDS) DescribeEngineDefaultParametersPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEngineDefaultParametersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEngineDefaultParametersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6686,10 +6715,12 @@ func (c *RDS) DescribeEventSubscriptionsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventSubscriptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventSubscriptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6820,10 +6851,12 @@ func (c *RDS) DescribeEventsPagesWithContext(ctx aws.Context, input *DescribeEve
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6960,10 +6993,12 @@ func (c *RDS) DescribeGlobalClustersPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeGlobalClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeGlobalClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7017,8 +7052,8 @@ func (c *RDS) DescribeInstallationMediaRequest(input *DescribeInstallationMediaI
 
 // DescribeInstallationMedia API operation for Amazon Relational Database Service.
 //
-// Describes the available installation media for on-premises, bring your own
-// media (BYOM) DB engines, such as Microsoft SQL Server.
+// Describes the available installation media for a DB engine that requires
+// an on-premises customer provided license, such as Microsoft SQL Server.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7029,7 +7064,7 @@ func (c *RDS) DescribeInstallationMediaRequest(input *DescribeInstallationMediaI
 //
 // Returned Error Codes:
 //   * ErrCodeInstallationMediaNotFoundFault "InstallationMediaNotFound"
-//   InstallationMediaID doesn't refer to an existing installation media.
+//   InstallationMediaID doesn't refer to an existing installation medium.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/DescribeInstallationMedia
 func (c *RDS) DescribeInstallationMedia(input *DescribeInstallationMediaInput) (*DescribeInstallationMediaOutput, error) {
@@ -7096,10 +7131,12 @@ func (c *RDS) DescribeInstallationMediaPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeInstallationMediaOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstallationMediaOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7226,10 +7263,12 @@ func (c *RDS) DescribeOptionGroupOptionsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeOptionGroupOptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOptionGroupOptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7361,10 +7400,12 @@ func (c *RDS) DescribeOptionGroupsPagesWithContext(ctx aws.Context, input *Descr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeOptionGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOptionGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7491,10 +7532,12 @@ func (c *RDS) DescribeOrderableDBInstanceOptionsPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeOrderableDBInstanceOptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOrderableDBInstanceOptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7707,10 +7750,12 @@ func (c *RDS) DescribeReservedDBInstancesPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedDBInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedDBInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7842,10 +7887,12 @@ func (c *RDS) DescribeReservedDBInstancesOfferingsPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedDBInstancesOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedDBInstancesOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8140,10 +8187,12 @@ func (c *RDS) DownloadDBLogFilePortionPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DownloadDBLogFilePortionOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DownloadDBLogFilePortionOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8291,8 +8340,8 @@ func (c *RDS) ImportInstallationMediaRequest(input *ImportInstallationMediaInput
 
 // ImportInstallationMedia API operation for Amazon Relational Database Service.
 //
-// Imports the installation media for an on-premises, bring your own media (BYOM)
-// DB engine, such as SQL Server.
+// Imports the installation media for a DB engine that requires an on-premises
+// customer provided license, such as SQL Server.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8307,7 +8356,7 @@ func (c *RDS) ImportInstallationMediaRequest(input *ImportInstallationMediaInput
 //   Zone identifier.
 //
 //   * ErrCodeInstallationMediaAlreadyExistsFault "InstallationMediaAlreadyExists"
-//   The specified installation media has already been imported.
+//   The specified installation medium has already been imported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ImportInstallationMedia
 func (c *RDS) ImportInstallationMedia(input *ImportInstallationMediaInput) (*ImportInstallationMediaOutput, error) {
@@ -10905,8 +10954,8 @@ func (c *RDS) RestoreDBClusterFromSnapshotRequest(input *RestoreDBClusterFromSna
 //
 // If a DB cluster snapshot is specified, the target DB cluster is created from
 // the source DB cluster restore point with the same configuration as the original
-// source DB cluster, except that the new DB cluster is created with the default
-// security group.
+// source DB cluster. If you don't specify a security group, the new DB cluster
+// is associated with the default security group.
 //
 // For more information on Amazon Aurora, see What Is Amazon Aurora? (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html)
 // in the Amazon Aurora User Guide.
@@ -12886,7 +12935,7 @@ type AuthorizeDBSecurityGroupIngressInput struct {
 	EC2SecurityGroupName *string `type:"string"`
 
 	// AWS account number of the owner of the EC2 security group specified in the
-	// EC2SecurityGroupName parameter. The AWS Access Key ID is not an acceptable
+	// EC2SecurityGroupName parameter. The AWS access key ID isn't an acceptable
 	// value. For VPC DB security groups, EC2SecurityGroupId must be provided. Otherwise,
 	// EC2SecurityGroupOwnerId and either EC2SecurityGroupName or EC2SecurityGroupId
 	// must be provided.
@@ -13053,7 +13102,7 @@ type BacktrackDBClusterInput struct {
 	// 8601 format. For more information about ISO 8601, see the ISO8601 Wikipedia
 	// page. (http://en.wikipedia.org/wiki/ISO_8601)
 	//
-	// If the specified time is not a consistent time for the DB cluster, Aurora
+	// If the specified time isn't a consistent time for the DB cluster, Aurora
 	// automatically chooses the nearest possible consistent time for the DB cluster.
 	//
 	// Constraints:
@@ -13534,7 +13583,8 @@ type CopyDBClusterSnapshotInput struct {
 	// The URL that contains a Signature Version 4 signed request for the CopyDBClusterSnapshot
 	// API action in the AWS Region that contains the source DB cluster snapshot
 	// to copy. The PreSignedUrl parameter must be used when copying an encrypted
-	// DB cluster snapshot from another AWS Region.
+	// DB cluster snapshot from another AWS Region. Don't specify PreSignedUrl when
+	// you are copying an encrypted DB cluster snapshot in the same AWS Region.
 	//
 	// The pre-signed URL must be a valid request for the CopyDBSClusterSnapshot
 	// API action that can be executed in the source AWS Region that contains the
@@ -13560,10 +13610,14 @@ type CopyDBClusterSnapshotInput struct {
 	// To learn how to generate a Signature Version 4 signed request, see Authenticating
 	// Requests: Using Query Parameters (AWS Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
 	// and Signature Version 4 Signing Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+	//
+	// If you are using an AWS SDK tool or the AWS CLI, you can specify SourceRegion
+	// (or --source-region for the AWS CLI) instead of specifying PreSignedUrl manually.
+	// Specifying SourceRegion autogenerates a pre-signed URL that is a valid request
+	// for the operation that can be executed in the source AWS Region.
 	PreSignedUrl *string `type:"string"`
 
-	// The identifier of the DB cluster snapshot to copy. This parameter is not
-	// case-sensitive.
+	// The identifier of the DB cluster snapshot to copy. This parameter isn't case-sensitive.
 	//
 	// You can't copy an encrypted, shared DB cluster snapshot from one AWS Region
 	// to another.
@@ -13595,7 +13649,7 @@ type CopyDBClusterSnapshotInput struct {
 	Tags []*Tag `locationNameList:"Tag" type:"list"`
 
 	// The identifier of the new DB cluster snapshot to create from the source DB
-	// cluster snapshot. This parameter is not case-sensitive.
+	// cluster snapshot. This parameter isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -13880,9 +13934,8 @@ type CopyDBSnapshotInput struct {
 	// to copy.
 	//
 	// You must specify this parameter when you copy an encrypted DB snapshot from
-	// another AWS Region by using the Amazon RDS API. You can specify the --source-region
-	// option instead of this parameter when you copy an encrypted DB snapshot from
-	// another AWS Region by using the AWS CLI.
+	// another AWS Region by using the Amazon RDS API. Don't specify PreSignedUrl
+	// when you are copying an encrypted DB snapshot in the same AWS Region.
 	//
 	// The presigned URL must be a valid request for the CopyDBSnapshot API action
 	// that can be executed in the source AWS Region that contains the encrypted
@@ -13912,6 +13965,11 @@ type CopyDBSnapshotInput struct {
 	// To learn how to generate a Signature Version 4 signed request, see Authenticating
 	// Requests: Using Query Parameters (AWS Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
 	// and Signature Version 4 Signing Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+	//
+	// If you are using an AWS SDK tool or the AWS CLI, you can specify SourceRegion
+	// (or --source-region for the AWS CLI) instead of specifying PreSignedUrl manually.
+	// Specifying SourceRegion autogenerates a pre-signed URL that is a valid request
+	// for the operation that can be executed in the source AWS Region.
 	PreSignedUrl *string `type:"string"`
 
 	// The identifier for the source DB snapshot.
@@ -14210,13 +14268,13 @@ type CreateCustomAvailabilityZoneInput struct {
 	// The name of a new VPN tunnel between the Amazon RDS website and the VMware
 	// vSphere cluster.
 	//
-	// Specify this parameter only if ExistingVpnId is not specified.
+	// Specify this parameter only if ExistingVpnId isn't specified.
 	NewVpnTunnelName *string `type:"string"`
 
 	// The IP address of network traffic from your on-premises data center. A custom
 	// AZ receives the network traffic.
 	//
-	// Specify this parameter only if ExistingVpnId is not specified.
+	// Specify this parameter only if ExistingVpnId isn't specified.
 	VpnTunnelOriginatorIP *string `type:"string"`
 }
 
@@ -14559,7 +14617,8 @@ type CreateDBClusterInput struct {
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
 	// The name of the DB cluster parameter group to associate with this DB cluster.
-	// If this argument is omitted, default.aurora5.6 is used.
+	// If you do not specify a value, then the default DB cluster parameter group
+	// for the specified DB engine and version is used.
 	//
 	// Constraints:
 	//
@@ -14661,14 +14720,14 @@ type CreateDBClusterInput struct {
 	// the KMS encryption key used to encrypt the new DB cluster, then you can use
 	// the KMS key alias instead of the ARN for the KMS encryption key.
 	//
-	// If an encryption key is not specified in KmsKeyId:
+	// If an encryption key isn't specified in KmsKeyId:
 	//
 	//    * If ReplicationSourceIdentifier identifies an encrypted source, then
 	//    Amazon RDS will use the encryption key used to encrypt the source. Otherwise,
 	//    Amazon RDS will use your default encryption key.
 	//
 	//    * If the StorageEncrypted parameter is enabled and ReplicationSourceIdentifier
-	//    is not specified, then Amazon RDS will use your default encryption key.
+	//    isn't specified, then Amazon RDS will use your default encryption key.
 	//
 	// AWS KMS creates the default encryption key for your AWS account. Your AWS
 	// account has a different default encryption key for each AWS Region.
@@ -14736,6 +14795,11 @@ type CreateDBClusterInput struct {
 	// To learn how to generate a Signature Version 4 signed request, see Authenticating
 	// Requests: Using Query Parameters (AWS Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
 	// and Signature Version 4 Signing Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+	//
+	// If you are using an AWS SDK tool or the AWS CLI, you can specify SourceRegion
+	// (or --source-region for the AWS CLI) instead of specifying PreSignedUrl manually.
+	// Specifying SourceRegion autogenerates a pre-signed URL that is a valid request
+	// for the operation that can be executed in the source AWS Region.
 	PreSignedUrl *string `type:"string"`
 
 	// The daily time range during which automated backups are created if automated
@@ -15162,7 +15226,7 @@ type CreateDBClusterSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier of the DB cluster to create a snapshot for. This parameter
-	// is not case-sensitive.
+	// isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -15428,7 +15492,7 @@ type CreateDBInstanceInput struct {
 	// MySQL
 	//
 	// The name of the database to create when the DB instance is created. If this
-	// parameter is not specified, no database is created in the DB instance.
+	// parameter isn't specified, no database is created in the DB instance.
 	//
 	// Constraints:
 	//
@@ -15439,7 +15503,7 @@ type CreateDBInstanceInput struct {
 	// MariaDB
 	//
 	// The name of the database to create when the DB instance is created. If this
-	// parameter is not specified, no database is created in the DB instance.
+	// parameter isn't specified, no database is created in the DB instance.
 	//
 	// Constraints:
 	//
@@ -15450,7 +15514,7 @@ type CreateDBInstanceInput struct {
 	// PostgreSQL
 	//
 	// The name of the database to create when the DB instance is created. If this
-	// parameter is not specified, the default "postgres" database is created in
+	// parameter isn't specified, the default "postgres" database is created in
 	// the DB instance.
 	//
 	// Constraints:
@@ -15481,7 +15545,7 @@ type CreateDBInstanceInput struct {
 	// Amazon Aurora
 	//
 	// The name of the database to create when the primary instance of the DB cluster
-	// is created. If this parameter is not specified, no database is created in
+	// is created. If this parameter isn't specified, no database is created in
 	// the DB instance.
 	//
 	// Constraints:
@@ -15492,8 +15556,8 @@ type CreateDBInstanceInput struct {
 	DBName *string `type:"string"`
 
 	// The name of the DB parameter group to associate with this DB instance. If
-	// you do not specify a value for DBParameterGroupName, then the default DBParameterGroup
-	// for the specified DB engine is used.
+	// you do not specify a value, then the default DB parameter group for the specified
+	// DB engine and version is used.
 	//
 	// Constraints:
 	//
@@ -15941,13 +16005,13 @@ type CreateDBInstanceInput struct {
 	// A value that indicates whether the DB instance is publicly accessible. When
 	// the DB instance is publicly accessible, it is an Internet-facing instance
 	// with a publicly resolvable DNS name, which resolves to a public IP address.
-	// When the DB instance is not publicly accessible, it is an internal instance
+	// When the DB instance isn't publicly accessible, it is an internal instance
 	// with a DNS name that resolves to a private IP address.
 	//
 	// Default: The default behavior varies depending on whether DBSubnetGroupName
 	// is specified.
 	//
-	// If DBSubnetGroupName is not specified, and PubliclyAccessible is not specified,
+	// If DBSubnetGroupName isn't specified, and PubliclyAccessible isn't specified,
 	// the following applies:
 	//
 	//    * If the default VPC in the target region doesn’t have an Internet gateway
@@ -15956,7 +16020,7 @@ type CreateDBInstanceInput struct {
 	//    * If the default VPC in the target region has an Internet gateway attached
 	//    to it, the DB instance is public.
 	//
-	// If DBSubnetGroupName is specified, and PubliclyAccessible is not specified,
+	// If DBSubnetGroupName is specified, and PubliclyAccessible isn't specified,
 	// the following applies:
 	//
 	//    * If the subnets are part of a VPC that doesn’t have an Internet gateway
@@ -15967,7 +16031,7 @@ type CreateDBInstanceInput struct {
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// A value that indicates whether the DB instance is encrypted. By default,
-	// it is not encrypted.
+	// it isn't encrypted.
 	//
 	// Amazon Aurora
 	//
@@ -16382,6 +16446,9 @@ type CreateDBInstanceReadReplicaInput struct {
 	// or the default DBParameterGroup for the specified DB engine for a cross region
 	// Read Replica.
 	//
+	// Currently, specifying a parameter group for this operation is only supported
+	// for Oracle DB instances.
+	//
 	// Constraints:
 	//
 	//    * Must be 1 to 255 letters, numbers, or hyphens.
@@ -16393,7 +16460,7 @@ type CreateDBInstanceReadReplicaInput struct {
 
 	// Specifies a DB subnet group for the DB instance. The new DB instance is created
 	// in the VPC associated with the DB subnet group. If no DB subnet group is
-	// specified, then the new DB instance is not created in a VPC.
+	// specified, then the new DB instance isn't created in a VPC.
 	//
 	// Constraints:
 	//
@@ -16533,9 +16600,8 @@ type CreateDBInstanceReadReplicaInput struct {
 	// API action in the source AWS Region that contains the source DB instance.
 	//
 	// You must specify this parameter when you create an encrypted Read Replica
-	// from another AWS Region by using the Amazon RDS API. You can specify the
-	// --source-region option instead of this parameter when you create an encrypted
-	// Read Replica from another AWS Region by using the AWS CLI.
+	// from another AWS Region by using the Amazon RDS API. Don't specify PreSignedUrl
+	// when you are creating an encrypted Read Replica in the same AWS Region.
 	//
 	// The presigned URL must be a valid request for the CreateDBInstanceReadReplica
 	// API action that can be executed in the source AWS Region that contains the
@@ -16567,6 +16633,11 @@ type CreateDBInstanceReadReplicaInput struct {
 	// To learn how to generate a Signature Version 4 signed request, see Authenticating
 	// Requests: Using Query Parameters (AWS Signature Version 4) (https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-query-string-auth.html)
 	// and Signature Version 4 Signing Process (https://docs.aws.amazon.com/general/latest/gr/signature-version-4.html).
+	//
+	// If you are using an AWS SDK tool or the AWS CLI, you can specify SourceRegion
+	// (or --source-region for the AWS CLI) instead of specifying PreSignedUrl manually.
+	// Specifying SourceRegion autogenerates a pre-signed URL that is a valid request
+	// for the operation that can be executed in the source AWS Region.
 	PreSignedUrl *string `type:"string"`
 
 	// The number of CPU cores and the number of threads per core for the DB instance
@@ -16576,7 +16647,7 @@ type CreateDBInstanceReadReplicaInput struct {
 	// A value that indicates whether the DB instance is publicly accessible. When
 	// the DB instance is publicly accessible, it is an Internet-facing instance
 	// with a publicly resolvable DNS name, which resolves to a public IP address.
-	// When the DB instance is not publicly accessible, it is an internal instance
+	// When the DB instance isn't publicly accessible, it is an internal instance
 	// with a DNS name that resolves to a private IP address. For more information,
 	// see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
@@ -17318,7 +17389,7 @@ type CreateEventSubscriptionInput struct {
 	_ struct{} `type:"structure"`
 
 	// A value that indicates whether to activate the subscription. If the event
-	// notification subscription is not activated, the subscription is created but
+	// notification subscription isn't activated, the subscription is created but
 	// not active.
 	Enabled *bool `type:"boolean"`
 
@@ -17360,7 +17431,7 @@ type CreateEventSubscriptionInput struct {
 
 	// The type of source that is generating the events. For example, if you want
 	// to be notified of events generated by a DB instance, you would set this parameter
-	// to db-instance. if this value is not specified, all events are returned.
+	// to db-instance. if this value isn't specified, all events are returned.
 	//
 	// Valid values: db-instance | db-cluster | db-parameter-group | db-security-group
 	// | db-snapshot | db-cluster-snapshot
@@ -17780,7 +17851,7 @@ type DBCluster struct {
 
 	// For all database engines except Amazon Aurora, AllocatedStorage specifies
 	// the allocated storage size in gibibytes (GiB). For Aurora, AllocatedStorage
-	// always returns 1, because Aurora DB cluster storage size is not fixed, but
+	// always returns 1, because Aurora DB cluster storage size isn't fixed, but
 	// instead automatically adjusts as needed.
 	AllocatedStorage *int64 `type:"integer"`
 
@@ -18960,7 +19031,7 @@ type DBEngineVersion struct {
 	DBParameterGroupFamily *string `type:"string"`
 
 	// The default character set for new instances of this engine version, if the
-	// CharacterSetName parameter of the CreateDBInstance API is not specified.
+	// CharacterSetName parameter of the CreateDBInstance API isn't specified.
 	DefaultCharacterSet *CharacterSet `type:"structure"`
 
 	// The name of the database engine.
@@ -19343,7 +19414,7 @@ type DBInstance struct {
 	// instance with multi-AZ support.
 	SecondaryAvailabilityZone *string `type:"string"`
 
-	// The status of a Read Replica. If the instance is not a Read Replica, this
+	// The status of a Read Replica. If the instance isn't a Read Replica, this
 	// is blank.
 	StatusInfos []*DBInstanceStatusInfo `locationNameList:"DBInstanceStatusInfo" type:"list"`
 
@@ -20031,7 +20102,7 @@ type DBInstanceStatusInfo struct {
 	_ struct{} `type:"structure"`
 
 	// Details of the error if there is an error for the instance. If the instance
-	// is not in an error state, this value is blank.
+	// isn't in an error state, this value is blank.
 	Message *string `type:"string"`
 
 	// Boolean value that is true if the instance is operating normally, or false
@@ -21025,9 +21096,9 @@ type DeleteDBClusterInput struct {
 
 	// A value that indicates whether to skip the creation of a final DB cluster
 	// snapshot before the DB cluster is deleted. If skip is specified, no DB cluster
-	// snapshot is created. If skip is not specified, a DB cluster snapshot is created
-	// before the DB cluster is deleted. By default, skip is not specified, and
-	// the DB cluster snapshot is created. By default, this parameter is disabled.
+	// snapshot is created. If skip isn't specified, a DB cluster snapshot is created
+	// before the DB cluster is deleted. By default, skip isn't specified, and the
+	// DB cluster snapshot is created. By default, this parameter is disabled.
 	//
 	// You must specify a FinalDBSnapshotIdentifier parameter if SkipFinalSnapshot
 	// is disabled.
@@ -21330,8 +21401,8 @@ type DeleteDBInstanceInput struct {
 
 	// A value that indicates whether to skip the creation of a final DB snapshot
 	// before the DB instance is deleted. If skip is specified, no DB snapshot is
-	// created. If skip is not specified, a DB snapshot is created before the DB
-	// instance is deleted. By default, skip is not specified, and the DB snapshot
+	// created. If skip isn't specified, a DB snapshot is created before the DB
+	// instance is deleted. By default, skip isn't specified, and the DB snapshot
 	// is created.
 	//
 	// Note that when a DB instance is in a failure state and has a status of 'failed',
@@ -21340,8 +21411,7 @@ type DeleteDBInstanceInput struct {
 	//
 	// Specify skip when deleting a Read Replica.
 	//
-	// The FinalDBSnapshotIdentifier parameter must be specified if skip is not
-	// specified.
+	// The FinalDBSnapshotIdentifier parameter must be specified if skip isn't specified.
 	SkipFinalSnapshot *bool `type:"boolean"`
 }
 
@@ -21794,7 +21864,7 @@ func (s *DeleteGlobalClusterOutput) SetGlobalCluster(v *GlobalCluster) *DeleteGl
 type DeleteInstallationMediaInput struct {
 	_ struct{} `type:"structure"`
 
-	// The installation media ID.
+	// The installation medium ID.
 	//
 	// InstallationMediaId is a required field
 	InstallationMediaId *string `type:"string" required:"true"`
@@ -21829,8 +21899,8 @@ func (s *DeleteInstallationMediaInput) SetInstallationMediaId(v string) *DeleteI
 	return s
 }
 
-// Contains the installation media for on-premises, bring your own media (BYOM)
-// DB engines, such as Microsoft SQL Server.
+// Contains the installation media for a DB engine that requires an on-premises
+// customer provided license, such as Microsoft SQL Server.
 type DeleteInstallationMediaOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -21840,7 +21910,7 @@ type DeleteInstallationMediaOutput struct {
 	// The DB engine.
 	Engine *string `type:"string"`
 
-	// The path to the installation media for the DB engine.
+	// The path to the installation medium for the DB engine.
 	EngineInstallationMediaPath *string `type:"string"`
 
 	// The engine version of the DB engine.
@@ -21849,14 +21919,14 @@ type DeleteInstallationMediaOutput struct {
 	// If an installation media failure occurred, the cause of the failure.
 	FailureCause *InstallationMediaFailureCause `type:"structure"`
 
-	// The installation media ID.
+	// The installation medium ID.
 	InstallationMediaId *string `type:"string"`
 
-	// The path to the installation media for the operating system associated with
+	// The path to the installation medium for the operating system associated with
 	// the DB engine.
 	OSInstallationMediaPath *string `type:"string"`
 
-	// The status of the installation media.
+	// The status of the installation medium.
 	Status *string `type:"string"`
 }
 
@@ -22023,7 +22093,7 @@ type DescribeCertificatesInput struct {
 	//    * Must match an existing CertificateIdentifier.
 	CertificateIdentifier *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeCertificates
@@ -22033,7 +22103,7 @@ type DescribeCertificatesInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -22147,7 +22217,7 @@ type DescribeCustomAvailabilityZonesInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -22293,7 +22363,7 @@ type DescribeDBClusterBacktracksInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -22426,7 +22496,7 @@ type DescribeDBClusterEndpointsInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -22539,7 +22609,7 @@ type DescribeDBClusterParameterGroupsInput struct {
 	//    * If supplied, must match the name of an existing DBClusterParameterGroup.
 	DBClusterParameterGroupName *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBClusterParameterGroups
@@ -22549,7 +22619,7 @@ type DescribeDBClusterParameterGroupsInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -22658,7 +22728,7 @@ type DescribeDBClusterParametersInput struct {
 	// DBClusterParameterGroupName is a required field
 	DBClusterParameterGroupName *string `type:"string" required:"true"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBClusterParameters
@@ -22668,7 +22738,7 @@ type DescribeDBClusterParametersInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -22850,7 +22920,7 @@ type DescribeDBClusterSnapshotsInput struct {
 
 	// The ID of the DB cluster to retrieve the list of DB cluster snapshots for.
 	// This parameter can't be used in conjunction with the DBClusterSnapshotIdentifier
-	// parameter. This parameter is not case-sensitive.
+	// parameter. This parameter isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -22906,7 +22976,7 @@ type DescribeDBClusterSnapshotsInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -23086,7 +23156,7 @@ type DescribeDBClustersInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -23210,7 +23280,7 @@ type DescribeDBEngineVersionsInput struct {
 	// Example: 5.1.49
 	EngineVersion *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// A value that indicates whether to include engine versions that aren't available
@@ -23240,7 +23310,7 @@ type DescribeDBEngineVersionsInput struct {
 
 	// The maximum number of records to include in the response. If more than the
 	// MaxRecords value is available, a pagination token called a marker is included
-	// in the response so that you can retrieve the remaining results.
+	// in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -23721,7 +23791,7 @@ type DescribeDBLogFilesInput struct {
 	// string.
 	FilenameContains *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// The pagination token provided in the previous request. If this parameter
@@ -23731,7 +23801,7 @@ type DescribeDBLogFilesInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	MaxRecords *int64 `type:"integer"`
 }
 
@@ -23853,7 +23923,7 @@ type DescribeDBParameterGroupsInput struct {
 	//    * If supplied, must match the name of an existing DBClusterParameterGroup.
 	DBParameterGroupName *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBParameterGroups
@@ -23973,7 +24043,7 @@ type DescribeDBParametersInput struct {
 	// DBParameterGroupName is a required field
 	DBParameterGroupName *string `type:"string" required:"true"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBParameters
@@ -24103,7 +24173,7 @@ type DescribeDBSecurityGroupsInput struct {
 	// The name of the DB security group to return details for.
 	DBSecurityGroupName *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBSecurityGroups
@@ -24282,7 +24352,7 @@ type DescribeDBSnapshotsInput struct {
 
 	// The ID of the DB instance to retrieve the list of DB snapshots for. This
 	// parameter can't be used in conjunction with DBSnapshotIdentifier. This parameter
-	// is not case-sensitive.
+	// isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -24507,7 +24577,7 @@ type DescribeDBSubnetGroupsInput struct {
 	// The name of the DB subnet group to return details for.
 	DBSubnetGroupName *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeDBSubnetGroups
@@ -24624,7 +24694,7 @@ type DescribeEngineDefaultClusterParametersInput struct {
 	// DBParameterGroupFamily is a required field
 	DBParameterGroupFamily *string `type:"string" required:"true"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeEngineDefaultClusterParameters
@@ -24634,7 +24704,7 @@ type DescribeEngineDefaultClusterParametersInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -24731,7 +24801,7 @@ type DescribeEngineDefaultParametersInput struct {
 	// DBParameterGroupFamily is a required field
 	DBParameterGroupFamily *string `type:"string" required:"true"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeEngineDefaultParameters
@@ -24741,7 +24811,7 @@ type DescribeEngineDefaultParametersInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -24833,7 +24903,7 @@ func (s *DescribeEngineDefaultParametersOutput) SetEngineDefaults(v *EngineDefau
 type DescribeEventCategoriesInput struct {
 	_ struct{} `type:"structure"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// The type of source that is generating the events.
@@ -24911,7 +24981,7 @@ func (s *DescribeEventCategoriesOutput) SetEventCategoriesMapList(v []*EventCate
 type DescribeEventSubscriptionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeOrderableDBInstanceOptions
@@ -25040,7 +25110,7 @@ type DescribeEventsInput struct {
 	// subscription.
 	EventCategories []*string `locationNameList:"EventCategory" type:"list"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeEvents request.
@@ -25348,7 +25418,7 @@ type DescribeInstallationMediaInput struct {
 	//    information about the valid engines for installation media, see ImportInstallationMedia.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
-	// The installation media ID.
+	// The installation medium ID.
 	InstallationMediaId *string `type:"string"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -25458,7 +25528,7 @@ type DescribeOptionGroupOptionsInput struct {
 	// EngineName is a required field
 	EngineName *string `type:"string" required:"true"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// If specified, filters the results to include only options for the specified
@@ -25584,7 +25654,7 @@ type DescribeOptionGroupsInput struct {
 	// a specific database engine.
 	EngineName *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// Filters the list of option groups to only include groups associated with
@@ -25728,7 +25798,7 @@ type DescribeOrderableDBInstanceOptionsInput struct {
 	// available offerings matching the specified engine version.
 	EngineVersion *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// The license model filter value. Specify this parameter to show only the available
@@ -26008,7 +26078,7 @@ type DescribeReservedDBInstancesInput struct {
 	// Valid Values: 1 | 3 | 31536000 | 94608000
 	Duration *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// The lease identifier filter value. Specify this parameter to show only the
@@ -26025,7 +26095,7 @@ type DescribeReservedDBInstancesInput struct {
 
 	// The maximum number of records to include in the response. If more than the
 	// MaxRecords value is available, a pagination token called a marker is included
-	// in the response so that you can retrieve the remaining results.
+	// in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -26164,7 +26234,7 @@ type DescribeReservedDBInstancesOfferingsInput struct {
 	// Valid Values: 1 | 3 | 31536000 | 94608000
 	Duration *string `type:"string"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -26174,7 +26244,7 @@ type DescribeReservedDBInstancesOfferingsInput struct {
 
 	// The maximum number of records to include in the response. If more than the
 	// MaxRecords value is available, a pagination token called a marker is included
-	// in the response so that you can retrieve the reamaining results.
+	// in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -26363,7 +26433,7 @@ func (s *DescribeReservedDBInstancesOutput) SetReservedDBInstances(v []*Reserved
 type DescribeSourceRegionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// An optional pagination token provided by a previous DescribeSourceRegions
@@ -26373,7 +26443,7 @@ type DescribeSourceRegionsInput struct {
 
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a pagination token called a marker
-	// is included in the response so that you can retrieve the remaining results.
+	// is included in the response so you can retrieve the remaining results.
 	//
 	// Default: 100
 	//
@@ -26662,8 +26732,8 @@ type DownloadDBLogFilePortionInput struct {
 	//    is returned up to a maximum of 10000 lines, starting with the most recent
 	//    log entries first.
 	//
-	//    * If NumberOfLines is specified and Marker is not specified, then the
-	//    most recent lines from the end of the log file are returned.
+	//    * If NumberOfLines is specified and Marker isn't specified, then the most
+	//    recent lines from the end of the log file are returned.
 	//
 	//    * If Marker is specified as "0", then the specified number of lines from
 	//    the beginning of the log file are returned.
@@ -27149,7 +27219,7 @@ func (s *EventSubscription) SetSubscriptionCreationTime(v string) *EventSubscrip
 type FailoverDBClusterInput struct {
 	_ struct{} `type:"structure"`
 
-	// A DB cluster identifier to force a failover for. This parameter is not case-sensitive.
+	// A DB cluster identifier to force a failover for. This parameter isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -27496,8 +27566,8 @@ type ImportInstallationMediaInput struct {
 
 	// The name of the database engine to be used for this instance.
 	//
-	// The list only includes supported on-premises, bring your own media (BYOM)
-	// DB engines.
+	// The list only includes supported DB engines that require an on-premises customer
+	// provided license.
 	//
 	// Valid Values:
 	//
@@ -27512,7 +27582,7 @@ type ImportInstallationMediaInput struct {
 	// Engine is a required field
 	Engine *string `type:"string" required:"true"`
 
-	// The path to the installation media for the specified DB engine.
+	// The path to the installation medium for the specified DB engine.
 	//
 	// Example: SQLServerISO/en_sql_server_2016_enterprise_x64_dvd_8701793.iso
 	//
@@ -27524,8 +27594,8 @@ type ImportInstallationMediaInput struct {
 	// For a list of valid engine versions, call DescribeDBEngineVersions.
 	//
 	// The following are the database engines and links to information about the
-	// major and minor versions. The list only includes supported on-premises, bring
-	// your own media (BYOM) DB engines.
+	// major and minor versions. The list only includes DB engines that require
+	// an on-premises customer provided license.
 	//
 	// Microsoft SQL Server
 	//
@@ -27535,7 +27605,7 @@ type ImportInstallationMediaInput struct {
 	// EngineVersion is a required field
 	EngineVersion *string `type:"string" required:"true"`
 
-	// The path to the installation media for the operating system associated with
+	// The path to the installation medium for the operating system associated with
 	// the specified DB engine.
 	//
 	// Example: WindowsISO/en_windows_server_2016_x64_dvd_9327751.iso
@@ -27609,8 +27679,8 @@ func (s *ImportInstallationMediaInput) SetOSInstallationMediaPath(v string) *Imp
 	return s
 }
 
-// Contains the installation media for on-premises, bring your own media (BYOM)
-// DB engines, such as Microsoft SQL Server.
+// Contains the installation media for a DB engine that requires an on-premises
+// customer provided license, such as Microsoft SQL Server.
 type ImportInstallationMediaOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -27620,7 +27690,7 @@ type ImportInstallationMediaOutput struct {
 	// The DB engine.
 	Engine *string `type:"string"`
 
-	// The path to the installation media for the DB engine.
+	// The path to the installation medium for the DB engine.
 	EngineInstallationMediaPath *string `type:"string"`
 
 	// The engine version of the DB engine.
@@ -27629,14 +27699,14 @@ type ImportInstallationMediaOutput struct {
 	// If an installation media failure occurred, the cause of the failure.
 	FailureCause *InstallationMediaFailureCause `type:"structure"`
 
-	// The installation media ID.
+	// The installation medium ID.
 	InstallationMediaId *string `type:"string"`
 
-	// The path to the installation media for the operating system associated with
+	// The path to the installation medium for the operating system associated with
 	// the DB engine.
 	OSInstallationMediaPath *string `type:"string"`
 
-	// The status of the installation media.
+	// The status of the installation medium.
 	Status *string `type:"string"`
 }
 
@@ -27698,8 +27768,8 @@ func (s *ImportInstallationMediaOutput) SetStatus(v string) *ImportInstallationM
 	return s
 }
 
-// Contains the installation media for on-premises, bring your own media (BYOM)
-// DB engines, such as Microsoft SQL Server.
+// Contains the installation media for a DB engine that requires an on-premises
+// customer provided license, such as Microsoft SQL Server.
 type InstallationMedia struct {
 	_ struct{} `type:"structure"`
 
@@ -27709,7 +27779,7 @@ type InstallationMedia struct {
 	// The DB engine.
 	Engine *string `type:"string"`
 
-	// The path to the installation media for the DB engine.
+	// The path to the installation medium for the DB engine.
 	EngineInstallationMediaPath *string `type:"string"`
 
 	// The engine version of the DB engine.
@@ -27718,14 +27788,14 @@ type InstallationMedia struct {
 	// If an installation media failure occurred, the cause of the failure.
 	FailureCause *InstallationMediaFailureCause `type:"structure"`
 
-	// The installation media ID.
+	// The installation medium ID.
 	InstallationMediaId *string `type:"string"`
 
-	// The path to the installation media for the operating system associated with
+	// The path to the installation medium for the operating system associated with
 	// the DB engine.
 	OSInstallationMediaPath *string `type:"string"`
 
-	// The status of the installation media.
+	// The status of the installation medium.
 	Status *string `type:"string"`
 }
 
@@ -27788,8 +27858,8 @@ func (s *InstallationMedia) SetStatus(v string) *InstallationMedia {
 }
 
 // Contains the cause of an installation media failure. Installation media is
-// used for on-premises, bring your own media (BYOM) DB engines, such as Microsoft
-// SQL Server.
+// used for a DB engine that requires an on-premises customer provided license,
+// such as Microsoft SQL Server.
 type InstallationMediaFailureCause struct {
 	_ struct{} `type:"structure"`
 
@@ -27816,7 +27886,7 @@ func (s *InstallationMediaFailureCause) SetMessage(v string) *InstallationMediaF
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// This parameter is not currently supported.
+	// This parameter isn't currently supported.
 	Filters []*Filter `locationNameList:"Filter" type:"list"`
 
 	// The Amazon RDS resource with tags to be listed. This value is an Amazon Resource
@@ -27944,7 +28014,7 @@ type ModifyCurrentDBClusterCapacityInput struct {
 	Capacity *int64 `type:"integer"`
 
 	// The DB cluster identifier for the cluster being modified. This parameter
-	// is not case-sensitive.
+	// isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -27966,8 +28036,8 @@ type ModifyCurrentDBClusterCapacityInput struct {
 	// ForceApplyCapacityChange, the default, sets the capacity to the specified
 	// value as soon as possible.
 	//
-	// RollbackCapacityChange ignores the capacity change if a scaling point is
-	// not found in the timeout period.
+	// RollbackCapacityChange ignores the capacity change if a scaling point isn't
+	// found in the timeout period.
 	TimeoutAction *string `type:"string"`
 }
 
@@ -28328,7 +28398,7 @@ type ModifyDBClusterInput struct {
 	CopyTagsToSnapshot *bool `type:"boolean"`
 
 	// The DB cluster identifier for the cluster being modified. This parameter
-	// is not case-sensitive.
+	// isn't case-sensitive.
 	//
 	// Constraints: This identifier must match the identifier of an existing DB
 	// cluster.
@@ -29012,7 +29082,7 @@ type ModifyDBInstanceInput struct {
 	DBSecurityGroups []*string `locationNameList:"DBSecurityGroupName" type:"list"`
 
 	// The new DB subnet group for the DB instance. You can use this parameter to
-	// move your DB instance to a different VPC. If your DB instance is not in a
+	// move your DB instance to a different VPC. If your DB instance isn't in a
 	// VPC, you can also use this parameter to move your DB instance into a VPC.
 	// For more information, see Updating the VPC for a DB Instance (http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_VPC.WorkingWithRDSInstanceinaVPC.html#USER_VPC.Non-VPC2VPC)
 	// in the Amazon RDS User Guide.
@@ -29284,7 +29354,7 @@ type ModifyDBInstanceInput struct {
 	// A value that indicates whether the DB instance is publicly accessible. When
 	// the DB instance is publicly accessible, it is an Internet-facing instance
 	// with a publicly resolvable DNS name, which resolves to a public IP address.
-	// When the DB instance is not publicly accessible, it is an internal instance
+	// When the DB instance isn't publicly accessible, it is an internal instance
 	// with a DNS name that resolves to a private IP address.
 	//
 	// PubliclyAccessible only applies to DB instances in a VPC. The DB instance
@@ -30031,7 +30101,7 @@ type ModifyEventSubscriptionInput struct {
 
 	// The type of source that is generating the events. For example, if you want
 	// to be notified of events generated by a DB instance, you would set this parameter
-	// to db-instance. if this value is not specified, all events are returned.
+	// to db-instance. If this value isn't specified, all events are returned.
 	//
 	// Valid values: db-instance | db-parameter-group | db-security-group | db-snapshot
 	SourceType *string `type:"string"`
@@ -30128,7 +30198,7 @@ type ModifyGlobalClusterInput struct {
 	DeletionProtection *bool `type:"boolean"`
 
 	// The DB cluster identifier for the global cluster being modified. This parameter
-	// is not case-sensitive.
+	// isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -31709,7 +31779,7 @@ type PromoteReadReplicaDBClusterInput struct {
 	_ struct{} `type:"structure"`
 
 	// The identifier of the DB cluster Read Replica to promote. This parameter
-	// is not case-sensitive.
+	// isn't case-sensitive.
 	//
 	// Constraints:
 	//
@@ -32045,7 +32115,7 @@ type RebootDBInstanceInput struct {
 	// A value that indicates whether the reboot is conducted through a Multi-AZ
 	// failover.
 	//
-	// Constraint: You can't enable force failover if the instance is not configured
+	// Constraint: You can't enable force failover if the instance isn't configured
 	// for Multi-AZ.
 	ForceFailover *bool `type:"boolean"`
 }
@@ -33560,6 +33630,9 @@ type RestoreDBClusterFromSnapshotInput struct {
 	//
 	// aws rds describe-db-engine-versions --engine aurora-postgresql --query "DBEngineVersions[].EngineVersion"
 	//
+	// If you aren't using the default engine version, then you must specify the
+	// engine version.
+	//
 	// Aurora MySQL
 	//
 	// Example: 5.6.10a, 5.6.mysql_aurora.1.19.2, 5.7.12, 5.7.mysql_aurora.2.04.5
@@ -33584,8 +33657,8 @@ type RestoreDBClusterFromSnapshotInput struct {
 	//    then the restored DB cluster is encrypted using the KMS key that was used
 	//    to encrypt the DB snapshot or DB cluster snapshot.
 	//
-	//    * If the DB snapshot or DB cluster snapshot in SnapshotIdentifier is not
-	//    encrypted, then the restored DB cluster is not encrypted.
+	//    * If the DB snapshot or DB cluster snapshot in SnapshotIdentifier isn't
+	//    encrypted, then the restored DB cluster isn't encrypted.
 	KmsKeyId *string `type:"string"`
 
 	// The name of the option group to use for the restored DB cluster.
@@ -33888,10 +33961,10 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//    * If the DB cluster is encrypted, then the restored DB cluster is encrypted
 	//    using the KMS key that was used to encrypt the source DB cluster.
 	//
-	//    * If the DB cluster is not encrypted, then the restored DB cluster is
-	//    not encrypted.
+	//    * If the DB cluster isn't encrypted, then the restored DB cluster isn't
+	//    encrypted.
 	//
-	// If DBClusterIdentifier refers to a DB cluster that is not encrypted, then
+	// If DBClusterIdentifier refers to a DB cluster that isn't encrypted, then
 	// the restore request is rejected.
 	KmsKeyId *string `type:"string"`
 
@@ -33913,7 +33986,7 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	//    * Must be before the latest restorable time for the DB instance
 	//
-	//    * Must be specified if UseLatestRestorableTime parameter is not provided
+	//    * Must be specified if UseLatestRestorableTime parameter isn't provided
 	//
 	//    * Can't be specified if the UseLatestRestorableTime parameter is enabled
 	//
@@ -33952,7 +34025,7 @@ type RestoreDBClusterToPointInTimeInput struct {
 	Tags []*Tag `locationNameList:"Tag" type:"list"`
 
 	// A value that indicates whether to restore the DB cluster to the latest restorable
-	// backup time. By default, the DB cluster is not restored to the latest restorable
+	// backup time. By default, the DB cluster isn't restored to the latest restorable
 	// backup time.
 	//
 	// Constraints: Can't be specified if RestoreToTime parameter is provided.
@@ -34277,7 +34350,7 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	Engine *string `type:"string"`
 
 	// Specifies the amount of provisioned IOPS for the DB instance, expressed in
-	// I/O operations per second. If this parameter is not specified, the IOPS value
+	// I/O operations per second. If this parameter isn't specified, the IOPS value
 	// is taken from the backup. If this parameter is set to 0, the new instance
 	// is converted to a non-PIOPS instance. The conversion takes additional time,
 	// though your DB instance is available for connections before the conversion
@@ -34325,7 +34398,7 @@ type RestoreDBInstanceFromDBSnapshotInput struct {
 	// A value that indicates whether the DB instance is publicly accessible. When
 	// the DB instance is publicly accessible, it is an Internet-facing instance
 	// with a publicly resolvable DNS name, which resolves to a public IP address.
-	// When the DB instance is not publicly accessible, it is an internal instance
+	// When the DB instance isn't publicly accessible, it is an internal instance
 	// with a DNS name that resolves to a private IP address. For more information,
 	// see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
@@ -34625,8 +34698,7 @@ type RestoreDBInstanceFromS3Input struct {
 	// for your engine, see DB Instance Class (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
 	// in the Amazon RDS User Guide.
 	//
-	// Importing from Amazon S3 is not supported on the db.t2.micro DB instance
-	// class.
+	// Importing from Amazon S3 isn't supported on the db.t2.micro DB instance class.
 	//
 	// DBInstanceClass is a required field
 	DBInstanceClass *string `type:"string" required:"true"`
@@ -34838,7 +34910,7 @@ type RestoreDBInstanceFromS3Input struct {
 	// A value that indicates whether the DB instance is publicly accessible. When
 	// the DB instance is publicly accessible, it is an Internet-facing instance
 	// with a publicly resolvable DNS name, which resolves to a public IP address.
-	// When the DB instance is not publicly accessible, it is an internal instance
+	// When the DB instance isn't publicly accessible, it is an internal instance
 	// with a DNS name that resolves to a private IP address. For more information,
 	// see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
@@ -35252,7 +35324,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 
 	// The database name for the restored DB instance.
 	//
-	// This parameter is not used for the MySQL or MariaDB engines.
+	// This parameter isn't used for the MySQL or MariaDB engines.
 	DBName *string `type:"string"`
 
 	// The name of the DB parameter group to associate with this DB instance.
@@ -35358,7 +35430,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	//
 	// SQL Server
 	//
-	// Setting the IOPS value for the SQL Server database engine is not supported.
+	// Setting the IOPS value for the SQL Server database engine isn't supported.
 	Iops *int64 `type:"integer"`
 
 	// License model information for the restored DB instance.
@@ -35395,7 +35467,7 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	// A value that indicates whether the DB instance is publicly accessible. When
 	// the DB instance is publicly accessible, it is an Internet-facing instance
 	// with a publicly resolvable DNS name, which resolves to a public IP address.
-	// When the DB instance is not publicly accessible, it is an internal instance
+	// When the DB instance isn't publicly accessible, it is an internal instance
 	// with a DNS name that resolves to a private IP address. For more information,
 	// see CreateDBInstance.
 	PubliclyAccessible *bool `type:"boolean"`
@@ -35461,8 +35533,8 @@ type RestoreDBInstanceToPointInTimeInput struct {
 	UseDefaultProcessorFeatures *bool `type:"boolean"`
 
 	// A value that indicates whether the DB instance is restored from the latest
-	// backup time. By default, the DB instance is not restored from the latest
-	// backup time.
+	// backup time. By default, the DB instance isn't restored from the latest backup
+	// time.
 	//
 	// Constraints: Can't be specified if the RestoreTime parameter is provided.
 	UseLatestRestorableTime *bool `type:"boolean"`
@@ -35763,8 +35835,8 @@ type RevokeDBSecurityGroupIngressInput struct {
 	// and either EC2SecurityGroupName or EC2SecurityGroupId must be provided.
 	EC2SecurityGroupName *string `type:"string"`
 
-	// The AWS Account Number of the owner of the EC2 security group specified in
-	// the EC2SecurityGroupName parameter. The AWS Access Key ID is not an acceptable
+	// The AWS account number of the owner of the EC2 security group specified in
+	// the EC2SecurityGroupName parameter. The AWS access key ID isn't an acceptable
 	// value. For VPC DB security groups, EC2SecurityGroupId must be provided. Otherwise,
 	// EC2SecurityGroupOwnerId and either EC2SecurityGroupName or EC2SecurityGroupId
 	// must be provided.
@@ -35890,7 +35962,7 @@ type ScalingConfiguration struct {
 	// as possible.
 	//
 	// RollbackCapacityChange, the default, ignores the capacity change if a scaling
-	// point is not found in the timeout period.
+	// point isn't found in the timeout period.
 	//
 	// If you specify ForceApplyCapacityChange, connections that prevent Aurora
 	// Serverless from finding a scaling point might be dropped.

@@ -749,10 +749,12 @@ func (c *ACM) ListCertificatesPagesWithContext(ctx aws.Context, input *ListCerti
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCertificatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

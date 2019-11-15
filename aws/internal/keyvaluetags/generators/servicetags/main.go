@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const filename = `service_tags_gen.go`
@@ -38,7 +40,6 @@ var sliceServiceNames = []string{
 	"devicefarm",
 	"directconnect",
 	"directoryservice",
-	"dlm",
 	"docdb",
 	"dynamodb",
 	"ec2",
@@ -85,6 +86,7 @@ var sliceServiceNames = []string{
 	"swf",
 	"transfer",
 	"waf",
+	"wafregional",
 	"workspaces",
 }
 
@@ -100,6 +102,7 @@ var mapServiceNames = []string{
 	"codecommit",
 	"cognitoidentity",
 	"cognitoidentityprovider",
+	"dlm",
 	"eks",
 	"glacier",
 	"glue",
@@ -134,6 +137,7 @@ func main() {
 		SliceServiceNames: sliceServiceNames,
 	}
 	templateFuncMap := template.FuncMap{
+		"TagPackage":        keyvaluetags.ServiceTagPackage,
 		"TagType":           ServiceTagType,
 		"TagTypeKeyField":   ServiceTagTypeKeyField,
 		"TagTypeValueField": ServiceTagTypeValueField,
@@ -182,7 +186,9 @@ package keyvaluetags
 import (
 	"github.com/aws/aws-sdk-go/aws"
 {{- range .SliceServiceNames }}
+{{- if eq . (. | TagPackage) }}
 	"github.com/aws/aws-sdk-go/service/{{ . }}"
+{{- end }}
 {{- end }}
 )
 
@@ -204,11 +210,11 @@ func {{ . | Title }}KeyValueTags(tags map[string]*string) KeyValueTags {
 {{- range .SliceServiceNames }}
 
 // {{ . | Title }}Tags returns {{ . }} service tags.
-func (tags KeyValueTags) {{ . | Title }}Tags() []*{{ . }}.{{ . | TagType }} {
-	result := make([]*{{ . }}.{{ . | TagType }}, 0, len(tags))
+func (tags KeyValueTags) {{ . | Title }}Tags() []*{{ . | TagPackage }}.{{ . | TagType }} {
+	result := make([]*{{ . | TagPackage }}.{{ . | TagType }}, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &{{ . }}.{{ . | TagType }}{
+		tag := &{{ . | TagPackage }}.{{ . | TagType }}{
 			{{ . | TagTypeKeyField }}:   aws.String(k),
 			{{ . | TagTypeValueField }}: aws.String(v),
 		}
@@ -220,7 +226,7 @@ func (tags KeyValueTags) {{ . | Title }}Tags() []*{{ . }}.{{ . | TagType }} {
 }
 
 // {{ . | Title }}KeyValueTags creates KeyValueTags from {{ . }} service tags.
-func {{ . | Title }}KeyValueTags(tags []*{{ . }}.{{ . | TagType }}) KeyValueTags {
+func {{ . | Title }}KeyValueTags(tags []*{{ . | TagPackage }}.{{ . | TagType }}) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

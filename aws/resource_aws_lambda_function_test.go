@@ -616,6 +616,39 @@ func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 	})
 }
 
+// This test is to verify the existing behavior in the Lambda API where the KMS Key ARN
+// is not returned if environment variables are not in use. If the API begins saving this
+// value and the kms_key_arn check begins failing, the documentation should be updated.
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6366
+func TestAccAWSLambdaFunction_KmsKeyArn_NoEnvironmentVariables(t *testing.T) {
+	var function1 lambda.GetFunctionOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigKmsKeyArnNoEnvironmentVariables(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &function1),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_Layers(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -2190,6 +2223,42 @@ resource "aws_lambda_function" "test" {
     }
 }
 `, funcName)
+}
+
+func testAccAWSLambdaConfigKmsKeyArnNoEnvironmentVariables(rName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(rName, rName, rName)+`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "*"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  kms_key_arn   = "${aws_kms_key.test.arn}"
+  role          = "${aws_iam_role.iam_for_lambda.arn}"
+  runtime       = "nodejs8.10"
+}
+`, rName)
 }
 
 func testAccAWSLambdaConfigWithLayers(funcName, layerName, policyName, roleName, sgName string) string {
