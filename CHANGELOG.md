@@ -1,5 +1,9 @@
 ## 2.37.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_dlm_lifecycle_policy: Add `tags` argument and `arn` attribute [GH-10864]
+
 BUG FIXES:
 
 * data-source/aws_iam_policy_document: Prevent panic when combining single principal identifier with multiple principal identifiers [GH-10780]
