@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/acm"
+	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -17,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -30,6 +33,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -39,6 +43,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -63,21 +68,98 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
+
+// AcmUpdateTags updates acm service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AcmUpdateTags(conn *acm.ACM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &acm.RemoveTagsFromCertificateInput{
+			CertificateArn: aws.String(identifier),
+			Tags:           removedTags.IgnoreAws().AcmTags(),
+		}
+
+		_, err := conn.RemoveTagsFromCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &acm.AddTagsToCertificateInput{
+			CertificateArn: aws.String(identifier),
+			Tags:           updatedTags.IgnoreAws().AcmTags(),
+		}
+
+		_, err := conn.AddTagsToCertificate(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// AcmpcaUpdateTags updates acmpca service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AcmpcaUpdateTags(conn *acmpca.ACMPCA, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &acmpca.UntagCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(identifier),
+			Tags:                    removedTags.IgnoreAws().AcmpcaTags(),
+		}
+
+		_, err := conn.UntagCertificateAuthority(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &acmpca.TagCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(identifier),
+			Tags:                    updatedTags.IgnoreAws().AcmpcaTags(),
+		}
+
+		_, err := conn.TagCertificateAuthority(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
 
 // AmplifyUpdateTags updates amplify service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
@@ -95,7 +177,7 @@ func AmplifyUpdateTags(conn *amplify.Amplify, identifier string, oldTagsMap inte
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -108,7 +190,7 @@ func AmplifyUpdateTags(conn *amplify.Amplify, identifier string, oldTagsMap inte
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -131,7 +213,7 @@ func ApigatewayUpdateTags(conn *apigateway.APIGateway, identifier string, oldTag
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -144,7 +226,7 @@ func ApigatewayUpdateTags(conn *apigateway.APIGateway, identifier string, oldTag
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -167,7 +249,7 @@ func Apigatewayv2UpdateTags(conn *apigatewayv2.ApiGatewayV2, identifier string, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -180,7 +262,7 @@ func Apigatewayv2UpdateTags(conn *apigatewayv2.ApiGatewayV2, identifier string, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -203,7 +285,7 @@ func AppmeshUpdateTags(conn *appmesh.AppMesh, identifier string, oldTagsMap inte
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -216,7 +298,7 @@ func AppmeshUpdateTags(conn *appmesh.AppMesh, identifier string, oldTagsMap inte
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -239,7 +321,7 @@ func AppstreamUpdateTags(conn *appstream.AppStream, identifier string, oldTagsMa
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -252,7 +334,7 @@ func AppstreamUpdateTags(conn *appstream.AppStream, identifier string, oldTagsMa
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -275,7 +357,7 @@ func AppsyncUpdateTags(conn *appsync.AppSync, identifier string, oldTagsMap inte
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -288,7 +370,7 @@ func AppsyncUpdateTags(conn *appsync.AppSync, identifier string, oldTagsMap inte
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -311,7 +393,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -324,7 +406,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -347,7 +429,7 @@ func BackupUpdateTags(conn *backup.Backup, identifier string, oldTagsMap interfa
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -360,7 +442,7 @@ func BackupUpdateTags(conn *backup.Backup, identifier string, oldTagsMap interfa
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -383,7 +465,7 @@ func Cloudhsmv2UpdateTags(conn *cloudhsmv2.CloudHSMV2, identifier string, oldTag
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -396,7 +478,7 @@ func Cloudhsmv2UpdateTags(conn *cloudhsmv2.CloudHSMV2, identifier string, oldTag
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -419,7 +501,7 @@ func CloudwatchUpdateTags(conn *cloudwatch.CloudWatch, identifier string, oldTag
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -432,7 +514,7 @@ func CloudwatchUpdateTags(conn *cloudwatch.CloudWatch, identifier string, oldTag
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -455,7 +537,7 @@ func CloudwatcheventsUpdateTags(conn *cloudwatchevents.CloudWatchEvents, identif
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -468,7 +550,43 @@ func CloudwatcheventsUpdateTags(conn *cloudwatchevents.CloudWatchEvents, identif
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// CloudwatchlogsUpdateTags updates cloudwatchlogs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudwatchlogsUpdateTags(conn *cloudwatchlogs.CloudWatchLogs, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &cloudwatchlogs.UntagLogGroupInput{
+			LogGroupName: aws.String(identifier),
+			Tags:         aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagLogGroup(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &cloudwatchlogs.TagLogGroupInput{
+			LogGroupName: aws.String(identifier),
+			Tags:         updatedTags.IgnoreAws().CloudwatchlogsTags(),
+		}
+
+		_, err := conn.TagLogGroup(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -491,7 +609,7 @@ func CodecommitUpdateTags(conn *codecommit.CodeCommit, identifier string, oldTag
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -504,7 +622,7 @@ func CodecommitUpdateTags(conn *codecommit.CodeCommit, identifier string, oldTag
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -527,7 +645,7 @@ func CodedeployUpdateTags(conn *codedeploy.CodeDeploy, identifier string, oldTag
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -540,7 +658,7 @@ func CodedeployUpdateTags(conn *codedeploy.CodeDeploy, identifier string, oldTag
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -563,7 +681,7 @@ func CodepipelineUpdateTags(conn *codepipeline.CodePipeline, identifier string, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -576,7 +694,7 @@ func CodepipelineUpdateTags(conn *codepipeline.CodePipeline, identifier string, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -599,7 +717,7 @@ func CognitoidentityUpdateTags(conn *cognitoidentity.CognitoIdentity, identifier
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -612,7 +730,7 @@ func CognitoidentityUpdateTags(conn *cognitoidentity.CognitoIdentity, identifier
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -635,7 +753,7 @@ func CognitoidentityproviderUpdateTags(conn *cognitoidentityprovider.CognitoIden
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -648,7 +766,7 @@ func CognitoidentityproviderUpdateTags(conn *cognitoidentityprovider.CognitoIden
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -671,7 +789,7 @@ func ConfigserviceUpdateTags(conn *configservice.ConfigService, identifier strin
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -684,7 +802,7 @@ func ConfigserviceUpdateTags(conn *configservice.ConfigService, identifier strin
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -707,7 +825,7 @@ func DatabasemigrationserviceUpdateTags(conn *databasemigrationservice.DatabaseM
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -720,7 +838,7 @@ func DatabasemigrationserviceUpdateTags(conn *databasemigrationservice.DatabaseM
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -743,7 +861,7 @@ func DatapipelineUpdateTags(conn *datapipeline.DataPipeline, identifier string, 
 		_, err := conn.RemoveTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -756,7 +874,7 @@ func DatapipelineUpdateTags(conn *datapipeline.DataPipeline, identifier string, 
 		_, err := conn.AddTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -779,7 +897,7 @@ func DatasyncUpdateTags(conn *datasync.DataSync, identifier string, oldTagsMap i
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -792,7 +910,7 @@ func DatasyncUpdateTags(conn *datasync.DataSync, identifier string, oldTagsMap i
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -815,7 +933,7 @@ func DaxUpdateTags(conn *dax.DAX, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -828,7 +946,7 @@ func DaxUpdateTags(conn *dax.DAX, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -851,7 +969,7 @@ func DevicefarmUpdateTags(conn *devicefarm.DeviceFarm, identifier string, oldTag
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -864,7 +982,7 @@ func DevicefarmUpdateTags(conn *devicefarm.DeviceFarm, identifier string, oldTag
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -887,7 +1005,7 @@ func DirectconnectUpdateTags(conn *directconnect.DirectConnect, identifier strin
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -900,7 +1018,7 @@ func DirectconnectUpdateTags(conn *directconnect.DirectConnect, identifier strin
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -923,7 +1041,7 @@ func DirectoryserviceUpdateTags(conn *directoryservice.DirectoryService, identif
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -936,7 +1054,43 @@ func DirectoryserviceUpdateTags(conn *directoryservice.DirectoryService, identif
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// DlmUpdateTags updates dlm service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DlmUpdateTags(conn *dlm.DLM, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &dlm.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &dlm.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().DlmTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -959,7 +1113,7 @@ func DocdbUpdateTags(conn *docdb.DocDB, identifier string, oldTagsMap interface{
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -972,7 +1126,7 @@ func DocdbUpdateTags(conn *docdb.DocDB, identifier string, oldTagsMap interface{
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -995,7 +1149,7 @@ func DynamodbUpdateTags(conn *dynamodb.DynamoDB, identifier string, oldTagsMap i
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1008,7 +1162,7 @@ func DynamodbUpdateTags(conn *dynamodb.DynamoDB, identifier string, oldTagsMap i
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1031,7 +1185,7 @@ func Ec2UpdateTags(conn *ec2.EC2, identifier string, oldTagsMap interface{}, new
 		_, err := conn.DeleteTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1044,7 +1198,7 @@ func Ec2UpdateTags(conn *ec2.EC2, identifier string, oldTagsMap interface{}, new
 		_, err := conn.CreateTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1067,7 +1221,7 @@ func EcrUpdateTags(conn *ecr.ECR, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1080,7 +1234,7 @@ func EcrUpdateTags(conn *ecr.ECR, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1103,7 +1257,7 @@ func EcsUpdateTags(conn *ecs.ECS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1116,7 +1270,7 @@ func EcsUpdateTags(conn *ecs.ECS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1139,7 +1293,7 @@ func EfsUpdateTags(conn *efs.EFS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.DeleteTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1152,7 +1306,7 @@ func EfsUpdateTags(conn *efs.EFS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.CreateTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1175,7 +1329,7 @@ func EksUpdateTags(conn *eks.EKS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1188,7 +1342,7 @@ func EksUpdateTags(conn *eks.EKS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1211,7 +1365,7 @@ func ElasticacheUpdateTags(conn *elasticache.ElastiCache, identifier string, old
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1224,7 +1378,7 @@ func ElasticacheUpdateTags(conn *elasticache.ElastiCache, identifier string, old
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1247,7 +1401,7 @@ func ElasticsearchserviceUpdateTags(conn *elasticsearchservice.ElasticsearchServ
 		_, err := conn.RemoveTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1260,7 +1414,43 @@ func ElasticsearchserviceUpdateTags(conn *elasticsearchservice.ElasticsearchServ
 		_, err := conn.AddTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// Elbv2UpdateTags updates elbv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Elbv2UpdateTags(conn *elbv2.ELBV2, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &elbv2.RemoveTagsInput{
+			ResourceArns: aws.StringSlice([]string{identifier}),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.RemoveTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &elbv2.AddTagsInput{
+			ResourceArns: aws.StringSlice([]string{identifier}),
+			Tags:         updatedTags.IgnoreAws().Elbv2Tags(),
+		}
+
+		_, err := conn.AddTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1283,7 +1473,7 @@ func EmrUpdateTags(conn *emr.EMR, identifier string, oldTagsMap interface{}, new
 		_, err := conn.RemoveTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1296,7 +1486,7 @@ func EmrUpdateTags(conn *emr.EMR, identifier string, oldTagsMap interface{}, new
 		_, err := conn.AddTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1319,7 +1509,7 @@ func FirehoseUpdateTags(conn *firehose.Firehose, identifier string, oldTagsMap i
 		_, err := conn.UntagDeliveryStream(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1332,7 +1522,7 @@ func FirehoseUpdateTags(conn *firehose.Firehose, identifier string, oldTagsMap i
 		_, err := conn.TagDeliveryStream(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1355,7 +1545,7 @@ func FsxUpdateTags(conn *fsx.FSx, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1368,7 +1558,7 @@ func FsxUpdateTags(conn *fsx.FSx, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1391,7 +1581,7 @@ func GlueUpdateTags(conn *glue.Glue, identifier string, oldTagsMap interface{}, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1404,7 +1594,7 @@ func GlueUpdateTags(conn *glue.Glue, identifier string, oldTagsMap interface{}, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1427,7 +1617,7 @@ func GuarddutyUpdateTags(conn *guardduty.GuardDuty, identifier string, oldTagsMa
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1440,7 +1630,7 @@ func GuarddutyUpdateTags(conn *guardduty.GuardDuty, identifier string, oldTagsMa
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1463,7 +1653,7 @@ func IotUpdateTags(conn *iot.IoT, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1476,7 +1666,7 @@ func IotUpdateTags(conn *iot.IoT, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1499,7 +1689,7 @@ func IotanalyticsUpdateTags(conn *iotanalytics.IoTAnalytics, identifier string, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1512,7 +1702,7 @@ func IotanalyticsUpdateTags(conn *iotanalytics.IoTAnalytics, identifier string, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1535,7 +1725,7 @@ func IoteventsUpdateTags(conn *iotevents.IoTEvents, identifier string, oldTagsMa
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1548,7 +1738,7 @@ func IoteventsUpdateTags(conn *iotevents.IoTEvents, identifier string, oldTagsMa
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1571,7 +1761,7 @@ func KafkaUpdateTags(conn *kafka.Kafka, identifier string, oldTagsMap interface{
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1584,7 +1774,7 @@ func KafkaUpdateTags(conn *kafka.Kafka, identifier string, oldTagsMap interface{
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1607,7 +1797,7 @@ func KinesisanalyticsUpdateTags(conn *kinesisanalytics.KinesisAnalytics, identif
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1620,7 +1810,7 @@ func KinesisanalyticsUpdateTags(conn *kinesisanalytics.KinesisAnalytics, identif
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1643,7 +1833,7 @@ func Kinesisanalyticsv2UpdateTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, i
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1656,7 +1846,7 @@ func Kinesisanalyticsv2UpdateTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, i
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1679,7 +1869,7 @@ func KmsUpdateTags(conn *kms.KMS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1692,7 +1882,7 @@ func KmsUpdateTags(conn *kms.KMS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1715,7 +1905,7 @@ func LambdaUpdateTags(conn *lambda.Lambda, identifier string, oldTagsMap interfa
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1728,7 +1918,7 @@ func LambdaUpdateTags(conn *lambda.Lambda, identifier string, oldTagsMap interfa
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1751,7 +1941,7 @@ func LicensemanagerUpdateTags(conn *licensemanager.LicenseManager, identifier st
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1764,7 +1954,7 @@ func LicensemanagerUpdateTags(conn *licensemanager.LicenseManager, identifier st
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1787,7 +1977,7 @@ func LightsailUpdateTags(conn *lightsail.Lightsail, identifier string, oldTagsMa
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1800,7 +1990,7 @@ func LightsailUpdateTags(conn *lightsail.Lightsail, identifier string, oldTagsMa
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1823,7 +2013,7 @@ func MediaconnectUpdateTags(conn *mediaconnect.MediaConnect, identifier string, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1836,7 +2026,7 @@ func MediaconnectUpdateTags(conn *mediaconnect.MediaConnect, identifier string, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1859,7 +2049,7 @@ func MediaconvertUpdateTags(conn *mediaconvert.MediaConvert, identifier string, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1872,7 +2062,7 @@ func MediaconvertUpdateTags(conn *mediaconvert.MediaConvert, identifier string, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1895,7 +2085,7 @@ func MedialiveUpdateTags(conn *medialive.MediaLive, identifier string, oldTagsMa
 		_, err := conn.DeleteTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1908,7 +2098,7 @@ func MedialiveUpdateTags(conn *medialive.MediaLive, identifier string, oldTagsMa
 		_, err := conn.CreateTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1931,7 +2121,7 @@ func MediapackageUpdateTags(conn *mediapackage.MediaPackage, identifier string, 
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1944,7 +2134,7 @@ func MediapackageUpdateTags(conn *mediapackage.MediaPackage, identifier string, 
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1967,7 +2157,7 @@ func MediastoreUpdateTags(conn *mediastore.MediaStore, identifier string, oldTag
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -1980,7 +2170,7 @@ func MediastoreUpdateTags(conn *mediastore.MediaStore, identifier string, oldTag
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2003,7 +2193,7 @@ func MqUpdateTags(conn *mq.MQ, identifier string, oldTagsMap interface{}, newTag
 		_, err := conn.DeleteTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2016,7 +2206,7 @@ func MqUpdateTags(conn *mq.MQ, identifier string, oldTagsMap interface{}, newTag
 		_, err := conn.CreateTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2039,7 +2229,7 @@ func NeptuneUpdateTags(conn *neptune.Neptune, identifier string, oldTagsMap inte
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2052,7 +2242,7 @@ func NeptuneUpdateTags(conn *neptune.Neptune, identifier string, oldTagsMap inte
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2075,7 +2265,7 @@ func OpsworksUpdateTags(conn *opsworks.OpsWorks, identifier string, oldTagsMap i
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2088,7 +2278,7 @@ func OpsworksUpdateTags(conn *opsworks.OpsWorks, identifier string, oldTagsMap i
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2111,7 +2301,7 @@ func OrganizationsUpdateTags(conn *organizations.Organizations, identifier strin
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2124,7 +2314,43 @@ func OrganizationsUpdateTags(conn *organizations.Organizations, identifier strin
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// QldbUpdateTags updates qldb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func QldbUpdateTags(conn *qldb.QLDB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &qldb.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &qldb.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().QldbTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2147,7 +2373,7 @@ func RamUpdateTags(conn *ram.RAM, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2160,7 +2386,7 @@ func RamUpdateTags(conn *ram.RAM, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2183,7 +2409,7 @@ func RdsUpdateTags(conn *rds.RDS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2196,7 +2422,7 @@ func RdsUpdateTags(conn *rds.RDS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2219,7 +2445,7 @@ func RedshiftUpdateTags(conn *redshift.Redshift, identifier string, oldTagsMap i
 		_, err := conn.DeleteTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2232,7 +2458,43 @@ func RedshiftUpdateTags(conn *redshift.Redshift, identifier string, oldTagsMap i
 		_, err := conn.CreateTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// ResourcegroupsUpdateTags updates resourcegroups service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &resourcegroups.UntagInput{
+			Arn:  aws.String(identifier),
+			Keys: aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.Untag(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &resourcegroups.TagInput{
+			Arn:  aws.String(identifier),
+			Tags: updatedTags.IgnoreAws().ResourcegroupsTags(),
+		}
+
+		_, err := conn.Tag(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2255,7 +2517,7 @@ func Route53resolverUpdateTags(conn *route53resolver.Route53Resolver, identifier
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2268,7 +2530,43 @@ func Route53resolverUpdateTags(conn *route53resolver.Route53Resolver, identifier
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// SagemakerUpdateTags updates sagemaker service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SagemakerUpdateTags(conn *sagemaker.SageMaker, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &sagemaker.DeleteTagsInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.DeleteTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &sagemaker.AddTagsInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().SagemakerTags(),
+		}
+
+		_, err := conn.AddTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2291,7 +2589,7 @@ func SecretsmanagerUpdateTags(conn *secretsmanager.SecretsManager, identifier st
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2304,7 +2602,7 @@ func SecretsmanagerUpdateTags(conn *secretsmanager.SecretsManager, identifier st
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2327,7 +2625,7 @@ func SecurityhubUpdateTags(conn *securityhub.SecurityHub, identifier string, old
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2340,7 +2638,7 @@ func SecurityhubUpdateTags(conn *securityhub.SecurityHub, identifier string, old
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2363,7 +2661,7 @@ func SfnUpdateTags(conn *sfn.SFN, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2376,7 +2674,7 @@ func SfnUpdateTags(conn *sfn.SFN, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2399,7 +2697,7 @@ func SnsUpdateTags(conn *sns.SNS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2412,7 +2710,43 @@ func SnsUpdateTags(conn *sns.SNS, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// SqsUpdateTags updates sqs service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func SqsUpdateTags(conn *sqs.SQS, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &sqs.UntagQueueInput{
+			QueueUrl: aws.String(identifier),
+			TagKeys:  aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagQueue(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &sqs.TagQueueInput{
+			QueueUrl: aws.String(identifier),
+			Tags:     updatedTags.IgnoreAws().SqsTags(),
+		}
+
+		_, err := conn.TagQueue(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2436,7 +2770,7 @@ func SsmUpdateTags(conn *ssm.SSM, identifier string, resourceType string, oldTag
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2450,7 +2784,7 @@ func SsmUpdateTags(conn *ssm.SSM, identifier string, resourceType string, oldTag
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2473,7 +2807,7 @@ func StoragegatewayUpdateTags(conn *storagegateway.StorageGateway, identifier st
 		_, err := conn.RemoveTagsFromResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2486,7 +2820,7 @@ func StoragegatewayUpdateTags(conn *storagegateway.StorageGateway, identifier st
 		_, err := conn.AddTagsToResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2509,7 +2843,7 @@ func SwfUpdateTags(conn *swf.SWF, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2522,7 +2856,7 @@ func SwfUpdateTags(conn *swf.SWF, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2545,7 +2879,7 @@ func TransferUpdateTags(conn *transfer.Transfer, identifier string, oldTagsMap i
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2558,7 +2892,7 @@ func TransferUpdateTags(conn *transfer.Transfer, identifier string, oldTagsMap i
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2581,7 +2915,7 @@ func WafUpdateTags(conn *waf.WAF, identifier string, oldTagsMap interface{}, new
 		_, err := conn.UntagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2594,7 +2928,43 @@ func WafUpdateTags(conn *waf.WAF, identifier string, oldTagsMap interface{}, new
 		_, err := conn.TagResource(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// WafregionalUpdateTags updates wafregional service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WafregionalUpdateTags(conn *wafregional.WAFRegional, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &waf.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &waf.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().WafregionalTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2617,7 +2987,7 @@ func WorkspacesUpdateTags(conn *workspaces.WorkSpaces, identifier string, oldTag
 		_, err := conn.DeleteTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -2630,7 +3000,7 @@ func WorkspacesUpdateTags(conn *workspaces.WorkSpaces, identifier string, oldTag
 		_, err := conn.CreateTags(input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
 

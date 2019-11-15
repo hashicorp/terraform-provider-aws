@@ -2452,6 +2452,11 @@ func readS3ObjectLockConfiguration(conn *s3.S3, bucket string) ([]interface{}, e
 		})
 	})
 	if err != nil {
+		// Certain S3 implementations do not include this API
+		if isAWSErr(err, "MethodNotAllowed", "") {
+			return nil, nil
+		}
+
 		if isAWSErr(err, "ObjectLockConfigurationNotFoundError", "") {
 			return nil, nil
 		}

@@ -377,6 +377,91 @@ func (c *ElastiCache) BatchStopUpdateActionWithContext(ctx aws.Context, input *B
 	return out, req.Send()
 }
 
+const opCompleteMigration = "CompleteMigration"
+
+// CompleteMigrationRequest generates a "aws/request.Request" representing the
+// client's request for the CompleteMigration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CompleteMigration for more information on using the CompleteMigration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CompleteMigrationRequest method.
+//    req, resp := client.CompleteMigrationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/CompleteMigration
+func (c *ElastiCache) CompleteMigrationRequest(input *CompleteMigrationInput) (req *request.Request, output *CompleteMigrationOutput) {
+	op := &request.Operation{
+		Name:       opCompleteMigration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CompleteMigrationInput{}
+	}
+
+	output = &CompleteMigrationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CompleteMigration API operation for Amazon ElastiCache.
+//
+// Complete the migration of data.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation CompleteMigration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeReplicationGroupNotFoundFault "ReplicationGroupNotFoundFault"
+//   The specified replication group does not exist.
+//
+//   * ErrCodeInvalidReplicationGroupStateFault "InvalidReplicationGroupState"
+//   The requested replication group is not in the available state.
+//
+//   * ErrCodeReplicationGroupNotUnderMigrationFault "ReplicationGroupNotUnderMigrationFault"
+//   The designated replication group is not available for data migration.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/CompleteMigration
+func (c *ElastiCache) CompleteMigration(input *CompleteMigrationInput) (*CompleteMigrationOutput, error) {
+	req, out := c.CompleteMigrationRequest(input)
+	return out, req.Send()
+}
+
+// CompleteMigrationWithContext is the same as CompleteMigration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CompleteMigration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) CompleteMigrationWithContext(ctx aws.Context, input *CompleteMigrationInput, opts ...request.Option) (*CompleteMigrationOutput, error) {
+	req, out := c.CompleteMigrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCopySnapshot = "CopySnapshot"
 
 // CopySnapshotRequest generates a "aws/request.Request" representing the
@@ -2100,10 +2185,12 @@ func (c *ElastiCache) DescribeCacheClustersPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2230,10 +2317,12 @@ func (c *ElastiCache) DescribeCacheEngineVersionsPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheEngineVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheEngineVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2374,10 +2463,12 @@ func (c *ElastiCache) DescribeCacheParameterGroupsPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheParameterGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheParameterGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2516,10 +2607,12 @@ func (c *ElastiCache) DescribeCacheParametersPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheParametersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheParametersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2660,10 +2753,12 @@ func (c *ElastiCache) DescribeCacheSecurityGroupsPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheSecurityGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheSecurityGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2799,10 +2894,12 @@ func (c *ElastiCache) DescribeCacheSubnetGroupsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCacheSubnetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCacheSubnetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2938,10 +3035,12 @@ func (c *ElastiCache) DescribeEngineDefaultParametersPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEngineDefaultParametersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEngineDefaultParametersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3081,10 +3180,12 @@ func (c *ElastiCache) DescribeEventsPagesWithContext(ctx aws.Context, input *Des
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3226,10 +3327,12 @@ func (c *ElastiCache) DescribeReplicationGroupsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3368,10 +3471,12 @@ func (c *ElastiCache) DescribeReservedCacheNodesPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedCacheNodesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedCacheNodesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3509,10 +3614,12 @@ func (c *ElastiCache) DescribeReservedCacheNodesOfferingsPagesWithContext(ctx aw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedCacheNodesOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedCacheNodesOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3650,10 +3757,12 @@ func (c *ElastiCache) DescribeServiceUpdatesPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeServiceUpdatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeServiceUpdatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3799,10 +3908,12 @@ func (c *ElastiCache) DescribeSnapshotsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSnapshotsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSnapshotsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3937,10 +4048,12 @@ func (c *ElastiCache) DescribeUpdateActionsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeUpdateActionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeUpdateActionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5264,6 +5377,94 @@ func (c *ElastiCache) RevokeCacheSecurityGroupIngressWithContext(ctx aws.Context
 	return out, req.Send()
 }
 
+const opStartMigration = "StartMigration"
+
+// StartMigrationRequest generates a "aws/request.Request" representing the
+// client's request for the StartMigration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartMigration for more information on using the StartMigration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartMigrationRequest method.
+//    req, resp := client.StartMigrationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/StartMigration
+func (c *ElastiCache) StartMigrationRequest(input *StartMigrationInput) (req *request.Request, output *StartMigrationOutput) {
+	op := &request.Operation{
+		Name:       opStartMigration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartMigrationInput{}
+	}
+
+	output = &StartMigrationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartMigration API operation for Amazon ElastiCache.
+//
+// Start the migration of data.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon ElastiCache's
+// API operation StartMigration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeReplicationGroupNotFoundFault "ReplicationGroupNotFoundFault"
+//   The specified replication group does not exist.
+//
+//   * ErrCodeInvalidReplicationGroupStateFault "InvalidReplicationGroupState"
+//   The requested replication group is not in the available state.
+//
+//   * ErrCodeReplicationGroupAlreadyUnderMigrationFault "ReplicationGroupAlreadyUnderMigrationFault"
+//   The targeted replication group is not available.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValue"
+//   The value for a parameter is invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticache-2015-02-02/StartMigration
+func (c *ElastiCache) StartMigration(input *StartMigrationInput) (*StartMigrationOutput, error) {
+	req, out := c.StartMigrationRequest(input)
+	return out, req.Send()
+}
+
+// StartMigrationWithContext is the same as StartMigration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartMigration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElastiCache) StartMigrationWithContext(ctx aws.Context, input *StartMigrationInput, opts ...request.Option) (*StartMigrationOutput, error) {
+	req, out := c.StartMigrationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTestFailover = "TestFailover"
 
 // TestFailoverRequest generates a "aws/request.Request" representing the
@@ -5780,6 +5981,9 @@ type CacheCluster struct {
 	// Default: false
 	AuthTokenEnabled *bool `type:"boolean"`
 
+	// The date the auth token was last modified
+	AuthTokenLastModifiedDate *time.Time `type:"timestamp"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
@@ -5957,6 +6161,12 @@ func (s *CacheCluster) SetAtRestEncryptionEnabled(v bool) *CacheCluster {
 // SetAuthTokenEnabled sets the AuthTokenEnabled field's value.
 func (s *CacheCluster) SetAuthTokenEnabled(v bool) *CacheCluster {
 	s.AuthTokenEnabled = &v
+	return s
+}
+
+// SetAuthTokenLastModifiedDate sets the AuthTokenLastModifiedDate field's value.
+func (s *CacheCluster) SetAuthTokenLastModifiedDate(v time.Time) *CacheCluster {
+	s.AuthTokenLastModifiedDate = &v
 	return s
 }
 
@@ -6769,6 +6979,78 @@ func (s *CacheSubnetGroup) SetVpcId(v string) *CacheSubnetGroup {
 	return s
 }
 
+type CompleteMigrationInput struct {
+	_ struct{} `type:"structure"`
+
+	// Forces the migration to stop without ensuring that data is in sync. It is
+	// recommended to use this option only to abort the migration and not recommended
+	// when application wants to continue migration to ElastiCache.
+	Force *bool `type:"boolean"`
+
+	// The ID of the replication group to which data is being migrated.
+	//
+	// ReplicationGroupId is a required field
+	ReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CompleteMigrationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CompleteMigrationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CompleteMigrationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CompleteMigrationInput"}
+	if s.ReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetForce sets the Force field's value.
+func (s *CompleteMigrationInput) SetForce(v bool) *CompleteMigrationInput {
+	s.Force = &v
+	return s
+}
+
+// SetReplicationGroupId sets the ReplicationGroupId field's value.
+func (s *CompleteMigrationInput) SetReplicationGroupId(v string) *CompleteMigrationInput {
+	s.ReplicationGroupId = &v
+	return s
+}
+
+type CompleteMigrationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Contains all of the attributes of a specific Redis replication group.
+	ReplicationGroup *ReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s CompleteMigrationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CompleteMigrationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationGroup sets the ReplicationGroup field's value.
+func (s *CompleteMigrationOutput) SetReplicationGroup(v *ReplicationGroup) *CompleteMigrationOutput {
+	s.ReplicationGroup = v
+	return s
+}
+
 // Node group (shard) configuration options when adding or removing replicas.
 // Each node group (shard) configuration has the following members: NodeGroupId,
 // NewReplicaCount, and PreferredAvailabilityZones.
@@ -6981,7 +7263,9 @@ type CreateCacheClusterInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or '@'.
+	//    * The only permitted printable special characters are !, &, #, $, ^, <,
+	//    >, and -. Other printable special characters cannot be used in the AUTH
+	//    token.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
 	// http://redis.io/commands/AUTH.
@@ -7707,7 +7991,9 @@ type CreateReplicationGroupInput struct {
 	//
 	//    * Must be at least 16 characters and no more than 128 characters in length.
 	//
-	//    * Cannot contain any of the following characters: '/', '"', or '@'.
+	//    * The only permitted printable special characters are !, &, #, $, ^, <,
+	//    >, and -. Other printable special characters cannot be used in the AUTH
+	//    token.
 	//
 	// For more information, see AUTH password (http://redis.io/commands/AUTH) at
 	// http://redis.io/commands/AUTH.
@@ -8323,6 +8609,39 @@ func (s CreateSnapshotOutput) GoString() string {
 // SetSnapshot sets the Snapshot field's value.
 func (s *CreateSnapshotOutput) SetSnapshot(v *Snapshot) *CreateSnapshotOutput {
 	s.Snapshot = v
+	return s
+}
+
+// The endpoint from which data should be migrated.
+type CustomerNodeEndpoint struct {
+	_ struct{} `type:"structure"`
+
+	// The address of the node endpoint
+	Address *string `type:"string"`
+
+	// The port of the node endpoint
+	Port *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s CustomerNodeEndpoint) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CustomerNodeEndpoint) GoString() string {
+	return s.String()
+}
+
+// SetAddress sets the Address field's value.
+func (s *CustomerNodeEndpoint) SetAddress(v string) *CustomerNodeEndpoint {
+	s.Address = &v
+	return s
+}
+
+// SetPort sets the Port field's value.
+func (s *CustomerNodeEndpoint) SetPort(v int64) *CustomerNodeEndpoint {
+	s.Port = &v
 	return s
 }
 
@@ -10889,10 +11208,7 @@ type ModifyCacheClusterInput struct {
 	// in different Availability Zones. If cross-az is specified, existing Memcached
 	// nodes remain in their current Availability Zone.
 	//
-	// Only newly created nodes are located in different Availability Zones. For
-	// instructions on how to move existing Memcached nodes to different Availability
-	// Zones, see the Availability Zone Considerations section of Cache Node Considerations
-	// for Memcached (https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html).
+	// Only newly created nodes are located in different Availability Zones.
 	AZMode *string `type:"string" enum:"AZMode"`
 
 	// If true, this parameter causes the modifications in this request and any
@@ -10909,6 +11225,29 @@ type ModifyCacheClusterInput struct {
 	//
 	// Default: false
 	ApplyImmediately *bool `type:"boolean"`
+
+	// Reserved parameter. The password used to access a password protected server.
+	// This parameter must be specified with the auth-token-update parameter. Password
+	// constraints:
+	//
+	//    * Must be only printable ASCII characters
+	//
+	//    * Must be at least 16 characters and no more than 128 characters in length
+	//
+	//    * Cannot contain any of the following characters: '/', '"', or '@', '%'
+	//
+	// For more information, see AUTH password at AUTH (http://redis.io/commands/AUTH).
+	AuthToken *string `type:"string"`
+
+	// Specifies the strategy to use to update the AUTH token. This parameter must
+	// be specified with the auth-token parameter. Possible values:
+	//
+	//    * Rotate
+	//
+	//    * Set
+	//
+	// For more information, see Authenticating Users with Redis AUTH (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html)
+	AuthTokenUpdateStrategy *string `type:"string" enum:"AuthTokenUpdateStrategyType"`
 
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
@@ -11126,6 +11465,18 @@ func (s *ModifyCacheClusterInput) SetAZMode(v string) *ModifyCacheClusterInput {
 // SetApplyImmediately sets the ApplyImmediately field's value.
 func (s *ModifyCacheClusterInput) SetApplyImmediately(v bool) *ModifyCacheClusterInput {
 	s.ApplyImmediately = &v
+	return s
+}
+
+// SetAuthToken sets the AuthToken field's value.
+func (s *ModifyCacheClusterInput) SetAuthToken(v string) *ModifyCacheClusterInput {
+	s.AuthToken = &v
+	return s
+}
+
+// SetAuthTokenUpdateStrategy sets the AuthTokenUpdateStrategy field's value.
+func (s *ModifyCacheClusterInput) SetAuthTokenUpdateStrategy(v string) *ModifyCacheClusterInput {
+	s.AuthTokenUpdateStrategy = &v
 	return s
 }
 
@@ -11403,6 +11754,29 @@ type ModifyReplicationGroupInput struct {
 	// Default: false
 	ApplyImmediately *bool `type:"boolean"`
 
+	// Reserved parameter. The password used to access a password protected server.
+	// This parameter must be specified with the auth-token-update-strategy parameter.
+	// Password constraints:
+	//
+	//    * Must be only printable ASCII characters
+	//
+	//    * Must be at least 16 characters and no more than 128 characters in length
+	//
+	//    * Cannot contain any of the following characters: '/', '"', or '@', '%'
+	//
+	// For more information, see AUTH password at AUTH (http://redis.io/commands/AUTH).
+	AuthToken *string `type:"string"`
+
+	// Specifies the strategy to use to update the AUTH token. This parameter must
+	// be specified with the auth-token parameter. Possible values:
+	//
+	//    * Rotate
+	//
+	//    * Set
+	//
+	// For more information, see Authenticating Users with Redis AUTH (https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/auth.html)
+	AuthTokenUpdateStrategy *string `type:"string" enum:"AuthTokenUpdateStrategyType"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
@@ -11561,6 +11935,18 @@ func (s *ModifyReplicationGroupInput) Validate() error {
 // SetApplyImmediately sets the ApplyImmediately field's value.
 func (s *ModifyReplicationGroupInput) SetApplyImmediately(v bool) *ModifyReplicationGroupInput {
 	s.ApplyImmediately = &v
+	return s
+}
+
+// SetAuthToken sets the AuthToken field's value.
+func (s *ModifyReplicationGroupInput) SetAuthToken(v string) *ModifyReplicationGroupInput {
+	s.AuthToken = &v
+	return s
+}
+
+// SetAuthTokenUpdateStrategy sets the AuthTokenUpdateStrategy field's value.
+func (s *ModifyReplicationGroupInput) SetAuthTokenUpdateStrategy(v string) *ModifyReplicationGroupInput {
+	s.AuthTokenUpdateStrategy = &v
 	return s
 }
 
@@ -12444,6 +12830,9 @@ func (s *ParameterNameValue) SetParameterValue(v string) *ParameterNameValue {
 type PendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
+	// The auth token status
+	AuthTokenStatus *string `type:"string" enum:"AuthTokenUpdateStatus"`
+
 	// A list of cache node IDs that are being removed (or will be removed) from
 	// the cluster. A node ID is a 4-digit numeric identifier (0001, 0002, etc.).
 	CacheNodeIdsToRemove []*string `locationNameList:"CacheNodeId" type:"list"`
@@ -12469,6 +12858,12 @@ func (s PendingModifiedValues) String() string {
 // GoString returns the string representation
 func (s PendingModifiedValues) GoString() string {
 	return s.String()
+}
+
+// SetAuthTokenStatus sets the AuthTokenStatus field's value.
+func (s *PendingModifiedValues) SetAuthTokenStatus(v string) *PendingModifiedValues {
+	s.AuthTokenStatus = &v
+	return s
 }
 
 // SetCacheNodeIdsToRemove sets the CacheNodeIdsToRemove field's value.
@@ -12826,6 +13221,9 @@ type ReplicationGroup struct {
 	// Default: false
 	AuthTokenEnabled *bool `type:"boolean"`
 
+	// The date the auth token was last modified
+	AuthTokenLastModifiedDate *time.Time `type:"timestamp"`
+
 	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
 	// group.
 	//
@@ -12938,6 +13336,12 @@ func (s *ReplicationGroup) SetAuthTokenEnabled(v bool) *ReplicationGroup {
 	return s
 }
 
+// SetAuthTokenLastModifiedDate sets the AuthTokenLastModifiedDate field's value.
+func (s *ReplicationGroup) SetAuthTokenLastModifiedDate(v time.Time) *ReplicationGroup {
+	s.AuthTokenLastModifiedDate = &v
+	return s
+}
+
 // SetAutomaticFailover sets the AutomaticFailover field's value.
 func (s *ReplicationGroup) SetAutomaticFailover(v string) *ReplicationGroup {
 	s.AutomaticFailover = &v
@@ -13033,6 +13437,9 @@ func (s *ReplicationGroup) SetTransitEncryptionEnabled(v bool) *ReplicationGroup
 type ReplicationGroupPendingModifiedValues struct {
 	_ struct{} `type:"structure"`
 
+	// The auth token status
+	AuthTokenStatus *string `type:"string" enum:"AuthTokenUpdateStatus"`
+
 	// Indicates the status of Multi-AZ with automatic failover for this Redis replication
 	// group.
 	//
@@ -13062,6 +13469,12 @@ func (s ReplicationGroupPendingModifiedValues) String() string {
 // GoString returns the string representation
 func (s ReplicationGroupPendingModifiedValues) GoString() string {
 	return s.String()
+}
+
+// SetAuthTokenStatus sets the AuthTokenStatus field's value.
+func (s *ReplicationGroupPendingModifiedValues) SetAuthTokenStatus(v string) *ReplicationGroupPendingModifiedValues {
+	s.AuthTokenStatus = &v
+	return s
 }
 
 // SetAutomaticFailoverStatus sets the AutomaticFailoverStatus field's value.
@@ -14118,6 +14531,82 @@ func (s *Snapshot) SetVpcId(v string) *Snapshot {
 	return s
 }
 
+type StartMigrationInput struct {
+	_ struct{} `type:"structure"`
+
+	// List of endpoints from which data should be migrated. For Redis (cluster
+	// mode disabled), list should have only one element.
+	//
+	// CustomerNodeEndpointList is a required field
+	CustomerNodeEndpointList []*CustomerNodeEndpoint `type:"list" required:"true"`
+
+	// The ID of the replication group to which data should be migrated.
+	//
+	// ReplicationGroupId is a required field
+	ReplicationGroupId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartMigrationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMigrationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartMigrationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartMigrationInput"}
+	if s.CustomerNodeEndpointList == nil {
+		invalidParams.Add(request.NewErrParamRequired("CustomerNodeEndpointList"))
+	}
+	if s.ReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCustomerNodeEndpointList sets the CustomerNodeEndpointList field's value.
+func (s *StartMigrationInput) SetCustomerNodeEndpointList(v []*CustomerNodeEndpoint) *StartMigrationInput {
+	s.CustomerNodeEndpointList = v
+	return s
+}
+
+// SetReplicationGroupId sets the ReplicationGroupId field's value.
+func (s *StartMigrationInput) SetReplicationGroupId(v string) *StartMigrationInput {
+	s.ReplicationGroupId = &v
+	return s
+}
+
+type StartMigrationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Contains all of the attributes of a specific Redis replication group.
+	ReplicationGroup *ReplicationGroup `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartMigrationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMigrationOutput) GoString() string {
+	return s.String()
+}
+
+// SetReplicationGroup sets the ReplicationGroup field's value.
+func (s *StartMigrationOutput) SetReplicationGroup(v *ReplicationGroup) *StartMigrationOutput {
+	s.ReplicationGroup = v
+	return s
+}
+
 // Represents the subnet associated with a cluster. This parameter refers to
 // subnets defined in Amazon Virtual Private Cloud (Amazon VPC) and used with
 // ElastiCache.
@@ -14568,6 +15057,22 @@ const (
 
 	// AZModeCrossAz is a AZMode enum value
 	AZModeCrossAz = "cross-az"
+)
+
+const (
+	// AuthTokenUpdateStatusSetting is a AuthTokenUpdateStatus enum value
+	AuthTokenUpdateStatusSetting = "SETTING"
+
+	// AuthTokenUpdateStatusRotating is a AuthTokenUpdateStatus enum value
+	AuthTokenUpdateStatusRotating = "ROTATING"
+)
+
+const (
+	// AuthTokenUpdateStrategyTypeSet is a AuthTokenUpdateStrategyType enum value
+	AuthTokenUpdateStrategyTypeSet = "SET"
+
+	// AuthTokenUpdateStrategyTypeRotate is a AuthTokenUpdateStrategyType enum value
+	AuthTokenUpdateStrategyTypeRotate = "ROTATE"
 )
 
 const (
