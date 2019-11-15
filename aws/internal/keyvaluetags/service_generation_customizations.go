@@ -34,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -88,6 +89,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -154,6 +156,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(directconnect.New)
 	case "directoryservice":
 		funcType = reflect.TypeOf(directoryservice.New)
+	case "dlm":
+		funcType = reflect.TypeOf(dlm.New)
 	case "docdb":
 		funcType = reflect.TypeOf(docdb.New)
 	case "dynamodb":
@@ -262,6 +266,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
 		funcType = reflect.TypeOf(waf.New)
+	case "wafregional":
+		funcType = reflect.TypeOf(wafregional.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
 	default:
@@ -269,4 +275,13 @@ func ServiceClientType(serviceName string) string {
 	}
 
 	return funcType.Out(0).String()
+}
+
+func ServiceTagPackage(serviceName string) string {
+	switch serviceName {
+	case "wafregional":
+		return "waf"
+	default:
+		return serviceName
+	}
 }
