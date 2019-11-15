@@ -6,11 +6,11 @@ ENHANCEMENTS:
 * resource/aws_dlm_lifecycle_policy: Add `tags` argument and `arn` attribute [GH-10864]
 * resource/aws_efs_file_system: Add `AFTER_7_DAYS` as a valid `lifecycle_policy` configuratio block `transition_to_ia` argument value [GH-10825]
 * resource/aws_glue_crawler: Add `tags` argument [GH-10805]
-* resource/aws_waf_geo_match_set: Support resource import [GH-10480]
-* resource/aws_waf_regex_match_set: Support resource import [GH-10481]
-* resource/aws_waf_regex_pattern_set: Support resource import [GH-10482]
-* resource/aws_waf_size_constraint_set: Support resource import [GH-10484]
-* resource/aws_waf_xss_match_set: Support resource import [GH-10485]
+* resource/aws_waf_geo_match_set: Support resource import and add `arn` attribute [GH-10480]
+* resource/aws_waf_regex_match_set: Support resource import and add `arn` attribute [GH-10481]
+* resource/aws_waf_regex_pattern_set: Support resource import and add `arn` attribute [GH-10482]
+* resource/aws_waf_size_constraint_set: Support resource import and add `arn` attribute [GH-10484]
+* resource/aws_waf_xss_match_set: Support resource import and add `arn` attribute [GH-10485]
 * resource/aws_wafregional_web_acl: Add `tags` argument [GH-10889]
 
 BUG FIXES:
