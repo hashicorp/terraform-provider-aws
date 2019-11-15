@@ -7,6 +7,7 @@ ENHANCEMENTS:
 * resource/aws_efs_file_system: Add `AFTER_7_DAYS` as a valid `lifecycle_policy` configuratio block `transition_to_ia` argument value [GH-10825]
 * resource/aws_glue_crawler: Add `tags` argument [GH-10805]
 * resource/aws_waf_geo_match_set: Support resource import [GH-10480]
+* resource/aws_waf_regex_match_set: Support resource import [GH-10481]
 * resource/aws_wafregional_web_acl: Add `tags` argument [GH-10889]
 
 BUG FIXES:
