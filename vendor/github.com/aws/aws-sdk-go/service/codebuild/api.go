@@ -1814,6 +1814,11 @@ type Build struct {
 	// Whether the build is complete. True if complete; otherwise, false.
 	BuildComplete *bool `locationName:"buildComplete" type:"boolean"`
 
+	// The number of the build. For each project, the buildNumber of its first build
+	// is 1. The buildNumber of each subsequent build is incremented by 1. If a
+	// build is deleted, the buildNumber of other builds does not change.
+	BuildNumber *int64 `locationName:"buildNumber" type:"long"`
+
 	// The current status of the build. Valid values include:
 	//
 	//    * FAILED: The build failed.
@@ -1850,6 +1855,9 @@ type Build struct {
 
 	// Information about the build environment for this build.
 	Environment *ProjectEnvironment `locationName:"environment" type:"structure"`
+
+	// A list of exported environment variables for this build.
+	ExportedEnvironmentVariables []*ExportedEnvironmentVariable `locationName:"exportedEnvironmentVariables" type:"list"`
 
 	// The unique ID for the build.
 	Id *string `locationName:"id" min:"1" type:"string"`
@@ -1975,6 +1983,12 @@ func (s *Build) SetBuildComplete(v bool) *Build {
 	return s
 }
 
+// SetBuildNumber sets the BuildNumber field's value.
+func (s *Build) SetBuildNumber(v int64) *Build {
+	s.BuildNumber = &v
+	return s
+}
+
 // SetBuildStatus sets the BuildStatus field's value.
 func (s *Build) SetBuildStatus(v string) *Build {
 	s.BuildStatus = &v
@@ -2008,6 +2022,12 @@ func (s *Build) SetEndTime(v time.Time) *Build {
 // SetEnvironment sets the Environment field's value.
 func (s *Build) SetEnvironment(v *ProjectEnvironment) *Build {
 	s.Environment = v
+	return s
+}
+
+// SetExportedEnvironmentVariables sets the ExportedEnvironmentVariables field's value.
+func (s *Build) SetExportedEnvironmentVariables(v []*ExportedEnvironmentVariable) *Build {
+	s.ExportedEnvironmentVariables = v
 	return s
 }
 
@@ -3158,6 +3178,8 @@ type EnvironmentVariable struct {
 	//    Manager Parameter Store.
 	//
 	//    * PLAINTEXT: An environment variable in plaintext format.
+	//
+	//    * SECRETS_MANAGER: An environment variable stored in AWS Secrets Manager.
 	Type *string `locationName:"type" type:"string" enum:"EnvironmentVariableType"`
 
 	// The value of the environment variable.
@@ -3214,6 +3236,44 @@ func (s *EnvironmentVariable) SetType(v string) *EnvironmentVariable {
 
 // SetValue sets the Value field's value.
 func (s *EnvironmentVariable) SetValue(v string) *EnvironmentVariable {
+	s.Value = &v
+	return s
+}
+
+// Information about an exported environment variable.
+type ExportedEnvironmentVariable struct {
+	_ struct{} `type:"structure"`
+
+	// The name of this exported environment variable.
+	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// The value assigned to this exported environment variable.
+	//
+	// During a build, the value of a variable is available starting with the install
+	// phase. It can be updated between the start of the install phase and the end
+	// of the post_build phase. After the post_build phase ends, the value of exported
+	// variables cannot change.
+	Value *string `locationName:"value" type:"string"`
+}
+
+// String returns the string representation
+func (s ExportedEnvironmentVariable) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportedEnvironmentVariable) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *ExportedEnvironmentVariable) SetName(v string) *ExportedEnvironmentVariable {
+	s.Name = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *ExportedEnvironmentVariable) SetValue(v string) *ExportedEnvironmentVariable {
 	s.Value = &v
 	return s
 }
@@ -4360,7 +4420,7 @@ type ProjectArtifacts struct {
 	// The type of build output artifact. Valid values include:
 	//
 	//    * CODEPIPELINE: The build project has build output generated through AWS
-	//    CodePipeline.
+	//    CodePipeline. The CODEPIPELINE type is not supported for secondaryArtifacts.
 	//
 	//    * NO_ARTIFACTS: The build project does not produce any build output.
 	//
@@ -4595,6 +4655,9 @@ type ProjectEnvironment struct {
 	//
 	//    * BUILD_GENERAL1_LARGE: Use up to 15 GB memory and 8 vCPUs for builds.
 	//
+	// For more information, see Build Environment Compute Types (https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html)
+	// in the AWS CodeBuild User Guide.
+	//
 	// ComputeType is a required field
 	ComputeType *string `locationName:"computeType" type:"string" required:"true" enum:"ComputeType"`
 
@@ -4632,7 +4695,8 @@ type ProjectEnvironment struct {
 
 	// Enables running the Docker daemon inside a Docker container. Set to true
 	// only if the build project is used to build Docker images. Otherwise, a build
-	// that attempts to interact with the Docker daemon fails.
+	// that attempts to interact with the Docker daemon fails. The default setting
+	// is false.
 	//
 	// You can initialize the Docker daemon during the install phase of your build
 	// by adding one of the following sets of commands to the install phase of your
@@ -4831,6 +4895,9 @@ type ProjectSource struct {
 	// provider. This option is valid only when your source provider is GitHub,
 	// GitHub Enterprise, or Bitbucket. If this is set and you use a different source
 	// provider, an invalidInputException is thrown.
+	//
+	// The status of a build triggered by a webhook is always reported to your source
+	// provider.
 	ReportBuildStatus *bool `locationName:"reportBuildStatus" type:"boolean"`
 
 	// An identifier for this project source.
@@ -4847,6 +4914,8 @@ type ProjectSource struct {
 	//    of a pipeline in AWS CodePipeline.
 	//
 	//    * GITHUB: The source code is in a GitHub repository.
+	//
+	//    * GITHUB_ENTERPRISE: The source code is in a GitHub Enterprise repository.
 	//
 	//    * NO_SOURCE: The project does not have input source code.
 	//
@@ -5344,6 +5413,9 @@ type StartBuildInput struct {
 	// Set to true to report to your source provider the status of a build's start
 	// and completion. If you use this option with a source provider other than
 	// GitHub, GitHub Enterprise, or Bitbucket, an invalidInputException is thrown.
+	//
+	// The status of a build triggered by a webhook is always reported to your source
+	// provider.
 	ReportBuildStatusOverride *bool `locationName:"reportBuildStatusOverride" type:"boolean"`
 
 	// An array of ProjectArtifacts objects.
@@ -6623,6 +6695,9 @@ const (
 
 	// EnvironmentVariableTypeParameterStore is a EnvironmentVariableType enum value
 	EnvironmentVariableTypeParameterStore = "PARAMETER_STORE"
+
+	// EnvironmentVariableTypeSecretsManager is a EnvironmentVariableType enum value
+	EnvironmentVariableTypeSecretsManager = "SECRETS_MANAGER"
 )
 
 const (

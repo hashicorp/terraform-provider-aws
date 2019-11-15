@@ -121,6 +121,27 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
+	var restApi apigateway.RestApi
+	resourceName := "aws_api_gateway_rest_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
+					testAccCheckAWSAPIGatewayRestAPIDisappears(&restApi),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayRestApi_EndpointConfiguration(t *testing.T) {
 	var restApi apigateway.RestApi
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -486,6 +507,20 @@ func testAccCheckAWSAPIGatewayRestAPIDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSAPIGatewayRestAPIDisappears(restApi *apigateway.RestApi) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigateway
+
+		input := &apigateway.DeleteRestApiInput{
+			RestApiId: restApi.Id,
+		}
+
+		_, err := conn.DeleteRestApi(input)
+
+		return err
+	}
 }
 
 const testAccAWSAPIGatewayRestAPIConfig = `

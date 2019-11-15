@@ -1371,10 +1371,12 @@ func (c *WorkSpaces) DescribeWorkspaceBundlesPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeWorkspaceBundlesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeWorkspaceBundlesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1507,10 +1509,12 @@ func (c *WorkSpaces) DescribeWorkspaceDirectoriesPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeWorkspaceDirectoriesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeWorkspaceDirectoriesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1813,10 +1817,12 @@ func (c *WorkSpaces) DescribeWorkspacesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeWorkspacesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeWorkspacesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

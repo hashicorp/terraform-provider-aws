@@ -13,6 +13,99 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
+const opCreateBatchInferenceJob = "CreateBatchInferenceJob"
+
+// CreateBatchInferenceJobRequest generates a "aws/request.Request" representing the
+// client's request for the CreateBatchInferenceJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateBatchInferenceJob for more information on using the CreateBatchInferenceJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateBatchInferenceJobRequest method.
+//    req, resp := client.CreateBatchInferenceJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateBatchInferenceJob
+func (c *Personalize) CreateBatchInferenceJobRequest(input *CreateBatchInferenceJobInput) (req *request.Request, output *CreateBatchInferenceJobOutput) {
+	op := &request.Operation{
+		Name:       opCreateBatchInferenceJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateBatchInferenceJobInput{}
+	}
+
+	output = &CreateBatchInferenceJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateBatchInferenceJob API operation for Amazon Personalize.
+//
+// Creates a batch inference job. The operation can handle up to 50 million
+// records and the input file must be in JSON format. For more information,
+// see recommendations-batch.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation CreateBatchInferenceJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Provide a valid value for the field or parameter.
+//
+//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   The specified resource already exists.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   The limit on the number of requests per second has been exceeded.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Could not find the specified resource.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The specified resource is in use.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/CreateBatchInferenceJob
+func (c *Personalize) CreateBatchInferenceJob(input *CreateBatchInferenceJobInput) (*CreateBatchInferenceJobOutput, error) {
+	req, out := c.CreateBatchInferenceJobRequest(input)
+	return out, req.Send()
+}
+
+// CreateBatchInferenceJobWithContext is the same as CreateBatchInferenceJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateBatchInferenceJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) CreateBatchInferenceJobWithContext(ctx aws.Context, input *CreateBatchInferenceJobInput, opts ...request.Option) (*CreateBatchInferenceJobOutput, error) {
+	req, out := c.CreateBatchInferenceJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateCampaign = "CreateCampaign"
 
 // CreateCampaignRequest generates a "aws/request.Request" representing the
@@ -1596,6 +1689,90 @@ func (c *Personalize) DescribeAlgorithmWithContext(ctx aws.Context, input *Descr
 	return out, req.Send()
 }
 
+const opDescribeBatchInferenceJob = "DescribeBatchInferenceJob"
+
+// DescribeBatchInferenceJobRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeBatchInferenceJob operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeBatchInferenceJob for more information on using the DescribeBatchInferenceJob
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeBatchInferenceJobRequest method.
+//    req, resp := client.DescribeBatchInferenceJobRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeBatchInferenceJob
+func (c *Personalize) DescribeBatchInferenceJobRequest(input *DescribeBatchInferenceJobInput) (req *request.Request, output *DescribeBatchInferenceJobOutput) {
+	op := &request.Operation{
+		Name:       opDescribeBatchInferenceJob,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeBatchInferenceJobInput{}
+	}
+
+	output = &DescribeBatchInferenceJobOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeBatchInferenceJob API operation for Amazon Personalize.
+//
+// Gets the properties of a batch inference job including name, Amazon Resource
+// Name (ARN), status, input and output configurations, and the ARN of the solution
+// version used to generate the recommendations.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation DescribeBatchInferenceJob for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Provide a valid value for the field or parameter.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Could not find the specified resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/DescribeBatchInferenceJob
+func (c *Personalize) DescribeBatchInferenceJob(input *DescribeBatchInferenceJobInput) (*DescribeBatchInferenceJobOutput, error) {
+	req, out := c.DescribeBatchInferenceJobRequest(input)
+	return out, req.Send()
+}
+
+// DescribeBatchInferenceJobWithContext is the same as DescribeBatchInferenceJob with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeBatchInferenceJob for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) DescribeBatchInferenceJobWithContext(ctx aws.Context, input *DescribeBatchInferenceJobInput, opts ...request.Option) (*DescribeBatchInferenceJobOutput, error) {
+	req, out := c.DescribeBatchInferenceJobRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeCampaign = "DescribeCampaign"
 
 // DescribeCampaignRequest generates a "aws/request.Request" representing the
@@ -2532,6 +2709,147 @@ func (c *Personalize) GetSolutionMetricsWithContext(ctx aws.Context, input *GetS
 	return out, req.Send()
 }
 
+const opListBatchInferenceJobs = "ListBatchInferenceJobs"
+
+// ListBatchInferenceJobsRequest generates a "aws/request.Request" representing the
+// client's request for the ListBatchInferenceJobs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListBatchInferenceJobs for more information on using the ListBatchInferenceJobs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListBatchInferenceJobsRequest method.
+//    req, resp := client.ListBatchInferenceJobsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListBatchInferenceJobs
+func (c *Personalize) ListBatchInferenceJobsRequest(input *ListBatchInferenceJobsInput) (req *request.Request, output *ListBatchInferenceJobsOutput) {
+	op := &request.Operation{
+		Name:       opListBatchInferenceJobs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListBatchInferenceJobsInput{}
+	}
+
+	output = &ListBatchInferenceJobsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListBatchInferenceJobs API operation for Amazon Personalize.
+//
+// Gets a list of the batch inference jobs that have been performed off of a
+// solution version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Personalize's
+// API operation ListBatchInferenceJobs for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   Provide a valid value for the field or parameter.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The token is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/personalize-2018-05-22/ListBatchInferenceJobs
+func (c *Personalize) ListBatchInferenceJobs(input *ListBatchInferenceJobsInput) (*ListBatchInferenceJobsOutput, error) {
+	req, out := c.ListBatchInferenceJobsRequest(input)
+	return out, req.Send()
+}
+
+// ListBatchInferenceJobsWithContext is the same as ListBatchInferenceJobs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListBatchInferenceJobs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) ListBatchInferenceJobsWithContext(ctx aws.Context, input *ListBatchInferenceJobsInput, opts ...request.Option) (*ListBatchInferenceJobsOutput, error) {
+	req, out := c.ListBatchInferenceJobsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListBatchInferenceJobsPages iterates over the pages of a ListBatchInferenceJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListBatchInferenceJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListBatchInferenceJobs operation.
+//    pageNum := 0
+//    err := client.ListBatchInferenceJobsPages(params,
+//        func(page *personalize.ListBatchInferenceJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Personalize) ListBatchInferenceJobsPages(input *ListBatchInferenceJobsInput, fn func(*ListBatchInferenceJobsOutput, bool) bool) error {
+	return c.ListBatchInferenceJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListBatchInferenceJobsPagesWithContext same as ListBatchInferenceJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Personalize) ListBatchInferenceJobsPagesWithContext(ctx aws.Context, input *ListBatchInferenceJobsInput, fn func(*ListBatchInferenceJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListBatchInferenceJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListBatchInferenceJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListBatchInferenceJobsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListCampaigns = "ListCampaigns"
 
 // ListCampaignsRequest generates a "aws/request.Request" representing the
@@ -2666,10 +2984,12 @@ func (c *Personalize) ListCampaignsPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCampaignsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCampaignsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2803,10 +3123,12 @@ func (c *Personalize) ListDatasetGroupsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDatasetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDatasetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2946,10 +3268,12 @@ func (c *Personalize) ListDatasetImportJobsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDatasetImportJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDatasetImportJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3086,10 +3410,12 @@ func (c *Personalize) ListDatasetsPagesWithContext(ctx aws.Context, input *ListD
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDatasetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDatasetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3226,10 +3552,12 @@ func (c *Personalize) ListEventTrackersPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEventTrackersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEventTrackersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3362,10 +3690,12 @@ func (c *Personalize) ListRecipesPagesWithContext(ctx aws.Context, input *ListRe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRecipesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRecipesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3499,10 +3829,12 @@ func (c *Personalize) ListSchemasPagesWithContext(ctx aws.Context, input *ListSc
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSchemasOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSchemasOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3643,10 +3975,12 @@ func (c *Personalize) ListSolutionVersionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSolutionVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSolutionVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3784,10 +4118,12 @@ func (c *Personalize) ListSolutionsPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSolutionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSolutionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4085,6 +4421,303 @@ func (s AutoMLResult) GoString() string {
 // SetBestRecipeArn sets the BestRecipeArn field's value.
 func (s *AutoMLResult) SetBestRecipeArn(v string) *AutoMLResult {
 	s.BestRecipeArn = &v
+	return s
+}
+
+// Contains information on a batch inference job.
+type BatchInferenceJob struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the batch inference job.
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string"`
+
+	// The time at which the batch inference job was created.
+	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
+
+	// If the batch inference job failed, the reason for the failure.
+	FailureReason *string `locationName:"failureReason" type:"string"`
+
+	// The Amazon S3 path that leads to the input data used to generate the batch
+	// inference job.
+	JobInput *BatchInferenceJobInput `locationName:"jobInput" type:"structure"`
+
+	// The name of the batch inference job.
+	JobName *string `locationName:"jobName" min:"1" type:"string"`
+
+	// The Amazon S3 bucket that contains the output data generated by the batch
+	// inference job.
+	JobOutput *BatchInferenceJobOutput `locationName:"jobOutput" type:"structure"`
+
+	// The time at which the batch inference job was last updated.
+	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
+
+	// The number of recommendations generated by the batch inference job. This
+	// number includes the error messages generated for failed input records.
+	NumResults *int64 `locationName:"numResults" type:"integer"`
+
+	// The ARN of the Amazon Identity and Access Management (IAM) role that requested
+	// the batch inference job.
+	RoleArn *string `locationName:"roleArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the solution version from which the batch
+	// inference job was created.
+	SolutionVersionArn *string `locationName:"solutionVersionArn" type:"string"`
+
+	// The status of the batch inference job. The status is one of the following
+	// values:
+	//
+	//    * PENDING
+	//
+	//    * IN PROGRESS
+	//
+	//    * ACTIVE
+	//
+	//    * CREATE FAILED
+	Status *string `locationName:"status" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJob) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJob) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *BatchInferenceJob) SetBatchInferenceJobArn(v string) *BatchInferenceJob {
+	s.BatchInferenceJobArn = &v
+	return s
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *BatchInferenceJob) SetCreationDateTime(v time.Time) *BatchInferenceJob {
+	s.CreationDateTime = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *BatchInferenceJob) SetFailureReason(v string) *BatchInferenceJob {
+	s.FailureReason = &v
+	return s
+}
+
+// SetJobInput sets the JobInput field's value.
+func (s *BatchInferenceJob) SetJobInput(v *BatchInferenceJobInput) *BatchInferenceJob {
+	s.JobInput = v
+	return s
+}
+
+// SetJobName sets the JobName field's value.
+func (s *BatchInferenceJob) SetJobName(v string) *BatchInferenceJob {
+	s.JobName = &v
+	return s
+}
+
+// SetJobOutput sets the JobOutput field's value.
+func (s *BatchInferenceJob) SetJobOutput(v *BatchInferenceJobOutput) *BatchInferenceJob {
+	s.JobOutput = v
+	return s
+}
+
+// SetLastUpdatedDateTime sets the LastUpdatedDateTime field's value.
+func (s *BatchInferenceJob) SetLastUpdatedDateTime(v time.Time) *BatchInferenceJob {
+	s.LastUpdatedDateTime = &v
+	return s
+}
+
+// SetNumResults sets the NumResults field's value.
+func (s *BatchInferenceJob) SetNumResults(v int64) *BatchInferenceJob {
+	s.NumResults = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *BatchInferenceJob) SetRoleArn(v string) *BatchInferenceJob {
+	s.RoleArn = &v
+	return s
+}
+
+// SetSolutionVersionArn sets the SolutionVersionArn field's value.
+func (s *BatchInferenceJob) SetSolutionVersionArn(v string) *BatchInferenceJob {
+	s.SolutionVersionArn = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *BatchInferenceJob) SetStatus(v string) *BatchInferenceJob {
+	s.Status = &v
+	return s
+}
+
+// The input configuration of a batch inference job.
+type BatchInferenceJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The URI of the Amazon S3 location that contains your input data. The Amazon
+	// S3 bucket must be in the same region as the API endpoint you are calling.
+	//
+	// S3DataSource is a required field
+	S3DataSource *S3DataConfig `locationName:"s3DataSource" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchInferenceJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchInferenceJobInput"}
+	if s.S3DataSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3DataSource"))
+	}
+	if s.S3DataSource != nil {
+		if err := s.S3DataSource.Validate(); err != nil {
+			invalidParams.AddNested("S3DataSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3DataSource sets the S3DataSource field's value.
+func (s *BatchInferenceJobInput) SetS3DataSource(v *S3DataConfig) *BatchInferenceJobInput {
+	s.S3DataSource = v
+	return s
+}
+
+// The output configuration parameters of a batch inference job.
+type BatchInferenceJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information on the Amazon S3 bucket in which the batch inference job's output
+	// is stored.
+	//
+	// S3DataDestination is a required field
+	S3DataDestination *S3DataConfig `locationName:"s3DataDestination" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJobOutput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchInferenceJobOutput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchInferenceJobOutput"}
+	if s.S3DataDestination == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3DataDestination"))
+	}
+	if s.S3DataDestination != nil {
+		if err := s.S3DataDestination.Validate(); err != nil {
+			invalidParams.AddNested("S3DataDestination", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3DataDestination sets the S3DataDestination field's value.
+func (s *BatchInferenceJobOutput) SetS3DataDestination(v *S3DataConfig) *BatchInferenceJobOutput {
+	s.S3DataDestination = v
+	return s
+}
+
+// A truncated version of the BatchInferenceJob datatype. The ListBatchInferenceJobs
+// operation returns a list of batch inference job summaries.
+type BatchInferenceJobSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the batch inference job.
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string"`
+
+	// The time at which the batch inference job was created.
+	CreationDateTime *time.Time `locationName:"creationDateTime" type:"timestamp"`
+
+	// If the batch inference job failed, the reason for the failure.
+	FailureReason *string `locationName:"failureReason" type:"string"`
+
+	// The name of the batch inference job.
+	JobName *string `locationName:"jobName" min:"1" type:"string"`
+
+	// The time at which the batch inference job was last updated.
+	LastUpdatedDateTime *time.Time `locationName:"lastUpdatedDateTime" type:"timestamp"`
+
+	// The status of the batch inference job. The status is one of the following
+	// values:
+	//
+	//    * PENDING
+	//
+	//    * IN PROGRESS
+	//
+	//    * ACTIVE
+	//
+	//    * CREATE FAILED
+	Status *string `locationName:"status" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchInferenceJobSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchInferenceJobSummary) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *BatchInferenceJobSummary) SetBatchInferenceJobArn(v string) *BatchInferenceJobSummary {
+	s.BatchInferenceJobArn = &v
+	return s
+}
+
+// SetCreationDateTime sets the CreationDateTime field's value.
+func (s *BatchInferenceJobSummary) SetCreationDateTime(v time.Time) *BatchInferenceJobSummary {
+	s.CreationDateTime = &v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *BatchInferenceJobSummary) SetFailureReason(v string) *BatchInferenceJobSummary {
+	s.FailureReason = &v
+	return s
+}
+
+// SetJobName sets the JobName field's value.
+func (s *BatchInferenceJobSummary) SetJobName(v string) *BatchInferenceJobSummary {
+	s.JobName = &v
+	return s
+}
+
+// SetLastUpdatedDateTime sets the LastUpdatedDateTime field's value.
+func (s *BatchInferenceJobSummary) SetLastUpdatedDateTime(v time.Time) *BatchInferenceJobSummary {
+	s.LastUpdatedDateTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *BatchInferenceJobSummary) SetStatus(v string) *BatchInferenceJobSummary {
+	s.Status = &v
 	return s
 }
 
@@ -4434,6 +5067,148 @@ func (s *ContinuousHyperParameterRange) SetMinValue(v float64) *ContinuousHyperP
 // SetName sets the Name field's value.
 func (s *ContinuousHyperParameterRange) SetName(v string) *ContinuousHyperParameterRange {
 	s.Name = &v
+	return s
+}
+
+type CreateBatchInferenceJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon S3 path that leads to the input file to base your recommendations
+	// on. The input material must be in JSON format.
+	//
+	// JobInput is a required field
+	JobInput *BatchInferenceJobInput `locationName:"jobInput" type:"structure" required:"true"`
+
+	// The name of the batch inference job to create.
+	//
+	// JobName is a required field
+	JobName *string `locationName:"jobName" min:"1" type:"string" required:"true"`
+
+	// The path to the Amazon S3 bucket where the job's output will be stored.
+	//
+	// JobOutput is a required field
+	JobOutput *BatchInferenceJobOutput `locationName:"jobOutput" type:"structure" required:"true"`
+
+	// The number of recommendations to retreive.
+	NumResults *int64 `locationName:"numResults" type:"integer"`
+
+	// The ARN of the Amazon Identity and Access Management role that has permissions
+	// to read and write to your input and out Amazon S3 buckets respectively.
+	//
+	// RoleArn is a required field
+	RoleArn *string `locationName:"roleArn" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the solution version that will be used
+	// to generate the batch inference recommendations.
+	//
+	// SolutionVersionArn is a required field
+	SolutionVersionArn *string `locationName:"solutionVersionArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateBatchInferenceJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateBatchInferenceJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateBatchInferenceJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateBatchInferenceJobInput"}
+	if s.JobInput == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobInput"))
+	}
+	if s.JobName == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobName"))
+	}
+	if s.JobName != nil && len(*s.JobName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobName", 1))
+	}
+	if s.JobOutput == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobOutput"))
+	}
+	if s.RoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
+	}
+	if s.SolutionVersionArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("SolutionVersionArn"))
+	}
+	if s.JobInput != nil {
+		if err := s.JobInput.Validate(); err != nil {
+			invalidParams.AddNested("JobInput", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.JobOutput != nil {
+		if err := s.JobOutput.Validate(); err != nil {
+			invalidParams.AddNested("JobOutput", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJobInput sets the JobInput field's value.
+func (s *CreateBatchInferenceJobInput) SetJobInput(v *BatchInferenceJobInput) *CreateBatchInferenceJobInput {
+	s.JobInput = v
+	return s
+}
+
+// SetJobName sets the JobName field's value.
+func (s *CreateBatchInferenceJobInput) SetJobName(v string) *CreateBatchInferenceJobInput {
+	s.JobName = &v
+	return s
+}
+
+// SetJobOutput sets the JobOutput field's value.
+func (s *CreateBatchInferenceJobInput) SetJobOutput(v *BatchInferenceJobOutput) *CreateBatchInferenceJobInput {
+	s.JobOutput = v
+	return s
+}
+
+// SetNumResults sets the NumResults field's value.
+func (s *CreateBatchInferenceJobInput) SetNumResults(v int64) *CreateBatchInferenceJobInput {
+	s.NumResults = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *CreateBatchInferenceJobInput) SetRoleArn(v string) *CreateBatchInferenceJobInput {
+	s.RoleArn = &v
+	return s
+}
+
+// SetSolutionVersionArn sets the SolutionVersionArn field's value.
+func (s *CreateBatchInferenceJobInput) SetSolutionVersionArn(v string) *CreateBatchInferenceJobInput {
+	s.SolutionVersionArn = &v
+	return s
+}
+
+type CreateBatchInferenceJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the batch inference job.
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateBatchInferenceJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateBatchInferenceJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *CreateBatchInferenceJobOutput) SetBatchInferenceJobArn(v string) *CreateBatchInferenceJobOutput {
+	s.BatchInferenceJobArn = &v
 	return s
 }
 
@@ -6478,6 +7253,67 @@ func (s *DescribeAlgorithmOutput) SetAlgorithm(v *Algorithm) *DescribeAlgorithmO
 	return s
 }
 
+type DescribeBatchInferenceJobInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the batch inference job to describe.
+	//
+	// BatchInferenceJobArn is a required field
+	BatchInferenceJobArn *string `locationName:"batchInferenceJobArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeBatchInferenceJobInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBatchInferenceJobInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeBatchInferenceJobInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeBatchInferenceJobInput"}
+	if s.BatchInferenceJobArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("BatchInferenceJobArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBatchInferenceJobArn sets the BatchInferenceJobArn field's value.
+func (s *DescribeBatchInferenceJobInput) SetBatchInferenceJobArn(v string) *DescribeBatchInferenceJobInput {
+	s.BatchInferenceJobArn = &v
+	return s
+}
+
+type DescribeBatchInferenceJobOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information on the specified batch inference job.
+	BatchInferenceJob *BatchInferenceJob `locationName:"batchInferenceJob" type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeBatchInferenceJobOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeBatchInferenceJobOutput) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJob sets the BatchInferenceJob field's value.
+func (s *DescribeBatchInferenceJobOutput) SetBatchInferenceJob(v *BatchInferenceJob) *DescribeBatchInferenceJobOutput {
+	s.BatchInferenceJob = v
+	return s
+}
+
 type DescribeCampaignInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7669,6 +8505,95 @@ func (s *IntegerHyperParameterRange) SetName(v string) *IntegerHyperParameterRan
 	return s
 }
 
+type ListBatchInferenceJobsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of batch inference job results to return in each page.
+	// The default value is 100.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token to request the next page of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the solution version from which the batch
+	// inference jobs were created.
+	SolutionVersionArn *string `locationName:"solutionVersionArn" type:"string"`
+}
+
+// String returns the string representation
+func (s ListBatchInferenceJobsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBatchInferenceJobsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListBatchInferenceJobsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListBatchInferenceJobsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListBatchInferenceJobsInput) SetMaxResults(v int64) *ListBatchInferenceJobsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListBatchInferenceJobsInput) SetNextToken(v string) *ListBatchInferenceJobsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSolutionVersionArn sets the SolutionVersionArn field's value.
+func (s *ListBatchInferenceJobsInput) SetSolutionVersionArn(v string) *ListBatchInferenceJobsInput {
+	s.SolutionVersionArn = &v
+	return s
+}
+
+type ListBatchInferenceJobsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list containing information on each job that is returned.
+	BatchInferenceJobs []*BatchInferenceJobSummary `locationName:"batchInferenceJobs" type:"list"`
+
+	// The token to use to retreive the next page of results. The value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListBatchInferenceJobsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBatchInferenceJobsOutput) GoString() string {
+	return s.String()
+}
+
+// SetBatchInferenceJobs sets the BatchInferenceJobs field's value.
+func (s *ListBatchInferenceJobsOutput) SetBatchInferenceJobs(v []*BatchInferenceJobSummary) *ListBatchInferenceJobsOutput {
+	s.BatchInferenceJobs = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListBatchInferenceJobsOutput) SetNextToken(v string) *ListBatchInferenceJobsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListCampaignsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8604,6 +9529,56 @@ func (s *RecipeSummary) SetStatus(v string) *RecipeSummary {
 	return s
 }
 
+// The configuration details of an Amazon S3 input or output bucket.
+type S3DataConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Amazon Key Management Service (KMS)
+	// key that Amazon Personalize uses to encrypt or decrypt the input and output
+	// files of a batch inference job.
+	KmsKeyArn *string `locationName:"kmsKeyArn" type:"string"`
+
+	// The file path of the Amazon S3 bucket.
+	//
+	// Path is a required field
+	Path *string `locationName:"path" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s S3DataConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3DataConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3DataConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3DataConfig"}
+	if s.Path == nil {
+		invalidParams.Add(request.NewErrParamRequired("Path"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *S3DataConfig) SetKmsKeyArn(v string) *S3DataConfig {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetPath sets the Path field's value.
+func (s *S3DataConfig) SetPath(v string) *S3DataConfig {
+	s.Path = &v
+	return s
+}
+
 // An object that provides information about a solution. A solution is a trained
 // model that can be deployed as a campaign.
 type Solution struct {
@@ -8768,9 +9743,7 @@ type SolutionConfig struct {
 	// Lists the feature transformation parameters.
 	FeatureTransformationParameters map[string]*string `locationName:"featureTransformationParameters" type:"map"`
 
-	// Describes the properties for hyperparameter optimization (HPO). For use with
-	// the bring-your-own-recipe feature. Not used with Amazon Personalize predefined
-	// recipes.
+	// Describes the properties for hyperparameter optimization (HPO).
 	HpoConfig *HPOConfig `locationName:"hpoConfig" type:"structure"`
 }
 
