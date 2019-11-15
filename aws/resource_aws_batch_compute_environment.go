@@ -43,6 +43,10 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								batch.CRAllocationStrategyBestFit,
+								batch.CRAllocationStrategyBestFitProgressive,
+								batch.CRAllocationStrategySpotCapacityOptimized}, true),
 						},
 						"bid_percentage": {
 							Type:     schema.TypeInt,
