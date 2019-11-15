@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_geo_match_set"
 description: |-

@@ -1499,10 +1499,12 @@ func (c *SNS) ListEndpointsByPlatformApplicationPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEndpointsByPlatformApplicationOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEndpointsByPlatformApplicationOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1746,10 +1748,12 @@ func (c *SNS) ListPlatformApplicationsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPlatformApplicationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPlatformApplicationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1892,10 +1896,12 @@ func (c *SNS) ListSubscriptionsPagesWithContext(ctx aws.Context, input *ListSubs
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSubscriptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSubscriptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2041,10 +2047,12 @@ func (c *SNS) ListSubscriptionsByTopicPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSubscriptionsByTopicOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSubscriptionsByTopicOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2281,10 +2289,12 @@ func (c *SNS) ListTopicsPagesWithContext(ctx aws.Context, input *ListTopicsInput
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTopicsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTopicsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

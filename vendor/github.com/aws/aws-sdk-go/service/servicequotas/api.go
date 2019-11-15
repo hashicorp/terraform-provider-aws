@@ -991,10 +991,12 @@ func (c *ServiceQuotas) ListAWSDefaultServiceQuotasPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAWSDefaultServiceQuotasOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAWSDefaultServiceQuotasOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1142,10 +1144,12 @@ func (c *ServiceQuotas) ListRequestedServiceQuotaChangeHistoryPagesWithContext(c
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRequestedServiceQuotaChangeHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRequestedServiceQuotaChangeHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1296,10 +1300,12 @@ func (c *ServiceQuotas) ListRequestedServiceQuotaChangeHistoryByQuotaPagesWithCo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRequestedServiceQuotaChangeHistoryByQuotaOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRequestedServiceQuotaChangeHistoryByQuotaOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1455,10 +1461,12 @@ func (c *ServiceQuotas) ListServiceQuotaIncreaseRequestsInTemplatePagesWithConte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListServiceQuotaIncreaseRequestsInTemplateOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListServiceQuotaIncreaseRequestsInTemplateOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1614,10 +1622,12 @@ func (c *ServiceQuotas) ListServiceQuotasPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListServiceQuotasOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListServiceQuotasOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1764,10 +1774,12 @@ func (c *ServiceQuotas) ListServicesPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListServicesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListServicesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

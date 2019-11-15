@@ -2609,10 +2609,6 @@ func (c *IoT) CreateStreamRequest(input *CreateStreamInput) (req *request.Reques
 // Creates a stream for delivering one or more large files in chunks over MQTT.
 // A stream transports data bytes in chunks or blocks packaged as MQTT messages
 // from a source like S3. You can have one or more files associated with a stream.
-// The total size of a file associated with the stream cannot exceed more than
-// 2 MB. The stream will be created with version 0. If a stream is created with
-// the same streamID as a stream that existed and was deleted within last 90
-// days, we will resurrect that old stream by incrementing the version by 1.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7736,6 +7732,106 @@ func (c *IoT) EnableTopicRuleWithContext(ctx aws.Context, input *EnableTopicRule
 	return out, req.Send()
 }
 
+const opGetCardinality = "GetCardinality"
+
+// GetCardinalityRequest generates a "aws/request.Request" representing the
+// client's request for the GetCardinality operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCardinality for more information on using the GetCardinality
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCardinalityRequest method.
+//    req, resp := client.GetCardinalityRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetCardinalityRequest(input *GetCardinalityInput) (req *request.Request, output *GetCardinalityOutput) {
+	op := &request.Operation{
+		Name:       opGetCardinality,
+		HTTPMethod: "POST",
+		HTTPPath:   "/indices/cardinality",
+	}
+
+	if input == nil {
+		input = &GetCardinalityInput{}
+	}
+
+	output = &GetCardinalityOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCardinality API operation for AWS IoT.
+//
+// Returns the number of things with distinct values for the aggregation field.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetCardinality for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeInvalidQueryException "InvalidQueryException"
+//   The query is invalid.
+//
+//   * ErrCodeInvalidAggregationException "InvalidAggregationException"
+//   The aggregation is invalid.
+//
+//   * ErrCodeIndexNotReadyException "IndexNotReadyException"
+//   The index is not ready.
+//
+func (c *IoT) GetCardinality(input *GetCardinalityInput) (*GetCardinalityOutput, error) {
+	req, out := c.GetCardinalityRequest(input)
+	return out, req.Send()
+}
+
+// GetCardinalityWithContext is the same as GetCardinality with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCardinality for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetCardinalityWithContext(ctx aws.Context, input *GetCardinalityInput, opts ...request.Option) (*GetCardinalityOutput, error) {
+	req, out := c.GetCardinalityRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetEffectivePolicies = "GetEffectivePolicies"
 
 // GetEffectivePoliciesRequest generates a "aws/request.Request" representing the
@@ -8179,6 +8275,109 @@ func (c *IoT) GetOTAUpdateWithContext(ctx aws.Context, input *GetOTAUpdateInput,
 	return out, req.Send()
 }
 
+const opGetPercentiles = "GetPercentiles"
+
+// GetPercentilesRequest generates a "aws/request.Request" representing the
+// client's request for the GetPercentiles operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPercentiles for more information on using the GetPercentiles
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPercentilesRequest method.
+//    req, resp := client.GetPercentilesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) GetPercentilesRequest(input *GetPercentilesInput) (req *request.Request, output *GetPercentilesOutput) {
+	op := &request.Operation{
+		Name:       opGetPercentiles,
+		HTTPMethod: "POST",
+		HTTPPath:   "/indices/percentiles",
+	}
+
+	if input == nil {
+		input = &GetPercentilesInput{}
+	}
+
+	output = &GetPercentilesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPercentiles API operation for AWS IoT.
+//
+// Returns the percentile values for the aggregation field. The results from
+// GetPercentiles is an approximation. The default percentile groupings are:
+// 1,5,25,50,75,95,99. You can specify custom percentile grouping using the
+// percents argument to the GetPercentiles API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation GetPercentiles for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   The request is not valid.
+//
+//   * ErrCodeThrottlingException "ThrottlingException"
+//   The rate exceeds the limit.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   The service is temporarily unavailable.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An unexpected error has occurred.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified resource does not exist.
+//
+//   * ErrCodeInvalidQueryException "InvalidQueryException"
+//   The query is invalid.
+//
+//   * ErrCodeInvalidAggregationException "InvalidAggregationException"
+//   The aggregation is invalid.
+//
+//   * ErrCodeIndexNotReadyException "IndexNotReadyException"
+//   The index is not ready.
+//
+func (c *IoT) GetPercentiles(input *GetPercentilesInput) (*GetPercentilesOutput, error) {
+	req, out := c.GetPercentilesRequest(input)
+	return out, req.Send()
+}
+
+// GetPercentilesWithContext is the same as GetPercentiles with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPercentiles for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) GetPercentilesWithContext(ctx aws.Context, input *GetPercentilesInput, opts ...request.Option) (*GetPercentilesOutput, error) {
+	req, out := c.GetPercentilesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetPolicy = "GetPolicy"
 
 // GetPolicyRequest generates a "aws/request.Request" representing the
@@ -8492,7 +8691,9 @@ func (c *IoT) GetStatisticsRequest(input *GetStatisticsInput) (req *request.Requ
 
 // GetStatistics API operation for AWS IoT.
 //
-// Gets statistics about things that match the specified query.
+// Gets statistics returns the count, average, sum, minimum, maximum, sumOfSquares,
+// variance, and standard deviation for the specified aggregated field. If the
+// aggregation field is of type String, only the count statistic is returned.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12716,7 +12917,11 @@ func (c *IoT) RegisterThingRequest(input *RegisterThingInput) (req *request.Requ
 
 // RegisterThing API operation for AWS IoT.
 //
-// Provisions a thing.
+// Provisions a thing in the device registry. RegisterThing calls other AWS
+// IoT control plane APIs. These calls might exceed your account level AWS IoT
+// Throttling Limits (https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_iot)
+// and cause throttle errors. Please contact AWS Customer Support (https://console.aws.amazon.com/support/home)
+// to raise your throttling limits if necessary.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -17273,7 +17478,8 @@ func (s AttachSecurityProfileOutput) GoString() string {
 type AttachThingPrincipalInput struct {
 	_ struct{} `type:"structure"`
 
-	// The principal, such as a certificate or other credential.
+	// The principal, which can be a certificate ARN (as returned from the CreateCertificate
+	// operation) or an Amazon Cognito ID.
 	//
 	// Principal is a required field
 	Principal *string `location:"header" locationName:"x-amzn-principal" type:"string" required:"true"`
@@ -26432,6 +26638,39 @@ func (s *ExponentialRolloutRate) SetRateIncreaseCriteria(v *RateIncreaseCriteria
 	return s
 }
 
+// Describes the name and data type at a field.
+type Field struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the field.
+	Name *string `locationName:"name" type:"string"`
+
+	// The datatype of the field.
+	Type *string `locationName:"type" type:"string" enum:"FieldType"`
+}
+
+// String returns the string representation
+func (s Field) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Field) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *Field) SetName(v string) *Field {
+	s.Name = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Field) SetType(v string) *Field {
+	s.Type = &v
+	return s
+}
+
 // The location of the OTA update.
 type FileLocation struct {
 	_ struct{} `type:"structure"`
@@ -26546,6 +26785,103 @@ func (s *FirehoseAction) SetRoleArn(v string) *FirehoseAction {
 // SetSeparator sets the Separator field's value.
 func (s *FirehoseAction) SetSeparator(v string) *FirehoseAction {
 	s.Separator = &v
+	return s
+}
+
+type GetCardinalityInput struct {
+	_ struct{} `type:"structure"`
+
+	// The field to aggregate.
+	AggregationField *string `locationName:"aggregationField" min:"1" type:"string"`
+
+	// The name of the index to search.
+	IndexName *string `locationName:"indexName" min:"1" type:"string"`
+
+	// The search query.
+	//
+	// QueryString is a required field
+	QueryString *string `locationName:"queryString" min:"1" type:"string" required:"true"`
+
+	// The query version.
+	QueryVersion *string `locationName:"queryVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s GetCardinalityInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCardinalityInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCardinalityInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCardinalityInput"}
+	if s.AggregationField != nil && len(*s.AggregationField) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AggregationField", 1))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 1))
+	}
+	if s.QueryString == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryString"))
+	}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregationField sets the AggregationField field's value.
+func (s *GetCardinalityInput) SetAggregationField(v string) *GetCardinalityInput {
+	s.AggregationField = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GetCardinalityInput) SetIndexName(v string) *GetCardinalityInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *GetCardinalityInput) SetQueryString(v string) *GetCardinalityInput {
+	s.QueryString = &v
+	return s
+}
+
+// SetQueryVersion sets the QueryVersion field's value.
+func (s *GetCardinalityInput) SetQueryVersion(v string) *GetCardinalityInput {
+	s.QueryVersion = &v
+	return s
+}
+
+type GetCardinalityOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The number of things that match the query.
+	Cardinality *int64 `locationName:"cardinality" type:"integer"`
+}
+
+// String returns the string representation
+func (s GetCardinalityOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCardinalityOutput) GoString() string {
+	return s.String()
+}
+
+// SetCardinality sets the Cardinality field's value.
+func (s *GetCardinalityOutput) SetCardinality(v int64) *GetCardinalityOutput {
+	s.Cardinality = &v
 	return s
 }
 
@@ -26848,6 +27184,112 @@ func (s *GetOTAUpdateOutput) SetOtaUpdateInfo(v *OTAUpdateInfo) *GetOTAUpdateOut
 	return s
 }
 
+type GetPercentilesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The field to aggregate.
+	AggregationField *string `locationName:"aggregationField" min:"1" type:"string"`
+
+	// The name of the index to search.
+	IndexName *string `locationName:"indexName" min:"1" type:"string"`
+
+	// The percentile groups returned.
+	Percents []*float64 `locationName:"percents" type:"list"`
+
+	// The query string.
+	//
+	// QueryString is a required field
+	QueryString *string `locationName:"queryString" min:"1" type:"string" required:"true"`
+
+	// The query version.
+	QueryVersion *string `locationName:"queryVersion" type:"string"`
+}
+
+// String returns the string representation
+func (s GetPercentilesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPercentilesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPercentilesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPercentilesInput"}
+	if s.AggregationField != nil && len(*s.AggregationField) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AggregationField", 1))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 1))
+	}
+	if s.QueryString == nil {
+		invalidParams.Add(request.NewErrParamRequired("QueryString"))
+	}
+	if s.QueryString != nil && len(*s.QueryString) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("QueryString", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAggregationField sets the AggregationField field's value.
+func (s *GetPercentilesInput) SetAggregationField(v string) *GetPercentilesInput {
+	s.AggregationField = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *GetPercentilesInput) SetIndexName(v string) *GetPercentilesInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetPercents sets the Percents field's value.
+func (s *GetPercentilesInput) SetPercents(v []*float64) *GetPercentilesInput {
+	s.Percents = v
+	return s
+}
+
+// SetQueryString sets the QueryString field's value.
+func (s *GetPercentilesInput) SetQueryString(v string) *GetPercentilesInput {
+	s.QueryString = &v
+	return s
+}
+
+// SetQueryVersion sets the QueryVersion field's value.
+func (s *GetPercentilesInput) SetQueryVersion(v string) *GetPercentilesInput {
+	s.QueryVersion = &v
+	return s
+}
+
+type GetPercentilesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The percentile values of the aggregated fields.
+	Percentiles []*PercentPair `locationName:"percentiles" type:"list"`
+}
+
+// String returns the string representation
+func (s GetPercentilesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPercentilesOutput) GoString() string {
+	return s.String()
+}
+
+// SetPercentiles sets the Percentiles field's value.
+func (s *GetPercentilesOutput) SetPercentiles(v []*PercentPair) *GetPercentilesOutput {
+	s.Percentiles = v
+	return s
+}
+
 // The input for the GetPolicy operation.
 type GetPolicyInput struct {
 	_ struct{} `type:"structure"`
@@ -27031,7 +27473,7 @@ func (s *GetPolicyVersionInput) SetPolicyVersionId(v string) *GetPolicyVersionIn
 type GetPolicyVersionOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The date the policy version was created.
+	// The date the policy was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
 	// The generation ID of the policy version.
@@ -27040,7 +27482,7 @@ type GetPolicyVersionOutput struct {
 	// Specifies whether the policy version is the default.
 	IsDefaultVersion *bool `locationName:"isDefaultVersion" type:"boolean"`
 
-	// The date the policy version was last modified.
+	// The date the policy was last modified.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
 	// The policy ARN.
@@ -27156,7 +27598,7 @@ func (s *GetRegistrationCodeOutput) SetRegistrationCode(v string) *GetRegistrati
 type GetStatisticsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The aggregation field name. Currently not supported.
+	// The aggregation field name.
 	AggregationField *string `locationName:"aggregationField" min:"1" type:"string"`
 
 	// The name of the index to search. The default value is AWS_Things.
@@ -33388,6 +33830,39 @@ func (s *OutgoingCertificate) SetTransferredTo(v string) *OutgoingCertificate {
 	return s
 }
 
+// Describes the percentile and percentile value.
+type PercentPair struct {
+	_ struct{} `type:"structure"`
+
+	// The percentile.
+	Percent *float64 `locationName:"percent" type:"double"`
+
+	// The value.
+	Value *float64 `locationName:"value" type:"double"`
+}
+
+// String returns the string representation
+func (s PercentPair) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PercentPair) GoString() string {
+	return s.String()
+}
+
+// SetPercent sets the Percent field's value.
+func (s *PercentPair) SetPercent(v float64) *PercentPair {
+	s.Percent = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *PercentPair) SetValue(v float64) *PercentPair {
+	s.Value = &v
+	return s
+}
+
 // Describes an AWS IoT policy.
 type Policy struct {
 	_ struct{} `type:"structure"`
@@ -34440,7 +34915,8 @@ func (s ReplaceTopicRuleOutput) GoString() string {
 type RepublishAction struct {
 	_ struct{} `type:"structure"`
 
-	// The Quality of Service (QoS) level to use when republishing messages.
+	// The Quality of Service (QoS) level to use when republishing messages. The
+	// default value is 0.
 	Qos *int64 `locationName:"qos" type:"integer"`
 
 	// The ARN of the IAM role that grants access.
@@ -36084,8 +36560,29 @@ func (s *StatisticalThreshold) SetStatistic(v string) *StatisticalThreshold {
 type Statistics struct {
 	_ struct{} `type:"structure"`
 
+	// The average of the aggregated field values.
+	Average *float64 `locationName:"average" type:"double"`
+
 	// The count of things that match the query.
 	Count *int64 `locationName:"count" type:"integer"`
+
+	// The maximum aggregated field value.
+	Maximum *float64 `locationName:"maximum" type:"double"`
+
+	// The minimum aggregated field value.
+	Minimum *float64 `locationName:"minimum" type:"double"`
+
+	// The standard deviation of the aggregated field valuesl
+	StdDeviation *float64 `locationName:"stdDeviation" type:"double"`
+
+	// The sum of the aggregated field values.
+	Sum *float64 `locationName:"sum" type:"double"`
+
+	// The sum of the squares of the aggregated field values.
+	SumOfSquares *float64 `locationName:"sumOfSquares" type:"double"`
+
+	// The variance of the aggregated field values.
+	Variance *float64 `locationName:"variance" type:"double"`
 }
 
 // String returns the string representation
@@ -36098,9 +36595,51 @@ func (s Statistics) GoString() string {
 	return s.String()
 }
 
+// SetAverage sets the Average field's value.
+func (s *Statistics) SetAverage(v float64) *Statistics {
+	s.Average = &v
+	return s
+}
+
 // SetCount sets the Count field's value.
 func (s *Statistics) SetCount(v int64) *Statistics {
 	s.Count = &v
+	return s
+}
+
+// SetMaximum sets the Maximum field's value.
+func (s *Statistics) SetMaximum(v float64) *Statistics {
+	s.Maximum = &v
+	return s
+}
+
+// SetMinimum sets the Minimum field's value.
+func (s *Statistics) SetMinimum(v float64) *Statistics {
+	s.Minimum = &v
+	return s
+}
+
+// SetStdDeviation sets the StdDeviation field's value.
+func (s *Statistics) SetStdDeviation(v float64) *Statistics {
+	s.StdDeviation = &v
+	return s
+}
+
+// SetSum sets the Sum field's value.
+func (s *Statistics) SetSum(v float64) *Statistics {
+	s.Sum = &v
+	return s
+}
+
+// SetSumOfSquares sets the SumOfSquares field's value.
+func (s *Statistics) SetSumOfSquares(v float64) *Statistics {
+	s.SumOfSquares = &v
+	return s
+}
+
+// SetVariance sets the Variance field's value.
+func (s *Statistics) SetVariance(v float64) *Statistics {
+	s.Variance = &v
 	return s
 }
 
@@ -37183,6 +37722,13 @@ func (s *ThingGroupDocument) SetThingGroupName(v string) *ThingGroupDocument {
 type ThingGroupIndexingConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// Contains custom field names and their data type.
+	CustomFields []*Field `locationName:"customFields" type:"list"`
+
+	// Contains fields that are indexed and whose types are already known by the
+	// Fleet Indexing service.
+	ManagedFields []*Field `locationName:"managedFields" type:"list"`
+
 	// Thing group indexing mode.
 	//
 	// ThingGroupIndexingMode is a required field
@@ -37210,6 +37756,18 @@ func (s *ThingGroupIndexingConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomFields sets the CustomFields field's value.
+func (s *ThingGroupIndexingConfiguration) SetCustomFields(v []*Field) *ThingGroupIndexingConfiguration {
+	s.CustomFields = v
+	return s
+}
+
+// SetManagedFields sets the ManagedFields field's value.
+func (s *ThingGroupIndexingConfiguration) SetManagedFields(v []*Field) *ThingGroupIndexingConfiguration {
+	s.ManagedFields = v
+	return s
 }
 
 // SetThingGroupIndexingMode sets the ThingGroupIndexingMode field's value.
@@ -37298,6 +37856,13 @@ func (s *ThingGroupProperties) SetThingGroupDescription(v string) *ThingGroupPro
 type ThingIndexingConfiguration struct {
 	_ struct{} `type:"structure"`
 
+	// Contains custom field names and their data type.
+	CustomFields []*Field `locationName:"customFields" type:"list"`
+
+	// Contains fields that are indexed and whose types are already known by the
+	// Fleet Indexing service.
+	ManagedFields []*Field `locationName:"managedFields" type:"list"`
+
 	// Thing connectivity indexing mode. Valid values are:
 	//
 	//    * STATUS – Your thing index contains connectivity status. To enable
@@ -37340,6 +37905,18 @@ func (s *ThingIndexingConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCustomFields sets the CustomFields field's value.
+func (s *ThingIndexingConfiguration) SetCustomFields(v []*Field) *ThingIndexingConfiguration {
+	s.CustomFields = v
+	return s
+}
+
+// SetManagedFields sets the ManagedFields field's value.
+func (s *ThingIndexingConfiguration) SetManagedFields(v []*Field) *ThingIndexingConfiguration {
+	s.ManagedFields = v
+	return s
 }
 
 // SetThingConnectivityIndexingMode sets the ThingConnectivityIndexingMode field's value.
@@ -40355,6 +40932,17 @@ const (
 
 	// EventTypeCaCertificate is a EventType enum value
 	EventTypeCaCertificate = "CA_CERTIFICATE"
+)
+
+const (
+	// FieldTypeNumber is a FieldType enum value
+	FieldTypeNumber = "Number"
+
+	// FieldTypeString is a FieldType enum value
+	FieldTypeString = "String"
+
+	// FieldTypeBoolean is a FieldType enum value
+	FieldTypeBoolean = "Boolean"
 )
 
 const (
