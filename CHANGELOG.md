@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_waf_regex_pattern_set: Support resource import and add `arn` attribute [GH-10482]
 * resource/aws_waf_size_constraint_set: Support resource import and add `arn` attribute [GH-10484]
 * resource/aws_waf_xss_match_set: Support resource import and add `arn` attribute [GH-10485]
+* resource/aws_wafregional_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10897]
 * resource/aws_wafregional_rule_group: Add `tags` argument and `arn` attribute [GH-10896]
 * resource/aws_wafregional_rule: Add `tags` argument and `arn` attribute [GH-10895]
 * resource/aws_wafregional_web_acl: Add `tags` argument [GH-10889]
