@@ -339,6 +339,7 @@ func flattenBatchComputeResources(computeResource *batch.ComputeResource) []map[
 	result := make([]map[string]interface{}, 0)
 	m := make(map[string]interface{})
 
+	m["allocation_strategy"] = aws.StringValue(computeResource.AllocationStrategy)
 	m["bid_percentage"] = int(aws.Int64Value(computeResource.BidPercentage))
 	m["desired_vcpus"] = int(aws.Int64Value(computeResource.DesiredvCpus))
 	m["ec2_key_pair"] = aws.StringValue(computeResource.Ec2KeyPair)
