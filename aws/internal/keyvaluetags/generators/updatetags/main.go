@@ -44,6 +44,7 @@ var serviceNames = []string{
 	"devicefarm",
 	"directconnect",
 	"directoryservice",
+	"dlm",
 	"docdb",
 	"dynamodb",
 	"ec2",

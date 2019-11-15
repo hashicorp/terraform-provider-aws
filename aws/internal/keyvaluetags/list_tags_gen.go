@@ -27,6 +27,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -466,6 +467,23 @@ func DirectoryserviceListTags(conn *directoryservice.DirectoryService, identifie
 	}
 
 	return DirectoryserviceKeyValueTags(output.Tags), nil
+}
+
+// DlmListTags lists dlm service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DlmListTags(conn *dlm.DLM, identifier string) (KeyValueTags, error) {
+	input := &dlm.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DlmKeyValueTags(output.Tags), nil
 }
 
 // DocdbListTags lists docdb service tags.
