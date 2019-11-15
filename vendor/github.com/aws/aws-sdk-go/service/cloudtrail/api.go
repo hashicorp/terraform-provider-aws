@@ -996,10 +996,12 @@ func (c *CloudTrail) ListPublicKeysPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPublicKeysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPublicKeysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1166,10 +1168,12 @@ func (c *CloudTrail) ListTagsPagesWithContext(ctx aws.Context, input *ListTagsIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1304,10 +1308,12 @@ func (c *CloudTrail) ListTrailsPagesWithContext(ctx aws.Context, input *ListTrai
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTrailsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTrailsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1478,10 +1484,12 @@ func (c *CloudTrail) LookupEventsPagesWithContext(ctx aws.Context, input *Lookup
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*LookupEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*LookupEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

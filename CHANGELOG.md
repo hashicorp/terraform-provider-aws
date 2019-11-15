@@ -1,13 +1,26 @@
-## 2.36.0 (Unreleased)
+## 2.37.0 (Unreleased)
 
 ENHANCEMENTS:
 
-* data-source/aws_iam_group: Add `users` attribute [GH-7132]
-* resource/aws_apigateway_stage: Add `arn` attribute [GH-10570]
-* resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute [GH-10566]
-* resource/aws_s3_bucket: Retry reading tags on `NoSuchBucket` errors due to eventual inconsistency [GH-10863]
-* resource/aws_waf_rule: Add `arn` attribute [GH-10798]
-* resource/aws_waf_rule_group: Add `arn` attribute [GH-10799]
+* resource/aws_dlm_lifecycle_policy: Add `tags` argument and `arn` attribute [GH-10864]
+* resource/aws_glue_crawler: Add `tags` argument [GH-10805]
+
+BUG FIXES:
+
+* data-source/aws_iam_policy_document: Prevent panic when combining single principal identifier with multiple principal identifiers [GH-10780]
+* data-source/aws_iam_policy_document: Prevent losing identifier elements when combining single and multiple principals identifiers [GH-10844]
+* resource/aws_servicequotas_service_quota: Remove resource from Terraform state on `NoSuchResourceException` error [GH-10735]
+
+## 2.36.0 (November 14, 2019)
+
+ENHANCEMENTS:
+
+* data-source/aws_iam_group: Add `users` attribute ([#7132](https://github.com/terraform-providers/terraform-provider-aws/issues/7132))
+* resource/aws_apigateway_stage: Add `arn` attribute ([#10570](https://github.com/terraform-providers/terraform-provider-aws/issues/10570))
+* resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute ([#10566](https://github.com/terraform-providers/terraform-provider-aws/issues/10566))
+* resource/aws_s3_bucket: Retry reading tags on `NoSuchBucket` errors due to eventual inconsistency ([#10863](https://github.com/terraform-providers/terraform-provider-aws/issues/10863))
+* resource/aws_waf_rule: Add `arn` attribute ([#10798](https://github.com/terraform-providers/terraform-provider-aws/issues/10798))
+* resource/aws_waf_rule_group: Add `arn` attribute ([#10799](https://github.com/terraform-providers/terraform-provider-aws/issues/10799))
 
 ## 2.35.0 (November 07, 2019)
 

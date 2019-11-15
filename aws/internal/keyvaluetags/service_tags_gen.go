@@ -25,7 +25,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -184,6 +183,16 @@ func (tags KeyValueTags) CognitoidentityproviderTags() map[string]*string {
 
 // CognitoidentityproviderKeyValueTags creates KeyValueTags from cognitoidentityprovider service tags.
 func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// DlmTags returns dlm service tags.
+func (tags KeyValueTags) DlmTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DlmKeyValueTags creates KeyValueTags from dlm service tags.
+func DlmKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -917,33 +926,6 @@ func (tags KeyValueTags) DirectoryserviceTags() []*directoryservice.Tag {
 
 // DirectoryserviceKeyValueTags creates KeyValueTags from directoryservice service tags.
 func DirectoryserviceKeyValueTags(tags []*directoryservice.Tag) KeyValueTags {
-	m := make(map[string]*string, len(tags))
-
-	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
-	}
-
-	return New(m)
-}
-
-// DlmTags returns dlm service tags.
-func (tags KeyValueTags) DlmTags() []*dlm.Tag {
-	result := make([]*dlm.Tag, 0, len(tags))
-
-	for k, v := range tags.Map() {
-		tag := &dlm.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v),
-		}
-
-		result = append(result, tag)
-	}
-
-	return result
-}
-
-// DlmKeyValueTags creates KeyValueTags from dlm service tags.
-func DlmKeyValueTags(tags []*dlm.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
