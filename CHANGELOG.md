@@ -8,6 +8,7 @@ BUG FIXES:
 
 * data-source/aws_iam_policy_document: Prevent panic when combining single principal identifier with multiple principal identifiers [GH-10780]
 * data-source/aws_iam_policy_document: Prevent losing identifier elements when combining single and multiple principals identifiers [GH-10844]
+* resource/aws_servicequotas_service_quota: Remove resource from Terraform state on `NoSuchResourceException` error [GH-10735]
 
 ## 2.36.0 (November 14, 2019)
 
