@@ -20,6 +20,8 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"tags": tagsSchemaComputed(),
+
 			"address": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -311,6 +313,11 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	}
 	if err := d.Set("vpc_security_groups", vpcSecurityGroups); err != nil {
 		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %#v", vpcSecurityGroups, err)
+	}
+
+	// Fetch and save tags
+	if err := saveTagsRDS(conn, d, aws.StringValue(dbInstance.DBInstanceArn)); err != nil {
+		log.Printf("[WARN] Failed to save tags for RDS Instance (%s): %s", aws.StringValue(dbInstance.DBInstanceArn), err)
 	}
 
 	return nil

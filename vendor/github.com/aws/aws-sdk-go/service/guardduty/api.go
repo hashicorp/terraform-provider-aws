@@ -2387,10 +2387,12 @@ func (c *GuardDuty) ListDetectorsPagesWithContext(ctx aws.Context, input *ListDe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDetectorsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDetectorsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2525,10 +2527,12 @@ func (c *GuardDuty) ListFiltersPagesWithContext(ctx aws.Context, input *ListFilt
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFiltersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFiltersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2663,10 +2667,12 @@ func (c *GuardDuty) ListFindingsPagesWithContext(ctx aws.Context, input *ListFin
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFindingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFindingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2801,10 +2807,12 @@ func (c *GuardDuty) ListIPSetsPagesWithContext(ctx aws.Context, input *ListIPSet
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListIPSetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListIPSetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2940,10 +2948,12 @@ func (c *GuardDuty) ListInvitationsPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInvitationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInvitationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3079,10 +3089,12 @@ func (c *GuardDuty) ListMembersPagesWithContext(ctx aws.Context, input *ListMemb
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMembersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMembersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3303,10 +3315,12 @@ func (c *GuardDuty) ListThreatIntelSetsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListThreatIntelSetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListThreatIntelSetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

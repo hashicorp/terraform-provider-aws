@@ -90,6 +90,22 @@ func Provider() terraform.ResourceProvider {
 
 			"endpoints": endpointsSchema(),
 
+			"ignore_tag_prefixes": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag key prefixes to ignore across all resources.",
+			},
+
+			"ignore_tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag keys to ignore across all resources.",
+			},
+
 			"insecure": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -241,6 +257,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_partition":                                 dataSourceAwsPartition(),
 			"aws_prefix_list":                               dataSourceAwsPrefixList(),
 			"aws_pricing_product":                           dataSourceAwsPricingProduct(),
+			"aws_qldb_ledger":                               dataSourceAwsQLDBLedger(),
 			"aws_ram_resource_share":                        dataSourceAwsRamResourceShare(),
 			"aws_rds_cluster":                               dataSourceAwsRdsCluster(),
 			"aws_redshift_cluster":                          dataSourceAwsRedshiftCluster(),
@@ -637,6 +654,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_organizational_unit":                   resourceAwsOrganizationsOrganizationalUnit(),
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
+			"aws_qldb_ledger":                                         resourceAwsQLDBLedger(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
 			"aws_quicksight_user":                                     resourceAwsQuickSightUser(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
@@ -1092,6 +1110,18 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		endpoints := endpointsSetI.(map[string]interface{})
 		for _, endpointServiceName := range endpointServiceNames {
 			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tag_prefixes"); ok {
+		for _, ignoreTagPrefixRaw := range v.(*schema.Set).List() {
+			config.IgnoreTagPrefixes = append(config.IgnoreTagPrefixes, ignoreTagPrefixRaw.(string))
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok {
+		for _, ignoreTagRaw := range v.(*schema.Set).List() {
+			config.IgnoreTags = append(config.IgnoreTags, ignoreTagRaw.(string))
 		}
 	}
 

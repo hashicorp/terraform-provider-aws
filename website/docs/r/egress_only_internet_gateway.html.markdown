@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_egress_only_internet_gateway"
 description: |-
