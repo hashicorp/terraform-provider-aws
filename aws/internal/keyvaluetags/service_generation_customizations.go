@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/aws/aws-sdk-go/service/apigateway"
@@ -19,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
+	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -32,6 +34,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -42,6 +45,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -68,20 +72,24 @@ import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
+	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -92,6 +100,8 @@ func ServiceClientType(serviceName string) string {
 	var funcType reflect.Type
 
 	switch serviceName {
+	case "acm":
+		funcType = reflect.TypeOf(acm.New)
 	case "acmpca":
 		funcType = reflect.TypeOf(acmpca.New)
 	case "amplify":
@@ -118,6 +128,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(cloudwatch.New)
 	case "cloudwatchevents":
 		funcType = reflect.TypeOf(cloudwatchevents.New)
+	case "cloudwatchlogs":
+		funcType = reflect.TypeOf(cloudwatchlogs.New)
 	case "codecommit":
 		funcType = reflect.TypeOf(codecommit.New)
 	case "codedeploy":
@@ -144,6 +156,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(directconnect.New)
 	case "directoryservice":
 		funcType = reflect.TypeOf(directoryservice.New)
+	case "dlm":
+		funcType = reflect.TypeOf(dlm.New)
 	case "docdb":
 		funcType = reflect.TypeOf(docdb.New)
 	case "dynamodb":
@@ -164,6 +178,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(elasticbeanstalk.New)
 	case "elasticsearchservice":
 		funcType = reflect.TypeOf(elasticsearchservice.New)
+	case "elbv2":
+		funcType = reflect.TypeOf(elbv2.New)
 	case "emr":
 		funcType = reflect.TypeOf(emr.New)
 	case "firehose":
@@ -216,12 +232,16 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(organizations.New)
 	case "pinpoint":
 		funcType = reflect.TypeOf(pinpoint.New)
+	case "qldb":
+		funcType = reflect.TypeOf(qldb.New)
 	case "ram":
 		funcType = reflect.TypeOf(ram.New)
 	case "rds":
 		funcType = reflect.TypeOf(rds.New)
 	case "redshift":
 		funcType = reflect.TypeOf(redshift.New)
+	case "resourcegroups":
+		funcType = reflect.TypeOf(resourcegroups.New)
 	case "route53resolver":
 		funcType = reflect.TypeOf(route53resolver.New)
 	case "sagemaker":
@@ -234,6 +254,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(sfn.New)
 	case "sns":
 		funcType = reflect.TypeOf(sns.New)
+	case "sqs":
+		funcType = reflect.TypeOf(sqs.New)
 	case "ssm":
 		funcType = reflect.TypeOf(ssm.New)
 	case "storagegateway":
@@ -244,6 +266,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
 		funcType = reflect.TypeOf(waf.New)
+	case "wafregional":
+		funcType = reflect.TypeOf(wafregional.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
 	default:
@@ -251,4 +275,13 @@ func ServiceClientType(serviceName string) string {
 	}
 
 	return funcType.Out(0).String()
+}
+
+func ServiceTagPackage(serviceName string) string {
+	switch serviceName {
+	case "wafregional":
+		return "waf"
+	default:
+		return serviceName
+	}
 }

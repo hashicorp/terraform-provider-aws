@@ -25,7 +25,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
-	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -187,6 +186,16 @@ func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// DlmTags returns dlm service tags.
+func (tags KeyValueTags) DlmTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DlmKeyValueTags creates KeyValueTags from dlm service tags.
+func DlmKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // EksTags returns eks service tags.
 func (tags KeyValueTags) EksTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -314,6 +323,16 @@ func (tags KeyValueTags) PinpointTags() map[string]*string {
 
 // PinpointKeyValueTags creates KeyValueTags from pinpoint service tags.
 func PinpointKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// QldbTags returns qldb service tags.
+func (tags KeyValueTags) QldbTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// QldbKeyValueTags creates KeyValueTags from qldb service tags.
+func QldbKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -907,33 +926,6 @@ func (tags KeyValueTags) DirectoryserviceTags() []*directoryservice.Tag {
 
 // DirectoryserviceKeyValueTags creates KeyValueTags from directoryservice service tags.
 func DirectoryserviceKeyValueTags(tags []*directoryservice.Tag) KeyValueTags {
-	m := make(map[string]*string, len(tags))
-
-	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
-	}
-
-	return New(m)
-}
-
-// DlmTags returns dlm service tags.
-func (tags KeyValueTags) DlmTags() []*dlm.Tag {
-	result := make([]*dlm.Tag, 0, len(tags))
-
-	for k, v := range tags.Map() {
-		tag := &dlm.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v),
-		}
-
-		result = append(result, tag)
-	}
-
-	return result
-}
-
-// DlmKeyValueTags creates KeyValueTags from dlm service tags.
-func DlmKeyValueTags(tags []*dlm.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -2176,6 +2168,33 @@ func (tags KeyValueTags) WafTags() []*waf.Tag {
 
 // WafKeyValueTags creates KeyValueTags from waf service tags.
 func WafKeyValueTags(tags []*waf.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// WafregionalTags returns wafregional service tags.
+func (tags KeyValueTags) WafregionalTags() []*waf.Tag {
+	result := make([]*waf.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &waf.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// WafregionalKeyValueTags creates KeyValueTags from wafregional service tags.
+func WafregionalKeyValueTags(tags []*waf.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

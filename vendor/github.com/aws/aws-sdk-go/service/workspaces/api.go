@@ -1371,10 +1371,12 @@ func (c *WorkSpaces) DescribeWorkspaceBundlesPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeWorkspaceBundlesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeWorkspaceBundlesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1507,10 +1509,12 @@ func (c *WorkSpaces) DescribeWorkspaceDirectoriesPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeWorkspaceDirectoriesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeWorkspaceDirectoriesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1813,10 +1817,12 @@ func (c *WorkSpaces) DescribeWorkspacesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeWorkspacesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeWorkspacesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3907,7 +3913,16 @@ type DefaultWorkspaceCreationProperties struct {
 	// The organizational unit (OU) in the directory for the WorkSpace machine accounts.
 	DefaultOu *string `type:"string"`
 
-	// The public IP address to attach to all WorkSpaces that are created or rebuilt.
+	// Specifies whether to automatically assign a public IP address to WorkSpaces
+	// in this directory by default. If enabled, the public IP address allows outbound
+	// internet access from your WorkSpaces when you’re using an internet gateway
+	// in the Amazon VPC in which your WorkSpaces are located. If you're using a
+	// Network Address Translation (NAT) gateway for outbound internet access from
+	// your VPC, or if your WorkSpaces are in public subnets and you manually assign
+	// them Elastic IP addresses, you should disable this setting. This setting
+	// applies to new WorkSpaces that you launch or to existing WorkSpaces that
+	// you rebuild. For more information, see Configure a VPC for Amazon WorkSpaces
+	// (https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces-vpc.html).
 	EnableInternetAccess *bool `type:"boolean"`
 
 	// Specifies whether the directory is enabled for Amazon WorkDocs.
@@ -4791,7 +4806,7 @@ type DescribeWorkspaceSnapshotsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the snapshots that can be used to rebuild a WorkSpace.
-	// These snapshots include the root volume.
+	// These snapshots include the user volume.
 	RebuildSnapshots []*Snapshot `type:"list"`
 
 	// Information about the snapshots that can be used to restore a WorkSpace.
@@ -7152,7 +7167,7 @@ type WorkspaceProperties struct {
 	RunningMode *string `type:"string" enum:"RunningMode"`
 
 	// The time after a user logs off when WorkSpaces are automatically stopped.
-	// Configured in 60 minute intervals.
+	// Configured in 60-minute intervals.
 	RunningModeAutoStopTimeoutInMinutes *int64 `type:"integer"`
 
 	// The size of the user storage.

@@ -3842,10 +3842,12 @@ func (c *APIGateway) GetApiKeysPagesWithContext(ctx aws.Context, input *GetApiKe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetApiKeysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetApiKeysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4238,10 +4240,12 @@ func (c *APIGateway) GetBasePathMappingsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBasePathMappingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBasePathMappingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4461,10 +4465,12 @@ func (c *APIGateway) GetClientCertificatesPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetClientCertificatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetClientCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4692,10 +4698,12 @@ func (c *APIGateway) GetDeploymentsPagesWithContext(ctx aws.Context, input *GetD
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDeploymentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDeploymentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5252,10 +5260,12 @@ func (c *APIGateway) GetDomainNamesPagesWithContext(ctx aws.Context, input *GetD
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDomainNamesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDomainNamesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6162,10 +6172,12 @@ func (c *APIGateway) GetModelsPagesWithContext(ctx aws.Context, input *GetModels
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetModelsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetModelsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6558,10 +6570,12 @@ func (c *APIGateway) GetResourcesPagesWithContext(ctx aws.Context, input *GetRes
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6781,10 +6795,12 @@ func (c *APIGateway) GetRestApisPagesWithContext(ctx aws.Context, input *GetRest
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetRestApisOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetRestApisOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7430,10 +7446,12 @@ func (c *APIGateway) GetUsagePagesWithContext(ctx aws.Context, input *GetUsageIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*Usage), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*Usage), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7748,10 +7766,12 @@ func (c *APIGateway) GetUsagePlanKeysPagesWithContext(ctx aws.Context, input *Ge
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUsagePlanKeysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUsagePlanKeysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7895,10 +7915,12 @@ func (c *APIGateway) GetUsagePlansPagesWithContext(ctx aws.Context, input *GetUs
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUsagePlansOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUsagePlansOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8118,10 +8140,12 @@ func (c *APIGateway) GetVpcLinksPagesWithContext(ctx aws.Context, input *GetVpcL
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetVpcLinksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetVpcLinksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

@@ -787,10 +787,12 @@ func (c *RAM) GetResourcePoliciesPagesWithContext(ctx aws.Context, input *GetRes
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetResourcePoliciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetResourcePoliciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -940,10 +942,12 @@ func (c *RAM) GetResourceShareAssociationsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetResourceShareAssociationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetResourceShareAssociationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1093,10 +1097,12 @@ func (c *RAM) GetResourceShareInvitationsPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetResourceShareInvitationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetResourceShareInvitationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1244,10 +1250,12 @@ func (c *RAM) GetResourceSharesPagesWithContext(ctx aws.Context, input *GetResou
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetResourceSharesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetResourceSharesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1404,10 +1412,12 @@ func (c *RAM) ListPendingInvitationResourcesPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPendingInvitationResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPendingInvitationResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1555,10 +1565,12 @@ func (c *RAM) ListPrincipalsPagesWithContext(ctx aws.Context, input *ListPrincip
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPrincipalsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPrincipalsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1709,10 +1721,12 @@ func (c *RAM) ListResourcesPagesWithContext(ctx aws.Context, input *ListResource
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

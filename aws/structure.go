@@ -1622,25 +1622,6 @@ func flattenAllCloudFormationParameters(cfParams []*cloudformation.Parameter) ma
 	return params
 }
 
-func expandCloudFormationTags(tags map[string]interface{}) []*cloudformation.Tag {
-	var cfTags []*cloudformation.Tag
-	for k, v := range tags {
-		cfTags = append(cfTags, &cloudformation.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v.(string)),
-		})
-	}
-	return cfTags
-}
-
-func flattenCloudFormationTags(cfTags []*cloudformation.Tag) map[string]string {
-	tags := make(map[string]string, len(cfTags))
-	for _, t := range cfTags {
-		tags[*t.Key] = *t.Value
-	}
-	return tags
-}
-
 func flattenCloudFormationOutputs(cfOutputs []*cloudformation.Output) map[string]string {
 	outputs := make(map[string]string, len(cfOutputs))
 	for _, o := range cfOutputs {

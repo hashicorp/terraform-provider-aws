@@ -1,4 +1,5 @@
 ---
+subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_graphql_api"
 description: |-
