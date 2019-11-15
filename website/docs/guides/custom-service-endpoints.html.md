@@ -1,4 +1,5 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Custom Service Endpoint Configuration"
 description: |-

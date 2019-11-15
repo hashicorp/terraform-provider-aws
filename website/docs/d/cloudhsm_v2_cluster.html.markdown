@@ -1,4 +1,5 @@
 ---
+subcategory: "CloudHSM v2"
 layout: "aws"
 page_title: "AWS: aws_cloudhsm_v2_cluster"
 description: |-

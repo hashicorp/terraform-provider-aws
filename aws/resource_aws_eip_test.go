@@ -912,6 +912,10 @@ resource "aws_eip" "test" {
 `
 
 const testAccAWSEIPNetworkInterfaceConfig = `
+data "aws_availability_zones" "available" {
+	state = "available"
+}
+
 resource "aws_vpc" "test" {
 	cidr_block = "10.0.0.0/24"
 	tags = {
@@ -925,7 +929,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.test.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.0.0/24"
   tags = {
 	Name = "tf-acc-eip-network-interface"
@@ -946,6 +950,10 @@ resource "aws_eip" "test" {
 `
 
 const testAccAWSEIPMultiNetworkInterfaceConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+  
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
 	tags = {
@@ -959,7 +967,7 @@ resource "aws_internet_gateway" "test" {
 
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block        = "10.0.0.0/24"
   tags = {
 	Name = "tf-acc-eip-multi-network-interface"
@@ -1011,6 +1019,10 @@ data "aws_ami" "amzn-ami-minimal-pv" {
   }
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_eip" "test" {
   count    = "${var.server_count}"
   instance = "${element(aws_instance.example.*.id, count.index)}"
@@ -1023,8 +1035,8 @@ resource "aws_instance" "example" {
   ami                         = "${data.aws_ami.amzn-ami-minimal-pv.id}"
   instance_type               = "m1.small"
   associate_public_ip_address = true
-  subnet_id                   = "${aws_subnet.us-east-1b-public.id}"
-  availability_zone           = "${aws_subnet.us-east-1b-public.availability_zone}"
+  subnet_id                   = "${aws_subnet.us-east-1-0-public.id}"
+  availability_zone           = "${aws_subnet.us-east-1-0-public.availability_zone}"
 
   tags = {
     Name = "testAccAWSEIP_classic_disassociate"
@@ -1046,11 +1058,11 @@ resource "aws_internet_gateway" "example" {
   vpc_id = "${aws_vpc.example.id}"
 }
 
-resource "aws_subnet" "us-east-1b-public" {
+resource "aws_subnet" "us-east-1-0-public" {
   vpc_id = "${aws_vpc.example.id}"
 
   cidr_block        = "10.0.0.0/24"
-  availability_zone = "us-east-1b"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
     Name = "tf-acc-eip-classic-disassociate"
   }
@@ -1065,8 +1077,8 @@ resource "aws_route_table" "us-east-1-public" {
   }
 }
 
-resource "aws_route_table_association" "us-east-1b-public" {
-  subnet_id      = "${aws_subnet.us-east-1b-public.id}"
+resource "aws_route_table_association" "us-east-1-0-public" {
+  subnet_id      = "${aws_subnet.us-east-1-0-public.id}"
   route_table_id = "${aws_route_table.us-east-1-public.id}"
 }
 `, rootDeviceType)
