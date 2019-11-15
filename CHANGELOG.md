@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * resource/aws_waf_geo_match_set: Support resource import [GH-10480]
 * resource/aws_waf_regex_match_set: Support resource import [GH-10481]
 * resource/aws_waf_regex_pattern_set: Support resource import [GH-10482]
+* resource/aws_waf_size_constraint_set: Support resource import [GH-10484]
 * resource/aws_wafregional_web_acl: Add `tags` argument [GH-10889]
 
 BUG FIXES:
