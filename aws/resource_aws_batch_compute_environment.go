@@ -39,6 +39,11 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"allocation_strategy": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 						"bid_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -230,6 +235,9 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 			Type:             aws.String(computeResourceType),
 		}
 
+		if v, ok := computeResource["allocation_strategy"]; ok {
+			input.ComputeResources.AllocationStrategy = aws.String(v.(string))
+		}
 		if v, ok := computeResource["bid_percentage"]; ok {
 			input.ComputeResources.BidPercentage = aws.Int64(int64(v.(int)))
 		}
