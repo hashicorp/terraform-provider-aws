@@ -1963,7 +1963,8 @@ func (c *EMR) ListStepsRequest(input *ListStepsInput) (req *request.Request, out
 // ListSteps API operation for Amazon Elastic MapReduce.
 //
 // Provides a list of steps for the cluster in reverse order unless you specify
-// stepIds with the request.
+// stepIds with the request of filter by StepStates. You can specify a maximum
+// of ten stepIDs.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2799,14 +2800,15 @@ func (c *EMR) SetVisibleToAllUsersRequest(input *SetVisibleToAllUsersInput) (req
 
 // SetVisibleToAllUsers API operation for Amazon Elastic MapReduce.
 //
-// This member will be deprecated.
-//
-// Sets whether all AWS Identity and Access Management (IAM) users under your
-// account can access the specified clusters (job flows). This action works
-// on running clusters. You can also set the visibility of a cluster when you
-// launch it using the VisibleToAllUsers parameter of RunJobFlow. The SetVisibleToAllUsers
-// action can be called only by an IAM user who created the cluster or the AWS
-// account that owns the cluster.
+// Sets the Cluster$VisibleToAllUsers value, which determines whether the cluster
+// is visible to all IAM users of the AWS account associated with the cluster.
+// Only the IAM user who created the cluster or the AWS account root user can
+// call this action. The default value, true, indicates that all IAM users in
+// the AWS account can perform cluster actions if they have the proper IAM policy
+// permissions. If set to false, only the IAM user that created the cluster
+// can perform actions. This action works on running clusters. You can override
+// the default true setting when you create a cluster by using the VisibleToAllUsers
+// parameter with RunJobFlow.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2992,6 +2994,9 @@ func (s *AddInstanceFleetInput) SetInstanceFleet(v *InstanceFleetConfig) *AddIns
 type AddInstanceFleetOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// The unique identifier of the cluster.
 	ClusterId *string `type:"string"`
 
@@ -3007,6 +3012,12 @@ func (s AddInstanceFleetOutput) String() string {
 // GoString returns the string representation
 func (s AddInstanceFleetOutput) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *AddInstanceFleetOutput) SetClusterArn(v string) *AddInstanceFleetOutput {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetClusterId sets the ClusterId field's value.
@@ -3088,6 +3099,9 @@ func (s *AddInstanceGroupsInput) SetJobFlowId(v string) *AddInstanceGroupsInput 
 type AddInstanceGroupsOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// Instance group IDs of the newly created instance groups.
 	InstanceGroupIds []*string `type:"list"`
 
@@ -3103,6 +3117,12 @@ func (s AddInstanceGroupsOutput) String() string {
 // GoString returns the string representation
 func (s AddInstanceGroupsOutput) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *AddInstanceGroupsOutput) SetClusterArn(v string) *AddInstanceGroupsOutput {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetInstanceGroupIds sets the InstanceGroupIds field's value.
@@ -3839,8 +3859,8 @@ type CloudWatchAlarmDefinition struct {
 	// A CloudWatch metric dimension.
 	Dimensions []*MetricDimension `type:"list"`
 
-	// The number of periods, expressed in seconds using Period, during which the
-	// alarm condition must exist before the alarm triggers automatic scaling activity.
+	// The number of periods, in five-minute increments, during which the alarm
+	// condition must exist before the alarm triggers automatic scaling activity.
 	// The default value is 1.
 	EvaluationPeriods *int64 `type:"integer"`
 
@@ -3975,6 +3995,9 @@ type Cluster struct {
 	// Specifies whether the cluster should terminate after completing all steps.
 	AutoTerminate *bool `type:"boolean"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// Applies only to Amazon EMR releases 4.x and later. The list of Configurations
 	// supplied to the EMR cluster.
 	Configurations []*Configuration `type:"list"`
@@ -4080,14 +4103,14 @@ type Cluster struct {
 	// of a cluster error.
 	TerminationProtected *bool `type:"boolean"`
 
-	// This member will be deprecated.
-	//
 	// Indicates whether the cluster is visible to all IAM users of the AWS account
-	// associated with the cluster. If this value is set to true, all IAM users
-	// of that AWS account can view and manage the cluster if they have the proper
-	// policy permissions set. If this value is false, only the IAM user that created
-	// the cluster can view and manage it. This value can be changed using the SetVisibleToAllUsers
-	// action.
+	// associated with the cluster. The default value, true, indicates that all
+	// IAM users in the AWS account can perform cluster actions if they have the
+	// proper IAM policy permissions. If this value is false, only the IAM user
+	// that created the cluster can perform actions. This value can be changed on
+	// a running cluster by using the SetVisibleToAllUsers action. You can override
+	// the default value of true when you create a cluster by using the VisibleToAllUsers
+	// parameter of the RunJobFlow action.
 	VisibleToAllUsers *bool `type:"boolean"`
 }
 
@@ -4116,6 +4139,12 @@ func (s *Cluster) SetAutoScalingRole(v string) *Cluster {
 // SetAutoTerminate sets the AutoTerminate field's value.
 func (s *Cluster) SetAutoTerminate(v bool) *Cluster {
 	s.AutoTerminate = &v
+	return s
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *Cluster) SetClusterArn(v string) *Cluster {
+	s.ClusterArn = &v
 	return s
 }
 
@@ -4331,6 +4360,9 @@ func (s *ClusterStatus) SetTimeline(v *ClusterTimeline) *ClusterStatus {
 type ClusterSummary struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// The unique identifier for the cluster.
 	Id *string `type:"string"`
 
@@ -4357,6 +4389,12 @@ func (s ClusterSummary) String() string {
 // GoString returns the string representation
 func (s ClusterSummary) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *ClusterSummary) SetClusterArn(v string) *ClusterSummary {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetId sets the Id field's value.
@@ -6180,12 +6218,9 @@ type InstanceGroup struct {
 	// of a CloudWatch metric. See PutAutoScalingPolicy.
 	AutoScalingPolicy *AutoScalingPolicyDescription `type:"structure"`
 
-	// The maximum Spot price your are willing to pay for EC2 instances.
-	//
-	// An optional, nullable field that applies if the MarketType for the instance
-	// group is specified as SPOT. Specify the maximum spot price in USD. If the
-	// value is NULL and SPOT is specified, the maximum Spot price is set equal
-	// to the On-Demand price.
+	// The bid price for each EC2 Spot instance type as defined by InstanceType.
+	// Expressed in USD. If neither BidPrice nor BidPriceAsPercentageOfOnDemandPrice
+	// is provided, BidPriceAsPercentageOfOnDemandPrice defaults to 100%.
 	BidPrice *string `type:"string"`
 
 	//
@@ -6367,12 +6402,9 @@ type InstanceGroupConfig struct {
 	// of a CloudWatch metric. See PutAutoScalingPolicy.
 	AutoScalingPolicy *AutoScalingPolicy `type:"structure"`
 
-	// The maximum Spot price your are willing to pay for EC2 instances.
-	//
-	// An optional, nullable field that applies if the MarketType for the instance
-	// group is specified as SPOT. Specify the maximum spot price in USD. If the
-	// value is NULL and SPOT is specified, the maximum Spot price is set equal
-	// to the On-Demand price.
+	// The bid price for each EC2 Spot instance type as defined by InstanceType.
+	// Expressed in USD. If neither BidPrice nor BidPriceAsPercentageOfOnDemandPrice
+	// is provided, BidPriceAsPercentageOfOnDemandPrice defaults to 100%.
 	BidPrice *string `type:"string"`
 
 	//
@@ -6509,11 +6541,9 @@ func (s *InstanceGroupConfig) SetName(v string) *InstanceGroupConfig {
 type InstanceGroupDetail struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum Spot price your are willing to pay for EC2 instances.
-	//
-	// An optional, nullable field that applies if the MarketType for the instance
-	// group is specified as SPOT. Specified in USD. If the value is NULL and SPOT
-	// is specified, the maximum Spot price is set equal to the On-Demand price.
+	// The bid price for each EC2 Spot instance type as defined by InstanceType.
+	// Expressed in USD. If neither BidPrice nor BidPriceAsPercentageOfOnDemandPrice
+	// is provided, BidPriceAsPercentageOfOnDemandPrice defaults to 100%.
 	BidPrice *string `type:"string"`
 
 	// The date/time the instance group was created.
@@ -7288,14 +7318,14 @@ type JobFlowDetail struct {
 	// is empty.
 	SupportedProducts []*string `type:"list"`
 
-	// This member will be deprecated.
-	//
-	// Specifies whether the cluster is visible to all IAM users of the AWS account
-	// associated with the cluster. If this value is set to true, all IAM users
-	// of that AWS account can view and (if they have the proper policy permissions
-	// set) manage the cluster. If it is set to false, only the IAM user that created
-	// the cluster can view and manage it. This value can be changed using the SetVisibleToAllUsers
-	// action.
+	// Indicates whether the cluster is visible to all IAM users of the AWS account
+	// associated with the cluster. The default value, true, indicates that all
+	// IAM users in the AWS account can perform cluster actions if they have the
+	// proper IAM policy permissions. If this value is false, only the IAM user
+	// that created the cluster can perform actions. This value can be changed on
+	// a running cluster by using the SetVisibleToAllUsers action. You can override
+	// the default value of true when you create a cluster by using the VisibleToAllUsers
+	// parameter of the RunJobFlow action.
 	VisibleToAllUsers *bool `type:"boolean"`
 }
 
@@ -8498,7 +8528,9 @@ type ListStepsInput struct {
 	// The pagination token that indicates the next set of results to retrieve.
 	Marker *string `type:"string"`
 
-	// The filter to limit the step list based on the identifier of the steps.
+	// The filter to limit the step list based on the identifier of the steps. You
+	// can specify a maximum of ten Step IDs. The character constraint applies to
+	// the overall length of the array.
 	StepIds []*string `type:"list"`
 
 	// The filter to limit the step list based on certain states.
@@ -8931,6 +8963,9 @@ type PutAutoScalingPolicyOutput struct {
 	// The automatic scaling policy definition.
 	AutoScalingPolicy *AutoScalingPolicyDescription `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// Specifies the ID of a cluster. The instance group to which the automatic
 	// scaling policy is applied is within this cluster.
 	ClusterId *string `type:"string"`
@@ -8952,6 +8987,12 @@ func (s PutAutoScalingPolicyOutput) GoString() string {
 // SetAutoScalingPolicy sets the AutoScalingPolicy field's value.
 func (s *PutAutoScalingPolicyOutput) SetAutoScalingPolicy(v *AutoScalingPolicyDescription) *PutAutoScalingPolicyOutput {
 	s.AutoScalingPolicy = v
+	return s
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *PutAutoScalingPolicyOutput) SetClusterArn(v string) *PutAutoScalingPolicyOutput {
+	s.ClusterArn = &v
 	return s
 }
 
@@ -9327,13 +9368,10 @@ type RunJobFlowInput struct {
 	// A list of tags to associate with a cluster and propagate to Amazon EC2 instances.
 	Tags []*Tag `type:"list"`
 
-	// This member will be deprecated.
-	//
-	// Whether the cluster is visible to all IAM users of the AWS account associated
-	// with the cluster. If this value is set to true, all IAM users of that AWS
-	// account can view and (if they have the proper policy permissions set) manage
-	// the cluster. If it is set to false, only the IAM user that created the cluster
-	// can view and manage it.
+	// A value of true indicates that all IAM users in the AWS account can perform
+	// cluster actions if they have the proper IAM policy permissions. This is the
+	// default. A value of false indicates that only the IAM user who created the
+	// cluster can perform actions.
 	VisibleToAllUsers *bool `type:"boolean"`
 }
 
@@ -9535,6 +9573,9 @@ func (s *RunJobFlowInput) SetVisibleToAllUsers(v bool) *RunJobFlowInput {
 type RunJobFlowOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name of the cluster.
+	ClusterArn *string `min:"20" type:"string"`
+
 	// An unique identifier for the job flow.
 	JobFlowId *string `type:"string"`
 }
@@ -9547,6 +9588,12 @@ func (s RunJobFlowOutput) String() string {
 // GoString returns the string representation
 func (s RunJobFlowOutput) GoString() string {
 	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *RunJobFlowOutput) SetClusterArn(v string) *RunJobFlowOutput {
+	s.ClusterArn = &v
+	return s
 }
 
 // SetJobFlowId sets the JobFlowId field's value.
@@ -9958,24 +10005,19 @@ func (s SetTerminationProtectionOutput) GoString() string {
 	return s.String()
 }
 
-// This member will be deprecated.
-//
 // The input to the SetVisibleToAllUsers action.
 type SetVisibleToAllUsersInput struct {
 	_ struct{} `type:"structure"`
 
-	// Identifiers of the job flows to receive the new visibility setting.
+	// The unique identifier of the job flow (cluster).
 	//
 	// JobFlowIds is a required field
 	JobFlowIds []*string `type:"list" required:"true"`
 
-	// This member will be deprecated.
-	//
-	// Whether the specified clusters are visible to all IAM users of the AWS account
-	// associated with the cluster. If this value is set to True, all IAM users
-	// of that AWS account can view and, if they have the proper IAM policy permissions
-	// set, manage the clusters. If it is set to False, only the IAM user that created
-	// a cluster can view and manage it.
+	// A value of true indicates that all IAM users in the AWS account can perform
+	// cluster actions if they have the proper IAM policy permissions. This is the
+	// default. A value of false indicates that only the IAM user who created the
+	// cluster can perform actions.
 	//
 	// VisibleToAllUsers is a required field
 	VisibleToAllUsers *bool `type:"boolean" required:"true"`
