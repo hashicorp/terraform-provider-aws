@@ -21,9 +21,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/internal/registry"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/registry/regsrc"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/registry/response"
-	"github.com/hashicorp/terraform-plugin-sdk/internal/svchost/disco"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/tfdiags"
 	tfversion "github.com/hashicorp/terraform-plugin-sdk/internal/version"
+	"github.com/hashicorp/terraform-svchost/disco"
 	"github.com/mitchellh/cli"
 )
 
