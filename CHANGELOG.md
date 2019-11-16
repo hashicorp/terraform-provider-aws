@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * resource/aws_wafregional_rule: Add `tags` argument and `arn` attribute [GH-10895]
 * resource/aws_wafregional_web_acl: Add `tags` argument [GH-10889]
 * resource/aws_wafregional_web_acl_association: Support resource import [GH-10538]
+* resource/aws_cloudtrail: support Tag on create [GH-10818]
 
 BUG FIXES:
 
