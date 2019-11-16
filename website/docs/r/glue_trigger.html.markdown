@@ -75,7 +75,8 @@ The following arguments are supported:
 ### actions Argument Reference
 
 * `arguments` - (Optional) Arguments to be passed to the job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes.
-* `job_name` - (Required) The name of a job to be executed.
+* `crawler_name` - (Optional) The name of the crawler to be executed. Conflicts with `job_name`.
+* `job_name` - (Optional) The name of a job to be executed. Conflicts with `crawler_name`.
 * `timeout` - (Optional) The job run timeout in minutes. It overrides the timeout value of the job.
 
 ### predicate Argument Reference

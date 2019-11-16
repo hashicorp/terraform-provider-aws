@@ -37,9 +37,15 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
+						"crawler_name": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"actions.0.job_name"},
+						},
 						"job_name": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"actions.0.crawler_name"},
 						},
 						"timeout": {
 							Type:     schema.TypeInt,
@@ -375,8 +381,14 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 
-		action := &glue.Action{
-			JobName: aws.String(m["job_name"].(string)),
+		action := &glue.Action{}
+
+		if crawlerName, ok := m["crawler_name"]; ok && crawlerName != "" {
+			action.CrawlerName = aws.String(crawlerName.(string))
+		}
+
+		if jobName, ok := m["job_name"]; ok && jobName != "" {
+			action.JobName = aws.String(jobName.(string))
 		}
 
 		argumentsMap := make(map[string]string)
@@ -432,9 +444,10 @@ func flattenGlueActions(actions []*glue.Action) []interface{} {
 
 	for _, action := range actions {
 		m := map[string]interface{}{
-			"arguments": aws.StringValueMap(action.Arguments),
-			"job_name":  aws.StringValue(action.JobName),
-			"timeout":   int(aws.Int64Value(action.Timeout)),
+			"arguments":    aws.StringValueMap(action.Arguments),
+			"crawler_name": aws.StringValue(action.CrawlerName),
+			"job_name":     aws.StringValue(action.JobName),
+			"timeout":      int(aws.Int64Value(action.Timeout)),
 		}
 		l = append(l, m)
 	}
