@@ -99,6 +99,7 @@ func policyDescriptionAttributes(d *schema.ResourceData, policy *applicationauto
 	d.Set("arn", policy.PolicyARN)
 	d.Set("policy_type", policy.PolicyType)
 	d.Set("resource_id", policy.ResourceId)
+	d.Set("service_namespace", policy.ServiceNamespace)
 	d.Set("scalable_dimension", policy.ScalableDimension)
 	return nil
 }
