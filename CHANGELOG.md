@@ -1,6 +1,10 @@
 ## 2.39.0 (Unreleased)
 ## 2.38.0 (November 18, 2019)
 
+FEATURES:
+
+* **New Resource:** `aws_eks_node_group` ([#10916](https://github.com/terraform-providers/terraform-provider-aws/issues/10916))
+
 ## 2.37.0 (November 18, 2019)
 
 ENHANCEMENTS:
