@@ -3867,10 +3867,12 @@ func (c *SageMaker) ListCompilationJobsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCompilationJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCompilationJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3997,10 +3999,12 @@ func (c *SageMaker) ListEndpointConfigsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEndpointConfigsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEndpointConfigsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4127,10 +4131,12 @@ func (c *SageMaker) ListEndpointsPagesWithContext(ctx aws.Context, input *ListEn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4258,10 +4264,12 @@ func (c *SageMaker) ListHyperParameterTuningJobsPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListHyperParameterTuningJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListHyperParameterTuningJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4388,10 +4396,12 @@ func (c *SageMaker) ListLabelingJobsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLabelingJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLabelingJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4523,10 +4533,12 @@ func (c *SageMaker) ListLabelingJobsForWorkteamPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLabelingJobsForWorkteamOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLabelingJobsForWorkteamOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4728,10 +4740,12 @@ func (c *SageMaker) ListModelsPagesWithContext(ctx aws.Context, input *ListModel
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListModelsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListModelsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4859,10 +4873,12 @@ func (c *SageMaker) ListNotebookInstanceLifecycleConfigsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNotebookInstanceLifecycleConfigsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNotebookInstanceLifecycleConfigsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4990,10 +5006,12 @@ func (c *SageMaker) ListNotebookInstancesPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNotebookInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNotebookInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5122,10 +5140,12 @@ func (c *SageMaker) ListSubscribedWorkteamsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSubscribedWorkteamsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSubscribedWorkteamsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5252,10 +5272,12 @@ func (c *SageMaker) ListTagsPagesWithContext(ctx aws.Context, input *ListTagsInp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5382,10 +5404,12 @@ func (c *SageMaker) ListTrainingJobsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTrainingJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTrainingJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5518,10 +5542,12 @@ func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobPagesWithContext(c
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTrainingJobsForHyperParameterTuningJobOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTrainingJobsForHyperParameterTuningJobOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5648,10 +5674,12 @@ func (c *SageMaker) ListTransformJobsPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTransformJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTransformJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5780,10 +5808,12 @@ func (c *SageMaker) ListWorkteamsPagesWithContext(ctx aws.Context, input *ListWo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkteamsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkteamsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5990,10 +6020,12 @@ func (c *SageMaker) SearchPagesWithContext(ctx aws.Context, input *SearchInput, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*SearchOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*SearchOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
