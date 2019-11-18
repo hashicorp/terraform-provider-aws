@@ -1,4 +1,4 @@
-## 2.38.0 (Unreleased)
+## 2.38.0 (November 18, 2019)
 
 ## 2.37.0 (November 18, 2019)
 
