@@ -1,4 +1,10 @@
 ## 2.39.0 (Unreleased)
+
+BUGS:
+
+* Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `custom_cookbooks_source` property for `aws_opsworks_stack` [GH-10175]
+* Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `app_source` property for `aws_opsworks_application` [GH-10175]
+
 ## 2.38.0 (November 18, 2019)
 
 FEATURES:
