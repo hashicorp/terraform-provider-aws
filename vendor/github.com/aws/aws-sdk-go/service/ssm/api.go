@@ -2434,10 +2434,12 @@ func (c *SSM) DescribeActivationsPagesWithContext(ctx aws.Context, input *Descri
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeActivationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeActivationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3597,10 +3599,12 @@ func (c *SSM) DescribeInstanceInformationPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeInstanceInformationOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInstanceInformationOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4866,10 +4870,12 @@ func (c *SSM) DescribeParametersPagesWithContext(ctx aws.Context, input *Describ
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeParametersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeParametersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6865,10 +6871,12 @@ func (c *SSM) GetParameterHistoryPagesWithContext(ctx aws.Context, input *GetPar
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetParameterHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetParameterHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7005,9 +7013,7 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 
 // GetParametersByPath API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieve parameters in a specific hierarchy. For more information, see Working
-// with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html)
-// in the AWS Systems Manager User Guide.
+// Retrieve information about one or more parameters in a specific hierarchy.
 //
 // Request results are returned on a best-effort basis. If you specify MaxResults
 // in the request, the response includes information up to the limit specified.
@@ -7016,8 +7022,6 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 // the results, it stops the operation and returns the matching values up to
 // that point and a NextToken. You can specify the NextToken in a subsequent
 // call to get the next set of results.
-//
-// This API action doesn't support filtering by tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7111,10 +7115,12 @@ func (c *SSM) GetParametersByPathPagesWithContext(ctx aws.Context, input *GetPar
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetParametersByPathOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetParametersByPathOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7722,10 +7728,12 @@ func (c *SSM) ListAssociationsPagesWithContext(ctx aws.Context, input *ListAssoc
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssociationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssociationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7881,10 +7889,12 @@ func (c *SSM) ListCommandInvocationsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCommandInvocationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCommandInvocationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8036,10 +8046,12 @@ func (c *SSM) ListCommandsPagesWithContext(ctx aws.Context, input *ListCommandsI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCommandsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCommandsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8447,10 +8459,12 @@ func (c *SSM) ListDocumentsPagesWithContext(ctx aws.Context, input *ListDocument
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDocumentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDocumentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -13071,16 +13085,21 @@ func (s *AttachmentInformation) SetName(v string) *AttachmentInformation {
 	return s
 }
 
-// A key and value pair that identifies the location of an attachment to a document.
+// Identifying information about a document attachment, including the file name
+// and a key-value pair that identifies the location of an attachment to a document.
 type AttachmentsSource struct {
 	_ struct{} `type:"structure"`
 
-	// The key of a key and value pair that identifies the location of an attachment
+	// The key of a key-value pair that identifies the location of an attachment
 	// to a document.
 	Key *string `type:"string" enum:"AttachmentsSourceKey"`
 
-	// The URL of the location of a document attachment, such as the URL of an Amazon
-	// S3 bucket.
+	// The name of the document attachment file.
+	Name *string `type:"string"`
+
+	// The value of a key-value pair that identifies the location of an attachment
+	// to a document. The format is the URL of the location of a document attachment,
+	// such as the URL of an Amazon S3 bucket.
 	Values []*string `min:"1" type:"list"`
 }
 
@@ -13110,6 +13129,12 @@ func (s *AttachmentsSource) Validate() error {
 // SetKey sets the Key field's value.
 func (s *AttachmentsSource) SetKey(v string) *AttachmentsSource {
 	s.Key = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *AttachmentsSource) SetName(v string) *AttachmentsSource {
+	s.Name = &v
 	return s
 }
 
@@ -20454,7 +20479,7 @@ func (s *DescribeOpsItemsOutput) SetOpsItemSummaries(v []*OpsItemSummary) *Descr
 type DescribeParametersInput struct {
 	_ struct{} `type:"structure"`
 
-	// One or more filters. Use a filter to return a more specific list of results.
+	// This data type is deprecated. Instead, use ParameterFilters.
 	Filters []*ParametersFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -24253,8 +24278,6 @@ type GetParametersByPathInput struct {
 	NextToken *string `type:"string"`
 
 	// Filters to limit the request results.
-	//
-	// You can't filter using the parameter name.
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/)
@@ -26696,7 +26719,7 @@ type ListCommandInvocationsInput struct {
 	Details *bool `type:"boolean"`
 
 	// (Optional) One or more filters. Use a filter to return a more specific list
-	// of results.
+	// of results. Note that the DocumentName filter is not supported for ListCommandInvocations.
 	Filters []*CommandFilter `min:"1" type:"list"`
 
 	// (Optional) The command execution details for a specific instance ID.
@@ -30284,9 +30307,19 @@ func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
 
 // One or more filters. Use a filter to return a more specific list of results.
 //
-// The Name and Tier filter keys can't be used with the GetParametersByPath
-// API action. Also, the Label filter key can't be used with the DescribeParameters
-// API action.
+// The ParameterStringFilter object is used by the DescribeParameters and GetParametersByPath
+// API actions. However, not all of the pattern values listed for Key can be
+// used with both actions.
+//
+// For DescribeActions, all of the listed patterns are valid, with the exception
+// of Label.
+//
+// For GetParametersByPath, the following patterns listed for Key are not valid:
+// Name, Path, and Tier.
+//
+// For examples of CLI commands demonstrating valid parameter filter constructions,
+// see Searching for Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
+// in the AWS Systems Manager User Guide.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -30295,8 +30328,14 @@ type ParameterStringFilter struct {
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
-	// Valid options are Equals and BeginsWith. For Path filter, valid options are
-	// Recursive and OneLevel.
+	// For all filters used with DescribeParameters, valid options include Equals
+	// and BeginsWith. The Name filter additionally supports the Contains option.
+	// (Exception: For filters using the key Path, valid options include Recursive
+	// and OneLevel.)
+	//
+	// For filters used with GetParametersByPath, valid options include Equals and
+	// BeginsWith. (Exception: For filters using the key Label, the only valid option
+	// is Equals.)
 	Option *string `min:"1" type:"string"`
 
 	// The value you want to search for.
@@ -31373,7 +31412,7 @@ func (s PutComplianceItemsOutput) GoString() string {
 type PutInventoryInput struct {
 	_ struct{} `type:"structure"`
 
-	// One or more instance IDs where you want to add or update inventory items.
+	// An instance ID where you want to add or update inventory items.
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
@@ -37091,6 +37130,9 @@ const (
 const (
 	// AttachmentsSourceKeySourceUrl is a AttachmentsSourceKey enum value
 	AttachmentsSourceKeySourceUrl = "SourceUrl"
+
+	// AttachmentsSourceKeyS3fileUrl is a AttachmentsSourceKey enum value
+	AttachmentsSourceKeyS3fileUrl = "S3FileUrl"
 )
 
 const (

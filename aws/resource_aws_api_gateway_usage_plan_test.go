@@ -12,9 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSAPIGatewayUsagePlan_importBasic(t *testing.T) {
-	resourceName := "aws_api_gateway_usage_plan.main"
-	rName := acctest.RandString(10)
+func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
+	var conf apigateway.UsagePlan
+	name := acctest.RandString(10)
+	updatedName := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,49 +24,31 @@ func TestAccAWSAPIGatewayUsagePlan_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
+				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
-	var conf apigateway.UsagePlan
-	name := acctest.RandString(10)
-	updatedName := acctest.RandString(10)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", ""),
-				),
-			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicUpdatedConfig(updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", updatedName),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", ""),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 		},
@@ -74,6 +58,7 @@ func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 	var conf apigateway.UsagePlan
 	name := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -83,35 +68,40 @@ func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", ""),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanDescriptionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", "This is a description"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is a description"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanDescriptionUpdatedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", "This is a new description"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is a new description"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanDescriptionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", "This is a description"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is a description"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "description", ""),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 		},
@@ -121,6 +111,7 @@ func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
 	var conf apigateway.UsagePlan
 	name := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -130,35 +121,40 @@ func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "product_code", ""),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "product_code", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanProductCodeConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "product_code", "MYCODE"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "product_code", "MYCODE"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanProductCodeUpdatedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "product_code", "MYCODE2"),
+					resource.TestCheckResourceAttr(resourceName, "product_code", "MYCODE2"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanProductCodeConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "product_code", "MYCODE"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "product_code", "MYCODE"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "product_code", ""),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "product_code", ""),
 				),
 			},
 		},
@@ -168,6 +164,7 @@ func TestAccAWSAPIGatewayUsagePlan_productCode(t *testing.T) {
 func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 	var conf apigateway.UsagePlan
 	name := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -177,35 +174,40 @@ func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_usage_plan.main", "throttle_settings"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "throttle_settings"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanThrottlingConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "throttle_settings.4173790118.burst_limit", "2"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "throttle_settings.4173790118.rate_limit", "5"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.4173790118.burst_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.4173790118.rate_limit", "5"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanThrottlingModifiedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "throttle_settings.1779463053.burst_limit", "3"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "throttle_settings.1779463053.rate_limit", "6"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.1779463053.burst_limit", "3"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.1779463053.rate_limit", "6"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_usage_plan.main", "throttle_settings"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "throttle_settings"),
 				),
 			},
 		},
@@ -216,6 +218,7 @@ func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	var conf apigateway.UsagePlan
 	name := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -225,9 +228,14 @@ func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 			{
 				Config: testAccAWSApiGatewayUsagePlanThrottlingConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "throttle_settings.4173790118.rate_limit", "5"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.4173790118.rate_limit", "5"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -236,6 +244,7 @@ func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 	var conf apigateway.UsagePlan
 	name := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -245,37 +254,42 @@ func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "quota_settings"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanQuotaConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings.1956747625.limit", "100"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings.1956747625.offset", "6"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings.1956747625.period", "WEEK"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.1956747625.limit", "100"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.1956747625.offset", "6"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.1956747625.period", "WEEK"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanQuotaModifiedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings.3909168194.limit", "200"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings.3909168194.offset", "20"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings.3909168194.period", "MONTH"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.3909168194.limit", "200"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.3909168194.offset", "20"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.3909168194.period", "MONTH"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_usage_plan.main", "quota_settings"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "quota_settings"),
 				),
 			},
 		},
@@ -285,6 +299,7 @@ func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	var conf apigateway.UsagePlan
 	name := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -296,44 +311,49 @@ func TestAccAWSAPIGatewayUsagePlan_apiStages(t *testing.T) {
 			{
 				Config: testAccAWSApiGatewayUsagePlanApiStagesConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "api_stages.0.stage", "test"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.0.stage", "test"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Handle api stages removal
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_usage_plan.main", "api_stages"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "api_stages"),
 				),
 			},
 			// Handle api stages additions
 			{
 				Config: testAccAWSApiGatewayUsagePlanApiStagesConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "api_stages.0.stage", "test"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.0.stage", "test"),
 				),
 			},
 			// Handle api stages updates
 			{
 				Config: testAccAWSApiGatewayUsagePlanApiStagesModifiedConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "api_stages.0.stage", "foo"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.0.stage", "foo"),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanExists("aws_api_gateway_usage_plan.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan.main", "name", name),
-					resource.TestCheckNoResourceAttr("aws_api_gateway_usage_plan.main", "api_stages"),
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckNoResourceAttr(resourceName, "api_stages"),
 				),
 			},
 		},
@@ -394,7 +414,7 @@ func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
 		if !ok {
 			return err
 		}
-		if aws2err.Code() != "NotFoundException" {
+		if aws2err.Code() != apigateway.ErrCodeNotFoundException {
 			return err
 		}
 
@@ -469,7 +489,7 @@ resource "aws_api_gateway_deployment" "foo" {
 
 func testAccAWSApiGatewayUsagePlanBasicConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
 }
 `, rName)
@@ -477,7 +497,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanDescriptionConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
   description = "This is a description"
 }
@@ -486,7 +506,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanDescriptionUpdatedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
   description = "This is a new description"
 }
@@ -495,7 +515,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanProductCodeConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name         = "%s"
   product_code = "MYCODE"
 }
@@ -504,7 +524,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanProductCodeUpdatedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name         = "%s"
   product_code = "MYCODE2"
 }
@@ -513,7 +533,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanBasicUpdatedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
 }
 `, rName)
@@ -521,7 +541,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanThrottlingConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
 
   throttle_settings {
@@ -534,7 +554,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanThrottlingModifiedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
 
   throttle_settings {
@@ -547,7 +567,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanQuotaConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
 
   quota_settings {
@@ -561,7 +581,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanQuotaModifiedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
 
   quota_settings {
@@ -575,7 +595,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanApiStagesConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
 
   api_stages {
@@ -588,7 +608,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 
 func testAccAWSApiGatewayUsagePlanApiStagesModifiedConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig+`
-resource "aws_api_gateway_usage_plan" "main" {
+resource "aws_api_gateway_usage_plan" "test" {
   name        = "%s"
 
   api_stages {
