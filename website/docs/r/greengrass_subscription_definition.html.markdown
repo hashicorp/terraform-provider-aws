@@ -1,5 +1,5 @@
-
 ---
+subcategory: "Greengrass"
 layout: "aws"
 page_title: "AWS: aws_greengrass_subscription_definition"
 description: |-
