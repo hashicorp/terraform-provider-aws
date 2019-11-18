@@ -1,4 +1,5 @@
 ---
+subcategory: "Greengrass"
 layout: "aws"
 page_title: "AWS: aws_greengrass_group"
 description: |-
