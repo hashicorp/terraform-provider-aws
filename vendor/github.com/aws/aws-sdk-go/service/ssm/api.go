@@ -1088,17 +1088,33 @@ func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) 
 
 // CreateResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
 //
-// Creates a resource data sync configuration to a single bucket in Amazon S3.
-// This is an asynchronous operation that returns immediately. After a successful
-// initial sync is completed, the system continuously syncs data to the Amazon
-// S3 bucket. To check the status of the sync, use the ListResourceDataSync.
+// A resource data sync helps you view data from multiple sources in a single
+// location. Systems Manager offers two types of resource data sync: SyncToDestination
+// and SyncFromSource.
+//
+// You can configure Systems Manager Inventory to use the SyncToDestination
+// type to synchronize Inventory data from multiple AWS Regions to a single
+// Amazon S3 bucket. For more information, see Configuring Resource Data Sync
+// for Inventory (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html)
+// in the AWS Systems Manager User Guide.
+//
+// You can configure Systems Manager Explorer to use the SyncToDestination type
+// to synchronize operational work items (OpsItems) and operational data (OpsData)
+// from multiple AWS Regions to a single Amazon S3 bucket. You can also configure
+// Explorer to use the SyncFromSource type. This type synchronizes OpsItems
+// and OpsData from multiple AWS accounts and Regions by using AWS Organizations.
+// For more information, see Setting Up Explorer to Display Data from Multiple
+// Accounts and Regions (http://docs.aws.amazon.com/systems-manager/latest/userguide/Explorer-resource-data-sync.html)
+// in the AWS Systems Manager User Guide.
+//
+// A resource data sync is an asynchronous operation that returns immediately.
+// After a successful initial sync is completed, the system continuously syncs
+// data. To check the status of a sync, use the ListResourceDataSync.
 //
 // By default, data is not encrypted in Amazon S3. We strongly recommend that
 // you enable encryption in Amazon S3 to ensure secure data storage. We also
 // recommend that you secure access to the Amazon S3 bucket by creating a restrictive
-// bucket policy. For more information, see Configuring Resource Data Sync for
-// Inventory (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html)
-// in the AWS Systems Manager User Guide.
+// bucket policy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1904,9 +1920,8 @@ func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) 
 // DeleteResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
 //
 // Deletes a Resource Data Sync configuration. After the configuration is deleted,
-// changes to inventory data on managed instances are no longer synced with
-// the target Amazon S3 bucket. Deleting a sync configuration does not delete
-// data in the target Amazon S3 bucket.
+// changes to data on managed instances are no longer synced to or from the
+// target. Deleting a sync configuration does not delete data.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1921,6 +1936,9 @@ func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) 
 //
 //   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
 //   The specified sync name was not found.
+//
+//   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
+//   The specified sync configuration is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
 func (c *SSM) DeleteResourceDataSync(input *DeleteResourceDataSyncInput) (*DeleteResourceDataSyncOutput, error) {
@@ -6608,6 +6626,9 @@ func (c *SSM) GetOpsSummaryRequest(input *GetOpsSummaryInput) (req *request.Requ
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
+//   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
+//   The specified sync name was not found.
+//
 //   * ErrCodeInvalidFilter "InvalidFilter"
 //   The filter name is not valid. Verify the you entered the correct name and
 //   try again.
@@ -8720,6 +8741,9 @@ func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req
 // API operation ListResourceDataSync for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
+//   The specified sync configuration is invalid.
+//
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
@@ -16097,6 +16121,9 @@ func (s *CreateMaintenanceWindowOutput) SetWindowId(v string) *CreateMaintenance
 type CreateOpsItemInput struct {
 	_ struct{} `type:"structure"`
 
+	// Specify a category to assign to an OpsItem.
+	Category *string `min:"1" type:"string"`
+
 	// Information about the OpsItem.
 	//
 	// Description is a required field
@@ -16137,6 +16164,9 @@ type CreateOpsItemInput struct {
 	// impacted resources, or statuses for the impacted resource.
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
 
+	// Specify a severity to assign to an OpsItem.
+	Severity *string `min:"1" type:"string"`
+
 	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager.
 	//
 	// Source is a required field
@@ -16174,6 +16204,9 @@ func (s CreateOpsItemInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateOpsItemInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateOpsItemInput"}
+	if s.Category != nil && len(*s.Category) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Category", 1))
+	}
 	if s.Description == nil {
 		invalidParams.Add(request.NewErrParamRequired("Description"))
 	}
@@ -16182,6 +16215,9 @@ func (s *CreateOpsItemInput) Validate() error {
 	}
 	if s.Priority != nil && *s.Priority < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Priority", 1))
+	}
+	if s.Severity != nil && len(*s.Severity) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Severity", 1))
 	}
 	if s.Source == nil {
 		invalidParams.Add(request.NewErrParamRequired("Source"))
@@ -16222,6 +16258,12 @@ func (s *CreateOpsItemInput) Validate() error {
 	return nil
 }
 
+// SetCategory sets the Category field's value.
+func (s *CreateOpsItemInput) SetCategory(v string) *CreateOpsItemInput {
+	s.Category = &v
+	return s
+}
+
 // SetDescription sets the Description field's value.
 func (s *CreateOpsItemInput) SetDescription(v string) *CreateOpsItemInput {
 	s.Description = &v
@@ -16249,6 +16291,12 @@ func (s *CreateOpsItemInput) SetPriority(v int64) *CreateOpsItemInput {
 // SetRelatedOpsItems sets the RelatedOpsItems field's value.
 func (s *CreateOpsItemInput) SetRelatedOpsItems(v []*RelatedOpsItem) *CreateOpsItemInput {
 	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *CreateOpsItemInput) SetSeverity(v string) *CreateOpsItemInput {
+	s.Severity = &v
 	return s
 }
 
@@ -16543,14 +16591,21 @@ type CreateResourceDataSyncInput struct {
 	_ struct{} `type:"structure"`
 
 	// Amazon S3 configuration details for the sync.
-	//
-	// S3Destination is a required field
-	S3Destination *ResourceDataSyncS3Destination `type:"structure" required:"true"`
+	S3Destination *ResourceDataSyncS3Destination `type:"structure"`
 
 	// A name for the configuration.
 	//
 	// SyncName is a required field
 	SyncName *string `min:"1" type:"string" required:"true"`
+
+	// Specify information about the data sources to synchronize.
+	SyncSource *ResourceDataSyncSource `type:"structure"`
+
+	// Specify SyncToDestination to create a resource data sync that synchronizes
+	// data from multiple AWS Regions to an Amazon S3 bucket. Specify SyncFromSource
+	// to synchronize data from multiple AWS accounts and Regions, as listed in
+	// AWS Organizations.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -16566,18 +16621,23 @@ func (s CreateResourceDataSyncInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateResourceDataSyncInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateResourceDataSyncInput"}
-	if s.S3Destination == nil {
-		invalidParams.Add(request.NewErrParamRequired("S3Destination"))
-	}
 	if s.SyncName == nil {
 		invalidParams.Add(request.NewErrParamRequired("SyncName"))
 	}
 	if s.SyncName != nil && len(*s.SyncName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
 	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
 	if s.S3Destination != nil {
 		if err := s.S3Destination.Validate(); err != nil {
 			invalidParams.AddNested("S3Destination", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SyncSource != nil {
+		if err := s.SyncSource.Validate(); err != nil {
+			invalidParams.AddNested("SyncSource", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -16596,6 +16656,18 @@ func (s *CreateResourceDataSyncInput) SetS3Destination(v *ResourceDataSyncS3Dest
 // SetSyncName sets the SyncName field's value.
 func (s *CreateResourceDataSyncInput) SetSyncName(v string) *CreateResourceDataSyncInput {
 	s.SyncName = &v
+	return s
+}
+
+// SetSyncSource sets the SyncSource field's value.
+func (s *CreateResourceDataSyncInput) SetSyncSource(v *ResourceDataSyncSource) *CreateResourceDataSyncInput {
+	s.SyncSource = v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *CreateResourceDataSyncInput) SetSyncType(v string) *CreateResourceDataSyncInput {
+	s.SyncType = &v
 	return s
 }
 
@@ -17189,6 +17261,9 @@ type DeleteResourceDataSyncInput struct {
 	//
 	// SyncName is a required field
 	SyncName *string `min:"1" type:"string" required:"true"`
+
+	// Specify the type of resource data sync to delete.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -17210,6 +17285,9 @@ func (s *DeleteResourceDataSyncInput) Validate() error {
 	if s.SyncName != nil && len(*s.SyncName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
 	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -17220,6 +17298,12 @@ func (s *DeleteResourceDataSyncInput) Validate() error {
 // SetSyncName sets the SyncName field's value.
 func (s *DeleteResourceDataSyncInput) SetSyncName(v string) *DeleteResourceDataSyncInput {
 	s.SyncName = &v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *DeleteResourceDataSyncInput) SetSyncType(v string) *DeleteResourceDataSyncInput {
+	s.SyncType = &v
 	return s
 }
 
@@ -23959,9 +24043,7 @@ type GetOpsSummaryInput struct {
 
 	// Optional aggregators that return counts of OpsItems based on one or more
 	// expressions.
-	//
-	// Aggregators is a required field
-	Aggregators []*OpsAggregator `min:"1" type:"list" required:"true"`
+	Aggregators []*OpsAggregator `min:"1" type:"list"`
 
 	// Optional filters used to scope down the returned OpsItems.
 	Filters []*OpsFilter `min:"1" type:"list"`
@@ -23973,6 +24055,12 @@ type GetOpsSummaryInput struct {
 
 	// A token to start the list. Use this token to get the next set of results.
 	NextToken *string `type:"string"`
+
+	// The OpsItem data type to return.
+	ResultAttributes []*OpsResultAttribute `min:"1" type:"list"`
+
+	// Specify the name of a resource data sync to get.
+	SyncName *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -23988,9 +24076,6 @@ func (s GetOpsSummaryInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *GetOpsSummaryInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetOpsSummaryInput"}
-	if s.Aggregators == nil {
-		invalidParams.Add(request.NewErrParamRequired("Aggregators"))
-	}
 	if s.Aggregators != nil && len(s.Aggregators) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Aggregators", 1))
 	}
@@ -23999,6 +24084,12 @@ func (s *GetOpsSummaryInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ResultAttributes != nil && len(s.ResultAttributes) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResultAttributes", 1))
+	}
+	if s.SyncName != nil && len(*s.SyncName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
 	}
 	if s.Aggregators != nil {
 		for i, v := range s.Aggregators {
@@ -24017,6 +24108,16 @@ func (s *GetOpsSummaryInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ResultAttributes != nil {
+		for i, v := range s.ResultAttributes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResultAttributes", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -24048,6 +24149,18 @@ func (s *GetOpsSummaryInput) SetMaxResults(v int64) *GetOpsSummaryInput {
 // SetNextToken sets the NextToken field's value.
 func (s *GetOpsSummaryInput) SetNextToken(v string) *GetOpsSummaryInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetResultAttributes sets the ResultAttributes field's value.
+func (s *GetOpsSummaryInput) SetResultAttributes(v []*OpsResultAttribute) *GetOpsSummaryInput {
+	s.ResultAttributes = v
+	return s
+}
+
+// SetSyncName sets the SyncName field's value.
+func (s *GetOpsSummaryInput) SetSyncName(v string) *GetOpsSummaryInput {
+	s.SyncName = &v
 	return s
 }
 
@@ -27694,6 +27807,12 @@ type ListResourceDataSyncInput struct {
 
 	// A token to start the list. Use this token to get the next set of results.
 	NextToken *string `type:"string"`
+
+	// View a list of resource data syncs according to the sync type. Specify SyncToDestination
+	// to view resource data syncs that synchronize data to an Amazon S3 buckets.
+	// Specify SyncFromSource to view resource data syncs from AWS Organizations
+	// or from multiple AWS Regions.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -27712,6 +27831,9 @@ func (s *ListResourceDataSyncInput) Validate() error {
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -27728,6 +27850,12 @@ func (s *ListResourceDataSyncInput) SetMaxResults(v int64) *ListResourceDataSync
 // SetNextToken sets the NextToken field's value.
 func (s *ListResourceDataSyncInput) SetNextToken(v string) *ListResourceDataSyncInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *ListResourceDataSyncInput) SetSyncType(v string) *ListResourceDataSyncInput {
+	s.SyncType = &v
 	return s
 }
 
@@ -29398,6 +29526,9 @@ func (s *OpsEntity) SetId(v string) *OpsEntity {
 type OpsEntityItem struct {
 	_ struct{} `type:"structure"`
 
+	// The time OpsItem data was captured.
+	CaptureTime *string `type:"string"`
+
 	// The detailed data content for an OpsItem summaries result item.
 	Content []map[string]*string `type:"list"`
 }
@@ -29410,6 +29541,12 @@ func (s OpsEntityItem) String() string {
 // GoString returns the string representation
 func (s OpsEntityItem) GoString() string {
 	return s.String()
+}
+
+// SetCaptureTime sets the CaptureTime field's value.
+func (s *OpsEntityItem) SetCaptureTime(v string) *OpsEntityItem {
+	s.CaptureTime = &v
+	return s
 }
 
 // SetContent sets the Content field's value.
@@ -29494,6 +29631,10 @@ func (s *OpsFilter) SetValues(v []*string) *OpsFilter {
 type OpsItem struct {
 	_ struct{} `type:"structure"`
 
+	// An OpsItem category. Category options include: Availability, Cost, Performance,
+	// Recovery, Security.
+	Category *string `min:"1" type:"string"`
+
 	// The ARN of the AWS account that created the OpsItem.
 	CreatedBy *string `type:"string"`
 
@@ -29547,6 +29688,9 @@ type OpsItem struct {
 	// impacted resources, or statuses for the impacted resource.
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
 
+	// The severity of the OpsItem. Severity options range from 1 to 4.
+	Severity *string `min:"1" type:"string"`
+
 	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager. The
 	// impacted resource is a subset of source.
 	Source *string `min:"1" type:"string"`
@@ -29573,6 +29717,12 @@ func (s OpsItem) String() string {
 // GoString returns the string representation
 func (s OpsItem) GoString() string {
 	return s.String()
+}
+
+// SetCategory sets the Category field's value.
+func (s *OpsItem) SetCategory(v string) *OpsItem {
+	s.Category = &v
+	return s
 }
 
 // SetCreatedBy sets the CreatedBy field's value.
@@ -29632,6 +29782,12 @@ func (s *OpsItem) SetPriority(v int64) *OpsItem {
 // SetRelatedOpsItems sets the RelatedOpsItems field's value.
 func (s *OpsItem) SetRelatedOpsItems(v []*RelatedOpsItem) *OpsItem {
 	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *OpsItem) SetSeverity(v string) *OpsItem {
+	s.Severity = &v
 	return s
 }
 
@@ -29789,6 +29945,9 @@ func (s *OpsItemNotification) SetArn(v string) *OpsItemNotification {
 type OpsItemSummary struct {
 	_ struct{} `type:"structure"`
 
+	// A list of OpsItems by category.
+	Category *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the IAM entity that created the OpsItem.
 	CreatedBy *string `type:"string"`
 
@@ -29811,6 +29970,9 @@ type OpsItemSummary struct {
 	// The importance of this OpsItem in relation to other OpsItems in the system.
 	Priority *int64 `min:"1" type:"integer"`
 
+	// A list of OpsItems by severity.
+	Severity *string `min:"1" type:"string"`
+
 	// The impacted AWS resource.
 	Source *string `min:"1" type:"string"`
 
@@ -29830,6 +29992,12 @@ func (s OpsItemSummary) String() string {
 // GoString returns the string representation
 func (s OpsItemSummary) GoString() string {
 	return s.String()
+}
+
+// SetCategory sets the Category field's value.
+func (s *OpsItemSummary) SetCategory(v string) *OpsItemSummary {
+	s.Category = &v
+	return s
 }
 
 // SetCreatedBy sets the CreatedBy field's value.
@@ -29874,6 +30042,12 @@ func (s *OpsItemSummary) SetPriority(v int64) *OpsItemSummary {
 	return s
 }
 
+// SetSeverity sets the Severity field's value.
+func (s *OpsItemSummary) SetSeverity(v string) *OpsItemSummary {
+	s.Severity = &v
+	return s
+}
+
 // SetSource sets the Source field's value.
 func (s *OpsItemSummary) SetSource(v string) *OpsItemSummary {
 	s.Source = &v
@@ -29889,6 +30063,49 @@ func (s *OpsItemSummary) SetStatus(v string) *OpsItemSummary {
 // SetTitle sets the Title field's value.
 func (s *OpsItemSummary) SetTitle(v string) *OpsItemSummary {
 	s.Title = &v
+	return s
+}
+
+// The OpsItem data type to return.
+type OpsResultAttribute struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the data type. Valid value: AWS:OpsItem, AWS:EC2InstanceInformation,
+	// AWS:OpsItemTrendline, or AWS:ComplianceSummary.
+	//
+	// TypeName is a required field
+	TypeName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s OpsResultAttribute) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsResultAttribute) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpsResultAttribute) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpsResultAttribute"}
+	if s.TypeName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTypeName sets the TypeName field's value.
+func (s *OpsResultAttribute) SetTypeName(v string) *OpsResultAttribute {
+	s.TypeName = &v
 	return s
 }
 
@@ -32770,6 +32987,75 @@ func (s *ResourceComplianceSummaryItem) SetStatus(v string) *ResourceComplianceS
 	return s
 }
 
+// Information about the AwsOrganizationsSource resource data sync source. A
+// sync source of this type can synchronize data from AWS Organizations or,
+// if an AWS Organization is not present, from multiple AWS Regions.
+type ResourceDataSyncAwsOrganizationsSource struct {
+	_ struct{} `type:"structure"`
+
+	// If an AWS Organization is present, this is either OrganizationalUnits or
+	// EntireOrganization. For OrganizationalUnits, the data is aggregated from
+	// a set of organization units. For EntireOrganization, the data is aggregated
+	// from the entire AWS Organization.
+	//
+	// OrganizationSourceType is a required field
+	OrganizationSourceType *string `min:"1" type:"string" required:"true"`
+
+	// The AWS Organizations organization units included in the sync.
+	OrganizationalUnits []*ResourceDataSyncOrganizationalUnit `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncAwsOrganizationsSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncAwsOrganizationsSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncAwsOrganizationsSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncAwsOrganizationsSource"}
+	if s.OrganizationSourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationSourceType"))
+	}
+	if s.OrganizationSourceType != nil && len(*s.OrganizationSourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationSourceType", 1))
+	}
+	if s.OrganizationalUnits != nil && len(s.OrganizationalUnits) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationalUnits", 1))
+	}
+	if s.OrganizationalUnits != nil {
+		for i, v := range s.OrganizationalUnits {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OrganizationalUnits", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOrganizationSourceType sets the OrganizationSourceType field's value.
+func (s *ResourceDataSyncAwsOrganizationsSource) SetOrganizationSourceType(v string) *ResourceDataSyncAwsOrganizationsSource {
+	s.OrganizationSourceType = &v
+	return s
+}
+
+// SetOrganizationalUnits sets the OrganizationalUnits field's value.
+func (s *ResourceDataSyncAwsOrganizationsSource) SetOrganizationalUnits(v []*ResourceDataSyncOrganizationalUnit) *ResourceDataSyncAwsOrganizationsSource {
+	s.OrganizationalUnits = v
+	return s
+}
+
 // Information about a Resource Data Sync configuration, including its current
 // status and last successful sync.
 type ResourceDataSyncItem struct {
@@ -32793,8 +33079,20 @@ type ResourceDataSyncItem struct {
 	// The date and time the configuration was created (UTC).
 	SyncCreatedTime *time.Time `type:"timestamp"`
 
+	// The date and time the resource data sync was changed.
+	SyncLastModifiedTime *time.Time `type:"timestamp"`
+
 	// The name of the Resource Data Sync.
 	SyncName *string `min:"1" type:"string"`
+
+	// Information about the source where the data was synchronized.
+	SyncSource *ResourceDataSyncSourceWithState `type:"structure"`
+
+	// The type of resource data sync. If SyncType is SyncToDestination, then the
+	// resource data sync synchronizes data to an Amazon S3 bucket. If the SyncType
+	// is SyncFromSource then the resource data sync synchronizes data from AWS
+	// Organizations or from multiple AWS Regions.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -32843,9 +33141,64 @@ func (s *ResourceDataSyncItem) SetSyncCreatedTime(v time.Time) *ResourceDataSync
 	return s
 }
 
+// SetSyncLastModifiedTime sets the SyncLastModifiedTime field's value.
+func (s *ResourceDataSyncItem) SetSyncLastModifiedTime(v time.Time) *ResourceDataSyncItem {
+	s.SyncLastModifiedTime = &v
+	return s
+}
+
 // SetSyncName sets the SyncName field's value.
 func (s *ResourceDataSyncItem) SetSyncName(v string) *ResourceDataSyncItem {
 	s.SyncName = &v
+	return s
+}
+
+// SetSyncSource sets the SyncSource field's value.
+func (s *ResourceDataSyncItem) SetSyncSource(v *ResourceDataSyncSourceWithState) *ResourceDataSyncItem {
+	s.SyncSource = v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *ResourceDataSyncItem) SetSyncType(v string) *ResourceDataSyncItem {
+	s.SyncType = &v
+	return s
+}
+
+// The AWS Organizations organizational unit data source for the sync.
+type ResourceDataSyncOrganizationalUnit struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS Organization unit ID data source for the sync.
+	OrganizationalUnitId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncOrganizationalUnit) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncOrganizationalUnit) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncOrganizationalUnit) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncOrganizationalUnit"}
+	if s.OrganizationalUnitId != nil && len(*s.OrganizationalUnitId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationalUnitId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOrganizationalUnitId sets the OrganizationalUnitId field's value.
+func (s *ResourceDataSyncOrganizationalUnit) SetOrganizationalUnitId(v string) *ResourceDataSyncOrganizationalUnit {
+	s.OrganizationalUnitId = &v
 	return s
 }
 
@@ -32944,6 +33297,177 @@ func (s *ResourceDataSyncS3Destination) SetRegion(v string) *ResourceDataSyncS3D
 // SetSyncFormat sets the SyncFormat field's value.
 func (s *ResourceDataSyncS3Destination) SetSyncFormat(v string) *ResourceDataSyncS3Destination {
 	s.SyncFormat = &v
+	return s
+}
+
+// Information about the source of the data included in the resource data sync.
+type ResourceDataSyncSource struct {
+	_ struct{} `type:"structure"`
+
+	// The field name in SyncSource for the ResourceDataSyncAwsOrganizationsSource
+	// type.
+	AwsOrganizationsSource *ResourceDataSyncAwsOrganizationsSource `type:"structure"`
+
+	// Whether to automatically synchronize and aggregate data from new AWS Regions
+	// when those Regions come online.
+	IncludeFutureRegions *bool `type:"boolean"`
+
+	// The SyncSource AWS Regions included in the resource data sync.
+	//
+	// SourceRegions is a required field
+	SourceRegions []*string `type:"list" required:"true"`
+
+	// The type of data source for the resource data sync. SourceType is either
+	// AwsOrganizations (if an organization is present in AWS Organizations) or
+	// singleAccountMultiRegions.
+	//
+	// SourceType is a required field
+	SourceType *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncSource"}
+	if s.SourceRegions == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceRegions"))
+	}
+	if s.SourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceType"))
+	}
+	if s.SourceType != nil && len(*s.SourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SourceType", 1))
+	}
+	if s.AwsOrganizationsSource != nil {
+		if err := s.AwsOrganizationsSource.Validate(); err != nil {
+			invalidParams.AddNested("AwsOrganizationsSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsOrganizationsSource sets the AwsOrganizationsSource field's value.
+func (s *ResourceDataSyncSource) SetAwsOrganizationsSource(v *ResourceDataSyncAwsOrganizationsSource) *ResourceDataSyncSource {
+	s.AwsOrganizationsSource = v
+	return s
+}
+
+// SetIncludeFutureRegions sets the IncludeFutureRegions field's value.
+func (s *ResourceDataSyncSource) SetIncludeFutureRegions(v bool) *ResourceDataSyncSource {
+	s.IncludeFutureRegions = &v
+	return s
+}
+
+// SetSourceRegions sets the SourceRegions field's value.
+func (s *ResourceDataSyncSource) SetSourceRegions(v []*string) *ResourceDataSyncSource {
+	s.SourceRegions = v
+	return s
+}
+
+// SetSourceType sets the SourceType field's value.
+func (s *ResourceDataSyncSource) SetSourceType(v string) *ResourceDataSyncSource {
+	s.SourceType = &v
+	return s
+}
+
+// The data type name for including resource data sync state. There are four
+// sync states:
+//
+// OrganizationNotExists (Your organization doesn't exist)
+//
+// NoPermissions (The system can't locate the service-linked role. This role
+// is automatically created when a user creates a resource data sync in Explorer.)
+//
+// InvalidOrganizationalUnit (You specified or selected an invalid unit in the
+// resource data sync configuration.)
+//
+// TrustedAccessDisabled (You disabled Systems Manager access in the organization
+// in AWS Organizations.)
+type ResourceDataSyncSourceWithState struct {
+	_ struct{} `type:"structure"`
+
+	// The field name in SyncSource for the ResourceDataSyncAwsOrganizationsSource
+	// type.
+	AwsOrganizationsSource *ResourceDataSyncAwsOrganizationsSource `type:"structure"`
+
+	// Whether to automatically synchronize and aggregate data from new AWS Regions
+	// when those Regions come online.
+	IncludeFutureRegions *bool `type:"boolean"`
+
+	// The SyncSource AWS Regions included in the resource data sync.
+	SourceRegions []*string `type:"list"`
+
+	// The type of data source for the resource data sync. SourceType is either
+	// AwsOrganizations (if an organization is present in AWS Organizations) or
+	// singleAccountMultiRegions.
+	SourceType *string `min:"1" type:"string"`
+
+	// The data type name for including resource data sync state. There are four
+	// sync states:
+	//
+	// OrganizationNotExists: Your organization doesn't exist.
+	//
+	// NoPermissions: The system can't locate the service-linked role. This role
+	// is automatically created when a user creates a resource data sync in Explorer.
+	//
+	// InvalidOrganizationalUnit: You specified or selected an invalid unit in the
+	// resource data sync configuration.
+	//
+	// TrustedAccessDisabled: You disabled Systems Manager access in the organization
+	// in AWS Organizations.
+	State *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncSourceWithState) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncSourceWithState) GoString() string {
+	return s.String()
+}
+
+// SetAwsOrganizationsSource sets the AwsOrganizationsSource field's value.
+func (s *ResourceDataSyncSourceWithState) SetAwsOrganizationsSource(v *ResourceDataSyncAwsOrganizationsSource) *ResourceDataSyncSourceWithState {
+	s.AwsOrganizationsSource = v
+	return s
+}
+
+// SetIncludeFutureRegions sets the IncludeFutureRegions field's value.
+func (s *ResourceDataSyncSourceWithState) SetIncludeFutureRegions(v bool) *ResourceDataSyncSourceWithState {
+	s.IncludeFutureRegions = &v
+	return s
+}
+
+// SetSourceRegions sets the SourceRegions field's value.
+func (s *ResourceDataSyncSourceWithState) SetSourceRegions(v []*string) *ResourceDataSyncSourceWithState {
+	s.SourceRegions = v
+	return s
+}
+
+// SetSourceType sets the SourceType field's value.
+func (s *ResourceDataSyncSourceWithState) SetSourceType(v string) *ResourceDataSyncSourceWithState {
+	s.SourceType = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ResourceDataSyncSourceWithState) SetState(v string) *ResourceDataSyncSourceWithState {
+	s.State = &v
 	return s
 }
 
@@ -34778,8 +35302,16 @@ func (s *Tag) SetValue(v string) *Tag {
 //    * Key=tag-key,Values=Name,Instance-Type,CostCenter
 //
 //    * (Maintenance window targets only) Key=resource-groups:Name,Values=ProductionResourceGroup
+//    This example demonstrates how to target all resources in the resource
+//    group ProductionResourceGroup in your maintenance window.
 //
 //    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
+//    This example demonstrates how to target only Amazon EC2 instances and
+//    VPCs in your maintenance window.
+//
+//    * (State Manager association targets only) Key=InstanceIds,Values=* This
+//    example demonstrates how to target all managed instances in the AWS Region
+//    where the association was created.
 //
 // For information about how to send commands that target instances using Key,Value
 // parameters, see Using Targets and Rate Controls to Send Commands to a Fleet
@@ -36455,6 +36987,9 @@ func (s UpdateManagedInstanceRoleOutput) GoString() string {
 type UpdateOpsItemInput struct {
 	_ struct{} `type:"structure"`
 
+	// Specify a new category for an OpsItem.
+	Category *string `min:"1" type:"string"`
+
 	// Update the information about the OpsItem. Provide enough information so that
 	// users reading this OpsItem for the first time understand the issue.
 	Description *string `min:"1" type:"string"`
@@ -36505,6 +37040,9 @@ type UpdateOpsItemInput struct {
 	// impacted resources, or statuses for the impacted resource.
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
 
+	// Specify a new severity for an OpsItem.
+	Severity *string `min:"1" type:"string"`
+
 	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
 	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
 	// in the AWS Systems Manager User Guide.
@@ -36528,6 +37066,9 @@ func (s UpdateOpsItemInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateOpsItemInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateOpsItemInput"}
+	if s.Category != nil && len(*s.Category) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Category", 1))
+	}
 	if s.Description != nil && len(*s.Description) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
 	}
@@ -36536,6 +37077,9 @@ func (s *UpdateOpsItemInput) Validate() error {
 	}
 	if s.Priority != nil && *s.Priority < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Priority", 1))
+	}
+	if s.Severity != nil && len(*s.Severity) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Severity", 1))
 	}
 	if s.Title != nil && len(*s.Title) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Title", 1))
@@ -36555,6 +37099,12 @@ func (s *UpdateOpsItemInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCategory sets the Category field's value.
+func (s *UpdateOpsItemInput) SetCategory(v string) *UpdateOpsItemInput {
+	s.Category = &v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -36596,6 +37146,12 @@ func (s *UpdateOpsItemInput) SetPriority(v int64) *UpdateOpsItemInput {
 // SetRelatedOpsItems sets the RelatedOpsItems field's value.
 func (s *UpdateOpsItemInput) SetRelatedOpsItems(v []*RelatedOpsItem) *UpdateOpsItemInput {
 	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *UpdateOpsItemInput) SetSeverity(v string) *UpdateOpsItemInput {
+	s.Severity = &v
 	return s
 }
 
@@ -37703,6 +38259,12 @@ const (
 
 	// OpsItemFilterKeyAutomationId is a OpsItemFilterKey enum value
 	OpsItemFilterKeyAutomationId = "AutomationId"
+
+	// OpsItemFilterKeyCategory is a OpsItemFilterKey enum value
+	OpsItemFilterKeyCategory = "Category"
+
+	// OpsItemFilterKeySeverity is a OpsItemFilterKey enum value
+	OpsItemFilterKeySeverity = "Severity"
 )
 
 const (
