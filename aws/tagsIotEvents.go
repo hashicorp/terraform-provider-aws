@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // getTags is a helper to get the tags for a resource. It expects the
@@ -20,7 +21,7 @@ func getTagsIotEvents(conn *iotevents.IoTEvents, d *schema.ResourceData) error {
 		return err
 	}
 
-	if err := d.Set("tags", tagsToMapIotEvents(resp.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.IoteventsKeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
 		return err
 	}
 
@@ -102,18 +103,6 @@ func tagsFromMapIotEvents(m map[string]interface{}) []*iotevents.Tag {
 		}
 		if !tagIgnoredIotEvents(t) {
 			result = append(result, t)
-		}
-	}
-
-	return result
-}
-
-// tagsToMap turns the list of tags into a map.
-func tagsToMapIotEvents(ts []*iotevents.Tag) map[string]string {
-	result := make(map[string]string)
-	for _, t := range ts {
-		if !tagIgnoredIotEvents(t) {
-			result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 		}
 	}
 
