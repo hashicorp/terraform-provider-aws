@@ -36,7 +36,7 @@ func resourceAwsDbSubnetGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateDbSubnetGroupName,
+				// ValidateFunc:  validateDbSubnetGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
