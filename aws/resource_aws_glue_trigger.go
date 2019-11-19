@@ -37,9 +37,13 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
+						"crawler_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 						"job_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"timeout": {
 							Type:     schema.TypeInt,
@@ -77,7 +81,11 @@ func resourceAwsGlueTrigger() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"job_name": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
+									},
+									"crawler_name": {
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"logical_operator": {
 										Type:     schema.TypeString,
@@ -88,13 +96,25 @@ func resourceAwsGlueTrigger() *schema.Resource {
 										}, false),
 									},
 									"state": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"predicate.0.conditions.0.crawl_state"},
 										ValidateFunc: validation.StringInSlice([]string{
 											glue.JobRunStateFailed,
 											glue.JobRunStateStopped,
 											glue.JobRunStateSucceeded,
 											glue.JobRunStateTimeout,
+										}, false),
+									},
+									"crawl_state": {
+										Type:          schema.TypeString,
+										Optional:      true,
+										ConflictsWith: []string{"predicate.0.conditions.0.state"},
+										ValidateFunc: validation.StringInSlice([]string{
+											glue.CrawlStateRunning,
+											glue.CrawlStateSucceeded,
+											glue.CrawlStateCancelled,
+											glue.CrawlStateFailed,
 										}, false),
 									},
 								},
@@ -126,6 +146,11 @@ func resourceAwsGlueTrigger() *schema.Resource {
 					glue.TriggerTypeScheduled,
 				}, false),
 			},
+			"workflow_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -153,8 +178,16 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 		input.Schedule = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("workflow_name"); ok {
+		input.WorkflowName = aws.String(v.(string))
+	}
+
 	if d.Get("enabled").(bool) && triggerType != glue.TriggerTypeOnDemand {
 		input.StartOnCreation = aws.Bool(true)
+	}
+
+	if v, ok := d.GetOk("workflow_name"); ok {
+		input.WorkflowName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
@@ -234,6 +267,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", trigger.Name)
 	d.Set("schedule", trigger.Schedule)
 	d.Set("type", trigger.Type)
+	d.Set("workflow_name", trigger.WorkflowName)
 
 	return nil
 }
@@ -365,8 +399,14 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 
-		action := &glue.Action{
-			JobName: aws.String(m["job_name"].(string)),
+		action := &glue.Action{}
+
+		if v, ok := m["crawler_name"].(string); ok && v != "" {
+			action.CrawlerName = aws.String(v)
+		}
+
+		if v, ok := m["job_name"].(string); ok && v != "" {
+			action.JobName = aws.String(v)
 		}
 
 		argumentsMap := make(map[string]string)
@@ -392,9 +432,23 @@ func expandGlueConditions(l []interface{}) []*glue.Condition {
 		m := mRaw.(map[string]interface{})
 
 		condition := &glue.Condition{
-			JobName:         aws.String(m["job_name"].(string)),
 			LogicalOperator: aws.String(m["logical_operator"].(string)),
-			State:           aws.String(m["state"].(string)),
+		}
+
+		if v, ok := m["crawler_name"].(string); ok && v != "" {
+			condition.CrawlerName = aws.String(v)
+		}
+
+		if v, ok := m["crawl_state"].(string); ok && v != "" {
+			condition.CrawlState = aws.String(v)
+		}
+
+		if v, ok := m["job_name"].(string); ok && v != "" {
+			condition.JobName = aws.String(v)
+		}
+
+		if v, ok := m["state"].(string); ok && v != "" {
+			condition.State = aws.String(v)
 		}
 
 		conditions = append(conditions, condition)
@@ -423,9 +477,17 @@ func flattenGlueActions(actions []*glue.Action) []interface{} {
 	for _, action := range actions {
 		m := map[string]interface{}{
 			"arguments": aws.StringValueMap(action.Arguments),
-			"job_name":  aws.StringValue(action.JobName),
 			"timeout":   int(aws.Int64Value(action.Timeout)),
 		}
+
+		if v := aws.StringValue(action.CrawlerName); v != "" {
+			m["crawler_name"] = v
+		}
+
+		if v := aws.StringValue(action.JobName); v != "" {
+			m["job_name"] = v
+		}
+
 		l = append(l, m)
 	}
 
@@ -437,10 +499,25 @@ func flattenGlueConditions(conditions []*glue.Condition) []interface{} {
 
 	for _, condition := range conditions {
 		m := map[string]interface{}{
-			"job_name":         aws.StringValue(condition.JobName),
 			"logical_operator": aws.StringValue(condition.LogicalOperator),
-			"state":            aws.StringValue(condition.State),
 		}
+
+		if v := aws.StringValue(condition.CrawlerName); v != "" {
+			m["crawler_name"] = v
+		}
+
+		if v := aws.StringValue(condition.CrawlState); v != "" {
+			m["crawl_state"] = v
+		}
+
+		if v := aws.StringValue(condition.JobName); v != "" {
+			m["job_name"] = v
+		}
+
+		if v := aws.StringValue(condition.State); v != "" {
+			m["state"] = v
+		}
+
 		l = append(l, m)
 	}
 
