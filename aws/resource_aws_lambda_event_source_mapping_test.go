@@ -316,6 +316,7 @@ func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lambda_event_source_mapping.test"
 	batchWindow := int64(5)
+	batchWindowUpdate := int64(10)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -337,6 +338,13 @@ func TestAccAWSLambdaEventSourceMapping_BatchWindow(t *testing.T) {
 					"starting_position",
 					"starting_position_timestamp",
 				},
+			},
+			{
+				Config: testAccAWSLambdaEventSourceMappingConfigKinesisBatchWindow(rName, batchWindowUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "maximum_batching_window_in_seconds", strconv.Itoa(int(batchWindowUpdate))),
+				),
 			},
 		},
 	})

@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -295,7 +294,7 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(params)
 		if err != nil {
 			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "") ||
