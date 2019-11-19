@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -114,7 +115,7 @@ func resourceAwsTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interfac
 	var removeFields []*string
 	if d.HasChange("description") {
 		_, n := d.GetChange("description")
-		if nil != n {
+		if "" != n {
 			input.Description = aws.String(n.(string))
 		} else {
 			removeFields = append(removeFields, aws.String("description"))
@@ -123,22 +124,25 @@ func resourceAwsTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("packet_length") {
 		_, n := d.GetChange("packet_length")
-		if nil != n {
+		if nil != n && n.(int) > 0 {
 			input.PacketLength = aws.Int64(int64(n.(int)))
 		} else {
 			removeFields = append(removeFields, aws.String("packet-length"))
 		}
 	}
+	log.Printf("[DEBUG] removeFields %v", removeFields)
 
-	if d.HasChange("virtual-network-id") {
-		_, n := d.GetChange("virtual-network-id")
-		if nil != n {
-			input.Description = aws.String(n.(string))
+	if d.HasChange("virtual_network_id") {
+		_, n := d.GetChange("virtual_network_id")
+		log.Printf("[DEBUG] VNI has change %v", n)
+		if nil != n && n.(int) > 0 {
+			input.VirtualNetworkId = aws.Int64(int64(n.(int)))
 		} else {
 			removeFields = append(removeFields, aws.String("virtual-network-id"))
 		}
 	}
 
+	log.Printf("[DEBUG] removeFields %v", removeFields)
 	if len(removeFields) > 0 {
 		input.SetRemoveFields(removeFields)
 	}
@@ -148,7 +152,7 @@ func resourceAwsTrafficMirrorSessionUpdate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error updating traffic mirror session %v", err)
 	}
 
-	return nil
+	return resourceAwsTrafficMirrorSessionRead(d, meta)
 }
 
 func resourceAwsTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) error {
@@ -173,20 +177,17 @@ func resourceAwsTrafficMirrorSessionRead(d *schema.ResourceData, meta interface{
 	}
 
 	session := out.TrafficMirrorSessions[0]
-	d.Set("network_interface_id", *session.NetworkInterfaceId)
-	d.Set("session_number", *session.SessionNumber)
-	d.Set("traffic_mirror_filter_id", *session.TrafficMirrorFilterId)
-	d.Set("traffic_mirror_target_id", *session.TrafficMirrorTargetId)
+	d.Set("network_interface_id", session.NetworkInterfaceId)
+	d.Set("session_number", session.SessionNumber)
+	d.Set("traffic_mirror_filter_id", session.TrafficMirrorFilterId)
+	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
+	d.Set("description", session.Description)
+	d.Set("packet_length", session.PacketLength)
 
-	if nil != session.Description {
-		d.Set("description", *session.Description)
-	}
-
-	if nil != session.PacketLength {
-		d.Set("packet_length", *session.PacketLength)
-	}
-
-	if nil != session.VirtualNetworkId {
+	// AWS returns a value for VNI even if nothing is set in config. To avoid further plan
+	// showing a change, using a workaround - set this in state only if it was set in config
+	_, vniSet := d.GetOk("virtual_network_id")
+	if vniSet && nil != session.VirtualNetworkId {
 		d.Set("virtual_network_id", *session.VirtualNetworkId)
 	}
 

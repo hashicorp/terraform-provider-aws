@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"strings"
+	"log"
 )
 
 func resourceAwsTrafficMirrorFilterRule() *schema.Resource {
@@ -135,70 +135,96 @@ func resourceAwsTrafficMirrorFilterRuleCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error creating traffic mirror filter rule for %v", filterId)
 	}
 
-	d.SetId(buildTrafficMirrorFilterRuleResourceId(out.TrafficMirrorFilterRule))
+	d.SetId(*out.TrafficMirrorFilterRule.TrafficMirrorFilterRuleId)
 	return resourceAwsTrafficMirrorFilterRuleRead(d, meta)
 }
 
 func resourceAwsTrafficMirrorFilterRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ruleId := d.Id()
 
-	filterId, ruleId, err := parseTrafficMirrorFilterRuleResourceId(d.Id())
-	if err != nil {
-		d.SetId("")
-		return err
-	}
-
-	awsMutexKV.Lock(filterId)
-	defer awsMutexKV.Unlock(filterId)
-
-	var filterIds []*string
-	filterIds = append(filterIds, &filterId)
-	input := &ec2.DescribeTrafficMirrorFiltersInput{
-		TrafficMirrorFilterIds: filterIds,
-	}
-
-	out, err := conn.DescribeTrafficMirrorFilters(input)
-	if err != nil || len(out.TrafficMirrorFilters) == 0 {
-		d.SetId("")
-		return fmt.Errorf("Error finding traffic mirror filter %v", err)
-	}
-
-	filter := out.TrafficMirrorFilters[0]
-	direction := d.Get("traffic_direction")
-	var ruleList []*ec2.TrafficMirrorFilterRule
 	var rule *ec2.TrafficMirrorFilterRule
-	switch direction {
-	case "egress":
-		ruleList = filter.EgressFilterRules
-	case "ingress":
-		ruleList = filter.IngressFilterRules
-	default:
-		// While importing search both list
-		ruleList = append(filter.EgressFilterRules, filter.IngressFilterRules...)
+	filterId, filterIdSet := d.GetOk("traffic_mirror_filter_id")
+	input := &ec2.DescribeTrafficMirrorFiltersInput{}
+	if filterIdSet {
+		input.TrafficMirrorFilterIds = []*string{aws.String(filterId.(string))}
+		awsMutexKV.Lock(filterId.(string))
+		defer awsMutexKV.Unlock(filterId.(string))
+	} else {
+		awsMutexKV.Lock("DescribeTrafficMirrorFilters")
+		defer awsMutexKV.Unlock("DescribeTrafficMirrorFilters")
 	}
 
-	for _, v := range ruleList {
-		if *v.TrafficMirrorFilterRuleId == ruleId {
-			rule = v
+	found := false
+	for !found {
+		out, err := conn.DescribeTrafficMirrorFilters(input)
+		if err != nil {
+			return fmt.Errorf("Error listing traffic mirror filters in the account")
+		}
+
+		if 0 == len(out.TrafficMirrorFilters) {
+			return fmt.Errorf("No traffir mirror filters found")
+		}
+
+		_, rule, err = findRuleInFilters(ruleId, out.TrafficMirrorFilters)
+		if nil == err {
+			found = true
 			break
+		} else {
+			if out.NextToken == nil {
+				break
+			} else {
+				input.NextToken = out.NextToken
+			}
 		}
 	}
 
-	if rule == nil {
+	if !found {
 		d.SetId("")
-		return fmt.Errorf("Filter rule id %v not found in filter %v (%v)", ruleId, filterId, direction)
+		return fmt.Errorf("Rule %s not found", ruleId)
 	}
 
 	return populateTrafficMirrorFilterRuleResource(d, rule)
 }
 
+func findRuleInFilters(ruleId string, filters []*ec2.TrafficMirrorFilter) (filter *ec2.TrafficMirrorFilter, rule *ec2.TrafficMirrorFilterRule, err error) {
+	log.Printf("[DEBUG] searching %s in %d filters", ruleId, len(filters))
+	err = nil
+	found := false
+	for _, v := range filters {
+		log.Printf("[DEBUG]: searching filter %s, ingress rule count = %d, egress rule count = %d", *v.TrafficMirrorFilterId, len(v.IngressFilterRules), len(v.EgressFilterRules))
+		for _, r := range v.IngressFilterRules {
+			if *r.TrafficMirrorFilterRuleId == ruleId {
+				rule = r
+				filter = v
+				found = true
+				break
+			}
+		}
+		for _, r := range v.EgressFilterRules {
+			if *r.TrafficMirrorFilterRuleId == ruleId {
+				rule = r
+				filter = v
+				found = true
+				break
+			}
+		}
+		if found {
+			break
+		}
+	}
+
+	if !found {
+		err = fmt.Errorf("Rule %s not found", ruleId)
+	}
+
+	log.Printf("[DEBUG]: Found %s in %s %s", ruleId, *filter.TrafficMirrorFilterId, *rule.TrafficDirection)
+	return filter, rule, err
+}
+
 func resourceAwsTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-
-	_, ruleId, err := parseTrafficMirrorFilterRuleResourceId(d.Id())
-	if err != nil {
-		return err
-	}
+	ruleId := d.Id()
 
 	input := &ec2.ModifyTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterRuleId: &ruleId,
@@ -271,7 +297,7 @@ func resourceAwsTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta inter
 		input.SetRemoveFields(removeFields)
 	}
 
-	_, err = conn.ModifyTrafficMirrorFilterRule(input)
+	_, err := conn.ModifyTrafficMirrorFilterRule(input)
 	if err != nil {
 		return fmt.Errorf("Error modifying rule %v", ruleId)
 	}
@@ -282,19 +308,14 @@ func resourceAwsTrafficMirrorFilterRuleUpdate(d *schema.ResourceData, meta inter
 func resourceAwsTrafficMirrorFilterRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	filterId, ruleId, err := parseTrafficMirrorFilterRuleResourceId(d.Id())
-	if err != nil {
-		d.SetId("")
-		return err
-	}
-
+	ruleId := d.Id()
 	input := &ec2.DeleteTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterRuleId: &ruleId,
 	}
 
-	_, err = conn.DeleteTrafficMirrorFilterRule(input)
+	_, err := conn.DeleteTrafficMirrorFilterRule(input)
 	if err != nil {
-		return fmt.Errorf("Error deleting traffic mirror filter rule %v (%v)", ruleId, filterId)
+		return fmt.Errorf("Error deleting traffic mirror filter rule %v", ruleId)
 	}
 
 	return nil
@@ -318,34 +339,26 @@ func buildTrafficMirrorPortRangeRequest(p []interface{}) (out *ec2.TrafficMirror
 }
 
 func populateTrafficMirrorFilterRuleResource(d *schema.ResourceData, rule *ec2.TrafficMirrorFilterRule) error {
-	d.SetId(buildTrafficMirrorFilterRuleResourceId(rule))
+	d.SetId(*rule.TrafficMirrorFilterRuleId)
 	d.Set("traffic_mirror_filter_id", rule.TrafficMirrorFilterId)
 	d.Set("destination_cidr_block", rule.DestinationCidrBlock)
 	d.Set("source_cidr_block", rule.SourceCidrBlock)
 	d.Set("rule_action", rule.RuleAction)
 	d.Set("rule_number", rule.RuleNumber)
 	d.Set("traffic_direction", rule.TrafficDirection)
-
-	if rule.Description != nil {
-		d.Set("description", rule.Description)
-	}
-
-	if rule.Protocol != nil {
-		d.Set("protocol", rule.Protocol)
-	}
-
-	if rule.DestinationPortRange != nil {
-		d.Set("destination_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.DestinationPortRange))
-	}
-
-	if rule.SourcePortRange != nil {
-		d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange))
-	}
+	d.Set("description", rule.Description)
+	d.Set("protocol", rule.Protocol)
+	d.Set("destination_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.DestinationPortRange))
+	d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange))
 
 	return nil
 }
 
 func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPortRange) interface{} {
+	if nil == portRange {
+		return nil
+	}
+
 	var out [1]interface{}
 	elem := make(map[string]interface{})
 	elem["from_port"] = portRange.FromPort
@@ -353,19 +366,4 @@ func buildTrafficMirrorFilterRulePortRangeSchema(portRange *ec2.TrafficMirrorPor
 	out[0] = elem
 
 	return out
-}
-
-// composite Resource ID required for supporting import, another option is to scan all the filters
-func buildTrafficMirrorFilterRuleResourceId(rule *ec2.TrafficMirrorFilterRule) string {
-	return fmt.Sprintf("%s:%s", *rule.TrafficMirrorFilterId, *rule.TrafficMirrorFilterRuleId)
-}
-
-func parseTrafficMirrorFilterRuleResourceId(id string) (string, string, error) {
-	res := strings.Split(id, ":")
-	if len(res) == 2 {
-		return res[0], res[1], nil
-	} else {
-		return "", "", fmt.Errorf("Error parsing resource Id %s. Expected <FilterId>:<RuleId>", id)
-	}
-
 }
