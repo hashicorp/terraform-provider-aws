@@ -1,29 +1,43 @@
-## 2.37.0 (Unreleased)
+## 2.39.0 (Unreleased)
+
+BUGS:
+
+* Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `custom_cookbooks_source` property for `aws_opsworks_stack` [GH-10175]
+* Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `app_source` property for `aws_opsworks_application` [GH-10175]
+
+## 2.38.0 (November 18, 2019)
+
+FEATURES:
+
+* **New Resource:** `aws_eks_node_group` ([#10916](https://github.com/terraform-providers/terraform-provider-aws/issues/10916))
+
+## 2.37.0 (November 18, 2019)
 
 ENHANCEMENTS:
 
-* resource/aws_api_gateway_rest_api: Add `tags` argument and `arn` attribute [GH-10581]
-* resource/aws_db_instance: Add `ca_cert_identifier` argument [GH-10490]
-* resource/aws_dlm_lifecycle_policy: Add `tags` argument and `arn` attribute [GH-10864]
-* resource/aws_efs_file_system: Add `AFTER_7_DAYS` as a valid `lifecycle_policy` configuratio block `transition_to_ia` argument value [GH-10825]
-* resource/aws_glue_crawler: Add `tags` argument [GH-10805]
-* resource/aws_s3_bucket_inventory: Add `IntelligentTieringAccessTier` as valid value for `optional_fields` argument [GH-10746]
-* resource/aws_waf_geo_match_set: Support resource import and add `arn` attribute [GH-10480]
-* resource/aws_waf_regex_match_set: Support resource import and add `arn` attribute [GH-10481]
-* resource/aws_waf_regex_pattern_set: Support resource import and add `arn` attribute [GH-10482]
-* resource/aws_waf_size_constraint_set: Support resource import and add `arn` attribute [GH-10484]
-* resource/aws_waf_xss_match_set: Support resource import and add `arn` attribute [GH-10485]
-* resource/aws_wafregional_rate_based_rule: Add `tags` argument and `arn` attribute [GH-10897]
-* resource/aws_wafregional_rule_group: Add `tags` argument and `arn` attribute [GH-10896]
-* resource/aws_wafregional_rule: Add `tags` argument and `arn` attribute [GH-10895]
-* resource/aws_wafregional_web_acl: Add `tags` argument [GH-10889]
-* resource/aws_wafregional_web_acl_association: Support resource import [GH-10538]
+* resource/aws_api_gateway_rest_api: Add `tags` argument and `arn` attribute ([#10581](https://github.com/terraform-providers/terraform-provider-aws/issues/10581))
+* resource/aws_db_instance: Add `ca_cert_identifier` argument ([#10490](https://github.com/terraform-providers/terraform-provider-aws/issues/10490))
+* resource/aws_dlm_lifecycle_policy: Add `tags` argument and `arn` attribute ([#10864](https://github.com/terraform-providers/terraform-provider-aws/issues/10864))
+* resource/aws_efs_file_system: Add `AFTER_7_DAYS` as a valid `lifecycle_policy` configuratio block `transition_to_ia` argument value ([#10825](https://github.com/terraform-providers/terraform-provider-aws/issues/10825))
+* resource/aws_glue_crawler: Add `tags` argument ([#10805](https://github.com/terraform-providers/terraform-provider-aws/issues/10805))
+* resource/aws_s3_bucket_inventory: Add `IntelligentTieringAccessTier` as valid value for `optional_fields` argument ([#10746](https://github.com/terraform-providers/terraform-provider-aws/issues/10746))
+* resource/aws_waf_geo_match_set: Support resource import and add `arn` attribute ([#10480](https://github.com/terraform-providers/terraform-provider-aws/issues/10480))
+* resource/aws_waf_regex_match_set: Support resource import and add `arn` attribute ([#10481](https://github.com/terraform-providers/terraform-provider-aws/issues/10481))
+* resource/aws_waf_regex_pattern_set: Support resource import and add `arn` attribute ([#10482](https://github.com/terraform-providers/terraform-provider-aws/issues/10482))
+* resource/aws_waf_size_constraint_set: Support resource import and add `arn` attribute ([#10484](https://github.com/terraform-providers/terraform-provider-aws/issues/10484))
+* resource/aws_waf_xss_match_set: Support resource import and add `arn` attribute ([#10485](https://github.com/terraform-providers/terraform-provider-aws/issues/10485))
+* resource/aws_wafregional_rate_based_rule: Add `tags` argument and `arn` attribute ([#10897](https://github.com/terraform-providers/terraform-provider-aws/issues/10897))
+* resource/aws_wafregional_rule_group: Add `tags` argument and `arn` attribute ([#10896](https://github.com/terraform-providers/terraform-provider-aws/issues/10896))
+* resource/aws_wafregional_rule: Add `tags` argument and `arn` attribute ([#10895](https://github.com/terraform-providers/terraform-provider-aws/issues/10895))
+* resource/aws_wafregional_web_acl: Add `tags` argument ([#10889](https://github.com/terraform-providers/terraform-provider-aws/issues/10889))
+* resource/aws_wafregional_web_acl_association: Support resource import ([#10538](https://github.com/terraform-providers/terraform-provider-aws/issues/10538))
+* resource/aws_cloudtrail: support Tag on create ([#10818](https://github.com/terraform-providers/terraform-provider-aws/issues/10818))
 
 BUG FIXES:
 
-* data-source/aws_iam_policy_document: Prevent panic when combining single principal identifier with multiple principal identifiers [GH-10780]
-* data-source/aws_iam_policy_document: Prevent losing identifier elements when combining single and multiple principals identifiers [GH-10844]
-* resource/aws_servicequotas_service_quota: Remove resource from Terraform state on `NoSuchResourceException` error [GH-10735]
+* data-source/aws_iam_policy_document: Prevent panic when combining single principal identifier with multiple principal identifiers ([#10780](https://github.com/terraform-providers/terraform-provider-aws/issues/10780))
+* data-source/aws_iam_policy_document: Prevent losing identifier elements when combining single and multiple principals identifiers ([#10844](https://github.com/terraform-providers/terraform-provider-aws/issues/10844))
+* resource/aws_servicequotas_service_quota: Remove resource from Terraform state on `NoSuchResourceException` error ([#10735](https://github.com/terraform-providers/terraform-provider-aws/issues/10735))
 
 ## 2.36.0 (November 14, 2019)
 

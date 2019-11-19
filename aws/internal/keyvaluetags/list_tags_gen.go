@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -229,6 +230,23 @@ func Cloudhsmv2ListTags(conn *cloudhsmv2.CloudHSMV2, identifier string) (KeyValu
 	}
 
 	return Cloudhsmv2KeyValueTags(output.TagList), nil
+}
+
+// CloudtrailListTags lists cloudtrail service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudtrailListTags(conn *cloudtrail.CloudTrail, identifier string) (KeyValueTags, error) {
+	input := &cloudtrail.ListTagsInput{
+		ResourceIdList: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.ListTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudtrailKeyValueTags(output.ResourceTagList[0].TagsList), nil
 }
 
 // CloudwatchListTags lists cloudwatch service tags.
