@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsKmsExternalKey() *schema.Resource {
@@ -105,7 +106,7 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapKMS(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().KmsTags()
 	}
 
 	var output *kms.CreateKeyOutput
@@ -249,7 +250,12 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("key_usage", metadata.KeyUsage)
 	d.Set("policy", policy)
 
-	if err := d.Set("tags", tagsToMapKMS(listResourceTagsOutput.Tags)); err != nil {
+	tags, err := keyvaluetags.KmsListTags(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -314,8 +320,12 @@ func resourceAwsKmsExternalKeyUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if err := setTagsKMS(conn, d, d.Id()); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating KMS External Key (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsKmsExternalKeyRead(d, meta)
