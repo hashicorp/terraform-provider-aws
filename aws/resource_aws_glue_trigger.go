@@ -126,6 +126,11 @@ func resourceAwsGlueTrigger() *schema.Resource {
 					glue.TriggerTypeScheduled,
 				}, false),
 			},
+			"workflow_name": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -151,6 +156,10 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("schedule"); ok {
 		input.Schedule = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("workflow_name"); ok {
+		input.WorkflowName = aws.String(v.(string))
 	}
 
 	if d.Get("enabled").(bool) && triggerType != glue.TriggerTypeOnDemand {
@@ -234,6 +243,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", trigger.Name)
 	d.Set("schedule", trigger.Schedule)
 	d.Set("type", trigger.Type)
+	d.Set("workflow_name", trigger.WorkflowName)
 
 	return nil
 }
