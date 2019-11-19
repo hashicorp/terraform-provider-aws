@@ -228,20 +228,6 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error normalizing KMS External Key (%s) policy: %s", d.Id(), err)
 	}
 
-	listResourceTagsInput := &kms.ListResourceTagsInput{
-		KeyId: metadata.KeyId,
-	}
-
-	listResourceTagsOutput, err := conn.ListResourceTags(listResourceTagsInput)
-
-	if err != nil {
-		return fmt.Errorf("error listing KMS External Key (%s) tags: %s", d.Id(), err)
-	}
-
-	if listResourceTagsOutput == nil {
-		return fmt.Errorf("error listing KMS External Key (%s) tags: empty response", d.Id())
-	}
-
 	d.Set("arn", metadata.Arn)
 	d.Set("description", metadata.Description)
 	d.Set("enabled", metadata.Enabled)
