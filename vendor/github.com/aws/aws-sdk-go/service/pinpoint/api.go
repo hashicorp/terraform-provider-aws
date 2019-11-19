@@ -855,6 +855,98 @@ func (c *Pinpoint) CreateSmsTemplateWithContext(ctx aws.Context, input *CreateSm
 	return out, req.Send()
 }
 
+const opCreateVoiceTemplate = "CreateVoiceTemplate"
+
+// CreateVoiceTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateVoiceTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateVoiceTemplate for more information on using the CreateVoiceTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateVoiceTemplateRequest method.
+//    req, resp := client.CreateVoiceTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateVoiceTemplate
+func (c *Pinpoint) CreateVoiceTemplateRequest(input *CreateVoiceTemplateInput) (req *request.Request, output *CreateVoiceTemplateOutput) {
+	op := &request.Operation{
+		Name:       opCreateVoiceTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/templates/{template-name}/voice",
+	}
+
+	if input == nil {
+		input = &CreateVoiceTemplateInput{}
+	}
+
+	output = &CreateVoiceTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateVoiceTemplate API operation for Amazon Pinpoint.
+//
+// Creates a message template that you can use in messages that are sent through
+// the voice channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation CreateVoiceTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateVoiceTemplate
+func (c *Pinpoint) CreateVoiceTemplate(input *CreateVoiceTemplateInput) (*CreateVoiceTemplateOutput, error) {
+	req, out := c.CreateVoiceTemplateRequest(input)
+	return out, req.Send()
+}
+
+// CreateVoiceTemplateWithContext is the same as CreateVoiceTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateVoiceTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) CreateVoiceTemplateWithContext(ctx aws.Context, input *CreateVoiceTemplateInput, opts ...request.Option) (*CreateVoiceTemplateOutput, error) {
+	req, out := c.CreateVoiceTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteAdmChannel = "DeleteAdmChannel"
 
 // DeleteAdmChannelRequest generates a "aws/request.Request" representing the
@@ -2743,6 +2835,101 @@ func (c *Pinpoint) DeleteVoiceChannel(input *DeleteVoiceChannelInput) (*DeleteVo
 // for more information on using Contexts.
 func (c *Pinpoint) DeleteVoiceChannelWithContext(ctx aws.Context, input *DeleteVoiceChannelInput, opts ...request.Option) (*DeleteVoiceChannelOutput, error) {
 	req, out := c.DeleteVoiceChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteVoiceTemplate = "DeleteVoiceTemplate"
+
+// DeleteVoiceTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteVoiceTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteVoiceTemplate for more information on using the DeleteVoiceTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteVoiceTemplateRequest method.
+//    req, resp := client.DeleteVoiceTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteVoiceTemplate
+func (c *Pinpoint) DeleteVoiceTemplateRequest(input *DeleteVoiceTemplateInput) (req *request.Request, output *DeleteVoiceTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteVoiceTemplate,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/templates/{template-name}/voice",
+	}
+
+	if input == nil {
+		input = &DeleteVoiceTemplateInput{}
+	}
+
+	output = &DeleteVoiceTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteVoiceTemplate API operation for Amazon Pinpoint.
+//
+// Deletes a message template that was designed for use in messages that were
+// sent through the voice channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation DeleteVoiceTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteVoiceTemplate
+func (c *Pinpoint) DeleteVoiceTemplate(input *DeleteVoiceTemplateInput) (*DeleteVoiceTemplateOutput, error) {
+	req, out := c.DeleteVoiceTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteVoiceTemplateWithContext is the same as DeleteVoiceTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteVoiceTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) DeleteVoiceTemplateWithContext(ctx aws.Context, input *DeleteVoiceTemplateInput, opts ...request.Option) (*DeleteVoiceTemplateOutput, error) {
+	req, out := c.DeleteVoiceTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6638,6 +6825,101 @@ func (c *Pinpoint) GetVoiceChannelWithContext(ctx aws.Context, input *GetVoiceCh
 	return out, req.Send()
 }
 
+const opGetVoiceTemplate = "GetVoiceTemplate"
+
+// GetVoiceTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the GetVoiceTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetVoiceTemplate for more information on using the GetVoiceTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetVoiceTemplateRequest method.
+//    req, resp := client.GetVoiceTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetVoiceTemplate
+func (c *Pinpoint) GetVoiceTemplateRequest(input *GetVoiceTemplateInput) (req *request.Request, output *GetVoiceTemplateOutput) {
+	op := &request.Operation{
+		Name:       opGetVoiceTemplate,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/templates/{template-name}/voice",
+	}
+
+	if input == nil {
+		input = &GetVoiceTemplateInput{}
+	}
+
+	output = &GetVoiceTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetVoiceTemplate API operation for Amazon Pinpoint.
+//
+// Retrieves the content and settings for a message template that you can use
+// in messages that are sent through the voice channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation GetVoiceTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetVoiceTemplate
+func (c *Pinpoint) GetVoiceTemplate(input *GetVoiceTemplateInput) (*GetVoiceTemplateOutput, error) {
+	req, out := c.GetVoiceTemplateRequest(input)
+	return out, req.Send()
+}
+
+// GetVoiceTemplateWithContext is the same as GetVoiceTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetVoiceTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) GetVoiceTemplateWithContext(ctx aws.Context, input *GetVoiceTemplateInput, opts ...request.Option) (*GetVoiceTemplateOutput, error) {
+	req, out := c.GetVoiceTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListJourneys = "ListJourneys"
 
 // ListJourneysRequest generates a "aws/request.Request" representing the
@@ -9519,6 +9801,101 @@ func (c *Pinpoint) UpdateVoiceChannelWithContext(ctx aws.Context, input *UpdateV
 	return out, req.Send()
 }
 
+const opUpdateVoiceTemplate = "UpdateVoiceTemplate"
+
+// UpdateVoiceTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateVoiceTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateVoiceTemplate for more information on using the UpdateVoiceTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateVoiceTemplateRequest method.
+//    req, resp := client.UpdateVoiceTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateVoiceTemplate
+func (c *Pinpoint) UpdateVoiceTemplateRequest(input *UpdateVoiceTemplateInput) (req *request.Request, output *UpdateVoiceTemplateOutput) {
+	op := &request.Operation{
+		Name:       opUpdateVoiceTemplate,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/templates/{template-name}/voice",
+	}
+
+	if input == nil {
+		input = &UpdateVoiceTemplateInput{}
+	}
+
+	output = &UpdateVoiceTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateVoiceTemplate API operation for Amazon Pinpoint.
+//
+// Updates an existing message template that you can use in messages that are
+// sent through the voice channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Pinpoint's
+// API operation UpdateVoiceTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   Provides information about an API request or response.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   Provides information about an API request or response.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateVoiceTemplate
+func (c *Pinpoint) UpdateVoiceTemplate(input *UpdateVoiceTemplateInput) (*UpdateVoiceTemplateOutput, error) {
+	req, out := c.UpdateVoiceTemplateRequest(input)
+	return out, req.Send()
+}
+
+// UpdateVoiceTemplateWithContext is the same as UpdateVoiceTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateVoiceTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Pinpoint) UpdateVoiceTemplateWithContext(ctx aws.Context, input *UpdateVoiceTemplateInput, opts ...request.Option) (*UpdateVoiceTemplateOutput, error) {
+	req, out := c.UpdateVoiceTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Specifies the status and settings of the ADM (Amazon Device Messaging) channel
 // for an application.
 type ADMChannelRequest struct {
@@ -9745,7 +10122,7 @@ type ADMMessage struct {
 	MD5 *string `type:"string"`
 
 	// The raw, JSON-formatted string to use as the payload for the notification
-	// message. This value overrides the message.
+	// message. If specified, this value overrides all other content for the message.
 	RawContent *string `type:"string"`
 
 	// Specifies whether the notification is a silent push notification, which is
@@ -10206,7 +10583,7 @@ type APNSMessage struct {
 	Priority *string `type:"string"`
 
 	// The raw, JSON-formatted string to use as the payload for the notification
-	// message. This value overrides all other content for the message.
+	// message. If specified, this value overrides all other content for the message.
 	//
 	// If you specify the raw content of an APNs push notification, the message
 	// payload has to include the content-available key. The value of the content-available
@@ -10424,6 +10801,11 @@ type APNSPushNotificationTemplate struct {
 	// on the message template.
 	MediaUrl *string `type:"string"`
 
+	// The raw, JSON-formatted string to use as the payload for push notifications
+	// that are based on the message template. If specified, this value overrides
+	// all other content for the message template.
+	RawContent *string `type:"string"`
+
 	// The key for the sound to play when the recipient receives a push notification
 	// that's based on the message template. The value for this key is the name
 	// of a sound file in your app's main bundle or the Library/Sounds folder in
@@ -10466,6 +10848,12 @@ func (s *APNSPushNotificationTemplate) SetBody(v string) *APNSPushNotificationTe
 // SetMediaUrl sets the MediaUrl field's value.
 func (s *APNSPushNotificationTemplate) SetMediaUrl(v string) *APNSPushNotificationTemplate {
 	s.MediaUrl = &v
+	return s
+}
+
+// SetRawContent sets the RawContent field's value.
+func (s *APNSPushNotificationTemplate) SetRawContent(v string) *APNSPushNotificationTemplate {
+	s.RawContent = &v
 	return s
 }
 
@@ -11481,13 +11869,13 @@ type AddressConfiguration struct {
 	// to email/SMS delivery receipt event attributes.
 	Context map[string]*string `type:"map"`
 
-	// The raw, JSON-formatted string to use as the payload for the notification
-	// message. This value overrides the message.
+	// The raw, JSON-formatted string to use as the payload for the message. If
+	// specified, this value overrides all other values for the message.
 	RawContent *string `type:"string"`
 
-	// An object that maps variable values for the message. Amazon Pinpoint merges
-	// these values with the variable values specified by properties of the DefaultMessage
-	// object. The substitutions in this map take precedence over all other substitutions.
+	// A map of the message variables to merge with the variables specified by properties
+	// of the DefaultMessage object. The variables specified in this map take precedence
+	// over all other variables.
 	Substitutions map[string][]*string `type:"map"`
 
 	// The message title to use instead of the default message title. This value
@@ -11574,6 +11962,11 @@ type AndroidPushNotificationTemplate struct {
 	// message template.
 	ImageUrl *string `type:"string"`
 
+	// The raw, JSON-formatted string to use as the payload for a push notification
+	// that's based on the message template. If specified, this value overrides
+	// all other content for the message template.
+	RawContent *string `type:"string"`
+
 	// The URL of the small icon image to display in the status bar and the content
 	// view of a push notification that's based on the message template.
 	SmallImageIconUrl *string `type:"string"`
@@ -11625,6 +12018,12 @@ func (s *AndroidPushNotificationTemplate) SetImageIconUrl(v string) *AndroidPush
 // SetImageUrl sets the ImageUrl field's value.
 func (s *AndroidPushNotificationTemplate) SetImageUrl(v string) *AndroidPushNotificationTemplate {
 	s.ImageUrl = &v
+	return s
+}
+
+// SetRawContent sets the RawContent field's value.
+func (s *AndroidPushNotificationTemplate) SetRawContent(v string) *AndroidPushNotificationTemplate {
+	s.RawContent = &v
 	return s
 }
 
@@ -12247,7 +12646,7 @@ type BaiduMessage struct {
 	ImageUrl *string `type:"string"`
 
 	// The raw, JSON-formatted string to use as the payload for the notification
-	// message. This value overrides the message.
+	// message. If specified, this value overrides all other content for the message.
 	RawContent *string `type:"string"`
 
 	// Specifies whether the notification is a silent push notification, which is
@@ -12504,7 +12903,7 @@ func (s *CampaignDateRangeKpiResponse) SetStartTime(v time.Time) *CampaignDateRa
 type CampaignEmailMessage struct {
 	_ struct{} `type:"structure"`
 
-	// The body of the email for recipients whose email clients don't support HTML
+	// The body of the email for recipients whose email clients don't render HTML
 	// content.
 	Body *string `type:"string"`
 
@@ -12513,7 +12912,7 @@ type CampaignEmailMessage struct {
 	FromAddress *string `type:"string"`
 
 	// The body of the email, in HTML format, for recipients whose email clients
-	// support HTML content.
+	// render HTML content.
 	HtmlBody *string `type:"string"`
 
 	// The subject line, or title, of the email.
@@ -14167,16 +14566,94 @@ func (s *CreateTemplateMessageBody) SetRequestID(v string) *CreateTemplateMessag
 	return s
 }
 
-// Specifies the default message to use for all channels.
+type CreateVoiceTemplateInput struct {
+	_ struct{} `type:"structure" payload:"VoiceTemplateRequest"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in messages that are sent through the voice channel.
+	//
+	// VoiceTemplateRequest is a required field
+	VoiceTemplateRequest *VoiceTemplateRequest `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateVoiceTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateVoiceTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateVoiceTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateVoiceTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+	if s.VoiceTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("VoiceTemplateRequest"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CreateVoiceTemplateInput) SetTemplateName(v string) *CreateVoiceTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+// SetVoiceTemplateRequest sets the VoiceTemplateRequest field's value.
+func (s *CreateVoiceTemplateInput) SetVoiceTemplateRequest(v *VoiceTemplateRequest) *CreateVoiceTemplateInput {
+	s.VoiceTemplateRequest = v
+	return s
+}
+
+type CreateVoiceTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"CreateTemplateMessageBody"`
+
+	// Provides information about a request to create a message template.
+	//
+	// CreateTemplateMessageBody is a required field
+	CreateTemplateMessageBody *CreateTemplateMessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateVoiceTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateVoiceTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetCreateTemplateMessageBody sets the CreateTemplateMessageBody field's value.
+func (s *CreateVoiceTemplateOutput) SetCreateTemplateMessageBody(v *CreateTemplateMessageBody) *CreateVoiceTemplateOutput {
+	s.CreateTemplateMessageBody = v
+	return s
+}
+
+// Specifies the default message for all channels.
 type DefaultMessage struct {
 	_ struct{} `type:"structure"`
 
-	// The default message body of the push notification, email, or SMS message.
+	// The default body of the message.
 	Body *string `type:"string"`
 
-	// The default message variables to use in the push notification, email, or
-	// SMS message. You can override these default variables with individual address
-	// variables.
+	// The default message variables to use in the message. You can override these
+	// default variables with individual address variables.
 	Substitutions map[string][]*string `type:"map"`
 }
 
@@ -15756,6 +16233,70 @@ func (s *DeleteVoiceChannelOutput) SetVoiceChannelResponse(v *VoiceChannelRespon
 	return s
 }
 
+type DeleteVoiceTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteVoiceTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteVoiceTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteVoiceTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteVoiceTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *DeleteVoiceTemplateInput) SetTemplateName(v string) *DeleteVoiceTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type DeleteVoiceTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteVoiceTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteVoiceTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *DeleteVoiceTemplateOutput) SetMessageBody(v *MessageBody) *DeleteVoiceTemplateOutput {
+	s.MessageBody = v
+	return s
+}
+
 // Specifies the settings and content for the default message and any default
 // messages that you tailored for specific channels.
 type DirectMessageConfiguration struct {
@@ -15774,7 +16315,7 @@ type DirectMessageConfiguration struct {
 	// This message overrides the default push notification message (DefaultPushNotificationMessage).
 	BaiduMessage *BaiduMessage `type:"structure"`
 
-	// The default message body for all channels.
+	// The default message for all channels.
 	DefaultMessage *DefaultMessage `type:"structure"`
 
 	// The default push notification message for all push notification channels.
@@ -16241,10 +16782,18 @@ func (s *EmailMessageActivity) SetTemplateName(v string) *EmailMessageActivity {
 type EmailTemplateRequest struct {
 	_ struct{} `type:"structure"`
 
+	// A JSON object that specifies the default values to use for message variables
+	// in the message template. This object is a set of key-value pairs. Each key
+	// defines a message variable in the template. The corresponding value defines
+	// the default value for that variable. When you create a message that's based
+	// on the template, you can override these defaults with message-specific and
+	// address-specific variables and values.
+	DefaultSubstitutions *string `type:"string"`
+
 	// The message body, in HTML format, to use in email messages that are based
 	// on the message template. We recommend using HTML format for email clients
-	// that support HTML. You can include links, formatted text, and more in an
-	// HTML message.
+	// that render HTML content. You can include links, formatted text, and more
+	// in an HTML message.
 	HtmlPart *string `type:"string"`
 
 	// The subject line, or title, to use in email messages that are based on the
@@ -16256,10 +16805,13 @@ type EmailTemplateRequest struct {
 	// associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
-	// The message body, in text format, to use in email messages that are based
-	// on the message template. We recommend using text format for email clients
-	// that don't support HTML and clients that are connected to high-latency networks,
-	// such as mobile devices.
+	// A custom description of the message template.
+	TemplateDescription *string `type:"string"`
+
+	// The message body, in plain text format, to use in email messages that are
+	// based on the message template. We recommend using plain text format for email
+	// clients that don't render HTML content and clients that are connected to
+	// high-latency networks, such as mobile devices.
 	TextPart *string `type:"string"`
 }
 
@@ -16271,6 +16823,12 @@ func (s EmailTemplateRequest) String() string {
 // GoString returns the string representation
 func (s EmailTemplateRequest) GoString() string {
 	return s.String()
+}
+
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *EmailTemplateRequest) SetDefaultSubstitutions(v string) *EmailTemplateRequest {
+	s.DefaultSubstitutions = &v
+	return s
 }
 
 // SetHtmlPart sets the HtmlPart field's value.
@@ -16288,6 +16846,12 @@ func (s *EmailTemplateRequest) SetSubject(v string) *EmailTemplateRequest {
 // SetTags sets the Tags field's value.
 func (s *EmailTemplateRequest) SetTags(v map[string]*string) *EmailTemplateRequest {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *EmailTemplateRequest) SetTemplateDescription(v string) *EmailTemplateRequest {
+	s.TemplateDescription = &v
 	return s
 }
 
@@ -16310,6 +16874,12 @@ type EmailTemplateResponse struct {
 	// CreationDate is a required field
 	CreationDate *string `type:"string" required:"true"`
 
+	// The JSON object that specifies the default values that are used for message
+	// variables in the message template. This object is a set of key-value pairs.
+	// Each key defines a message variable in the template. The corresponding value
+	// defines the default value for that variable.
+	DefaultSubstitutions *string `type:"string"`
+
 	// The message body, in HTML format, that's used in email messages that are
 	// based on the message template.
 	HtmlPart *string `type:"string"`
@@ -16328,6 +16898,9 @@ type EmailTemplateResponse struct {
 	// key and an associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
+	// The custom description of the message template.
+	TemplateDescription *string `type:"string"`
+
 	// The name of the message template.
 	//
 	// TemplateName is a required field
@@ -16339,8 +16912,8 @@ type EmailTemplateResponse struct {
 	// TemplateType is a required field
 	TemplateType *string `type:"string" required:"true" enum:"TemplateType"`
 
-	// The message body, in text format, that's used in email messages that are
-	// based on the message template.
+	// The message body, in plain text format, that's used in email messages that
+	// are based on the message template.
 	TextPart *string `type:"string"`
 }
 
@@ -16366,6 +16939,12 @@ func (s *EmailTemplateResponse) SetCreationDate(v string) *EmailTemplateResponse
 	return s
 }
 
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *EmailTemplateResponse) SetDefaultSubstitutions(v string) *EmailTemplateResponse {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
 // SetHtmlPart sets the HtmlPart field's value.
 func (s *EmailTemplateResponse) SetHtmlPart(v string) *EmailTemplateResponse {
 	s.HtmlPart = &v
@@ -16387,6 +16966,12 @@ func (s *EmailTemplateResponse) SetSubject(v string) *EmailTemplateResponse {
 // SetTags sets the Tags field's value.
 func (s *EmailTemplateResponse) SetTags(v map[string]*string) *EmailTemplateResponse {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *EmailTemplateResponse) SetTemplateDescription(v string) *EmailTemplateResponse {
+	s.TemplateDescription = &v
 	return s
 }
 
@@ -17233,7 +17818,7 @@ type EndpointSendConfiguration struct {
 	Context map[string]*string `type:"map"`
 
 	// The raw, JSON-formatted string to use as the payload for the message. If
-	// specified, this value overrides the message.
+	// specified, this value overrides all other values for the message.
 	RawContent *string `type:"string"`
 
 	// A map of the message variables to merge with the variables specified for
@@ -18469,7 +19054,7 @@ type GCMMessage struct {
 	Priority *string `type:"string"`
 
 	// The raw, JSON-formatted string to use as the payload for the notification
-	// message. This value overrides the message.
+	// message. If specified, this value overrides all other content for the message.
 	RawContent *string `type:"string"`
 
 	// The package name of the application where registration tokens must match
@@ -22025,6 +22610,71 @@ func (s *GetVoiceChannelOutput) SetVoiceChannelResponse(v *VoiceChannelResponse)
 	return s
 }
 
+type GetVoiceTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetVoiceTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetVoiceTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetVoiceTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetVoiceTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *GetVoiceTemplateInput) SetTemplateName(v string) *GetVoiceTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+type GetVoiceTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"VoiceTemplateResponse"`
+
+	// Provides information about the content and settings for a message template
+	// that can be used in messages that are sent through the voice channel.
+	//
+	// VoiceTemplateResponse is a required field
+	VoiceTemplateResponse *VoiceTemplateResponse `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetVoiceTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetVoiceTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetVoiceTemplateResponse sets the VoiceTemplateResponse field's value.
+func (s *GetVoiceTemplateOutput) SetVoiceTemplateResponse(v *VoiceTemplateResponse) *GetVoiceTemplateOutput {
+	s.VoiceTemplateResponse = v
+	return s
+}
+
 // Specifies the settings for a holdout activity in a journey. This type of
 // activity stops a journey for a specified percentage of participants.
 type HoldoutActivity struct {
@@ -23471,7 +24121,7 @@ type Message struct {
 	MediaUrl *string `type:"string"`
 
 	// The raw, JSON-formatted string to use as the payload for the notification
-	// message. This value overrides other values for the message.
+	// message. If specified, this value overrides all other content for the message.
 	RawContent *string `type:"string"`
 
 	// Specifies whether the notification is a silent push notification, which is
@@ -23715,8 +24365,7 @@ func (s *MessageConfiguration) SetSMSMessage(v *CampaignSmsMessage) *MessageConf
 	return s
 }
 
-// Specifies the objects that define configuration and other settings for a
-// message.
+// Specifies the configuration and other settings for a message.
 type MessageRequest struct {
 	_ struct{} `type:"structure"`
 
@@ -23738,7 +24387,8 @@ type MessageRequest struct {
 	// as content overrides and message variables.
 	Endpoints map[string]*EndpointSendConfiguration `type:"map"`
 
-	// The set of properties that defines the configuration settings for the message.
+	// The settings and content for the default message and any default messages
+	// that you defined for specific channels.
 	//
 	// MessageConfiguration is a required field
 	MessageConfiguration *DirectMessageConfiguration `type:"structure" required:"true"`
@@ -24535,6 +25185,14 @@ type PushNotificationTemplateRequest struct {
 	// The default message template to use for push notification channels.
 	Default *DefaultPushNotificationTemplate `type:"structure"`
 
+	// A JSON object that specifies the default values to use for message variables
+	// in the message template. This object is a set of key-value pairs. Each key
+	// defines a message variable in the template. The corresponding value defines
+	// the default value for that variable. When you create a message that's based
+	// on the template, you can override these defaults with message-specific and
+	// address-specific variables and values.
+	DefaultSubstitutions *string `type:"string"`
+
 	// The message template to use for the GCM channel, which is used to send notifications
 	// through the Firebase Cloud Messaging (FCM), formerly Google Cloud Messaging
 	// (GCM), service. This message template overrides the default template for
@@ -24545,6 +25203,9 @@ type PushNotificationTemplateRequest struct {
 	// with the message template. Each tag consists of a required tag key and an
 	// associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// A custom description of the message template.
+	TemplateDescription *string `type:"string"`
 }
 
 // String returns the string representation
@@ -24581,6 +25242,12 @@ func (s *PushNotificationTemplateRequest) SetDefault(v *DefaultPushNotificationT
 	return s
 }
 
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *PushNotificationTemplateRequest) SetDefaultSubstitutions(v string) *PushNotificationTemplateRequest {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
 // SetGCM sets the GCM field's value.
 func (s *PushNotificationTemplateRequest) SetGCM(v *AndroidPushNotificationTemplate) *PushNotificationTemplateRequest {
 	s.GCM = v
@@ -24590,6 +25257,12 @@ func (s *PushNotificationTemplateRequest) SetGCM(v *AndroidPushNotificationTempl
 // SetTags sets the Tags field's value.
 func (s *PushNotificationTemplateRequest) SetTags(v map[string]*string) *PushNotificationTemplateRequest {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *PushNotificationTemplateRequest) SetTemplateDescription(v string) *PushNotificationTemplateRequest {
+	s.TemplateDescription = &v
 	return s
 }
 
@@ -24624,6 +25297,12 @@ type PushNotificationTemplateResponse struct {
 	// The default message template that's used for push notification channels.
 	Default *DefaultPushNotificationTemplate `type:"structure"`
 
+	// The JSON object that specifies the default values that are used for message
+	// variables in the message template. This object is a set of key-value pairs.
+	// Each key defines a message variable in the template. The corresponding value
+	// defines the default value for that variable.
+	DefaultSubstitutions *string `type:"string"`
+
 	// The message template that's used for the GCM channel, which is used to send
 	// notifications through the Firebase Cloud Messaging (FCM), formerly Google
 	// Cloud Messaging (GCM), service. This message template overrides the default
@@ -24639,6 +25318,9 @@ type PushNotificationTemplateResponse struct {
 	// associated with the message template. Each tag consists of a required tag
 	// key and an associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The custom description of the message template.
+	TemplateDescription *string `type:"string"`
 
 	// The name of the message template.
 	//
@@ -24698,6 +25380,12 @@ func (s *PushNotificationTemplateResponse) SetDefault(v *DefaultPushNotification
 	return s
 }
 
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *PushNotificationTemplateResponse) SetDefaultSubstitutions(v string) *PushNotificationTemplateResponse {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
 // SetGCM sets the GCM field's value.
 func (s *PushNotificationTemplateResponse) SetGCM(v *AndroidPushNotificationTemplate) *PushNotificationTemplateResponse {
 	s.GCM = v
@@ -24713,6 +25401,12 @@ func (s *PushNotificationTemplateResponse) SetLastModifiedDate(v string) *PushNo
 // SetTags sets the Tags field's value.
 func (s *PushNotificationTemplateResponse) SetTags(v map[string]*string) *PushNotificationTemplateResponse {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *PushNotificationTemplateResponse) SetTemplateDescription(v string) *PushNotificationTemplateResponse {
+	s.TemplateDescription = &v
 	return s
 }
 
@@ -25548,10 +26242,21 @@ type SMSTemplateRequest struct {
 	// The message body to use in text messages that are based on the message template.
 	Body *string `type:"string"`
 
+	// A JSON object that specifies the default values to use for message variables
+	// in the message template. This object is a set of key-value pairs. Each key
+	// defines a message variable in the template. The corresponding value defines
+	// the default value for that variable. When you create a message that's based
+	// on the template, you can override these defaults with message-specific and
+	// address-specific variables and values.
+	DefaultSubstitutions *string `type:"string"`
+
 	// A string-to-string map of key-value pairs that defines the tags to associate
 	// with the message template. Each tag consists of a required tag key and an
 	// associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// A custom description of the message template.
+	TemplateDescription *string `type:"string"`
 }
 
 // String returns the string representation
@@ -25570,9 +26275,21 @@ func (s *SMSTemplateRequest) SetBody(v string) *SMSTemplateRequest {
 	return s
 }
 
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *SMSTemplateRequest) SetDefaultSubstitutions(v string) *SMSTemplateRequest {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *SMSTemplateRequest) SetTags(v map[string]*string) *SMSTemplateRequest {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *SMSTemplateRequest) SetTemplateDescription(v string) *SMSTemplateRequest {
+	s.TemplateDescription = &v
 	return s
 }
 
@@ -25593,6 +26310,12 @@ type SMSTemplateResponse struct {
 	// CreationDate is a required field
 	CreationDate *string `type:"string" required:"true"`
 
+	// The JSON object that specifies the default values that are used for message
+	// variables in the message template. This object is a set of key-value pairs.
+	// Each key defines a message variable in the template. The corresponding value
+	// defines the default value for that variable.
+	DefaultSubstitutions *string `type:"string"`
+
 	// The date when the message template was last modified.
 	//
 	// LastModifiedDate is a required field
@@ -25602,6 +26325,9 @@ type SMSTemplateResponse struct {
 	// associated with the message template. Each tag consists of a required tag
 	// key and an associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The custom description of the message template.
+	TemplateDescription *string `type:"string"`
 
 	// The name of the message template.
 	//
@@ -25643,6 +26369,12 @@ func (s *SMSTemplateResponse) SetCreationDate(v string) *SMSTemplateResponse {
 	return s
 }
 
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *SMSTemplateResponse) SetDefaultSubstitutions(v string) *SMSTemplateResponse {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
 // SetLastModifiedDate sets the LastModifiedDate field's value.
 func (s *SMSTemplateResponse) SetLastModifiedDate(v string) *SMSTemplateResponse {
 	s.LastModifiedDate = &v
@@ -25652,6 +26384,12 @@ func (s *SMSTemplateResponse) SetLastModifiedDate(v string) *SMSTemplateResponse
 // SetTags sets the Tags field's value.
 func (s *SMSTemplateResponse) SetTags(v map[string]*string) *SMSTemplateResponse {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *SMSTemplateResponse) SetTemplateDescription(v string) *SMSTemplateResponse {
+	s.TemplateDescription = &v
 	return s
 }
 
@@ -26636,8 +27374,7 @@ type SendMessagesInput struct {
 	// ApplicationId is a required field
 	ApplicationId *string `location:"uri" locationName:"application-id" type:"string" required:"true"`
 
-	// Specifies the objects that define configuration and other settings for a
-	// message.
+	// Specifies the configuration and other settings for a message.
 	//
 	// MessageRequest is a required field
 	MessageRequest *MessageRequest `type:"structure" required:"true"`
@@ -26726,7 +27463,7 @@ type SendUsersMessageRequest struct {
 	// it generates for users-messages deliveries.
 	Context map[string]*string `type:"map"`
 
-	// The message definitions for the default message and any default messages
+	// The settings and content for the default message and any default messages
 	// that you defined for specific channels.
 	//
 	// MessageConfiguration is a required field
@@ -27129,17 +27866,17 @@ func (s *SimpleCondition) SetSegmentDimensions(v *SegmentDimensions) *SimpleCond
 type SimpleEmail struct {
 	_ struct{} `type:"structure"`
 
-	// The body of the email message, in HTML format. We recommend using an HTML
-	// part for email clients that support HTML. You can include links, formatted
+	// The body of the email message, in HTML format. We recommend using HTML format
+	// for email clients that render HTML content. You can include links, formatted
 	// text, and more in an HTML message.
 	HtmlPart *SimpleEmailPart `type:"structure"`
 
 	// The subject line, or title, of the email.
 	Subject *SimpleEmailPart `type:"structure"`
 
-	// The body of the email message, in text format. We recommend using a text
-	// part for email clients that don't support HTML and clients that are connected
-	// to high-latency networks, such as mobile devices.
+	// The body of the email message, in plain text format. We recommend using plain
+	// text format for email clients that don't render HTML content and clients
+	// that are connected to high-latency networks, such as mobile devices.
 	TextPart *SimpleEmailPart `type:"structure"`
 }
 
@@ -27399,7 +28136,7 @@ func (s *Template) SetName(v string) *Template {
 	return s
 }
 
-// Specifies the message template for each type of channel.
+// Specifies the message template to use for the message, for each type of channel.
 type TemplateConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -27411,6 +28148,9 @@ type TemplateConfiguration struct {
 
 	// The SMS template to use for the message.
 	SMSTemplate *Template `type:"structure"`
+
+	// The voice template to use for the message.
+	VoiceTemplate *Template `type:"structure"`
 }
 
 // String returns the string representation
@@ -27441,6 +28181,12 @@ func (s *TemplateConfiguration) SetSMSTemplate(v *Template) *TemplateConfigurati
 	return s
 }
 
+// SetVoiceTemplate sets the VoiceTemplate field's value.
+func (s *TemplateConfiguration) SetVoiceTemplate(v *Template) *TemplateConfiguration {
+	s.VoiceTemplate = v
+	return s
+}
+
 // Provides information about a message template that's associated with your
 // Amazon Pinpoint account.
 type TemplateResponse struct {
@@ -27454,6 +28200,12 @@ type TemplateResponse struct {
 	// CreationDate is a required field
 	CreationDate *string `type:"string" required:"true"`
 
+	// The JSON object that specifies the default values that are used for message
+	// variables in the message template. This object is a set of key-value pairs.
+	// Each key defines a message variable in the template. The corresponding value
+	// defines the default value for that variable.
+	DefaultSubstitutions *string `type:"string"`
+
 	// The date when the message template was last modified.
 	//
 	// LastModifiedDate is a required field
@@ -27463,6 +28215,9 @@ type TemplateResponse struct {
 	// associated with the message template. Each tag consists of a required tag
 	// key and an associated tag value.
 	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The custom description of the message template.
+	TemplateDescription *string `type:"string"`
 
 	// The name of the message template.
 	//
@@ -27497,6 +28252,12 @@ func (s *TemplateResponse) SetCreationDate(v string) *TemplateResponse {
 	return s
 }
 
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *TemplateResponse) SetDefaultSubstitutions(v string) *TemplateResponse {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
 // SetLastModifiedDate sets the LastModifiedDate field's value.
 func (s *TemplateResponse) SetLastModifiedDate(v string) *TemplateResponse {
 	s.LastModifiedDate = &v
@@ -27506,6 +28267,12 @@ func (s *TemplateResponse) SetLastModifiedDate(v string) *TemplateResponse {
 // SetTags sets the Tags field's value.
 func (s *TemplateResponse) SetTags(v map[string]*string) *TemplateResponse {
 	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *TemplateResponse) SetTemplateDescription(v string) *TemplateResponse {
+	s.TemplateDescription = &v
 	return s
 }
 
@@ -29453,6 +30220,85 @@ func (s *UpdateVoiceChannelOutput) SetVoiceChannelResponse(v *VoiceChannelRespon
 	return s
 }
 
+type UpdateVoiceTemplateInput struct {
+	_ struct{} `type:"structure" payload:"VoiceTemplateRequest"`
+
+	// TemplateName is a required field
+	TemplateName *string `location:"uri" locationName:"template-name" type:"string" required:"true"`
+
+	// Specifies the content and settings for a message template that can be used
+	// in messages that are sent through the voice channel.
+	//
+	// VoiceTemplateRequest is a required field
+	VoiceTemplateRequest *VoiceTemplateRequest `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateVoiceTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateVoiceTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateVoiceTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateVoiceTemplateInput"}
+	if s.TemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TemplateName"))
+	}
+	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
+	}
+	if s.VoiceTemplateRequest == nil {
+		invalidParams.Add(request.NewErrParamRequired("VoiceTemplateRequest"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *UpdateVoiceTemplateInput) SetTemplateName(v string) *UpdateVoiceTemplateInput {
+	s.TemplateName = &v
+	return s
+}
+
+// SetVoiceTemplateRequest sets the VoiceTemplateRequest field's value.
+func (s *UpdateVoiceTemplateInput) SetVoiceTemplateRequest(v *VoiceTemplateRequest) *UpdateVoiceTemplateInput {
+	s.VoiceTemplateRequest = v
+	return s
+}
+
+type UpdateVoiceTemplateOutput struct {
+	_ struct{} `type:"structure" payload:"MessageBody"`
+
+	// Provides information about an API request or response.
+	//
+	// MessageBody is a required field
+	MessageBody *MessageBody `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateVoiceTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateVoiceTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetMessageBody sets the MessageBody field's value.
+func (s *UpdateVoiceTemplateOutput) SetMessageBody(v *MessageBody) *UpdateVoiceTemplateOutput {
+	s.MessageBody = v
+	return s
+}
+
 // Specifies the status and settings of the voice channel for an application.
 type VoiceChannelRequest struct {
 	_ struct{} `type:"structure"`
@@ -29593,11 +30439,12 @@ func (s *VoiceChannelResponse) SetVersion(v int64) *VoiceChannelResponse {
 type VoiceMessage struct {
 	_ struct{} `type:"structure"`
 
-	// The text script for the voice message.
+	// The text of the script to use for the voice message.
 	Body *string `type:"string"`
 
-	// The language to use when delivering the message. For a list of supported
-	// languages, see the Amazon Polly Developer Guide (AmazonPollyDG.html).
+	// The code for the language to use when synthesizing the text of the message
+	// script. For a list of supported languages and the code for each one, see
+	// the Amazon Polly Developer Guide (https://docs.aws.amazon.com/polly/latest/dg/what-is.html).
 	LanguageCode *string `type:"string"`
 
 	// The long code to send the voice message from. This value should be one of
@@ -29611,7 +30458,7 @@ type VoiceMessage struct {
 	Substitutions map[string][]*string `type:"map"`
 
 	// The name of the voice to use when delivering the message. For a list of supported
-	// voices, see the Amazon Polly Developer Guide (AmazonPollyDG.html).
+	// voices, see the Amazon Polly Developer Guide (https://docs.aws.amazon.com/polly/latest/dg/what-is.html).
 	VoiceId *string `type:"string"`
 }
 
@@ -29651,6 +30498,224 @@ func (s *VoiceMessage) SetSubstitutions(v map[string][]*string) *VoiceMessage {
 
 // SetVoiceId sets the VoiceId field's value.
 func (s *VoiceMessage) SetVoiceId(v string) *VoiceMessage {
+	s.VoiceId = &v
+	return s
+}
+
+// Specifies the content and settings for a message template that can be used
+// in messages that are sent through the voice channel.
+type VoiceTemplateRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The text of the script to use in messages that are based on the message template,
+	// in plain text format.
+	Body *string `type:"string"`
+
+	// A JSON object that specifies the default values to use for message variables
+	// in the message template. This object is a set of key-value pairs. Each key
+	// defines a message variable in the template. The corresponding value defines
+	// the default value for that variable. When you create a message that's based
+	// on the template, you can override these defaults with message-specific and
+	// address-specific variables and values.
+	DefaultSubstitutions *string `type:"string"`
+
+	// The code for the language to use when synthesizing the text of the script
+	// in messages that are based on the message template. For a list of supported
+	// languages and the code for each one, see the Amazon Polly Developer Guide
+	// (https://docs.aws.amazon.com/polly/latest/dg/what-is.html).
+	LanguageCode *string `type:"string"`
+
+	// A string-to-string map of key-value pairs that defines the tags to associate
+	// with the message template. Each tag consists of a required tag key and an
+	// associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// A custom description of the message template.
+	TemplateDescription *string `type:"string"`
+
+	// The name of the voice to use when delivering messages that are based on the
+	// message template. For a list of supported voices, see the Amazon Polly Developer
+	// Guide (https://docs.aws.amazon.com/polly/latest/dg/what-is.html).
+	VoiceId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s VoiceTemplateRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VoiceTemplateRequest) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *VoiceTemplateRequest) SetBody(v string) *VoiceTemplateRequest {
+	s.Body = &v
+	return s
+}
+
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *VoiceTemplateRequest) SetDefaultSubstitutions(v string) *VoiceTemplateRequest {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
+// SetLanguageCode sets the LanguageCode field's value.
+func (s *VoiceTemplateRequest) SetLanguageCode(v string) *VoiceTemplateRequest {
+	s.LanguageCode = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *VoiceTemplateRequest) SetTags(v map[string]*string) *VoiceTemplateRequest {
+	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *VoiceTemplateRequest) SetTemplateDescription(v string) *VoiceTemplateRequest {
+	s.TemplateDescription = &v
+	return s
+}
+
+// SetVoiceId sets the VoiceId field's value.
+func (s *VoiceTemplateRequest) SetVoiceId(v string) *VoiceTemplateRequest {
+	s.VoiceId = &v
+	return s
+}
+
+// Provides information about the content and settings for a message template
+// that can be used in messages that are sent through the voice channel.
+type VoiceTemplateResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the message template.
+	Arn *string `type:"string"`
+
+	// The text of the script that's used in messages that are based on the message
+	// template, in plain text format.
+	Body *string `type:"string"`
+
+	// The date when the message template was created.
+	//
+	// CreationDate is a required field
+	CreationDate *string `type:"string" required:"true"`
+
+	// The JSON object that specifies the default values that are used for message
+	// variables in the message template. This object is a set of key-value pairs.
+	// Each key defines a message variable in the template. The corresponding value
+	// defines the default value for that variable.
+	DefaultSubstitutions *string `type:"string"`
+
+	// The code for the language that's used when synthesizing the text of the script
+	// in messages that are based on the message template. For a list of supported
+	// languages and the code for each one, see the Amazon Polly Developer Guide
+	// (https://docs.aws.amazon.com/polly/latest/dg/what-is.html).
+	LanguageCode *string `type:"string"`
+
+	// The date when the message template was last modified.
+	//
+	// LastModifiedDate is a required field
+	LastModifiedDate *string `type:"string" required:"true"`
+
+	// A string-to-string map of key-value pairs that identifies the tags that are
+	// associated with the message template. Each tag consists of a required tag
+	// key and an associated tag value.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+
+	// The custom description of the message template.
+	TemplateDescription *string `type:"string"`
+
+	// The name of the message template.
+	//
+	// TemplateName is a required field
+	TemplateName *string `type:"string" required:"true"`
+
+	// The type of channel that the message template is designed for. For a voice
+	// template, this value is VOICE.
+	//
+	// TemplateType is a required field
+	TemplateType *string `type:"string" required:"true" enum:"TemplateType"`
+
+	// The name of the voice that's used when delivering messages that are based
+	// on the message template. For a list of supported voices, see the Amazon Polly
+	// Developer Guide (https://docs.aws.amazon.com/polly/latest/dg/what-is.html).
+	VoiceId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s VoiceTemplateResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VoiceTemplateResponse) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *VoiceTemplateResponse) SetArn(v string) *VoiceTemplateResponse {
+	s.Arn = &v
+	return s
+}
+
+// SetBody sets the Body field's value.
+func (s *VoiceTemplateResponse) SetBody(v string) *VoiceTemplateResponse {
+	s.Body = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *VoiceTemplateResponse) SetCreationDate(v string) *VoiceTemplateResponse {
+	s.CreationDate = &v
+	return s
+}
+
+// SetDefaultSubstitutions sets the DefaultSubstitutions field's value.
+func (s *VoiceTemplateResponse) SetDefaultSubstitutions(v string) *VoiceTemplateResponse {
+	s.DefaultSubstitutions = &v
+	return s
+}
+
+// SetLanguageCode sets the LanguageCode field's value.
+func (s *VoiceTemplateResponse) SetLanguageCode(v string) *VoiceTemplateResponse {
+	s.LanguageCode = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *VoiceTemplateResponse) SetLastModifiedDate(v string) *VoiceTemplateResponse {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *VoiceTemplateResponse) SetTags(v map[string]*string) *VoiceTemplateResponse {
+	s.Tags = v
+	return s
+}
+
+// SetTemplateDescription sets the TemplateDescription field's value.
+func (s *VoiceTemplateResponse) SetTemplateDescription(v string) *VoiceTemplateResponse {
+	s.TemplateDescription = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *VoiceTemplateResponse) SetTemplateName(v string) *VoiceTemplateResponse {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateType sets the TemplateType field's value.
+func (s *VoiceTemplateResponse) SetTemplateType(v string) *VoiceTemplateResponse {
+	s.TemplateType = &v
+	return s
+}
+
+// SetVoiceId sets the VoiceId field's value.
+func (s *VoiceTemplateResponse) SetVoiceId(v string) *VoiceTemplateResponse {
 	s.VoiceId = &v
 	return s
 }
@@ -29698,7 +30763,7 @@ func (s *WaitActivity) SetWaitTime(v *WaitTime) *WaitActivity {
 type WaitTime struct {
 	_ struct{} `type:"structure"`
 
-	// The amount of time, as a duration in ISO 8601 format, to wait before determining
+	// The amount of time to wait, as a duration in ISO 8601 format, before determining
 	// whether the activity's conditions have been met or moving participants to
 	// the next activity in the journey.
 	WaitFor *string `type:"string"`
@@ -29815,7 +30880,7 @@ type WriteCampaignRequest struct {
 	// in addition to the default treatment for the campaign.
 	AdditionalTreatments []*WriteTreatmentResource `type:"list"`
 
-	// The custom description of the campaign.
+	// A custom description of the campaign.
 	Description *string `type:"string"`
 
 	// The allocated percentage of users (segment members) who shouldn't receive
@@ -29855,7 +30920,7 @@ type WriteCampaignRequest struct {
 	// The message template to use for the campaign.
 	TemplateConfiguration *TemplateConfiguration `type:"structure"`
 
-	// The custom description of a variation of the campaign to use for A/B testing.
+	// A custom description of a variation of the campaign to use for A/B testing.
 	TreatmentDescription *string `type:"string"`
 
 	// The custom name of a variation of the campaign to use for A/B testing.
@@ -30335,7 +31400,7 @@ type WriteTreatmentResource struct {
 	// The message template to use for the treatment.
 	TemplateConfiguration *TemplateConfiguration `type:"structure"`
 
-	// The custom description of the treatment.
+	// A custom description of the treatment.
 	TreatmentDescription *string `type:"string"`
 
 	// The custom name of the treatment. A treatment is a variation of a campaign
