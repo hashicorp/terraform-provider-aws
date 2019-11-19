@@ -16,8 +16,8 @@ Manages a Glue Trigger resource.
 
 ```hcl
 resource "aws_glue_trigger" "example" {
-  name = "example"
-  type = "CONDITIONAL"
+  name          = "example"
+  type          = "CONDITIONAL"
 
   actions {
     job_name = "${aws_glue_job.example1.name}"
@@ -114,12 +114,13 @@ The following arguments are supported:
 * `predicate` – (Optional) A predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. Defined below.
 * `schedule` – (Optional) A cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
 * `type` – (Required) The type of trigger. Valid values are `CONDITIONAL`, `ON_DEMAND`, and `SCHEDULED`.
+* `workflow_name` - (Optional) A workflow to which the trigger should be associated to. Every workflow graph (DAG) needs a starting trigger (`ON_DEMAND` or `SCHEDULED`) and can contain multiple additional `CONDITIONAL` triggers.
 
 ### actions Argument Reference
 
 * `arguments` - (Optional) Arguments to be passed to the job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes.
-* `job_name` - (Optional) The name of a job to be executed. Either this one or `crawler_name` must be specified.
-* `crawler_name` - (Optional) The name of a crawler to be executed. Either this one or `job_name` must be specified.
+* `crawler_name` - (Optional) The name of the crawler to be executed. Conflicts with `job_name`.
+* `job_name` - (Optional) The name of a job to be executed. Conflicts with `crawler_name`.
 * `timeout` - (Optional) The job run timeout in minutes. It overrides the timeout value of the job.
 
 ### predicate Argument Reference

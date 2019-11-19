@@ -37,15 +37,15 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 						},
-						"job_name": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"actions.0.crawler_name"},
-						},
 						"crawler_name": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"actions.0.job_name"},
+						},
+						"job_name": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"actions.0.crawler_name"},
 						},
 						"timeout": {
 							Type:     schema.TypeInt,
@@ -152,8 +152,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 			},
 			"workflow_name": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Optional: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -188,6 +188,10 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if d.Get("enabled").(bool) && triggerType != glue.TriggerTypeOnDemand {
 		input.StartOnCreation = aws.Bool(true)
+	}
+
+	if v, ok := d.GetOk("workflow_name"); ok {
+		input.WorkflowName = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
@@ -399,18 +403,14 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 
-		job_name := m["job_name"].(string)
-		crawler_name := m["crawler_name"].(string)
+		action := &glue.Action{}
 
-		var action *glue.Action
-		if len(job_name) > 0 {
-			action = &glue.Action{
-				JobName: aws.String(job_name),
-			}
-		} else if len(crawler_name) > 0 {
-			action = &glue.Action{
-				CrawlerName: aws.String(crawler_name),
-			}
+		if crawlerName, ok := m["crawler_name"]; ok && crawlerName != "" {
+			action.CrawlerName = aws.String(crawlerName.(string))
+		}
+
+		if jobName, ok := m["job_name"]; ok && jobName != "" {
+			action.JobName = aws.String(jobName.(string))
 		}
 
 		argumentsMap := make(map[string]string)
