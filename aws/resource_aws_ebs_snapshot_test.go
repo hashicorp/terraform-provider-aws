@@ -240,7 +240,7 @@ resource "aws_ebs_snapshot" "test" {
 
   tags = {
     Name = "%s"
-	"%s" = "%s"
+    "%s" = "%s"
   }
 
   timeouts {
@@ -265,8 +265,8 @@ resource "aws_ebs_snapshot" "test" {
 
   tags = {
     Name = "%s"
-	"%s" = "%s"
-	"%s" = "%s"
+    "%s" = "%s"
+    "%s" = "%s"
   }
 
   timeouts {
