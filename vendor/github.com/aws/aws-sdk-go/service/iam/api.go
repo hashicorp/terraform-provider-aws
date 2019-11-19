@@ -16214,7 +16214,7 @@ func (s *AttachedPermissionsBoundary) SetPermissionsBoundaryType(v string) *Atta
 //
 // For more information about managed policies, refer to Managed Policies and
 // Inline Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-vs-inline.html)
-// in the Using IAM guide.
+// in the IAM User Guide.
 type AttachedPolicy struct {
 	_ struct{} `type:"structure"`
 
@@ -19981,7 +19981,7 @@ type EntityInfo struct {
 
 	// The path to the entity (user or role). For more information about paths,
 	// see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	Path *string `min:"1" type:"string"`
 
 	// The type of entity (user or role).
@@ -22884,7 +22884,7 @@ type Group struct {
 
 	// The Amazon Resource Name (ARN) specifying the group. For more information
 	// about ARNs and how to use them in policies, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
@@ -22897,7 +22897,7 @@ type Group struct {
 
 	// The stable and unique string identifying the group. For more information
 	// about IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// GroupId is a required field
 	GroupId *string `min:"16" type:"string" required:"true"`
@@ -22909,7 +22909,7 @@ type Group struct {
 
 	// The path to the group. For more information about paths, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Path is a required field
 	Path *string `min:"1" type:"string" required:"true"`
@@ -22978,7 +22978,7 @@ type GroupDetail struct {
 
 	// The stable and unique string identifying the group. For more information
 	// about IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	GroupId *string `min:"16" type:"string"`
 
 	// The friendly name that identifies the group.
@@ -22989,7 +22989,7 @@ type GroupDetail struct {
 
 	// The path to the group. For more information about paths, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	Path *string `min:"1" type:"string"`
 }
 
@@ -23062,7 +23062,7 @@ type InstanceProfile struct {
 	// The Amazon Resource Name (ARN) specifying the instance profile. For more
 	// information about ARNs and how to use them in policies, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
@@ -23074,7 +23074,7 @@ type InstanceProfile struct {
 
 	// The stable and unique string identifying the instance profile. For more information
 	// about IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// InstanceProfileId is a required field
 	InstanceProfileId *string `min:"16" type:"string" required:"true"`
@@ -23086,7 +23086,7 @@ type InstanceProfile struct {
 
 	// The path to the instance profile. For more information about paths, see IAM
 	// Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Path is a required field
 	Path *string `min:"1" type:"string" required:"true"`
@@ -26821,7 +26821,7 @@ func (s *MFADevice) SetUserName(v string) *MFADevice {
 //
 // For more information about managed policies, see Managed Policies and Inline
 // Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-vs-inline.html)
-// in the Using IAM guide.
+// in the IAM User Guide.
 type ManagedPolicyDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -26845,7 +26845,7 @@ type ManagedPolicyDetail struct {
 	//
 	// For more information about policy versions, see Versioning for Managed Policies
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-versions.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	DefaultVersionId *string `type:"string"`
 
 	// A friendly description of the policy.
@@ -26857,7 +26857,7 @@ type ManagedPolicyDetail struct {
 	// The path to the policy.
 	//
 	// For more information about paths, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	Path *string `min:"1" type:"string"`
 
 	// The number of entities (users and roles) for which the policy is used as
@@ -26871,7 +26871,7 @@ type ManagedPolicyDetail struct {
 	// The stable and unique string identifying the policy.
 	//
 	// For more information about IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	PolicyId *string `min:"16" type:"string"`
 
 	// The friendly name (not ARN) identifying the policy.
@@ -27145,7 +27145,7 @@ func (s *PasswordPolicy) SetRequireUppercaseCharacters(v bool) *PasswordPolicy {
 //
 // For more information about managed policies, refer to Managed Policies and
 // Inline Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-vs-inline.html)
-// in the Using IAM guide.
+// in the IAM User Guide.
 type Policy struct {
 	_ struct{} `type:"structure"`
 
@@ -27179,7 +27179,7 @@ type Policy struct {
 	// The path to the policy.
 	//
 	// For more information about paths, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	Path *string `min:"1" type:"string"`
 
 	// The number of entities (users and roles) for which the policy is used to
@@ -27193,7 +27193,7 @@ type Policy struct {
 	// The stable and unique string identifying the policy.
 	//
 	// For more information about IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	PolicyId *string `min:"16" type:"string"`
 
 	// The friendly name (not ARN) identifying the policy.
@@ -27411,7 +27411,7 @@ func (s *PolicyGrantingServiceAccess) SetPolicyType(v string) *PolicyGrantingSer
 //
 // For more information about managed policies, refer to Managed Policies and
 // Inline Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-vs-inline.html)
-// in the Using IAM guide.
+// in the IAM User Guide.
 type PolicyGroup struct {
 	_ struct{} `type:"structure"`
 
@@ -27453,7 +27453,7 @@ func (s *PolicyGroup) SetGroupName(v string) *PolicyGroup {
 //
 // For more information about managed policies, refer to Managed Policies and
 // Inline Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-vs-inline.html)
-// in the Using IAM guide.
+// in the IAM User Guide.
 type PolicyRole struct {
 	_ struct{} `type:"structure"`
 
@@ -27495,7 +27495,7 @@ func (s *PolicyRole) SetRoleName(v string) *PolicyRole {
 //
 // For more information about managed policies, refer to Managed Policies and
 // Inline Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-vs-inline.html)
-// in the Using IAM guide.
+// in the IAM User Guide.
 type PolicyUser struct {
 	_ struct{} `type:"structure"`
 
@@ -27538,7 +27538,7 @@ func (s *PolicyUser) SetUserName(v string) *PolicyUser {
 //
 // For more information about managed policies, refer to Managed Policies and
 // Inline Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/policies-managed-vs-inline.html)
-// in the Using IAM guide.
+// in the IAM User Guide.
 type PolicyVersion struct {
 	_ struct{} `type:"structure"`
 
@@ -28691,7 +28691,7 @@ type Role struct {
 
 	// The path to the role. For more information about paths, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Path is a required field
 	Path *string `min:"1" type:"string" required:"true"`
@@ -28705,10 +28705,19 @@ type Role struct {
 
 	// The stable and unique string identifying the role. For more information about
 	// IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// RoleId is a required field
 	RoleId *string `min:"16" type:"string" required:"true"`
+
+	// Contains information about the last time that an IAM role was used. This
+	// includes the date and time and the Region in which the role was last used.
+	// Activity is only reported for the trailing 400 days. This period can be shorter
+	// if your Region began supporting these features within the last year. The
+	// role might have been used more than 400 days ago. For more information, see
+	// Regions Where Data Is Tracked (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#access-advisor_tracking-period)
+	// in the IAM User Guide.
+	RoleLastUsed *RoleLastUsed `type:"structure"`
 
 	// The friendly name that identifies the role.
 	//
@@ -28779,6 +28788,12 @@ func (s *Role) SetRoleId(v string) *Role {
 	return s
 }
 
+// SetRoleLastUsed sets the RoleLastUsed field's value.
+func (s *Role) SetRoleLastUsed(v *RoleLastUsed) *Role {
+	s.RoleLastUsed = v
+	return s
+}
+
 // SetRoleName sets the RoleName field's value.
 func (s *Role) SetRoleName(v string) *Role {
 	s.RoleName = &v
@@ -28821,7 +28836,7 @@ type RoleDetail struct {
 
 	// The path to the role. For more information about paths, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	Path *string `min:"1" type:"string"`
 
 	// The ARN of the policy used to set the permissions boundary for the role.
@@ -28833,8 +28848,17 @@ type RoleDetail struct {
 
 	// The stable and unique string identifying the role. For more information about
 	// IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	RoleId *string `min:"16" type:"string"`
+
+	// Contains information about the last time that an IAM role was used. This
+	// includes the date and time and the Region in which the role was last used.
+	// Activity is only reported for the trailing 400 days. This period can be shorter
+	// if your Region began supporting these features within the last year. The
+	// role might have been used more than 400 days ago. For more information, see
+	// Regions Where Data Is Tracked (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#access-advisor_tracking-period)
+	// in the IAM User Guide.
+	RoleLastUsed *RoleLastUsed `type:"structure"`
 
 	// The friendly name that identifies the role.
 	RoleName *string `min:"1" type:"string"`
@@ -28907,6 +28931,12 @@ func (s *RoleDetail) SetRoleId(v string) *RoleDetail {
 	return s
 }
 
+// SetRoleLastUsed sets the RoleLastUsed field's value.
+func (s *RoleDetail) SetRoleLastUsed(v *RoleLastUsed) *RoleDetail {
+	s.RoleLastUsed = v
+	return s
+}
+
 // SetRoleName sets the RoleName field's value.
 func (s *RoleDetail) SetRoleName(v string) *RoleDetail {
 	s.RoleName = &v
@@ -28922,6 +28952,54 @@ func (s *RoleDetail) SetRolePolicyList(v []*PolicyDetail) *RoleDetail {
 // SetTags sets the Tags field's value.
 func (s *RoleDetail) SetTags(v []*Tag) *RoleDetail {
 	s.Tags = v
+	return s
+}
+
+// Contains information about the last time that an IAM role was used. This
+// includes the date and time and the Region in which the role was last used.
+// Activity is only reported for the trailing 400 days. This period can be shorter
+// if your Region began supporting these features within the last year. The
+// role might have been used more than 400 days ago. For more information, see
+// Regions Where Data Is Tracked (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#access-advisor_tracking-period)
+// in the IAM User Guide.
+//
+// This data type is returned as a response element in the GetRole and GetAccountAuthorizationDetails
+// operations.
+type RoleLastUsed struct {
+	_ struct{} `type:"structure"`
+
+	// The date and time, in ISO 8601 date-time format (http://www.iso.org/iso/iso8601)
+	// that the role was last used.
+	//
+	// This field is null if the role has not been used within the IAM tracking
+	// period. For more information about the tracking period, see Regions Where
+	// Data Is Tracked (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_access-advisor.html#access-advisor_tracking-period)
+	// in the IAM User Guide.
+	LastUsedDate *time.Time `type:"timestamp"`
+
+	// The name of the AWS Region in which the role was last used.
+	Region *string `type:"string"`
+}
+
+// String returns the string representation
+func (s RoleLastUsed) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RoleLastUsed) GoString() string {
+	return s.String()
+}
+
+// SetLastUsedDate sets the LastUsedDate field's value.
+func (s *RoleLastUsed) SetLastUsedDate(v time.Time) *RoleLastUsed {
+	s.LastUsedDate = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *RoleLastUsed) SetRegion(v string) *RoleLastUsed {
+	s.Region = &v
 	return s
 }
 
@@ -29214,7 +29292,7 @@ type ServerCertificateMetadata struct {
 	// The Amazon Resource Name (ARN) specifying the server certificate. For more
 	// information about ARNs and how to use them in policies, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
@@ -29224,14 +29302,14 @@ type ServerCertificateMetadata struct {
 
 	// The path to the server certificate. For more information about paths, see
 	// IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Path is a required field
 	Path *string `min:"1" type:"string" required:"true"`
 
 	// The stable and unique string identifying the server certificate. For more
 	// information about IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// ServerCertificateId is a required field
 	ServerCertificateId *string `min:"16" type:"string" required:"true"`
@@ -32544,7 +32622,7 @@ type User struct {
 
 	// The Amazon Resource Name (ARN) that identifies the user. For more information
 	// about ARNs and how to use ARNs in policies, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Arn is a required field
 	Arn *string `min:"20" type:"string" required:"true"`
@@ -32559,7 +32637,7 @@ type User struct {
 	// when the user's password was last used to sign in to an AWS website. For
 	// a list of AWS websites that capture a user's last sign-in time, see the Credential
 	// Reports (https://docs.aws.amazon.com/IAM/latest/UserGuide/credential-reports.html)
-	// topic in the Using IAM guide. If a password is used more than once in a five-minute
+	// topic in the IAM User Guide. If a password is used more than once in a five-minute
 	// span, only the first use is returned in this field. If the field is null
 	// (no value), then it indicates that they never signed in with a password.
 	// This can be because:
@@ -32570,7 +32648,7 @@ type User struct {
 	//    information on October 20, 2014.
 	//
 	// A null value does not mean that the user never had a password. Also, if the
-	// user does not currently have a password, but had one in the past, then this
+	// user does not currently have a password but had one in the past, then this
 	// field contains the date and time the most recent password was used.
 	//
 	// This value is returned only in the GetUser and ListUsers operations.
@@ -32578,7 +32656,7 @@ type User struct {
 
 	// The path to the user. For more information about paths, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// Path is a required field
 	Path *string `min:"1" type:"string" required:"true"`
@@ -32597,7 +32675,7 @@ type User struct {
 
 	// The stable and unique string identifying the user. For more information about
 	// IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	//
 	// UserId is a required field
 	UserId *string `min:"16" type:"string" required:"true"`
@@ -32693,7 +32771,7 @@ type UserDetail struct {
 
 	// The path to the user. For more information about paths, see IAM Identifiers
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	Path *string `min:"1" type:"string"`
 
 	// The ARN of the policy used to set the permissions boundary for the user.
@@ -32710,7 +32788,7 @@ type UserDetail struct {
 
 	// The stable and unique string identifying the user. For more information about
 	// IDs, see IAM Identifiers (https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html)
-	// in the Using IAM guide.
+	// in the IAM User Guide.
 	UserId *string `min:"16" type:"string"`
 
 	// The friendly name identifying the user.

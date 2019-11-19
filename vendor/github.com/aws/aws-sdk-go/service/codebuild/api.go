@@ -136,7 +136,7 @@ func (c *CodeBuild) BatchGetBuildsRequest(input *BatchGetBuildsInput) (req *requ
 
 // BatchGetBuilds API operation for AWS CodeBuild.
 //
-// Gets information about builds.
+// Gets information about one or more builds.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -215,7 +215,7 @@ func (c *CodeBuild) BatchGetProjectsRequest(input *BatchGetProjectsInput) (req *
 
 // BatchGetProjects API operation for AWS CodeBuild.
 //
-// Gets information about build projects.
+// Gets information about one or more build projects.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4653,7 +4653,23 @@ type ProjectEnvironment struct {
 	//
 	//    * BUILD_GENERAL1_MEDIUM: Use up to 7 GB memory and 4 vCPUs for builds.
 	//
-	//    * BUILD_GENERAL1_LARGE: Use up to 15 GB memory and 8 vCPUs for builds.
+	//    * BUILD_GENERAL1_LARGE: Use up to 16 GB memory and 8 vCPUs for builds,
+	//    depending on your environment type.
+	//
+	//    * BUILD_GENERAL1_2XLARGE: Use up to 145 GB memory, 72 vCPUs, and 824 GB
+	//    of SSD storage for builds. This compute type supports Docker images up
+	//    to 100 GB uncompressed.
+	//
+	// If you use BUILD_GENERAL1_LARGE:
+	//
+	//    * For environment type LINUX_CONTAINER, you can use up to 15 GB memory
+	//    and 8 vCPUs for builds.
+	//
+	//    * For environment type LINUX_GPU_CONTAINER, you can use up to 255 GB memory,
+	//    32 vCPUs, and 4 NVIDIA Tesla V100 GPUs for builds.
+	//
+	//    * For environment type ARM_CONTAINER, you can use up to 16 GB memory and
+	//    8 vCPUs on ARM-based processors for builds.
 	//
 	// For more information, see Build Environment Compute Types (https://docs.aws.amazon.com/codebuild/latest/userguide/build-env-ref-compute-types.html)
 	// in the AWS CodeBuild User Guide.
@@ -4722,6 +4738,22 @@ type ProjectEnvironment struct {
 	RegistryCredential *RegistryCredential `locationName:"registryCredential" type:"structure"`
 
 	// The type of build environment to use for related builds.
+	//
+	//    * The environment type ARM_CONTAINER is available only in regions US East
+	//    (N. Virginia), US East (Ohio), US West (Oregon), EU (Ireland), Asia Pacific
+	//    (Mumbai), Asia Pacific (Tokyo), Asia Pacific (Sydney), and EU (Frankfurt).
+	//
+	//    * The environment type LINUX_CONTAINER with compute type build.general1.2xlarge
+	//    is available only in regions US East (N. Virginia), US East (N. Virginia),
+	//    US West (Oregon), Canada (Central), EU (Ireland), EU (London), EU (Frankfurt),
+	//    Asia Pacific (Tokyo), Asia Pacific (Seoul), Asia Pacific (Singapore),
+	//    Asia Pacific (Sydney), China (Beijing), and China (Ningxia).
+	//
+	//    * The environment type LINUX_GPU_CONTAINER is available only in regions
+	//    US East (N. Virginia), US East (N. Virginia), US West (Oregon), Canada
+	//    (Central), EU (Ireland), EU (London), EU (Frankfurt), Asia Pacific (Tokyo),
+	//    Asia Pacific (Seoul), Asia Pacific (Singapore), Asia Pacific (Sydney)
+	//    , China (Beijing), and China (Ningxia).
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"EnvironmentType"`
@@ -6674,6 +6706,9 @@ const (
 
 	// ComputeTypeBuildGeneral1Large is a ComputeType enum value
 	ComputeTypeBuildGeneral1Large = "BUILD_GENERAL1_LARGE"
+
+	// ComputeTypeBuildGeneral12xlarge is a ComputeType enum value
+	ComputeTypeBuildGeneral12xlarge = "BUILD_GENERAL1_2XLARGE"
 )
 
 const (
@@ -6687,6 +6722,12 @@ const (
 
 	// EnvironmentTypeLinuxContainer is a EnvironmentType enum value
 	EnvironmentTypeLinuxContainer = "LINUX_CONTAINER"
+
+	// EnvironmentTypeLinuxGpuContainer is a EnvironmentType enum value
+	EnvironmentTypeLinuxGpuContainer = "LINUX_GPU_CONTAINER"
+
+	// EnvironmentTypeArmContainer is a EnvironmentType enum value
+	EnvironmentTypeArmContainer = "ARM_CONTAINER"
 )
 
 const (
