@@ -3,7 +3,7 @@ subcategory: "Greengrass"
 layout: "aws"
 page_title: "AWS: aws_greengrass_function_definition"
 description: |-
-    Creates and manages an AWS IoT Greengrass Logger Definition
+    Creates and manages an AWS IoT Greengrass Function Definition
 ---
 
 # Resource: aws_greengrass_function_definition
