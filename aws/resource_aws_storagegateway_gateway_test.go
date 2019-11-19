@@ -286,7 +286,6 @@ func TestAccAWSStorageGatewayGateway_GatewayName(t *testing.T) {
 func TestAccAWSStorageGatewayGateway_CloudWatchLogs(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 	resourceName2 := "aws_cloudwatch_log_group.test"
 
@@ -296,7 +295,7 @@ func TestAccAWSStorageGatewayGateway_CloudWatchLogs(t *testing.T) {
 		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSStorageGatewayGatewayConfig_Log_Group(rName1, rName2),
+				Config: testAccAWSStorageGatewayGatewayConfig_Log_Group(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", resourceName2, "arn"),
@@ -624,14 +623,10 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName)
 }
 
-func testAccAWSStorageGatewayGatewayConfig_Log_Group(rName, rName2 string) string {
+func testAccAWSStorageGatewayGatewayConfig_Log_Group(rName string) string {
 	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
-}
-
-resource "aws_cloudwatch_log_group" "test2" {
-  name = %[2]q
 }
 
 resource "aws_storagegateway_gateway" "test" {
@@ -641,7 +636,7 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       		= "FILE_S3"
   cloudwatch_log_group_arn	= "${aws_cloudwatch_log_group.test.arn}"
 }
-`, rName, rName2)
+`, rName)
 }
 
 func testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName string) string {
