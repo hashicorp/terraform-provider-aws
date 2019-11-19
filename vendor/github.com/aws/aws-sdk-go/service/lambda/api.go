@@ -9511,8 +9511,14 @@ const (
 	// RuntimeNodejs10X is a Runtime enum value
 	RuntimeNodejs10X = "nodejs10.x"
 
+	// RuntimeNodejs12X is a Runtime enum value
+	RuntimeNodejs12X = "nodejs12.x"
+
 	// RuntimeJava8 is a Runtime enum value
 	RuntimeJava8 = "java8"
+
+	// RuntimeJava11 is a Runtime enum value
+	RuntimeJava11 = "java11"
 
 	// RuntimePython27 is a Runtime enum value
 	RuntimePython27 = "python2.7"
@@ -9522,6 +9528,9 @@ const (
 
 	// RuntimePython37 is a Runtime enum value
 	RuntimePython37 = "python3.7"
+
+	// RuntimePython38 is a Runtime enum value
+	RuntimePython38 = "python3.8"
 
 	// RuntimeDotnetcore10 is a Runtime enum value
 	RuntimeDotnetcore10 = "dotnetcore1.0"

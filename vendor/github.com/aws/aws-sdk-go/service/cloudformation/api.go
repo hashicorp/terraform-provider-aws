@@ -2458,6 +2458,124 @@ func (c *CloudFormation) DetectStackResourceDriftWithContext(ctx aws.Context, in
 	return out, req.Send()
 }
 
+const opDetectStackSetDrift = "DetectStackSetDrift"
+
+// DetectStackSetDriftRequest generates a "aws/request.Request" representing the
+// client's request for the DetectStackSetDrift operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DetectStackSetDrift for more information on using the DetectStackSetDrift
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DetectStackSetDriftRequest method.
+//    req, resp := client.DetectStackSetDriftRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudformation-2010-05-15/DetectStackSetDrift
+func (c *CloudFormation) DetectStackSetDriftRequest(input *DetectStackSetDriftInput) (req *request.Request, output *DetectStackSetDriftOutput) {
+	op := &request.Operation{
+		Name:       opDetectStackSetDrift,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DetectStackSetDriftInput{}
+	}
+
+	output = &DetectStackSetDriftOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DetectStackSetDrift API operation for AWS CloudFormation.
+//
+// Detect drift on a stack set. When CloudFormation performs drift detection
+// on a stack set, it performs drift detection on the stack associated with
+// each stack instance in the stack set. For more information, see How CloudFormation
+// Performs Drift Detection on a Stack Set (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-drift.html).
+//
+// DetectStackSetDrift returns the OperationId of the stack set drift detection
+// operation. Use this operation id with DescribeStackSetOperation to monitor
+// the progress of the drift detection operation. The drift detection operation
+// may take some time, depending on the number of stack instances included in
+// the stack set, as well as the number of resources included in each stack.
+//
+// Once the operation has completed, use the following actions to return drift
+// information:
+//
+//    * Use DescribeStackSet to return detailed informaiton about the stack
+//    set, including detailed information about the last completed drift operation
+//    performed on the stack set. (Information about drift operations that are
+//    in progress is not included.)
+//
+//    * Use ListStackInstances to return a list of stack instances belonging
+//    to the stack set, including the drift status and last drift time checked
+//    of each instance.
+//
+//    * Use DescribeStackInstance to return detailed information about a specific
+//    stack instance, including its drift status and last drift time checked.
+//
+// For more information on performing a drift detection operation on a stack
+// set, see Detecting Unmanaged Changes in Stack Sets (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-drift.html).
+//
+// You can only run a single drift detection operation on a given stack set
+// at one time.
+//
+// To stop a drift detection stack set operation, use StopStackSetOperation .
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CloudFormation's
+// API operation DetectStackSetDrift for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   The specified operation isn't valid.
+//
+//   * ErrCodeOperationInProgressException "OperationInProgressException"
+//   Another operation is currently in progress for this stack set. Only one operation
+//   can be performed for a stack set at a given time.
+//
+//   * ErrCodeStackSetNotFoundException "StackSetNotFoundException"
+//   The specified stack set doesn't exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/cloudformation-2010-05-15/DetectStackSetDrift
+func (c *CloudFormation) DetectStackSetDrift(input *DetectStackSetDriftInput) (*DetectStackSetDriftOutput, error) {
+	req, out := c.DetectStackSetDriftRequest(input)
+	return out, req.Send()
+}
+
+// DetectStackSetDriftWithContext is the same as DetectStackSetDrift with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DetectStackSetDrift for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CloudFormation) DetectStackSetDriftWithContext(ctx aws.Context, input *DetectStackSetDriftInput, opts ...request.Option) (*DetectStackSetDriftOutput, error) {
+	req, out := c.DetectStackSetDriftRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opEstimateTemplateCost = "EstimateTemplateCost"
 
 // EstimateTemplateCostRequest generates a "aws/request.Request" representing the
@@ -9014,6 +9132,100 @@ func (s *DetectStackResourceDriftOutput) SetStackResourceDrift(v *StackResourceD
 	return s
 }
 
+type DetectStackSetDriftInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the stack set operation.
+	OperationId *string `min:"1" type:"string" idempotencyToken:"true"`
+
+	// The user-specified preferences for how AWS CloudFormation performs a stack
+	// set operation.
+	//
+	// For more information on maximum concurrent accounts and failure tolerance,
+	// see Stack set operation options (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-concepts.html#stackset-ops-options).
+	OperationPreferences *StackSetOperationPreferences `type:"structure"`
+
+	// The name of the stack set on which to perform the drift detection operation.
+	//
+	// StackSetName is a required field
+	StackSetName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DetectStackSetDriftInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DetectStackSetDriftInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DetectStackSetDriftInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DetectStackSetDriftInput"}
+	if s.OperationId != nil && len(*s.OperationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OperationId", 1))
+	}
+	if s.StackSetName == nil {
+		invalidParams.Add(request.NewErrParamRequired("StackSetName"))
+	}
+	if s.OperationPreferences != nil {
+		if err := s.OperationPreferences.Validate(); err != nil {
+			invalidParams.AddNested("OperationPreferences", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOperationId sets the OperationId field's value.
+func (s *DetectStackSetDriftInput) SetOperationId(v string) *DetectStackSetDriftInput {
+	s.OperationId = &v
+	return s
+}
+
+// SetOperationPreferences sets the OperationPreferences field's value.
+func (s *DetectStackSetDriftInput) SetOperationPreferences(v *StackSetOperationPreferences) *DetectStackSetDriftInput {
+	s.OperationPreferences = v
+	return s
+}
+
+// SetStackSetName sets the StackSetName field's value.
+func (s *DetectStackSetDriftInput) SetStackSetName(v string) *DetectStackSetDriftInput {
+	s.StackSetName = &v
+	return s
+}
+
+type DetectStackSetDriftOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the drift detection stack set operation.
+	//
+	// you can use this operation id with DescribeStackSetOperation to monitor the
+	// progress of the drift detection operation.
+	OperationId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DetectStackSetDriftOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DetectStackSetDriftOutput) GoString() string {
+	return s.String()
+}
+
+// SetOperationId sets the OperationId field's value.
+func (s *DetectStackSetDriftOutput) SetOperationId(v string) *DetectStackSetDriftOutput {
+	s.OperationId = &v
+	return s
+}
+
 // The input for an EstimateTemplateCost action.
 type EstimateTemplateCostInput struct {
 	_ struct{} `type:"structure"`
@@ -12884,6 +13096,28 @@ type StackInstance struct {
 	// The name of the AWS account that the stack instance is associated with.
 	Account *string `type:"string"`
 
+	// Status of the stack instance's actual configuration compared to the expected
+	// template and parameter configuration of the stack set to which it belongs.
+	//
+	//    * DRIFTED: The stack differs from the expected template and parameter
+	//    configuration of the stack set to which it belongs. A stack instance is
+	//    considered to have drifted if one or more of the resources in the associated
+	//    stack have drifted.
+	//
+	//    * NOT_CHECKED: AWS CloudFormation has not checked if the stack instance
+	//    differs from its expected stack set configuration.
+	//
+	//    * IN_SYNC: The stack instance's actual configuration matches its expected
+	//    stack set configuration.
+	//
+	//    * UNKNOWN: This value is reserved for future use.
+	DriftStatus *string `type:"string" enum:"StackDriftStatus"`
+
+	// Most recent time when CloudFormation performed a drift detection operation
+	// on the stack instance. This value will be NULL for any stack instance on
+	// which drift detection has not yet been performed.
+	LastDriftCheckTimestamp *time.Time `type:"timestamp"`
+
 	// A list of parameters from the stack set template whose values have been overridden
 	// in this stack instance.
 	ParameterOverrides []*Parameter `type:"list"`
@@ -12936,6 +13170,18 @@ func (s *StackInstance) SetAccount(v string) *StackInstance {
 	return s
 }
 
+// SetDriftStatus sets the DriftStatus field's value.
+func (s *StackInstance) SetDriftStatus(v string) *StackInstance {
+	s.DriftStatus = &v
+	return s
+}
+
+// SetLastDriftCheckTimestamp sets the LastDriftCheckTimestamp field's value.
+func (s *StackInstance) SetLastDriftCheckTimestamp(v time.Time) *StackInstance {
+	s.LastDriftCheckTimestamp = &v
+	return s
+}
+
 // SetParameterOverrides sets the ParameterOverrides field's value.
 func (s *StackInstance) SetParameterOverrides(v []*Parameter) *StackInstance {
 	s.ParameterOverrides = v
@@ -12978,6 +13224,28 @@ type StackInstanceSummary struct {
 
 	// The name of the AWS account that the stack instance is associated with.
 	Account *string `type:"string"`
+
+	// Status of the stack instance's actual configuration compared to the expected
+	// template and parameter configuration of the stack set to which it belongs.
+	//
+	//    * DRIFTED: The stack differs from the expected template and parameter
+	//    configuration of the stack set to which it belongs. A stack instance is
+	//    considered to have drifted if one or more of the resources in the associated
+	//    stack have drifted.
+	//
+	//    * NOT_CHECKED: AWS CloudFormation has not checked if the stack instance
+	//    differs from its expected stack set configuration.
+	//
+	//    * IN_SYNC: The stack instance's actual configuration matches its expected
+	//    stack set configuration.
+	//
+	//    * UNKNOWN: This value is reserved for future use.
+	DriftStatus *string `type:"string" enum:"StackDriftStatus"`
+
+	// Most recent time when CloudFormation performed a drift detection operation
+	// on the stack instance. This value will be NULL for any stack instance on
+	// which drift detection has not yet been performed.
+	LastDriftCheckTimestamp *time.Time `type:"timestamp"`
 
 	// The name of the AWS region that the stack instance is associated with.
 	Region *string `type:"string"`
@@ -13023,6 +13291,18 @@ func (s StackInstanceSummary) GoString() string {
 // SetAccount sets the Account field's value.
 func (s *StackInstanceSummary) SetAccount(v string) *StackInstanceSummary {
 	s.Account = &v
+	return s
+}
+
+// SetDriftStatus sets the DriftStatus field's value.
+func (s *StackInstanceSummary) SetDriftStatus(v string) *StackInstanceSummary {
+	s.DriftStatus = &v
+	return s
+}
+
+// SetLastDriftCheckTimestamp sets the LastDriftCheckTimestamp field's value.
+func (s *StackInstanceSummary) SetLastDriftCheckTimestamp(v time.Time) *StackInstanceSummary {
+	s.LastDriftCheckTimestamp = &v
 	return s
 }
 
@@ -13692,6 +13972,13 @@ type StackSet struct {
 	// The Amazon Resource Number (ARN) of the stack set.
 	StackSetARN *string `type:"string"`
 
+	// Detailed information about the drift status of the stack set.
+	//
+	// For stack sets, contains information about the last completed drift operation
+	// performed on the stack set. Information about drift operations currently
+	// in progress is not included.
+	StackSetDriftDetectionDetails *StackSetDriftDetectionDetails `type:"structure"`
+
 	// The ID of the stack set.
 	StackSetId *string `type:"string"`
 
@@ -13756,6 +14043,12 @@ func (s *StackSet) SetStackSetARN(v string) *StackSet {
 	return s
 }
 
+// SetStackSetDriftDetectionDetails sets the StackSetDriftDetectionDetails field's value.
+func (s *StackSet) SetStackSetDriftDetectionDetails(v *StackSetDriftDetectionDetails) *StackSet {
+	s.StackSetDriftDetectionDetails = v
+	return s
+}
+
 // SetStackSetId sets the StackSetId field's value.
 func (s *StackSet) SetStackSetId(v string) *StackSet {
 	s.StackSetId = &v
@@ -13783,6 +14076,145 @@ func (s *StackSet) SetTags(v []*Tag) *StackSet {
 // SetTemplateBody sets the TemplateBody field's value.
 func (s *StackSet) SetTemplateBody(v string) *StackSet {
 	s.TemplateBody = &v
+	return s
+}
+
+// Detailed information about the drift status of the stack set.
+//
+// For stack sets, contains information about the last completed drift operation
+// performed on the stack set. Information about drift operations in-progress
+// is not included.
+//
+// For stack set operations, includes information about drift operations currently
+// being performed on the stack set.
+//
+// For more information, see Detecting Unmanaged Changes in Stack Sets (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-drift.html)
+// in the AWS CloudFormation User Guide.
+type StackSetDriftDetectionDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the stack set drift detection operation.
+	//
+	//    * COMPLETED: The drift detection operation completed without failing on
+	//    any stack instances.
+	//
+	//    * FAILED: The drift detection operation exceeded the specified failure
+	//    tolerance.
+	//
+	//    * PARTIAL_SUCCESS: The drift detection operation completed without exceeding
+	//    the failure tolerance for the operation.
+	//
+	//    * IN_PROGRESS: The drift detection operation is currently being performed.
+	//
+	//    * STOPPED: The user has cancelled the drift detection operation.
+	DriftDetectionStatus *string `type:"string" enum:"StackSetDriftDetectionStatus"`
+
+	// Status of the stack set's actual configuration compared to its expected template
+	// and parameter configuration. A stack set is considered to have drifted if
+	// one or more of its stack instances have drifted from their expected template
+	// and parameter configuration.
+	//
+	//    * DRIFTED: One or more of the stack instances belonging to the stack set
+	//    stack differs from the expected template and parameter configuration.
+	//    A stack instance is considered to have drifted if one or more of the resources
+	//    in the associated stack have drifted.
+	//
+	//    * NOT_CHECKED: AWS CloudFormation has not checked the stack set for drift.
+	//
+	//    * IN_SYNC: All of the stack instances belonging to the stack set stack
+	//    match from the expected template and parameter configuration.
+	DriftStatus *string `type:"string" enum:"StackSetDriftStatus"`
+
+	// The number of stack instances that have drifted from the expected template
+	// and parameter configuration of the stack set. A stack instance is considered
+	// to have drifted if one or more of the resources in the associated stack do
+	// not match their expected configuration.
+	DriftedStackInstancesCount *int64 `type:"integer"`
+
+	// The number of stack instances for which the drift detection operation failed.
+	FailedStackInstancesCount *int64 `type:"integer"`
+
+	// The number of stack instances that are currently being checked for drift.
+	InProgressStackInstancesCount *int64 `type:"integer"`
+
+	// The number of stack instances which match the expected template and parameter
+	// configuration of the stack set.
+	InSyncStackInstancesCount *int64 `type:"integer"`
+
+	// Most recent time when CloudFormation performed a drift detection operation
+	// on the stack set. This value will be NULL for any stack set on which drift
+	// detection has not yet been performed.
+	LastDriftCheckTimestamp *time.Time `type:"timestamp"`
+
+	// The total number of stack instances belonging to this stack set.
+	//
+	// The total number of stack instances is equal to the total of:
+	//
+	//    * Stack instances that match the stack set configuration.
+	//
+	//    * Stack instances that have drifted from the stack set configuration.
+	//
+	//    * Stack instances where the drift detection operation has failed.
+	//
+	//    * Stack instances currently being checked for drift.
+	TotalStackInstancesCount *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s StackSetDriftDetectionDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StackSetDriftDetectionDetails) GoString() string {
+	return s.String()
+}
+
+// SetDriftDetectionStatus sets the DriftDetectionStatus field's value.
+func (s *StackSetDriftDetectionDetails) SetDriftDetectionStatus(v string) *StackSetDriftDetectionDetails {
+	s.DriftDetectionStatus = &v
+	return s
+}
+
+// SetDriftStatus sets the DriftStatus field's value.
+func (s *StackSetDriftDetectionDetails) SetDriftStatus(v string) *StackSetDriftDetectionDetails {
+	s.DriftStatus = &v
+	return s
+}
+
+// SetDriftedStackInstancesCount sets the DriftedStackInstancesCount field's value.
+func (s *StackSetDriftDetectionDetails) SetDriftedStackInstancesCount(v int64) *StackSetDriftDetectionDetails {
+	s.DriftedStackInstancesCount = &v
+	return s
+}
+
+// SetFailedStackInstancesCount sets the FailedStackInstancesCount field's value.
+func (s *StackSetDriftDetectionDetails) SetFailedStackInstancesCount(v int64) *StackSetDriftDetectionDetails {
+	s.FailedStackInstancesCount = &v
+	return s
+}
+
+// SetInProgressStackInstancesCount sets the InProgressStackInstancesCount field's value.
+func (s *StackSetDriftDetectionDetails) SetInProgressStackInstancesCount(v int64) *StackSetDriftDetectionDetails {
+	s.InProgressStackInstancesCount = &v
+	return s
+}
+
+// SetInSyncStackInstancesCount sets the InSyncStackInstancesCount field's value.
+func (s *StackSetDriftDetectionDetails) SetInSyncStackInstancesCount(v int64) *StackSetDriftDetectionDetails {
+	s.InSyncStackInstancesCount = &v
+	return s
+}
+
+// SetLastDriftCheckTimestamp sets the LastDriftCheckTimestamp field's value.
+func (s *StackSetDriftDetectionDetails) SetLastDriftCheckTimestamp(v time.Time) *StackSetDriftDetectionDetails {
+	s.LastDriftCheckTimestamp = &v
+	return s
+}
+
+// SetTotalStackInstancesCount sets the TotalStackInstancesCount field's value.
+func (s *StackSetDriftDetectionDetails) SetTotalStackInstancesCount(v int64) *StackSetDriftDetectionDetails {
+	s.TotalStackInstancesCount = &v
 	return s
 }
 
@@ -13834,6 +14266,17 @@ type StackSetOperation struct {
 	// stacks. You can't reassociate a retained stack, or add an existing, saved
 	// stack to a new stack set.
 	RetainStacks *bool `type:"boolean"`
+
+	// Detailed information about the drift status of the stack set. This includes
+	// information about drift operations currently being performed on the stack
+	// set.
+	//
+	// this information will only be present for stack set operations whose Action
+	// type is DETECT_DRIFT.
+	//
+	// For more information, see Detecting Unmanaged Changes in Stack Sets (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-drift.html)
+	// in the AWS CloudFormation User Guide.
+	StackSetDriftDetectionDetails *StackSetDriftDetectionDetails `type:"structure"`
 
 	// The ID of the stack set.
 	StackSetId *string `type:"string"`
@@ -13914,6 +14357,12 @@ func (s *StackSetOperation) SetOperationPreferences(v *StackSetOperationPreferen
 // SetRetainStacks sets the RetainStacks field's value.
 func (s *StackSetOperation) SetRetainStacks(v bool) *StackSetOperation {
 	s.RetainStacks = &v
+	return s
+}
+
+// SetStackSetDriftDetectionDetails sets the StackSetDriftDetectionDetails field's value.
+func (s *StackSetOperation) SetStackSetDriftDetectionDetails(v *StackSetDriftDetectionDetails) *StackSetOperation {
+	s.StackSetDriftDetectionDetails = v
 	return s
 }
 
@@ -14221,6 +14670,29 @@ type StackSetSummary struct {
 	// or updated.
 	Description *string `min:"1" type:"string"`
 
+	// Status of the stack set's actual configuration compared to its expected template
+	// and parameter configuration. A stack set is considered to have drifted if
+	// one or more of its stack instances have drifted from their expected template
+	// and parameter configuration.
+	//
+	//    * DRIFTED: One or more of the stack instances belonging to the stack set
+	//    stack differs from the expected template and parameter configuration.
+	//    A stack instance is considered to have drifted if one or more of the resources
+	//    in the associated stack have drifted.
+	//
+	//    * NOT_CHECKED: AWS CloudFormation has not checked the stack set for drift.
+	//
+	//    * IN_SYNC: All of the stack instances belonging to the stack set stack
+	//    match from the expected template and parameter configuration.
+	//
+	//    * UNKNOWN: This value is reserved for future use.
+	DriftStatus *string `type:"string" enum:"StackDriftStatus"`
+
+	// Most recent time when CloudFormation performed a drift detection operation
+	// on the stack set. This value will be NULL for any stack set on which drift
+	// detection has not yet been performed.
+	LastDriftCheckTimestamp *time.Time `type:"timestamp"`
+
 	// The ID of the stack set.
 	StackSetId *string `type:"string"`
 
@@ -14244,6 +14716,18 @@ func (s StackSetSummary) GoString() string {
 // SetDescription sets the Description field's value.
 func (s *StackSetSummary) SetDescription(v string) *StackSetSummary {
 	s.Description = &v
+	return s
+}
+
+// SetDriftStatus sets the DriftStatus field's value.
+func (s *StackSetSummary) SetDriftStatus(v string) *StackSetSummary {
+	s.DriftStatus = &v
+	return s
+}
+
+// SetLastDriftCheckTimestamp sets the LastDriftCheckTimestamp field's value.
+func (s *StackSetSummary) SetLastDriftCheckTimestamp(v time.Time) *StackSetSummary {
+	s.LastDriftCheckTimestamp = &v
 	return s
 }
 
@@ -16194,6 +16678,34 @@ const (
 )
 
 const (
+	// StackSetDriftDetectionStatusCompleted is a StackSetDriftDetectionStatus enum value
+	StackSetDriftDetectionStatusCompleted = "COMPLETED"
+
+	// StackSetDriftDetectionStatusFailed is a StackSetDriftDetectionStatus enum value
+	StackSetDriftDetectionStatusFailed = "FAILED"
+
+	// StackSetDriftDetectionStatusPartialSuccess is a StackSetDriftDetectionStatus enum value
+	StackSetDriftDetectionStatusPartialSuccess = "PARTIAL_SUCCESS"
+
+	// StackSetDriftDetectionStatusInProgress is a StackSetDriftDetectionStatus enum value
+	StackSetDriftDetectionStatusInProgress = "IN_PROGRESS"
+
+	// StackSetDriftDetectionStatusStopped is a StackSetDriftDetectionStatus enum value
+	StackSetDriftDetectionStatusStopped = "STOPPED"
+)
+
+const (
+	// StackSetDriftStatusDrifted is a StackSetDriftStatus enum value
+	StackSetDriftStatusDrifted = "DRIFTED"
+
+	// StackSetDriftStatusInSync is a StackSetDriftStatus enum value
+	StackSetDriftStatusInSync = "IN_SYNC"
+
+	// StackSetDriftStatusNotChecked is a StackSetDriftStatus enum value
+	StackSetDriftStatusNotChecked = "NOT_CHECKED"
+)
+
+const (
 	// StackSetOperationActionCreate is a StackSetOperationAction enum value
 	StackSetOperationActionCreate = "CREATE"
 
@@ -16202,6 +16714,9 @@ const (
 
 	// StackSetOperationActionDelete is a StackSetOperationAction enum value
 	StackSetOperationActionDelete = "DELETE"
+
+	// StackSetOperationActionDetectDrift is a StackSetOperationAction enum value
+	StackSetOperationActionDetectDrift = "DETECT_DRIFT"
 )
 
 const (

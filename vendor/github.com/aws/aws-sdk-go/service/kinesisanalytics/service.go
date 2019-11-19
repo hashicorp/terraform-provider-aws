@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a KinesisAnalytics client from just a session.
 //     svc := kinesisanalytics.New(mySession)
 //

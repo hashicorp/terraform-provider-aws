@@ -3493,11 +3493,10 @@ func (c *EC2) CreateCustomerGatewayRequest(input *CreateCustomerGatewayInput) (r
 // For more information, see AWS Site-to-Site VPN (https://docs.aws.amazon.com/vpn/latest/s2svpn/VPC_VPN.html)
 // in the AWS Site-to-Site VPN User Guide.
 //
-// You cannot create more than one customer gateway with the same VPN type,
-// IP address, and BGP ASN parameter values. If you run an identical request
-// more than one time, the first request creates the customer gateway, and subsequent
-// requests return information about the existing customer gateway. The subsequent
-// requests do not create new customer gateway resources.
+// To create more than one customer gateway with the same VPN type, IP address,
+// and BGP ASN, specify a unique device name for each customer gateway. Identical
+// requests return information about the existing customer gateway and do not
+// create new customer gateways.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -27115,6 +27114,86 @@ func (c *EC2) ModifyInstanceEventStartTimeWithContext(ctx aws.Context, input *Mo
 	return out, req.Send()
 }
 
+const opModifyInstanceMetadataOptions = "ModifyInstanceMetadataOptions"
+
+// ModifyInstanceMetadataOptionsRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyInstanceMetadataOptions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyInstanceMetadataOptions for more information on using the ModifyInstanceMetadataOptions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyInstanceMetadataOptionsRequest method.
+//    req, resp := client.ModifyInstanceMetadataOptionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceMetadataOptions
+func (c *EC2) ModifyInstanceMetadataOptionsRequest(input *ModifyInstanceMetadataOptionsInput) (req *request.Request, output *ModifyInstanceMetadataOptionsOutput) {
+	op := &request.Operation{
+		Name:       opModifyInstanceMetadataOptions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyInstanceMetadataOptionsInput{}
+	}
+
+	output = &ModifyInstanceMetadataOptionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyInstanceMetadataOptions API operation for Amazon Elastic Compute Cloud.
+//
+// Modify the instance metadata parameters on a running or stopped instance.
+// When you modify the parameters on a stopped instance, they are applied when
+// the instance is started. When you modify the parameters on a running instance,
+// the API responds with a state of “pending”. After the parameter modifications
+// are successfully applied to the instance, the state of the modifications
+// changes from “pending” to “applied” in subsequent describe-instances
+// API calls. For more information, see Instance Metadata and User Data (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Compute Cloud's
+// API operation ModifyInstanceMetadataOptions for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ec2-2016-11-15/ModifyInstanceMetadataOptions
+func (c *EC2) ModifyInstanceMetadataOptions(input *ModifyInstanceMetadataOptionsInput) (*ModifyInstanceMetadataOptionsOutput, error) {
+	req, out := c.ModifyInstanceMetadataOptionsRequest(input)
+	return out, req.Send()
+}
+
+// ModifyInstanceMetadataOptionsWithContext is the same as ModifyInstanceMetadataOptions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyInstanceMetadataOptions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EC2) ModifyInstanceMetadataOptionsWithContext(ctx aws.Context, input *ModifyInstanceMetadataOptionsInput, opts ...request.Option) (*ModifyInstanceMetadataOptionsOutput, error) {
+	req, out := c.ModifyInstanceMetadataOptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyInstancePlacement = "ModifyInstancePlacement"
 
 // ModifyInstancePlacementRequest generates a "aws/request.Request" representing the
@@ -39950,6 +40029,11 @@ type CreateCustomerGatewayInput struct {
 	// The Amazon Resource Name (ARN) for the customer gateway certificate.
 	CertificateArn *string `type:"string"`
 
+	// A name for the customer gateway device.
+	//
+	// Length Constraints: Up to 255 characters.
+	DeviceName *string `type:"string"`
+
 	// Checks whether you have the required permissions for the action, without
 	// actually making the request, and provides an error response. If you have
 	// the required permissions, the error response is DryRunOperation. Otherwise,
@@ -40001,6 +40085,12 @@ func (s *CreateCustomerGatewayInput) SetBgpAsn(v int64) *CreateCustomerGatewayIn
 // SetCertificateArn sets the CertificateArn field's value.
 func (s *CreateCustomerGatewayInput) SetCertificateArn(v string) *CreateCustomerGatewayInput {
 	s.CertificateArn = &v
+	return s
+}
+
+// SetDeviceName sets the DeviceName field's value.
+func (s *CreateCustomerGatewayInput) SetDeviceName(v string) *CreateCustomerGatewayInput {
+	s.DeviceName = &v
 	return s
 }
 
@@ -45425,6 +45515,9 @@ type CustomerGateway struct {
 	// The ID of the customer gateway.
 	CustomerGatewayId *string `locationName:"customerGatewayId" type:"string"`
 
+	// The name of customer gateway device.
+	DeviceName *string `locationName:"deviceName" type:"string"`
+
 	// The Internet-routable IP address of the customer gateway's outside interface.
 	IpAddress *string `locationName:"ipAddress" type:"string"`
 
@@ -45464,6 +45557,12 @@ func (s *CustomerGateway) SetCertificateArn(v string) *CustomerGateway {
 // SetCustomerGatewayId sets the CustomerGatewayId field's value.
 func (s *CustomerGateway) SetCustomerGatewayId(v string) *CustomerGateway {
 	s.CustomerGatewayId = &v
+	return s
+}
+
+// SetDeviceName sets the DeviceName field's value.
+func (s *CustomerGateway) SetDeviceName(v string) *CustomerGateway {
+	s.DeviceName = &v
 	return s
 }
 
@@ -53474,9 +53573,8 @@ type DescribeInstancesInput struct {
 	//    * hypervisor - The hypervisor type of the instance (ovm | xen).
 	//
 	//    * iam-instance-profile.arn - The instance profile associated with the
-	//    instance. Specified as an ARN.
-	//
-	//    * image-id - The ID of the image used to launch the instance.
+	//    instance. Specified as an ARN. image-id - The ID of the image used to
+	//    launch the instance.
 	//
 	//    * instance-id - The ID of the instance.
 	//
@@ -53508,6 +53606,15 @@ type DescribeInstancesInput struct {
 	//    for the instance in the launch group (for example, 0, 1, 2, and so on).
 	//
 	//    * launch-time - The time when the instance was launched.
+	//
+	//    * metadata-http-tokens - The metadata request authorization state (optional
+	//    | required)
+	//
+	//    * metadata-http-put-response-hop-limit - The http metadata request put
+	//    response hop limit (integer, possible values 1 to 64)
+	//
+	//    * metadata-http-endpoint - Enable or disable metadata access on http endpoint
+	//    (enabled | disabled)
 	//
 	//    * monitoring-state - Indicates whether detailed monitoring is enabled
 	//    (disabled | enabled).
@@ -60959,6 +61066,9 @@ type DescribeVpnConnectionsInput struct {
 	//
 	//    * vpn-gateway-id - The ID of a virtual private gateway associated with
 	//    the VPN connection.
+	//
+	//    * transit-gateway-id - The ID of a transit gateway associated with the
+	//    VPN connection.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// One or more VPN connection IDs.
@@ -69612,6 +69722,9 @@ type Instance struct {
 	// The license configurations.
 	Licenses []*LicenseConfiguration `locationName:"licenseSet" locationNameList:"item" type:"list"`
 
+	// The metadata options for the instance.
+	MetadataOptions *InstanceMetadataOptionsResponse `locationName:"metadataOptions" type:"structure"`
+
 	// The monitoring for the instance.
 	Monitoring *Monitoring `locationName:"monitoring" type:"structure"`
 
@@ -69837,6 +69950,12 @@ func (s *Instance) SetLaunchTime(v time.Time) *Instance {
 // SetLicenses sets the Licenses field's value.
 func (s *Instance) SetLicenses(v []*LicenseConfiguration) *Instance {
 	s.Licenses = v
+	return s
+}
+
+// SetMetadataOptions sets the MetadataOptions field's value.
+func (s *Instance) SetMetadataOptions(v *InstanceMetadataOptionsResponse) *Instance {
+	s.MetadataOptions = v
 	return s
 }
 
@@ -70318,6 +70437,146 @@ func (s *InstanceMarketOptionsRequest) SetMarketType(v string) *InstanceMarketOp
 // SetSpotOptions sets the SpotOptions field's value.
 func (s *InstanceMarketOptionsRequest) SetSpotOptions(v *SpotMarketOptions) *InstanceMarketOptionsRequest {
 	s.SpotOptions = v
+	return s
+}
+
+// The metadata options for the instance.
+type InstanceMetadataOptionsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// This parameter enables or disables the HTTP metadata endpoint on your instances.
+	// If the parameter is not specified, the default state is enabled.
+	//
+	// If you specify a value of disabled, you will not be able to access your instance
+	// metadata.
+	HttpEndpoint *string `type:"string" enum:"InstanceMetadataEndpointState"`
+
+	// The desired HTTP PUT response hop limit for instance metadata requests. The
+	// larger the number, the further instance metadata requests can travel.
+	//
+	// Default: 1
+	//
+	// Possible values: Integers from 1 to 64
+	HttpPutResponseHopLimit *int64 `type:"integer"`
+
+	// The state of token usage for your instance metadata requests. If the parameter
+	// is not specified in the request, the default state is optional.
+	//
+	// If the state is optional, you can choose to retrieve instance metadata with
+	// or without a signed token header on your request. If you retrieve the IAM
+	// role credentials without a token, the version 1.0 role credentials are returned.
+	// If you retrieve the IAM role credentials using a valid signed token, the
+	// version 2.0 role credentials are returned.
+	//
+	// If the state is required, you must send a signed token header with any instance
+	// metadata retrieval requests. In this state, retrieving the IAM role credentials
+	// always returns the version 2.0 credentials; the version 1.0 credentials are
+	// not available.
+	HttpTokens *string `type:"string" enum:"HttpTokensState"`
+}
+
+// String returns the string representation
+func (s InstanceMetadataOptionsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceMetadataOptionsRequest) GoString() string {
+	return s.String()
+}
+
+// SetHttpEndpoint sets the HttpEndpoint field's value.
+func (s *InstanceMetadataOptionsRequest) SetHttpEndpoint(v string) *InstanceMetadataOptionsRequest {
+	s.HttpEndpoint = &v
+	return s
+}
+
+// SetHttpPutResponseHopLimit sets the HttpPutResponseHopLimit field's value.
+func (s *InstanceMetadataOptionsRequest) SetHttpPutResponseHopLimit(v int64) *InstanceMetadataOptionsRequest {
+	s.HttpPutResponseHopLimit = &v
+	return s
+}
+
+// SetHttpTokens sets the HttpTokens field's value.
+func (s *InstanceMetadataOptionsRequest) SetHttpTokens(v string) *InstanceMetadataOptionsRequest {
+	s.HttpTokens = &v
+	return s
+}
+
+// The metadata options for the instance.
+type InstanceMetadataOptionsResponse struct {
+	_ struct{} `type:"structure"`
+
+	// This parameter enables or disables the HTTP metadata endpoint on your instances.
+	// If the parameter is not specified, the default state is enabled.
+	//
+	// If you specify a value of disabled, you will not be able to access your instance
+	// metadata.
+	HttpEndpoint *string `locationName:"httpEndpoint" type:"string" enum:"InstanceMetadataEndpointState"`
+
+	// The desired HTTP PUT response hop limit for instance metadata requests. The
+	// larger the number, the further instance metadata requests can travel.
+	//
+	// Default: 1
+	//
+	// Possible values: Integers from 1 to 64
+	HttpPutResponseHopLimit *int64 `locationName:"httpPutResponseHopLimit" type:"integer"`
+
+	// The state of token usage for your instance metadata requests. If the parameter
+	// is not specified in the request, the default state is optional.
+	//
+	// If the state is optional, you can choose to retrieve instance metadata with
+	// or without a signed token header on your request. If you retrieve the IAM
+	// role credentials without a token, the version 1.0 role credentials are returned.
+	// If you retrieve the IAM role credentials using a valid signed token, the
+	// version 2.0 role credentials are returned.
+	//
+	// If the state is required, you must send a signed token header with any instance
+	// metadata retrieval requests. In this state, retrieving the IAM role credential
+	// always returns the version 2.0 credentials; the version 1.0 credentials are
+	// not available.
+	HttpTokens *string `locationName:"httpTokens" type:"string" enum:"HttpTokensState"`
+
+	// The state of the metadata option changes.
+	//
+	// pending - The metadata options are being updated and the instance is not
+	// ready to process metadata traffic with the new selection.
+	//
+	// applied - The metadata options have been successfully applied on the instance.
+	State *string `locationName:"state" type:"string" enum:"InstanceMetadataOptionsState"`
+}
+
+// String returns the string representation
+func (s InstanceMetadataOptionsResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceMetadataOptionsResponse) GoString() string {
+	return s.String()
+}
+
+// SetHttpEndpoint sets the HttpEndpoint field's value.
+func (s *InstanceMetadataOptionsResponse) SetHttpEndpoint(v string) *InstanceMetadataOptionsResponse {
+	s.HttpEndpoint = &v
+	return s
+}
+
+// SetHttpPutResponseHopLimit sets the HttpPutResponseHopLimit field's value.
+func (s *InstanceMetadataOptionsResponse) SetHttpPutResponseHopLimit(v int64) *InstanceMetadataOptionsResponse {
+	s.HttpPutResponseHopLimit = &v
+	return s
+}
+
+// SetHttpTokens sets the HttpTokens field's value.
+func (s *InstanceMetadataOptionsResponse) SetHttpTokens(v string) *InstanceMetadataOptionsResponse {
+	s.HttpTokens = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *InstanceMetadataOptionsResponse) SetState(v string) *InstanceMetadataOptionsResponse {
+	s.State = &v
 	return s
 }
 
@@ -75229,6 +75488,135 @@ func (s ModifyInstanceEventStartTimeOutput) GoString() string {
 // SetEvent sets the Event field's value.
 func (s *ModifyInstanceEventStartTimeOutput) SetEvent(v *InstanceStatusEvent) *ModifyInstanceEventStartTimeOutput {
 	s.Event = v
+	return s
+}
+
+type ModifyInstanceMetadataOptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Checks whether you have the required permissions for the action, without
+	// actually making the request, and provides an error response. If you have
+	// the required permissions, the error response is DryRunOperation. Otherwise,
+	// it is UnauthorizedOperation.
+	DryRun *bool `type:"boolean"`
+
+	// This parameter enables or disables the HTTP metadata endpoint on your instances.
+	// If the parameter is not specified, the existing state is maintained.
+	//
+	// If you specify a value of disabled, you will not be able to access your instance
+	// metadata.
+	HttpEndpoint *string `type:"string" enum:"InstanceMetadataEndpointState"`
+
+	// The desired HTTP PUT response hop limit for instance metadata requests. The
+	// larger the number, the further instance metadata requests can travel. If
+	// no parameter is specified, the existing state is maintained.
+	//
+	// Possible values: Integers from 1 to 64
+	HttpPutResponseHopLimit *int64 `type:"integer"`
+
+	// The state of token usage for your instance metadata requests. If the parameter
+	// is not specified in the request, the default state is optional.
+	//
+	// If the state is optional, you can choose to retrieve instance metadata with
+	// or without a signed token header on your request. If you retrieve the IAM
+	// role credentials without a token, the version 1.0 role credentials are returned.
+	// If you retrieve the IAM role credentials using a valid signed token, the
+	// version 2.0 role credentials are returned.
+	//
+	// If the state is required, you must send a signed token header with any instance
+	// metadata retrieval requests. In this state, retrieving the IAM role credential
+	// always returns the version 2.0 credentials; the version 1.0 credentials are
+	// not available.
+	HttpTokens *string `type:"string" enum:"HttpTokensState"`
+
+	// The ID of the instance.
+	//
+	// InstanceId is a required field
+	InstanceId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceMetadataOptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceMetadataOptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyInstanceMetadataOptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyInstanceMetadataOptionsInput"}
+	if s.InstanceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InstanceId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDryRun sets the DryRun field's value.
+func (s *ModifyInstanceMetadataOptionsInput) SetDryRun(v bool) *ModifyInstanceMetadataOptionsInput {
+	s.DryRun = &v
+	return s
+}
+
+// SetHttpEndpoint sets the HttpEndpoint field's value.
+func (s *ModifyInstanceMetadataOptionsInput) SetHttpEndpoint(v string) *ModifyInstanceMetadataOptionsInput {
+	s.HttpEndpoint = &v
+	return s
+}
+
+// SetHttpPutResponseHopLimit sets the HttpPutResponseHopLimit field's value.
+func (s *ModifyInstanceMetadataOptionsInput) SetHttpPutResponseHopLimit(v int64) *ModifyInstanceMetadataOptionsInput {
+	s.HttpPutResponseHopLimit = &v
+	return s
+}
+
+// SetHttpTokens sets the HttpTokens field's value.
+func (s *ModifyInstanceMetadataOptionsInput) SetHttpTokens(v string) *ModifyInstanceMetadataOptionsInput {
+	s.HttpTokens = &v
+	return s
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *ModifyInstanceMetadataOptionsInput) SetInstanceId(v string) *ModifyInstanceMetadataOptionsInput {
+	s.InstanceId = &v
+	return s
+}
+
+type ModifyInstanceMetadataOptionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the instance.
+	InstanceId *string `locationName:"instanceId" type:"string"`
+
+	// The metadata options for the instance.
+	InstanceMetadataOptions *InstanceMetadataOptionsResponse `locationName:"instanceMetadataOptions" type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyInstanceMetadataOptionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyInstanceMetadataOptionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetInstanceId sets the InstanceId field's value.
+func (s *ModifyInstanceMetadataOptionsOutput) SetInstanceId(v string) *ModifyInstanceMetadataOptionsOutput {
+	s.InstanceId = &v
+	return s
+}
+
+// SetInstanceMetadataOptions sets the InstanceMetadataOptions field's value.
+func (s *ModifyInstanceMetadataOptionsOutput) SetInstanceMetadataOptions(v *InstanceMetadataOptionsResponse) *ModifyInstanceMetadataOptionsOutput {
+	s.InstanceMetadataOptions = v
 	return s
 }
 
@@ -85732,6 +86120,10 @@ type RunInstancesInput struct {
 	// MaxCount is a required field
 	MaxCount *int64 `type:"integer" required:"true"`
 
+	// The metadata options for the instance. For more information, see Instance
+	// Metadata and User Data (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
+	MetadataOptions *InstanceMetadataOptionsRequest `type:"structure"`
+
 	// The minimum number of instances to launch. If you specify a minimum that
 	// is more instances than Amazon EC2 can launch in the target Availability Zone,
 	// Amazon EC2 launches no instances.
@@ -86011,6 +86403,12 @@ func (s *RunInstancesInput) SetLicenseSpecifications(v []*LicenseConfigurationRe
 // SetMaxCount sets the MaxCount field's value.
 func (s *RunInstancesInput) SetMaxCount(v int64) *RunInstancesInput {
 	s.MaxCount = &v
+	return s
+}
+
+// SetMetadataOptions sets the MetadataOptions field's value.
+func (s *RunInstancesInput) SetMetadataOptions(v *InstanceMetadataOptionsRequest) *RunInstancesInput {
+	s.MetadataOptions = v
 	return s
 }
 
@@ -96474,6 +96872,14 @@ const (
 )
 
 const (
+	// HttpTokensStateOptional is a HttpTokensState enum value
+	HttpTokensStateOptional = "optional"
+
+	// HttpTokensStateRequired is a HttpTokensState enum value
+	HttpTokensStateRequired = "required"
+)
+
+const (
 	// HypervisorTypeOvm is a HypervisorType enum value
 	HypervisorTypeOvm = "ovm"
 
@@ -96637,6 +97043,22 @@ const (
 
 	// InstanceMatchCriteriaTargeted is a InstanceMatchCriteria enum value
 	InstanceMatchCriteriaTargeted = "targeted"
+)
+
+const (
+	// InstanceMetadataEndpointStateDisabled is a InstanceMetadataEndpointState enum value
+	InstanceMetadataEndpointStateDisabled = "disabled"
+
+	// InstanceMetadataEndpointStateEnabled is a InstanceMetadataEndpointState enum value
+	InstanceMetadataEndpointStateEnabled = "enabled"
+)
+
+const (
+	// InstanceMetadataOptionsStatePending is a InstanceMetadataOptionsState enum value
+	InstanceMetadataOptionsStatePending = "pending"
+
+	// InstanceMetadataOptionsStateApplied is a InstanceMetadataOptionsState enum value
+	InstanceMetadataOptionsStateApplied = "applied"
 )
 
 const (

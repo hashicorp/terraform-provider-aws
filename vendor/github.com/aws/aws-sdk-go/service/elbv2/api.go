@@ -320,6 +320,11 @@ func (c *ELBV2) CreateListenerRequest(input *CreateListenerInput) (req *request.
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
 //
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/CreateListener
 func (c *ELBV2) CreateListener(input *CreateListenerInput) (*CreateListenerOutput, error) {
 	req, out := c.CreateListenerRequest(input)
@@ -582,6 +587,11 @@ func (c *ELBV2) CreateRuleRequest(input *CreateRuleInput) (req *request.Request,
 //
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
+//
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/CreateRule
 func (c *ELBV2) CreateRule(input *CreateRuleInput) (*CreateRuleOutput, error) {
@@ -2297,13 +2307,17 @@ func (c *ELBV2) ModifyListenerRequest(input *ModifyListenerInput) (req *request.
 
 // ModifyListener API operation for Elastic Load Balancing.
 //
-// Modifies the specified properties of the specified listener.
+// Replaces the specified properties of the specified listener. Any properties
+// that you do not specify remain unchanged.
 //
-// Any properties that you do not specify retain their current values. However,
-// changing the protocol from HTTPS to HTTP, or from TLS to TCP, removes the
+// Changing the protocol from HTTPS to HTTP, or from TLS to TCP, removes the
 // security policy and default certificate properties. If you change the protocol
 // from HTTP to HTTPS, or from TCP to TLS, you must add the security policy
 // and default certificate properties.
+//
+// To add an item to a list, remove an item from a list, or update an item in
+// a list, you must provide the entire list. For example, to add an action,
+// specify a list with the current actions plus the new action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2358,6 +2372,11 @@ func (c *ELBV2) ModifyListenerRequest(input *ModifyListenerInput) (req *request.
 //
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
+//
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/ModifyListener
 func (c *ELBV2) ModifyListener(input *ModifyListenerInput) (*ModifyListenerOutput, error) {
@@ -2512,9 +2531,12 @@ func (c *ELBV2) ModifyRuleRequest(input *ModifyRuleInput) (req *request.Request,
 
 // ModifyRule API operation for Elastic Load Balancing.
 //
-// Modifies the specified rule.
+// Replaces the specified properties of the specified rule. Any properties that
+// you do not specify are unchanged.
 //
-// Any existing properties that you do not modify retain their current values.
+// To add an item to a list, remove an item from a list, or update an item in
+// a list, you must provide the entire list. For example, to add an action,
+// specify a list with the current actions plus the new action.
 //
 // To modify the actions for the default rule, use ModifyListener.
 //
@@ -2556,6 +2578,11 @@ func (c *ELBV2) ModifyRuleRequest(input *ModifyRuleInput) (req *request.Request,
 //
 //   * ErrCodeInvalidLoadBalancerActionException "InvalidLoadBalancerAction"
 //   The requested action is not valid.
+//
+//   * ErrCodeTooManyUniqueTargetGroupsPerLoadBalancerException "TooManyUniqueTargetGroupsPerLoadBalancer"
+//   You've reached the limit on the number of unique target groups per load balancer
+//   across all listeners. If a target group is used by multiple actions for a
+//   load balancer, it is counted as only one use.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/elasticloadbalancingv2-2015-12-01/ModifyRule
 func (c *ELBV2) ModifyRule(input *ModifyRuleInput) (*ModifyRuleOutput, error) {
@@ -3413,6 +3440,13 @@ type Action struct {
 	// a custom HTTP response. Specify only when Type is fixed-response.
 	FixedResponseConfig *FixedResponseActionConfig `type:"structure"`
 
+	// Information for creating an action that distributes requests among one or
+	// more target groups. For Network Load Balancers, you can specify a single
+	// target group. Specify only when Type is forward. If you specify both ForwardConfig
+	// and TargetGroupArn, you can specify only one target group using ForwardConfig
+	// and it must be the same target group specified in TargetGroupArn.
+	ForwardConfig *ForwardActionConfig `type:"structure"`
+
 	// The order for the action. This value is required for rules with multiple
 	// actions. The action with the lowest value for order is performed first. The
 	// last action to be performed must be one of the following types of actions:
@@ -3424,7 +3458,8 @@ type Action struct {
 	RedirectConfig *RedirectActionConfig `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the target group. Specify only when Type
-	// is forward.
+	// is forward and you want to route to a single target group. To route to one
+	// or more target groups, use ForwardConfig instead.
 	TargetGroupArn *string `type:"string"`
 
 	// The type of action.
@@ -3494,6 +3529,12 @@ func (s *Action) SetAuthenticateOidcConfig(v *AuthenticateOidcActionConfig) *Act
 // SetFixedResponseConfig sets the FixedResponseConfig field's value.
 func (s *Action) SetFixedResponseConfig(v *FixedResponseActionConfig) *Action {
 	s.FixedResponseConfig = v
+	return s
+}
+
+// SetForwardConfig sets the ForwardConfig field's value.
+func (s *Action) SetForwardConfig(v *ForwardActionConfig) *Action {
+	s.ForwardConfig = v
 	return s
 }
 
@@ -4110,10 +4151,10 @@ type CreateListenerInput struct {
 	// The actions for the default rule. The rule must include one forward action
 	// or one or more fixed-response actions.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP for a
-	// Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -4434,10 +4475,10 @@ type CreateRuleInput struct {
 	// actions: forward, fixed-response, or redirect, and it must be the last action
 	// to be performed.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP for a
-	// Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -6082,6 +6123,40 @@ func (s *FixedResponseActionConfig) SetStatusCode(v string) *FixedResponseAction
 	return s
 }
 
+// Information about a forward action.
+type ForwardActionConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The target group stickiness for the rule.
+	TargetGroupStickinessConfig *TargetGroupStickinessConfig `type:"structure"`
+
+	// One or more target groups. For Network Load Balancers, you can specify a
+	// single target group.
+	TargetGroups []*TargetGroupTuple `type:"list"`
+}
+
+// String returns the string representation
+func (s ForwardActionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForwardActionConfig) GoString() string {
+	return s.String()
+}
+
+// SetTargetGroupStickinessConfig sets the TargetGroupStickinessConfig field's value.
+func (s *ForwardActionConfig) SetTargetGroupStickinessConfig(v *TargetGroupStickinessConfig) *ForwardActionConfig {
+	s.TargetGroupStickinessConfig = v
+	return s
+}
+
+// SetTargetGroups sets the TargetGroups field's value.
+func (s *ForwardActionConfig) SetTargetGroups(v []*TargetGroupTuple) *ForwardActionConfig {
+	s.TargetGroups = v
+	return s
+}
+
 // Information about a host header condition.
 type HostHeaderConditionConfig struct {
 	_ struct{} `type:"structure"`
@@ -6218,6 +6293,12 @@ type Limit struct {
 	//    * rules-per-application-load-balancer
 	//
 	//    * target-groups
+	//
+	//    * target-groups-per-action-on-application-load-balancer
+	//
+	//    * target-groups-per-action-on-network-load-balancer
+	//
+	//    * target-groups-per-application-load-balancer
 	//
 	//    * targets-per-application-load-balancer
 	//
@@ -6654,10 +6735,10 @@ type ModifyListenerInput struct {
 	// The actions for the default rule. The rule must include one forward action
 	// or one or more fixed-response actions.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP for a
-	// Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -6868,10 +6949,10 @@ type ModifyRuleInput struct {
 	// actions: forward, fixed-response, or redirect, and it must be the last action
 	// to be performed.
 	//
-	// If the action type is forward, you specify a target group. The protocol of
-	// the target group must be HTTP or HTTPS for an Application Load Balancer.
-	// The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP for a
-	// Network Load Balancer.
+	// If the action type is forward, you specify one or more target groups. The
+	// protocol of the target group must be HTTP or HTTPS for an Application Load
+	// Balancer. The protocol of the target group must be TCP, TLS, UDP, or TCP_UDP
+	// for a Network Load Balancer.
 	//
 	// [HTTPS listeners] If the action type is authenticate-oidc, you authenticate
 	// users through an identity provider that is OpenID Connect (OIDC) compliant.
@@ -8717,6 +8798,74 @@ func (s *TargetGroupAttribute) SetKey(v string) *TargetGroupAttribute {
 // SetValue sets the Value field's value.
 func (s *TargetGroupAttribute) SetValue(v string) *TargetGroupAttribute {
 	s.Value = &v
+	return s
+}
+
+// Information about the target group stickiness for a rule.
+type TargetGroupStickinessConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The time period, in seconds, during which requests from a client should be
+	// routed to the same target group. The range is 1-604800 seconds (7 days).
+	DurationSeconds *int64 `type:"integer"`
+
+	// Indicates whether target group stickiness is enabled.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s TargetGroupStickinessConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetGroupStickinessConfig) GoString() string {
+	return s.String()
+}
+
+// SetDurationSeconds sets the DurationSeconds field's value.
+func (s *TargetGroupStickinessConfig) SetDurationSeconds(v int64) *TargetGroupStickinessConfig {
+	s.DurationSeconds = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *TargetGroupStickinessConfig) SetEnabled(v bool) *TargetGroupStickinessConfig {
+	s.Enabled = &v
+	return s
+}
+
+// Information about how traffic will be distributed between multiple target
+// groups in a forward rule.
+type TargetGroupTuple struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the target group.
+	TargetGroupArn *string `type:"string"`
+
+	// The weight. The range is 0 to 999.
+	Weight *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s TargetGroupTuple) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetGroupTuple) GoString() string {
+	return s.String()
+}
+
+// SetTargetGroupArn sets the TargetGroupArn field's value.
+func (s *TargetGroupTuple) SetTargetGroupArn(v string) *TargetGroupTuple {
+	s.TargetGroupArn = &v
+	return s
+}
+
+// SetWeight sets the Weight field's value.
+func (s *TargetGroupTuple) SetWeight(v int64) *TargetGroupTuple {
+	s.Weight = &v
 	return s
 }
 

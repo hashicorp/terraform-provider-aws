@@ -344,14 +344,14 @@ func (c *ConfigService) DeleteConfigRuleRequest(input *DeleteConfigRuleInput) (r
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   You see this exception in the following cases:
 //
-//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-//      request again later.
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
 //
-//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
 //      Try your request again later.
 //
-//      * For DeleteConfigRule API, a remediation action is associated with the
-//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
 //      associated with the rule before deleting the rule and try your request
 //      again later.
 //
@@ -360,6 +360,13 @@ func (c *ConfigService) DeleteConfigRuleRequest(input *DeleteConfigRuleInput) (r
 //
 //      * For DeleteOrganizationConfigRule, organization config rule creation
 //      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteConfigRule
 func (c *ConfigService) DeleteConfigRule(input *DeleteConfigRuleInput) (*DeleteConfigRuleOutput, error) {
@@ -553,6 +560,117 @@ func (c *ConfigService) DeleteConfigurationRecorderWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+const opDeleteConformancePack = "DeleteConformancePack"
+
+// DeleteConformancePackRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteConformancePack operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteConformancePack for more information on using the DeleteConformancePack
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteConformancePackRequest method.
+//    req, resp := client.DeleteConformancePackRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteConformancePack
+func (c *ConfigService) DeleteConformancePackRequest(input *DeleteConformancePackInput) (req *request.Request, output *DeleteConformancePackOutput) {
+	op := &request.Operation{
+		Name:       opDeleteConformancePack,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteConformancePackInput{}
+	}
+
+	output = &DeleteConformancePackOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteConformancePack API operation for AWS Config.
+//
+// Deletes the specified conformance pack and all the AWS Config rules and all
+// evaluation results within that conformance pack.
+//
+// AWS Config sets the conformance pack to DELETE_IN_PROGRESS until the deletion
+// is complete. You cannot update a conformance pack while it is in this state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DeleteConformancePack for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+//   You specified one or more conformance packs that do not exist.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
+//
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteConformancePack
+func (c *ConfigService) DeleteConformancePack(input *DeleteConformancePackInput) (*DeleteConformancePackOutput, error) {
+	req, out := c.DeleteConformancePackRequest(input)
+	return out, req.Send()
+}
+
+// DeleteConformancePackWithContext is the same as DeleteConformancePack with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteConformancePack for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DeleteConformancePackWithContext(ctx aws.Context, input *DeleteConformancePackInput, opts ...request.Option) (*DeleteConformancePackOutput, error) {
+	req, out := c.DeleteConformancePackRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteDeliveryChannel = "DeleteDeliveryChannel"
 
 // DeleteDeliveryChannelRequest generates a "aws/request.Request" representing the
@@ -705,14 +823,14 @@ func (c *ConfigService) DeleteEvaluationResultsRequest(input *DeleteEvaluationRe
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   You see this exception in the following cases:
 //
-//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-//      request again later.
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
 //
-//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
 //      Try your request again later.
 //
-//      * For DeleteConfigRule API, a remediation action is associated with the
-//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
 //      associated with the rule before deleting the rule and try your request
 //      again later.
 //
@@ -721,6 +839,13 @@ func (c *ConfigService) DeleteEvaluationResultsRequest(input *DeleteEvaluationRe
 //
 //      * For DeleteOrganizationConfigRule, organization config rule creation
 //      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteEvaluationResults
 func (c *ConfigService) DeleteEvaluationResults(input *DeleteEvaluationResultsInput) (*DeleteEvaluationResultsOutput, error) {
@@ -810,14 +935,14 @@ func (c *ConfigService) DeleteOrganizationConfigRuleRequest(input *DeleteOrganiz
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   You see this exception in the following cases:
 //
-//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-//      request again later.
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
 //
-//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
 //      Try your request again later.
 //
-//      * For DeleteConfigRule API, a remediation action is associated with the
-//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
 //      associated with the rule before deleting the rule and try your request
 //      again later.
 //
@@ -827,13 +952,20 @@ func (c *ConfigService) DeleteOrganizationConfigRuleRequest(input *DeleteOrganiz
 //      * For DeleteOrganizationConfigRule, organization config rule creation
 //      is in progress. Try your request again later.
 //
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
+//
 //   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
-//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-//   are called from member accounts. All APIs must be called from organization
-//   master account.
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteOrganizationConfigRule
 func (c *ConfigService) DeleteOrganizationConfigRule(input *DeleteOrganizationConfigRuleInput) (*DeleteOrganizationConfigRuleOutput, error) {
@@ -852,6 +984,131 @@ func (c *ConfigService) DeleteOrganizationConfigRule(input *DeleteOrganizationCo
 // for more information on using Contexts.
 func (c *ConfigService) DeleteOrganizationConfigRuleWithContext(ctx aws.Context, input *DeleteOrganizationConfigRuleInput, opts ...request.Option) (*DeleteOrganizationConfigRuleOutput, error) {
 	req, out := c.DeleteOrganizationConfigRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteOrganizationConformancePack = "DeleteOrganizationConformancePack"
+
+// DeleteOrganizationConformancePackRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteOrganizationConformancePack operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteOrganizationConformancePack for more information on using the DeleteOrganizationConformancePack
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteOrganizationConformancePackRequest method.
+//    req, resp := client.DeleteOrganizationConformancePackRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteOrganizationConformancePack
+func (c *ConfigService) DeleteOrganizationConformancePackRequest(input *DeleteOrganizationConformancePackInput) (req *request.Request, output *DeleteOrganizationConformancePackOutput) {
+	op := &request.Operation{
+		Name:       opDeleteOrganizationConformancePack,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteOrganizationConformancePackInput{}
+	}
+
+	output = &DeleteOrganizationConformancePackOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteOrganizationConformancePack API operation for AWS Config.
+//
+// Deletes the specified organization conformance pack and all of the config
+// rules and remediation actions from all member accounts in that organization.
+// Only a master account can delete an organization conformance pack.
+//
+// AWS Config sets the state of a conformance pack to DELETE_IN_PROGRESS until
+// the deletion is complete. You cannot update a conformance pack while it is
+// in this state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DeleteOrganizationConformancePack for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+//   AWS Config organization conformance pack that you passed in the filter does
+//   not exist.
+//
+//   For DeleteOrganizationConformancePack, you tried to delete an organization
+//   conformance pack that does not exist.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
+//
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteOrganizationConformancePack
+func (c *ConfigService) DeleteOrganizationConformancePack(input *DeleteOrganizationConformancePackInput) (*DeleteOrganizationConformancePackOutput, error) {
+	req, out := c.DeleteOrganizationConformancePackRequest(input)
+	return out, req.Send()
+}
+
+// DeleteOrganizationConformancePackWithContext is the same as DeleteOrganizationConformancePack with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteOrganizationConformancePack for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DeleteOrganizationConformancePackWithContext(ctx aws.Context, input *DeleteOrganizationConformancePackInput, opts ...request.Option) (*DeleteOrganizationConformancePackOutput, error) {
+	req, out := c.DeleteOrganizationConformancePackRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2209,6 +2466,271 @@ func (c *ConfigService) DescribeConfigurationRecordersWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
+const opDescribeConformancePackCompliance = "DescribeConformancePackCompliance"
+
+// DescribeConformancePackComplianceRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeConformancePackCompliance operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeConformancePackCompliance for more information on using the DescribeConformancePackCompliance
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeConformancePackComplianceRequest method.
+//    req, resp := client.DescribeConformancePackComplianceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConformancePackCompliance
+func (c *ConfigService) DescribeConformancePackComplianceRequest(input *DescribeConformancePackComplianceInput) (req *request.Request, output *DescribeConformancePackComplianceOutput) {
+	op := &request.Operation{
+		Name:       opDescribeConformancePackCompliance,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeConformancePackComplianceInput{}
+	}
+
+	output = &DescribeConformancePackComplianceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeConformancePackCompliance API operation for AWS Config.
+//
+// Returns compliance information for each rule in that conformance pack.
+//
+// You must provide exact rule names otherwise AWS Config cannot return evaluation
+// results due to insufficient data.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DescribeConformancePackCompliance for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One or more of the specified parameters are invalid. Verify that your parameters
+//   are valid and try again.
+//
+//   * ErrCodeNoSuchConfigRuleInConformancePackException "NoSuchConfigRuleInConformancePackException"
+//   AWS Config rule that you passed in the filter does not exist.
+//
+//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+//   You specified one or more conformance packs that do not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConformancePackCompliance
+func (c *ConfigService) DescribeConformancePackCompliance(input *DescribeConformancePackComplianceInput) (*DescribeConformancePackComplianceOutput, error) {
+	req, out := c.DescribeConformancePackComplianceRequest(input)
+	return out, req.Send()
+}
+
+// DescribeConformancePackComplianceWithContext is the same as DescribeConformancePackCompliance with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeConformancePackCompliance for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DescribeConformancePackComplianceWithContext(ctx aws.Context, input *DescribeConformancePackComplianceInput, opts ...request.Option) (*DescribeConformancePackComplianceOutput, error) {
+	req, out := c.DescribeConformancePackComplianceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeConformancePackStatus = "DescribeConformancePackStatus"
+
+// DescribeConformancePackStatusRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeConformancePackStatus operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeConformancePackStatus for more information on using the DescribeConformancePackStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeConformancePackStatusRequest method.
+//    req, resp := client.DescribeConformancePackStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConformancePackStatus
+func (c *ConfigService) DescribeConformancePackStatusRequest(input *DescribeConformancePackStatusInput) (req *request.Request, output *DescribeConformancePackStatusOutput) {
+	op := &request.Operation{
+		Name:       opDescribeConformancePackStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeConformancePackStatusInput{}
+	}
+
+	output = &DescribeConformancePackStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeConformancePackStatus API operation for AWS Config.
+//
+// Provides one or more conformance packs deployment status.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DescribeConformancePackStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConformancePackStatus
+func (c *ConfigService) DescribeConformancePackStatus(input *DescribeConformancePackStatusInput) (*DescribeConformancePackStatusOutput, error) {
+	req, out := c.DescribeConformancePackStatusRequest(input)
+	return out, req.Send()
+}
+
+// DescribeConformancePackStatusWithContext is the same as DescribeConformancePackStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeConformancePackStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DescribeConformancePackStatusWithContext(ctx aws.Context, input *DescribeConformancePackStatusInput, opts ...request.Option) (*DescribeConformancePackStatusOutput, error) {
+	req, out := c.DescribeConformancePackStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeConformancePacks = "DescribeConformancePacks"
+
+// DescribeConformancePacksRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeConformancePacks operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeConformancePacks for more information on using the DescribeConformancePacks
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeConformancePacksRequest method.
+//    req, resp := client.DescribeConformancePacksRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConformancePacks
+func (c *ConfigService) DescribeConformancePacksRequest(input *DescribeConformancePacksInput) (req *request.Request, output *DescribeConformancePacksOutput) {
+	op := &request.Operation{
+		Name:       opDescribeConformancePacks,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeConformancePacksInput{}
+	}
+
+	output = &DescribeConformancePacksOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeConformancePacks API operation for AWS Config.
+//
+// Returns a list of one or more conformance packs.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DescribeConformancePacks for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+//   You specified one or more conformance packs that do not exist.
+//
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConformancePacks
+func (c *ConfigService) DescribeConformancePacks(input *DescribeConformancePacksInput) (*DescribeConformancePacksOutput, error) {
+	req, out := c.DescribeConformancePacksRequest(input)
+	return out, req.Send()
+}
+
+// DescribeConformancePacksWithContext is the same as DescribeConformancePacks with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeConformancePacks for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DescribeConformancePacksWithContext(ctx aws.Context, input *DescribeConformancePacksInput, opts ...request.Option) (*DescribeConformancePacksOutput, error) {
+	req, out := c.DescribeConformancePacksRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeDeliveryChannelStatus = "DescribeDeliveryChannelStatus"
 
 // DescribeDeliveryChannelStatusRequest generates a "aws/request.Request" representing the
@@ -2454,9 +2976,9 @@ func (c *ConfigService) DescribeOrganizationConfigRuleStatusesRequest(input *Des
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
-//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-//   are called from member accounts. All APIs must be called from organization
-//   master account.
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConfigRuleStatuses
 func (c *ConfigService) DescribeOrganizationConfigRuleStatuses(input *DescribeOrganizationConfigRuleStatusesInput) (*DescribeOrganizationConfigRuleStatusesOutput, error) {
@@ -2555,9 +3077,9 @@ func (c *ConfigService) DescribeOrganizationConfigRulesRequest(input *DescribeOr
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
-//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-//   are called from member accounts. All APIs must be called from organization
-//   master account.
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConfigRules
 func (c *ConfigService) DescribeOrganizationConfigRules(input *DescribeOrganizationConfigRulesInput) (*DescribeOrganizationConfigRulesOutput, error) {
@@ -2576,6 +3098,218 @@ func (c *ConfigService) DescribeOrganizationConfigRules(input *DescribeOrganizat
 // for more information on using Contexts.
 func (c *ConfigService) DescribeOrganizationConfigRulesWithContext(ctx aws.Context, input *DescribeOrganizationConfigRulesInput, opts ...request.Option) (*DescribeOrganizationConfigRulesOutput, error) {
 	req, out := c.DescribeOrganizationConfigRulesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeOrganizationConformancePackStatuses = "DescribeOrganizationConformancePackStatuses"
+
+// DescribeOrganizationConformancePackStatusesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeOrganizationConformancePackStatuses operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeOrganizationConformancePackStatuses for more information on using the DescribeOrganizationConformancePackStatuses
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeOrganizationConformancePackStatusesRequest method.
+//    req, resp := client.DescribeOrganizationConformancePackStatusesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConformancePackStatuses
+func (c *ConfigService) DescribeOrganizationConformancePackStatusesRequest(input *DescribeOrganizationConformancePackStatusesInput) (req *request.Request, output *DescribeOrganizationConformancePackStatusesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeOrganizationConformancePackStatuses,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeOrganizationConformancePackStatusesInput{}
+	}
+
+	output = &DescribeOrganizationConformancePackStatusesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeOrganizationConformancePackStatuses API operation for AWS Config.
+//
+// Provides organization conformance pack deployment status for an organization.
+//
+// The status is not considered successful until organization conformance pack
+// is successfully deployed in all the member accounts with an exception of
+// excluded accounts.
+//
+// When you specify the limit and the next token, you receive a paginated response.
+// Limit and next token are not applicable if you specify organization conformance
+// pack names. They are only applicable, when you request all the organization
+// conformance packs.
+//
+// Only a master account can call this API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DescribeOrganizationConformancePackStatuses for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+//   AWS Config organization conformance pack that you passed in the filter does
+//   not exist.
+//
+//   For DeleteOrganizationConformancePack, you tried to delete an organization
+//   conformance pack that does not exist.
+//
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConformancePackStatuses
+func (c *ConfigService) DescribeOrganizationConformancePackStatuses(input *DescribeOrganizationConformancePackStatusesInput) (*DescribeOrganizationConformancePackStatusesOutput, error) {
+	req, out := c.DescribeOrganizationConformancePackStatusesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeOrganizationConformancePackStatusesWithContext is the same as DescribeOrganizationConformancePackStatuses with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeOrganizationConformancePackStatuses for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DescribeOrganizationConformancePackStatusesWithContext(ctx aws.Context, input *DescribeOrganizationConformancePackStatusesInput, opts ...request.Option) (*DescribeOrganizationConformancePackStatusesOutput, error) {
+	req, out := c.DescribeOrganizationConformancePackStatusesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeOrganizationConformancePacks = "DescribeOrganizationConformancePacks"
+
+// DescribeOrganizationConformancePacksRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeOrganizationConformancePacks operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeOrganizationConformancePacks for more information on using the DescribeOrganizationConformancePacks
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeOrganizationConformancePacksRequest method.
+//    req, resp := client.DescribeOrganizationConformancePacksRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConformancePacks
+func (c *ConfigService) DescribeOrganizationConformancePacksRequest(input *DescribeOrganizationConformancePacksInput) (req *request.Request, output *DescribeOrganizationConformancePacksOutput) {
+	op := &request.Operation{
+		Name:       opDescribeOrganizationConformancePacks,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeOrganizationConformancePacksInput{}
+	}
+
+	output = &DescribeOrganizationConformancePacksOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeOrganizationConformancePacks API operation for AWS Config.
+//
+// Returns a list of organization conformance packs.
+//
+// When you specify the limit and the next token, you receive a paginated response.
+// Limit and next token are not applicable if you specify organization conformance
+// packs names. They are only applicable, when you request all the organization
+// conformance packs. Only a master account can call this API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DescribeOrganizationConformancePacks for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+//   AWS Config organization conformance pack that you passed in the filter does
+//   not exist.
+//
+//   For DeleteOrganizationConformancePack, you tried to delete an organization
+//   conformance pack that does not exist.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeOrganizationConformancePacks
+func (c *ConfigService) DescribeOrganizationConformancePacks(input *DescribeOrganizationConformancePacksInput) (*DescribeOrganizationConformancePacksOutput, error) {
+	req, out := c.DescribeOrganizationConformancePacksRequest(input)
+	return out, req.Send()
+}
+
+// DescribeOrganizationConformancePacksWithContext is the same as DescribeOrganizationConformancePacks with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeOrganizationConformancePacks for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DescribeOrganizationConformancePacksWithContext(ctx aws.Context, input *DescribeOrganizationConformancePacksInput, opts ...request.Option) (*DescribeOrganizationConformancePacksOutput, error) {
+	req, out := c.DescribeOrganizationConformancePacksRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3831,6 +4565,184 @@ func (c *ConfigService) GetComplianceSummaryByResourceTypeWithContext(ctx aws.Co
 	return out, req.Send()
 }
 
+const opGetConformancePackComplianceDetails = "GetConformancePackComplianceDetails"
+
+// GetConformancePackComplianceDetailsRequest generates a "aws/request.Request" representing the
+// client's request for the GetConformancePackComplianceDetails operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetConformancePackComplianceDetails for more information on using the GetConformancePackComplianceDetails
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetConformancePackComplianceDetailsRequest method.
+//    req, resp := client.GetConformancePackComplianceDetailsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetConformancePackComplianceDetails
+func (c *ConfigService) GetConformancePackComplianceDetailsRequest(input *GetConformancePackComplianceDetailsInput) (req *request.Request, output *GetConformancePackComplianceDetailsOutput) {
+	op := &request.Operation{
+		Name:       opGetConformancePackComplianceDetails,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetConformancePackComplianceDetailsInput{}
+	}
+
+	output = &GetConformancePackComplianceDetailsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetConformancePackComplianceDetails API operation for AWS Config.
+//
+// Returns compliance details of a conformance pack for all AWS resources that
+// are monitered by conformance pack.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation GetConformancePackComplianceDetails for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+//   You specified one or more conformance packs that do not exist.
+//
+//   * ErrCodeNoSuchConfigRuleInConformancePackException "NoSuchConfigRuleInConformancePackException"
+//   AWS Config rule that you passed in the filter does not exist.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One or more of the specified parameters are invalid. Verify that your parameters
+//   are valid and try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetConformancePackComplianceDetails
+func (c *ConfigService) GetConformancePackComplianceDetails(input *GetConformancePackComplianceDetailsInput) (*GetConformancePackComplianceDetailsOutput, error) {
+	req, out := c.GetConformancePackComplianceDetailsRequest(input)
+	return out, req.Send()
+}
+
+// GetConformancePackComplianceDetailsWithContext is the same as GetConformancePackComplianceDetails with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetConformancePackComplianceDetails for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) GetConformancePackComplianceDetailsWithContext(ctx aws.Context, input *GetConformancePackComplianceDetailsInput, opts ...request.Option) (*GetConformancePackComplianceDetailsOutput, error) {
+	req, out := c.GetConformancePackComplianceDetailsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetConformancePackComplianceSummary = "GetConformancePackComplianceSummary"
+
+// GetConformancePackComplianceSummaryRequest generates a "aws/request.Request" representing the
+// client's request for the GetConformancePackComplianceSummary operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetConformancePackComplianceSummary for more information on using the GetConformancePackComplianceSummary
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetConformancePackComplianceSummaryRequest method.
+//    req, resp := client.GetConformancePackComplianceSummaryRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetConformancePackComplianceSummary
+func (c *ConfigService) GetConformancePackComplianceSummaryRequest(input *GetConformancePackComplianceSummaryInput) (req *request.Request, output *GetConformancePackComplianceSummaryOutput) {
+	op := &request.Operation{
+		Name:       opGetConformancePackComplianceSummary,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetConformancePackComplianceSummaryInput{}
+	}
+
+	output = &GetConformancePackComplianceSummaryOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetConformancePackComplianceSummary API operation for AWS Config.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation GetConformancePackComplianceSummary for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+//   You specified one or more conformance packs that do not exist.
+//
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetConformancePackComplianceSummary
+func (c *ConfigService) GetConformancePackComplianceSummary(input *GetConformancePackComplianceSummaryInput) (*GetConformancePackComplianceSummaryOutput, error) {
+	req, out := c.GetConformancePackComplianceSummaryRequest(input)
+	return out, req.Send()
+}
+
+// GetConformancePackComplianceSummaryWithContext is the same as GetConformancePackComplianceSummary with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetConformancePackComplianceSummary for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) GetConformancePackComplianceSummaryWithContext(ctx aws.Context, input *GetConformancePackComplianceSummaryInput, opts ...request.Option) (*GetConformancePackComplianceSummaryOutput, error) {
+	req, out := c.GetConformancePackComplianceSummaryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetDiscoveredResourceCounts = "GetDiscoveredResourceCounts"
 
 // GetDiscoveredResourceCountsRequest generates a "aws/request.Request" representing the
@@ -4021,9 +4933,9 @@ func (c *ConfigService) GetOrganizationConfigRuleDetailedStatusRequest(input *Ge
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
-//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-//   are called from member accounts. All APIs must be called from organization
-//   master account.
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetOrganizationConfigRuleDetailedStatus
 func (c *ConfigService) GetOrganizationConfigRuleDetailedStatus(input *GetOrganizationConfigRuleDetailedStatusInput) (*GetOrganizationConfigRuleDetailedStatusOutput, error) {
@@ -4042,6 +4954,107 @@ func (c *ConfigService) GetOrganizationConfigRuleDetailedStatus(input *GetOrgani
 // for more information on using Contexts.
 func (c *ConfigService) GetOrganizationConfigRuleDetailedStatusWithContext(ctx aws.Context, input *GetOrganizationConfigRuleDetailedStatusInput, opts ...request.Option) (*GetOrganizationConfigRuleDetailedStatusOutput, error) {
 	req, out := c.GetOrganizationConfigRuleDetailedStatusRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetOrganizationConformancePackDetailedStatus = "GetOrganizationConformancePackDetailedStatus"
+
+// GetOrganizationConformancePackDetailedStatusRequest generates a "aws/request.Request" representing the
+// client's request for the GetOrganizationConformancePackDetailedStatus operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetOrganizationConformancePackDetailedStatus for more information on using the GetOrganizationConformancePackDetailedStatus
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetOrganizationConformancePackDetailedStatusRequest method.
+//    req, resp := client.GetOrganizationConformancePackDetailedStatusRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetOrganizationConformancePackDetailedStatus
+func (c *ConfigService) GetOrganizationConformancePackDetailedStatusRequest(input *GetOrganizationConformancePackDetailedStatusInput) (req *request.Request, output *GetOrganizationConformancePackDetailedStatusOutput) {
+	op := &request.Operation{
+		Name:       opGetOrganizationConformancePackDetailedStatus,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetOrganizationConformancePackDetailedStatusInput{}
+	}
+
+	output = &GetOrganizationConformancePackDetailedStatusOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetOrganizationConformancePackDetailedStatus API operation for AWS Config.
+//
+// Returns detailed status for each member account within an organization for
+// a given organization conformance pack.
+//
+// Only a master account can call this API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation GetOrganizationConformancePackDetailedStatus for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+//   AWS Config organization conformance pack that you passed in the filter does
+//   not exist.
+//
+//   For DeleteOrganizationConformancePack, you tried to delete an organization
+//   conformance pack that does not exist.
+//
+//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   The specified limit is outside the allowable range.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The specified next token is invalid. Specify the nextToken string that was
+//   returned in the previous response to get the next page of results.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetOrganizationConformancePackDetailedStatus
+func (c *ConfigService) GetOrganizationConformancePackDetailedStatus(input *GetOrganizationConformancePackDetailedStatusInput) (*GetOrganizationConformancePackDetailedStatusOutput, error) {
+	req, out := c.GetOrganizationConformancePackDetailedStatusRequest(input)
+	return out, req.Send()
+}
+
+// GetOrganizationConformancePackDetailedStatusWithContext is the same as GetOrganizationConformancePackDetailedStatus with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetOrganizationConformancePackDetailedStatus for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) GetOrganizationConformancePackDetailedStatusWithContext(ctx aws.Context, input *GetOrganizationConformancePackDetailedStatusInput, opts ...request.Option) (*GetOrganizationConformancePackDetailedStatusOutput, error) {
+	req, out := c.GetOrganizationConformancePackDetailedStatusRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4688,14 +5701,14 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   You see this exception in the following cases:
 //
-//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-//      request again later.
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
 //
-//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
 //      Try your request again later.
 //
-//      * For DeleteConfigRule API, a remediation action is associated with the
-//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
 //      associated with the rule before deleting the rule and try your request
 //      again later.
 //
@@ -4704,6 +5717,13 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //
 //      * For DeleteOrganizationConfigRule, organization config rule creation
 //      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
 //
 //   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
 //   Indicates one of the following errors:
@@ -4714,9 +5734,14 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
 //      the function ARN, and check the function's permissions.
 //
-//      * For OrganizationConfigRule, organization config rule cannot be created
+//      * For PutOrganizationConfigRule, organization config rule cannot be created
 //      because you do not have permissions to call IAM GetRole action or create
-//      service linked role.
+//      a service linked role.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack cannot be created becuase you do not have permissions: To call IAM
+//      GetRole action or create a service linked role. To read Amazon S3 bucket.
+//      To create a rule and a stack.
 //
 //   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
 //   There are no configuration recorders available to provide the role needed
@@ -4826,9 +5851,9 @@ func (c *ConfigService) PutConfigurationAggregatorRequest(input *PutConfiguratio
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
-//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-//   are called from member accounts. All APIs must be called from organization
-//   master account.
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
 //
 //   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
 //   Organization is no longer available.
@@ -4954,6 +5979,148 @@ func (c *ConfigService) PutConfigurationRecorder(input *PutConfigurationRecorder
 // for more information on using Contexts.
 func (c *ConfigService) PutConfigurationRecorderWithContext(ctx aws.Context, input *PutConfigurationRecorderInput, opts ...request.Option) (*PutConfigurationRecorderOutput, error) {
 	req, out := c.PutConfigurationRecorderRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutConformancePack = "PutConformancePack"
+
+// PutConformancePackRequest generates a "aws/request.Request" representing the
+// client's request for the PutConformancePack operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutConformancePack for more information on using the PutConformancePack
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutConformancePackRequest method.
+//    req, resp := client.PutConformancePackRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutConformancePack
+func (c *ConfigService) PutConformancePackRequest(input *PutConformancePackInput) (req *request.Request, output *PutConformancePackOutput) {
+	op := &request.Operation{
+		Name:       opPutConformancePack,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutConformancePackInput{}
+	}
+
+	output = &PutConformancePackOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutConformancePack API operation for AWS Config.
+//
+// Creates or updates a conformance pack. A conformance pack is a collection
+// of AWS Config rules that can be easily deployed in an account and a region.
+//
+// This API creates a service linked role AWSServiceRoleForConfigConforms in
+// your account. The service linked role is created only when the role does
+// not exist in your account. AWS Config verifies the existence of role with
+// GetRole action.
+//
+// You must specify either the TemplateS3Uri or the TemplateBody parameter,
+// but not both. If you provide both AWS Config uses the TemplateS3Uri parameter
+// and ignores the TemplateBody parameter.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation PutConformancePack for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   Indicates one of the following errors:
+//
+//      * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//      to AWS Config lacks permissions to perform the config:Put* action.
+//
+//      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//      the function ARN, and check the function's permissions.
+//
+//      * For PutOrganizationConfigRule, organization config rule cannot be created
+//      because you do not have permissions to call IAM GetRole action or create
+//      a service linked role.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack cannot be created becuase you do not have permissions: To call IAM
+//      GetRole action or create a service linked role. To read Amazon S3 bucket.
+//      To create a rule and a stack.
+//
+//   * ErrCodeConformancePackTemplateValidationException "ConformancePackTemplateValidationException"
+//   You have specified a template that is not valid or supported.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
+//
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One or more of the specified parameters are invalid. Verify that your parameters
+//   are valid and try again.
+//
+//   * ErrCodeMaxNumberOfConformancePacksExceededException "MaxNumberOfConformancePacksExceededException"
+//   You have reached the limit (20) of the number of conformance packs in an
+//   account.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutConformancePack
+func (c *ConfigService) PutConformancePack(input *PutConformancePackInput) (*PutConformancePackOutput, error) {
+	req, out := c.PutConformancePackRequest(input)
+	return out, req.Send()
+}
+
+// PutConformancePackWithContext is the same as PutConformancePack with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutConformancePack for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) PutConformancePackWithContext(ctx aws.Context, input *PutConformancePackInput, opts ...request.Option) (*PutConformancePackOutput, error) {
+	req, out := c.PutConformancePackRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5242,14 +6409,14 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   You see this exception in the following cases:
 //
-//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-//      request again later.
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
 //
-//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
 //      Try your request again later.
 //
-//      * For DeleteConfigRule API, a remediation action is associated with the
-//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
 //      associated with the rule before deleting the rule and try your request
 //      again later.
 //
@@ -5258,6 +6425,13 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //
 //      * For DeleteOrganizationConfigRule, organization config rule creation
 //      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One or more of the specified parameters are invalid. Verify that your parameters
@@ -5270,9 +6444,9 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
-//   For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-//   are called from member accounts. All APIs must be called from organization
-//   master account.
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
 //
 //   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
 //   Organization is no longer available.
@@ -5290,9 +6464,14 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
 //      the function ARN, and check the function's permissions.
 //
-//      * For OrganizationConfigRule, organization config rule cannot be created
+//      * For PutOrganizationConfigRule, organization config rule cannot be created
 //      because you do not have permissions to call IAM GetRole action or create
-//      service linked role.
+//      a service linked role.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack cannot be created becuase you do not have permissions: To call IAM
+//      GetRole action or create a service linked role. To read Amazon S3 bucket.
+//      To create a rule and a stack.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConfigRule
 func (c *ConfigService) PutOrganizationConfigRule(input *PutOrganizationConfigRuleInput) (*PutOrganizationConfigRuleOutput, error) {
@@ -5311,6 +6490,164 @@ func (c *ConfigService) PutOrganizationConfigRule(input *PutOrganizationConfigRu
 // for more information on using Contexts.
 func (c *ConfigService) PutOrganizationConfigRuleWithContext(ctx aws.Context, input *PutOrganizationConfigRuleInput, opts ...request.Option) (*PutOrganizationConfigRuleOutput, error) {
 	req, out := c.PutOrganizationConfigRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutOrganizationConformancePack = "PutOrganizationConformancePack"
+
+// PutOrganizationConformancePackRequest generates a "aws/request.Request" representing the
+// client's request for the PutOrganizationConformancePack operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutOrganizationConformancePack for more information on using the PutOrganizationConformancePack
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutOrganizationConformancePackRequest method.
+//    req, resp := client.PutOrganizationConformancePackRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConformancePack
+func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganizationConformancePackInput) (req *request.Request, output *PutOrganizationConformancePackOutput) {
+	op := &request.Operation{
+		Name:       opPutOrganizationConformancePack,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutOrganizationConformancePackInput{}
+	}
+
+	output = &PutOrganizationConformancePackOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutOrganizationConformancePack API operation for AWS Config.
+//
+// Deploys conformance packs across member accounts in an AWS Organization.
+//
+// This API enables organization service access through the EnableAWSServiceAccess
+// action and creates a service linked role AWSServiceRoleForConfigMultiAccountSetup
+// in the master account of your organization. The service linked role is created
+// only when the role does not exist in the master account. AWS Config verifies
+// the existence of role with GetRole action.
+//
+// The SPN is config-multiaccountsetup.amazonaws.com.
+//
+// You must specify either the TemplateS3Uri or the TemplateBody parameter,
+// but not both. If you provide both AWS Config uses the TemplateS3Uri parameter
+// and ignores the TemplateBody parameter.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation PutOrganizationConformancePack for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeMaxNumberOfOrganizationConformancePacksExceededException "MaxNumberOfOrganizationConformancePacksExceededException"
+//   You have reached the limit (10) of the number of organization conformance
+//   packs in an account.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   You see this exception in the following cases:
+//
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
+//
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
+//      Try your request again later.
+//
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
+//      associated with the rule before deleting the rule and try your request
+//      again later.
+//
+//      * For PutConfigOrganizationRule, organization config rule deletion is
+//      in progress. Try your request again later.
+//
+//      * For DeleteOrganizationConfigRule, organization config rule creation
+//      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   The requested action is not valid.
+//
+//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+//   API.
+//
+//   For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+//   Config throws an exception if APIs are called from member accounts. All APIs
+//   must be called from organization master account.
+//
+//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   Indicates one of the following errors:
+//
+//      * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//      to AWS Config lacks permissions to perform the config:Put* action.
+//
+//      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//      the function ARN, and check the function's permissions.
+//
+//      * For PutOrganizationConfigRule, organization config rule cannot be created
+//      because you do not have permissions to call IAM GetRole action or create
+//      a service linked role.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack cannot be created becuase you do not have permissions: To call IAM
+//      GetRole action or create a service linked role. To read Amazon S3 bucket.
+//      To create a rule and a stack.
+//
+//   * ErrCodeOrganizationConformancePackTemplateValidationException "OrganizationConformancePackTemplateValidationException"
+//   You have specified a template that is not valid or supported.
+//
+//   * ErrCodeOrganizationAllFeaturesNotEnabledException "OrganizationAllFeaturesNotEnabledException"
+//   AWS Config resource cannot be created because your organization does not
+//   have all features enabled.
+//
+//   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
+//   Organization is no longer available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConformancePack
+func (c *ConfigService) PutOrganizationConformancePack(input *PutOrganizationConformancePackInput) (*PutOrganizationConformancePackOutput, error) {
+	req, out := c.PutOrganizationConformancePackRequest(input)
+	return out, req.Send()
+}
+
+// PutOrganizationConformancePackWithContext is the same as PutOrganizationConformancePack with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutOrganizationConformancePack for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) PutOrganizationConformancePackWithContext(ctx aws.Context, input *PutOrganizationConformancePackInput, opts ...request.Option) (*PutOrganizationConformancePackOutput, error) {
+	req, out := c.PutOrganizationConformancePackRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5383,9 +6720,14 @@ func (c *ConfigService) PutRemediationConfigurationsRequest(input *PutRemediatio
 //      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
 //      the function ARN, and check the function's permissions.
 //
-//      * For OrganizationConfigRule, organization config rule cannot be created
+//      * For PutOrganizationConfigRule, organization config rule cannot be created
 //      because you do not have permissions to call IAM GetRole action or create
-//      service linked role.
+//      a service linked role.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack cannot be created becuase you do not have permissions: To call IAM
+//      GetRole action or create a service linked role. To read Amazon S3 bucket.
+//      To create a rule and a stack.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One or more of the specified parameters are invalid. Verify that your parameters
@@ -5775,14 +7117,14 @@ func (c *ConfigService) StartConfigRulesEvaluationRequest(input *StartConfigRule
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   You see this exception in the following cases:
 //
-//      * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-//      request again later.
+//      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//      again later.
 //
-//      * For DeleteConfigRule API, the rule is deleting your evaluation results.
+//      * For DeleteConfigRule, the rule is deleting your evaluation results.
 //      Try your request again later.
 //
-//      * For DeleteConfigRule API, a remediation action is associated with the
-//      rule and AWS Config cannot delete this rule. Delete the remediation action
+//      * For DeleteConfigRule, a remediation action is associated with the rule
+//      and AWS Config cannot delete this rule. Delete the remediation action
 //      associated with the rule before deleting the rule and try your request
 //      again later.
 //
@@ -5791,6 +7133,13 @@ func (c *ConfigService) StartConfigRulesEvaluationRequest(input *StartConfigRule
 //
 //      * For DeleteOrganizationConfigRule, organization config rule creation
 //      is in progress. Try your request again later.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack creation, update, and deletion is in progress. Try your request again
+//      later.
+//
+//      * For DeleteConformancePack, a conformance pack creation, update, and
+//      deletion is in progress. Try your request again later.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One or more of the specified parameters are invalid. Verify that your parameters
@@ -5978,9 +7327,14 @@ func (c *ConfigService) StartRemediationExecutionRequest(input *StartRemediation
 //      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
 //      the function ARN, and check the function's permissions.
 //
-//      * For OrganizationConfigRule, organization config rule cannot be created
+//      * For PutOrganizationConfigRule, organization config rule cannot be created
 //      because you do not have permissions to call IAM GetRole action or create
-//      service linked role.
+//      a service linked role.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack cannot be created becuase you do not have permissions: To call IAM
+//      GetRole action or create a service linked role. To read Amazon S3 bucket.
+//      To create a rule and a stack.
 //
 //   * ErrCodeNoSuchRemediationConfigurationException "NoSuchRemediationConfigurationException"
 //   You specified an AWS Config rule without a remediation configuration.
@@ -8337,6 +9691,512 @@ func (s *ConfigurationRecorderStatus) SetRecording(v bool) *ConfigurationRecorde
 	return s
 }
 
+// Filters the conformance pack by compliance types and AWS Config rule names.
+type ConformancePackComplianceFilters struct {
+	_ struct{} `type:"structure"`
+
+	// Filters the results by compliance.
+	//
+	// The allowed values are COMPLIANT and NON_COMPLIANT.
+	ComplianceType *string `type:"string" enum:"ConformancePackComplianceType"`
+
+	// Filters the results by AWS Config rule names.
+	ConfigRuleNames []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s ConformancePackComplianceFilters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackComplianceFilters) GoString() string {
+	return s.String()
+}
+
+// SetComplianceType sets the ComplianceType field's value.
+func (s *ConformancePackComplianceFilters) SetComplianceType(v string) *ConformancePackComplianceFilters {
+	s.ComplianceType = &v
+	return s
+}
+
+// SetConfigRuleNames sets the ConfigRuleNames field's value.
+func (s *ConformancePackComplianceFilters) SetConfigRuleNames(v []*string) *ConformancePackComplianceFilters {
+	s.ConfigRuleNames = v
+	return s
+}
+
+type ConformancePackComplianceSummary struct {
+	_ struct{} `type:"structure"`
+
+	// ConformancePackComplianceStatus is a required field
+	ConformancePackComplianceStatus *string `type:"string" required:"true" enum:"ConformancePackComplianceType"`
+
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ConformancePackComplianceSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackComplianceSummary) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackComplianceStatus sets the ConformancePackComplianceStatus field's value.
+func (s *ConformancePackComplianceSummary) SetConformancePackComplianceStatus(v string) *ConformancePackComplianceSummary {
+	s.ConformancePackComplianceStatus = &v
+	return s
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *ConformancePackComplianceSummary) SetConformancePackName(v string) *ConformancePackComplianceSummary {
+	s.ConformancePackName = &v
+	return s
+}
+
+// Returns details of a conformance pack. A conformance pack is a collection
+// of AWS Config rules that can be easily deployed in an account and a region.
+type ConformancePackDetail struct {
+	_ struct{} `type:"structure"`
+
+	// Amazon Resource Name (ARN) of the conformance pack.
+	//
+	// ConformancePackArn is a required field
+	ConformancePackArn *string `min:"1" type:"string" required:"true"`
+
+	// ID of the conformance pack.
+	//
+	// ConformancePackId is a required field
+	ConformancePackId *string `min:"1" type:"string" required:"true"`
+
+	// A list of ConformancePackInputParameter objects.
+	ConformancePackInputParameters []*ConformancePackInputParameter `type:"list"`
+
+	// Name of the conformance pack.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	CreatedBy *string `min:"1" type:"string"`
+
+	// Location of an Amazon S3 bucket where AWS Config can deliver evaluation results
+	// and conformance pack template that is used to create a pack.
+	//
+	// DeliveryS3Bucket is a required field
+	DeliveryS3Bucket *string `min:"3" type:"string" required:"true"`
+
+	// Any folder structure you want to add to an Amazon S3 bucket.
+	DeliveryS3KeyPrefix *string `min:"1" type:"string"`
+
+	// Last time when conformation pack update was requested.
+	LastUpdateRequestedTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ConformancePackDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackDetail) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackArn sets the ConformancePackArn field's value.
+func (s *ConformancePackDetail) SetConformancePackArn(v string) *ConformancePackDetail {
+	s.ConformancePackArn = &v
+	return s
+}
+
+// SetConformancePackId sets the ConformancePackId field's value.
+func (s *ConformancePackDetail) SetConformancePackId(v string) *ConformancePackDetail {
+	s.ConformancePackId = &v
+	return s
+}
+
+// SetConformancePackInputParameters sets the ConformancePackInputParameters field's value.
+func (s *ConformancePackDetail) SetConformancePackInputParameters(v []*ConformancePackInputParameter) *ConformancePackDetail {
+	s.ConformancePackInputParameters = v
+	return s
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *ConformancePackDetail) SetConformancePackName(v string) *ConformancePackDetail {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetCreatedBy sets the CreatedBy field's value.
+func (s *ConformancePackDetail) SetCreatedBy(v string) *ConformancePackDetail {
+	s.CreatedBy = &v
+	return s
+}
+
+// SetDeliveryS3Bucket sets the DeliveryS3Bucket field's value.
+func (s *ConformancePackDetail) SetDeliveryS3Bucket(v string) *ConformancePackDetail {
+	s.DeliveryS3Bucket = &v
+	return s
+}
+
+// SetDeliveryS3KeyPrefix sets the DeliveryS3KeyPrefix field's value.
+func (s *ConformancePackDetail) SetDeliveryS3KeyPrefix(v string) *ConformancePackDetail {
+	s.DeliveryS3KeyPrefix = &v
+	return s
+}
+
+// SetLastUpdateRequestedTime sets the LastUpdateRequestedTime field's value.
+func (s *ConformancePackDetail) SetLastUpdateRequestedTime(v time.Time) *ConformancePackDetail {
+	s.LastUpdateRequestedTime = &v
+	return s
+}
+
+// Filters a conformance pack by AWS Config rule names, compliance types, AWS
+// resource types, and resource IDs.
+type ConformancePackEvaluationFilters struct {
+	_ struct{} `type:"structure"`
+
+	// Filters the results by compliance.
+	//
+	// The allowed values are COMPLIANT and NON_COMPLIANT.
+	ComplianceType *string `type:"string" enum:"ConformancePackComplianceType"`
+
+	// Filters the results by AWS Config rule names.
+	ConfigRuleNames []*string `type:"list"`
+
+	// Filters the results by resource IDs.
+	ResourceIds []*string `type:"list"`
+
+	// Filters the results by the resource type (for example, "AWS::EC2::Instance").
+	ResourceType *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ConformancePackEvaluationFilters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackEvaluationFilters) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConformancePackEvaluationFilters) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConformancePackEvaluationFilters"}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetComplianceType sets the ComplianceType field's value.
+func (s *ConformancePackEvaluationFilters) SetComplianceType(v string) *ConformancePackEvaluationFilters {
+	s.ComplianceType = &v
+	return s
+}
+
+// SetConfigRuleNames sets the ConfigRuleNames field's value.
+func (s *ConformancePackEvaluationFilters) SetConfigRuleNames(v []*string) *ConformancePackEvaluationFilters {
+	s.ConfigRuleNames = v
+	return s
+}
+
+// SetResourceIds sets the ResourceIds field's value.
+func (s *ConformancePackEvaluationFilters) SetResourceIds(v []*string) *ConformancePackEvaluationFilters {
+	s.ResourceIds = v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ConformancePackEvaluationFilters) SetResourceType(v string) *ConformancePackEvaluationFilters {
+	s.ResourceType = &v
+	return s
+}
+
+// The details of a conformance pack evaluation. Provides AWS Config rule and
+// AWS resource type that was evaluated, the compliance of the conformance pack,
+// related time stamps, and supplementary information.
+type ConformancePackEvaluationResult struct {
+	_ struct{} `type:"structure"`
+
+	// Supplementary information about how the evaluation determined the compliance.
+	Annotation *string `type:"string"`
+
+	// Filters the results by compliance.
+	//
+	// The allowed values are COMPLIANT and NON_COMPLIANT.
+	//
+	// ComplianceType is a required field
+	ComplianceType *string `type:"string" required:"true" enum:"ConformancePackComplianceType"`
+
+	// The time when AWS Config rule evaluated AWS resource.
+	//
+	// ConfigRuleInvokedTime is a required field
+	ConfigRuleInvokedTime *time.Time `type:"timestamp" required:"true"`
+
+	// Uniquely identifies an evaluation result.
+	//
+	// EvaluationResultIdentifier is a required field
+	EvaluationResultIdentifier *EvaluationResultIdentifier `type:"structure" required:"true"`
+
+	// The time when AWS Config recorded the evaluation result.
+	//
+	// ResultRecordedTime is a required field
+	ResultRecordedTime *time.Time `type:"timestamp" required:"true"`
+}
+
+// String returns the string representation
+func (s ConformancePackEvaluationResult) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackEvaluationResult) GoString() string {
+	return s.String()
+}
+
+// SetAnnotation sets the Annotation field's value.
+func (s *ConformancePackEvaluationResult) SetAnnotation(v string) *ConformancePackEvaluationResult {
+	s.Annotation = &v
+	return s
+}
+
+// SetComplianceType sets the ComplianceType field's value.
+func (s *ConformancePackEvaluationResult) SetComplianceType(v string) *ConformancePackEvaluationResult {
+	s.ComplianceType = &v
+	return s
+}
+
+// SetConfigRuleInvokedTime sets the ConfigRuleInvokedTime field's value.
+func (s *ConformancePackEvaluationResult) SetConfigRuleInvokedTime(v time.Time) *ConformancePackEvaluationResult {
+	s.ConfigRuleInvokedTime = &v
+	return s
+}
+
+// SetEvaluationResultIdentifier sets the EvaluationResultIdentifier field's value.
+func (s *ConformancePackEvaluationResult) SetEvaluationResultIdentifier(v *EvaluationResultIdentifier) *ConformancePackEvaluationResult {
+	s.EvaluationResultIdentifier = v
+	return s
+}
+
+// SetResultRecordedTime sets the ResultRecordedTime field's value.
+func (s *ConformancePackEvaluationResult) SetResultRecordedTime(v time.Time) *ConformancePackEvaluationResult {
+	s.ResultRecordedTime = &v
+	return s
+}
+
+// Input parameters in the form of key-value pairs for the conformance pack,
+// both of which you define. Keys can have a maximum character length of 128
+// characters, and values can have a maximum length of 256 characters.
+type ConformancePackInputParameter struct {
+	_ struct{} `type:"structure"`
+
+	// One part of a key-value pair.
+	//
+	// ParameterName is a required field
+	ParameterName *string `type:"string" required:"true"`
+
+	// Another part of the key-value pair.
+	//
+	// ParameterValue is a required field
+	ParameterValue *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ConformancePackInputParameter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackInputParameter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConformancePackInputParameter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConformancePackInputParameter"}
+	if s.ParameterName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ParameterName"))
+	}
+	if s.ParameterValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("ParameterValue"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetParameterName sets the ParameterName field's value.
+func (s *ConformancePackInputParameter) SetParameterName(v string) *ConformancePackInputParameter {
+	s.ParameterName = &v
+	return s
+}
+
+// SetParameterValue sets the ParameterValue field's value.
+func (s *ConformancePackInputParameter) SetParameterValue(v string) *ConformancePackInputParameter {
+	s.ParameterValue = &v
+	return s
+}
+
+// Compliance information of one or more AWS Config rules within a conformance
+// pack. You can filter using AWS Config rule names and compliance types.
+type ConformancePackRuleCompliance struct {
+	_ struct{} `type:"structure"`
+
+	// Filters the results by compliance.
+	//
+	// The allowed values are COMPLIANT and NON_COMPLIANT.
+	ComplianceType *string `type:"string" enum:"ConformancePackComplianceType"`
+
+	// Filters the results by AWS Config rule name.
+	ConfigRuleName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ConformancePackRuleCompliance) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackRuleCompliance) GoString() string {
+	return s.String()
+}
+
+// SetComplianceType sets the ComplianceType field's value.
+func (s *ConformancePackRuleCompliance) SetComplianceType(v string) *ConformancePackRuleCompliance {
+	s.ComplianceType = &v
+	return s
+}
+
+// SetConfigRuleName sets the ConfigRuleName field's value.
+func (s *ConformancePackRuleCompliance) SetConfigRuleName(v string) *ConformancePackRuleCompliance {
+	s.ConfigRuleName = &v
+	return s
+}
+
+// Status details of a conformance pack.
+type ConformancePackStatusDetail struct {
+	_ struct{} `type:"structure"`
+
+	// Amazon Resource Name (ARN) of comformance pack.
+	//
+	// ConformancePackArn is a required field
+	ConformancePackArn *string `min:"1" type:"string" required:"true"`
+
+	// ID of the conformance pack.
+	//
+	// ConformancePackId is a required field
+	ConformancePackId *string `min:"1" type:"string" required:"true"`
+
+	// Name of the conformance pack.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// Indicates deployment status of conformance pack.
+	//
+	// AWS Config sets the state of the conformance pack to:
+	//
+	//    * CREATE_IN_PROGRESS when a conformance pack creation is in progress for
+	//    an account.
+	//
+	//    * CREATE_COMPLETE when a conformance pack has been successfully created
+	//    in your account.
+	//
+	//    * CREATE_FAILED when a conformance pack creation failed in your account.
+	//
+	//    * DELETE_IN_PROGRESS when a conformance pack deletion is in progress.
+	//
+	//    * DELETE_FAILED when a conformance pack deletion failed from your account.
+	//
+	// ConformancePackState is a required field
+	ConformancePackState *string `type:"string" required:"true" enum:"ConformancePackState"`
+
+	// The reason of conformance pack creation failure.
+	ConformancePackStatusReason *string `type:"string"`
+
+	// Last time when conformation pack creation and update was successful.
+	LastUpdateCompletedTime *time.Time `type:"timestamp"`
+
+	// Last time when conformation pack creation and update was requested.
+	//
+	// LastUpdateRequestedTime is a required field
+	LastUpdateRequestedTime *time.Time `type:"timestamp" required:"true"`
+
+	// Amazon Resource Name (ARN) of AWS CloudFormation stack.
+	//
+	// StackArn is a required field
+	StackArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ConformancePackStatusDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackStatusDetail) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackArn sets the ConformancePackArn field's value.
+func (s *ConformancePackStatusDetail) SetConformancePackArn(v string) *ConformancePackStatusDetail {
+	s.ConformancePackArn = &v
+	return s
+}
+
+// SetConformancePackId sets the ConformancePackId field's value.
+func (s *ConformancePackStatusDetail) SetConformancePackId(v string) *ConformancePackStatusDetail {
+	s.ConformancePackId = &v
+	return s
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *ConformancePackStatusDetail) SetConformancePackName(v string) *ConformancePackStatusDetail {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetConformancePackState sets the ConformancePackState field's value.
+func (s *ConformancePackStatusDetail) SetConformancePackState(v string) *ConformancePackStatusDetail {
+	s.ConformancePackState = &v
+	return s
+}
+
+// SetConformancePackStatusReason sets the ConformancePackStatusReason field's value.
+func (s *ConformancePackStatusDetail) SetConformancePackStatusReason(v string) *ConformancePackStatusDetail {
+	s.ConformancePackStatusReason = &v
+	return s
+}
+
+// SetLastUpdateCompletedTime sets the LastUpdateCompletedTime field's value.
+func (s *ConformancePackStatusDetail) SetLastUpdateCompletedTime(v time.Time) *ConformancePackStatusDetail {
+	s.LastUpdateCompletedTime = &v
+	return s
+}
+
+// SetLastUpdateRequestedTime sets the LastUpdateRequestedTime field's value.
+func (s *ConformancePackStatusDetail) SetLastUpdateRequestedTime(v time.Time) *ConformancePackStatusDetail {
+	s.LastUpdateRequestedTime = &v
+	return s
+}
+
+// SetStackArn sets the StackArn field's value.
+func (s *ConformancePackStatusDetail) SetStackArn(v string) *ConformancePackStatusDetail {
+	s.StackArn = &v
+	return s
+}
+
 type DeleteAggregationAuthorizationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8574,6 +10434,61 @@ func (s DeleteConfigurationRecorderOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteConformancePackInput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the conformance pack you want to delete.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteConformancePackInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConformancePackInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteConformancePackInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteConformancePackInput"}
+	if s.ConformancePackName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConformancePackName"))
+	}
+	if s.ConformancePackName != nil && len(*s.ConformancePackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConformancePackName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *DeleteConformancePackInput) SetConformancePackName(v string) *DeleteConformancePackInput {
+	s.ConformancePackName = &v
+	return s
+}
+
+type DeleteConformancePackOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteConformancePackOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConformancePackOutput) GoString() string {
+	return s.String()
+}
+
 // The input for the DeleteDeliveryChannel action. The action accepts the following
 // data, in JSON format.
 type DeleteDeliveryChannelInput struct {
@@ -8741,6 +10656,61 @@ func (s DeleteOrganizationConfigRuleOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteOrganizationConfigRuleOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteOrganizationConformancePackInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of organization conformance pack that you want to delete.
+	//
+	// OrganizationConformancePackName is a required field
+	OrganizationConformancePackName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteOrganizationConformancePackInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOrganizationConformancePackInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteOrganizationConformancePackInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteOrganizationConformancePackInput"}
+	if s.OrganizationConformancePackName == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationConformancePackName"))
+	}
+	if s.OrganizationConformancePackName != nil && len(*s.OrganizationConformancePackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationConformancePackName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOrganizationConformancePackName sets the OrganizationConformancePackName field's value.
+func (s *DeleteOrganizationConformancePackInput) SetOrganizationConformancePackName(v string) *DeleteOrganizationConformancePackInput {
+	s.OrganizationConformancePackName = &v
+	return s
+}
+
+type DeleteOrganizationConformancePackOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteOrganizationConformancePackOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOrganizationConformancePackOutput) GoString() string {
 	return s.String()
 }
 
@@ -10049,6 +12019,274 @@ func (s *DescribeConfigurationRecordersOutput) SetConfigurationRecorders(v []*Co
 	return s
 }
 
+type DescribeConformancePackComplianceInput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the conformance pack.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// A ConformancePackComplianceFilters object.
+	Filters *ConformancePackComplianceFilters `type:"structure"`
+
+	// The maximum number of AWS Config rules within a conformance pack are returned
+	// on each page.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConformancePackComplianceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConformancePackComplianceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeConformancePackComplianceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeConformancePackComplianceInput"}
+	if s.ConformancePackName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConformancePackName"))
+	}
+	if s.ConformancePackName != nil && len(*s.ConformancePackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConformancePackName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *DescribeConformancePackComplianceInput) SetConformancePackName(v string) *DescribeConformancePackComplianceInput {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeConformancePackComplianceInput) SetFilters(v *ConformancePackComplianceFilters) *DescribeConformancePackComplianceInput {
+	s.Filters = v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeConformancePackComplianceInput) SetLimit(v int64) *DescribeConformancePackComplianceInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConformancePackComplianceInput) SetNextToken(v string) *DescribeConformancePackComplianceInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeConformancePackComplianceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the conformance pack.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// Returns a list of ConformancePackRuleCompliance objects.
+	//
+	// ConformancePackRuleComplianceList is a required field
+	ConformancePackRuleComplianceList []*ConformancePackRuleCompliance `type:"list" required:"true"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConformancePackComplianceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConformancePackComplianceOutput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *DescribeConformancePackComplianceOutput) SetConformancePackName(v string) *DescribeConformancePackComplianceOutput {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetConformancePackRuleComplianceList sets the ConformancePackRuleComplianceList field's value.
+func (s *DescribeConformancePackComplianceOutput) SetConformancePackRuleComplianceList(v []*ConformancePackRuleCompliance) *DescribeConformancePackComplianceOutput {
+	s.ConformancePackRuleComplianceList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConformancePackComplianceOutput) SetNextToken(v string) *DescribeConformancePackComplianceOutput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeConformancePackStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// Comma-separated list of conformance pack names.
+	ConformancePackNames []*string `type:"list"`
+
+	// The maximum number of conformance packs returned on each page.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConformancePackStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConformancePackStatusInput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackNames sets the ConformancePackNames field's value.
+func (s *DescribeConformancePackStatusInput) SetConformancePackNames(v []*string) *DescribeConformancePackStatusInput {
+	s.ConformancePackNames = v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeConformancePackStatusInput) SetLimit(v int64) *DescribeConformancePackStatusInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConformancePackStatusInput) SetNextToken(v string) *DescribeConformancePackStatusInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeConformancePackStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ConformancePackStatusDetail objects.
+	ConformancePackStatusDetails []*ConformancePackStatusDetail `type:"list"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConformancePackStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConformancePackStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackStatusDetails sets the ConformancePackStatusDetails field's value.
+func (s *DescribeConformancePackStatusOutput) SetConformancePackStatusDetails(v []*ConformancePackStatusDetail) *DescribeConformancePackStatusOutput {
+	s.ConformancePackStatusDetails = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConformancePackStatusOutput) SetNextToken(v string) *DescribeConformancePackStatusOutput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeConformancePacksInput struct {
+	_ struct{} `type:"structure"`
+
+	// Comma-separated list of conformance pack names for which you want details.
+	// If you do not specify any names, AWS Config returns details for all your
+	// conformance packs.
+	ConformancePackNames []*string `type:"list"`
+
+	// The maximum number of conformance packs returned on each page.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConformancePacksInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConformancePacksInput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackNames sets the ConformancePackNames field's value.
+func (s *DescribeConformancePacksInput) SetConformancePackNames(v []*string) *DescribeConformancePacksInput {
+	s.ConformancePackNames = v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeConformancePacksInput) SetLimit(v int64) *DescribeConformancePacksInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConformancePacksInput) SetNextToken(v string) *DescribeConformancePacksInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeConformancePacksOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns a list of ConformancePackDetail objects.
+	ConformancePackDetails []*ConformancePackDetail `type:"list"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeConformancePacksOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeConformancePacksOutput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackDetails sets the ConformancePackDetails field's value.
+func (s *DescribeConformancePacksOutput) SetConformancePackDetails(v []*ConformancePackDetail) *DescribeConformancePacksOutput {
+	s.ConformancePackDetails = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeConformancePacksOutput) SetNextToken(v string) *DescribeConformancePacksOutput {
+	s.NextToken = &v
+	return s
+}
+
 // The input for the DeliveryChannelStatus action.
 type DescribeDeliveryChannelStatusInput struct {
 	_ struct{} `type:"structure"`
@@ -10276,7 +12514,7 @@ type DescribeOrganizationConfigRulesOutput struct {
 	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 
-	// Retuns a list OrganizationConfigRule objects.
+	// Returns a list of OrganizationConfigRule objects.
 	OrganizationConfigRules []*OrganizationConfigRule `type:"list"`
 }
 
@@ -10299,6 +12537,161 @@ func (s *DescribeOrganizationConfigRulesOutput) SetNextToken(v string) *Describe
 // SetOrganizationConfigRules sets the OrganizationConfigRules field's value.
 func (s *DescribeOrganizationConfigRulesOutput) SetOrganizationConfigRules(v []*OrganizationConfigRule) *DescribeOrganizationConfigRulesOutput {
 	s.OrganizationConfigRules = v
+	return s
+}
+
+type DescribeOrganizationConformancePackStatusesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of OrganizationConformancePackStatuses returned on each
+	// page. If you do no specify a number, AWS Config uses the default. The default
+	// is 100.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// The names of organization conformance packs for which you want status details.
+	// If you do not specify any names, AWS Config returns details for all your
+	// organization conformance packs.
+	OrganizationConformancePackNames []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeOrganizationConformancePackStatusesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOrganizationConformancePackStatusesInput) GoString() string {
+	return s.String()
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeOrganizationConformancePackStatusesInput) SetLimit(v int64) *DescribeOrganizationConformancePackStatusesInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOrganizationConformancePackStatusesInput) SetNextToken(v string) *DescribeOrganizationConformancePackStatusesInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOrganizationConformancePackNames sets the OrganizationConformancePackNames field's value.
+func (s *DescribeOrganizationConformancePackStatusesInput) SetOrganizationConformancePackNames(v []*string) *DescribeOrganizationConformancePackStatusesInput {
+	s.OrganizationConformancePackNames = v
+	return s
+}
+
+type DescribeOrganizationConformancePackStatusesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// A list of OrganizationConformancePackStatus objects.
+	OrganizationConformancePackStatuses []*OrganizationConformancePackStatus `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeOrganizationConformancePackStatusesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOrganizationConformancePackStatusesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOrganizationConformancePackStatusesOutput) SetNextToken(v string) *DescribeOrganizationConformancePackStatusesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOrganizationConformancePackStatuses sets the OrganizationConformancePackStatuses field's value.
+func (s *DescribeOrganizationConformancePackStatusesOutput) SetOrganizationConformancePackStatuses(v []*OrganizationConformancePackStatus) *DescribeOrganizationConformancePackStatusesOutput {
+	s.OrganizationConformancePackStatuses = v
+	return s
+}
+
+type DescribeOrganizationConformancePacksInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of organization config packs returned on each page. If
+	// you do no specify a number, AWS Config uses the default. The default is 100.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// The name that you assign to an organization conformance pack.
+	OrganizationConformancePackNames []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeOrganizationConformancePacksInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOrganizationConformancePacksInput) GoString() string {
+	return s.String()
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeOrganizationConformancePacksInput) SetLimit(v int64) *DescribeOrganizationConformancePacksInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOrganizationConformancePacksInput) SetNextToken(v string) *DescribeOrganizationConformancePacksInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOrganizationConformancePackNames sets the OrganizationConformancePackNames field's value.
+func (s *DescribeOrganizationConformancePacksInput) SetOrganizationConformancePackNames(v []*string) *DescribeOrganizationConformancePacksInput {
+	s.OrganizationConformancePackNames = v
+	return s
+}
+
+type DescribeOrganizationConformancePacksOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// Returns a list of OrganizationConformancePacks objects.
+	OrganizationConformancePacks []*OrganizationConformancePack `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeOrganizationConformancePacksOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOrganizationConformancePacksOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOrganizationConformancePacksOutput) SetNextToken(v string) *DescribeOrganizationConformancePacksOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOrganizationConformancePacks sets the OrganizationConformancePacks field's value.
+func (s *DescribeOrganizationConformancePacksOutput) SetOrganizationConformancePacks(v []*OrganizationConformancePack) *DescribeOrganizationConformancePacksOutput {
+	s.OrganizationConformancePacks = v
 	return s
 }
 
@@ -11987,6 +14380,210 @@ func (s *GetComplianceSummaryByResourceTypeOutput) SetComplianceSummariesByResou
 	return s
 }
 
+type GetConformancePackComplianceDetailsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the conformance pack.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// A ConformancePackEvaluationFilters object.
+	Filters *ConformancePackEvaluationFilters `type:"structure"`
+
+	// The maximum number of evaluation results returned on each page. If you do
+	// no specify a number, AWS Config uses the default. The default is 100.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetConformancePackComplianceDetailsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConformancePackComplianceDetailsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetConformancePackComplianceDetailsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetConformancePackComplianceDetailsInput"}
+	if s.ConformancePackName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConformancePackName"))
+	}
+	if s.ConformancePackName != nil && len(*s.ConformancePackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConformancePackName", 1))
+	}
+	if s.Filters != nil {
+		if err := s.Filters.Validate(); err != nil {
+			invalidParams.AddNested("Filters", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *GetConformancePackComplianceDetailsInput) SetConformancePackName(v string) *GetConformancePackComplianceDetailsInput {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *GetConformancePackComplianceDetailsInput) SetFilters(v *ConformancePackEvaluationFilters) *GetConformancePackComplianceDetailsInput {
+	s.Filters = v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetConformancePackComplianceDetailsInput) SetLimit(v int64) *GetConformancePackComplianceDetailsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetConformancePackComplianceDetailsInput) SetNextToken(v string) *GetConformancePackComplianceDetailsInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetConformancePackComplianceDetailsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the conformance pack.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// Returns a list of ConformancePackEvaluationResult objects.
+	ConformancePackRuleEvaluationResults []*ConformancePackEvaluationResult `type:"list"`
+
+	// The nextToken string returned in a previous request that you use to request
+	// the next page of results in a paginated response.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetConformancePackComplianceDetailsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConformancePackComplianceDetailsOutput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *GetConformancePackComplianceDetailsOutput) SetConformancePackName(v string) *GetConformancePackComplianceDetailsOutput {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetConformancePackRuleEvaluationResults sets the ConformancePackRuleEvaluationResults field's value.
+func (s *GetConformancePackComplianceDetailsOutput) SetConformancePackRuleEvaluationResults(v []*ConformancePackEvaluationResult) *GetConformancePackComplianceDetailsOutput {
+	s.ConformancePackRuleEvaluationResults = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetConformancePackComplianceDetailsOutput) SetNextToken(v string) *GetConformancePackComplianceDetailsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type GetConformancePackComplianceSummaryInput struct {
+	_ struct{} `type:"structure"`
+
+	// ConformancePackNames is a required field
+	ConformancePackNames []*string `min:"1" type:"list" required:"true"`
+
+	Limit *int64 `type:"integer"`
+
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetConformancePackComplianceSummaryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConformancePackComplianceSummaryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetConformancePackComplianceSummaryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetConformancePackComplianceSummaryInput"}
+	if s.ConformancePackNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConformancePackNames"))
+	}
+	if s.ConformancePackNames != nil && len(s.ConformancePackNames) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConformancePackNames", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConformancePackNames sets the ConformancePackNames field's value.
+func (s *GetConformancePackComplianceSummaryInput) SetConformancePackNames(v []*string) *GetConformancePackComplianceSummaryInput {
+	s.ConformancePackNames = v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetConformancePackComplianceSummaryInput) SetLimit(v int64) *GetConformancePackComplianceSummaryInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetConformancePackComplianceSummaryInput) SetNextToken(v string) *GetConformancePackComplianceSummaryInput {
+	s.NextToken = &v
+	return s
+}
+
+type GetConformancePackComplianceSummaryOutput struct {
+	_ struct{} `type:"structure"`
+
+	ConformancePackComplianceSummaryList []*ConformancePackComplianceSummary `min:"1" type:"list"`
+
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetConformancePackComplianceSummaryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetConformancePackComplianceSummaryOutput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackComplianceSummaryList sets the ConformancePackComplianceSummaryList field's value.
+func (s *GetConformancePackComplianceSummaryOutput) SetConformancePackComplianceSummaryList(v []*ConformancePackComplianceSummary) *GetConformancePackComplianceSummaryOutput {
+	s.ConformancePackComplianceSummaryList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetConformancePackComplianceSummaryOutput) SetNextToken(v string) *GetConformancePackComplianceSummaryOutput {
+	s.NextToken = &v
+	return s
+}
+
 type GetDiscoveredResourceCountsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12198,6 +14795,111 @@ func (s *GetOrganizationConfigRuleDetailedStatusOutput) SetNextToken(v string) *
 // SetOrganizationConfigRuleDetailedStatus sets the OrganizationConfigRuleDetailedStatus field's value.
 func (s *GetOrganizationConfigRuleDetailedStatusOutput) SetOrganizationConfigRuleDetailedStatus(v []*MemberAccountStatus) *GetOrganizationConfigRuleDetailedStatusOutput {
 	s.OrganizationConfigRuleDetailedStatus = v
+	return s
+}
+
+type GetOrganizationConformancePackDetailedStatusInput struct {
+	_ struct{} `type:"structure"`
+
+	// An OrganizationResourceDetailedStatusFilters object.
+	Filters *OrganizationResourceDetailedStatusFilters `type:"structure"`
+
+	// The maximum number of OrganizationConformancePackDetailedStatuses returned
+	// on each page. If you do not specify a number, AWS Config uses the default.
+	// The default is 100.
+	Limit *int64 `type:"integer"`
+
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// The name of organization conformance pack for which you want status details
+	// for member accounts.
+	//
+	// OrganizationConformancePackName is a required field
+	OrganizationConformancePackName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetOrganizationConformancePackDetailedStatusInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOrganizationConformancePackDetailedStatusInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetOrganizationConformancePackDetailedStatusInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetOrganizationConformancePackDetailedStatusInput"}
+	if s.OrganizationConformancePackName == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationConformancePackName"))
+	}
+	if s.OrganizationConformancePackName != nil && len(*s.OrganizationConformancePackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationConformancePackName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *GetOrganizationConformancePackDetailedStatusInput) SetFilters(v *OrganizationResourceDetailedStatusFilters) *GetOrganizationConformancePackDetailedStatusInput {
+	s.Filters = v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *GetOrganizationConformancePackDetailedStatusInput) SetLimit(v int64) *GetOrganizationConformancePackDetailedStatusInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetOrganizationConformancePackDetailedStatusInput) SetNextToken(v string) *GetOrganizationConformancePackDetailedStatusInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOrganizationConformancePackName sets the OrganizationConformancePackName field's value.
+func (s *GetOrganizationConformancePackDetailedStatusInput) SetOrganizationConformancePackName(v string) *GetOrganizationConformancePackDetailedStatusInput {
+	s.OrganizationConformancePackName = &v
+	return s
+}
+
+type GetOrganizationConformancePackDetailedStatusOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
+	NextToken *string `type:"string"`
+
+	// A list of OrganizationConformancePackDetailedStatus objects.
+	OrganizationConformancePackDetailedStatuses []*OrganizationConformancePackDetailedStatus `type:"list"`
+}
+
+// String returns the string representation
+func (s GetOrganizationConformancePackDetailedStatusOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetOrganizationConformancePackDetailedStatusOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *GetOrganizationConformancePackDetailedStatusOutput) SetNextToken(v string) *GetOrganizationConformancePackDetailedStatusOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetOrganizationConformancePackDetailedStatuses sets the OrganizationConformancePackDetailedStatuses field's value.
+func (s *GetOrganizationConformancePackDetailedStatusOutput) SetOrganizationConformancePackDetailedStatuses(v []*OrganizationConformancePackDetailedStatus) *GetOrganizationConformancePackDetailedStatusOutput {
+	s.OrganizationConformancePackDetailedStatuses = v
 	return s
 }
 
@@ -12903,7 +15605,7 @@ type OrganizationConfigRule struct {
 	// The timestamp of the last update.
 	LastUpdateTime *time.Time `type:"timestamp"`
 
-	// The Amazon Resource Name (ARN) of organization config rule.
+	// Amazon Resource Name (ARN) of organization config rule.
 	//
 	// OrganizationConfigRuleArn is a required field
 	OrganizationConfigRuleArn *string `min:"1" type:"string" required:"true"`
@@ -13062,6 +15764,311 @@ func (s *OrganizationConfigRuleStatus) SetOrganizationConfigRuleName(v string) *
 // SetOrganizationRuleStatus sets the OrganizationRuleStatus field's value.
 func (s *OrganizationConfigRuleStatus) SetOrganizationRuleStatus(v string) *OrganizationConfigRuleStatus {
 	s.OrganizationRuleStatus = &v
+	return s
+}
+
+// An organization conformance pack that has information about conformance packs
+// that AWS Config creates in member accounts.
+type OrganizationConformancePack struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ConformancePackInputParameter objects.
+	ConformancePackInputParameters []*ConformancePackInputParameter `type:"list"`
+
+	// Location of an Amazon S3 bucket where AWS Config can deliver evaluation results
+	// and conformance pack template that is used to create a pack.
+	//
+	// DeliveryS3Bucket is a required field
+	DeliveryS3Bucket *string `min:"3" type:"string" required:"true"`
+
+	// Any folder structure you want to add to an Amazon S3 bucket.
+	DeliveryS3KeyPrefix *string `min:"1" type:"string"`
+
+	// A comma-separated list of accounts excluded from organization conformance
+	// pack.
+	ExcludedAccounts []*string `type:"list"`
+
+	// Last time when organization conformation pack was updated.
+	//
+	// LastUpdateTime is a required field
+	LastUpdateTime *time.Time `type:"timestamp" required:"true"`
+
+	// Amazon Resource Name (ARN) of organization conformance pack.
+	//
+	// OrganizationConformancePackArn is a required field
+	OrganizationConformancePackArn *string `min:"1" type:"string" required:"true"`
+
+	// The name you assign to an organization conformance pack.
+	//
+	// OrganizationConformancePackName is a required field
+	OrganizationConformancePackName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s OrganizationConformancePack) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationConformancePack) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackInputParameters sets the ConformancePackInputParameters field's value.
+func (s *OrganizationConformancePack) SetConformancePackInputParameters(v []*ConformancePackInputParameter) *OrganizationConformancePack {
+	s.ConformancePackInputParameters = v
+	return s
+}
+
+// SetDeliveryS3Bucket sets the DeliveryS3Bucket field's value.
+func (s *OrganizationConformancePack) SetDeliveryS3Bucket(v string) *OrganizationConformancePack {
+	s.DeliveryS3Bucket = &v
+	return s
+}
+
+// SetDeliveryS3KeyPrefix sets the DeliveryS3KeyPrefix field's value.
+func (s *OrganizationConformancePack) SetDeliveryS3KeyPrefix(v string) *OrganizationConformancePack {
+	s.DeliveryS3KeyPrefix = &v
+	return s
+}
+
+// SetExcludedAccounts sets the ExcludedAccounts field's value.
+func (s *OrganizationConformancePack) SetExcludedAccounts(v []*string) *OrganizationConformancePack {
+	s.ExcludedAccounts = v
+	return s
+}
+
+// SetLastUpdateTime sets the LastUpdateTime field's value.
+func (s *OrganizationConformancePack) SetLastUpdateTime(v time.Time) *OrganizationConformancePack {
+	s.LastUpdateTime = &v
+	return s
+}
+
+// SetOrganizationConformancePackArn sets the OrganizationConformancePackArn field's value.
+func (s *OrganizationConformancePack) SetOrganizationConformancePackArn(v string) *OrganizationConformancePack {
+	s.OrganizationConformancePackArn = &v
+	return s
+}
+
+// SetOrganizationConformancePackName sets the OrganizationConformancePackName field's value.
+func (s *OrganizationConformancePack) SetOrganizationConformancePackName(v string) *OrganizationConformancePack {
+	s.OrganizationConformancePackName = &v
+	return s
+}
+
+// Organization conformance pack creation or deletion status in each member
+// account. This includes the name of the conformance pack, the status, error
+// code and error message when the conformance pack creation or deletion failed.
+type OrganizationConformancePackDetailedStatus struct {
+	_ struct{} `type:"structure"`
+
+	// The 12-digit account ID of a member account.
+	//
+	// AccountId is a required field
+	AccountId *string `type:"string" required:"true"`
+
+	// The name of conformance pack deployed in the member account.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// An error code that is returned when conformance pack creation or deletion
+	// failed in the member account.
+	ErrorCode *string `type:"string"`
+
+	// An error message indicating that conformance pack account creation or deletion
+	// has failed due to an error in the member account.
+	ErrorMessage *string `type:"string"`
+
+	// The timestamp of the last status update.
+	LastUpdateTime *time.Time `type:"timestamp"`
+
+	// Indicates deployment status for conformance pack in a member account. When
+	// master account calls PutOrganizationConformancePack action for the first
+	// time, conformance pack status is created in the member account. When master
+	// account calls PutOrganizationConformancePack action for the second time,
+	// conformance pack status is updated in the member account. Conformance pack
+	// status is deleted when the master account deletes OrganizationConformancePack
+	// and disables service access for config-multiaccountsetup.amazonaws.com.
+	//
+	// AWS Config sets the state of the conformance pack to:
+	//
+	//    * CREATE_SUCCESSFUL when conformance pack has been created in the member
+	//    account.
+	//
+	//    * CREATE_IN_PROGRESS when conformance pack is being created in the member
+	//    account.
+	//
+	//    * CREATE_FAILED when conformance pack creation has failed in the member
+	//    account.
+	//
+	//    * DELETE_FAILED when conformance pack deletion has failed in the member
+	//    account.
+	//
+	//    * DELETE_IN_PROGRESS when conformance pack is being deleted in the member
+	//    account.
+	//
+	//    * DELETE_SUCCESSFUL when conformance pack has been deleted in the member
+	//    account.
+	//
+	//    * UPDATE_SUCCESSFUL when conformance pack has been updated in the member
+	//    account.
+	//
+	//    * UPDATE_IN_PROGRESS when conformance pack is being updated in the member
+	//    account.
+	//
+	//    * UPDATE_FAILED when conformance pack deletion has failed in the member
+	//    account.
+	//
+	// Status is a required field
+	Status *string `type:"string" required:"true" enum:"OrganizationResourceDetailedStatus"`
+}
+
+// String returns the string representation
+func (s OrganizationConformancePackDetailedStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationConformancePackDetailedStatus) GoString() string {
+	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *OrganizationConformancePackDetailedStatus) SetAccountId(v string) *OrganizationConformancePackDetailedStatus {
+	s.AccountId = &v
+	return s
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *OrganizationConformancePackDetailedStatus) SetConformancePackName(v string) *OrganizationConformancePackDetailedStatus {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *OrganizationConformancePackDetailedStatus) SetErrorCode(v string) *OrganizationConformancePackDetailedStatus {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *OrganizationConformancePackDetailedStatus) SetErrorMessage(v string) *OrganizationConformancePackDetailedStatus {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetLastUpdateTime sets the LastUpdateTime field's value.
+func (s *OrganizationConformancePackDetailedStatus) SetLastUpdateTime(v time.Time) *OrganizationConformancePackDetailedStatus {
+	s.LastUpdateTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *OrganizationConformancePackDetailedStatus) SetStatus(v string) *OrganizationConformancePackDetailedStatus {
+	s.Status = &v
+	return s
+}
+
+// Returns the status for an organization conformance pack in an organization.
+type OrganizationConformancePackStatus struct {
+	_ struct{} `type:"structure"`
+
+	// An error code that is returned when organization conformance pack creation
+	// or deletion has failed in the member account.
+	ErrorCode *string `type:"string"`
+
+	// An error message indicating that organization conformance pack creation or
+	// deletion failed due to an error.
+	ErrorMessage *string `type:"string"`
+
+	// The timestamp of the last update.
+	LastUpdateTime *time.Time `type:"timestamp"`
+
+	// The name that you assign to organization conformance pack.
+	//
+	// OrganizationConformancePackName is a required field
+	OrganizationConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// Indicates deployment status of an organization conformance pack. When master
+	// account calls PutOrganizationConformancePack for the first time, conformance
+	// pack status is created in all the member accounts. When master account calls
+	// PutOrganizationConformancePack for the second time, conformance pack status
+	// is updated in all the member accounts. Additionally, conformance pack status
+	// is updated when one or more member accounts join or leave an organization.
+	// Conformance pack status is deleted when the master account deletes OrganizationConformancePack
+	// in all the member accounts and disables service access for config-multiaccountsetup.amazonaws.com.
+	//
+	// AWS Config sets the state of the conformance pack to:
+	//
+	//    * CREATE_SUCCESSFUL when an organization conformance pack has been successfully
+	//    created in all the member accounts.
+	//
+	//    * CREATE_IN_PROGRESS when an organization conformance pack creation is
+	//    in progress.
+	//
+	//    * CREATE_FAILED when an organization conformance pack creation failed
+	//    in one or more member accounts within that organization.
+	//
+	//    * DELETE_FAILED when an organization conformance pack deletion failed
+	//    in one or more member accounts within that organization.
+	//
+	//    * DELETE_IN_PROGRESS when an organization conformance pack deletion is
+	//    in progress.
+	//
+	//    * DELETE_SUCCESSFUL when an organization conformance pack has been successfully
+	//    deleted from all the member accounts.
+	//
+	//    * UPDATE_SUCCESSFUL when an organization conformance pack has been successfully
+	//    updated in all the member accounts.
+	//
+	//    * UPDATE_IN_PROGRESS when an organization conformance pack update is in
+	//    progress.
+	//
+	//    * UPDATE_FAILED when an organization conformance pack update failed in
+	//    one or more member accounts within that organization.
+	//
+	// Status is a required field
+	Status *string `type:"string" required:"true" enum:"OrganizationResourceStatus"`
+}
+
+// String returns the string representation
+func (s OrganizationConformancePackStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationConformancePackStatus) GoString() string {
+	return s.String()
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *OrganizationConformancePackStatus) SetErrorCode(v string) *OrganizationConformancePackStatus {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *OrganizationConformancePackStatus) SetErrorMessage(v string) *OrganizationConformancePackStatus {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetLastUpdateTime sets the LastUpdateTime field's value.
+func (s *OrganizationConformancePackStatus) SetLastUpdateTime(v time.Time) *OrganizationConformancePackStatus {
+	s.LastUpdateTime = &v
+	return s
+}
+
+// SetOrganizationConformancePackName sets the OrganizationConformancePackName field's value.
+func (s *OrganizationConformancePackStatus) SetOrganizationConformancePackName(v string) *OrganizationConformancePackStatus {
+	s.OrganizationConformancePackName = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *OrganizationConformancePackStatus) SetStatus(v string) *OrganizationConformancePackStatus {
+	s.Status = &v
 	return s
 }
 
@@ -13348,6 +16355,75 @@ func (s *OrganizationManagedRuleMetadata) SetTagKeyScope(v string) *Organization
 // SetTagValueScope sets the TagValueScope field's value.
 func (s *OrganizationManagedRuleMetadata) SetTagValueScope(v string) *OrganizationManagedRuleMetadata {
 	s.TagValueScope = &v
+	return s
+}
+
+// Status filter object to filter results based on specific member account ID
+// or status type for an organization conformance pack.
+type OrganizationResourceDetailedStatusFilters struct {
+	_ struct{} `type:"structure"`
+
+	// The 12-digit account ID of the member account within an organization.
+	AccountId *string `type:"string"`
+
+	// Indicates deployment status for conformance pack in a member account. When
+	// master account calls PutOrganizationConformancePack action for the first
+	// time, conformance pack status is created in the member account. When master
+	// account calls PutOrganizationConformancePack action for the second time,
+	// conformance pack status is updated in the member account. Conformance pack
+	// status is deleted when the master account deletes OrganizationConformancePack
+	// and disables service access for config-multiaccountsetup.amazonaws.com.
+	//
+	// AWS Config sets the state of the conformance pack to:
+	//
+	//    * CREATE_SUCCESSFUL when conformance pack has been created in the member
+	//    account.
+	//
+	//    * CREATE_IN_PROGRESS when conformance pack is being created in the member
+	//    account.
+	//
+	//    * CREATE_FAILED when conformance pack creation has failed in the member
+	//    account.
+	//
+	//    * DELETE_FAILED when conformance pack deletion has failed in the member
+	//    account.
+	//
+	//    * DELETE_IN_PROGRESS when conformance pack is being deleted in the member
+	//    account.
+	//
+	//    * DELETE_SUCCESSFUL when conformance pack has been deleted in the member
+	//    account.
+	//
+	//    * UPDATE_SUCCESSFUL when conformance pack has been updated in the member
+	//    account.
+	//
+	//    * UPDATE_IN_PROGRESS when conformance pack is being updated in the member
+	//    account.
+	//
+	//    * UPDATE_FAILED when conformance pack deletion has failed in the member
+	//    account.
+	Status *string `type:"string" enum:"OrganizationResourceDetailedStatus"`
+}
+
+// String returns the string representation
+func (s OrganizationResourceDetailedStatusFilters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationResourceDetailedStatusFilters) GoString() string {
+	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *OrganizationResourceDetailedStatusFilters) SetAccountId(v string) *OrganizationResourceDetailedStatusFilters {
+	s.AccountId = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *OrganizationResourceDetailedStatusFilters) SetStatus(v string) *OrganizationResourceDetailedStatusFilters {
+	s.Status = &v
 	return s
 }
 
@@ -13733,6 +16809,152 @@ func (s PutConfigurationRecorderOutput) GoString() string {
 	return s.String()
 }
 
+type PutConformancePackInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ConformancePackInputParameter objects.
+	ConformancePackInputParameters []*ConformancePackInputParameter `type:"list"`
+
+	// Name of the conformance pack you want to create.
+	//
+	// ConformancePackName is a required field
+	ConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// Location of an Amazon S3 bucket where AWS Config can deliver evaluation results.
+	// AWS Config stores intermediate files while processing conformance pack template.
+	//
+	// DeliveryS3Bucket is a required field
+	DeliveryS3Bucket *string `min:"3" type:"string" required:"true"`
+
+	// The prefix for the Amazon S3 bucket.
+	DeliveryS3KeyPrefix *string `min:"1" type:"string"`
+
+	// A string containing full conformance pack template body. Structure containing
+	// the template body with a minimum length of 1 byte and a maximum length of
+	// 51,200 bytes.
+	//
+	// You can only use a YAML template with one resource type, that is, config
+	// rule.
+	TemplateBody *string `min:"1" type:"string"`
+
+	// Location of file containing the template body. The uri must point to the
+	// conformance pack template (max size: 300,000 bytes) that is located in an
+	// Amazon S3 bucket in the same region as the conformance pack.
+	//
+	// You must have access to read Amazon S3 bucket.
+	TemplateS3Uri *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PutConformancePackInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutConformancePackInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutConformancePackInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutConformancePackInput"}
+	if s.ConformancePackName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConformancePackName"))
+	}
+	if s.ConformancePackName != nil && len(*s.ConformancePackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConformancePackName", 1))
+	}
+	if s.DeliveryS3Bucket == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeliveryS3Bucket"))
+	}
+	if s.DeliveryS3Bucket != nil && len(*s.DeliveryS3Bucket) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DeliveryS3Bucket", 3))
+	}
+	if s.DeliveryS3KeyPrefix != nil && len(*s.DeliveryS3KeyPrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeliveryS3KeyPrefix", 1))
+	}
+	if s.TemplateBody != nil && len(*s.TemplateBody) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateBody", 1))
+	}
+	if s.TemplateS3Uri != nil && len(*s.TemplateS3Uri) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateS3Uri", 1))
+	}
+	if s.ConformancePackInputParameters != nil {
+		for i, v := range s.ConformancePackInputParameters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ConformancePackInputParameters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConformancePackInputParameters sets the ConformancePackInputParameters field's value.
+func (s *PutConformancePackInput) SetConformancePackInputParameters(v []*ConformancePackInputParameter) *PutConformancePackInput {
+	s.ConformancePackInputParameters = v
+	return s
+}
+
+// SetConformancePackName sets the ConformancePackName field's value.
+func (s *PutConformancePackInput) SetConformancePackName(v string) *PutConformancePackInput {
+	s.ConformancePackName = &v
+	return s
+}
+
+// SetDeliveryS3Bucket sets the DeliveryS3Bucket field's value.
+func (s *PutConformancePackInput) SetDeliveryS3Bucket(v string) *PutConformancePackInput {
+	s.DeliveryS3Bucket = &v
+	return s
+}
+
+// SetDeliveryS3KeyPrefix sets the DeliveryS3KeyPrefix field's value.
+func (s *PutConformancePackInput) SetDeliveryS3KeyPrefix(v string) *PutConformancePackInput {
+	s.DeliveryS3KeyPrefix = &v
+	return s
+}
+
+// SetTemplateBody sets the TemplateBody field's value.
+func (s *PutConformancePackInput) SetTemplateBody(v string) *PutConformancePackInput {
+	s.TemplateBody = &v
+	return s
+}
+
+// SetTemplateS3Uri sets the TemplateS3Uri field's value.
+func (s *PutConformancePackInput) SetTemplateS3Uri(v string) *PutConformancePackInput {
+	s.TemplateS3Uri = &v
+	return s
+}
+
+type PutConformancePackOutput struct {
+	_ struct{} `type:"structure"`
+
+	// ARN of the conformance pack.
+	ConformancePackArn *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PutConformancePackOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutConformancePackOutput) GoString() string {
+	return s.String()
+}
+
+// SetConformancePackArn sets the ConformancePackArn field's value.
+func (s *PutConformancePackOutput) SetConformancePackArn(v string) *PutConformancePackOutput {
+	s.ConformancePackArn = &v
+	return s
+}
+
 // The input for the PutDeliveryChannel action.
 type PutDeliveryChannelInput struct {
 	_ struct{} `type:"structure"`
@@ -13989,6 +17211,158 @@ func (s PutOrganizationConfigRuleOutput) GoString() string {
 // SetOrganizationConfigRuleArn sets the OrganizationConfigRuleArn field's value.
 func (s *PutOrganizationConfigRuleOutput) SetOrganizationConfigRuleArn(v string) *PutOrganizationConfigRuleOutput {
 	s.OrganizationConfigRuleArn = &v
+	return s
+}
+
+type PutOrganizationConformancePackInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ConformancePackInputParameter objects.
+	ConformancePackInputParameters []*ConformancePackInputParameter `type:"list"`
+
+	// Location of an Amazon S3 bucket where AWS Config can deliver evaluation results.
+	// AWS Config stores intermediate files while processing conformance pack template.
+	//
+	// DeliveryS3Bucket is a required field
+	DeliveryS3Bucket *string `min:"3" type:"string" required:"true"`
+
+	// The prefix for the Amazon S3 bucket.
+	DeliveryS3KeyPrefix *string `min:"1" type:"string"`
+
+	// A list of AWS accounts to be excluded from an organization conformance pack
+	// while deploying a conformance pack.
+	ExcludedAccounts []*string `type:"list"`
+
+	// Name of the organization conformance pack you want to create.
+	//
+	// OrganizationConformancePackName is a required field
+	OrganizationConformancePackName *string `min:"1" type:"string" required:"true"`
+
+	// A string containing full conformance pack template body. Structure containing
+	// the template body with a minimum length of 1 byte and a maximum length of
+	// 51,200 bytes.
+	TemplateBody *string `min:"1" type:"string"`
+
+	// Location of file containing the template body. The uri must point to the
+	// conformance pack template (max size: 300,000 bytes).
+	//
+	// You must have access to read Amazon S3 bucket.
+	TemplateS3Uri *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PutOrganizationConformancePackInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutOrganizationConformancePackInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutOrganizationConformancePackInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutOrganizationConformancePackInput"}
+	if s.DeliveryS3Bucket == nil {
+		invalidParams.Add(request.NewErrParamRequired("DeliveryS3Bucket"))
+	}
+	if s.DeliveryS3Bucket != nil && len(*s.DeliveryS3Bucket) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DeliveryS3Bucket", 3))
+	}
+	if s.DeliveryS3KeyPrefix != nil && len(*s.DeliveryS3KeyPrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeliveryS3KeyPrefix", 1))
+	}
+	if s.OrganizationConformancePackName == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationConformancePackName"))
+	}
+	if s.OrganizationConformancePackName != nil && len(*s.OrganizationConformancePackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationConformancePackName", 1))
+	}
+	if s.TemplateBody != nil && len(*s.TemplateBody) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateBody", 1))
+	}
+	if s.TemplateS3Uri != nil && len(*s.TemplateS3Uri) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TemplateS3Uri", 1))
+	}
+	if s.ConformancePackInputParameters != nil {
+		for i, v := range s.ConformancePackInputParameters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ConformancePackInputParameters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConformancePackInputParameters sets the ConformancePackInputParameters field's value.
+func (s *PutOrganizationConformancePackInput) SetConformancePackInputParameters(v []*ConformancePackInputParameter) *PutOrganizationConformancePackInput {
+	s.ConformancePackInputParameters = v
+	return s
+}
+
+// SetDeliveryS3Bucket sets the DeliveryS3Bucket field's value.
+func (s *PutOrganizationConformancePackInput) SetDeliveryS3Bucket(v string) *PutOrganizationConformancePackInput {
+	s.DeliveryS3Bucket = &v
+	return s
+}
+
+// SetDeliveryS3KeyPrefix sets the DeliveryS3KeyPrefix field's value.
+func (s *PutOrganizationConformancePackInput) SetDeliveryS3KeyPrefix(v string) *PutOrganizationConformancePackInput {
+	s.DeliveryS3KeyPrefix = &v
+	return s
+}
+
+// SetExcludedAccounts sets the ExcludedAccounts field's value.
+func (s *PutOrganizationConformancePackInput) SetExcludedAccounts(v []*string) *PutOrganizationConformancePackInput {
+	s.ExcludedAccounts = v
+	return s
+}
+
+// SetOrganizationConformancePackName sets the OrganizationConformancePackName field's value.
+func (s *PutOrganizationConformancePackInput) SetOrganizationConformancePackName(v string) *PutOrganizationConformancePackInput {
+	s.OrganizationConformancePackName = &v
+	return s
+}
+
+// SetTemplateBody sets the TemplateBody field's value.
+func (s *PutOrganizationConformancePackInput) SetTemplateBody(v string) *PutOrganizationConformancePackInput {
+	s.TemplateBody = &v
+	return s
+}
+
+// SetTemplateS3Uri sets the TemplateS3Uri field's value.
+func (s *PutOrganizationConformancePackInput) SetTemplateS3Uri(v string) *PutOrganizationConformancePackInput {
+	s.TemplateS3Uri = &v
+	return s
+}
+
+type PutOrganizationConformancePackOutput struct {
+	_ struct{} `type:"structure"`
+
+	// ARN of the organization conformance pack.
+	OrganizationConformancePackArn *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PutOrganizationConformancePackOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutOrganizationConformancePackOutput) GoString() string {
+	return s.String()
+}
+
+// SetOrganizationConformancePackArn sets the OrganizationConformancePackArn field's value.
+func (s *PutOrganizationConformancePackOutput) SetOrganizationConformancePackArn(v string) *PutOrganizationConformancePackOutput {
+	s.OrganizationConformancePackArn = &v
 	return s
 }
 
@@ -16297,6 +19671,31 @@ const (
 )
 
 const (
+	// ConformancePackComplianceTypeCompliant is a ConformancePackComplianceType enum value
+	ConformancePackComplianceTypeCompliant = "COMPLIANT"
+
+	// ConformancePackComplianceTypeNonCompliant is a ConformancePackComplianceType enum value
+	ConformancePackComplianceTypeNonCompliant = "NON_COMPLIANT"
+)
+
+const (
+	// ConformancePackStateCreateInProgress is a ConformancePackState enum value
+	ConformancePackStateCreateInProgress = "CREATE_IN_PROGRESS"
+
+	// ConformancePackStateCreateComplete is a ConformancePackState enum value
+	ConformancePackStateCreateComplete = "CREATE_COMPLETE"
+
+	// ConformancePackStateCreateFailed is a ConformancePackState enum value
+	ConformancePackStateCreateFailed = "CREATE_FAILED"
+
+	// ConformancePackStateDeleteInProgress is a ConformancePackState enum value
+	ConformancePackStateDeleteInProgress = "DELETE_IN_PROGRESS"
+
+	// ConformancePackStateDeleteFailed is a ConformancePackState enum value
+	ConformancePackStateDeleteFailed = "DELETE_FAILED"
+)
+
+const (
 	// DeliveryStatusSuccess is a DeliveryStatus enum value
 	DeliveryStatusSuccess = "Success"
 
@@ -16339,15 +19738,6 @@ const (
 	// MemberAccountRuleStatusCreateFailed is a MemberAccountRuleStatus enum value
 	MemberAccountRuleStatusCreateFailed = "CREATE_FAILED"
 
-	// MemberAccountRuleStatusUpdateSuccessful is a MemberAccountRuleStatus enum value
-	MemberAccountRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
-
-	// MemberAccountRuleStatusUpdateFailed is a MemberAccountRuleStatus enum value
-	MemberAccountRuleStatusUpdateFailed = "UPDATE_FAILED"
-
-	// MemberAccountRuleStatusUpdateInProgress is a MemberAccountRuleStatus enum value
-	MemberAccountRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
-
 	// MemberAccountRuleStatusDeleteSuccessful is a MemberAccountRuleStatus enum value
 	MemberAccountRuleStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
 
@@ -16356,6 +19746,15 @@ const (
 
 	// MemberAccountRuleStatusDeleteInProgress is a MemberAccountRuleStatus enum value
 	MemberAccountRuleStatusDeleteInProgress = "DELETE_IN_PROGRESS"
+
+	// MemberAccountRuleStatusUpdateSuccessful is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// MemberAccountRuleStatusUpdateInProgress is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+
+	// MemberAccountRuleStatusUpdateFailed is a MemberAccountRuleStatus enum value
+	MemberAccountRuleStatusUpdateFailed = "UPDATE_FAILED"
 )
 
 const (
@@ -16384,6 +19783,64 @@ const (
 )
 
 const (
+	// OrganizationResourceDetailedStatusCreateSuccessful is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusCreateSuccessful = "CREATE_SUCCESSFUL"
+
+	// OrganizationResourceDetailedStatusCreateInProgress is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusCreateInProgress = "CREATE_IN_PROGRESS"
+
+	// OrganizationResourceDetailedStatusCreateFailed is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusCreateFailed = "CREATE_FAILED"
+
+	// OrganizationResourceDetailedStatusDeleteSuccessful is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
+
+	// OrganizationResourceDetailedStatusDeleteFailed is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusDeleteFailed = "DELETE_FAILED"
+
+	// OrganizationResourceDetailedStatusDeleteInProgress is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusDeleteInProgress = "DELETE_IN_PROGRESS"
+
+	// OrganizationResourceDetailedStatusUpdateSuccessful is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// OrganizationResourceDetailedStatusUpdateInProgress is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+
+	// OrganizationResourceDetailedStatusUpdateFailed is a OrganizationResourceDetailedStatus enum value
+	OrganizationResourceDetailedStatusUpdateFailed = "UPDATE_FAILED"
+)
+
+const (
+	// OrganizationResourceStatusCreateSuccessful is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusCreateSuccessful = "CREATE_SUCCESSFUL"
+
+	// OrganizationResourceStatusCreateInProgress is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusCreateInProgress = "CREATE_IN_PROGRESS"
+
+	// OrganizationResourceStatusCreateFailed is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusCreateFailed = "CREATE_FAILED"
+
+	// OrganizationResourceStatusDeleteSuccessful is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
+
+	// OrganizationResourceStatusDeleteFailed is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusDeleteFailed = "DELETE_FAILED"
+
+	// OrganizationResourceStatusDeleteInProgress is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusDeleteInProgress = "DELETE_IN_PROGRESS"
+
+	// OrganizationResourceStatusUpdateSuccessful is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// OrganizationResourceStatusUpdateInProgress is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+
+	// OrganizationResourceStatusUpdateFailed is a OrganizationResourceStatus enum value
+	OrganizationResourceStatusUpdateFailed = "UPDATE_FAILED"
+)
+
+const (
 	// OrganizationRuleStatusCreateSuccessful is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusCreateSuccessful = "CREATE_SUCCESSFUL"
 
@@ -16393,15 +19850,6 @@ const (
 	// OrganizationRuleStatusCreateFailed is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusCreateFailed = "CREATE_FAILED"
 
-	// OrganizationRuleStatusUpdateSuccessful is a OrganizationRuleStatus enum value
-	OrganizationRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
-
-	// OrganizationRuleStatusUpdateFailed is a OrganizationRuleStatus enum value
-	OrganizationRuleStatusUpdateFailed = "UPDATE_FAILED"
-
-	// OrganizationRuleStatusUpdateInProgress is a OrganizationRuleStatus enum value
-	OrganizationRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
-
 	// OrganizationRuleStatusDeleteSuccessful is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusDeleteSuccessful = "DELETE_SUCCESSFUL"
 
@@ -16410,6 +19858,15 @@ const (
 
 	// OrganizationRuleStatusDeleteInProgress is a OrganizationRuleStatus enum value
 	OrganizationRuleStatusDeleteInProgress = "DELETE_IN_PROGRESS"
+
+	// OrganizationRuleStatusUpdateSuccessful is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateSuccessful = "UPDATE_SUCCESSFUL"
+
+	// OrganizationRuleStatusUpdateInProgress is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+
+	// OrganizationRuleStatusUpdateFailed is a OrganizationRuleStatus enum value
+	OrganizationRuleStatusUpdateFailed = "UPDATE_FAILED"
 )
 
 const (
