@@ -289,7 +289,9 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	// AWS API will fail if this parameter is set (even as default value) for sqs event source.  Ideally this should be implemented in GO SDK or AWS API itself.
-	if !strings.HasPrefix(d.Get("event_source_arn").(string), "arn:aws:sqs:") {
+	eventSourceArn, err := arn.Parse(d.Get("event_source_arn").(string))
+
+	if err == nil && eventSourceArn.Service != "sqs" {
 		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
 	}
 
