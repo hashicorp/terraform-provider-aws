@@ -1,5 +1,9 @@
 ## 2.39.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_guardduty_detector` [GH-10463]
+
 ENHANCEMENTS:
 
 * resource/aws_resourcegroups_group: Add `tags` argument [GH-10640]
