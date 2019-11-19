@@ -289,7 +289,6 @@ func TestAccAWSStorageGatewayGateway_CloudWatchLogs(t *testing.T) {
 	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_gateway.test"
 	resourceName2 := "aws_cloudwatch_log_group.test"
-	resourceName3 := "aws_cloudwatch_log_group.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -301,13 +300,6 @@ func TestAccAWSStorageGatewayGateway_CloudWatchLogs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", resourceName2, "arn"),
-				),
-			},
-			{
-				Config: testAccAWSStorageGatewayGatewayConfig_Log_Group_Update(rName1, rName2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", resourceName3, "arn"),
 				),
 			},
 			{
@@ -648,26 +640,6 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_timezone   		= "GMT"
   gateway_type       		= "FILE_S3"
   cloudwatch_log_group_arn	= "${aws_cloudwatch_log_group.test.arn}"
-}
-`, rName, rName2)
-}
-
-func testAccAWSStorageGatewayGatewayConfig_Log_Group_Update(rName, rName2 string) string {
-	return testAccAWSStorageGateway_FileGatewayBase(rName) + fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_cloudwatch_log_group" "test2" {
-  name = %[2]q
-}
-
-resource "aws_storagegateway_gateway" "test" {
-  gateway_ip_address 		= "${aws_instance.test.public_ip}"
-  gateway_name       		= %[1]q
-  gateway_timezone   		= "GMT"
-  gateway_type       		= "FILE_S3"
-  cloudwatch_log_group_arn	= "${aws_cloudwatch_log_group.test2.arn}"
 }
 `, rName, rName2)
 }
