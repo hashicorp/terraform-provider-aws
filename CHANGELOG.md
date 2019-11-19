@@ -2,7 +2,7 @@
 
 ENHANCEMENTS:
 
-* resource/aws_resourcegroups_group: Support resource import [GH-10640]
+* resource/aws_resourcegroups_group: Add `tags` argument [GH-10640]
 
 BUGS:
 
