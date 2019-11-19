@@ -1,5 +1,9 @@
 ## 2.39.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_resourcegroups_group: Support resource import [GH-10640]
+
 BUGS:
 
 * Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `custom_cookbooks_source` property for `aws_opsworks_stack` [GH-10175]
