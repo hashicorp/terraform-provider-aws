@@ -2276,10 +2276,12 @@ func (c *Lambda) ListAliasesPagesWithContext(ctx aws.Context, input *ListAliases
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAliasesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAliasesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2424,10 +2426,12 @@ func (c *Lambda) ListEventSourceMappingsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEventSourceMappingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEventSourceMappingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2572,10 +2576,12 @@ func (c *Lambda) ListFunctionsPagesWithContext(ctx aws.Context, input *ListFunct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFunctionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFunctionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2722,10 +2728,12 @@ func (c *Lambda) ListLayerVersionsPagesWithContext(ctx aws.Context, input *ListL
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLayerVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLayerVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2868,10 +2876,12 @@ func (c *Lambda) ListLayersPagesWithContext(ctx aws.Context, input *ListLayersIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLayersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLayersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3108,10 +3118,12 @@ func (c *Lambda) ListVersionsByFunctionPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVersionsByFunctionOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListVersionsByFunctionOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9499,8 +9511,14 @@ const (
 	// RuntimeNodejs10X is a Runtime enum value
 	RuntimeNodejs10X = "nodejs10.x"
 
+	// RuntimeNodejs12X is a Runtime enum value
+	RuntimeNodejs12X = "nodejs12.x"
+
 	// RuntimeJava8 is a Runtime enum value
 	RuntimeJava8 = "java8"
+
+	// RuntimeJava11 is a Runtime enum value
+	RuntimeJava11 = "java11"
 
 	// RuntimePython27 is a Runtime enum value
 	RuntimePython27 = "python2.7"
@@ -9510,6 +9528,9 @@ const (
 
 	// RuntimePython37 is a Runtime enum value
 	RuntimePython37 = "python3.7"
+
+	// RuntimePython38 is a Runtime enum value
+	RuntimePython38 = "python3.8"
 
 	// RuntimeDotnetcore10 is a Runtime enum value
 	RuntimeDotnetcore10 = "dotnetcore1.0"

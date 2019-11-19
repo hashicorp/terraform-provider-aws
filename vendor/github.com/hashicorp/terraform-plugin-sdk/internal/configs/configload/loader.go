@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/internal/configs"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/registry"
-	"github.com/hashicorp/terraform-plugin-sdk/internal/svchost/disco"
+	"github.com/hashicorp/terraform-svchost/disco"
 	"github.com/spf13/afero"
 )
 

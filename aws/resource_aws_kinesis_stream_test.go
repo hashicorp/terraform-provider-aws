@@ -2,18 +2,73 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_kinesis_stream", &resource.Sweeper{
+		Name: "aws_kinesis_stream",
+		F:    testSweepKinesisStreams,
+	})
+}
+
+func testSweepKinesisStreams(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).kinesisconn
+	input := &kinesis.ListStreamsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
+		for _, streamNamePtr := range page.StreamNames {
+			if streamNamePtr == nil {
+				continue
+			}
+
+			streamName := aws.StringValue(streamNamePtr)
+			input := &kinesis.DeleteStreamInput{
+				EnforceConsumerDeletion: aws.Bool(false),
+				StreamName:              streamNamePtr,
+			}
+
+			log.Printf("[INFO] Deleting Kinesis Stream: %s", streamName)
+
+			_, err := conn.DeleteStream(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Kinesis Stream (%s): %w", streamName, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error listing Kinesis Streams: %s", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSKinesisStream_basic(t *testing.T) {
 	var stream kinesis.StreamDescription

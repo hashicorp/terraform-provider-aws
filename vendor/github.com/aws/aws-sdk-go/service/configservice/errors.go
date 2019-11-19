@@ -4,6 +4,12 @@ package configservice
 
 const (
 
+	// ErrCodeConformancePackTemplateValidationException for service response error code
+	// "ConformancePackTemplateValidationException".
+	//
+	// You have specified a template that is not valid or supported.
+	ErrCodeConformancePackTemplateValidationException = "ConformancePackTemplateValidationException"
+
 	// ErrCodeInsufficientDeliveryPolicyException for service response error code
 	// "InsufficientDeliveryPolicyException".
 	//
@@ -21,9 +27,14 @@ const (
 	//    * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
 	//    the function ARN, and check the function's permissions.
 	//
-	//    * For OrganizationConfigRule, organization config rule cannot be created
+	//    * For PutOrganizationConfigRule, organization config rule cannot be created
 	//    because you do not have permissions to call IAM GetRole action or create
-	//    service linked role.
+	//    a service linked role.
+	//
+	//    * For PutConformancePack and PutOrganizationConformancePack, a conformance
+	//    pack cannot be created becuase you do not have permissions: To call IAM
+	//    GetRole action or create a service linked role. To read Amazon S3 bucket.
+	//    To create a rule and a stack.
 	ErrCodeInsufficientPermissionsException = "InsufficientPermissionsException"
 
 	// ErrCodeInvalidConfigurationRecorderNameException for service response error code
@@ -134,6 +145,13 @@ const (
 	// You have reached the limit of the number of recorders you can create.
 	ErrCodeMaxNumberOfConfigurationRecordersExceededException = "MaxNumberOfConfigurationRecordersExceededException"
 
+	// ErrCodeMaxNumberOfConformancePacksExceededException for service response error code
+	// "MaxNumberOfConformancePacksExceededException".
+	//
+	// You have reached the limit (20) of the number of conformance packs in an
+	// account.
+	ErrCodeMaxNumberOfConformancePacksExceededException = "MaxNumberOfConformancePacksExceededException"
+
 	// ErrCodeMaxNumberOfDeliveryChannelsExceededException for service response error code
 	// "MaxNumberOfDeliveryChannelsExceededException".
 	//
@@ -146,6 +164,13 @@ const (
 	// You have reached the limit of the number of organization config rules you
 	// can create.
 	ErrCodeMaxNumberOfOrganizationConfigRulesExceededException = "MaxNumberOfOrganizationConfigRulesExceededException"
+
+	// ErrCodeMaxNumberOfOrganizationConformancePacksExceededException for service response error code
+	// "MaxNumberOfOrganizationConformancePacksExceededException".
+	//
+	// You have reached the limit (10) of the number of organization conformance
+	// packs in an account.
+	ErrCodeMaxNumberOfOrganizationConformancePacksExceededException = "MaxNumberOfOrganizationConformancePacksExceededException"
 
 	// ErrCodeMaxNumberOfRetentionConfigurationsExceededException for service response error code
 	// "MaxNumberOfRetentionConfigurationsExceededException".
@@ -192,6 +217,12 @@ const (
 	// rule names are correct and try again.
 	ErrCodeNoSuchConfigRuleException = "NoSuchConfigRuleException"
 
+	// ErrCodeNoSuchConfigRuleInConformancePackException for service response error code
+	// "NoSuchConfigRuleInConformancePackException".
+	//
+	// AWS Config rule that you passed in the filter does not exist.
+	ErrCodeNoSuchConfigRuleInConformancePackException = "NoSuchConfigRuleInConformancePackException"
+
 	// ErrCodeNoSuchConfigurationAggregatorException for service response error code
 	// "NoSuchConfigurationAggregatorException".
 	//
@@ -204,6 +235,12 @@ const (
 	// You have specified a configuration recorder that does not exist.
 	ErrCodeNoSuchConfigurationRecorderException = "NoSuchConfigurationRecorderException"
 
+	// ErrCodeNoSuchConformancePackException for service response error code
+	// "NoSuchConformancePackException".
+	//
+	// You specified one or more conformance packs that do not exist.
+	ErrCodeNoSuchConformancePackException = "NoSuchConformancePackException"
+
 	// ErrCodeNoSuchDeliveryChannelException for service response error code
 	// "NoSuchDeliveryChannelException".
 	//
@@ -215,6 +252,16 @@ const (
 	//
 	// You specified one or more organization config rules that do not exist.
 	ErrCodeNoSuchOrganizationConfigRuleException = "NoSuchOrganizationConfigRuleException"
+
+	// ErrCodeNoSuchOrganizationConformancePackException for service response error code
+	// "NoSuchOrganizationConformancePackException".
+	//
+	// AWS Config organization conformance pack that you passed in the filter does
+	// not exist.
+	//
+	// For DeleteOrganizationConformancePack, you tried to delete an organization
+	// conformance pack that does not exist.
+	ErrCodeNoSuchOrganizationConformancePackException = "NoSuchOrganizationConformancePackException"
 
 	// ErrCodeNoSuchRemediationConfigurationException for service response error code
 	// "NoSuchRemediationConfigurationException".
@@ -240,9 +287,9 @@ const (
 	// For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 	// API.
 	//
-	// For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-	// are called from member accounts. All APIs must be called from organization
-	// master account.
+	// For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+	// Config throws an exception if APIs are called from member accounts. All APIs
+	// must be called from organization master account.
 	ErrCodeOrganizationAccessDeniedException = "OrganizationAccessDeniedException"
 
 	// ErrCodeOrganizationAllFeaturesNotEnabledException for service response error code
@@ -251,6 +298,12 @@ const (
 	// AWS Config resource cannot be created because your organization does not
 	// have all features enabled.
 	ErrCodeOrganizationAllFeaturesNotEnabledException = "OrganizationAllFeaturesNotEnabledException"
+
+	// ErrCodeOrganizationConformancePackTemplateValidationException for service response error code
+	// "OrganizationConformancePackTemplateValidationException".
+	//
+	// You have specified a template that is not valid or supported.
+	ErrCodeOrganizationConformancePackTemplateValidationException = "OrganizationConformancePackTemplateValidationException"
 
 	// ErrCodeOversizedConfigurationItemException for service response error code
 	// "OversizedConfigurationItemException".
@@ -270,14 +323,14 @@ const (
 	//
 	// You see this exception in the following cases:
 	//
-	//    * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-	//    request again later.
+	//    * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+	//    again later.
 	//
-	//    * For DeleteConfigRule API, the rule is deleting your evaluation results.
+	//    * For DeleteConfigRule, the rule is deleting your evaluation results.
 	//    Try your request again later.
 	//
-	//    * For DeleteConfigRule API, a remediation action is associated with the
-	//    rule and AWS Config cannot delete this rule. Delete the remediation action
+	//    * For DeleteConfigRule, a remediation action is associated with the rule
+	//    and AWS Config cannot delete this rule. Delete the remediation action
 	//    associated with the rule before deleting the rule and try your request
 	//    again later.
 	//
@@ -286,6 +339,13 @@ const (
 	//
 	//    * For DeleteOrganizationConfigRule, organization config rule creation
 	//    is in progress. Try your request again later.
+	//
+	//    * For PutConformancePack and PutOrganizationConformancePack, a conformance
+	//    pack creation, update, and deletion is in progress. Try your request again
+	//    later.
+	//
+	//    * For DeleteConformancePack, a conformance pack creation, update, and
+	//    deletion is in progress. Try your request again later.
 	ErrCodeResourceInUseException = "ResourceInUseException"
 
 	// ErrCodeResourceNotDiscoveredException for service response error code
