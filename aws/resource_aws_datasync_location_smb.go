@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDataSyncLocationSmb() *schema.Resource {
@@ -37,25 +38,23 @@ func resourceAwsDataSyncLocationSmb() *schema.Resource {
 				Optional: true,
 			},
 			"mount_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				// Ignore missing config block (stolen from aws_ecs_service)
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"version": {
-							Type:         schema.TypeString,
-							Default:      "AUTOMATIC",
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.NoZeroValues,
+							Type:     schema.TypeString,
+							Default:  datasync.SmbVersionAutomatic,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								datasync.SmbVersionAutomatic,
+								datasync.SmbVersionSmb2,
+								datasync.SmbVersionSmb3,
+							}, false),
 						},
 					},
 				},
@@ -85,11 +84,7 @@ func resourceAwsDataSyncLocationSmb() *schema.Resource {
 				},
 				*/
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tagsSchema(),
 			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -111,7 +106,7 @@ func resourceAwsDataSyncLocationSmbCreate(d *schema.ResourceData, meta interface
 		Password:       aws.String(d.Get("password").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
-		Tags:           expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
+		Tags:           keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatasyncTags(),
 		User:           aws.String(d.Get("user").(string)),
 	}
 
@@ -179,7 +174,7 @@ func resourceAwsDataSyncLocationSmbRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("subdirectory", subdirectory)
 
-	if err := d.Set("tags", flattenDataSyncTagListEntry(tagsOutput.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.DatasyncKeyValueTags(tagsOutput.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -194,34 +189,12 @@ func resourceAwsDataSyncLocationSmbUpdate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).datasyncconn
 
 	if d.HasChange("tags") {
-		oldRaw, newRaw := d.GetChange("tags")
-		createTags, removeTags := dataSyncTagsDiff(expandDataSyncTagListEntry(oldRaw.(map[string]interface{})), expandDataSyncTagListEntry(newRaw.(map[string]interface{})))
+		o, n := d.GetChange("tags")
 
-		if len(removeTags) > 0 {
-			input := &datasync.UntagResourceInput{
-				Keys:        dataSyncTagsKeys(removeTags),
-				ResourceArn: aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Untagging DataSync Location SMB: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging DataSync Location SMB (%s): %s", d.Id(), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &datasync.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging DataSync Location SMB: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging DataSync Location SMB (%s): %s", d.Id(), err)
-			}
+		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Datasync SMB location (%s) tags: %s", d.Id(), err)
 		}
 	}
-
 	return resourceAwsDataSyncLocationSmbRead(d, meta)
 }
 
