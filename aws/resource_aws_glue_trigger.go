@@ -38,14 +38,12 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							Optional: true,
 						},
 						"crawler_name": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"actions.0.job_name"},
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"job_name": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"actions.0.crawler_name"},
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"timeout": {
 							Type:     schema.TypeInt,
@@ -82,14 +80,12 @@ func resourceAwsGlueTrigger() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"job_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.crawler_name"},
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"crawler_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.job_name"},
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"logical_operator": {
 										Type:     schema.TypeString,
@@ -405,12 +401,12 @@ func expandGlueActions(l []interface{}) []*glue.Action {
 
 		action := &glue.Action{}
 
-		if crawlerName, ok := m["crawler_name"]; ok && crawlerName != "" {
-			action.CrawlerName = aws.String(crawlerName.(string))
+		if v, ok := m["crawler_name"].(string); ok && v != "" {
+			action.CrawlerName = aws.String(v)
 		}
 
-		if jobName, ok := m["job_name"]; ok && jobName != "" {
-			action.JobName = aws.String(jobName.(string))
+		if v, ok := m["job_name"].(string); ok && v != "" {
+			action.JobName = aws.String(v)
 		}
 
 		argumentsMap := make(map[string]string)
@@ -439,12 +435,20 @@ func expandGlueConditions(l []interface{}) []*glue.Condition {
 			LogicalOperator: aws.String(m["logical_operator"].(string)),
 		}
 
-		if len(m["job_name"].(string)) > 0 {
-			condition.JobName = aws.String(m["job_name"].(string))
-			condition.State = aws.String(m["state"].(string))
-		} else if len(m["crawler_name"].(string)) > 0 {
-			condition.CrawlerName = aws.String(m["crawler_name"].(string))
-			condition.CrawlState = aws.String(m["crawl_state"].(string))
+		if v, ok := m["crawler_name"].(string); ok && v != "" {
+			condition.CrawlerName = aws.String(v)
+		}
+
+		if v, ok := m["crawl_state"].(string); ok && v != "" {
+			condition.CrawlState = aws.String(v)
+		}
+
+		if v, ok := m["job_name"].(string); ok && v != "" {
+			condition.JobName = aws.String(v)
+		}
+
+		if v, ok := m["state"].(string); ok && v != "" {
+			condition.State = aws.String(v)
 		}
 
 		conditions = append(conditions, condition)
@@ -476,11 +480,14 @@ func flattenGlueActions(actions []*glue.Action) []interface{} {
 			"timeout":   int(aws.Int64Value(action.Timeout)),
 		}
 
-		if action.JobName != nil && len(*action.JobName) > 0 {
-			m["job_name"] = aws.StringValue(action.JobName)
-		} else if action.CrawlerName != nil && len(*action.CrawlerName) > 0 {
-			m["crawler_name"] = aws.StringValue(action.CrawlerName)
+		if v := aws.StringValue(action.CrawlerName); v != "" {
+			m["crawler_name"] = v
 		}
+
+		if v := aws.StringValue(action.JobName); v != "" {
+			m["job_name"] = v
+		}
+
 		l = append(l, m)
 	}
 
@@ -495,13 +502,22 @@ func flattenGlueConditions(conditions []*glue.Condition) []interface{} {
 			"logical_operator": aws.StringValue(condition.LogicalOperator),
 		}
 
-		if condition.JobName != nil && len(*condition.JobName) > 0 {
-			m["job_name"] = aws.StringValue(condition.JobName)
-			m["state"] = aws.StringValue(condition.State)
-		} else if condition.CrawlerName != nil && len(*condition.CrawlerName) > 0 {
-			m["crawler_name"] = aws.StringValue(condition.CrawlerName)
-			m["crawl_state"] = aws.StringValue(condition.CrawlState)
+		if v := aws.StringValue(condition.CrawlerName); v != "" {
+			m["crawler_name"] = v
 		}
+
+		if v := aws.StringValue(condition.CrawlState); v != "" {
+			m["crawl_state"] = v
+		}
+
+		if v := aws.StringValue(condition.JobName); v != "" {
+			m["job_name"] = v
+		}
+
+		if v := aws.StringValue(condition.State); v != "" {
+			m["state"] = v
+		}
+
 		l = append(l, m)
 	}
 
