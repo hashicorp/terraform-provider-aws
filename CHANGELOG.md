@@ -11,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data_source/aws_instance: Fixes a bug where multiple EBS volumes would get collapsed and only one would return [GH-10045]
+* resource/aws_iam_instance_profile: Remove requirement to specify a role, as it is not required by the API [GH-10525]
 * resource/aws_opsworks_application: Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `app_source` property [GH-10175]
 * resource/aws_opsworks_stack: Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `custom_cookbooks_source` property [GH-10175]
 
