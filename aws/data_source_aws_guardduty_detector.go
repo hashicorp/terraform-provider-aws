@@ -70,7 +70,7 @@ func dataSourceAwsGuarddutyDetectorRead(d *schema.ResourceData, meta interface{}
 	}
 
 	d.SetId(detectorId)
-	d.Set("enabled", getResp.Status)
+	d.Set("status", getResp.Status)
 	d.Set("service_role_arn", getResp.ServiceRole)
 	d.Set("finding_publishing_frequency", getResp.FindingPublishingFrequency)
 
