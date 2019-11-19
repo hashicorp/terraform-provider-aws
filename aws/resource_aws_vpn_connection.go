@@ -106,12 +106,12 @@ func resourceAwsVpnConnection() *schema.Resource {
 			},
 
 			"tunnel1_preshared_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateVpnConnectionTunnelPreSharedKey,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				Computed:  true,
+				ForceNew:  true,
+				// ValidateFunc: validateVpnConnectionTunnelPreSharedKey,
 			},
 
 			"tunnel2_inside_cidr": {
@@ -123,12 +123,12 @@ func resourceAwsVpnConnection() *schema.Resource {
 			},
 
 			"tunnel2_preshared_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateVpnConnectionTunnelPreSharedKey,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+				Computed:  true,
+				ForceNew:  true,
+				// ValidateFunc: validateVpnConnectionTunnelPreSharedKey,
 			},
 
 			"tags": tagsSchema(),
