@@ -1,4 +1,5 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_usage_plan"
 description: |-
