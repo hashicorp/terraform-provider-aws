@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * resource/aws_glue_trigger: Add `workflow_name` argument [GH-9762]
 * resource/aws_glue_trigger: Add `actions` configuration block `crawler_name` argument [GH-10190]
 * resource/aws_glue_trigger: Add `predicate` `conditions` configuration block `crawler_name` and `crawl_state` arguments [GH-10190]
+* resource/aws_lambda_event_source_mapping: Add `maximum_batching_window_in_seconds` argument [GH-10051]
 * resource/aws_resourcegroups_group: Add `tags` argument [GH-10640]
 
 BUG FIXES:
