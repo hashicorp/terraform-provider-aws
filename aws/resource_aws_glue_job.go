@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -25,7 +26,7 @@ func resourceAwsGlueJob() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{"max_capacity", "number_of_workers", "worker_type"},
 				Deprecated:    "Please use attribute `max_capacity' instead. This attribute might be removed in future releases.",
 				ValidateFunc:  validation.IntAtLeast(2),
 			},
@@ -91,7 +92,7 @@ func resourceAwsGlueJob() *schema.Resource {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"allocated_capacity"},
+				ConflictsWith: []string{"allocated_capacity", "number_of_workers", "worker_type"},
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
@@ -117,6 +118,18 @@ func resourceAwsGlueJob() *schema.Resource {
 			"security_configuration": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"worker_type": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"allocated_capacity", "max_capacity", "allocated_capacity"},
+				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^Standard|G.1X|G.2X`), "Must be one of Standard, G.1X or G.2X. See https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-jobs-job.html"),
+			},
+			"number_of_workers": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"allocated_capacity", "max_capacity", "allocated_capacity"},
+				ValidateFunc:  validation.IntAtLeast(2),
 			},
 		},
 	}
@@ -174,6 +187,14 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("security_configuration"); ok {
 		input.SecurityConfiguration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("worker_type"); ok {
+		input.WorkerType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("number_of_workers"); ok {
+		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Creating Glue Job: %s", input)
@@ -235,6 +256,9 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting security_configuration: %s", err)
 	}
 
+	d.Set("worker_type", job.WorkerType)
+	d.Set("number_of_workers", int(aws.Int64Value(job.NumberOfWorkers)))
+
 	// TODO: Deprecated fields - remove in next major version
 	d.Set("allocated_capacity", int(aws.Int64Value(job.AllocatedCapacity)))
 
@@ -250,13 +274,16 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
-	if v, ok := d.GetOk("max_capacity"); ok {
-		jobUpdate.MaxCapacity = aws.Float64(v.(float64))
-	}
-
-	if d.HasChange("allocated_capacity") {
-		jobUpdate.MaxCapacity = aws.Float64(float64(d.Get("allocated_capacity").(int)))
-		log.Printf("[WARN] Using deprecated `allocated_capacity' attribute.")
+	if v, ok := d.GetOk("number_of_workers"); ok {
+		jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
+	} else {
+		if v, ok := d.GetOk("max_capacity"); ok {
+			jobUpdate.MaxCapacity = aws.Float64(v.(float64))
+		}
+		if d.HasChange("allocated_capacity") {
+			jobUpdate.MaxCapacity = aws.Float64(float64(d.Get("allocated_capacity").(int)))
+			log.Printf("[WARN] Using deprecated `allocated_capacity' attribute.")
+		}
 	}
 
 	if v, ok := d.GetOk("connections"); ok {
@@ -291,6 +318,10 @@ func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("security_configuration"); ok {
 		jobUpdate.SecurityConfiguration = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("worker_type"); ok {
+		jobUpdate.WorkerType = aws.String(v.(string))
 	}
 
 	input := &glue.UpdateJobInput{
