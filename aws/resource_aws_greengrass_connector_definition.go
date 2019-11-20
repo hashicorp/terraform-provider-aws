@@ -29,6 +29,7 @@ func resourceAwsGreengrassConnectorDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 			"latest_definition_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -120,6 +121,14 @@ func resourceAwsGreengrassConnectorDefinitionCreate(d *schema.ResourceData, meta
 		Name: aws.String(d.Get("name").(string)),
 	}
 
+	if rawTags := d.Get("tags").(map[string]interface{}); len(rawTags) > 0 {
+		tags := make(map[string]*string)
+		for key, value := range rawTags {
+			tags[key] = aws.String(value.(string))
+		}
+		params.Tags = tags
+	}
+
 	log.Printf("[DEBUG] Creating Greengrass Connector Definition: %s", params)
 	out, err := conn.CreateConnectorDefinition(params)
 	if err != nil {
@@ -192,6 +201,10 @@ func resourceAwsGreengrassConnectorDefinitionRead(d *schema.ResourceData, meta i
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
 
+	if err := getTagsGreengrass(conn, d); err != nil {
+		return err
+	}
+
 	if out.LatestVersion != nil {
 		err = setConnectorDefinitionVersion(*out.LatestVersion, d, conn)
 
@@ -221,6 +234,10 @@ func resourceAwsGreengrassConnectorDefinitionUpdate(d *schema.ResourceData, meta
 		if err != nil {
 			return err
 		}
+	}
+
+	if err := setTagsGreengrass(conn, d); err != nil {
+		return err
 	}
 	return resourceAwsGreengrassConnectorDefinitionRead(d, meta)
 }
