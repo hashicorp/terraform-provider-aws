@@ -28,15 +28,18 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeDotnetcore21,
 	lambda.RuntimeGo1X,
 	lambda.RuntimeJava8,
+	lambda.RuntimeJava11,
 	lambda.RuntimeNodejs43,
 	lambda.RuntimeNodejs43Edge,
 	lambda.RuntimeNodejs610,
 	lambda.RuntimeNodejs810,
 	lambda.RuntimeNodejs10X,
+	lambda.RuntimeNodejs12X,
 	lambda.RuntimeProvided,
 	lambda.RuntimePython27,
 	lambda.RuntimePython36,
 	lambda.RuntimePython37,
+	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
 }
 
