@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_policy"
-sidebar_current: "docs-aws-datasource-iam-policy"
 description: |-
   Get information on a Amazon IAM policy
 ---

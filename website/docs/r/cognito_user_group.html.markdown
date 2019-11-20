@@ -1,7 +1,7 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_group"
-sidebar_current: "docs-aws-resource-cognito-user-group"
 description: |-
   Provides a Cognito User Group resource.
 ---

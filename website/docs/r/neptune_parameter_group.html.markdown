@@ -1,7 +1,7 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_parameter_group"
-sidebar_current: "docs-aws-resource-aws-neptune-parameter-group"
 description: |-
   Manages a Neptune Parameter Group
 ---

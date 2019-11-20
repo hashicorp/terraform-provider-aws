@@ -1,7 +1,7 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_apns_voip_channel"
-sidebar_current: "docs-aws-resource-pinpoint-apns-voip-channel"
 description: |-
   Provides a Pinpoint APNs VoIP Channel resource.
 ---

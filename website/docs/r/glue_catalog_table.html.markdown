@@ -1,7 +1,7 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_catalog_table"
-sidebar_current: "docs-aws-resource-glue-catalog-table"
 description: |-
   Provides a Glue Catalog Table.
 ---

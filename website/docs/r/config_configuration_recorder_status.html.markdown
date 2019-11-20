@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_configuration_recorder_status"
-sidebar_current: "docs-aws-resource-config-configuration-recorder-status"
 description: |-
   Manages status of an AWS Config Configuration Recorder.
 ---

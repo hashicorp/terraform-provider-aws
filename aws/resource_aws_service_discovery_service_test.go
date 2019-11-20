@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
@@ -93,7 +93,7 @@ func TestAccAWSServiceDiscoveryService_public(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryService_http(t *testing.T) {
-	rName := acctest.RandString(5)
+	rName := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
 	resourceName := "aws_service_discovery_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{

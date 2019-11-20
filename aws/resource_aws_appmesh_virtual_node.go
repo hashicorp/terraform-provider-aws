@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsAppmeshVirtualNode() *schema.Resource {
@@ -235,12 +235,13 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 												"namespace_name": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateServiceDiscoveryHttpNamespaceName,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
 
 												"service_name": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
 											},
 										},

@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot"
-sidebar_current: "docs-aws-datasource-ebs-snapshot"
 description: |-
   Get information on an EBS Snapshot.
 ---

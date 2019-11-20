@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb_attachment"
-sidebar_current: "docs-aws-resource-elb-attachment"
 description: |-
   Provides an Elastic Load Balancer Attachment resource.
 ---

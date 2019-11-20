@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_interface_sg_attachment"
-sidebar_current: "docs-aws-resource-network-interface-sg-attachment"
 description: |-
   Associates a security group with a network interface.
 ---

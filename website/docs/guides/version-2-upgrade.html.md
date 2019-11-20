@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Version 2 Upgrade Guide"
-sidebar_current: "docs-aws-guide-version-2-upgrade"
 description: |-
   Terraform AWS Provider Version 2 Upgrade Guide
 ---

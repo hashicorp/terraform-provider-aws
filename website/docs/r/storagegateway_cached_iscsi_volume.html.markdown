@@ -1,7 +1,7 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_cached_iscsi_volume"
-sidebar_current: "docs-aws-resource-storagegateway-cached-iscsi-volume"
 description: |-
   Manages an AWS Storage Gateway cached iSCSI volume
 ---
@@ -63,6 +63,7 @@ The following arguments are supported:
 * `volume_size_in_bytes` - (Required) The size of the volume in bytes.
 * `snapshot_id` - (Optional) The snapshot ID of the snapshot to restore as the new cached volume. e.g. `snap-1122aabb`.
 * `source_volume_arn` - (Optional) The ARN for an existing volume. Specifying this ARN makes the new volume into an exact copy of the specified existing volume's latest recovery point. The `volume_size_in_bytes` value for this new volume must be equal to or larger than the size of the existing volume, in bytes.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Attribute Reference
 

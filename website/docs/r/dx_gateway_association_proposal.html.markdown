@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_gateway_association_proposal"
-sidebar_current: "docs-aws-resource-dx-gateway-association-proposal"
 description: |-
   Manages a Direct Connect Gateway Association Proposal.
 ---

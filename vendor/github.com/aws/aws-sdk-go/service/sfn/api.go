@@ -976,10 +976,12 @@ func (c *SFN) GetExecutionHistoryPagesWithContext(ctx aws.Context, input *GetExe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetExecutionHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetExecutionHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1120,10 +1122,12 @@ func (c *SFN) ListActivitiesPagesWithContext(ctx aws.Context, input *ListActivit
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListActivitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListActivitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1271,10 +1275,12 @@ func (c *SFN) ListExecutionsPagesWithContext(ctx aws.Context, input *ListExecuti
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListExecutionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1415,10 +1421,12 @@ func (c *SFN) ListStateMachinesPagesWithContext(ctx aws.Context, input *ListStat
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListStateMachinesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListStateMachinesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4768,10 +4776,10 @@ type MapIterationEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The index of the array belonging to the Map state iteration.
-	Index *int64 `type:"integer"`
+	Index *int64 `locationName:"index" type:"integer"`
 
 	// The name of the iteration’s parent Map state.
-	Name *string `min:"1" type:"string"`
+	Name *string `locationName:"name" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -4801,7 +4809,7 @@ type MapStateStartedEventDetails struct {
 	_ struct{} `type:"structure"`
 
 	// The size of the array for Map state iterations.
-	Length *int64 `type:"integer"`
+	Length *int64 `locationName:"length" type:"integer"`
 }
 
 // String returns the string representation

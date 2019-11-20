@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_user_group_membership"
-sidebar_current: "docs-aws-resource-iam-user-group-membership"
 description: |-
   Provides a resource for adding an IAM User to IAM Groups without conflicting
   with itself.

@@ -1,7 +1,7 @@
 ---
+subcategory: "Batch"
 layout: "aws"
 page_title: "AWS: aws_batch_job_queue"
-sidebar_current: "docs-aws-datasource-batch-job-queue"
 description: |-
     Provides details about a batch job queue
 ---

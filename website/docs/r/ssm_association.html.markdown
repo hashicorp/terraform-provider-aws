@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_association"
-sidebar_current: "docs-aws-resource-ssm-association"
 description: |-
   Associates an SSM Document to an instance or EC2 tag.
 ---
@@ -53,6 +53,15 @@ Targets specify what instance IDs or tags to apply the document to and has these
 
 In addition to all arguments above, the following attributes are exported:
 
+* `association_id` - The ID of the SSM association.
+* `instance_id` - The instance id that the SSM document was applied to.
 * `name` - The name of the SSM document to apply.
-* `instance_ids` - The instance id that the SSM document was applied to.
 * `parameters` - Additional parameters passed to the SSM document.
+
+## Import
+
+SSM associations can be imported using the `association_id`, e.g.
+
+```
+$ terraform import aws_ssm_association.test-association 10abcdef-0abc-1234-5678-90abcdef123456
+```

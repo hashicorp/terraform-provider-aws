@@ -1,7 +1,7 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_cluster"
-sidebar_current: "docs-aws-datasource-ecs-cluster"
 description: |-
     Provides details about an ecs cluster
 ---

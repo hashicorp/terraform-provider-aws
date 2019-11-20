@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_route_table_association"
-sidebar_current: "docs-aws-resource-vpc-endpoint-route-table-association"
 description: |-
   Manages a VPC Endpoint Route Table Association
 ---
@@ -31,3 +31,13 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - A hash of the EC2 Route Table and VPC Endpoint identifiers.
+
+
+## Import
+
+VPC Endpoint Route Table Associations can be imported using `vpc_endpoint_id` together with `route_table_id`,
+e.g.
+
+```
+$ terraform import aws_vpc_endpoint_route_table_association.example vpce-aaaaaaaa/rt-bbbbbbbb
+```

@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_resource_data_sync"
-sidebar_current: "docs-aws-resource-ssm-resource-data-sync"
 description: |-
   Provides a SSM resource data sync.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "MediaStore"
 layout: "aws"
 page_title: "AWS: aws_media_store_container"
-sidebar_current: "docs-aws-resource-media-store-container"
 description: |-
   Provides a MediaStore Container.
 ---

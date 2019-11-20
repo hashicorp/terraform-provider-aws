@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_user_login_profile"
-sidebar_current: "docs-aws-resource-iam-user-login-profile"
 description: |-
   Manages an IAM User Login Profile
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Discovery"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_public_dns_namespace"
-sidebar_current: "docs-aws-resource-service-discovery-public-dns-namespace"
 description: |-
   Provides a Service Discovery Public DNS Namespace resource.
 ---

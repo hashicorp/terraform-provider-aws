@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_arn"
-sidebar_current: "docs-aws-datasource-arn"
 description: |-
     Parses an ARN into its constituent parts.
 ---

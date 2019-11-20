@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_xss_match_set"
-sidebar_current: "docs-aws-resource-wafregional-xss-match-set"
 description: |-
   Provides an AWS WAF Regional XSS Match Set resource for use with ALB.
 ---

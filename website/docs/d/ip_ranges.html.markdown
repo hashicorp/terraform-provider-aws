@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_ip_ranges"
-sidebar_current: "docs-aws-datasource-ip_ranges"
 description: |-
   Get information on AWS IP ranges.
 ---

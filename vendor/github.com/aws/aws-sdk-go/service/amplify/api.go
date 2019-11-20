@@ -953,6 +953,95 @@ func (c *Amplify) DeleteWebhookWithContext(ctx aws.Context, input *DeleteWebhook
 	return out, req.Send()
 }
 
+const opGenerateAccessLogs = "GenerateAccessLogs"
+
+// GenerateAccessLogsRequest generates a "aws/request.Request" representing the
+// client's request for the GenerateAccessLogs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GenerateAccessLogs for more information on using the GenerateAccessLogs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GenerateAccessLogsRequest method.
+//    req, resp := client.GenerateAccessLogsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/GenerateAccessLogs
+func (c *Amplify) GenerateAccessLogsRequest(input *GenerateAccessLogsInput) (req *request.Request, output *GenerateAccessLogsOutput) {
+	op := &request.Operation{
+		Name:       opGenerateAccessLogs,
+		HTTPMethod: "POST",
+		HTTPPath:   "/apps/{appId}/accesslogs",
+	}
+
+	if input == nil {
+		input = &GenerateAccessLogsInput{}
+	}
+
+	output = &GenerateAccessLogsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GenerateAccessLogs API operation for AWS Amplify.
+//
+// Retrieve website access logs for a specific time range via a pre-signed URL.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Amplify's
+// API operation GenerateAccessLogs for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Exception thrown when an entity has not been found during an operation.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Exception thrown when a request contains unexpected data.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Exception thrown when an operation fails due to a lack of access.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   Exception thrown when the service fails to perform an operation due to an
+//   internal issue.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/GenerateAccessLogs
+func (c *Amplify) GenerateAccessLogs(input *GenerateAccessLogsInput) (*GenerateAccessLogsOutput, error) {
+	req, out := c.GenerateAccessLogsRequest(input)
+	return out, req.Send()
+}
+
+// GenerateAccessLogsWithContext is the same as GenerateAccessLogs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GenerateAccessLogs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Amplify) GenerateAccessLogsWithContext(ctx aws.Context, input *GenerateAccessLogsInput, opts ...request.Option) (*GenerateAccessLogsOutput, error) {
+	req, out := c.GenerateAccessLogsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetApp = "GetApp"
 
 // GetAppRequest generates a "aws/request.Request" representing the
@@ -1037,6 +1126,99 @@ func (c *Amplify) GetApp(input *GetAppInput) (*GetAppOutput, error) {
 // for more information on using Contexts.
 func (c *Amplify) GetAppWithContext(ctx aws.Context, input *GetAppInput, opts ...request.Option) (*GetAppOutput, error) {
 	req, out := c.GetAppRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetArtifactUrl = "GetArtifactUrl"
+
+// GetArtifactUrlRequest generates a "aws/request.Request" representing the
+// client's request for the GetArtifactUrl operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetArtifactUrl for more information on using the GetArtifactUrl
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetArtifactUrlRequest method.
+//    req, resp := client.GetArtifactUrlRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/GetArtifactUrl
+func (c *Amplify) GetArtifactUrlRequest(input *GetArtifactUrlInput) (req *request.Request, output *GetArtifactUrlOutput) {
+	op := &request.Operation{
+		Name:       opGetArtifactUrl,
+		HTTPMethod: "GET",
+		HTTPPath:   "/artifacts/{artifactId}",
+	}
+
+	if input == nil {
+		input = &GetArtifactUrlInput{}
+	}
+
+	output = &GetArtifactUrlOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetArtifactUrl API operation for AWS Amplify.
+//
+// Retrieves artifact info that corresponds to a artifactId.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Amplify's
+// API operation GetArtifactUrl for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Exception thrown when a request contains unexpected data.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Exception thrown when an operation fails due to a lack of access.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   Exception thrown when the service fails to perform an operation due to an
+//   internal issue.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Exception thrown when an entity has not been found during an operation.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   Exception thrown when a resource could not be created because of service
+//   limits.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/GetArtifactUrl
+func (c *Amplify) GetArtifactUrl(input *GetArtifactUrlInput) (*GetArtifactUrlOutput, error) {
+	req, out := c.GetArtifactUrlRequest(input)
+	return out, req.Send()
+}
+
+// GetArtifactUrlWithContext is the same as GetArtifactUrl with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetArtifactUrl for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Amplify) GetArtifactUrlWithContext(ctx aws.Context, input *GetArtifactUrlInput, opts ...request.Option) (*GetArtifactUrlOutput, error) {
+	req, out := c.GetArtifactUrlRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1487,6 +1669,96 @@ func (c *Amplify) ListApps(input *ListAppsInput) (*ListAppsOutput, error) {
 // for more information on using Contexts.
 func (c *Amplify) ListAppsWithContext(ctx aws.Context, input *ListAppsInput, opts ...request.Option) (*ListAppsOutput, error) {
 	req, out := c.ListAppsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListArtifacts = "ListArtifacts"
+
+// ListArtifactsRequest generates a "aws/request.Request" representing the
+// client's request for the ListArtifacts operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListArtifacts for more information on using the ListArtifacts
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListArtifactsRequest method.
+//    req, resp := client.ListArtifactsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/ListArtifacts
+func (c *Amplify) ListArtifactsRequest(input *ListArtifactsInput) (req *request.Request, output *ListArtifactsOutput) {
+	op := &request.Operation{
+		Name:       opListArtifacts,
+		HTTPMethod: "GET",
+		HTTPPath:   "/apps/{appId}/branches/{branchName}/jobs/{jobId}/artifacts",
+	}
+
+	if input == nil {
+		input = &ListArtifactsInput{}
+	}
+
+	output = &ListArtifactsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListArtifacts API operation for AWS Amplify.
+//
+// List artifacts with an app, a branch, a job and an artifact type.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Amplify's
+// API operation ListArtifacts for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Exception thrown when a request contains unexpected data.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Exception thrown when an operation fails due to a lack of access.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   Exception thrown when the service fails to perform an operation due to an
+//   internal issue.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   Exception thrown when a resource could not be created because of service
+//   limits.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/ListArtifacts
+func (c *Amplify) ListArtifacts(input *ListArtifactsInput) (*ListArtifactsOutput, error) {
+	req, out := c.ListArtifactsRequest(input)
+	return out, req.Send()
+}
+
+// ListArtifactsWithContext is the same as ListArtifacts with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListArtifacts for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Amplify) ListArtifactsWithContext(ctx aws.Context, input *ListArtifactsInput, opts ...request.Option) (*ListArtifactsOutput, error) {
+	req, out := c.ListArtifactsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2980,6 +3252,43 @@ func (s *App) SetUpdateTime(v time.Time) *App {
 	return s
 }
 
+// Structure for artifact.
+type Artifact struct {
+	_ struct{} `type:"structure"`
+
+	// File name for the artifact.
+	//
+	// ArtifactFileName is a required field
+	ArtifactFileName *string `locationName:"artifactFileName" type:"string" required:"true"`
+
+	// Unique Id for a artifact.
+	//
+	// ArtifactId is a required field
+	ArtifactId *string `locationName:"artifactId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Artifact) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Artifact) GoString() string {
+	return s.String()
+}
+
+// SetArtifactFileName sets the ArtifactFileName field's value.
+func (s *Artifact) SetArtifactFileName(v string) *Artifact {
+	s.ArtifactFileName = &v
+	return s
+}
+
+// SetArtifactId sets the ArtifactId field's value.
+func (s *Artifact) SetArtifactId(v string) *Artifact {
+	s.ArtifactId = &v
+	return s
+}
+
 // Structure with auto branch creation config.
 type AutoBranchCreationConfig struct {
 	_ struct{} `type:"structure"`
@@ -2996,11 +3305,17 @@ type AutoBranchCreationConfig struct {
 	// Enables Basic Auth for the auto created branch.
 	EnableBasicAuth *bool `locationName:"enableBasicAuth" type:"boolean"`
 
+	// Enables Pull Request Preview for auto created branch.
+	EnablePullRequestPreview *bool `locationName:"enablePullRequestPreview" type:"boolean"`
+
 	// Environment Variables for the auto created branch.
 	EnvironmentVariables map[string]*string `locationName:"environmentVariables" type:"map"`
 
 	// Framework for the auto created branch.
 	Framework *string `locationName:"framework" type:"string"`
+
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
 
 	// Stage for the auto created branch.
 	Stage *string `locationName:"stage" type:"string" enum:"Stage"`
@@ -3053,6 +3368,12 @@ func (s *AutoBranchCreationConfig) SetEnableBasicAuth(v bool) *AutoBranchCreatio
 	return s
 }
 
+// SetEnablePullRequestPreview sets the EnablePullRequestPreview field's value.
+func (s *AutoBranchCreationConfig) SetEnablePullRequestPreview(v bool) *AutoBranchCreationConfig {
+	s.EnablePullRequestPreview = &v
+	return s
+}
+
 // SetEnvironmentVariables sets the EnvironmentVariables field's value.
 func (s *AutoBranchCreationConfig) SetEnvironmentVariables(v map[string]*string) *AutoBranchCreationConfig {
 	s.EnvironmentVariables = v
@@ -3062,6 +3383,12 @@ func (s *AutoBranchCreationConfig) SetEnvironmentVariables(v map[string]*string)
 // SetFramework sets the Framework field's value.
 func (s *AutoBranchCreationConfig) SetFramework(v string) *AutoBranchCreationConfig {
 	s.Framework = &v
+	return s
+}
+
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *AutoBranchCreationConfig) SetPullRequestEnvironmentName(v string) *AutoBranchCreationConfig {
+	s.PullRequestEnvironmentName = &v
 	return s
 }
 
@@ -3082,6 +3409,9 @@ type Branch struct {
 
 	// List of custom resources that are linked to this branch.
 	AssociatedResources []*string `locationName:"associatedResources" type:"list"`
+
+	// ARN for a Backend Environment, part of an Amplify App.
+	BackendEnvironmentArn *string `locationName:"backendEnvironmentArn" min:"1" type:"string"`
 
 	// Basic Authorization credentials for a branch, part of an Amplify App.
 	BasicAuthCredentials *string `locationName:"basicAuthCredentials" type:"string"`
@@ -3114,6 +3444,9 @@ type Branch struct {
 	// Description is a required field
 	Description *string `locationName:"description" type:"string" required:"true"`
 
+	// The destination branch if the branch is a pull request branch.
+	DestinationBranch *string `locationName:"destinationBranch" min:"1" type:"string"`
+
 	// Display name for a branch, will use as the default domain prefix.
 	//
 	// DisplayName is a required field
@@ -3134,6 +3467,11 @@ type Branch struct {
 	// EnableNotification is a required field
 	EnableNotification *bool `locationName:"enableNotification" type:"boolean" required:"true"`
 
+	// Enables Pull Request Preview for this branch.
+	//
+	// EnablePullRequestPreview is a required field
+	EnablePullRequestPreview *bool `locationName:"enablePullRequestPreview" type:"boolean" required:"true"`
+
 	// Environment Variables specific to a branch, part of an Amplify App.
 	//
 	// EnvironmentVariables is a required field
@@ -3143,6 +3481,12 @@ type Branch struct {
 	//
 	// Framework is a required field
 	Framework *string `locationName:"framework" type:"string" required:"true"`
+
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
+
+	// The source branch if the branch is a pull request branch.
+	SourceBranch *string `locationName:"sourceBranch" min:"1" type:"string"`
 
 	// Stage for a branch, part of an Amplify App.
 	//
@@ -3193,6 +3537,12 @@ func (s *Branch) SetAssociatedResources(v []*string) *Branch {
 	return s
 }
 
+// SetBackendEnvironmentArn sets the BackendEnvironmentArn field's value.
+func (s *Branch) SetBackendEnvironmentArn(v string) *Branch {
+	s.BackendEnvironmentArn = &v
+	return s
+}
+
 // SetBasicAuthCredentials sets the BasicAuthCredentials field's value.
 func (s *Branch) SetBasicAuthCredentials(v string) *Branch {
 	s.BasicAuthCredentials = &v
@@ -3235,6 +3585,12 @@ func (s *Branch) SetDescription(v string) *Branch {
 	return s
 }
 
+// SetDestinationBranch sets the DestinationBranch field's value.
+func (s *Branch) SetDestinationBranch(v string) *Branch {
+	s.DestinationBranch = &v
+	return s
+}
+
 // SetDisplayName sets the DisplayName field's value.
 func (s *Branch) SetDisplayName(v string) *Branch {
 	s.DisplayName = &v
@@ -3259,6 +3615,12 @@ func (s *Branch) SetEnableNotification(v bool) *Branch {
 	return s
 }
 
+// SetEnablePullRequestPreview sets the EnablePullRequestPreview field's value.
+func (s *Branch) SetEnablePullRequestPreview(v bool) *Branch {
+	s.EnablePullRequestPreview = &v
+	return s
+}
+
 // SetEnvironmentVariables sets the EnvironmentVariables field's value.
 func (s *Branch) SetEnvironmentVariables(v map[string]*string) *Branch {
 	s.EnvironmentVariables = v
@@ -3268,6 +3630,18 @@ func (s *Branch) SetEnvironmentVariables(v map[string]*string) *Branch {
 // SetFramework sets the Framework field's value.
 func (s *Branch) SetFramework(v string) *Branch {
 	s.Framework = &v
+	return s
+}
+
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *Branch) SetPullRequestEnvironmentName(v string) *Branch {
+	s.PullRequestEnvironmentName = &v
+	return s
+}
+
+// SetSourceBranch sets the SourceBranch field's value.
+func (s *Branch) SetSourceBranch(v string) *Branch {
+	s.SourceBranch = &v
 	return s
 }
 
@@ -3558,6 +3932,9 @@ type CreateBranchInput struct {
 	// AppId is a required field
 	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
 
+	// ARN for a Backend Environment, part of an Amplify App.
+	BackendEnvironmentArn *string `locationName:"backendEnvironmentArn" min:"1" type:"string"`
+
 	// Basic Authorization credentials for the branch.
 	BasicAuthCredentials *string `locationName:"basicAuthCredentials" type:"string"`
 
@@ -3584,11 +3961,17 @@ type CreateBranchInput struct {
 	// Enables notifications for the branch.
 	EnableNotification *bool `locationName:"enableNotification" type:"boolean"`
 
+	// Enables Pull Request Preview for this branch.
+	EnablePullRequestPreview *bool `locationName:"enablePullRequestPreview" type:"boolean"`
+
 	// Environment Variables for the branch.
 	EnvironmentVariables map[string]*string `locationName:"environmentVariables" type:"map"`
 
 	// Framework for the branch.
 	Framework *string `locationName:"framework" type:"string"`
+
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
 
 	// Stage for the branch.
 	Stage *string `locationName:"stage" type:"string" enum:"Stage"`
@@ -3619,6 +4002,9 @@ func (s *CreateBranchInput) Validate() error {
 	if s.AppId != nil && len(*s.AppId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
 	}
+	if s.BackendEnvironmentArn != nil && len(*s.BackendEnvironmentArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BackendEnvironmentArn", 1))
+	}
 	if s.BranchName == nil {
 		invalidParams.Add(request.NewErrParamRequired("BranchName"))
 	}
@@ -3641,6 +4027,12 @@ func (s *CreateBranchInput) Validate() error {
 // SetAppId sets the AppId field's value.
 func (s *CreateBranchInput) SetAppId(v string) *CreateBranchInput {
 	s.AppId = &v
+	return s
+}
+
+// SetBackendEnvironmentArn sets the BackendEnvironmentArn field's value.
+func (s *CreateBranchInput) SetBackendEnvironmentArn(v string) *CreateBranchInput {
+	s.BackendEnvironmentArn = &v
 	return s
 }
 
@@ -3692,6 +4084,12 @@ func (s *CreateBranchInput) SetEnableNotification(v bool) *CreateBranchInput {
 	return s
 }
 
+// SetEnablePullRequestPreview sets the EnablePullRequestPreview field's value.
+func (s *CreateBranchInput) SetEnablePullRequestPreview(v bool) *CreateBranchInput {
+	s.EnablePullRequestPreview = &v
+	return s
+}
+
 // SetEnvironmentVariables sets the EnvironmentVariables field's value.
 func (s *CreateBranchInput) SetEnvironmentVariables(v map[string]*string) *CreateBranchInput {
 	s.EnvironmentVariables = v
@@ -3701,6 +4099,12 @@ func (s *CreateBranchInput) SetEnvironmentVariables(v map[string]*string) *Creat
 // SetFramework sets the Framework field's value.
 func (s *CreateBranchInput) SetFramework(v string) *CreateBranchInput {
 	s.Framework = &v
+	return s
+}
+
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *CreateBranchInput) SetPullRequestEnvironmentName(v string) *CreateBranchInput {
+	s.PullRequestEnvironmentName = &v
 	return s
 }
 
@@ -3880,7 +4284,7 @@ type CreateDomainAssociationInput struct {
 	// DomainName is a required field
 	DomainName *string `locationName:"domainName" type:"string" required:"true"`
 
-	// Enables automated creation of Subdomains for branches.
+	// Enables automated creation of Subdomains for branches. (Currently not supported)
 	EnableAutoSubDomain *bool `locationName:"enableAutoSubDomain" type:"boolean"`
 
 	// Setting structure for the Subdomain.
@@ -4590,7 +4994,7 @@ type DomainAssociation struct {
 	// DomainStatus is a required field
 	DomainStatus *string `locationName:"domainStatus" type:"string" required:"true" enum:"DomainStatus"`
 
-	// Enables automated creation of Subdomains for branches.
+	// Enables automated creation of Subdomains for branches. (Currently not supported)
 	//
 	// EnableAutoSubDomain is a required field
 	EnableAutoSubDomain *bool `locationName:"enableAutoSubDomain" type:"boolean" required:"true"`
@@ -4655,6 +5059,104 @@ func (s *DomainAssociation) SetStatusReason(v string) *DomainAssociation {
 // SetSubDomains sets the SubDomains field's value.
 func (s *DomainAssociation) SetSubDomains(v []*SubDomain) *DomainAssociation {
 	s.SubDomains = v
+	return s
+}
+
+// Request structure for the generate access logs request.
+type GenerateAccessLogsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id for an Amplify App.
+	//
+	// AppId is a required field
+	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
+
+	// Name of the domain.
+	//
+	// DomainName is a required field
+	DomainName *string `locationName:"domainName" type:"string" required:"true"`
+
+	// The time at which the logs should end, inclusive.
+	EndTime *time.Time `locationName:"endTime" type:"timestamp"`
+
+	// The time at which the logs should start, inclusive.
+	StartTime *time.Time `locationName:"startTime" type:"timestamp"`
+}
+
+// String returns the string representation
+func (s GenerateAccessLogsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GenerateAccessLogsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GenerateAccessLogsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GenerateAccessLogsInput"}
+	if s.AppId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AppId"))
+	}
+	if s.AppId != nil && len(*s.AppId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
+	}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAppId sets the AppId field's value.
+func (s *GenerateAccessLogsInput) SetAppId(v string) *GenerateAccessLogsInput {
+	s.AppId = &v
+	return s
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *GenerateAccessLogsInput) SetDomainName(v string) *GenerateAccessLogsInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *GenerateAccessLogsInput) SetEndTime(v time.Time) *GenerateAccessLogsInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *GenerateAccessLogsInput) SetStartTime(v time.Time) *GenerateAccessLogsInput {
+	s.StartTime = &v
+	return s
+}
+
+// Result structure for the generate access logs request.
+type GenerateAccessLogsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Pre-signed URL for the requested access logs.
+	LogUrl *string `locationName:"logUrl" type:"string"`
+}
+
+// String returns the string representation
+func (s GenerateAccessLogsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GenerateAccessLogsOutput) GoString() string {
+	return s.String()
+}
+
+// SetLogUrl sets the LogUrl field's value.
+func (s *GenerateAccessLogsOutput) SetLogUrl(v string) *GenerateAccessLogsOutput {
+	s.LogUrl = &v
 	return s
 }
 
@@ -4726,7 +5228,86 @@ func (s *GetAppOutput) SetApp(v *App) *GetAppOutput {
 	return s
 }
 
-// Result structure for get branch request.
+// Request structure for the get artifact request.
+type GetArtifactUrlInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id for a artifact.
+	//
+	// ArtifactId is a required field
+	ArtifactId *string `location:"uri" locationName:"artifactId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetArtifactUrlInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetArtifactUrlInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetArtifactUrlInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetArtifactUrlInput"}
+	if s.ArtifactId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ArtifactId"))
+	}
+	if s.ArtifactId != nil && len(*s.ArtifactId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ArtifactId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArtifactId sets the ArtifactId field's value.
+func (s *GetArtifactUrlInput) SetArtifactId(v string) *GetArtifactUrlInput {
+	s.ArtifactId = &v
+	return s
+}
+
+// Result structure for the get artifact request.
+type GetArtifactUrlOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id for a artifact.
+	//
+	// ArtifactId is a required field
+	ArtifactId *string `locationName:"artifactId" type:"string" required:"true"`
+
+	// Presigned url for the artifact.
+	//
+	// ArtifactUrl is a required field
+	ArtifactUrl *string `locationName:"artifactUrl" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetArtifactUrlOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetArtifactUrlOutput) GoString() string {
+	return s.String()
+}
+
+// SetArtifactId sets the ArtifactId field's value.
+func (s *GetArtifactUrlOutput) SetArtifactId(v string) *GetArtifactUrlOutput {
+	s.ArtifactId = &v
+	return s
+}
+
+// SetArtifactUrl sets the ArtifactUrl field's value.
+func (s *GetArtifactUrlOutput) SetArtifactUrl(v string) *GetArtifactUrlOutput {
+	s.ArtifactUrl = &v
+	return s
+}
+
+// Request structure for get branch request.
 type GetBranchInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5295,6 +5876,141 @@ func (s *ListAppsOutput) SetApps(v []*App) *ListAppsOutput {
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListAppsOutput) SetNextToken(v string) *ListAppsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// Request structure for the list artifacts request.
+type ListArtifactsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id for an Amplify App.
+	//
+	// AppId is a required field
+	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
+
+	// Name for a branch, part of an Amplify App.
+	//
+	// BranchName is a required field
+	BranchName *string `location:"uri" locationName:"branchName" min:"1" type:"string" required:"true"`
+
+	// Unique Id for an Job.
+	//
+	// JobId is a required field
+	JobId *string `location:"uri" locationName:"jobId" type:"string" required:"true"`
+
+	// Maximum number of records to list in a single response.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// Pagination token. Set to null to start listing artifacts from start. If non-null
+	// pagination token is returned in a result, then pass its value in here to
+	// list more artifacts.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListArtifactsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListArtifactsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListArtifactsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListArtifactsInput"}
+	if s.AppId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AppId"))
+	}
+	if s.AppId != nil && len(*s.AppId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
+	}
+	if s.BranchName == nil {
+		invalidParams.Add(request.NewErrParamRequired("BranchName"))
+	}
+	if s.BranchName != nil && len(*s.BranchName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BranchName", 1))
+	}
+	if s.JobId == nil {
+		invalidParams.Add(request.NewErrParamRequired("JobId"))
+	}
+	if s.JobId != nil && len(*s.JobId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("JobId", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAppId sets the AppId field's value.
+func (s *ListArtifactsInput) SetAppId(v string) *ListArtifactsInput {
+	s.AppId = &v
+	return s
+}
+
+// SetBranchName sets the BranchName field's value.
+func (s *ListArtifactsInput) SetBranchName(v string) *ListArtifactsInput {
+	s.BranchName = &v
+	return s
+}
+
+// SetJobId sets the JobId field's value.
+func (s *ListArtifactsInput) SetJobId(v string) *ListArtifactsInput {
+	s.JobId = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListArtifactsInput) SetMaxResults(v int64) *ListArtifactsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListArtifactsInput) SetNextToken(v string) *ListArtifactsInput {
+	s.NextToken = &v
+	return s
+}
+
+// Result structure for the list artifacts request.
+type ListArtifactsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of artifacts.
+	//
+	// Artifacts is a required field
+	Artifacts []*Artifact `locationName:"artifacts" type:"list" required:"true"`
+
+	// Pagination token. If non-null pagination token is returned in a result, then
+	// pass its value in another request to fetch more entries.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListArtifactsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListArtifactsOutput) GoString() string {
+	return s.String()
+}
+
+// SetArtifacts sets the Artifacts field's value.
+func (s *ListArtifactsOutput) SetArtifacts(v []*Artifact) *ListArtifactsOutput {
+	s.Artifacts = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListArtifactsOutput) SetNextToken(v string) *ListArtifactsOutput {
 	s.NextToken = &v
 	return s
 }
@@ -6127,6 +6843,12 @@ type Step struct {
 	//
 	// StepName is a required field
 	StepName *string `locationName:"stepName" type:"string" required:"true"`
+
+	// URL to the test artifact for the execution step.
+	TestArtifactsUrl *string `locationName:"testArtifactsUrl" type:"string"`
+
+	// URL to the test config for the execution step.
+	TestConfigUrl *string `locationName:"testConfigUrl" type:"string"`
 }
 
 // String returns the string representation
@@ -6190,6 +6912,18 @@ func (s *Step) SetStatusReason(v string) *Step {
 // SetStepName sets the StepName field's value.
 func (s *Step) SetStepName(v string) *Step {
 	s.StepName = &v
+	return s
+}
+
+// SetTestArtifactsUrl sets the TestArtifactsUrl field's value.
+func (s *Step) SetTestArtifactsUrl(v string) *Step {
+	s.TestArtifactsUrl = &v
+	return s
+}
+
+// SetTestConfigUrl sets the TestConfigUrl field's value.
+func (s *Step) SetTestConfigUrl(v string) *Step {
+	s.TestConfigUrl = &v
 	return s
 }
 
@@ -6551,12 +7285,16 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateAppInput struct {
 	_ struct{} `type:"structure"`
 
+	// Personal Access token for 3rd party source control system for an Amplify
+	// App, used to create webhook and read-only deploy key. Token is not stored.
+	AccessToken *string `locationName:"accessToken" min:"1" type:"string"`
+
 	// Unique Id for an Amplify App.
 	//
 	// AppId is a required field
 	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
 
-	// Automated branch creation config for the Amplify App.
+	// Automated branch creation branchConfig for the Amplify App.
 	AutoBranchCreationConfig *AutoBranchCreationConfig `locationName:"autoBranchCreationConfig" type:"structure"`
 
 	// Automated branch creation glob patterns for the Amplify App.
@@ -6592,8 +7330,15 @@ type UpdateAppInput struct {
 	// Name for an Amplify App.
 	Name *string `locationName:"name" min:"1" type:"string"`
 
+	// OAuth token for 3rd party source control system for an Amplify App, used
+	// to create webhook and read-only deploy key. OAuth token is not stored.
+	OauthToken *string `locationName:"oauthToken" type:"string"`
+
 	// Platform for an Amplify App.
 	Platform *string `locationName:"platform" type:"string" enum:"Platform"`
+
+	// Repository for an Amplify App
+	Repository *string `locationName:"repository" type:"string"`
 }
 
 // String returns the string representation
@@ -6609,6 +7354,9 @@ func (s UpdateAppInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateAppInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateAppInput"}
+	if s.AccessToken != nil && len(*s.AccessToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AccessToken", 1))
+	}
 	if s.AppId == nil {
 		invalidParams.Add(request.NewErrParamRequired("AppId"))
 	}
@@ -6644,6 +7392,12 @@ func (s *UpdateAppInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAccessToken sets the AccessToken field's value.
+func (s *UpdateAppInput) SetAccessToken(v string) *UpdateAppInput {
+	s.AccessToken = &v
+	return s
 }
 
 // SetAppId sets the AppId field's value.
@@ -6724,9 +7478,21 @@ func (s *UpdateAppInput) SetName(v string) *UpdateAppInput {
 	return s
 }
 
+// SetOauthToken sets the OauthToken field's value.
+func (s *UpdateAppInput) SetOauthToken(v string) *UpdateAppInput {
+	s.OauthToken = &v
+	return s
+}
+
 // SetPlatform sets the Platform field's value.
 func (s *UpdateAppInput) SetPlatform(v string) *UpdateAppInput {
 	s.Platform = &v
+	return s
+}
+
+// SetRepository sets the Repository field's value.
+func (s *UpdateAppInput) SetRepository(v string) *UpdateAppInput {
+	s.Repository = &v
 	return s
 }
 
@@ -6765,6 +7531,9 @@ type UpdateBranchInput struct {
 	// AppId is a required field
 	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
 
+	// ARN for a Backend Environment, part of an Amplify App.
+	BackendEnvironmentArn *string `locationName:"backendEnvironmentArn" min:"1" type:"string"`
+
 	// Basic Authorization credentials for the branch.
 	BasicAuthCredentials *string `locationName:"basicAuthCredentials" type:"string"`
 
@@ -6791,11 +7560,17 @@ type UpdateBranchInput struct {
 	// Enables notifications for the branch.
 	EnableNotification *bool `locationName:"enableNotification" type:"boolean"`
 
+	// Enables Pull Request Preview for this branch.
+	EnablePullRequestPreview *bool `locationName:"enablePullRequestPreview" type:"boolean"`
+
 	// Environment Variables for the branch.
 	EnvironmentVariables map[string]*string `locationName:"environmentVariables" type:"map"`
 
 	// Framework for the branch.
 	Framework *string `locationName:"framework" type:"string"`
+
+	// The Amplify Environment name for the pull request.
+	PullRequestEnvironmentName *string `locationName:"pullRequestEnvironmentName" type:"string"`
 
 	// Stage for the branch.
 	Stage *string `locationName:"stage" type:"string" enum:"Stage"`
@@ -6823,6 +7598,9 @@ func (s *UpdateBranchInput) Validate() error {
 	if s.AppId != nil && len(*s.AppId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
 	}
+	if s.BackendEnvironmentArn != nil && len(*s.BackendEnvironmentArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("BackendEnvironmentArn", 1))
+	}
 	if s.BranchName == nil {
 		invalidParams.Add(request.NewErrParamRequired("BranchName"))
 	}
@@ -6842,6 +7620,12 @@ func (s *UpdateBranchInput) Validate() error {
 // SetAppId sets the AppId field's value.
 func (s *UpdateBranchInput) SetAppId(v string) *UpdateBranchInput {
 	s.AppId = &v
+	return s
+}
+
+// SetBackendEnvironmentArn sets the BackendEnvironmentArn field's value.
+func (s *UpdateBranchInput) SetBackendEnvironmentArn(v string) *UpdateBranchInput {
+	s.BackendEnvironmentArn = &v
 	return s
 }
 
@@ -6893,6 +7677,12 @@ func (s *UpdateBranchInput) SetEnableNotification(v bool) *UpdateBranchInput {
 	return s
 }
 
+// SetEnablePullRequestPreview sets the EnablePullRequestPreview field's value.
+func (s *UpdateBranchInput) SetEnablePullRequestPreview(v bool) *UpdateBranchInput {
+	s.EnablePullRequestPreview = &v
+	return s
+}
+
 // SetEnvironmentVariables sets the EnvironmentVariables field's value.
 func (s *UpdateBranchInput) SetEnvironmentVariables(v map[string]*string) *UpdateBranchInput {
 	s.EnvironmentVariables = v
@@ -6902,6 +7692,12 @@ func (s *UpdateBranchInput) SetEnvironmentVariables(v map[string]*string) *Updat
 // SetFramework sets the Framework field's value.
 func (s *UpdateBranchInput) SetFramework(v string) *UpdateBranchInput {
 	s.Framework = &v
+	return s
+}
+
+// SetPullRequestEnvironmentName sets the PullRequestEnvironmentName field's value.
+func (s *UpdateBranchInput) SetPullRequestEnvironmentName(v string) *UpdateBranchInput {
+	s.PullRequestEnvironmentName = &v
 	return s
 }
 
@@ -6957,7 +7753,7 @@ type UpdateDomainAssociationInput struct {
 	// DomainName is a required field
 	DomainName *string `location:"uri" locationName:"domainName" type:"string" required:"true"`
 
-	// Enables automated creation of Subdomains for branches.
+	// Enables automated creation of Subdomains for branches. (Currently not supported)
 	EnableAutoSubDomain *bool `locationName:"enableAutoSubDomain" type:"boolean"`
 
 	// Setting structure for the Subdomain.
@@ -7322,4 +8118,7 @@ const (
 
 	// StageExperimental is a Stage enum value
 	StageExperimental = "EXPERIMENTAL"
+
+	// StagePullRequest is a Stage enum value
+	StagePullRequest = "PULL_REQUEST"
 )

@@ -1,7 +1,7 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_notification"
-sidebar_current: "docs-aws-resource-autoscaling-notification"
 description: |-
   Provides an AutoScaling Group with Notification support
 ---

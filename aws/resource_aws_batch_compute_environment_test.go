@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -391,6 +391,8 @@ func testAccPreCheckAWSBatch(t *testing.T) {
 
 func testAccAWSBatchComputeEnvironmentConfigBase(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 ########## ecs_instance_role ##########
 
 resource "aws_iam_role" "ecs_instance_role" {
@@ -404,7 +406,7 @@ resource "aws_iam_role" "ecs_instance_role" {
 	    "Action": "sts:AssumeRole",
 	    "Effect": "Allow",
 	    "Principal": {
-		"Service": "ec2.amazonaws.com"
+		"Service": "ec2.${data.aws_partition.current.dns_suffix}"
 	    }
 	}
     ]
@@ -414,7 +416,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
   role       = "${aws_iam_role.ecs_instance_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
@@ -435,7 +437,7 @@ resource "aws_iam_role" "aws_batch_service_role" {
 	    "Action": "sts:AssumeRole",
 	    "Effect": "Allow",
 	    "Principal": {
-		"Service": "batch.amazonaws.com"
+		"Service": "batch.${data.aws_partition.current.dns_suffix}"
 	    }
 	}
     ]
@@ -445,7 +447,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
   role       = "${aws_iam_role.aws_batch_service_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
 ########## aws_ec2_spot_fleet_role ##########
@@ -461,7 +463,7 @@ resource "aws_iam_role" "aws_ec2_spot_fleet_role" {
 	    "Action": "sts:AssumeRole",
 	    "Effect": "Allow",
 	    "Principal": {
-		"Service": "spotfleet.amazonaws.com"
+		"Service": "spotfleet.${data.aws_partition.current.dns_suffix}"
 	    }
 	}
     ]
@@ -471,7 +473,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "aws_ec2_spot_fleet_role" {
   role       = "${aws_iam_role.aws_ec2_spot_fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 ########## security group ##########

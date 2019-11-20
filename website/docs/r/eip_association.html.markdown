@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_eip_association"
-sidebar_current: "docs-aws-resource-eip-association"
 description: |-
   Provides an AWS EIP Association
 ---

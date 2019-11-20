@@ -2,17 +2,19 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 	var conf apigateway.ClientCertificate
+	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,23 +24,31 @@ func TestAccAWSAPIGatewayClientCertificate_basic(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists("aws_api_gateway_client_certificate.cow", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_client_certificate.cow", "description", "Hello from TF acceptance test"),
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayClientCertificateConfig_basic_updated,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayClientCertificateExists("aws_api_gateway_client_certificate.cow", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_client_certificate.cow", "description", "Hello from TF acceptance test - updated"),
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test - updated"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSAPIGatewayClientCertificate_importBasic(t *testing.T) {
-	resourceName := "aws_api_gateway_client_certificate.cow"
+func TestAccAWSAPIGatewayClientCertificate_tags(t *testing.T) {
+	var conf apigateway.ClientCertificate
+	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -46,13 +56,34 @@ func TestAccAWSAPIGatewayClientCertificate_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayClientCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayClientCertificateConfig_basic,
+				Config: testAccAWSAPIGatewayClientCertificateConfigTags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSAPIGatewayClientCertificateConfigTags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayClientCertificateConfigTags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayClientCertificateExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -105,7 +136,7 @@ func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error
 		if !ok {
 			return err
 		}
-		if awsErr.Code() != "NotFoundException" {
+		if awsErr.Code() != apigateway.ErrCodeNotFoundException {
 			return err
 		}
 
@@ -116,13 +147,38 @@ func testAccCheckAWSAPIGatewayClientCertificateDestroy(s *terraform.State) error
 }
 
 const testAccAWSAPIGatewayClientCertificateConfig_basic = `
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
 }
 `
 
 const testAccAWSAPIGatewayClientCertificateConfig_basic_updated = `
-resource "aws_api_gateway_client_certificate" "cow" {
+resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `
+
+func testAccAWSAPIGatewayClientCertificateConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_client_certificate" "test" {
+  description = "Hello from TF acceptance test"
+
+  tags = {
+	%q = %q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccAWSAPIGatewayClientCertificateConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_client_certificate" "test" {
+  description = "Hello from TF acceptance test"
+
+  tags = {
+	%q = %q
+	%q = %q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}

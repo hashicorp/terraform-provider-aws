@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_sql_injection_match_set"
-sidebar_current: "docs-aws-resource-waf-sql-injection-match-set"
 description: |-
   Provides a AWS WAF SQL Injection Match Set resource.
 ---

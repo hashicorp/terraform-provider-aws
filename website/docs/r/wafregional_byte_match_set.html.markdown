@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_byte_match_set"
-sidebar_current: "docs-aws-resource-wafregional-bytematchset"
 description: |-
   Provides a AWS WAF Regional ByteMatchSet resource for use with ALB.
 ---

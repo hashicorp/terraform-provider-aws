@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -51,6 +51,24 @@ func testSweepInstances(region string) error {
 
 				log.Printf("[INFO] Terminating EC2 Instance: %s", id)
 				err := awsTerminateInstance(conn, id, 5*time.Minute)
+
+				if isAWSErr(err, "OperationNotPermitted", "Modify its 'disableApiTermination' instance attribute and try again.") {
+					log.Printf("[INFO] Enabling API Termination on EC2 Instance: %s", id)
+
+					input := &ec2.ModifyInstanceAttributeInput{
+						InstanceId: instance.InstanceId,
+						DisableApiTermination: &ec2.AttributeBooleanValue{
+							Value: aws.Bool(false),
+						},
+					}
+
+					_, err = conn.ModifyInstanceAttribute(input)
+
+					if err == nil {
+						err = awsTerminateInstance(conn, id, 5*time.Minute)
+					}
+				}
+
 				if err != nil {
 					log.Printf("[ERROR] Error terminating EC2 Instance (%s): %s", id, err)
 				}
@@ -128,31 +146,10 @@ func TestFetchRootDevice(t *testing.T) {
 	}
 }
 
-func TestAccAWSInstance_importBasic(t *testing.T) {
-	resourceName := "aws_instance.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigVPC,
-			},
-
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "user_data"},
-			},
-		},
-	})
-}
-
-func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
-	resourceName := "aws_instance.foo"
+func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
+	var v ec2.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -161,8 +158,11 @@ func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigInDefaultVpcBySgName(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						resourceName, &v),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -172,9 +172,10 @@ func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_importInDefaultVpcBySgId(t *testing.T) {
-	resourceName := "aws_instance.foo"
+func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
+	var v ec2.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -183,8 +184,11 @@ func TestAccAWSInstance_importInDefaultVpcBySgId(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigInDefaultVpcBySgId(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						resourceName, &v),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -194,9 +198,10 @@ func TestAccAWSInstance_importInDefaultVpcBySgId(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_importInEc2Classic(t *testing.T) {
-	resourceName := "aws_instance.foo"
+func TestAccAWSInstance_inEc2Classic(t *testing.T) {
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
+	var v ec2.Instance
 
 	// EC2 Classic enabled
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
@@ -210,8 +215,11 @@ func TestAccAWSInstance_importInEc2Classic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigInEc2Classic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						resourceName, &v),
+				),
 			},
-
 			{
 				Config:                  testAccInstanceConfigInEc2Classic(rInt),
 				ResourceName:            resourceName,
@@ -226,7 +234,7 @@ func TestAccAWSInstance_importInEc2Classic(t *testing.T) {
 func TestAccAWSInstance_basic(t *testing.T) {
 	var v ec2.Instance
 	var vol *ec2.Volume
-
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	testCheck := func(rInt int) func(*terraform.State) error {
@@ -248,7 +256,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -266,26 +274,29 @@ func TestAccAWSInstance_basic(t *testing.T) {
 					return err
 				},
 			},
-
 			{
 				Config: testAccInstanceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					testCheck(rInt),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"user_data",
 						"3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.#", "0"),
+						resourceName, "ebs_block_device.#", "0"),
 					resource.TestMatchResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"arn",
 						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			// We repeat the exact same test so that we can be sure
 			// that the user data hash stuff is working without generating
 			// an incorrect diff.
@@ -293,17 +304,16 @@ func TestAccAWSInstance_basic(t *testing.T) {
 				Config: testAccInstanceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					testCheck(rInt),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"user_data",
 						"3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.#", "0"),
+						resourceName, "ebs_block_device.#", "0"),
 				),
 			},
-
 			// Clean up volume created above
 			{
 				Config: testAccInstanceConfig(rInt),
@@ -319,8 +329,8 @@ func TestAccAWSInstance_basic(t *testing.T) {
 
 func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 	var instance ec2.Instance
-	kmsKeyResourceName := "aws_kms_key.foo"
-	resourceName := "aws_instance.foo"
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -342,8 +352,8 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 
 func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 	var instance ec2.Instance
-	kmsKeyResourceName := "aws_kms_key.foo"
-	resourceName := "aws_instance.foo"
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -359,18 +369,23 @@ func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "root_block_device.0.kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	var v ec2.Instance
-
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -378,12 +393,18 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 				Config: testAccInstanceConfigWithUserDataBase64(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"user_data_base64",
 						"aGVsbG8gd29ybGQ="),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
 			},
 		},
 	})
@@ -391,6 +412,7 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 
 func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -412,7 +434,7 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
@@ -422,17 +444,22 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 				//Config: testAccInstanceConfigBlockDevices,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.#", "1"),
+						resourceName, "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_size", "11"),
+						resourceName, "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_type", "gp2"),
+						resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.iops", "100"),
+						resourceName, "root_block_device.0.iops", "100"),
 					testCheck(),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -440,16 +467,23 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 
 func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device", "user_data"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGP2WithIopsValue,
-				Check:  testAccCheckInstanceExists("aws_instance.foo", &v),
+				Check:  testAccCheckInstanceExists(resourceName, &v),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config:             testAccInstanceGP2WithIopsValue,
@@ -462,6 +496,7 @@ func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 
 func TestAccAWSInstance_blockDevices(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -498,7 +533,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
@@ -507,51 +542,57 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 				Config: testAccInstanceConfigBlockDevices,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.#", "1"),
+						resourceName, "root_block_device.#", "1"),
 					resource.TestMatchResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+						resourceName, "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_size", "11"),
+						resourceName, "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_type", "gp2"),
+						resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.#", "3"),
+						resourceName, "ebs_block_device.#", "3"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2576023345.device_name", "/dev/sdb"),
+						resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
 					resource.TestMatchResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+						resourceName, "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2576023345.volume_size", "9"),
+						resourceName, "ebs_block_device.2576023345.volume_size", "9"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2576023345.volume_type", "gp2"),
+						resourceName, "ebs_block_device.2576023345.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2554893574.device_name", "/dev/sdc"),
+						resourceName, "ebs_block_device.2554893574.device_name", "/dev/sdc"),
 					resource.TestMatchResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2554893574.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+						resourceName, "ebs_block_device.2554893574.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2554893574.volume_size", "10"),
+						resourceName, "ebs_block_device.2554893574.volume_size", "10"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2554893574.volume_type", "io1"),
+						resourceName, "ebs_block_device.2554893574.volume_type", "io1"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2554893574.iops", "100"),
+						resourceName, "ebs_block_device.2554893574.iops", "100"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2634515331.device_name", "/dev/sdd"),
+						resourceName, "ebs_block_device.2634515331.device_name", "/dev/sdd"),
 					resource.TestMatchResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2634515331.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
+						resourceName, "ebs_block_device.2634515331.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2634515331.encrypted", "true"),
+						resourceName, "ebs_block_device.2634515331.encrypted", "true"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.2634515331.volume_size", "12"),
+						resourceName, "ebs_block_device.2634515331.volume_size", "12"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.#", "1"),
+						resourceName, "ephemeral_block_device.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.1692014856.device_name", "/dev/sde"),
+						resourceName, "ephemeral_block_device.1692014856.device_name", "/dev/sde"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.1692014856.virtual_name", "ephemeral0"),
+						resourceName, "ephemeral_block_device.1692014856.virtual_name", "ephemeral0"),
 					testCheck(),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
 			},
 		},
 	})
@@ -559,16 +600,17 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 
 func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `
-					resource "aws_instance" "foo" {
+					resource "aws_instance" "test" {
 						# us-west-2
 						# Amazon Linux HVM Instance Store 64-bit (2016.09.0)
 						# https://aws.amazon.com/amazon-linux-ami
@@ -580,18 +622,23 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 					}`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ami", "ami-44c36524"),
+						resourceName, "ami", "ami-44c36524"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.#", "0"),
+						resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_optimized", "false"),
+						resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "instance_type", "m3.medium"),
+						resourceName, "instance_type", "m3.medium"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.#", "0"),
+						resourceName, "root_block_device.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -599,6 +646,7 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 
 func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	testCheck := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -629,14 +677,14 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"ephemeral_block_device"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `
-					resource "aws_instance" "foo" {
+					resource "aws_instance" "test" {
 						# us-west-2
 						ami = "ami-01f05461"  // This AMI (Ubuntu) contains two ephemerals
 
@@ -657,33 +705,39 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 					}`,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ami", "ami-01f05461"),
+						resourceName, "ami", "ami-01f05461"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_optimized", "false"),
+						resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "instance_type", "c3.large"),
+						resourceName, "instance_type", "c3.large"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.#", "1"),
+						resourceName, "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_size", "11"),
+						resourceName, "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_type", "gp2"),
+						resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ebs_block_device.#", "0"),
+						resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.#", "2"),
+						resourceName, "ephemeral_block_device.#", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.172787947.device_name", "/dev/sdb"),
+						resourceName, "ephemeral_block_device.172787947.device_name", "/dev/sdb"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.172787947.no_device", "true"),
+						resourceName, "ephemeral_block_device.172787947.no_device", "true"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.3336996981.device_name", "/dev/sdc"),
+						resourceName, "ephemeral_block_device.3336996981.device_name", "/dev/sdc"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "ephemeral_block_device.3336996981.no_device", "true"),
+						resourceName, "ephemeral_block_device.3336996981.no_device", "true"),
 					testCheck(),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
 			},
 		},
 	})
@@ -691,6 +745,7 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 
 func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	testCheck := func(enabled bool) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -707,30 +762,33 @@ func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigSourceDestDisable,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheck(false),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccInstanceConfigSourceDestEnable,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheck(true),
 				),
 			},
-
 			{
 				Config: testAccInstanceConfigSourceDestDisable,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheck(false),
 				),
 			},
@@ -740,6 +798,7 @@ func TestAccAWSInstance_sourceDestCheck(t *testing.T) {
 
 func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	checkDisableApiTermination := func(expected bool) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -761,22 +820,26 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigDisableAPITermination(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					checkDisableApiTermination(true),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccInstanceConfigDisableAPITermination(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					checkDisableApiTermination(false),
 				),
 			},
@@ -786,10 +849,11 @@ func TestAccAWSInstance_disableApiTermination(t *testing.T) {
 
 func TestAccAWSInstance_vpc(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
@@ -798,12 +862,18 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 				Config: testAccInstanceConfigVPC,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"user_data",
 						"562a3e32810edf6ff09994f050f12e799452379d"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "user_data"},
 			},
 		},
 	})
@@ -812,10 +882,11 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 func TestAccAWSInstance_placementGroup(t *testing.T) {
 	var v ec2.Instance
 	rStr := acctest.RandString(5)
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
@@ -824,12 +895,17 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 				Config: testAccInstanceConfigPlacementGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"placement_group",
 						fmt.Sprintf("testAccInstanceConfigPlacementGroup_%s", rStr)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -837,6 +913,7 @@ func TestAccAWSInstance_placementGroup(t *testing.T) {
 
 func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -847,12 +924,17 @@ func TestAccAWSInstance_ipv6_supportAddressCount(t *testing.T) {
 				Config: testAccInstanceConfigIpv6Support,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"ipv6_address_count",
 						"1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -875,6 +957,7 @@ func TestAccAWSInstance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 
 func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -885,12 +968,17 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 				Config: testAccInstanceConfigIpv6SupportWithIpv4,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo",
+						resourceName,
 						"ipv6_address_count",
 						"1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -898,6 +986,7 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 
 func TestAccAWSInstance_multipleRegions(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	// record the initialized providers so that we can use them to
 	// check for the instances in each region
@@ -911,9 +1000,9 @@ func TestAccAWSInstance_multipleRegions(t *testing.T) {
 			{
 				Config: testAccInstanceConfigMultipleRegions,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExistsWithProvider("aws_instance.foo", &v,
+					testAccCheckInstanceExistsWithProvider(resourceName, &v,
 						testAccAwsRegionProviderFunc("us-west-2", &providers)),
-					testAccCheckInstanceExistsWithProvider("aws_instance.bar", &v,
+					testAccCheckInstanceExistsWithProvider("aws_instance.test2", &v,
 						testAccAwsRegionProviderFunc("us-east-1", &providers)),
 				),
 			},
@@ -923,12 +1012,12 @@ func TestAccAWSInstance_multipleRegions(t *testing.T) {
 
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
-
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo_instance",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
@@ -937,8 +1026,13 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 				Config: testAccInstanceNetworkInstanceSecurityGroups(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo_instance", &v),
+						resourceName, &v),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -946,12 +1040,12 @@ func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 
 func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 	var v ec2.Instance
-
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo_instance",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -959,22 +1053,27 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 				Config: testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo_instance", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo_instance", "security_groups.#", "0"),
+						resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo_instance", "vpc_security_group_ids.#", "1"),
+						resourceName, "vpc_security_group_ids.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceNetworkInstanceVPCRemoveSecurityGroupIDs(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo_instance", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo_instance", "security_groups.#", "0"),
+						resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo_instance", "vpc_security_group_ids.#", "1"),
+						resourceName, "vpc_security_group_ids.#", "1"),
 				),
 				ExpectError: regexp.MustCompile(`VPC-based instances require at least one security group to be attached`),
 			},
@@ -984,12 +1083,12 @@ func TestAccAWSInstance_NetworkInstanceRemovingAllSecurityGroups(t *testing.T) {
 
 func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 	var v ec2.Instance
-
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo_instance",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -997,12 +1096,17 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 				Config: testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
-						"aws_instance.foo_instance", &v),
+						resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo_instance", "security_groups.#", "0"),
+						resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo_instance", "vpc_security_group_ids.#", "1"),
+						resourceName, "vpc_security_group_ids.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1010,6 +1114,7 @@ func TestAccAWSInstance_NetworkInstanceVPCSecurityGroupIDs(t *testing.T) {
 
 func TestAccAWSInstance_tags(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1019,18 +1124,23 @@ func TestAccAWSInstance_tags(t *testing.T) {
 			{
 				Config: testAccCheckInstanceConfigTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
-					testAccCheckTags(&v.Tags, "foo", "bar"),
+					testAccCheckInstanceExists(resourceName, &v),
+					testAccCheckTags(&v.Tags, "test", "test2"),
 					// Guard against regression of https://github.com/hashicorp/terraform/issues/914
 					testAccCheckTags(&v.Tags, "#", ""),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccCheckInstanceConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
-					testAccCheckTags(&v.Tags, "foo", ""),
-					testAccCheckTags(&v.Tags, "bar", "baz"),
+					testAccCheckInstanceExists(resourceName, &v),
+					testAccCheckTags(&v.Tags, "test", ""),
+					testAccCheckTags(&v.Tags, "test2", "test3"),
 				),
 			},
 		},
@@ -1039,6 +1149,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 
 func TestAccAWSInstance_volumeTags(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1048,39 +1159,45 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 			{
 				Config: testAccCheckInstanceConfigNoVolumeTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(
-						"aws_instance.foo", "volume_tags"),
+						resourceName, "volume_tags"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
 			},
 			{
 				Config: testAccCheckInstanceConfigWithVolumeTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "volume_tags.%", "1"),
+						resourceName, "volume_tags.%", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "volume_tags.Name", "acceptance-test-volume-tag"),
+						resourceName, "volume_tags.Name", "acceptance-test-volume-tag"),
 				),
 			},
 			{
 				Config: testAccCheckInstanceConfigWithVolumeTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "volume_tags.%", "2"),
+						resourceName, "volume_tags.%", "2"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "volume_tags.Name", "acceptance-test-volume-tag"),
+						resourceName, "volume_tags.Name", "acceptance-test-volume-tag"),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "volume_tags.Environment", "dev"),
+						resourceName, "volume_tags.Environment", "dev"),
 				),
 			},
 			{
 				Config: testAccCheckInstanceConfigNoVolumeTags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(
-						"aws_instance.foo", "volume_tags"),
+						resourceName, "volume_tags"),
 				),
 			},
 		},
@@ -1089,6 +1206,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 
 func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1098,8 +1216,13 @@ func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 			{
 				Config: testAccCheckInstanceConfigWithAttachedVolume,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1108,6 +1231,7 @@ func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 	var v ec2.Instance
 	rName := acctest.RandString(5)
+	resourceName := "aws_instance.test"
 
 	testCheckInstanceProfile := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1121,20 +1245,25 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigWithoutInstanceProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfigWithInstanceProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheckInstanceProfile(),
 				),
 			},
@@ -1145,6 +1274,7 @@ func TestAccAWSInstance_instanceProfileChange(t *testing.T) {
 func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 	var v ec2.Instance
 	rName := acctest.RandString(5)
+	resourceName := "aws_instance.test"
 
 	testCheckInstanceProfile := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1158,16 +1288,21 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigWithInstanceProfile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheckInstanceProfile(),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1175,6 +1310,7 @@ func TestAccAWSInstance_withIamInstanceProfile(t *testing.T) {
 
 func TestAccAWSInstance_privateIP(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1188,16 +1324,21 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigPrivateIP,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheckPrivateIP(),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1205,6 +1346,7 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 
 func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1218,7 +1360,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"associate_public_ip_address"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
@@ -1226,9 +1368,14 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 			{
 				Config: testAccInstanceConfigAssociatePublicIPAndPrivateIP,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheckPrivateIP(),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1238,6 +1385,7 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/2302
 func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	testCheckKeyPair := func(keyName string) resource.TestCheckFunc {
 		return func(*terraform.State) error {
@@ -1256,7 +1404,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_instance.foo",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"source_dest_check"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckInstanceDestroy,
@@ -1264,7 +1412,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 			{
 				Config: testAccInstanceConfigKeyPair(keyPairName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					testCheckKeyPair(keyPairName),
 				),
 			},
@@ -1274,6 +1422,7 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 
 func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1283,10 +1432,16 @@ func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 			{
 				Config: testAccInstanceConfigRootBlockDeviceMismatch,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(
-						"aws_instance.foo", "root_block_device.0.volume_size", "13"),
+						resourceName, "root_block_device.0.volume_size", "13"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"root_block_device"},
 			},
 		},
 	})
@@ -1303,17 +1458,18 @@ func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 // set NewRemoved on the .# field when it changes to 0.
 func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_instance.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigForceNewAndTagsDrift,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 					driftTags(&v),
 				),
 				ExpectNonEmptyPlan: true,
@@ -1321,8 +1477,13 @@ func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 			{
 				Config: testAccInstanceConfigForceNewAndTagsDrift_Update,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &v),
+					testAccCheckInstanceExists(resourceName, &v),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1331,6 +1492,7 @@ func TestAccAWSInstance_forceNewAndTagsDrift(t *testing.T) {
 func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1340,13 +1502,18 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 			{
 				Config: testAccInstanceConfigWithSmallInstanceType,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &before),
+					testAccCheckInstanceExists(resourceName, &before),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfigUpdateInstanceType,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &after),
+					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(
 						t, &before, &after),
 				),
@@ -1358,6 +1525,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	var instance ec2.Instance
 	var ini ec2.NetworkInterface
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1367,10 +1535,16 @@ func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 			{
 				Config: testAccInstanceConfigPrimaryNetworkInterface,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &instance),
-					testAccCheckAWSENIExists("aws_network_interface.bar", &ini),
-					resource.TestCheckResourceAttr("aws_instance.foo", "network_interface.#", "1"),
+					testAccCheckInstanceExists(resourceName, &instance),
+					testAccCheckAWSENIExists("aws_network_interface.test", &ini),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface"},
 			},
 		},
 	})
@@ -1379,6 +1553,7 @@ func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 func TestAccAWSInstance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	var instance ec2.Instance
 	var ini ec2.NetworkInterface
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1388,10 +1563,16 @@ func TestAccAWSInstance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 			{
 				Config: testAccInstanceConfigPrimaryNetworkInterfaceSourceDestCheck,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &instance),
-					testAccCheckAWSENIExists("aws_network_interface.bar", &ini),
-					resource.TestCheckResourceAttr("aws_instance.foo", "source_dest_check", "false"),
+					testAccCheckInstanceExists(resourceName, &instance),
+					testAccCheckAWSENIExists("aws_network_interface.test", &ini),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface"},
 			},
 		},
 	})
@@ -1402,6 +1583,7 @@ func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
 	var after ec2.Instance
 	var iniPrimary ec2.NetworkInterface
 	var iniSecondary ec2.NetworkInterface
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1411,17 +1593,23 @@ func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
 			{
 				Config: testAccInstanceConfigAddSecondaryNetworkInterfaceBefore,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &before),
+					testAccCheckInstanceExists(resourceName, &before),
 					testAccCheckAWSENIExists("aws_network_interface.primary", &iniPrimary),
-					resource.TestCheckResourceAttr("aws_instance.foo", "network_interface.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"network_interface"},
 			},
 			{
 				Config: testAccInstanceConfigAddSecondaryNetworkInterfaceAfter,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &after),
+					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckAWSENIExists("aws_network_interface.secondary", &iniSecondary),
-					resource.TestCheckResourceAttr("aws_instance.foo", "network_interface.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_interface.#", "1"),
 				),
 			},
 		},
@@ -1432,6 +1620,7 @@ func TestAccAWSInstance_addSecondaryInterface(t *testing.T) {
 func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1441,15 +1630,20 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 			{
 				Config: testAccInstanceConfigAddSecurityGroupBefore,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &before),
-					resource.TestCheckResourceAttr("aws_instance.foo", "vpc_security_group_ids.#", "1"),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfigAddSecurityGroupAfter,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &after),
-					resource.TestCheckResourceAttr("aws_instance.foo", "vpc_security_group_ids.#", "2"),
+					testAccCheckInstanceExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
 				),
 			},
 		},
@@ -1459,7 +1653,7 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 // https://github.com/terraform-providers/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 	var before ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1470,10 +1664,15 @@ func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_associatePublic_defaultPrivate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "false"),
-					resource.TestCheckResourceAttr(resName, "public_ip", ""),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1482,7 +1681,7 @@ func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 // https://github.com/terraform-providers/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 	var before ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1493,10 +1692,15 @@ func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_associatePublic_defaultPublic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "true"),
-					resource.TestCheckResourceAttrSet(resName, "public_ip"),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1505,7 +1709,7 @@ func TestAccAWSInstance_associatePublic_defaultPublic(t *testing.T) {
 // https://github.com/terraform-providers/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 	var before ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1516,10 +1720,15 @@ func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_associatePublic_explicitPublic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "true"),
-					resource.TestCheckResourceAttrSet(resName, "public_ip"),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1528,7 +1737,7 @@ func TestAccAWSInstance_associatePublic_explicitPublic(t *testing.T) {
 // https://github.com/terraform-providers/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 	var before ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1539,10 +1748,15 @@ func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_associatePublic_explicitPrivate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "false"),
-					resource.TestCheckResourceAttr(resName, "public_ip", ""),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1551,7 +1765,7 @@ func TestAccAWSInstance_associatePublic_explicitPrivate(t *testing.T) {
 // https://github.com/terraform-providers/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 	var before ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1562,10 +1776,15 @@ func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_associatePublic_overridePublic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "true"),
-					resource.TestCheckResourceAttrSet(resName, "public_ip"),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1574,7 +1793,7 @@ func TestAccAWSInstance_associatePublic_overridePublic(t *testing.T) {
 // https://github.com/terraform-providers/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 	var before ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1585,10 +1804,15 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_associatePublic_overridePrivate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "associate_public_ip_address", "false"),
-					resource.TestCheckResourceAttr(resName, "public_ip", ""),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1596,7 +1820,7 @@ func TestAccAWSInstance_associatePublic_overridePrivate(t *testing.T) {
 
 func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 	var before, after ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1607,18 +1831,23 @@ func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_getPasswordData(false, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "get_password_data", "false"),
-					resource.TestCheckResourceAttr(resName, "password_data", ""),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "password_data", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_getPasswordData(true, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &after),
+					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(t, &before, &after),
-					resource.TestCheckResourceAttr(resName, "get_password_data", "true"),
-					resource.TestCheckResourceAttrSet(resName, "password_data"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "password_data"),
 				),
 			},
 		},
@@ -1627,7 +1856,7 @@ func TestAccAWSInstance_getPasswordData_falseToTrue(t *testing.T) {
 
 func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 	var before, after ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1638,18 +1867,82 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_getPasswordData(true, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "get_password_data", "true"),
-					resource.TestCheckResourceAttrSet(resName, "password_data"),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "password_data"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password_data", "get_password_data"},
 			},
 			{
 				Config: testAccInstanceConfig_getPasswordData(false, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &after),
+					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(t, &before, &after),
-					resource.TestCheckResourceAttr(resName, "get_password_data", "false"),
-					resource.TestCheckResourceAttr(resName, "password_data", ""),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "password_data", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_CreditSpecification_Empty_NonBurstable(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_CreditSpecification_Empty_NonBurstable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"credit_specification"},
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/10203
+func TestAccAWSInstance_CreditSpecification_UnspecifiedToEmpty_NonBurstable(t *testing.T) {
+	var instance ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_CreditSpecification_Unspecified_NonBurstable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfig_CreditSpecification_Empty_NonBurstable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
 				),
 			},
 		},
@@ -1658,7 +1951,7 @@ func TestAccAWSInstance_getPasswordData_trueToFalse(t *testing.T) {
 
 func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *testing.T) {
 	var instance ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1669,10 +1962,15 @@ func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *tes
 			{
 				Config: testAccInstanceConfig_creditSpecification_unspecified(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &instance),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1680,7 +1978,7 @@ func TestAccAWSInstance_creditSpecification_unspecifiedDefaultsToStandard(t *tes
 
 func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1691,17 +1989,22 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &first),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_unspecified(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &second),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
 			},
 		},
@@ -1710,7 +2013,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits(t *testing.T) {
 
 func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1721,17 +2024,22 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &first),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_unspecified(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &second),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
 			},
 		},
@@ -1741,7 +2049,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
 	var instance ec2.Instance
 	rInt := acctest.RandInt()
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1751,10 +2059,15 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_creditSpecification_unknownCpuCredits(rInt, "t2.micro"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &instance),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1763,7 +2076,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t2(t *testing.T) {
 func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
 	var instance ec2.Instance
 	rInt := acctest.RandInt()
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1773,10 +2086,15 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_creditSpecification_unknownCpuCredits(rInt, "t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &instance),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1784,7 +2102,7 @@ func TestAccAWSInstance_creditSpecification_unknownCpuCredits_t3(t *testing.T) {
 
 func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 	var first, second, third ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1795,25 +2113,30 @@ func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &first),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &second),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &third),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &third),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
 			},
 		},
@@ -1822,7 +2145,7 @@ func TestAccAWSInstance_creditSpecification_updateCpuCredits(t *testing.T) {
 
 func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testing.T) {
 	var instance ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1833,8 +2156,14 @@ func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testin
 			{
 				Config: testAccInstanceConfig_creditSpecification_isNotAppliedToNonBurstable(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &instance),
+					testAccCheckInstanceExists(resourceName, &instance),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"credit_specification"},
 			},
 		},
 	})
@@ -1842,7 +2171,7 @@ func TestAccAWSInstance_creditSpecification_isNotAppliedToNonBurstable(t *testin
 
 func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *testing.T) {
 	var instance ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1853,10 +2182,15 @@ func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 			{
 				Config: testAccInstanceConfig_creditSpecification_unspecified_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &instance),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1864,7 +2198,7 @@ func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 
 func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1875,17 +2209,22 @@ func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &first),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_unspecified_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &second),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
 			},
 		},
@@ -1894,7 +2233,7 @@ func TestAccAWSInstance_creditSpecificationT3_standardCpuCredits(t *testing.T) {
 
 func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) {
 	var first, second ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1905,17 +2244,22 @@ func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) 
 			{
 				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &first),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_unspecified_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &second),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
 			},
 		},
@@ -1924,7 +2268,7 @@ func TestAccAWSInstance_creditSpecificationT3_unlimitedCpuCredits(t *testing.T) 
 
 func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
 	var first, second, third ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1935,25 +2279,30 @@ func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &first),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &first),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &second),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &second),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &third),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &third),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
 			},
 		},
@@ -1962,7 +2311,7 @@ func TestAccAWSInstance_creditSpecificationT3_updateCpuCredits(t *testing.T) {
 
 func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *testing.T) {
 	var before, after ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1973,19 +2322,24 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *te
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_standardCpuCredits_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "standard"),
+					testAccCheckInstanceExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "standard"),
 				),
-				Taint: []string{resName},
+				Taint: []string{resourceName},
 			},
 		},
 	})
@@ -1993,7 +2347,7 @@ func TestAccAWSInstance_creditSpecification_standardCpuCredits_t2Tot3Taint(t *te
 
 func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *testing.T) {
 	var before, after ec2.Instance
-	resName := "aws_instance.foo"
+	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2004,19 +2358,24 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 			{
 				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &before),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_creditSpecification_unlimitedCpuCredits_t3(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resName, &after),
-					resource.TestCheckResourceAttr(resName, "credit_specification.#", "1"),
-					resource.TestCheckResourceAttr(resName, "credit_specification.0.cpu_credits", "unlimited"),
+					testAccCheckInstanceExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credit_specification.0.cpu_credits", "unlimited"),
 				),
-				Taint: []string{resName},
+				Taint: []string{resourceName},
 			},
 		},
 	})
@@ -2025,6 +2384,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 func TestAccAWSInstance_disappears(t *testing.T) {
 	var conf ec2.Instance
 	rInt := acctest.RandInt()
+	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2034,7 +2394,7 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 			{
 				Config: testAccInstanceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists("aws_instance.foo", &conf),
+					testAccCheckInstanceExists(resourceName, &conf),
 					testAccCheckInstanceDisappears(&conf),
 				),
 				ExpectNonEmptyPlan: true,
@@ -2058,6 +2418,12 @@ func TestAccAWSInstance_UserData_EmptyStringToUnspecified(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data"},
 			},
 			// Switching should show no difference
 			{
@@ -2084,6 +2450,11 @@ func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Switching should show no difference
 			{
@@ -2300,7 +2671,7 @@ resource "aws_security_group" "sg" {
   vpc_id      = "${data.aws_vpc.default.id}"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami             = "${data.aws_ami.ubuntu.id}"
   instance_type   = "t2.micro"
   security_groups = ["${aws_security_group.sg.name}"]
@@ -2336,7 +2707,7 @@ resource "aws_security_group" "sg" {
   vpc_id      = "${data.aws_vpc.default.id}"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami                    = "${data.aws_ami.ubuntu.id}"
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.sg.id}"]
@@ -2371,7 +2742,7 @@ resource "aws_security_group" "sg" {
   description = "Test security group"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami             = "${data.aws_ami.ubuntu.id}"
   instance_type   = "m3.medium"
   security_groups = ["${aws_security_group.sg.name}"]
@@ -2381,9 +2752,9 @@ resource "aws_instance" "foo" {
 
 func testAccInstanceConfig_pre(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_foo" {
+resource "aws_security_group" "tf_test_test" {
   name        = "tf_test_%d"
-  description = "foo"
+  description = "test"
 
   ingress {
     protocol    = "icmp"
@@ -2397,9 +2768,9 @@ resource "aws_security_group" "tf_test_foo" {
 
 func testAccInstanceConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_foo" {
+resource "aws_security_group" "tf_test_test" {
   name        = "tf_test_%d"
-  description = "foo"
+  description = "test"
 
   ingress {
     protocol    = "icmp"
@@ -2409,13 +2780,13 @@ resource "aws_security_group" "tf_test_foo" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   # us-west-2
   ami               = "ami-4fccb37f"
   availability_zone = "us-west-2a"
 
   instance_type   = "m1.small"
-  security_groups = ["${aws_security_group.tf_test_foo.name}"]
+  security_groups = ["${aws_security_group.tf_test_test.name}"]
   user_data       = "foo:-with-character's"
 }
 `, rInt)
@@ -2423,9 +2794,9 @@ resource "aws_instance" "foo" {
 
 func testAccInstanceConfigWithUserDataBase64(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_foo" {
+resource "aws_security_group" "tf_test_test" {
   name        = "tf_test_%d"
-  description = "foo"
+  description = "test"
 
   ingress {
     protocol    = "icmp"
@@ -2435,20 +2806,20 @@ resource "aws_security_group" "tf_test_foo" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   # us-west-2
   ami               = "ami-4fccb37f"
   availability_zone = "us-west-2a"
 
   instance_type    = "m1.small"
-  security_groups  = ["${aws_security_group.tf_test_foo.name}"]
+  security_groups  = ["${aws_security_group.tf_test_test.name}"]
   user_data_base64 = "${base64encode("hello world")}"
 }
 `, rInt)
 }
 
 const testAccInstanceConfigWithSmallInstanceType = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-55a7ea65"
 	availability_zone = "us-west-2a"
@@ -2462,7 +2833,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigUpdateInstanceType = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-55a7ea65"
 	availability_zone = "us-west-2a"
@@ -2476,7 +2847,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceGP2IopsDevice = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-55a7ea65"
 
@@ -2493,7 +2864,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceGP2WithIopsValue = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-55a7ea65"
 
@@ -2512,7 +2883,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigBlockDevices = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-55a7ea65"
 
@@ -2553,57 +2924,57 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigSourceDestEnable = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-source-dest-enable"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-source-dest-enable"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 }
 `
 
 const testAccInstanceConfigSourceDestDisable = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-source-dest-disable"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-source-dest-disable"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 	source_dest_check = false
 }
 `
 
 func testAccInstanceConfigDisableAPITermination(val bool) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -2611,46 +2982,46 @@ resource "aws_vpc" "foo" {
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-instance-disable-api-termination"
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   # us-west-2
   ami                     = "ami-4fccb37f"
   instance_type           = "m1.small"
-  subnet_id               = "${aws_subnet.foo.id}"
+  subnet_id               = "${aws_subnet.test.id}"
   disable_api_termination = %t
 }
 `, val)
 }
 
 const testAccInstanceConfigVPC = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-vpc"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-vpc"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 	associate_public_ip_address = true
 	tenancy = "dedicated"
 	# pre-encoded base64 data
@@ -2660,7 +3031,7 @@ resource "aws_instance" "foo" {
 
 func testAccInstanceConfigPlacementGroup(rStr string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -2668,28 +3039,28 @@ resource "aws_vpc" "foo" {
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-instance-placement-group"
   }
 }
 
-resource "aws_placement_group" "foo" {
+resource "aws_placement_group" "test" {
   name     = "testAccInstanceConfigPlacementGroup_%s"
   strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   # us-west-2
   ami                         = "ami-55a7ea65"
   instance_type               = "c3.large"
-  subnet_id                   = "${aws_subnet.foo.id}"
+  subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
-  placement_group             = "${aws_placement_group.foo.name}"
+  placement_group             = "${aws_placement_group.test.name}"
 
   # pre-encoded base64 data
   user_data = "3dc39dda39be1205215e776bad998da361a5955d"
@@ -2698,7 +3069,7 @@ resource "aws_instance" "foo" {
 }
 
 const testAccInstanceConfigIpv6ErrorConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -2706,20 +3077,20 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 	tags = {
 		Name = "tf-acc-instance-ipv6-err"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-c5eabbf5"
 	instance_type = "t2.micro"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 	ipv6_addresses = ["2600:1f14:bb2:e501::10"]
 	ipv6_address_count = 1
 	tags = {
@@ -2729,7 +3100,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigIpv6Support = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -2737,20 +3108,20 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 	tags = {
 		Name = "tf-acc-instance-ipv6-support"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-c5eabbf5"
 	instance_type = "t2.micro"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 
 	ipv6_address_count = 1
 	tags = {
@@ -2760,7 +3131,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigIpv6SupportWithIpv4 = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -2768,20 +3139,20 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 	tags = {
 		Name = "tf-acc-instance-ipv6-support-with-ipv4"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	ami = "ami-c5eabbf5"
 	instance_type = "t2.micro"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 
 	associate_public_ip_address = true
 	ipv6_address_count = 1
@@ -2801,15 +3172,14 @@ provider "aws" {
 	alias = "east"
 	region = "us-east-1"
 }
-
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	# us-west-2
 	provider = "aws.west"
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
 }
 
-resource "aws_instance" "bar" {
+resource "aws_instance" "test2" {
 	# us-east-1
 	provider = "aws.east"
 	ami = "ami-8c6ea9e4"
@@ -2818,21 +3188,21 @@ resource "aws_instance" "bar" {
 `
 
 const testAccCheckInstanceConfigTags = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
 	tags = {
-		foo = "bar"
+		test = "test2"
 	}
 }
 `
 
 const testAccInstanceConfigEbsBlockDeviceKmsKeyArn = `
-resource "aws_kms_key" "foo" {
+resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   # us-west-2
   ami = "ami-55a7ea65"
 
@@ -2850,14 +3220,14 @@ resource "aws_instance" "foo" {
   ebs_block_device {
     device_name = "/dev/sdd"
     encrypted   = true
-    kms_key_id  = "${aws_kms_key.foo.arn}"
+    kms_key_id  = "${aws_kms_key.test.arn}"
     volume_size = 12
   }
 }
 `
 
 const testAccInstanceConfigRootBlockDeviceKmsKeyArn = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -2865,9 +3235,9 @@ resource "aws_vpc" "foo" {
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.test.id}"
   availability_zone = "us-west-2a"
 
   tags = {
@@ -2875,19 +3245,19 @@ resource "aws_subnet" "foo" {
   }
 }
 
-resource "aws_kms_key" "foo" {
+resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-08692d171e3cf02d6"
   instance_type = "t3.nano"
-  subnet_id     = "${aws_subnet.foo.id}"
+  subnet_id     = "${aws_subnet.test.id}"
 
   root_block_device {
     delete_on_termination = true
     encrypted             = true
-    kms_key_id            = "${aws_kms_key.foo.arn}"
+    kms_key_id            = "${aws_kms_key.test.arn}"
   }
 }
 `
@@ -2919,7 +3289,7 @@ data "aws_ami" "debian_jessie_latest" {
   owners = ["379101102735"] # Debian
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "${data.aws_ami.debian_jessie_latest.id}"
   instance_type = "t2.medium"
 
@@ -2935,7 +3305,7 @@ resource "aws_instance" "foo" {
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${aws_instance.foo.availability_zone}"
+  availability_zone = "${aws_instance.test.availability_zone}"
   size              = "10"
   type              = "gp2"
 
@@ -2947,12 +3317,12 @@ resource "aws_ebs_volume" "test" {
 resource "aws_volume_attachment" "test" {
   device_name = "/dev/xvdg"
   volume_id   = "${aws_ebs_volume.test.id}"
-  instance_id = "${aws_instance.foo.id}"
+  instance_id = "${aws_instance.test.id}"
 }
 `
 
 const testAccCheckInstanceConfigNoVolumeTags = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-55a7ea65"
 
 	instance_type = "m3.medium"
@@ -2986,7 +3356,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccCheckInstanceConfigWithVolumeTags = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-55a7ea65"
 
 	instance_type = "m3.medium"
@@ -3024,7 +3394,7 @@ resource "aws_instance" "foo" {
 `
 
 const testAccCheckInstanceConfigWithVolumeTagsUpdate = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-55a7ea65"
 
 	instance_type = "m3.medium"
@@ -3063,11 +3433,11 @@ resource "aws_instance" "foo" {
 `
 
 const testAccCheckInstanceConfigTagsUpdate = `
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-4fccb37f"
 	instance_type = "m1.small"
 	tags = {
-		bar = "baz"
+		test2 = "test3"
 	}
 }
 `
@@ -3079,12 +3449,12 @@ resource "aws_iam_role" "test" {
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-4fccb37f"
   instance_type = "m1.small"
 
   tags = {
-    bar = "baz"
+    test = "test3"
   }
 }
 `, rName)
@@ -3102,62 +3472,62 @@ resource "aws_iam_instance_profile" "test" {
   roles = ["${aws_iam_role.test.name}"]
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami                  = "ami-4fccb37f"
   instance_type        = "m1.small"
   iam_instance_profile = "${aws_iam_instance_profile.test.name}"
 
   tags = {
-    bar = "baz"
+    test = "test3"
   }
 }
 `, rName, rName)
 }
 
 const testAccInstanceConfigPrivateIP = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-private-ip"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-private-ip"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-c5eabbf5"
 	instance_type = "t2.micro"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 	private_ip = "10.1.1.42"
 }
 `
 
 const testAccInstanceConfigAssociatePublicIPAndPrivateIP = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-public-ip-and-private-ip"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-public-ip-and-private-ip"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-c5eabbf5"
 	instance_type = "t2.micro"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 	associate_public_ip_address = true
 	private_ip = "10.1.1.42"
 }
@@ -3166,10 +3536,10 @@ resource "aws_instance" "foo" {
 func testAccInstanceNetworkInstanceSecurityGroups(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.test.id}"
 }
 
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -3177,10 +3547,10 @@ resource "aws_vpc" "foo" {
   }
 }
 
-resource "aws_security_group" "tf_test_foo" {
+resource "aws_security_group" "test" {
   name        = "tf_test_%d"
-  description = "foo"
-  vpc_id      = "${aws_vpc.foo.id}"
+  description = "test"
+  vpc_id      = "${aws_vpc.test.id}"
 
   ingress {
     protocol    = "icmp"
@@ -3190,26 +3560,26 @@ resource "aws_security_group" "tf_test_foo" {
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-instance-network-security-groups"
   }
 }
 
-resource "aws_instance" "foo_instance" {
+resource "aws_instance" "test" {
   ami                         = "ami-21f78e11"
   instance_type               = "t1.micro"
-  vpc_security_group_ids      = ["${aws_security_group.tf_test_foo.id}"]
-  subnet_id                   = "${aws_subnet.foo.id}"
+  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
+  subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
   depends_on                  = ["aws_internet_gateway.gw"]
 }
 
-resource "aws_eip" "foo_eip" {
-  instance   = "${aws_instance.foo_instance.id}"
+resource "aws_eip" "test_eip" {
+  instance   = "${aws_instance.test.id}"
   vpc        = true
   depends_on = ["aws_internet_gateway.gw"]
 }
@@ -3219,10 +3589,10 @@ resource "aws_eip" "foo_eip" {
 func testAccInstanceNetworkInstanceVPCSecurityGroupIDs(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.test.id}"
 }
 
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -3230,10 +3600,10 @@ resource "aws_vpc" "foo" {
   }
 }
 
-resource "aws_security_group" "tf_test_foo" {
+resource "aws_security_group" "tf_test_test" {
   name        = "tf_test_%d"
-  description = "foo"
-  vpc_id      = "${aws_vpc.foo.id}"
+  description = "test"
+  vpc_id      = "${aws_vpc.test.id}"
 
   ingress {
     protocol    = "icmp"
@@ -3243,25 +3613,25 @@ resource "aws_security_group" "tf_test_foo" {
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-instance-network-vpc-sg-ids"
   }
 }
 
-resource "aws_instance" "foo_instance" {
+resource "aws_instance" "test" {
   ami                    = "ami-21f78e11"
   instance_type          = "t1.micro"
-  vpc_security_group_ids = ["${aws_security_group.tf_test_foo.id}"]
-  subnet_id              = "${aws_subnet.foo.id}"
+  vpc_security_group_ids = ["${aws_security_group.tf_test_test.id}"]
+  subnet_id              = "${aws_subnet.test.id}"
   depends_on             = ["aws_internet_gateway.gw"]
 }
 
-resource "aws_eip" "foo_eip" {
-  instance   = "${aws_instance.foo_instance.id}"
+resource "aws_eip" "test_eip" {
+  instance   = "${aws_instance.test.id}"
   vpc        = true
   depends_on = ["aws_internet_gateway.gw"]
 }
@@ -3271,10 +3641,10 @@ resource "aws_eip" "foo_eip" {
 func testAccInstanceNetworkInstanceVPCRemoveSecurityGroupIDs(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.test.id}"
 }
 
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -3282,10 +3652,10 @@ resource "aws_vpc" "foo" {
   }
 }
 
-resource "aws_security_group" "tf_test_foo" {
+resource "aws_security_group" "tf_test_test" {
   name        = "tf_test_%d"
-  description = "foo"
-  vpc_id      = "${aws_vpc.foo.id}"
+  description = "test"
+  vpc_id      = "${aws_vpc.test.id}"
 
   ingress {
     protocol    = "icmp"
@@ -3295,25 +3665,25 @@ resource "aws_security_group" "tf_test_foo" {
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.foo.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-instance-network-vpc-sg-ids"
   }
 }
 
-resource "aws_instance" "foo_instance" {
+resource "aws_instance" "test" {
   ami                    = "ami-21f78e11"
   instance_type          = "t1.micro"
   vpc_security_group_ids = []
-  subnet_id              = "${aws_subnet.foo.id}"
+  subnet_id              = "${aws_subnet.test.id}"
   depends_on             = ["aws_internet_gateway.gw"]
 }
 
-resource "aws_eip" "foo_eip" {
-  instance   = "${aws_instance.foo_instance.id}"
+resource "aws_eip" "test_eip" {
+  instance   = "${aws_instance.test.id}"
   vpc        = true
   depends_on = ["aws_internet_gateway.gw"]
 }
@@ -3330,12 +3700,11 @@ resource "aws_key_pair" "debugging" {
   key_name   = "%s"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
-
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-408c7f28"
   instance_type = "t1.micro"
   key_name      = "${aws_key_pair.debugging.key_name}"
-
+  
   tags = {
     Name = "testAccInstanceConfigKeyPair_TestAMI"
   }
@@ -3344,26 +3713,26 @@ resource "aws_instance" "foo" {
 }
 
 const testAccInstanceConfigRootBlockDeviceMismatch = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-root-block-device-mismatch"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-root-block-device-mismatch"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	// This is an AMI with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
 	ami = "ami-ef5b69df"
 	instance_type = "t1.micro"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 	root_block_device {
 		volume_size = 13
 	}
@@ -3371,61 +3740,61 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigForceNewAndTagsDrift = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-force-new-and-tags-drift"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-force-new-and-tags-drift"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-22b9a343"
 	instance_type = "t2.nano"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 }
 `
 
 const testAccInstanceConfigForceNewAndTagsDrift_Update = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-instance-force-new-and-tags-drift"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	tags = {
 		Name = "tf-acc-instance-force-new-and-tags-drift"
 	}
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-22b9a343"
 	instance_type = "t2.micro"
-	subnet_id = "${aws_subnet.foo.id}"
+	subnet_id = "${aws_subnet.test.id}"
 }
 `
 
 const testAccInstanceConfigPrimaryNetworkInterface = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
   tags = {
     Name = "terraform-testacc-instance-primary-network-iface"
   }
 }
 
-resource "aws_subnet" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags = {
@@ -3433,34 +3802,34 @@ resource "aws_subnet" "foo" {
   }
 }
 
-resource "aws_network_interface" "bar" {
-  subnet_id = "${aws_subnet.foo.id}"
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
   private_ips = ["172.16.10.100"]
   tags = {
     Name = "primary_network_interface"
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-22b9a343"
 	instance_type = "t2.micro"
 	network_interface {
-	 network_interface_id = "${aws_network_interface.bar.id}"
+	 network_interface_id = "${aws_network_interface.test.id}"
 	 device_index = 0
   }
 }
 `
 
 const testAccInstanceConfigPrimaryNetworkInterfaceSourceDestCheck = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
   tags = {
     Name = "terraform-testacc-instance-primary-network-iface-source-dest-check"
   }
 }
 
-resource "aws_subnet" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags = {
@@ -3468,8 +3837,8 @@ resource "aws_subnet" "foo" {
   }
 }
 
-resource "aws_network_interface" "bar" {
-  subnet_id = "${aws_subnet.foo.id}"
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
   private_ips = ["172.16.10.100"]
   source_dest_check = false
   tags = {
@@ -3477,26 +3846,26 @@ resource "aws_network_interface" "bar" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-22b9a343"
 	instance_type = "t2.micro"
 	network_interface {
-	 network_interface_id = "${aws_network_interface.bar.id}"
+	 network_interface_id = "${aws_network_interface.test.id}"
 	 device_index = 0
   }
 }
 `
 
 const testAccInstanceConfigAddSecondaryNetworkInterfaceBefore = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
   tags = {
     Name = "terraform-testacc-instance-add-secondary-network-iface"
   }
 }
 
-resource "aws_subnet" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags = {
@@ -3505,7 +3874,7 @@ resource "aws_subnet" "foo" {
 }
 
 resource "aws_network_interface" "primary" {
-  subnet_id = "${aws_subnet.foo.id}"
+  subnet_id = "${aws_subnet.test.id}"
   private_ips = ["172.16.10.100"]
   tags = {
     Name = "primary_network_interface"
@@ -3513,14 +3882,14 @@ resource "aws_network_interface" "primary" {
 }
 
 resource "aws_network_interface" "secondary" {
-  subnet_id = "${aws_subnet.foo.id}"
+  subnet_id = "${aws_subnet.test.id}"
   private_ips = ["172.16.10.101"]
   tags = {
     Name = "secondary_network_interface"
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-22b9a343"
 	instance_type = "t2.micro"
 	network_interface {
@@ -3531,15 +3900,15 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigAddSecondaryNetworkInterfaceAfter = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
   tags = {
     Name = "terraform-testacc-instance-add-secondary-network-iface"
   }
 }
 
-resource "aws_subnet" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
   cidr_block = "172.16.10.0/24"
   availability_zone = "us-west-2a"
   tags = {
@@ -3548,7 +3917,7 @@ resource "aws_subnet" "foo" {
 }
 
 resource "aws_network_interface" "primary" {
-  subnet_id = "${aws_subnet.foo.id}"
+  subnet_id = "${aws_subnet.test.id}"
   private_ips = ["172.16.10.100"]
   tags = {
     Name = "primary_network_interface"
@@ -3557,18 +3926,18 @@ resource "aws_network_interface" "primary" {
 
 // Attach previously created network interface, observe no state diff on instance resource
 resource "aws_network_interface" "secondary" {
-  subnet_id = "${aws_subnet.foo.id}"
+  subnet_id = "${aws_subnet.test.id}"
   private_ips = ["172.16.10.101"]
   tags = {
     Name = "secondary_network_interface"
   }
   attachment {
-    instance = "${aws_instance.foo.id}"
+    instance = "${aws_instance.test.id}"
     device_index = 1
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
 	ami = "ami-22b9a343"
 	instance_type = "t2.micro"
 	network_interface {
@@ -3579,132 +3948,132 @@ resource "aws_instance" "foo" {
 `
 
 const testAccInstanceConfigAddSecurityGroupBefore = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
     cidr_block = "172.16.0.0/16"
   tags = {
         Name = "terraform-testacc-instance-add-security-group"
     }
 }
 
-resource "aws_subnet" "foo" {
-    vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test" {
+    vpc_id = "${aws_vpc.test.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
   tags = {
-        Name = "tf-acc-instance-add-security-group-foo"
+        Name = "tf-acc-instance-add-security-group-test"
     }
 }
 
-resource "aws_subnet" "bar" {
-    vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test2" {
+    vpc_id = "${aws_vpc.test.id}"
     cidr_block = "172.16.11.0/24"
     availability_zone = "us-west-2a"
   tags = {
-        Name = "tf-acc-instance-add-security-group-bar"
+        Name = "tf-acc-instance-add-security-group-test2"
     }
 }
 
-resource "aws_security_group" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  description = "foo"
-  name = "foo"
+resource "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  description = "test"
+  name = "test"
 }
 
-resource "aws_security_group" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
-  description = "bar"
-  name = "bar"
+resource "aws_security_group" "test2" {
+  vpc_id = "${aws_vpc.test.id}"
+  description = "test2"
+  name = "test2"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
     ami = "ami-c5eabbf5"
     instance_type = "t2.micro"
-    subnet_id = "${aws_subnet.bar.id}"
+    subnet_id = "${aws_subnet.test.id}"
     associate_public_ip_address = false
     vpc_security_group_ids = [
-      "${aws_security_group.foo.id}"
+      "${aws_security_group.test.id}"
     ]
   tags = {
-        Name = "foo-instance-sg-add-test"
+        Name = "test-instance-sg-add-test"
     }
 }
 
-resource "aws_network_interface" "bar" {
-    subnet_id = "${aws_subnet.foo.id}"
+resource "aws_network_interface" "test" {
+    subnet_id = "${aws_subnet.test.id}"
     private_ips = ["172.16.10.100"]
-    security_groups = ["${aws_security_group.foo.id}"]
+    security_groups = ["${aws_security_group.test.id}"]
     attachment {
-        instance = "${aws_instance.foo.id}"
+        instance = "${aws_instance.test.id}"
         device_index = 1
     }
   tags = {
-        Name = "bar_interface"
+        Name = "test_interface"
     }
 }
 `
 
 const testAccInstanceConfigAddSecurityGroupAfter = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
     cidr_block = "172.16.0.0/16"
   tags = {
         Name = "terraform-testacc-instance-add-security-group"
     }
 }
 
-resource "aws_subnet" "foo" {
-    vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test" {
+    vpc_id = "${aws_vpc.test.id}"
     cidr_block = "172.16.10.0/24"
     availability_zone = "us-west-2a"
   tags = {
-        Name = "tf-acc-instance-add-security-group-foo"
+        Name = "tf-acc-instance-add-security-group-test"
     }
 }
 
-resource "aws_subnet" "bar" {
-    vpc_id = "${aws_vpc.foo.id}"
+resource "aws_subnet" "test2" {
+    vpc_id = "${aws_vpc.test.id}"
     cidr_block = "172.16.11.0/24"
     availability_zone = "us-west-2a"
   tags = {
-        Name = "tf-acc-instance-add-security-group-bar"
+        Name = "tf-acc-instance-add-security-group-test"
     }
 }
 
-resource "aws_security_group" "foo" {
-  vpc_id = "${aws_vpc.foo.id}"
-  description = "foo"
-  name = "foo"
+resource "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  description = "test"
+  name = "test"
 }
 
-resource "aws_security_group" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
-  description = "bar"
-  name = "bar"
+resource "aws_security_group" "test2" {
+  vpc_id = "${aws_vpc.test.id}"
+  description = "test2"
+  name = "test2"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
     ami = "ami-c5eabbf5"
     instance_type = "t2.micro"
-    subnet_id = "${aws_subnet.bar.id}"
+    subnet_id = "${aws_subnet.test.id}"
     associate_public_ip_address = false
     vpc_security_group_ids = [
-      "${aws_security_group.foo.id}",
-      "${aws_security_group.bar.id}"
+      "${aws_security_group.test.id}",
+      "${aws_security_group.test2.id}"
     ]
   tags = {
-        Name = "foo-instance-sg-add-test"
+        Name = "test-instance-sg-add-test"
     }
 }
 
-resource "aws_network_interface" "bar" {
-    subnet_id = "${aws_subnet.foo.id}"
+resource "aws_network_interface" "test" {
+    subnet_id = "${aws_subnet.test.id}"
     private_ips = ["172.16.10.100"]
-    security_groups = ["${aws_security_group.foo.id}"]
+    security_groups = ["${aws_security_group.test.id}"]
     attachment {
-        instance = "${aws_instance.foo.id}"
+        instance = "${aws_instance.test.id}"
         device_index = 1
     }
   tags = {
-        Name = "bar_interface"
+        Name = "test_interface"
     }
 }
 `
@@ -3730,7 +4099,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-22b9a343"                   # us-west-2
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.public_subnet.id}"
@@ -3763,7 +4132,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-22b9a343"                   # us-west-2
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.public_subnet.id}"
@@ -3796,7 +4165,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami                         = "ami-22b9a343"                   # us-west-2
   instance_type               = "t2.micro"
   subnet_id                   = "${aws_subnet.public_subnet.id}"
@@ -3830,7 +4199,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami                         = "ami-22b9a343"                   # us-west-2
   instance_type               = "t2.micro"
   subnet_id                   = "${aws_subnet.public_subnet.id}"
@@ -3864,7 +4233,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami                         = "ami-22b9a343"                   # us-west-2
   instance_type               = "t2.micro"
   subnet_id                   = "${aws_subnet.public_subnet.id}"
@@ -3898,7 +4267,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami                         = "ami-22b9a343"                   # us-west-2
   instance_type               = "t2.micro"
   subnet_id                   = "${aws_subnet.public_subnet.id}"
@@ -3924,19 +4293,98 @@ data "aws_ami" "win2016core" {
   }
 }
 
-resource "aws_key_pair" "foo" {
+resource "aws_key_pair" "test" {
   key_name   = "tf-acctest-%d"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "${data.aws_ami.win2016core.id}"
   instance_type = "t2.medium"
-  key_name      = "${aws_key_pair.foo.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 
   get_password_data = %t
 }
 `, rInt, val)
+}
+
+func testAccInstanceConfig_CreditSpecification_Empty_NonBurstable(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "m5.large"
+  subnet_id     = "${aws_subnet.test.id}"
+
+  credit_specification {}
+}
+`, rName)
+}
+
+func testAccInstanceConfig_CreditSpecification_Unspecified_NonBurstable(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "172.16.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "172.16.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "m5.large"
+  subnet_id     = "${aws_subnet.test.id}"
+}
+`, rName)
 }
 
 func testAccInstanceConfig_creditSpecification_unspecified(rInt int) string {
@@ -3955,7 +4403,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-22b9a343"               # us-west-2
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.my_subnet.id}"
@@ -3979,7 +4427,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-51537029"               # us-west-2
   instance_type = "t3.micro"
   subnet_id     = "${aws_subnet.my_subnet.id}"
@@ -4004,7 +4452,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-22b9a343"               # us-west-2
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.my_subnet.id}"
@@ -4032,7 +4480,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-51537029"               # us-west-2
   instance_type = "t3.micro"
   subnet_id     = "${aws_subnet.my_subnet.id}"
@@ -4060,7 +4508,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-22b9a343"               # us-west-2
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.my_subnet.id}"
@@ -4088,7 +4536,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-51537029"               # us-west-2
   instance_type = "t3.micro"
   subnet_id     = "${aws_subnet.my_subnet.id}"
@@ -4116,7 +4564,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-22b9a343"               # us-west-2
   instance_type = "m1.small"
   subnet_id     = "${aws_subnet.my_subnet.id}"
@@ -4144,7 +4592,7 @@ resource "aws_subnet" "my_subnet" {
   availability_zone = "us-west-2a"
 }
 
-resource "aws_instance" "foo" {
+resource "aws_instance" "test" {
   ami           = "ami-51537029"               # us-west-2
   instance_type = %q
   subnet_id     = "${aws_subnet.my_subnet.id}"

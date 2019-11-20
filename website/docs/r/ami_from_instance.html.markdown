@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami_from_instance"
-sidebar_current: "docs-aws-resource-ami-from-instance"
 description: |-
   Creates an Amazon Machine Image (AMI) from an EBS-backed EC2 instance
 ---

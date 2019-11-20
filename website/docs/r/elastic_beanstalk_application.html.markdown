@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_application"
-sidebar_current: "docs-aws-resource-elastic-beanstalk-application"
 description: |-
   Provides an Elastic Beanstalk Application Resource
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Map Reduce (EMR)"
 layout: "aws"
 page_title: "AWS: aws_emr_security_configuration"
-sidebar_current: "docs-aws-resource-emr-security-configuration"
 description: |-
   Provides a resource to manage AWS EMR Security Configurations
 ---

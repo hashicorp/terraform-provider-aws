@@ -1,7 +1,7 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pools"
-sidebar_current: "docs-aws-cognito-user-pools"
 description: |-
   Get list of cognito user pools.
 ---

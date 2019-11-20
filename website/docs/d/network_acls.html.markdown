@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acls"
-sidebar_current: "docs-aws-datasource-network-acls"
 description: |-
     Provides a list of network ACL ids for a VPC
 ---

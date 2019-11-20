@@ -1,7 +1,7 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_instance"
-sidebar_current: "docs-aws-resource-docdb-cluster-instance"
 description: |-
   Provides an DocDB Cluster Resource Instance
 ---

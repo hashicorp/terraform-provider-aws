@@ -1,7 +1,7 @@
 ---
+subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_account"
-sidebar_current: "docs-aws-resource-securityhub-account"
 description: |-
   Enables Security Hub for an AWS account.
 ---

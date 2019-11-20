@@ -1,7 +1,7 @@
 ---
+subcategory: "Transfer"
 layout: "aws"
 page_title: "AWS: aws_transfer_server"
-sidebar_current: "docs-aws-datasource-transfer-server"
 description: |-
   Get information on an AWS Transfer Server resource
 ---

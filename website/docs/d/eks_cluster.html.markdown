@@ -1,7 +1,7 @@
 ---
+subcategory: "EKS"
 layout: "aws"
 page_title: "AWS: aws_eks_cluster"
-sidebar_current: "docs-aws-datasource-eks-cluster"
 description: |-
   Retrieve information about an EKS Cluster
 ---
@@ -50,6 +50,7 @@ output "identity-oidc-issuer" {
 * `platform_version` - The platform version for the cluster.
 * `role_arn` - The Amazon Resource Name (ARN) of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
+* `tags` - Key-value mapping of resource tags.
 * `version` - The Kubernetes server version for the cluster.
 * `vpc_config` - Nested attribute containing VPC configuration for the cluster.
   * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.

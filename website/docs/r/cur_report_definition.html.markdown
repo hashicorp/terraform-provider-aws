@@ -1,7 +1,7 @@
 ---
+subcategory: "Cost and Usage Report"
 layout: "aws"
 page_title: "AWS: aws_cur_report_definition"
-sidebar_current: "docs-aws-resource-cur-report-definition"
 description: |-
   Provides a Cost and Usage Report Definition.
 ---
