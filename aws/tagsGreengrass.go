@@ -114,3 +114,12 @@ func tagIgnoredGreengrass(tagKey, tagValue string) bool {
 	}
 	return false
 }
+
+// Parse tags from schema to map[string]*string interface
+func parseTagsSchemaAsMap(rawTags map[string]interface{}) map[string]*string {
+	tags := make(map[string]*string)
+	for key, value := range rawTags {
+		tags[key] = aws.String(value.(string))
+	}
+	return tags
+}
