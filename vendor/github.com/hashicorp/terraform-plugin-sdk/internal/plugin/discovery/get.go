@@ -43,13 +43,6 @@ func init() {
 	getter.Getters["https"] = httpGetter
 }
 
-// An Installer maintains a local cache of plugins by downloading plugins
-// from an online repository.
-type Installer interface {
-	Get(provider addrs.ProviderType, req Constraints) (PluginMeta, tfdiags.Diagnostics, error)
-	PurgeUnused(used map[string]PluginMeta) (removed PluginMetaSet, err error)
-}
-
 // ProviderInstaller is an Installer implementation that knows how to
 // download Terraform providers from the official HashiCorp releases service
 // into a local directory. The files downloaded are compliant with the
