@@ -122,11 +122,7 @@ func resourceAwsGreengrassConnectorDefinitionCreate(d *schema.ResourceData, meta
 	}
 
 	if rawTags := d.Get("tags").(map[string]interface{}); len(rawTags) > 0 {
-		tags := make(map[string]*string)
-		for key, value := range rawTags {
-			tags[key] = aws.String(value.(string))
-		}
-		params.Tags = tags
+		params.Tags = parseTagsSchemaAsMap(rawTags)
 	}
 
 	log.Printf("[DEBUG] Creating Greengrass Connector Definition: %s", params)
