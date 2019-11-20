@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * provider: Support for EC2 Metadata secure tokens [GH-10940]
+* resource/aws_glue_job: Add `number_of_workers` and `worker_type` arguments [GH-9115]
 * resource/aws_glue_trigger: Add `workflow_name` argument [GH-9762]
 * resource/aws_glue_trigger: Add `actions` configuration block `crawler_name` argument [GH-10190]
 * resource/aws_glue_trigger: Add `predicate` `conditions` configuration block `crawler_name` and `crawl_state` arguments [GH-10190]
