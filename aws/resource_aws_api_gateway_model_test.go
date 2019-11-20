@@ -16,6 +16,7 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	var conf apigateway.Model
 	rInt := acctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
+	modelName := fmt.Sprintf("tfacctest%s", rInt)
 	resourceName := "aws_api_gateway_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,12 +25,12 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayModelConfig(rName, rInt),
+				Config: testAccAWSAPIGatewayModelConfig(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayModelExists(resourceName, rInt, &conf),
-					testAccCheckAWSAPIGatewayModelAttributes(&conf, rInt),
+					testAccCheckAWSAPIGatewayModelExists(resourceName, modelName, &conf),
+					testAccCheckAWSAPIGatewayModelAttributes(&conf, modelName),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", rInt),
+						resourceName, "name", modelName),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "a test schema"),
 					resource.TestCheckResourceAttr(
@@ -138,7 +139,7 @@ func testAccAWSAPIGatewayModelImportStateIdFunc(resourceName string) resource.Im
 	}
 }
 
-func testAccAWSAPIGatewayModelConfig(rName, rInt string) string {
+func testAccAWSAPIGatewayModelConfig(rName, modelName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -155,5 +156,5 @@ resource "aws_api_gateway_model" "test" {
 }
 EOF
 }
-`, rName, rInt)
+`, rName, modelName)
 }
