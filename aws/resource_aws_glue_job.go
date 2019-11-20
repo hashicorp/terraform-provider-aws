@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -122,13 +121,17 @@ func resourceAwsGlueJob() *schema.Resource {
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"allocated_capacity", "max_capacity", "allocated_capacity"},
-				ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^Standard|G.1X|G.2X`), "Must be one of Standard, G.1X or G.2X. See https://docs.aws.amazon.com/glue/latest/dg/aws-glue-api-jobs-job.html"),
+				ConflictsWith: []string{"allocated_capacity", "max_capacity"},
+				ValidateFunc:  validation.StringInSlice([]string{
+					glue.WorkerTypeG1x,
+					glue.WorkerTypeG2x,
+					glue.WorkerTypeStandard,
+				}, false),
 			},
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ConflictsWith: []string{"allocated_capacity", "max_capacity", "allocated_capacity"},
+				ConflictsWith: []string{"allocated_capacity", "max_capacity"},
 				ValidateFunc:  validation.IntAtLeast(2),
 			},
 		},
