@@ -217,6 +217,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 				Required: true,
 			},
 
+			"max_instance_lifetime": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+
 			"default_cooldown": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -579,6 +584,10 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 		createOpts.ServiceLinkedRoleARN = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("max_instance_lifetime"); ok {
+		createOpts.MaxInstanceLifetime = aws.Int64(int64(v.(int)))
+	}
+
 	log.Printf("[DEBUG] AutoScaling Group create configuration: %#v", createOpts)
 
 	// Retry for IAM eventual consistency
@@ -694,6 +703,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
+	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
 
 	if err := d.Set("suspended_processes", flattenAsgSuspendedProcesses(g.SuspendedProcesses)); err != nil {
 		return fmt.Errorf("error setting suspended_processes: %s", err)
@@ -881,6 +891,10 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("max_size") {
 		opts.MaxSize = aws.Int64(int64(d.Get("max_size").(int)))
+	}
+
+	if d.HasChange("max_instance_lifetime") {
+		opts.MaxInstanceLifetime = aws.Int64(int64(d.Get("max_instance_lifetime").(int)))
 	}
 
 	if d.HasChange("health_check_grace_period") {
