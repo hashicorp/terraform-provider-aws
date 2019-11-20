@@ -551,6 +551,41 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig(t *testing.T) {
+	var project codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.3389748318.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.3389748318.git_submodules_config.0.fetch_submodules", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "source.3338377709.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.3338377709.git_submodules_config.0.fetch_submodules", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 	var project codebuild.Project
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2475,6 +2510,40 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName, gitCloneDepth)
+}
+
+func testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig(rName string, fetchSubmodules bool) string {
+	fetchSubmodulesValue := "false"
+
+	if fetchSubmodules {
+		fetchSubmodulesValue = "true"
+	}
+
+	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = "%s"
+  service_role = "${aws_iam_role.test.arn}"
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    git_submodules_config {
+      fetch_submodules = %s
+    }
+
+    location = "https://git-codecommit.region-id.amazonaws.com/v1/repos/repo-name"
+    type     = "CODECOMMIT"
+  }
+}
+`, rName, fetchSubmodulesValue)
 }
 
 func testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName string, insecureSSL bool) string {
