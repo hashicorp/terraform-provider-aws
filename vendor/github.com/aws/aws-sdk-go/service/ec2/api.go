@@ -39167,6 +39167,8 @@ type CopySnapshotInput struct {
 	//
 	// SourceSnapshotId is a required field
 	SourceSnapshotId *string `type:"string" required:"true"`
+
+	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -39243,12 +39245,20 @@ func (s *CopySnapshotInput) SetSourceSnapshotId(v string) *CopySnapshotInput {
 	return s
 }
 
+// SetTagSpecifications sets the TagSpecifications field's value.
+func (s *CopySnapshotInput) SetTagSpecifications(v []*TagSpecification) *CopySnapshotInput {
+	s.TagSpecifications = v
+	return s
+}
+
 // Contains the output of CopySnapshot.
 type CopySnapshotOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the new snapshot.
 	SnapshotId *string `locationName:"snapshotId" type:"string"`
+
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -39264,6 +39274,12 @@ func (s CopySnapshotOutput) GoString() string {
 // SetSnapshotId sets the SnapshotId field's value.
 func (s *CopySnapshotOutput) SetSnapshotId(v string) *CopySnapshotOutput {
 	s.SnapshotId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CopySnapshotOutput) SetTags(v []*Tag) *CopySnapshotOutput {
+	s.Tags = v
 	return s
 }
 

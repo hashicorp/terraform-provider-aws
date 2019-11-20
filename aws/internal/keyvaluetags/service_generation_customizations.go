@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -124,6 +125,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(cloudfront.New)
 	case "cloudhsmv2":
 		funcType = reflect.TypeOf(cloudhsmv2.New)
+	case "cloudtrail":
+		funcType = reflect.TypeOf(cloudtrail.New)
 	case "cloudwatch":
 		funcType = reflect.TypeOf(cloudwatch.New)
 	case "cloudwatchevents":
