@@ -115,7 +115,7 @@ func testSweepDirectConnectGateways(region string) error {
 	return nil
 }
 
-func TestAccAwsDxGateway_importBasic(t *testing.T) {
+func TestAccAwsDxGateway_basic(t *testing.T) {
 	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -125,8 +125,11 @@ func TestAccAwsDxGateway_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayExists(resourceName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -136,7 +139,7 @@ func TestAccAwsDxGateway_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDxGateway_importComplex(t *testing.T) {
+func TestAccAwsDxGateway_complex(t *testing.T) {
 	checkFn := func(s []*terraform.InstanceState) error {
 		if len(s) != 3 {
 			return fmt.Errorf("Got %d resources, expected 3. State: %#v", len(s), s)
@@ -147,6 +150,7 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 	rName1 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rName2 := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
 	rBgpAsn := randIntRange(64512, 65534)
+	resourceName := "aws_dx_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -155,30 +159,16 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName1, rName2, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayExists(resourceName),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_account_id"),
+				),
 			},
-
 			{
-				ResourceName:      "aws_dx_gateway.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateCheck:  checkFn,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAwsDxGateway_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDxGatewayConfig(acctest.RandString(5), randIntRange(64512, 65534)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxGatewayExists("aws_dx_gateway.test"),
-					testAccCheckResourceAttrAccountID("aws_dx_gateway.test", "owner_account_id"),
-				),
 			},
 		},
 	})

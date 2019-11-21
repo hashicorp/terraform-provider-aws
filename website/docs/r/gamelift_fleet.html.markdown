@@ -1,4 +1,5 @@
 ---
+subcategory: "Gamelift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_fleet"
 description: |-
@@ -73,6 +74,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Fleet ID.
 * `arn` - Fleet ARN.
 * `operating_system` - Operating system of the fleet's computing resources.
+
+## Timeouts
+
+`aws_gamelift_fleet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `70m`) How long to wait for a fleet to be created.
+* `delete` - (Default `20m`) How long to wait for a fleet to be deleted.
 
 ## Import
 

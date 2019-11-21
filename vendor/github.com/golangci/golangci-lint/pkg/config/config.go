@@ -116,9 +116,13 @@ type Run struct {
 
 	ExitCodeIfIssuesFound int  `mapstructure:"issues-exit-code"`
 	AnalyzeTests          bool `mapstructure:"tests"`
-	Deadline              time.Duration
-	PrintVersion          bool
 
+	// Deprecated: Deadline exists for historical compatibility
+	// and should not be used. To set run timeout use Timeout instead.
+	Deadline time.Duration
+	Timeout  time.Duration
+
+	PrintVersion       bool
 	SkipFiles          []string `mapstructure:"skip-files"`
 	SkipDirs           []string `mapstructure:"skip-dirs"`
 	UseDefaultSkipDirs bool     `mapstructure:"skip-dirs-use-default"`
@@ -172,9 +176,11 @@ type LintersSettings struct {
 		Statements int
 	}
 	Whitespace struct {
-		MultiIf bool `mapstructure:"multi-if"`
+		MultiIf   bool `mapstructure:"multi-if"`
+		MultiFunc bool `mapstructure:"multi-func"`
 	}
 
+	WSL      WSLSettings
 	Lll      LllSettings
 	Unparam  UnparamSettings
 	Nakedret NakedretSettings
@@ -183,6 +189,7 @@ type LintersSettings struct {
 	Gocritic GocriticSettings
 	Godox    GodoxSettings
 	Dogsled  DogsledSettings
+	Gocognit GocognitSettings
 }
 
 type GovetSettings struct {
@@ -243,6 +250,18 @@ type DogsledSettings struct {
 	MaxBlankIdentifiers int `mapstructure:"max-blank-identifiers"`
 }
 
+type GocognitSettings struct {
+	MinComplexity int `mapstructure:"min-complexity"`
+}
+
+type WSLSettings struct {
+	StrictAppend                bool `mapstructure:"strict-append"`
+	AllowAssignAndCallCuddle    bool `mapstructure:"allow-assign-and-call"`
+	AllowMultiLineAssignCuddle  bool `mapstructure:"allow-multiline-assign"`
+	AllowCaseTrailingWhitespace bool `mapstructure:"allow-case-trailing-whitespace"`
+	AllowCuddleDeclaration      bool `mapstructure:"allow-cuddle-declarations"`
+}
+
 var defaultLintersSettings = LintersSettings{
 	Lll: LllSettings{
 		LineLength: 120,
@@ -267,6 +286,16 @@ var defaultLintersSettings = LintersSettings{
 	},
 	Dogsled: DogsledSettings{
 		MaxBlankIdentifiers: 2,
+	},
+	Gocognit: GocognitSettings{
+		MinComplexity: 30,
+	},
+	WSL: WSLSettings{
+		StrictAppend:                true,
+		AllowAssignAndCallCuddle:    true,
+		AllowMultiLineAssignCuddle:  true,
+		AllowCaseTrailingWhitespace: true,
+		AllowCuddleDeclaration:      false,
 	},
 }
 
@@ -339,7 +368,7 @@ type Issues struct {
 	NeedFix bool `mapstructure:"fix"`
 }
 
-type Config struct { //nolint:maligned
+type Config struct {
 	Run Run
 
 	Output struct {

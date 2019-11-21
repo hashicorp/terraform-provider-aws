@@ -90,6 +90,22 @@ func Provider() terraform.ResourceProvider {
 
 			"endpoints": endpointsSchema(),
 
+			"ignore_tag_prefixes": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag key prefixes to ignore across all resources.",
+			},
+
+			"ignore_tags": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Set:         schema.HashString,
+				Description: "Resource tag keys to ignore across all resources.",
+			},
+
 			"insecure": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -205,6 +221,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_elb_hosted_zone_id":                        dataSourceAwsElbHostedZoneId(),
 			"aws_elb_service_account":                       dataSourceAwsElbServiceAccount(),
 			"aws_glue_script":                               dataSourceAwsGlueScript(),
+			"aws_guardduty_detector":                        dataSourceAwsGuarddutyDetector(),
 			"aws_iam_account_alias":                         dataSourceAwsIamAccountAlias(),
 			"aws_iam_group":                                 dataSourceAwsIAMGroup(),
 			"aws_iam_instance_profile":                      dataSourceAwsIAMInstanceProfile(),
@@ -241,6 +258,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_partition":                                 dataSourceAwsPartition(),
 			"aws_prefix_list":                               dataSourceAwsPrefixList(),
 			"aws_pricing_product":                           dataSourceAwsPricingProduct(),
+			"aws_qldb_ledger":                               dataSourceAwsQLDBLedger(),
 			"aws_ram_resource_share":                        dataSourceAwsRamResourceShare(),
 			"aws_rds_cluster":                               dataSourceAwsRdsCluster(),
 			"aws_redshift_cluster":                          dataSourceAwsRedshiftCluster(),
@@ -279,9 +297,11 @@ func Provider() terraform.ResourceProvider {
 			"aws_vpn_gateway":                               dataSourceAwsVpnGateway(),
 			"aws_waf_ipset":                                 dataSourceAwsWafIpSet(),
 			"aws_waf_rule":                                  dataSourceAwsWafRule(),
+			"aws_waf_rate_based_rule":                       dataSourceAwsWafRateBasedRule(),
 			"aws_waf_web_acl":                               dataSourceAwsWafWebAcl(),
 			"aws_wafregional_ipset":                         dataSourceAwsWafRegionalIpSet(),
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
+			"aws_wafregional_rate_based_rule":               dataSourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
@@ -480,6 +500,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_eip":                                                 resourceAwsEip(),
 			"aws_eip_association":                                     resourceAwsEipAssociation(),
 			"aws_eks_cluster":                                         resourceAwsEksCluster(),
+			"aws_eks_node_group":                                      resourceAwsEksNodeGroup(),
 			"aws_elasticache_cluster":                                 resourceAwsElasticacheCluster(),
 			"aws_elasticache_parameter_group":                         resourceAwsElasticacheParameterGroup(),
 			"aws_elasticache_replication_group":                       resourceAwsElasticacheReplicationGroup(),
@@ -519,6 +540,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_glue_job":                                            resourceAwsGlueJob(),
 			"aws_glue_security_configuration":                         resourceAwsGlueSecurityConfiguration(),
 			"aws_glue_trigger":                                        resourceAwsGlueTrigger(),
+			"aws_glue_workflow":                                       resourceAwsGlueWorkflow(),
 			"aws_guardduty_detector":                                  resourceAwsGuardDutyDetector(),
 			"aws_guardduty_invite_accepter":                           resourceAwsGuardDutyInviteAccepter(),
 			"aws_guardduty_ipset":                                     resourceAwsGuardDutyIpset(),
@@ -634,7 +656,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_organizations_organizational_unit":                   resourceAwsOrganizationsOrganizationalUnit(),
 			"aws_placement_group":                                     resourceAwsPlacementGroup(),
 			"aws_proxy_protocol_policy":                               resourceAwsProxyProtocolPolicy(),
+			"aws_qldb_ledger":                                         resourceAwsQLDBLedger(),
 			"aws_quicksight_group":                                    resourceAwsQuickSightGroup(),
+			"aws_quicksight_user":                                     resourceAwsQuickSightUser(),
 			"aws_ram_principal_association":                           resourceAwsRamPrincipalAssociation(),
 			"aws_ram_resource_association":                            resourceAwsRamResourceAssociation(),
 			"aws_ram_resource_share":                                  resourceAwsRamResourceShare(),
@@ -973,6 +997,7 @@ func init() {
 		"glacier",
 		"globalaccelerator",
 		"glue",
+		"greengrass",
 		"guardduty",
 		"iam",
 		"inspector",
@@ -1091,6 +1116,18 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		endpoints := endpointsSetI.(map[string]interface{})
 		for _, endpointServiceName := range endpointServiceNames {
 			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tag_prefixes"); ok {
+		for _, ignoreTagPrefixRaw := range v.(*schema.Set).List() {
+			config.IgnoreTagPrefixes = append(config.IgnoreTagPrefixes, ignoreTagPrefixRaw.(string))
+		}
+	}
+
+	if v, ok := d.GetOk("ignore_tags"); ok {
+		for _, ignoreTagRaw := range v.(*schema.Set).List() {
+			config.IgnoreTags = append(config.IgnoreTags, ignoreTagRaw.(string))
 		}
 	}
 

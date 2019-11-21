@@ -20304,6 +20304,30 @@ const (
 	// EC2InstanceTypeC48xlarge is a EC2InstanceType enum value
 	EC2InstanceTypeC48xlarge = "c4.8xlarge"
 
+	// EC2InstanceTypeC5Large is a EC2InstanceType enum value
+	EC2InstanceTypeC5Large = "c5.large"
+
+	// EC2InstanceTypeC5Xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeC5Xlarge = "c5.xlarge"
+
+	// EC2InstanceTypeC52xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeC52xlarge = "c5.2xlarge"
+
+	// EC2InstanceTypeC54xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeC54xlarge = "c5.4xlarge"
+
+	// EC2InstanceTypeC59xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeC59xlarge = "c5.9xlarge"
+
+	// EC2InstanceTypeC512xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeC512xlarge = "c5.12xlarge"
+
+	// EC2InstanceTypeC518xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeC518xlarge = "c5.18xlarge"
+
+	// EC2InstanceTypeC524xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeC524xlarge = "c5.24xlarge"
+
 	// EC2InstanceTypeR3Large is a EC2InstanceType enum value
 	EC2InstanceTypeR3Large = "r3.large"
 
@@ -20337,6 +20361,30 @@ const (
 	// EC2InstanceTypeR416xlarge is a EC2InstanceType enum value
 	EC2InstanceTypeR416xlarge = "r4.16xlarge"
 
+	// EC2InstanceTypeR5Large is a EC2InstanceType enum value
+	EC2InstanceTypeR5Large = "r5.large"
+
+	// EC2InstanceTypeR5Xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeR5Xlarge = "r5.xlarge"
+
+	// EC2InstanceTypeR52xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeR52xlarge = "r5.2xlarge"
+
+	// EC2InstanceTypeR54xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeR54xlarge = "r5.4xlarge"
+
+	// EC2InstanceTypeR58xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeR58xlarge = "r5.8xlarge"
+
+	// EC2InstanceTypeR512xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeR512xlarge = "r5.12xlarge"
+
+	// EC2InstanceTypeR516xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeR516xlarge = "r5.16xlarge"
+
+	// EC2InstanceTypeR524xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeR524xlarge = "r5.24xlarge"
+
 	// EC2InstanceTypeM3Medium is a EC2InstanceType enum value
 	EC2InstanceTypeM3Medium = "m3.medium"
 
@@ -20363,6 +20411,30 @@ const (
 
 	// EC2InstanceTypeM410xlarge is a EC2InstanceType enum value
 	EC2InstanceTypeM410xlarge = "m4.10xlarge"
+
+	// EC2InstanceTypeM5Large is a EC2InstanceType enum value
+	EC2InstanceTypeM5Large = "m5.large"
+
+	// EC2InstanceTypeM5Xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeM5Xlarge = "m5.xlarge"
+
+	// EC2InstanceTypeM52xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeM52xlarge = "m5.2xlarge"
+
+	// EC2InstanceTypeM54xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeM54xlarge = "m5.4xlarge"
+
+	// EC2InstanceTypeM58xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeM58xlarge = "m5.8xlarge"
+
+	// EC2InstanceTypeM512xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeM512xlarge = "m5.12xlarge"
+
+	// EC2InstanceTypeM516xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeM516xlarge = "m5.16xlarge"
+
+	// EC2InstanceTypeM524xlarge is a EC2InstanceType enum value
+	EC2InstanceTypeM524xlarge = "m5.24xlarge"
 )
 
 const (
@@ -20633,6 +20705,9 @@ const (
 
 	// OperatingSystemAmazonLinux is a OperatingSystem enum value
 	OperatingSystemAmazonLinux = "AMAZON_LINUX"
+
+	// OperatingSystemAmazonLinux2 is a OperatingSystem enum value
+	OperatingSystemAmazonLinux2 = "AMAZON_LINUX_2"
 )
 
 const (

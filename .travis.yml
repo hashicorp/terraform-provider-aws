@@ -21,6 +21,7 @@ matrix:
     - go: "1.13.x"
       name: "Website"
       script:
+        - make docscheck
         - make website-test
         - make website-lint
 

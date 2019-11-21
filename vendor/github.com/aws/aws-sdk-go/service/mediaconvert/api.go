@@ -954,10 +954,12 @@ func (c *MediaConvert) DescribeEndpointsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1542,10 +1544,12 @@ func (c *MediaConvert) ListJobTemplatesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1689,10 +1693,12 @@ func (c *MediaConvert) ListJobsPagesWithContext(ctx aws.Context, input *ListJobs
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1835,10 +1841,12 @@ func (c *MediaConvert) ListPresetsPagesWithContext(ctx aws.Context, input *ListP
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPresetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPresetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1981,10 +1989,12 @@ func (c *MediaConvert) ListQueuesPagesWithContext(ctx aws.Context, input *ListQu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListQueuesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListQueuesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2781,7 +2791,8 @@ func (s *Ac3Settings) SetSampleRate(v int64) *Ac3Settings {
 type AccelerationSettings struct {
 	_ struct{} `type:"structure"`
 
-	// Acceleration configuration for the job.
+	// Specify the conditions when the service will run your job with accelerated
+	// transcoding.
 	//
 	// Mode is a required field
 	Mode *string `locationName:"mode" type:"string" required:"true" enum:"AccelerationMode"`
@@ -3191,12 +3202,16 @@ type AudioDescription struct {
 	// * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
 	CodecSettings *AudioCodecSettings `locationName:"codecSettings" type:"structure"`
 
-	// Specify the language for this audio output track, using the ISO 639-2 or
-	// ISO 639-3 three-letter language code. The language specified will be used
-	// when 'Follow Input Language Code' is not selected or when 'Follow Input Language
-	// Code' is selected but there is no ISO 639 language code specified by the
-	// input.
-	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+	// Specify the language for this audio output track. The service puts this language
+	// code into your output audio track when you set Language code control (AudioLanguageCodeControl)
+	// to Use configured (USE_CONFIGURED). The service also uses your specified
+	// custom language code when you set Language code control (AudioLanguageCodeControl)
+	// to Follow input (FOLLOW_INPUT), but your input file doesn't specify a language
+	// code. For all outputs, you can use an ISO 639-2 or ISO 639-3 code. For streaming
+	// outputs, you can also use any other code in the full RFC-5646 specification.
+	// Streaming outputs are those that are in one of the following output groups:
+	// CMAF, DASH ISO, Apple HLS, or Microsoft Smooth Streaming.
+	CustomLanguageCode *string `locationName:"customLanguageCode" type:"string"`
 
 	// Indicates the language of the audio output track. The ISO 639 language specified
 	// in the 'Language Code' drop down will be used when 'Follow Input Language
@@ -3204,10 +3219,12 @@ type AudioDescription struct {
 	// there is no ISO 639 language code specified by the input.
 	LanguageCode *string `locationName:"languageCode" type:"string" enum:"LanguageCode"`
 
-	// Choosing FOLLOW_INPUT will cause the ISO 639 language code of the output
-	// to follow the ISO 639 language code of the input. The language specified
-	// for languageCode' will be used when USE_CONFIGURED is selected or when FOLLOW_INPUT
-	// is selected but there is no ISO 639 language code specified by the input.
+	// Specify which source for language code takes precedence for this audio track.
+	// When you choose Follow input (FOLLOW_INPUT), the service uses the language
+	// code from the input track if it's present. If there's no languge code on
+	// the input track, the service uses the code that you specify in the setting
+	// Language code (languageCode or customLanguageCode). When you choose Use configured
+	// (USE_CONFIGURED), the service uses the language code that you specify.
 	LanguageCodeControl *string `locationName:"languageCodeControl" type:"string" enum:"AudioLanguageCodeControl"`
 
 	// Advanced audio remixing settings.
@@ -3233,9 +3250,6 @@ func (s AudioDescription) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *AudioDescription) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "AudioDescription"}
-	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
-		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
-	}
 	if s.AudioNormalizationSettings != nil {
 		if err := s.AudioNormalizationSettings.Validate(); err != nil {
 			invalidParams.AddNested("AudioNormalizationSettings", err.(request.ErrInvalidParams))
@@ -3932,13 +3946,16 @@ type CaptionDescription struct {
 	// each input.
 	CaptionSelectorName *string `locationName:"captionSelectorName" min:"1" type:"string"`
 
-	// Indicates the language of the caption output track, using the ISO 639-2 or
-	// ISO 639-3 three-letter language code. For most captions output formats, the
-	// encoder puts this language information in the output captions metadata. If
-	// your output captions format is DVB-Sub or Burn in, the encoder uses this
-	// language information to choose the font language for rendering the captions
-	// text.
-	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+	// Specify the language for this captions output track. For most captions output
+	// formats, the encoder puts this language information in the output captions
+	// metadata. If your output captions format is DVB-Sub or Burn in, the encoder
+	// uses this language information when automatically selecting the font script
+	// for rendering the captions text. For all outputs, you can use an ISO 639-2
+	// or ISO 639-3 code. For streaming outputs, you can also use any other code
+	// in the full RFC-5646 specification. Streaming outputs are those that are
+	// in one of the following output groups: CMAF, DASH ISO, Apple HLS, or Microsoft
+	// Smooth Streaming.
+	CustomLanguageCode *string `locationName:"customLanguageCode" type:"string"`
 
 	// Specific settings required by destination type. Note that burnin_destination_settings
 	// are not available if the source of the caption data is Embedded or Teletext.
@@ -3974,9 +3991,6 @@ func (s *CaptionDescription) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CaptionDescription"}
 	if s.CaptionSelectorName != nil && len(*s.CaptionSelectorName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("CaptionSelectorName", 1))
-	}
-	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
-		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
 	}
 	if s.DestinationSettings != nil {
 		if err := s.DestinationSettings.Validate(); err != nil {
@@ -4024,13 +4038,16 @@ func (s *CaptionDescription) SetLanguageDescription(v string) *CaptionDescriptio
 type CaptionDescriptionPreset struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates the language of the caption output track, using the ISO 639-2 or
-	// ISO 639-3 three-letter language code. For most captions output formats, the
-	// encoder puts this language information in the output captions metadata. If
-	// your output captions format is DVB-Sub or Burn in, the encoder uses this
-	// language information to choose the font language for rendering the captions
-	// text.
-	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
+	// Specify the language for this captions output track. For most captions output
+	// formats, the encoder puts this language information in the output captions
+	// metadata. If your output captions format is DVB-Sub or Burn in, the encoder
+	// uses this language information when automatically selecting the font script
+	// for rendering the captions text. For all outputs, you can use an ISO 639-2
+	// or ISO 639-3 code. For streaming outputs, you can also use any other code
+	// in the full RFC-5646 specification. Streaming outputs are those that are
+	// in one of the following output groups: CMAF, DASH ISO, Apple HLS, or Microsoft
+	// Smooth Streaming.
+	CustomLanguageCode *string `locationName:"customLanguageCode" type:"string"`
 
 	// Specific settings required by destination type. Note that burnin_destination_settings
 	// are not available if the source of the caption data is Embedded or Teletext.
@@ -4064,9 +4081,6 @@ func (s CaptionDescriptionPreset) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CaptionDescriptionPreset) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CaptionDescriptionPreset"}
-	if s.CustomLanguageCode != nil && len(*s.CustomLanguageCode) < 3 {
-		invalidParams.Add(request.NewErrParamMinLen("CustomLanguageCode", 3))
-	}
 	if s.DestinationSettings != nil {
 		if err := s.DestinationSettings.Validate(); err != nil {
 			invalidParams.AddNested("DestinationSettings", err.(request.ErrInvalidParams))
@@ -4454,6 +4468,61 @@ func (s *ChannelMapping) SetOutputChannels(v []*OutputChannelMapping) *ChannelMa
 	return s
 }
 
+// Specify the details for each pair of HLS and DASH additional manifests that
+// you want the service to generate for this CMAF output group. Each pair of
+// manifests can reference a different subset of outputs in the group.
+type CmafAdditionalManifest struct {
+	_ struct{} `type:"structure"`
+
+	// Specify a name modifier that the service adds to the name of this manifest
+	// to make it different from the file names of the other main manifests in the
+	// output group. For example, say that the default main manifest for your HLS
+	// group is film-name.m3u8. If you enter "-no-premium" for this setting, then
+	// the file name the service generates for this top-level manifest is film-name-no-premium.m3u8.
+	// For HLS output groups, specify a manifestNameModifier that is different from
+	// the nameModifier of the output. The service uses the output name modifier
+	// to create unique names for the individual variant manifests.
+	ManifestNameModifier *string `locationName:"manifestNameModifier" min:"1" type:"string"`
+
+	// Specify the outputs that you want this additional top-level manifest to reference.
+	SelectedOutputs []*string `locationName:"selectedOutputs" type:"list"`
+}
+
+// String returns the string representation
+func (s CmafAdditionalManifest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CmafAdditionalManifest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CmafAdditionalManifest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CmafAdditionalManifest"}
+	if s.ManifestNameModifier != nil && len(*s.ManifestNameModifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ManifestNameModifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetManifestNameModifier sets the ManifestNameModifier field's value.
+func (s *CmafAdditionalManifest) SetManifestNameModifier(v string) *CmafAdditionalManifest {
+	s.ManifestNameModifier = &v
+	return s
+}
+
+// SetSelectedOutputs sets the SelectedOutputs field's value.
+func (s *CmafAdditionalManifest) SetSelectedOutputs(v []*string) *CmafAdditionalManifest {
+	s.SelectedOutputs = v
+	return s
+}
+
 // Settings for CMAF encryption
 type CmafEncryptionSettings struct {
 	_ struct{} `type:"structure"`
@@ -4549,6 +4618,14 @@ func (s *CmafEncryptionSettings) SetType(v string) *CmafEncryptionSettings {
 type CmafGroupSettings struct {
 	_ struct{} `type:"structure"`
 
+	// By default, the service creates one top-level .m3u8 HLS manifest and one
+	// top -level .mpd DASH manifest for each CMAF output group in your job. These
+	// default manifests reference every output in the output group. To create additional
+	// top-level manifests that reference a subset of the outputs in the output
+	// group, specify a list of them here. For each additional manifest that you
+	// specify, the service creates one HLS manifest and one DASH manifest.
+	AdditionalManifests []*CmafAdditionalManifest `locationName:"additionalManifests" type:"list"`
+
 	// A partial URI prefix that will be put in the manifest file at the top level
 	// BaseURL element. Can be used if streams are delivered from a different URL
 	// than the manifest file.
@@ -4608,6 +4685,14 @@ type CmafGroupSettings struct {
 	// to 1, your final segment is 3.5 seconds.
 	MinFinalSegmentLength *float64 `locationName:"minFinalSegmentLength" type:"double"`
 
+	// Specify whether your DASH profile is on-demand or main. When you choose Main
+	// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+	// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+	// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+	// When you choose On-demand, you must also set the output group setting Segment
+	// control (SegmentControl) to Single file (SINGLE_FILE).
+	MpdProfile *string `locationName:"mpdProfile" type:"string" enum:"CmafMpdProfile"`
+
 	// When set to SINGLE_FILE, a single output file is generated, which is internally
 	// segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 	// separate segment files will be created.
@@ -4653,6 +4738,16 @@ func (s *CmafGroupSettings) Validate() error {
 	if s.SegmentLength != nil && *s.SegmentLength < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("SegmentLength", 1))
 	}
+	if s.AdditionalManifests != nil {
+		for i, v := range s.AdditionalManifests {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AdditionalManifests", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Encryption != nil {
 		if err := s.Encryption.Validate(); err != nil {
 			invalidParams.AddNested("Encryption", err.(request.ErrInvalidParams))
@@ -4663,6 +4758,12 @@ func (s *CmafGroupSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalManifests sets the AdditionalManifests field's value.
+func (s *CmafGroupSettings) SetAdditionalManifests(v []*CmafAdditionalManifest) *CmafGroupSettings {
+	s.AdditionalManifests = v
+	return s
 }
 
 // SetBaseUrl sets the BaseUrl field's value.
@@ -4728,6 +4829,12 @@ func (s *CmafGroupSettings) SetMinBufferTime(v int64) *CmafGroupSettings {
 // SetMinFinalSegmentLength sets the MinFinalSegmentLength field's value.
 func (s *CmafGroupSettings) SetMinFinalSegmentLength(v float64) *CmafGroupSettings {
 	s.MinFinalSegmentLength = &v
+	return s
+}
+
+// SetMpdProfile sets the MpdProfile field's value.
+func (s *CmafGroupSettings) SetMpdProfile(v string) *CmafGroupSettings {
+	s.MpdProfile = &v
 	return s
 }
 
@@ -4899,6 +5006,9 @@ type ContainerSettings struct {
 	// Settings for MP4 container. You can create audio-only AAC outputs with this
 	// container.
 	Mp4Settings *Mp4Settings `locationName:"mp4Settings" type:"structure"`
+
+	// Settings for MP4 segments in DASH
+	MpdSettings *MpdSettings `locationName:"mpdSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -4967,6 +5077,12 @@ func (s *ContainerSettings) SetMp4Settings(v *Mp4Settings) *ContainerSettings {
 	return s
 }
 
+// SetMpdSettings sets the MpdSettings field's value.
+func (s *ContainerSettings) SetMpdSettings(v *MpdSettings) *ContainerSettings {
+	s.MpdSettings = v
+	return s
+}
+
 // Send your create job request with your job settings and IAM role. Optionally,
 // include user metadata and the ARN for the queue.
 type CreateJobInput struct {
@@ -5026,6 +5142,10 @@ type CreateJobInput struct {
 	// sends an update at this interval from the time the service begins processing
 	// your job to the time it completes the transcode or encounters an error.
 	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
+
+	// The tags that you want to add to the resource. You can tag resources with
+	// a key-value pair or with only a key.
+	Tags map[string]*string `locationName:"tags" type:"map"`
 
 	// User-defined metadata that you want to associate with an MediaConvert job.
 	// You specify metadata in key/value pairs.
@@ -5128,6 +5248,12 @@ func (s *CreateJobInput) SetSimulateReservedQueue(v string) *CreateJobInput {
 // SetStatusUpdateInterval sets the StatusUpdateInterval field's value.
 func (s *CreateJobInput) SetStatusUpdateInterval(v string) *CreateJobInput {
 	s.StatusUpdateInterval = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateJobInput) SetTags(v map[string]*string) *CreateJobInput {
+	s.Tags = v
 	return s
 }
 
@@ -5572,6 +5698,58 @@ func (s *CreateQueueOutput) SetQueue(v *Queue) *CreateQueueOutput {
 	return s
 }
 
+// Specify the details for each additional DASH manifest that you want the service
+// to generate for this output group. Each manifest can reference a different
+// subset of outputs in the group.
+type DashAdditionalManifest struct {
+	_ struct{} `type:"structure"`
+
+	// Specify a name modifier that the service adds to the name of this manifest
+	// to make it different from the file names of the other main manifests in the
+	// output group. For example, say that the default main manifest for your DASH
+	// group is film-name.mpd. If you enter "-no-premium" for this setting, then
+	// the file name the service generates for this top-level manifest is film-name-no-premium.mpd.
+	ManifestNameModifier *string `locationName:"manifestNameModifier" min:"1" type:"string"`
+
+	// Specify the outputs that you want this additional top-level manifest to reference.
+	SelectedOutputs []*string `locationName:"selectedOutputs" type:"list"`
+}
+
+// String returns the string representation
+func (s DashAdditionalManifest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DashAdditionalManifest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DashAdditionalManifest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DashAdditionalManifest"}
+	if s.ManifestNameModifier != nil && len(*s.ManifestNameModifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ManifestNameModifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetManifestNameModifier sets the ManifestNameModifier field's value.
+func (s *DashAdditionalManifest) SetManifestNameModifier(v string) *DashAdditionalManifest {
+	s.ManifestNameModifier = &v
+	return s
+}
+
+// SetSelectedOutputs sets the SelectedOutputs field's value.
+func (s *DashAdditionalManifest) SetSelectedOutputs(v []*string) *DashAdditionalManifest {
+	s.SelectedOutputs = v
+	return s
+}
+
 // Specifies DRM settings for DASH outputs.
 type DashIsoEncryptionSettings struct {
 	_ struct{} `type:"structure"`
@@ -5617,6 +5795,12 @@ func (s *DashIsoEncryptionSettings) SetSpekeKeyProvider(v *SpekeKeyProvider) *Da
 type DashIsoGroupSettings struct {
 	_ struct{} `type:"structure"`
 
+	// By default, the service creates one .mpd DASH manifest for each DASH ISO
+	// output group in your job. This default manifest references every output in
+	// the output group. To create additional DASH manifests that reference a subset
+	// of the outputs in the output group, specify a list of them here.
+	AdditionalManifests []*DashAdditionalManifest `locationName:"additionalManifests" type:"list"`
+
 	// A partial URI prefix that will be put in the manifest (.mpd) file at the
 	// top level BaseURL element. Can be used if streams are delivered from a different
 	// URL than the manifest file.
@@ -5651,6 +5835,14 @@ type DashIsoGroupSettings struct {
 	// playout.
 	MinBufferTime *int64 `locationName:"minBufferTime" type:"integer"`
 
+	// Specify whether your DASH profile is on-demand or main. When you choose Main
+	// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+	// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+	// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+	// When you choose On-demand, you must also set the output group setting Segment
+	// control (SegmentControl) to Single file (SINGLE_FILE).
+	MpdProfile *string `locationName:"mpdProfile" type:"string" enum:"DashIsoMpdProfile"`
+
 	// When set to SINGLE_FILE, a single output file is generated, which is internally
 	// segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 	// separate segment files will be created.
@@ -5663,12 +5855,13 @@ type DashIsoGroupSettings struct {
 	// files as in other output types.
 	SegmentLength *int64 `locationName:"segmentLength" min:"1" type:"integer"`
 
-	// When you enable Precise segment duration in manifests (writeSegmentTimelineInRepresentation),
-	// your DASH manifest shows precise segment durations. The segment duration
-	// information appears inside the SegmentTimeline element, inside SegmentTemplate
-	// at the Representation level. When this feature isn't enabled, the segment
-	// durations in your DASH manifest are approximate. The segment duration information
-	// appears in the duration attribute of the SegmentTemplate element.
+	// If you get an HTTP error in the 400 range when you play back your DASH output,
+	// enable this setting and run your transcoding job again. When you enable this
+	// setting, the service writes precise segment durations in the DASH manifest.
+	// The segment duration information appears inside the SegmentTimeline element,
+	// inside SegmentTemplate at the Representation level. When you don't enable
+	// this setting, the service writes approximate segment durations in your DASH
+	// manifest.
 	WriteSegmentTimelineInRepresentation *string `locationName:"writeSegmentTimelineInRepresentation" type:"string" enum:"DashIsoWriteSegmentTimelineInRepresentation"`
 }
 
@@ -5691,11 +5884,27 @@ func (s *DashIsoGroupSettings) Validate() error {
 	if s.SegmentLength != nil && *s.SegmentLength < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("SegmentLength", 1))
 	}
+	if s.AdditionalManifests != nil {
+		for i, v := range s.AdditionalManifests {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AdditionalManifests", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalManifests sets the AdditionalManifests field's value.
+func (s *DashIsoGroupSettings) SetAdditionalManifests(v []*DashAdditionalManifest) *DashIsoGroupSettings {
+	s.AdditionalManifests = v
+	return s
 }
 
 // SetBaseUrl sets the BaseUrl field's value.
@@ -5737,6 +5946,12 @@ func (s *DashIsoGroupSettings) SetHbbtvCompliance(v string) *DashIsoGroupSetting
 // SetMinBufferTime sets the MinBufferTime field's value.
 func (s *DashIsoGroupSettings) SetMinBufferTime(v int64) *DashIsoGroupSettings {
 	s.MinBufferTime = &v
+	return s
+}
+
+// SetMpdProfile sets the MpdProfile field's value.
+func (s *DashIsoGroupSettings) SetMpdProfile(v string) *DashIsoGroupSettings {
+	s.MpdProfile = &v
 	return s
 }
 
@@ -6153,6 +6368,88 @@ func (s DisassociateCertificateOutput) String() string {
 // GoString returns the string representation
 func (s DisassociateCertificateOutput) GoString() string {
 	return s.String()
+}
+
+// Settings for Dolby Vision
+type DolbyVision struct {
+	_ struct{} `type:"structure"`
+
+	// Use these settings when you set DolbyVisionLevel6Mode to SPECIFY to override
+	// the MaxCLL and MaxFALL values in your input with new values.
+	L6Metadata *DolbyVisionLevel6Metadata `locationName:"l6Metadata" type:"structure"`
+
+	// Use Dolby Vision Mode to choose how the service will handle Dolby Vision
+	// MaxCLL and MaxFALL properies.
+	L6Mode *string `locationName:"l6Mode" type:"string" enum:"DolbyVisionLevel6Mode"`
+
+	// In the current MediaConvert implementation, the Dolby Vision profile is always
+	// 5 (PROFILE_5). Therefore, all of your inputs must contain Dolby Vision frame
+	// interleaved data.
+	Profile *string `locationName:"profile" type:"string" enum:"DolbyVisionProfile"`
+}
+
+// String returns the string representation
+func (s DolbyVision) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DolbyVision) GoString() string {
+	return s.String()
+}
+
+// SetL6Metadata sets the L6Metadata field's value.
+func (s *DolbyVision) SetL6Metadata(v *DolbyVisionLevel6Metadata) *DolbyVision {
+	s.L6Metadata = v
+	return s
+}
+
+// SetL6Mode sets the L6Mode field's value.
+func (s *DolbyVision) SetL6Mode(v string) *DolbyVision {
+	s.L6Mode = &v
+	return s
+}
+
+// SetProfile sets the Profile field's value.
+func (s *DolbyVision) SetProfile(v string) *DolbyVision {
+	s.Profile = &v
+	return s
+}
+
+// Use these settings when you set DolbyVisionLevel6Mode to SPECIFY to override
+// the MaxCLL and MaxFALL values in your input with new values.
+type DolbyVisionLevel6Metadata struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum Content Light Level. Static HDR metadata that corresponds to the
+	// brightest pixel in the entire stream. Measured in nits.
+	MaxCll *int64 `locationName:"maxCll" type:"integer"`
+
+	// Maximum Frame-Average Light Level. Static HDR metadata that corresponds to
+	// the highest frame-average brightness in the entire stream. Measured in nits.
+	MaxFall *int64 `locationName:"maxFall" type:"integer"`
+}
+
+// String returns the string representation
+func (s DolbyVisionLevel6Metadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DolbyVisionLevel6Metadata) GoString() string {
+	return s.String()
+}
+
+// SetMaxCll sets the MaxCll field's value.
+func (s *DolbyVisionLevel6Metadata) SetMaxCll(v int64) *DolbyVisionLevel6Metadata {
+	s.MaxCll = &v
+	return s
+}
+
+// SetMaxFall sets the MaxFall field's value.
+func (s *DolbyVisionLevel6Metadata) SetMaxFall(v int64) *DolbyVisionLevel6Metadata {
+	s.MaxFall = &v
+	return s
 }
 
 // Inserts DVB Network Information Table (NIT) at the specified table repetition
@@ -8623,17 +8920,17 @@ type H265Settings struct {
 	// Inserts timecode for each frame as 4 bytes of an unregistered SEI message.
 	UnregisteredSeiTimecode *string `locationName:"unregisteredSeiTimecode" type:"string" enum:"H265UnregisteredSeiTimecode"`
 
-	// Use this setting only for outputs encoded with H.265 that are in CMAF or
-	// DASH output groups. If you include writeMp4PackagingType in your JSON job
-	// specification for other outputs, your video might not work properly with
-	// downstream systems and video players. If the location of parameter set NAL
-	// units don't matter in your workflow, ignore this setting. The service defaults
-	// to marking your output as HEV1. Choose HVC1 to mark your output as HVC1.
-	// This makes your output compliant with this specification: ISO IECJTC1 SC29
-	// N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these outputs, the service
-	// stores parameter set NAL units in the sample headers but not in the samples
-	// directly. Keep the default HEV1 to mark your output as HEV1. For these outputs,
-	// the service writes parameter set NAL units directly into the samples.
+	// If the location of parameter set NAL units doesn't matter in your workflow,
+	// ignore this setting. Use this setting only with CMAF or DASH outputs, or
+	// with standalone file outputs in an MPEG-4 container (MP4 outputs). Choose
+	// HVC1 to mark your output as HVC1. This makes your output compliant with the
+	// following specification: ISO IECJTC1 SC29 N13798 Text ISO/IEC FDIS 14496-15
+	// 3rd Edition. For these outputs, the service stores parameter set NAL units
+	// in the sample headers but not in the samples directly. For MP4 outputs, when
+	// you choose HVC1, your output video might not work properly with some downstream
+	// systems and video players. The service defaults to marking your output as
+	// HEV1. For these outputs, the service writes parameter set NAL units directly
+	// into the samples.
 	WriteMp4PackagingType *string `locationName:"writeMp4PackagingType" type:"string" enum:"H265WriteMp4PackagingType"`
 }
 
@@ -9069,6 +9366,61 @@ func (s *Hdr10Metadata) SetWhitePointY(v int64) *Hdr10Metadata {
 	return s
 }
 
+// Specify the details for each additional HLS manifest that you want the service
+// to generate for this output group. Each manifest can reference a different
+// subset of outputs in the group.
+type HlsAdditionalManifest struct {
+	_ struct{} `type:"structure"`
+
+	// Specify a name modifier that the service adds to the name of this manifest
+	// to make it different from the file names of the other main manifests in the
+	// output group. For example, say that the default main manifest for your HLS
+	// group is film-name.m3u8. If you enter "-no-premium" for this setting, then
+	// the file name the service generates for this top-level manifest is film-name-no-premium.m3u8.
+	// For HLS output groups, specify a manifestNameModifier that is different from
+	// the nameModifier of the output. The service uses the output name modifier
+	// to create unique names for the individual variant manifests.
+	ManifestNameModifier *string `locationName:"manifestNameModifier" min:"1" type:"string"`
+
+	// Specify the outputs that you want this additional top-level manifest to reference.
+	SelectedOutputs []*string `locationName:"selectedOutputs" type:"list"`
+}
+
+// String returns the string representation
+func (s HlsAdditionalManifest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HlsAdditionalManifest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsAdditionalManifest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsAdditionalManifest"}
+	if s.ManifestNameModifier != nil && len(*s.ManifestNameModifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ManifestNameModifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetManifestNameModifier sets the ManifestNameModifier field's value.
+func (s *HlsAdditionalManifest) SetManifestNameModifier(v string) *HlsAdditionalManifest {
+	s.ManifestNameModifier = &v
+	return s
+}
+
+// SetSelectedOutputs sets the SelectedOutputs field's value.
+func (s *HlsAdditionalManifest) SetSelectedOutputs(v []*string) *HlsAdditionalManifest {
+	s.SelectedOutputs = v
+	return s
+}
+
 // Caption Language Mapping
 type HlsCaptionLanguageMapping struct {
 	_ struct{} `type:"structure"`
@@ -9076,7 +9428,7 @@ type HlsCaptionLanguageMapping struct {
 	// Caption channel.
 	CaptionChannel *int64 `locationName:"captionChannel" type:"integer"`
 
-	// Specify the language for this caption channel, using the ISO 639-2 or ISO
+	// Specify the language for this captions channel, using the ISO 639-2 or ISO
 	// 639-3 three-letter language code
 	CustomLanguageCode *string `locationName:"customLanguageCode" min:"3" type:"string"`
 
@@ -9247,6 +9599,12 @@ type HlsGroupSettings struct {
 	// themselves.
 	AdMarkers []*string `locationName:"adMarkers" type:"list"`
 
+	// By default, the service creates one top-level .m3u8 HLS manifest for each
+	// HLS output group in your job. This default manifest references every output
+	// in the output group. To create additional top-level manifests that reference
+	// a subset of the outputs in the output group, specify a list of them here.
+	AdditionalManifests []*HlsAdditionalManifest `locationName:"additionalManifests" type:"list"`
+
 	// A partial URI prefix that will be prepended to each output in the media .m3u8
 	// file. Can be used if base manifest is delivered from a different URL than
 	// the main .m3u8 file.
@@ -9381,6 +9739,16 @@ func (s *HlsGroupSettings) Validate() error {
 	if s.TimestampDeltaMilliseconds != nil && *s.TimestampDeltaMilliseconds < -2.147483648e+09 {
 		invalidParams.Add(request.NewErrParamMinValue("TimestampDeltaMilliseconds", -2.147483648e+09))
 	}
+	if s.AdditionalManifests != nil {
+		for i, v := range s.AdditionalManifests {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AdditionalManifests", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.CaptionLanguageMappings != nil {
 		for i, v := range s.CaptionLanguageMappings {
 			if v == nil {
@@ -9406,6 +9774,12 @@ func (s *HlsGroupSettings) Validate() error {
 // SetAdMarkers sets the AdMarkers field's value.
 func (s *HlsGroupSettings) SetAdMarkers(v []*string) *HlsGroupSettings {
 	s.AdMarkers = v
+	return s
+}
+
+// SetAdditionalManifests sets the AdditionalManifests field's value.
+func (s *HlsGroupSettings) SetAdditionalManifests(v []*HlsAdditionalManifest) *HlsGroupSettings {
+	s.AdditionalManifests = v
 	return s
 }
 
@@ -10486,8 +10860,8 @@ type InsertableImage struct {
 	// blank.
 	Height *int64 `locationName:"height" type:"integer"`
 
-	// Specify the Amazon S3 location of the image that you want to overlay on the
-	// video. Use a PNG or TGA file.
+	// Specify the HTTP, HTTPS, or Amazon S3 location of the image that you want
+	// to overlay on the video. Use a PNG or TGA file.
 	ImageInserterInput *string `locationName:"imageInserterInput" min:"14" type:"string"`
 
 	// Specify the distance, in pixels, between the inserted image and the left
@@ -10617,6 +10991,19 @@ type Job struct {
 	// complex content.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
+	// Describes whether the current job is running with accelerated transcoding.
+	// For jobs that have Acceleration (AccelerationMode) set to DISABLED, AccelerationStatus
+	// is always NOT_APPLICABLE. For jobs that have Acceleration (AccelerationMode)
+	// set to ENABLED or PREFERRED, AccelerationStatus is one of the other states.
+	// AccelerationStatus is IN_PROGRESS initially, while the service determines
+	// whether the input files and job settings are compatible with accelerated
+	// transcoding. If they are, AcclerationStatus is ACCELERATED. If your input
+	// files and job settings aren't compatible with accelerated transcoding, the
+	// service either fails your job or runs it without accelerated transcoding,
+	// depending on how you set Acceleration (AccelerationMode). When the service
+	// runs your job without accelerated transcoding, AccelerationStatus is NOT_ACCELERATED.
+	AccelerationStatus *string `locationName:"accelerationStatus" type:"string" enum:"AccelerationStatus"`
+
 	// An identifier for this resource that is unique within all of AWS.
 	Arn *string `locationName:"arn" type:"string"`
 
@@ -10656,6 +11043,10 @@ type Job struct {
 	// The job template that the job is created from, if it is created from a job
 	// template.
 	JobTemplate *string `locationName:"jobTemplate" type:"string"`
+
+	// Provides messages from the service about jobs that you have already successfully
+	// submitted.
+	Messages *JobMessages `locationName:"messages" type:"structure"`
 
 	// List of output group details
 	OutputGroupDetails []*OutputGroupDetail `locationName:"outputGroupDetails" type:"list"`
@@ -10723,6 +11114,12 @@ func (s *Job) SetAccelerationSettings(v *AccelerationSettings) *Job {
 	return s
 }
 
+// SetAccelerationStatus sets the AccelerationStatus field's value.
+func (s *Job) SetAccelerationStatus(v string) *Job {
+	s.AccelerationStatus = &v
+	return s
+}
+
 // SetArn sets the Arn field's value.
 func (s *Job) SetArn(v string) *Job {
 	s.Arn = &v
@@ -10774,6 +11171,12 @@ func (s *Job) SetJobPercentComplete(v int64) *Job {
 // SetJobTemplate sets the JobTemplate field's value.
 func (s *Job) SetJobTemplate(v string) *Job {
 	s.JobTemplate = &v
+	return s
+}
+
+// SetMessages sets the Messages field's value.
+func (s *Job) SetMessages(v *JobMessages) *Job {
+	s.Messages = v
 	return s
 }
 
@@ -10840,6 +11243,42 @@ func (s *Job) SetTiming(v *Timing) *Job {
 // SetUserMetadata sets the UserMetadata field's value.
 func (s *Job) SetUserMetadata(v map[string]*string) *Job {
 	s.UserMetadata = v
+	return s
+}
+
+// Provides messages from the service about jobs that you have already successfully
+// submitted.
+type JobMessages struct {
+	_ struct{} `type:"structure"`
+
+	// List of messages that are informational only and don't indicate a problem
+	// with your job.
+	Info []*string `locationName:"info" type:"list"`
+
+	// List of messages that warn about conditions that might cause your job not
+	// to run or to fail.
+	Warning []*string `locationName:"warning" type:"list"`
+}
+
+// String returns the string representation
+func (s JobMessages) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JobMessages) GoString() string {
+	return s.String()
+}
+
+// SetInfo sets the Info field's value.
+func (s *JobMessages) SetInfo(v []*string) *JobMessages {
+	s.Info = v
+	return s
+}
+
+// SetWarning sets the Warning field's value.
+func (s *JobMessages) SetWarning(v []*string) *JobMessages {
+	s.Warning = v
 	return s
 }
 
@@ -12933,6 +13372,59 @@ func (s *Mp4Settings) SetMp4MajorBrand(v string) *Mp4Settings {
 	return s
 }
 
+// Settings for MP4 segments in DASH
+type MpdSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Use this setting only in DASH output groups that include sidecar TTML or
+	// IMSC captions. You specify sidecar captions in a separate output from your
+	// audio and video. Choose Raw (RAW) for captions in a single XML file in a
+	// raw container. Choose Fragmented MPEG-4 (FRAGMENTED_MP4) for captions in
+	// XML format contained within fragmented MP4 files. This set of fragmented
+	// MP4 files is separate from your video and audio fragmented MP4 files.
+	CaptionContainerType *string `locationName:"captionContainerType" type:"string" enum:"MpdCaptionContainerType"`
+
+	// Use this setting only when you specify SCTE-35 markers from ESAM. Choose
+	// INSERT to put SCTE-35 markers in this output at the insertion points that
+	// you specify in an ESAM XML document. Provide the document in the setting
+	// SCC XML (sccXml).
+	Scte35Esam *string `locationName:"scte35Esam" type:"string" enum:"MpdScte35Esam"`
+
+	// Ignore this setting unless you have SCTE-35 markers in your input video file.
+	// Choose Passthrough (PASSTHROUGH) if you want SCTE-35 markers that appear
+	// in your input to also appear in this output. Choose None (NONE) if you don't
+	// want those SCTE-35 markers in this output.
+	Scte35Source *string `locationName:"scte35Source" type:"string" enum:"MpdScte35Source"`
+}
+
+// String returns the string representation
+func (s MpdSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MpdSettings) GoString() string {
+	return s.String()
+}
+
+// SetCaptionContainerType sets the CaptionContainerType field's value.
+func (s *MpdSettings) SetCaptionContainerType(v string) *MpdSettings {
+	s.CaptionContainerType = &v
+	return s
+}
+
+// SetScte35Esam sets the Scte35Esam field's value.
+func (s *MpdSettings) SetScte35Esam(v string) *MpdSettings {
+	s.Scte35Esam = &v
+	return s
+}
+
+// SetScte35Source sets the Scte35Source field's value.
+func (s *MpdSettings) SetScte35Source(v string) *MpdSettings {
+	s.Scte35Source = &v
+	return s
+}
+
 // Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
 // the value MPEG2.
 type Mpeg2Settings struct {
@@ -13311,6 +13803,58 @@ func (s *Mpeg2Settings) SetTemporalAdaptiveQuantization(v string) *Mpeg2Settings
 	return s
 }
 
+// Specify the details for each additional Microsoft Smooth Streaming manifest
+// that you want the service to generate for this output group. Each manifest
+// can reference a different subset of outputs in the group.
+type MsSmoothAdditionalManifest struct {
+	_ struct{} `type:"structure"`
+
+	// Specify a name modifier that the service adds to the name of this manifest
+	// to make it different from the file names of the other main manifests in the
+	// output group. For example, say that the default main manifest for your Microsoft
+	// Smooth group is film-name.ismv. If you enter "-no-premium" for this setting,
+	// then the file name the service generates for this top-level manifest is film-name-no-premium.ismv.
+	ManifestNameModifier *string `locationName:"manifestNameModifier" min:"1" type:"string"`
+
+	// Specify the outputs that you want this additional top-level manifest to reference.
+	SelectedOutputs []*string `locationName:"selectedOutputs" type:"list"`
+}
+
+// String returns the string representation
+func (s MsSmoothAdditionalManifest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MsSmoothAdditionalManifest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MsSmoothAdditionalManifest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MsSmoothAdditionalManifest"}
+	if s.ManifestNameModifier != nil && len(*s.ManifestNameModifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ManifestNameModifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetManifestNameModifier sets the ManifestNameModifier field's value.
+func (s *MsSmoothAdditionalManifest) SetManifestNameModifier(v string) *MsSmoothAdditionalManifest {
+	s.ManifestNameModifier = &v
+	return s
+}
+
+// SetSelectedOutputs sets the SelectedOutputs field's value.
+func (s *MsSmoothAdditionalManifest) SetSelectedOutputs(v []*string) *MsSmoothAdditionalManifest {
+	s.SelectedOutputs = v
+	return s
+}
+
 // If you are using DRM, set DRM System (MsSmoothEncryptionSettings) to specify
 // the value SpekeKeyProvider.
 type MsSmoothEncryptionSettings struct {
@@ -13342,6 +13886,13 @@ func (s *MsSmoothEncryptionSettings) SetSpekeKeyProvider(v *SpekeKeyProvider) *M
 // MS_SMOOTH_GROUP_SETTINGS.
 type MsSmoothGroupSettings struct {
 	_ struct{} `type:"structure"`
+
+	// By default, the service creates one .ism Microsoft Smooth Streaming manifest
+	// for each Microsoft Smooth Streaming output group in your job. This default
+	// manifest references every output in the output group. To create additional
+	// manifests that reference a subset of the outputs in the output group, specify
+	// a list of them here.
+	AdditionalManifests []*MsSmoothAdditionalManifest `locationName:"additionalManifests" type:"list"`
 
 	// COMBINE_DUPLICATE_STREAMS combines identical audio encoding settings across
 	// a Microsoft Smooth output group into a single audio stream.
@@ -13387,11 +13938,27 @@ func (s *MsSmoothGroupSettings) Validate() error {
 	if s.FragmentLength != nil && *s.FragmentLength < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("FragmentLength", 1))
 	}
+	if s.AdditionalManifests != nil {
+		for i, v := range s.AdditionalManifests {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AdditionalManifests", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAdditionalManifests sets the AdditionalManifests field's value.
+func (s *MsSmoothGroupSettings) SetAdditionalManifests(v []*MsSmoothAdditionalManifest) *MsSmoothGroupSettings {
+	s.AdditionalManifests = v
+	return s
 }
 
 // SetAudioDeduplication sets the AudioDeduplication field's value.
@@ -14952,9 +15519,40 @@ func (s *ResourceTags) SetTags(v map[string]*string) *ResourceTags {
 	return s
 }
 
+// Optional. Have MediaConvert automatically apply Amazon S3 access control
+// for the outputs in this output group. When you don't use this setting, S3
+// automatically applies the default access control list PRIVATE.
+type S3DestinationAccessControl struct {
+	_ struct{} `type:"structure"`
+
+	// Choose an Amazon S3 canned ACL for MediaConvert to apply to this output.
+	CannedAcl *string `locationName:"cannedAcl" type:"string" enum:"S3ObjectCannedAcl"`
+}
+
+// String returns the string representation
+func (s S3DestinationAccessControl) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3DestinationAccessControl) GoString() string {
+	return s.String()
+}
+
+// SetCannedAcl sets the CannedAcl field's value.
+func (s *S3DestinationAccessControl) SetCannedAcl(v string) *S3DestinationAccessControl {
+	s.CannedAcl = &v
+	return s
+}
+
 // Settings associated with S3 destination
 type S3DestinationSettings struct {
 	_ struct{} `type:"structure"`
+
+	// Optional. Have MediaConvert automatically apply Amazon S3 access control
+	// for the outputs in this output group. When you don't use this setting, S3
+	// automatically applies the default access control list PRIVATE.
+	AccessControl *S3DestinationAccessControl `locationName:"accessControl" type:"structure"`
 
 	// Settings for how your job outputs are encrypted as they are uploaded to Amazon
 	// S3.
@@ -14969,6 +15567,12 @@ func (s S3DestinationSettings) String() string {
 // GoString returns the string representation
 func (s S3DestinationSettings) GoString() string {
 	return s.String()
+}
+
+// SetAccessControl sets the AccessControl field's value.
+func (s *S3DestinationSettings) SetAccessControl(v *S3DestinationAccessControl) *S3DestinationSettings {
+	s.AccessControl = v
+	return s
 }
 
 // SetEncryption sets the Encryption field's value.
@@ -16527,6 +17131,9 @@ type VideoPreprocessor struct {
 	// picture.
 	Deinterlacer *Deinterlacer `locationName:"deinterlacer" type:"structure"`
 
+	// Enable Dolby Vision feature to produce Dolby Vision compatible video output.
+	DolbyVision *DolbyVision `locationName:"dolbyVision" type:"structure"`
+
 	// Enable the Image inserter (ImageInserter) feature to include a graphic overlay
 	// on your video. Enable or disable this feature for each output individually.
 	// This setting is disabled by default.
@@ -16591,6 +17198,12 @@ func (s *VideoPreprocessor) SetColorCorrector(v *ColorCorrector) *VideoPreproces
 // SetDeinterlacer sets the Deinterlacer field's value.
 func (s *VideoPreprocessor) SetDeinterlacer(v *Deinterlacer) *VideoPreprocessor {
 	s.Deinterlacer = v
+	return s
+}
+
+// SetDolbyVision sets the DolbyVision field's value.
+func (s *VideoPreprocessor) SetDolbyVision(v *DolbyVision) *VideoPreprocessor {
+	s.DolbyVision = v
 	return s
 }
 
@@ -16980,14 +17593,47 @@ const (
 	Ac3MetadataControlUseConfigured = "USE_CONFIGURED"
 )
 
-// Enable Acceleration (AccelerationMode) on any job that you want processed
-// with accelerated transcoding.
+// Specify whether the service runs your job with accelerated transcoding. Choose
+// DISABLED if you don't want accelerated transcoding. Choose ENABLED if you
+// want your job to run with accelerated transcoding and to fail if your input
+// files or your job settings aren't compatible with accelerated transcoding.
+// Choose PREFERRED if you want your job to run with accelerated transcoding
+// if the job is compatible with the feature and to run at standard speed if
+// it's not.
 const (
 	// AccelerationModeDisabled is a AccelerationMode enum value
 	AccelerationModeDisabled = "DISABLED"
 
 	// AccelerationModeEnabled is a AccelerationMode enum value
 	AccelerationModeEnabled = "ENABLED"
+
+	// AccelerationModePreferred is a AccelerationMode enum value
+	AccelerationModePreferred = "PREFERRED"
+)
+
+// Describes whether the current job is running with accelerated transcoding.
+// For jobs that have Acceleration (AccelerationMode) set to DISABLED, AccelerationStatus
+// is always NOT_APPLICABLE. For jobs that have Acceleration (AccelerationMode)
+// set to ENABLED or PREFERRED, AccelerationStatus is one of the other states.
+// AccelerationStatus is IN_PROGRESS initially, while the service determines
+// whether the input files and job settings are compatible with accelerated
+// transcoding. If they are, AcclerationStatus is ACCELERATED. If your input
+// files and job settings aren't compatible with accelerated transcoding, the
+// service either fails your job or runs it without accelerated transcoding,
+// depending on how you set Acceleration (AccelerationMode). When the service
+// runs your job without accelerated transcoding, AccelerationStatus is NOT_ACCELERATED.
+const (
+	// AccelerationStatusNotApplicable is a AccelerationStatus enum value
+	AccelerationStatusNotApplicable = "NOT_APPLICABLE"
+
+	// AccelerationStatusInProgress is a AccelerationStatus enum value
+	AccelerationStatusInProgress = "IN_PROGRESS"
+
+	// AccelerationStatusAccelerated is a AccelerationStatus enum value
+	AccelerationStatusAccelerated = "ACCELERATED"
+
+	// AccelerationStatusNotAccelerated is a AccelerationStatus enum value
+	AccelerationStatusNotAccelerated = "NOT_ACCELERATED"
 )
 
 // This setting only applies to H.264, H.265, and MPEG2 outputs. Use Insert
@@ -17080,10 +17726,12 @@ const (
 	AudioDefaultSelectionNotDefault = "NOT_DEFAULT"
 )
 
-// Choosing FOLLOW_INPUT will cause the ISO 639 language code of the output
-// to follow the ISO 639 language code of the input. The language specified
-// for languageCode' will be used when USE_CONFIGURED is selected or when FOLLOW_INPUT
-// is selected but there is no ISO 639 language code specified by the input.
+// Specify which source for language code takes precedence for this audio track.
+// When you choose Follow input (FOLLOW_INPUT), the service uses the language
+// code from the input track if it's present. If there's no languge code on
+// the input track, the service uses the code that you specify in the setting
+// Language code (languageCode or customLanguageCode). When you choose Use configured
+// (USE_CONFIGURED), the service uses the language code that you specify.
 const (
 	// AudioLanguageCodeControlFollowInput is a AudioLanguageCodeControl enum value
 	AudioLanguageCodeControlFollowInput = "FOLLOW_INPUT"
@@ -17184,6 +17832,9 @@ const (
 
 	// BillingTagsSourceJobTemplate is a BillingTagsSource enum value
 	BillingTagsSourceJobTemplate = "JOB_TEMPLATE"
+
+	// BillingTagsSourceJob is a BillingTagsSource enum value
+	BillingTagsSourceJob = "JOB"
 )
 
 // If no explicit x_position or y_position is provided, setting alignment to
@@ -17442,6 +18093,20 @@ const (
 	CmafManifestDurationFormatInteger = "INTEGER"
 )
 
+// Specify whether your DASH profile is on-demand or main. When you choose Main
+// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+// When you choose On-demand, you must also set the output group setting Segment
+// control (SegmentControl) to Single file (SINGLE_FILE).
+const (
+	// CmafMpdProfileMainProfile is a CmafMpdProfile enum value
+	CmafMpdProfileMainProfile = "MAIN_PROFILE"
+
+	// CmafMpdProfileOnDemandProfile is a CmafMpdProfile enum value
+	CmafMpdProfileOnDemandProfile = "ON_DEMAND_PROFILE"
+)
+
 // When set to SINGLE_FILE, a single output file is generated, which is internally
 // segmented using the Fragment Length and Segment Length. When set to SEGMENTED_FILES,
 // separate segment files will be created.
@@ -17605,6 +18270,20 @@ const (
 	DashIsoHbbtvComplianceNone = "NONE"
 )
 
+// Specify whether your DASH profile is on-demand or main. When you choose Main
+// profile (MAIN_PROFILE), the service signals urn:mpeg:dash:profile:isoff-main:2011
+// in your .mpd DASH manifest. When you choose On-demand (ON_DEMAND_PROFILE),
+// the service signals urn:mpeg:dash:profile:isoff-on-demand:2011 in your .mpd.
+// When you choose On-demand, you must also set the output group setting Segment
+// control (SegmentControl) to Single file (SINGLE_FILE).
+const (
+	// DashIsoMpdProfileMainProfile is a DashIsoMpdProfile enum value
+	DashIsoMpdProfileMainProfile = "MAIN_PROFILE"
+
+	// DashIsoMpdProfileOnDemandProfile is a DashIsoMpdProfile enum value
+	DashIsoMpdProfileOnDemandProfile = "ON_DEMAND_PROFILE"
+)
+
 // This setting can improve the compatibility of your output with video players
 // on obsolete devices. It applies only to DASH H.264 outputs with DRM encryption.
 // Choose Unencrypted SEI (UNENCRYPTED_SEI) only to correct problems with playback
@@ -17716,6 +18395,27 @@ const (
 
 	// DescribeEndpointsModeGetOnly is a DescribeEndpointsMode enum value
 	DescribeEndpointsModeGetOnly = "GET_ONLY"
+)
+
+// Use Dolby Vision Mode to choose how the service will handle Dolby Vision
+// MaxCLL and MaxFALL properies.
+const (
+	// DolbyVisionLevel6ModePassthrough is a DolbyVisionLevel6Mode enum value
+	DolbyVisionLevel6ModePassthrough = "PASSTHROUGH"
+
+	// DolbyVisionLevel6ModeRecalculate is a DolbyVisionLevel6Mode enum value
+	DolbyVisionLevel6ModeRecalculate = "RECALCULATE"
+
+	// DolbyVisionLevel6ModeSpecify is a DolbyVisionLevel6Mode enum value
+	DolbyVisionLevel6ModeSpecify = "SPECIFY"
+)
+
+// In the current MediaConvert implementation, the Dolby Vision profile is always
+// 5 (PROFILE_5). Therefore, all of your inputs must contain Dolby Vision frame
+// interleaved data.
+const (
+	// DolbyVisionProfileProfile5 is a DolbyVisionProfile enum value
+	DolbyVisionProfileProfile5 = "PROFILE_5"
 )
 
 // Applies only to 29.97 fps outputs. When this feature is enabled, the service
@@ -18896,17 +19596,17 @@ const (
 	H265UnregisteredSeiTimecodeEnabled = "ENABLED"
 )
 
-// Use this setting only for outputs encoded with H.265 that are in CMAF or
-// DASH output groups. If you include writeMp4PackagingType in your JSON job
-// specification for other outputs, your video might not work properly with
-// downstream systems and video players. If the location of parameter set NAL
-// units don't matter in your workflow, ignore this setting. The service defaults
-// to marking your output as HEV1. Choose HVC1 to mark your output as HVC1.
-// This makes your output compliant with this specification: ISO IECJTC1 SC29
-// N13798 Text ISO/IEC FDIS 14496-15 3rd Edition. For these outputs, the service
-// stores parameter set NAL units in the sample headers but not in the samples
-// directly. Keep the default HEV1 to mark your output as HEV1. For these outputs,
-// the service writes parameter set NAL units directly into the samples.
+// If the location of parameter set NAL units doesn't matter in your workflow,
+// ignore this setting. Use this setting only with CMAF or DASH outputs, or
+// with standalone file outputs in an MPEG-4 container (MP4 outputs). Choose
+// HVC1 to mark your output as HVC1. This makes your output compliant with the
+// following specification: ISO IECJTC1 SC29 N13798 Text ISO/IEC FDIS 14496-15
+// 3rd Edition. For these outputs, the service stores parameter set NAL units
+// in the sample headers but not in the samples directly. For MP4 outputs, when
+// you choose HVC1, your output video might not work properly with some downstream
+// systems and video players. The service defaults to marking your output as
+// HEV1. For these outputs, the service writes parameter set NAL units directly
+// into the samples.
 const (
 	// H265WriteMp4PackagingTypeHvc1 is a H265WriteMp4PackagingType enum value
 	H265WriteMp4PackagingTypeHvc1 = "HVC1"
@@ -20163,6 +20863,44 @@ const (
 	Mp4MoovPlacementNormal = "NORMAL"
 )
 
+// Use this setting only in DASH output groups that include sidecar TTML or
+// IMSC captions. You specify sidecar captions in a separate output from your
+// audio and video. Choose Raw (RAW) for captions in a single XML file in a
+// raw container. Choose Fragmented MPEG-4 (FRAGMENTED_MP4) for captions in
+// XML format contained within fragmented MP4 files. This set of fragmented
+// MP4 files is separate from your video and audio fragmented MP4 files.
+const (
+	// MpdCaptionContainerTypeRaw is a MpdCaptionContainerType enum value
+	MpdCaptionContainerTypeRaw = "RAW"
+
+	// MpdCaptionContainerTypeFragmentedMp4 is a MpdCaptionContainerType enum value
+	MpdCaptionContainerTypeFragmentedMp4 = "FRAGMENTED_MP4"
+)
+
+// Use this setting only when you specify SCTE-35 markers from ESAM. Choose
+// INSERT to put SCTE-35 markers in this output at the insertion points that
+// you specify in an ESAM XML document. Provide the document in the setting
+// SCC XML (sccXml).
+const (
+	// MpdScte35EsamInsert is a MpdScte35Esam enum value
+	MpdScte35EsamInsert = "INSERT"
+
+	// MpdScte35EsamNone is a MpdScte35Esam enum value
+	MpdScte35EsamNone = "NONE"
+)
+
+// Ignore this setting unless you have SCTE-35 markers in your input video file.
+// Choose Passthrough (PASSTHROUGH) if you want SCTE-35 markers that appear
+// in your input to also appear in this output. Choose None (NONE) if you don't
+// want those SCTE-35 markers in this output.
+const (
+	// MpdScte35SourcePassthrough is a MpdScte35Source enum value
+	MpdScte35SourcePassthrough = "PASSTHROUGH"
+
+	// MpdScte35SourceNone is a MpdScte35Source enum value
+	MpdScte35SourceNone = "NONE"
+)
+
 // Adaptive quantization. Allows intra-frame quantizers to vary to improve visual
 // quality.
 const (
@@ -20697,6 +21435,21 @@ const (
 	RespondToAfdPassthrough = "PASSTHROUGH"
 )
 
+// Choose an Amazon S3 canned ACL for MediaConvert to apply to this output.
+const (
+	// S3ObjectCannedAclPublicRead is a S3ObjectCannedAcl enum value
+	S3ObjectCannedAclPublicRead = "PUBLIC_READ"
+
+	// S3ObjectCannedAclAuthenticatedRead is a S3ObjectCannedAcl enum value
+	S3ObjectCannedAclAuthenticatedRead = "AUTHENTICATED_READ"
+
+	// S3ObjectCannedAclBucketOwnerRead is a S3ObjectCannedAcl enum value
+	S3ObjectCannedAclBucketOwnerRead = "BUCKET_OWNER_READ"
+
+	// S3ObjectCannedAclBucketOwnerFullControl is a S3ObjectCannedAcl enum value
+	S3ObjectCannedAclBucketOwnerFullControl = "BUCKET_OWNER_FULL_CONTROL"
+)
+
 // Specify how you want your data keys managed. AWS uses data keys to encrypt
 // your content. AWS also encrypts the data keys themselves, using a customer
 // master key (CMK), and then stores the encrypted data keys alongside your
@@ -20742,6 +21495,9 @@ const (
 
 	// SccDestinationFramerateFramerate24 is a SccDestinationFramerate enum value
 	SccDestinationFramerateFramerate24 = "FRAMERATE_24"
+
+	// SccDestinationFramerateFramerate25 is a SccDestinationFramerate enum value
+	SccDestinationFramerateFramerate25 = "FRAMERATE_25"
 
 	// SccDestinationFramerateFramerate2997Dropframe is a SccDestinationFramerate enum value
 	SccDestinationFramerateFramerate2997Dropframe = "FRAMERATE_29_97_DROPFRAME"
