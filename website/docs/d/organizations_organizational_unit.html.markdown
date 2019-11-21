@@ -1,4 +1,5 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_organizational_unit"
 sidebar_current: "docs-aws-datasource-organizations-organizational-unit"
