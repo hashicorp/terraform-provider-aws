@@ -1,4 +1,5 @@
 ---
+subcategory: "Traffic Mirroring"
 layout: "aws"
 page_title: "AWS: aws_traffic_mirror_filter"
 sidebar_current: "docs-aws-resource-traffic-mirror-filter"
