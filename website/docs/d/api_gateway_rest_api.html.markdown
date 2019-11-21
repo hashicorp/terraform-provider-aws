@@ -29,4 +29,6 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 ## Attributes Reference
 
  * `id` - Set to the ID of the found REST API.
+ * `arn` - The ARN of the REST API
  * `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
+ * `tags` - Key-value mapping of resource tags

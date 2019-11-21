@@ -5,8 +5,10 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsApiGatewayRestApi() *schema.Resource {
@@ -21,6 +23,11 @@ func dataSourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -54,6 +61,18 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 	match := matchedApis[0]
 
 	d.SetId(*match.Id)
+
+	restApiArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("/restapis/%s", d.Id()),
+	}.String()
+	d.Set("arn", restApiArn)
+
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(match.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	resourceParams := &apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
