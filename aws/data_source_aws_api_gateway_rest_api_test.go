@@ -11,7 +11,7 @@ import (
 func TestAccDataSourceAwsApiGatewayRestApi(t *testing.T) {
 	rName := acctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
-	resourceName := "resource.aws_api_gateway_rest_api.test"
+	resourceName := "aws_api_gateway_rest_api.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
