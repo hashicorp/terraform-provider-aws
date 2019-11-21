@@ -5,9 +5,11 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGlueJob() *schema.Resource {
@@ -28,6 +30,10 @@ func resourceAwsGlueJob() *schema.Resource {
 				ConflictsWith: []string{"max_capacity", "number_of_workers", "worker_type"},
 				Deprecated:    "Please use attribute `max_capacity' instead. This attribute might be removed in future releases.",
 				ValidateFunc:  validation.IntAtLeast(2),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"command": {
 				Type:     schema.TypeList,
@@ -109,6 +115,7 @@ func resourceAwsGlueJob() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateArn,
 			},
+			"tags": tagsSchema(),
 			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -146,6 +153,7 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 		Name:    aws.String(name),
 		Role:    aws.String(d.Get("role_arn").(string)),
+		Tags:    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlueTags(),
 		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 	}
 
@@ -236,6 +244,15 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	jobARN := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "glue",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("job/%s", d.Id()),
+	}.String()
+	d.Set("arn", jobARN)
+
 	if err := d.Set("command", flattenGlueJobCommand(job.Command)); err != nil {
 		return fmt.Errorf("error setting command: %s", err)
 	}
@@ -254,6 +271,17 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("max_retries", int(aws.Int64Value(job.MaxRetries)))
 	d.Set("name", job.Name)
 	d.Set("role_arn", job.Role)
+
+	tags, err := keyvaluetags.GlueListTags(conn, jobARN)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Glue Job (%s): %s", jobARN, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("timeout", int(aws.Int64Value(job.Timeout)))
 	if err := d.Set("security_configuration", job.SecurityConfiguration); err != nil {
 		return fmt.Errorf("error setting security_configuration: %s", err)
@@ -271,71 +299,93 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	jobUpdate := &glue.JobUpdate{
-		Command: expandGlueJobCommand(d.Get("command").([]interface{})),
-		Role:    aws.String(d.Get("role_arn").(string)),
-		Timeout: aws.Int64(int64(d.Get("timeout").(int))),
-	}
-
-	if v, ok := d.GetOk("number_of_workers"); ok {
-		jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
-	} else {
-		if v, ok := d.GetOk("max_capacity"); ok {
-			jobUpdate.MaxCapacity = aws.Float64(v.(float64))
+	if d.HasChange("allocated_capacity") ||
+		d.HasChange("command") ||
+		d.HasChange("connections") ||
+		d.HasChange("default_arguments") ||
+		d.HasChange("description") ||
+		d.HasChange("execution_property") ||
+		d.HasChange("glue_version") ||
+		d.HasChange("max_capacity") ||
+		d.HasChange("max_retries") ||
+		d.HasChange("number_of_workers") ||
+		d.HasChange("role_arn") ||
+		d.HasChange("security_configuration") ||
+		d.HasChange("timeout") ||
+		d.HasChange("worker_type") {
+		jobUpdate := &glue.JobUpdate{
+			Command: expandGlueJobCommand(d.Get("command").([]interface{})),
+			Role:    aws.String(d.Get("role_arn").(string)),
+			Timeout: aws.Int64(int64(d.Get("timeout").(int))),
 		}
-		if d.HasChange("allocated_capacity") {
-			jobUpdate.MaxCapacity = aws.Float64(float64(d.Get("allocated_capacity").(int)))
-			log.Printf("[WARN] Using deprecated `allocated_capacity' attribute.")
+
+		if v, ok := d.GetOk("number_of_workers"); ok {
+			jobUpdate.NumberOfWorkers = aws.Int64(int64(v.(int)))
+		} else {
+			if v, ok := d.GetOk("max_capacity"); ok {
+				jobUpdate.MaxCapacity = aws.Float64(v.(float64))
+			}
+			if d.HasChange("allocated_capacity") {
+				jobUpdate.MaxCapacity = aws.Float64(float64(d.Get("allocated_capacity").(int)))
+				log.Printf("[WARN] Using deprecated `allocated_capacity' attribute.")
+			}
+		}
+
+		if v, ok := d.GetOk("connections"); ok {
+			jobUpdate.Connections = &glue.ConnectionsList{
+				Connections: expandStringList(v.([]interface{})),
+			}
+		}
+
+		if kv, ok := d.GetOk("default_arguments"); ok {
+			defaultArgumentsMap := make(map[string]string)
+			for k, v := range kv.(map[string]interface{}) {
+				defaultArgumentsMap[k] = v.(string)
+			}
+			jobUpdate.DefaultArguments = aws.StringMap(defaultArgumentsMap)
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			jobUpdate.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("glue_version"); ok {
+			jobUpdate.GlueVersion = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("execution_property"); ok {
+			jobUpdate.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
+		}
+
+		if v, ok := d.GetOk("max_retries"); ok {
+			jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("security_configuration"); ok {
+			jobUpdate.SecurityConfiguration = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("worker_type"); ok {
+			jobUpdate.WorkerType = aws.String(v.(string))
+		}
+
+		input := &glue.UpdateJobInput{
+			JobName:   aws.String(d.Id()),
+			JobUpdate: jobUpdate,
+		}
+
+		log.Printf("[DEBUG] Updating Glue Job: %s", input)
+		_, err := conn.UpdateJob(input)
+		if err != nil {
+			return fmt.Errorf("error updating Glue Job (%s): %s", d.Id(), err)
 		}
 	}
 
-	if v, ok := d.GetOk("connections"); ok {
-		jobUpdate.Connections = &glue.ConnectionsList{
-			Connections: expandStringList(v.([]interface{})),
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
-	}
-
-	if kv, ok := d.GetOk("default_arguments"); ok {
-		defaultArgumentsMap := make(map[string]string)
-		for k, v := range kv.(map[string]interface{}) {
-			defaultArgumentsMap[k] = v.(string)
-		}
-		jobUpdate.DefaultArguments = aws.StringMap(defaultArgumentsMap)
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		jobUpdate.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("glue_version"); ok {
-		jobUpdate.GlueVersion = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("execution_property"); ok {
-		jobUpdate.ExecutionProperty = expandGlueExecutionProperty(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("max_retries"); ok {
-		jobUpdate.MaxRetries = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("security_configuration"); ok {
-		jobUpdate.SecurityConfiguration = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("worker_type"); ok {
-		jobUpdate.WorkerType = aws.String(v.(string))
-	}
-
-	input := &glue.UpdateJobInput{
-		JobName:   aws.String(d.Id()),
-		JobUpdate: jobUpdate,
-	}
-
-	log.Printf("[DEBUG] Updating Glue Job: %s", input)
-	_, err := conn.UpdateJob(input)
-	if err != nil {
-		return fmt.Errorf("error updating Glue Job (%s): %s", d.Id(), err)
 	}
 
 	return resourceAwsGlueJobRead(d, meta)
