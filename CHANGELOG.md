@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_iam_group_policy: Add IAM Policy JSON difference suppression and validation to `policy` argument [GH-9660]
 * resource/aws_lambda_event_source_mapping: Add `maximum_batching_window_in_seconds` argument [GH-10051]
 * resource/aws_lambda_function: Support `java11`, `nodejs12.x`, and `python3.8` as valid `runtime` argument values in validation [GH-10938]
+* resource/aws_lambda_layer_version: Support `java11`, `nodejs12.x`, and `python3.8` as valid `compatible_runtimes` argument values in validation [GH-10938]
 * resource/aws_resourcegroups_group: Add `tags` argument [GH-10640]
 
 BUG FIXES:
