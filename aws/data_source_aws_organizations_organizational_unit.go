@@ -60,9 +60,7 @@ func dataSourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, me
 			return fmt.Errorf("Error listing organizational units for parent: %s", err)
 		}
 
-		for _, ou := range ous.OrganizationalUnits {
-			children = append(children, ou)
-		}
+		children = append(children, ous.OrganizationalUnits...)
 
 		if ous.NextToken == nil {
 			break
