@@ -6,10 +6,12 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGlueTrigger() *schema.Resource {
@@ -51,6 +53,10 @@ func resourceAwsGlueTrigger() *schema.Resource {
 						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -136,6 +142,7 @@ func resourceAwsGlueTrigger() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags": tagsSchema(),
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -163,6 +170,7 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 	input := &glue.CreateTriggerInput{
 		Actions: expandGlueActions(d.Get("actions").([]interface{})),
 		Name:    aws.String(name),
+		Tags:    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GlueTags(),
 		Type:    aws.String(triggerType),
 	}
 
@@ -248,6 +256,15 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting actions: %s", err)
 	}
 
+	triggerARN := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "glue",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("trigger/%s", d.Id()),
+	}.String()
+	d.Set("arn", triggerARN)
+
 	d.Set("description", trigger.Description)
 
 	var enabled bool
@@ -266,6 +283,17 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.Set("name", trigger.Name)
 	d.Set("schedule", trigger.Schedule)
+
+	tags, err := keyvaluetags.GlueListTags(conn, triggerARN)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Glue Trigger (%s): %s", triggerARN, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("type", trigger.Type)
 	d.Set("workflow_name", trigger.WorkflowName)
 
@@ -327,6 +355,13 @@ func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) erro
 			if err != nil {
 				return fmt.Errorf("error stopping Glue Trigger (%s): %s", d.Id(), err)
 			}
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.GlueUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 

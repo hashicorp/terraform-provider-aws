@@ -113,6 +113,7 @@ The following arguments are supported:
 * `name` – (Required) The name of the trigger.
 * `predicate` – (Optional) A predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. Defined below.
 * `schedule` – (Optional) A cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
+* `tags` - (Optional) Key-value mapping of resource tags
 * `type` – (Required) The type of trigger. Valid values are `CONDITIONAL`, `ON_DEMAND`, and `SCHEDULED`.
 * `workflow_name` - (Optional) A workflow to which the trigger should be associated to. Every workflow graph (DAG) needs a starting trigger (`ON_DEMAND` or `SCHEDULED` type) and can contain multiple additional `CONDITIONAL` triggers.
 
@@ -140,6 +141,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of Glue Trigger
 * `id` - Trigger name
 
 ## Timeouts
