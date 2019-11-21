@@ -97,6 +97,7 @@ resource "aws_eip" "byoip-ip" {
 
 The following arguments are supported:
 
+* `subnet_id` - (Required) The VPC subnet ID.
 * `vpc` - (Optional) Boolean if the EIP is in a VPC or not.
 * `instance` - (Optional) EC2 instance ID.
 * `network_interface` - (Optional) Network interface ID to associate with.
