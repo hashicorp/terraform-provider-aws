@@ -23,6 +23,7 @@ BUG FIXES:
 
 * data_source/aws_instance: Fixes a bug where multiple EBS volumes would get collapsed and only one would return [GH-10045]
 * resource/aws_appmesh_virtual_node: Allow FQDN values in `service_discovery` `aws_cloud_map` configuration block `namespace_name` and `service_name` argument validations [GH-9788]
+* resource/aws_batch_compute_environment: Propose resource recreation when updating `compute_resources` configuration block `tags` argument [GH-10937]
 * resource/aws_iam_instance_profile: Remove requirement to specify a role, as it is not required by the API [GH-10525]
 * resource/aws_opsworks_application: Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `app_source` property [GH-10175]
 * resource/aws_opsworks_stack: Fixes issue where `terraform apply` continuously suggests applying changes to `ssh_key` or `password` in `custom_cookbooks_source` property [GH-10175]
