@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	//"strings"
+	"strings"
 	"testing"
-	//"time"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	//"github.com/aws/aws-sdk-go/aws/awserr"
@@ -990,9 +990,6 @@ func TestAccAWSEc2Fleet_Type(t *testing.T) {
 }
 
 // Test for the bug described in https://github.com/terraform-providers/terraform-provider-aws/issues/6777
-// For various reasons that don't seem trivially fixable, this test infrastructure doesn't get destroyed cleanly
-// when the testAccCheckAWSEc2FleetHistory check passes. Leaving it commented out for now.
-/*
 func TestAccAWSEc2Fleet_TemplateMultipleNetworkInterfaces(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -1083,20 +1080,24 @@ resource "aws_launch_template" "test" {
 
 	network_interfaces {
 		device_index = 0
+		delete_on_termination = true
 		network_interface_id = "${aws_network_interface.test.id}"
 	}
 	network_interfaces {
 		device_index = 1
+		delete_on_termination = true
 		subnet_id = "${aws_subnet.test.id}"
 	}
 
 }
 
 resource "aws_ec2_fleet" "test" {
+	terminate_instances = true
+
 	launch_template_config {
 		launch_template_specification {
-		launch_template_id = "${aws_launch_template.test.id}"
-		version            = "${aws_launch_template.test.latest_version}"
+			launch_template_id = "${aws_launch_template.test.id}"
+			version            = "${aws_launch_template.test.latest_version}"
 		}
 		# allow to choose from several instance types if there is no spot capacity for some type
 		override {
@@ -1164,7 +1165,6 @@ func testAccCheckAWSEc2FleetHistory(resourceName string, errorMsg string) resour
 		return nil
 	}
 }
-*/
 
 func testAccCheckAWSEc2FleetExists(resourceName string, fleet *ec2.FleetData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

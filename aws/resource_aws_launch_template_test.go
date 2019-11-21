@@ -541,7 +541,7 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
 				),
 			},
@@ -1072,6 +1072,80 @@ resource "aws_launch_template" "test" {
 
   network_interfaces {
     network_interface_id = "${aws_network_interface.test.id}"
+    ipv4_address_count = 2
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_associatePublicIpAddressTrue = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.1.0.0/24"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+}
+
+resource "aws_launch_template" "test" {
+  name = "network-interface-launch-template"
+
+  network_interfaces {
+	network_interface_id = "${aws_network_interface.test.id}"
+	associate_public_ip_address = true
+    ipv4_address_count = 2
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_associatePublicIpAddressFalse = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.1.0.0/24"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+}
+
+resource "aws_launch_template" "test" {
+  name = "network-interface-launch-template"
+
+  network_interfaces {
+	network_interface_id = "${aws_network_interface.test.id}"
+	associate_public_ip_address = false
+    ipv4_address_count = 2
+  }
+}
+`
+
+const testAccAWSLaunchTemplateConfig_associatePublicIpAddressMissing = `
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "10.1.0.0/24"
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = "${aws_subnet.test.id}"
+}
+
+resource "aws_launch_template" "test" {
+  name = "network-interface-launch-template"
+
+  network_interfaces {
+	network_interface_id = "${aws_network_interface.test.id}"
     ipv4_address_count = 2
   }
 }
