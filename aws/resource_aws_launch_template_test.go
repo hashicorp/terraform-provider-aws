@@ -554,6 +554,54 @@ func TestAccAWSLaunchTemplate_networkInterface(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfig_associatePublicIpAddressTrue,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_associatePublicIpAddressFalse,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_associatePublicIpAddressMissing,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
