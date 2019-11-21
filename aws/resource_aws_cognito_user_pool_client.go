@@ -56,7 +56,6 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 						cognitoidentityprovider.ExplicitAuthFlowsTypeCustomAuthFlowOnly,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeUserPasswordAuth,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowAdminUserPasswordAuth,
-						cognitoidentityprovider.AuthFlowTypeAdminUserPasswordAuth,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowCustomAuth,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserPasswordAuth,
 						cognitoidentityprovider.ExplicitAuthFlowsTypeAllowUserSrpAuth,
