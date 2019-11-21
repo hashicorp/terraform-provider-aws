@@ -13,6 +13,7 @@ ENHANCEMENTS:
 * resource/aws_glue_trigger: Add `workflow_name` argument [GH-9762]
 * resource/aws_glue_trigger: Add `actions` configuration block `crawler_name` argument [GH-10190]
 * resource/aws_glue_trigger: Add `predicate` `conditions` configuration block `crawler_name` and `crawl_state` arguments [GH-10190]
+* resource/aws_glue_trigger: Add `tags` argument and `arn` attribute [GH-10967]
 * resource/aws_iam_group_policy: Add IAM Policy JSON difference suppression and validation to `policy` argument [GH-9660]
 * resource/aws_lambda_event_source_mapping: Add `maximum_batching_window_in_seconds` argument [GH-10051]
 * resource/aws_lambda_function: Support `java11`, `nodejs12.x`, and `python3.8` as valid `runtime` argument values in validation [GH-10938]
