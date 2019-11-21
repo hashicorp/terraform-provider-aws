@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_cloudwatch_metric_alarm: Add `threshold_metric_id` argument (support Anomaly Detection metrics) [GH-9828]
 * resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates [GH-10935]
 * resource/aws_ebs_snapshot_copy: Support tagging-on-create and in-place `tags` updates [GH-10936]
 
