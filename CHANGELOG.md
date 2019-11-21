@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates [GH-10935]
+* resource/aws_ebs_snapshot_copy: Support tagging-on-create and in-place `tags` updates [GH-10936]
 
 ## 2.39.0 (November 21, 2019)
 
