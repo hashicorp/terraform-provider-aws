@@ -60,6 +60,7 @@ be removed in future releases, please use `max_capacity` instead.
 * `max_retries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
 * `role_arn` – (Required) The ARN of the IAM role associated with this job.
+* `tags` - (Optional) Key-value mapping of resource tags
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, or G.2X.
@@ -79,6 +80,7 @@ be removed in future releases, please use `max_capacity` instead.
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of Glue Job
 * `id` - Job name
 
 ## Import
