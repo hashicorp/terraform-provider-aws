@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
@@ -60,6 +60,29 @@ func TestAccAWSS3BucketPublicAccessBlock_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketPublicAccessBlockExists(resourceName, &config),
 					testAccCheckAWSS3BucketPublicAccessBlockDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSS3BucketPublicAccessBlock_bucketDisappears(t *testing.T) {
+	var config s3.PublicAccessBlockConfiguration
+	name := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	resourceName := "aws_s3_bucket_public_access_block.bucket"
+	bucketResourceName := "aws_s3_bucket.bucket"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSS3BucketPublicAccessBlockConfig(name, "false", "false", "false", "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketPublicAccessBlockExists(resourceName, &config),
+					testAccCheckAWSS3DestroyBucket(bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

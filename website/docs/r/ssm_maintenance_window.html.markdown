@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_maintenance_window"
-sidebar_current: "docs-aws-resource-ssm-maintenance-window"
 description: |-
   Provides an SSM Maintenance Window resource
 ---

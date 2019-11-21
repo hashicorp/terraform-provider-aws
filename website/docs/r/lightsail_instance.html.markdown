@@ -1,7 +1,7 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_instance"
-sidebar_current: "docs-aws-resource-lightsail-instance"
 description: |-
   Provides an Lightsail Instance
 ---

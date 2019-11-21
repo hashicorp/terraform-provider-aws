@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -162,6 +162,7 @@ func TestAccAWSEc2CapacityReservation_endDate(t *testing.T) {
 
 func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
 	var cr ec2.CapacityReservation
+	endDate := time.Now().UTC().Add(12 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_ec2_capacity_reservation.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -182,10 +183,10 @@ func TestAccAWSEc2CapacityReservation_endDateType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEc2CapacityReservationConfig_endDate("2019-10-31T07:39:57Z"),
+				Config: testAccEc2CapacityReservationConfig_endDate(endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEc2CapacityReservationExists(resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "end_date", "2019-10-31T07:39:57Z"),
+					resource.TestCheckResourceAttr(resourceName, "end_date", endDate),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "limited"),
 				),
 			},

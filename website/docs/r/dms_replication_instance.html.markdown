@@ -1,7 +1,7 @@
 ---
+subcategory: "Database Migration Service (DMS)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_instance"
-sidebar_current: "docs-aws-resource-dms-replication-instance"
 description: |-
   Provides a DMS (Data Migration Service) replication instance resource.
 ---

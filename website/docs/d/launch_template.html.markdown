@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_launch_template"
-sidebar_current: "docs-aws-datasource-launch-template"
 description: |-
   Provides a Launch Template data source.
 ---

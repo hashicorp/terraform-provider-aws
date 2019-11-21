@@ -1,7 +1,7 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_policy_attachment"
-sidebar_current: "docs-aws-resource-organizations-policy-attachment"
 description: |-
   Provides a resource to attach an AWS Organizations policy to an organization account, root, or unit.
 ---

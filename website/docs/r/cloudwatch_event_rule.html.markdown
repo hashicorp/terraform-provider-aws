@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_rule"
-sidebar_current: "docs-aws-resource-cloudwatch-event-rule"
 description: |-
   Provides a CloudWatch Event Rule resource.
 ---

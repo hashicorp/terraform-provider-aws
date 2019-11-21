@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_usage_plan"
-sidebar_current: "docs-aws-resource-api-gateway-usage-plan"
 description: |-
   Provides an API Gateway Usage Plan.
 ---

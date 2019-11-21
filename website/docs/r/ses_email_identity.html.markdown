@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_email_identity"
-sidebar_current: "docs-aws-resource-ses-email-identity"
 description: |-
   Provides an SES email identity resource
 ---

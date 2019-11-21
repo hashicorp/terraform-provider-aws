@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami_copy"
-sidebar_current: "docs-aws-resource-ami-copy"
 description: |-
   Duplicates an existing Amazon Machine Image (AMI)
 ---

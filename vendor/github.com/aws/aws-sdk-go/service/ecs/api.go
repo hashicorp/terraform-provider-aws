@@ -2120,10 +2120,12 @@ func (c *ECS) ListClustersPagesWithContext(ctx aws.Context, input *ListClustersI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2272,10 +2274,12 @@ func (c *ECS) ListContainerInstancesPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListContainerInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListContainerInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2420,10 +2424,12 @@ func (c *ECS) ListServicesPagesWithContext(ctx aws.Context, input *ListServicesI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListServicesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListServicesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2662,10 +2668,12 @@ func (c *ECS) ListTaskDefinitionFamiliesPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTaskDefinitionFamiliesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTaskDefinitionFamiliesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2808,10 +2816,12 @@ func (c *ECS) ListTaskDefinitionsPagesWithContext(ctx aws.Context, input *ListTa
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTaskDefinitionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTaskDefinitionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2965,10 +2975,12 @@ func (c *ECS) ListTasksPagesWithContext(ctx aws.Context, input *ListTasksInput, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTasksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTasksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5531,9 +5543,6 @@ type Container struct {
 	// The exit code returned from the container.
 	ExitCode *int64 `locationName:"exitCode" type:"integer"`
 
-	// The FireLens configuration for the container.
-	FirelensConfiguration *FirelensConfiguration `locationName:"firelensConfiguration" type:"structure"`
-
 	// The IDs of each GPU assigned to the container.
 	GpuIds []*string `locationName:"gpuIds" type:"list"`
 
@@ -5605,12 +5614,6 @@ func (s *Container) SetCpu(v string) *Container {
 // SetExitCode sets the ExitCode field's value.
 func (s *Container) SetExitCode(v int64) *Container {
 	s.ExitCode = &v
-	return s
-}
-
-// SetFirelensConfiguration sets the FirelensConfiguration field's value.
-func (s *Container) SetFirelensConfiguration(v *FirelensConfiguration) *Container {
-	s.FirelensConfiguration = v
 	return s
 }
 
@@ -11138,7 +11141,7 @@ type LogConfiguration struct {
 	// splunk, and awsfirelens.
 	//
 	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
-	// fluentd, gelf, json-file, journald, syslog, splunk, and awsfirelens.
+	// fluentd, gelf, json-file, journald, logentries, syslog, splunk, and awsfirelens.
 	//
 	// For more information about using the awslogs log driver, see Using the awslogs
 	// Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
@@ -11170,7 +11173,9 @@ type LogConfiguration struct {
 	// --format '{{.Server.APIVersion}}'
 	Options map[string]*string `locationName:"options" type:"map"`
 
-	// The secrets to pass to the log configuration.
+	// The secrets to pass to the log configuration. For more information, see Specifying
+	// Sensitive Data (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html)
+	// in the Amazon Elastic Container Service Developer Guide.
 	SecretOptions []*Secret `locationName:"secretOptions" type:"list"`
 }
 
@@ -12354,7 +12359,7 @@ type RegisterTaskDefinitionInput struct {
 	// The process namespace to use for the containers in the task. The valid values
 	// are host or task. If host is specified, then all containers within the tasks
 	// that specified the host PID mode on the same container instance share the
-	// same IPC resources with the host Amazon EC2 instance. If task is specified,
+	// same process namespace with the host Amazon EC2 instance. If task is specified,
 	// all containers within the specified task share the same process namespace.
 	// If no value is specified, the default is a private namespace. For more information,
 	// see PID settings (https://docs.docker.com/engine/reference/run/#pid-settings---pid)
@@ -15077,7 +15082,7 @@ type TaskDefinition struct {
 	// The process namespace to use for the containers in the task. The valid values
 	// are host or task. If host is specified, then all containers within the tasks
 	// that specified the host PID mode on the same container instance share the
-	// same IPC resources with the host Amazon EC2 instance. If task is specified,
+	// same process namespace with the host Amazon EC2 instance. If task is specified,
 	// all containers within the specified task share the same process namespace.
 	// If no value is specified, the default is a private namespace. For more information,
 	// see PID settings (https://docs.docker.com/engine/reference/run/#pid-settings---pid)

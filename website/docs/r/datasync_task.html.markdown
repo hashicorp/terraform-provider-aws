@@ -1,7 +1,7 @@
 ---
+subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_task"
-sidebar_current: "docs-aws-resource-datasync-task"
 description: |-
   Manages an AWS DataSync Task
 ---

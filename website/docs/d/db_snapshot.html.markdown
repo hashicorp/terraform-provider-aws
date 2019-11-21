@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_snapshot"
-sidebar_current: "docs-aws-datasource-db-snapshot"
 description: |-
   Get information on a DB Snapshot.
 ---

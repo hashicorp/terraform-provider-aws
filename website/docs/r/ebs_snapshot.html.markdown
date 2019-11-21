@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot"
-sidebar_current: "docs-aws-resource-ebs-snapshot"
 description: |-
   Provides an elastic block storage snapshot resource.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_key"
-sidebar_current: "docs-aws-resource-kms-key"
 description: |-
   Provides a KMS customer master key.
 ---
@@ -26,7 +26,7 @@ The following arguments are supported:
 * `description` - (Optional) The description of the key as viewed in AWS console.
 * `key_usage` - (Optional) Specifies the intended use of the key.
 	Defaults to ENCRYPT_DECRYPT, and only symmetric encryption and decryption are supported.
-* `policy` - (Optional) A valid policy JSON document. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html).
+* `policy` - (Optional) A valid policy JSON document. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `deletion_window_in_days` - (Optional) Duration in days after which the key is deleted
 	after destruction of the resource, must be between 7 and 30 days. Defaults to 30 days.
 * `is_enabled` - (Optional) Specifies whether the key is enabled. Defaults to true.

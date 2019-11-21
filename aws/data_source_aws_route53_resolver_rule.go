@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func dataSourceAwsRoute53ResolverRule() *schema.Resource {
@@ -125,9 +125,13 @@ func dataSourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface
 	d.Set("resolver_endpoint_id", rule.ResolverEndpointId)
 	d.Set("resolver_rule_id", rule.Id)
 	d.Set("rule_type", rule.RuleType)
-	d.Set("share_status", rule.ShareStatus)
-	if err := getTagsRoute53Resolver(conn, d); err != nil {
-		return fmt.Errorf("error reading Route 53 Resolver rule (%s) tags: %s", d.Id(), err)
+	shareStatus := aws.StringValue(rule.ShareStatus)
+	d.Set("share_status", shareStatus)
+	// https://github.com/terraform-providers/terraform-provider-aws/issues/10211
+	if shareStatus != route53resolver.ShareStatusSharedWithMe {
+		if err := getTagsRoute53Resolver(conn, d); err != nil {
+			return fmt.Errorf("error reading Route 53 Resolver rule (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return nil

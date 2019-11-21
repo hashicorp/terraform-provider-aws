@@ -1460,8 +1460,8 @@ func (c *SageMaker) CreateTransformJobRequest(input *CreateTransformJobInput) (r
 //    * TransformResources - Identifies the ML compute instances for the transform
 //    job.
 //
-// For more information about how batch transformation works Amazon SageMaker,
-// see How It Works (https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html).
+// For more information about how batch transformation works, see Batch Transform
+// (https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3867,10 +3867,12 @@ func (c *SageMaker) ListCompilationJobsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCompilationJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCompilationJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3997,10 +3999,12 @@ func (c *SageMaker) ListEndpointConfigsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEndpointConfigsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEndpointConfigsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4127,10 +4131,12 @@ func (c *SageMaker) ListEndpointsPagesWithContext(ctx aws.Context, input *ListEn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4258,10 +4264,12 @@ func (c *SageMaker) ListHyperParameterTuningJobsPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListHyperParameterTuningJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListHyperParameterTuningJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4388,10 +4396,12 @@ func (c *SageMaker) ListLabelingJobsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLabelingJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLabelingJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4523,10 +4533,12 @@ func (c *SageMaker) ListLabelingJobsForWorkteamPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLabelingJobsForWorkteamOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLabelingJobsForWorkteamOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4728,10 +4740,12 @@ func (c *SageMaker) ListModelsPagesWithContext(ctx aws.Context, input *ListModel
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListModelsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListModelsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4859,10 +4873,12 @@ func (c *SageMaker) ListNotebookInstanceLifecycleConfigsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNotebookInstanceLifecycleConfigsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNotebookInstanceLifecycleConfigsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4990,10 +5006,12 @@ func (c *SageMaker) ListNotebookInstancesPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNotebookInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNotebookInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5122,10 +5140,12 @@ func (c *SageMaker) ListSubscribedWorkteamsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListSubscribedWorkteamsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListSubscribedWorkteamsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5252,10 +5272,12 @@ func (c *SageMaker) ListTagsPagesWithContext(ctx aws.Context, input *ListTagsInp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5382,10 +5404,12 @@ func (c *SageMaker) ListTrainingJobsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTrainingJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTrainingJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5518,10 +5542,12 @@ func (c *SageMaker) ListTrainingJobsForHyperParameterTuningJobPagesWithContext(c
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTrainingJobsForHyperParameterTuningJobOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTrainingJobsForHyperParameterTuningJobOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5648,10 +5674,12 @@ func (c *SageMaker) ListTransformJobsPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTransformJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTransformJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5780,10 +5808,12 @@ func (c *SageMaker) ListWorkteamsPagesWithContext(ctx aws.Context, input *ListWo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkteamsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkteamsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5990,10 +6020,12 @@ func (c *SageMaker) SearchPagesWithContext(ctx aws.Context, input *SearchInput, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*SearchOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*SearchOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7661,14 +7693,6 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-NamedEntityRecognition
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-NamedEntityRecognition
 	//
-	//    * Named entity eecognition - Groups similar selections and calculates
-	//    aggregate boundaries, resolving to most-assigned label. arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-NamedEntityRecognition
-	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-NamedEntityRecognition
-	//
 	// For more information, see Annotation Consolidation (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-annotation-consolidation.html).
 	//
 	// AnnotationConsolidationLambdaArn is a required field
@@ -8379,6 +8403,9 @@ type ContainerDefinition struct {
 	// Using Your Own Algorithms with Amazon SageMaker (https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms.html)
 	Image *string `type:"string"`
 
+	// Specifies whether the container hosts a single model or multiple models.
+	Mode *string `type:"string" enum:"ContainerMode"`
+
 	// The S3 path where the model artifacts, which result from model training,
 	// are stored. This path must point to a single gzip compressed tar archive
 	// (.tar.gz suffix). The S3 path is required for Amazon SageMaker built-in algorithms,
@@ -8443,6 +8470,12 @@ func (s *ContainerDefinition) SetImage(v string) *ContainerDefinition {
 	return s
 }
 
+// SetMode sets the Mode field's value.
+func (s *ContainerDefinition) SetMode(v string) *ContainerDefinition {
+	s.Mode = &v
+	return s
+}
+
 // SetModelDataUrl sets the ModelDataUrl field's value.
 func (s *ContainerDefinition) SetModelDataUrl(v string) *ContainerDefinition {
 	s.ModelDataUrl = &v
@@ -8500,7 +8533,7 @@ type ContinuousParameterRange struct {
 	//
 	// ReverseLogarithmic
 	//
-	// Hyperparemeter tuning searches the values in the hyperparameter range by
+	// Hyperparameter tuning searches the values in the hyperparameter range by
 	// using a reverse logarithmic scale.
 	//
 	// Reverse logarithmic scaling works only for ranges that are entirely within
@@ -9039,6 +9072,21 @@ type CreateEndpointConfigInput struct {
 	// The Amazon Resource Name (ARN) of a AWS Key Management Service key that Amazon
 	// SageMaker uses to encrypt data on the storage volume attached to the ML compute
 	// instance that hosts the endpoint.
+	//
+	// Certain Nitro-based instances include local storage, dependent on the instance
+	// type. Local storage volumes are encrypted using a hardware module on the
+	// instance. You can't request a KmsKeyId when using an instance type with local
+	// storage. If any of the models that you specify in the ProductionVariants
+	// parameter use nitro-based instances with local storage, do not specify a
+	// value for the KmsKeyId parameter. If you specify a value for KmsKeyId when
+	// using any nitro-based instances with local storage, the call to CreateEndpointConfig
+	// fails.
+	//
+	// For a list of instance types that support local instance storage, see Instance
+	// Store Volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#instance-store-volumes).
+	//
+	// For more information about local instance storage encryption, see SSD Instance
+	// Store Volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ssd-instance-store.html).
 	KmsKeyId *string `type:"string"`
 
 	// An list of ProductionVariant objects, one for each model that you want to
@@ -10768,8 +10816,8 @@ type CreateTransformJobInput struct {
 	// request. A record is a single unit of input data that inference can be made
 	// on. For example, a single line in a CSV file is a record.
 	//
-	// To enable the batch strategy, you must set SplitType to Line, RecordIO, or
-	// TFRecord.
+	// To enable the batch strategy, you must set the SplitType property of the
+	// DataProcessing object to Line, RecordIO, or TFRecord.
 	//
 	// To use only one record when making an HTTP invocation request to a container,
 	// set BatchStrategy to SingleRecord and SplitType to Line.
@@ -11168,8 +11216,8 @@ type DataProcessing struct {
 	InputFilter *string `type:"string"`
 
 	// Specifies the source of the data to join with the transformed data. The valid
-	// values are None and Input The default value is None which specifies not to
-	// join the input with the transformed data. If you want the batch transform
+	// values are None and Input. The default value is None, which specifies not
+	// to join the input with the transformed data. If you want the batch transform
 	// job to join the original input data with the transformed data, set JoinSource
 	// to Input.
 	//
@@ -14014,6 +14062,9 @@ type DescribeTrainingJobOutput struct {
 	//
 	//    * Training - Training is in progress.
 	//
+	//    * Interrupted - The job stopped because the managed spot training instances
+	//    were interrupted.
+	//
 	//    * Uploading - Training is complete and the model artifacts are being uploaded
 	//    to the S3 location.
 	//
@@ -14033,9 +14084,6 @@ type DescribeTrainingJobOutput struct {
 	//
 	//    * MaxWaitTmeExceeded - The job stopped because it exceeded the maximum
 	//    allowed wait time.
-	//
-	//    * Interrupted - The job stopped because the managed spot training instances
-	//    were interrupted.
 	//
 	//    * Stopped - The training job has stopped.
 	//
@@ -14837,7 +14885,7 @@ type FileSystemDataSource struct {
 	DirectoryPath *string `type:"string" required:"true"`
 
 	// The access mode of the mount of the directory associated with the channel.
-	// A directory can be mounted either in ro (read-only) or rw (read-write).
+	// A directory can be mounted either in ro (read-only) or rw (read-write) mode.
 	//
 	// FileSystemAccessMode is a required field
 	FileSystemAccessMode *string `type:"string" required:"true" enum:"FileSystemAccessMode"`
@@ -14912,8 +14960,8 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 	return s
 }
 
-// A conditional statement for a search expression that includes a Boolean operator,
-// a resource property, and a value.
+// A conditional statement for a search expression that includes a resource
+// property, a Boolean operator, and a value.
 //
 // If you don't specify an Operator and a Value, the filter searches for only
 // the specified property. For example, defining a Filter for the FailureReason
@@ -15007,7 +15055,7 @@ type Filter struct {
 	// Contains
 	//
 	// Only supported for text-based properties. The word-list of the property contains
-	// the specified Value.
+	// the specified Value. A SearchExpression can include only one Contains operator.
 	//
 	// If you have specified a filter Value, the default is Equals.
 	Operator *string `type:"string" enum:"Operator"`
@@ -16903,7 +16951,7 @@ type IntegerParameterRange struct {
 	//
 	// Logarithmic
 	//
-	// Hyperparemeter tuning searches the values in the hyperparameter range by
+	// Hyperparameter tuning searches the values in the hyperparameter range by
 	// using a logarithmic scale.
 	//
 	// Logarithmic scaling works only for ranges that have only values greater than
@@ -17564,6 +17612,8 @@ func (s *LabelingJobS3DataSource) SetManifestS3Uri(v string) *LabelingJobS3DataS
 // A set of conditions for stopping a labeling job. If any of the conditions
 // are met, the job is automatically stopped. You can use these conditions to
 // control the cost of data labeling.
+//
+// Labeling jobs fail after 30 days with an appropriate client error message.
 type LabelingJobStoppingConditions struct {
 	_ struct{} `type:"structure"`
 
@@ -22213,10 +22263,21 @@ type ResourceConfig struct {
 	// InstanceType is a required field
 	InstanceType *string `type:"string" required:"true" enum:"TrainingInstanceType"`
 
-	// The AWS Key Management Service (AWS KMS) key that Amazon SageMaker uses to
-	// encrypt data on the storage volume attached to the ML compute instance(s)
-	// that run the training job. The VolumeKmsKeyId can be any of the following
-	// formats:
+	// The AWS KMS key that Amazon SageMaker uses to encrypt data on the storage
+	// volume attached to the ML compute instance(s) that run the training job.
+	//
+	// Certain Nitro-based instances include local storage, dependent on the instance
+	// type. Local storage volumes are encrypted using a hardware module on the
+	// instance. You can't request a VolumeKmsKeyId when using an instance type
+	// with local storage.
+	//
+	// For a list of instance types that support local instance storage, see Instance
+	// Store Volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#instance-store-volumes).
+	//
+	// For more information about local instance storage encryption, see SSD Instance
+	// Store Volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ssd-instance-store.html).
+	//
+	// The VolumeKmsKeyId can be in any of the following formats:
 	//
 	//    * // KMS Key ID "1234abcd-12ab-34cd-56ef-1234567890ab"
 	//
@@ -22234,6 +22295,15 @@ type ResourceConfig struct {
 	//
 	// Amazon SageMaker supports only the General Purpose SSD (gp2) ML storage volume
 	// type.
+	//
+	// Certain Nitro-based instances include local storage with a fixed total size,
+	// dependent on the instance type. When using these instances for training,
+	// Amazon SageMaker mounts the local instance storage instead of Amazon EBS
+	// gp2 storage. You can't request a VolumeSizeInGB greater than the total size
+	// of the local instance storage.
+	//
+	// For a list of instance types that support local instance storage, including
+	// the total size per instance type, see Instance Store Volumes (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#instance-store-volumes).
 	//
 	// VolumeSizeInGB is a required field
 	VolumeSizeInGB *int64 `min:"1" type:"integer" required:"true"`
@@ -22410,13 +22480,14 @@ type S3DataSource struct {
 	//
 	//    * A manifest might look like this: s3://bucketname/example.manifest The
 	//    manifest is an S3 object which is a JSON file with the following format:
-	//    [ {"prefix": "s3://customer_bucket/some/prefix/"}, "relative/path/to/custdata-1",
-	//    "relative/path/custdata-2", ... ] The preceding JSON matches the following
-	//    s3Uris: s3://customer_bucket/some/prefix/relative/path/to/custdata-1 s3://customer_bucket/some/prefix/relative/path/custdata-2
-	//    ... The complete set of s3uris in this manifest is the input data for
-	//    the channel for this datasource. The object that each s3uris points to
-	//    must be readable by the IAM role that Amazon SageMaker uses to perform
-	//    tasks on your behalf.
+	//    The preceding JSON matches the following s3Uris: [ {"prefix": "s3://customer_bucket/some/prefix/"},
+	//    "relative/path/to/custdata-1", "relative/path/custdata-2", ... "relative/path/custdata-N"
+	//    ] The preceding JSON matches the following s3Uris: s3://customer_bucket/some/prefix/relative/path/to/custdata-1
+	//    s3://customer_bucket/some/prefix/relative/path/custdata-2 ... s3://customer_bucket/some/prefix/relative/path/custdata-N
+	//    The complete set of s3uris in this manifest is the input data for the
+	//    channel for this datasource. The object that each s3uris points to must
+	//    be readable by the IAM role that Amazon SageMaker uses to perform tasks
+	//    on your behalf.
 	//
 	// S3Uri is a required field
 	S3Uri *string `type:"string" required:"true"`
@@ -22480,7 +22551,8 @@ func (s *S3DataSource) SetS3Uri(v string) *S3DataSource {
 // A SearchExpression contains the following components:
 //
 //    * A list of Filter objects. Each filter defines a simple Boolean expression
-//    comprised of a resource property name, Boolean operator, and value.
+//    comprised of a resource property name, Boolean operator, and value. A
+//    SearchExpression can include only one Contains operator.
 //
 //    * A list of NestedFilter objects. Each nested filter defines a list of
 //    Boolean expressions using a list of resource properties. A nested filter
@@ -24542,9 +24614,9 @@ type TransformInput struct {
 	// is removed if the value of BatchStrategy is set to SingleRecord. Padding
 	// is not removed if the value of BatchStrategy is set to MultiRecord.
 	//
-	// For more information about the RecordIO, see Data Format (http://mxnet.io/architecture/note_data_loading.html#data-format)
-	// in the MXNet documentation. For more information about the TFRecord, see
-	// Consuming TFRecord data (https://www.tensorflow.org/guide/datasets#consuming_tfrecord_data)
+	// For more information about RecordIO, see Create a Dataset Using RecordIO
+	// (https://mxnet.apache.org/api/faq/recordio) in the MXNet documentation. For
+	// more information about TFRecord, see Consuming TFRecord data (https://www.tensorflow.org/guide/datasets#consuming_tfrecord_data)
 	// in the TensorFlow documentation.
 	SplitType *string `type:"string" enum:"SplitType"`
 }
@@ -24851,7 +24923,7 @@ type TransformOutput struct {
 	// in the Amazon Simple Storage Service Developer Guide.
 	//
 	// The KMS key policy must grant permission to the IAM role that you specify
-	// in your CreateTramsformJob request. For more information, see Using Key Policies
+	// in your CreateModel request. For more information, see Using Key Policies
 	// in AWS KMS (http://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html)
 	// in the AWS Key Management Service Developer Guide.
 	KmsKeyId *string `type:"string"`
@@ -25024,12 +25096,13 @@ type TransformS3DataSource struct {
 	//    * A manifest might look like this: s3://bucketname/example.manifest The
 	//    manifest is an S3 object which is a JSON file with the following format:
 	//    [ {"prefix": "s3://customer_bucket/some/prefix/"}, "relative/path/to/custdata-1",
-	//    "relative/path/custdata-2", ... ] The preceding JSON matches the following
-	//    S3Uris: s3://customer_bucket/some/prefix/relative/path/to/custdata-1 s3://customer_bucket/some/prefix/relative/path/custdata-1
-	//    ... The complete set of S3Uris in this manifest constitutes the input
-	//    data for the channel for this datasource. The object that each S3Uris
-	//    points to must be readable by the IAM role that Amazon SageMaker uses
-	//    to perform tasks on your behalf.
+	//    "relative/path/custdata-2", ... "relative/path/custdata-N" ] The preceding
+	//    JSON matches the following s3Uris: s3://customer_bucket/some/prefix/relative/path/to/custdata-1
+	//    s3://customer_bucket/some/prefix/relative/path/custdata-2 ... s3://customer_bucket/some/prefix/relative/path/custdata-N
+	//    The complete set of S3Uris in this manifest constitutes the input data
+	//    for the channel for this datasource. The object that each S3Uris points
+	//    to must be readable by the IAM role that Amazon SageMaker uses to perform
+	//    tasks on your behalf.
 	//
 	// S3Uri is a required field
 	S3Uri *string `type:"string" required:"true"`
@@ -26138,6 +26211,14 @@ const (
 )
 
 const (
+	// ContainerModeSingleModel is a ContainerMode enum value
+	ContainerModeSingleModel = "SingleModel"
+
+	// ContainerModeMultiModel is a ContainerMode enum value
+	ContainerModeMultiModel = "MultiModel"
+)
+
+const (
 	// ContentClassifierFreeOfPersonallyIdentifiableInformation is a ContentClassifier enum value
 	ContentClassifierFreeOfPersonallyIdentifiableInformation = "FreeOfPersonallyIdentifiableInformation"
 
@@ -26534,6 +26615,15 @@ const (
 
 	// NotebookInstanceAcceleratorTypeMlEia1Xlarge is a NotebookInstanceAcceleratorType enum value
 	NotebookInstanceAcceleratorTypeMlEia1Xlarge = "ml.eia1.xlarge"
+
+	// NotebookInstanceAcceleratorTypeMlEia2Medium is a NotebookInstanceAcceleratorType enum value
+	NotebookInstanceAcceleratorTypeMlEia2Medium = "ml.eia2.medium"
+
+	// NotebookInstanceAcceleratorTypeMlEia2Large is a NotebookInstanceAcceleratorType enum value
+	NotebookInstanceAcceleratorTypeMlEia2Large = "ml.eia2.large"
+
+	// NotebookInstanceAcceleratorTypeMlEia2Xlarge is a NotebookInstanceAcceleratorType enum value
+	NotebookInstanceAcceleratorTypeMlEia2Xlarge = "ml.eia2.xlarge"
 )
 
 const (
@@ -26662,6 +26752,15 @@ const (
 
 	// ProductionVariantAcceleratorTypeMlEia1Xlarge is a ProductionVariantAcceleratorType enum value
 	ProductionVariantAcceleratorTypeMlEia1Xlarge = "ml.eia1.xlarge"
+
+	// ProductionVariantAcceleratorTypeMlEia2Medium is a ProductionVariantAcceleratorType enum value
+	ProductionVariantAcceleratorTypeMlEia2Medium = "ml.eia2.medium"
+
+	// ProductionVariantAcceleratorTypeMlEia2Large is a ProductionVariantAcceleratorType enum value
+	ProductionVariantAcceleratorTypeMlEia2Large = "ml.eia2.large"
+
+	// ProductionVariantAcceleratorTypeMlEia2Xlarge is a ProductionVariantAcceleratorType enum value
+	ProductionVariantAcceleratorTypeMlEia2Xlarge = "ml.eia2.xlarge"
 )
 
 const (
@@ -26709,6 +26808,24 @@ const (
 
 	// ProductionVariantInstanceTypeMlM524xlarge is a ProductionVariantInstanceType enum value
 	ProductionVariantInstanceTypeMlM524xlarge = "ml.m5.24xlarge"
+
+	// ProductionVariantInstanceTypeMlM5dLarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5dLarge = "ml.m5d.large"
+
+	// ProductionVariantInstanceTypeMlM5dXlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5dXlarge = "ml.m5d.xlarge"
+
+	// ProductionVariantInstanceTypeMlM5d2xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5d2xlarge = "ml.m5d.2xlarge"
+
+	// ProductionVariantInstanceTypeMlM5d4xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5d4xlarge = "ml.m5d.4xlarge"
+
+	// ProductionVariantInstanceTypeMlM5d12xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5d12xlarge = "ml.m5d.12xlarge"
+
+	// ProductionVariantInstanceTypeMlM5d24xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlM5d24xlarge = "ml.m5d.24xlarge"
 
 	// ProductionVariantInstanceTypeMlC4Large is a ProductionVariantInstanceType enum value
 	ProductionVariantInstanceTypeMlC4Large = "ml.c4.large"
@@ -26760,6 +26877,78 @@ const (
 
 	// ProductionVariantInstanceTypeMlC518xlarge is a ProductionVariantInstanceType enum value
 	ProductionVariantInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+
+	// ProductionVariantInstanceTypeMlC5dLarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5dLarge = "ml.c5d.large"
+
+	// ProductionVariantInstanceTypeMlC5dXlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5dXlarge = "ml.c5d.xlarge"
+
+	// ProductionVariantInstanceTypeMlC5d2xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5d2xlarge = "ml.c5d.2xlarge"
+
+	// ProductionVariantInstanceTypeMlC5d4xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5d4xlarge = "ml.c5d.4xlarge"
+
+	// ProductionVariantInstanceTypeMlC5d9xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5d9xlarge = "ml.c5d.9xlarge"
+
+	// ProductionVariantInstanceTypeMlC5d18xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlC5d18xlarge = "ml.c5d.18xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dnXlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dnXlarge = "ml.g4dn.xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn2xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn2xlarge = "ml.g4dn.2xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn4xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn4xlarge = "ml.g4dn.4xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn8xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn8xlarge = "ml.g4dn.8xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn12xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn12xlarge = "ml.g4dn.12xlarge"
+
+	// ProductionVariantInstanceTypeMlG4dn16xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlG4dn16xlarge = "ml.g4dn.16xlarge"
+
+	// ProductionVariantInstanceTypeMlR5Large is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5Large = "ml.r5.large"
+
+	// ProductionVariantInstanceTypeMlR5Xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5Xlarge = "ml.r5.xlarge"
+
+	// ProductionVariantInstanceTypeMlR52xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR52xlarge = "ml.r5.2xlarge"
+
+	// ProductionVariantInstanceTypeMlR54xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR54xlarge = "ml.r5.4xlarge"
+
+	// ProductionVariantInstanceTypeMlR512xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR512xlarge = "ml.r5.12xlarge"
+
+	// ProductionVariantInstanceTypeMlR524xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR524xlarge = "ml.r5.24xlarge"
+
+	// ProductionVariantInstanceTypeMlR5dLarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5dLarge = "ml.r5d.large"
+
+	// ProductionVariantInstanceTypeMlR5dXlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5dXlarge = "ml.r5d.xlarge"
+
+	// ProductionVariantInstanceTypeMlR5d2xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5d2xlarge = "ml.r5d.2xlarge"
+
+	// ProductionVariantInstanceTypeMlR5d4xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5d4xlarge = "ml.r5d.4xlarge"
+
+	// ProductionVariantInstanceTypeMlR5d12xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5d12xlarge = "ml.r5d.12xlarge"
+
+	// ProductionVariantInstanceTypeMlR5d24xlarge is a ProductionVariantInstanceType enum value
+	ProductionVariantInstanceTypeMlR5d24xlarge = "ml.r5d.24xlarge"
 )
 
 const (
@@ -27015,6 +27204,9 @@ const (
 	// TrainingInstanceTypeMlP316xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlP316xlarge = "ml.p3.16xlarge"
 
+	// TrainingInstanceTypeMlP3dn24xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlP3dn24xlarge = "ml.p3dn.24xlarge"
+
 	// TrainingInstanceTypeMlC5Xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC5Xlarge = "ml.c5.xlarge"
 
@@ -27029,9 +27221,6 @@ const (
 
 	// TrainingInstanceTypeMlC518xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
-
-	// TrainingInstanceTypeMlP3dn24xlarge is a TrainingInstanceType enum value
-	TrainingInstanceTypeMlP3dn24xlarge = "ml.p3dn.24xlarge"
 )
 
 const (

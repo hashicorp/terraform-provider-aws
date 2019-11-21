@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_environment"
-sidebar_current: "docs-aws-resource-elastic-beanstalk-environment"
 description: |-
   Provides an Elastic Beanstalk Environment Resource
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "WorkSpaces"
 layout: "aws"
 page_title: "AWS: aws_workspaces_bundle"
-sidebar_current: "docs-aws-datasource-workspaces-bundle"
 description: |-
   Get information on a Workspaces Bundle.
 ---

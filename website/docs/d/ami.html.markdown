@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami"
-sidebar_current: "docs-aws-datasource-ami"
 description: |-
   Get information on a Amazon Machine Image (AMI).
 ---

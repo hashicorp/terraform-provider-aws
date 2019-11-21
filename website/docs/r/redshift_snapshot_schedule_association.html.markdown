@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_snapshot_schedule_association"
-sidebar_current: "docs-aws-resource-redshift-snapshot-schedule-association"
 description: |-
   Provides an Association Redshift Cluster and Snapshot Schedule resource.
 ---

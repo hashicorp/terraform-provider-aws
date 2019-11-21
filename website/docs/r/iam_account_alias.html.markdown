@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_account_alias"
-sidebar_current: "docs-aws-resource-iam-account-alias"
 description: |-
   Manages the account alias for the AWS Account.
 ---

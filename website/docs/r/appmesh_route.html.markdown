@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_route"
-sidebar_current: "docs-aws-resource-appmesh-route"
 description: |-
   Provides an AWS App Mesh route resource.
 ---

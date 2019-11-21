@@ -1,7 +1,7 @@
 ---
+subcategory: "Route53 Resolver"
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rules"
-sidebar_current: "docs-aws-datasource-route53-resolver-rules"
 description: |-
     Provides details about a set of Route53 Resolver rules
 ---

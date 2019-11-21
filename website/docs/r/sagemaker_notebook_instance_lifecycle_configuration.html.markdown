@@ -1,7 +1,7 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_notebook_instance_lifecycle_configuration"
-sidebar_current: "docs-aws-resource-sagemaker-notebook-instance-lifecycle-configuration"
 description: |-
   Provides a lifecycle configuration for SageMaker Notebook Instances.
 ---

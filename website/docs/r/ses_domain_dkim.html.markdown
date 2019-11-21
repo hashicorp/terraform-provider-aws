@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_domain_dkim"
-sidebar_current: "docs-aws-resource-ses-domain-dkim"
 description: |-
   Provides an SES domain DKIM generation resource
 ---

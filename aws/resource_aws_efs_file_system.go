@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsEfsFileSystem() *schema.Resource {
@@ -105,6 +105,7 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								efs.TransitionToIARulesAfter7Days,
 								efs.TransitionToIARulesAfter14Days,
 								efs.TransitionToIARulesAfter30Days,
 								efs.TransitionToIARulesAfter60Days,
@@ -132,6 +133,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	createOpts := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
 		ThroughputMode: aws.String(throughputMode),
+		Tags:           tagsFromMapEFS(d.Get("tags").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("performance_mode"); ok {
@@ -191,11 +193,6 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
 				d.Id(), err.Error())
 		}
-	}
-
-	err = setTagsEFS(conn, d)
-	if err != nil {
-		return fmt.Errorf("error setting tags for EFS file system (%q): %s", d.Id(), err)
 	}
 
 	return resourceAwsEfsFileSystemRead(d, meta)

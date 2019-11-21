@@ -2,15 +2,117 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_waf_web_acl", &resource.Sweeper{
+		Name: "aws_waf_web_acl",
+		F:    testSweepWafWebAcls,
+	})
+}
+
+func testSweepWafWebAcls(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).wafconn
+
+	input := &waf.ListWebACLsInput{}
+
+	for {
+		output, err := conn.ListWebACLs(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping WAF Regional Web ACL sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing WAF Regional Web ACLs: %s", err)
+		}
+
+		for _, webACL := range output.WebACLs {
+			deleteInput := &waf.DeleteWebACLInput{
+				WebACLId: webACL.WebACLId,
+			}
+			id := aws.StringValue(webACL.WebACLId)
+			wr := newWafRetryer(conn)
+
+			_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+				deleteInput.ChangeToken = token
+				log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
+				return conn.DeleteWebACL(deleteInput)
+			})
+
+			if isAWSErr(err, waf.ErrCodeNonEmptyEntityException, "") {
+				getWebACLInput := &waf.GetWebACLInput{
+					WebACLId: webACL.WebACLId,
+				}
+
+				getWebACLOutput, getWebACLErr := conn.GetWebACL(getWebACLInput)
+
+				if getWebACLErr != nil {
+					return fmt.Errorf("error getting WAF Regional Web ACL (%s): %s", id, getWebACLErr)
+				}
+
+				var updates []*waf.WebACLUpdate
+				updateWebACLInput := &waf.UpdateWebACLInput{
+					DefaultAction: getWebACLOutput.WebACL.DefaultAction,
+					Updates:       updates,
+					WebACLId:      webACL.WebACLId,
+				}
+
+				for _, rule := range getWebACLOutput.WebACL.Rules {
+					update := &waf.WebACLUpdate{
+						Action:        aws.String(waf.ChangeActionDelete),
+						ActivatedRule: rule,
+					}
+
+					updateWebACLInput.Updates = append(updateWebACLInput.Updates, update)
+				}
+
+				_, updateWebACLErr := wr.RetryWithToken(func(token *string) (interface{}, error) {
+					updateWebACLInput.ChangeToken = token
+					log.Printf("[INFO] Removing Rules from WAF Regional Web ACL: %s", id)
+					return conn.UpdateWebACL(updateWebACLInput)
+				})
+
+				if updateWebACLErr != nil {
+					return fmt.Errorf("error removing rules from WAF Regional Web ACL (%s): %s", id, updateWebACLErr)
+				}
+
+				_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
+					deleteInput.ChangeToken = token
+					log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
+					return conn.DeleteWebACL(deleteInput)
+				})
+			}
+
+			if err != nil {
+				return fmt.Errorf("error deleting WAF Regional Web ACL (%s): %s", id, err)
+			}
+		}
+
+		if aws.StringValue(output.NextMarker) == "" {
+			break
+		}
+
+		input.NextMarker = output.NextMarker
+	}
+
+	return nil
+}
 
 func TestAccAWSWafWebAcl_basic(t *testing.T) {
 	var webACL waf.WebACL
@@ -30,7 +132,9 @@ func TestAccAWSWafWebAcl_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`webacl/.+`)),
 				),
 			},
 			{
@@ -61,6 +165,7 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
@@ -72,6 +177,7 @@ func TestAccAWSWafWebAcl_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
 				),
 			},
@@ -230,6 +336,65 @@ func TestAccAWSWafWebAcl_disappears(t *testing.T) {
 					testAccCheckAWSWafWebAclDisappears(&webACL),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSWafWebAcl_Tags(t *testing.T) {
+	var webACL waf.WebACL
+	rName := fmt.Sprintf("wafacl%s", acctest.RandString(5))
+	resourceName := "aws_waf_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafWebAclConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSWafWebAclConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSWafWebAclConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafWebAclExists(resourceName, &webACL),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.4234791575.type", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -581,4 +746,37 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSWafWebAclConfigTags1(rName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_web_acl" "test" {
+  metric_name = %q
+  name        = %q
+
+  default_action {
+    type = "ALLOW"
+  }
+	tags = {
+		%q = %q
+	}
+}
+`, rName, rName, tag1Key, tag1Value)
+}
+
+func testAccAWSWafWebAclConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_web_acl" "test" {
+ metric_name = %q
+ name        = %q
+
+ default_action {
+   type = "ALLOW"
+ }
+	tags = {
+		%q = %q
+		%q = %q
+	}
+}
+`, rName, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

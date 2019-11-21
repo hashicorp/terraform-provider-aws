@@ -6,37 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDaxParameterGroupConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDaxParameterGroupExists("aws_dax_parameter_group.test"),
-					resource.TestCheckResourceAttr("aws_dax_parameter_group.test", "parameters.#", "2"),
-				),
-			},
-			{
-				Config: testAccDaxParameterGroupConfig_parameters(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDaxParameterGroupExists("aws_dax_parameter_group.test"),
-					resource.TestCheckResourceAttr("aws_dax_parameter_group.test", "parameters.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAwsDaxParameterGroup_import(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_dax_parameter_group.test"
 
@@ -47,12 +22,22 @@ func TestAccAwsDaxParameterGroup_import(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDaxParameterGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDaxParameterGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDaxParameterGroupConfig_parameters(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDaxParameterGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
+				),
 			},
 		},
 	})

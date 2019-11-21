@@ -1,7 +1,7 @@
 ---
+subcategory: "Athena"
 layout: "aws"
 page_title: "AWS: aws_athena_named_query"
-sidebar_current: "docs-aws-resource-athena-named-query"
 description: |-
   Provides an Athena Named Query resource.
 ---

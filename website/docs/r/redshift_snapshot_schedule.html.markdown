@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_snapshot_schedule"
-sidebar_current: "docs-aws-resource-redshift-snapshot-schedule"
 description: |-
   Provides an Redshift Snapshot Schedule resource.
 ---

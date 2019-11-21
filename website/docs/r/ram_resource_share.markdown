@@ -1,7 +1,7 @@
 ---
+subcategory: "RAM"
 layout: "aws"
 page_title: "AWS: aws_ram_resource_share"
-sidebar_current: "docs-aws-resource-ram-resource-share"
 description: |-
   Manages a Resource Access Manager (RAM) Resource Share.
 ---
