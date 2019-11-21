@@ -123,12 +123,15 @@ func resourceAwsCloudWatchMetricAlarm() *schema.Resource {
 				ConflictsWith: []string{"extended_statistic", "metric_query"},
 			},
 			"threshold": {
-				Type:     schema.TypeFloat,
-				Optional: true,
+				Type:          schema.TypeFloat,
+				Optional:      true,
+				ConflictsWith: []string{"threshold_metric_id"},
 			},
 			"threshold_metric_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"threshold"},
+				ValidateFunc:  validation.StringLenBetween(1, 255),
 			},
 			"actions_enabled": {
 				Type:     schema.TypeBool,
@@ -416,12 +419,10 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 		params.EvaluateLowSampleCountPercentile = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("threshold"); ok {
-		params.Threshold = aws.Float64(v.(float64))
-	}
-
 	if v, ok := d.GetOk("threshold_metric_id"); ok {
 		params.ThresholdMetricId = aws.String(v.(string))
+	} else {
+		params.Threshold = aws.Float64(d.Get("threshold").(float64))
 	}
 
 	var alarmActions []*string
