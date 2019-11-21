@@ -1,4 +1,9 @@
 ## 2.40.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates [GH-10935]
+
 ## 2.39.0 (November 21, 2019)
 
 FEATURES:
