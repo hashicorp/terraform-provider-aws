@@ -1,4 +1,5 @@
 ---
+subcategory: "API Gateway v2 (WebSocket APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_v2_api"
 sidebar_current: "docs-aws-resource-api-gateway-v2-api"
