@@ -1,4 +1,5 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_hosted_transit_virtual_interface_accepter"
 sidebar_current: "docs-aws-resource-dx-hosted-transit-virtual-interface-accepter"
