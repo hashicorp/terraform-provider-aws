@@ -1,5 +1,10 @@
 ## 2.40.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_dx_hosted_transit_virtual_interface` [GH-8523]
+* **New Resource:** `aws_dx_hosted_transit_virtual_interface_accepter` [GH-8523]
+
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_metric_alarm: Add `threshold_metric_id` argument (support Anomaly Detection metrics) [GH-9828]
