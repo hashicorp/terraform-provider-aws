@@ -248,6 +248,7 @@ DOC
 The following arguments are supported:
 
 * `rule` - (Required) The name of the rule you want to add targets to.
+* `event_bus_name` - (Optional) The event bus to associate with the rule. If you omit this, the default event bus is used.
 * `target_id` - (Optional) The unique target assignment ID.  If missing, will generate a random, unique id.
 * `arn` - (Required) The Amazon Resource Name (ARN) associated of the target.
 * `input` - (Optional) Valid JSON text passed to the target.
@@ -305,8 +306,8 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 ## Import
 
-Cloud Watch Event Target can be imported using the role event_rule and target_id separated by `/`.
+Cloud Watch Event Target can be imported using the role `event_rule` and `target_id` and optional `event_bus_name` separated by `#`.
 
  ```
-$ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+$ terraform import aws_cloudwatch_event_target.test-event-target event-bus-name#rule-name#target-id
 ```
