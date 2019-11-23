@@ -39,6 +39,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -212,6 +213,7 @@ type AWSClient struct {
 	codecommitconn                      *codecommit.CodeCommit
 	codedeployconn                      *codedeploy.CodeDeploy
 	codepipelineconn                    *codepipeline.CodePipeline
+	codestarnotificationsconn           *codestarnotifications.CodeStarNotifications
 	cognitoconn                         *cognitoidentity.CognitoIdentity
 	cognitoidpconn                      *cognitoidentityprovider.CognitoIdentityProvider
 	configconn                          *configservice.ConfigService
@@ -415,6 +417,7 @@ func (c *Config) Client() (interface{}, error) {
 		codecommitconn:                      codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codecommit"])})),
 		codedeployconn:                      codedeploy.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codedeploy"])})),
 		codepipelineconn:                    codepipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codepipeline"])})),
+		codestarnotificationsconn:           codestarnotifications.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codestarnotifications"])})),
 		cognitoconn:                         cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidentity"])})),
 		cognitoidpconn:                      cognitoidentityprovider.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidp"])})),
 		configconn:                          configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["configservice"])})),
