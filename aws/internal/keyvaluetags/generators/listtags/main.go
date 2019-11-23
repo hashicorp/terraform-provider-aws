@@ -35,6 +35,7 @@ var serviceNames = []string{
 	"codecommit",
 	"codedeploy",
 	"codepipeline",
+	"codestarnotifications",
 	"cognitoidentity",
 	"cognitoidentityprovider",
 	"configservice",
@@ -279,6 +280,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudwatchlogs":
 		return "LogGroupName"
+	case "codestarnotifications":
+		return "Arn"
 	case "dax":
 		return "ResourceName"
 	case "devicefarm":
