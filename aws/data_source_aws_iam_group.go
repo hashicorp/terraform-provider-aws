@@ -75,9 +75,7 @@ func dataSourceAwsIAMGroupRead(d *schema.ResourceData, meta interface{}) error {
 		if group == nil {
 			group = page.Group
 		}
-		for _, user := range page.Users {
-			users = append(users, user)
-		}
+		users = append(users, page.Users...)
 		return !lastPage
 	})
 	if err != nil {
