@@ -44,7 +44,7 @@ func TestAccAWSLightsailDomain_disappears(t *testing.T) {
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error deleting Lightsail Domain in disapear test")
+			return fmt.Errorf("Error deleting Lightsail Domain in disappear test")
 		}
 
 		return nil
