@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsLb() *schema.Resource {
@@ -73,7 +75,11 @@ func resourceAwsLb() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
-				Default:  "application",
+				Default:  elbv2.LoadBalancerTypeEnumApplication,
+				ValidateFunc: validation.StringInSlice([]string{
+					elbv2.LoadBalancerTypeEnumApplication,
+					elbv2.LoadBalancerTypeEnumNetwork,
+				}, false),
 			},
 
 			"security_groups": {
@@ -183,6 +189,10 @@ func resourceAwsLb() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					elbv2.IpAddressTypeIpv4,
+					elbv2.IpAddressTypeDualstack,
+				}, false),
 			},
 
 			"vpc_id": {
@@ -213,6 +223,7 @@ func suppressIfLBType(t string) schema.SchemaDiffSuppressFunc {
 
 func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Elbv2Tags()
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -227,7 +238,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	elbOpts := &elbv2.CreateLoadBalancerInput{
 		Name: aws.String(name),
 		Type: aws.String(d.Get("load_balancer_type").(string)),
-		Tags: tagsFromMapELBv2(d.Get("tags").(map[string]interface{})),
+	}
+
+	if len(tags) > 0 {
+		elbOpts.Tags = tags
 	}
 
 	if scheme, ok := d.GetOk("internal"); ok && scheme.(bool) {
@@ -277,36 +291,85 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
 	log.Printf("[INFO] LB ID: %s", d.Id())
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"provisioning", "failed"},
-		Target:  []string{"active"},
-		Refresh: func() (interface{}, string, error) {
-			describeResp, err := elbconn.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-				LoadBalancerArns: []*string{lb.LoadBalancerArn},
+	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
+
+	switch d.Get("load_balancer_type").(string) {
+	case "application":
+		if v, ok := d.GetOk("idle_timeout"); ok {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("idle_timeout.timeout_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", v.(int))),
 			})
-			if err != nil {
-				return nil, "", err
-			}
+		}
 
-			if len(describeResp.LoadBalancers) != 1 {
-				return nil, "", fmt.Errorf("No load balancers returned for %s", aws.StringValue(lb.LoadBalancerArn))
-			}
-			dLb := describeResp.LoadBalancers[0]
-
-			log.Printf("[INFO] LB state: %s", aws.StringValue(dLb.State.Code))
-
-			return describeResp, aws.StringValue(dLb.State.Code), nil
-		},
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+		if v, ok := d.GetOk("enable_http2"); ok {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("routing.http2.enabled"),
+				Value: aws.String(strconv.FormatBool(v.(bool))),
+			})
+		}
+	case "network":
+		if v, ok := d.GetOk("enable_cross_zone_load_balancing"); ok {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("load_balancing.cross_zone.enabled"),
+				Value: aws.String(fmt.Sprintf("%t", v.(bool))),
+			})
+		}
 	}
 
-	return resourceAwsLbUpdate(d, meta)
+	if v, ok := d.GetOk("enable_deletion_protection"); ok {
+		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+			Key:   aws.String("deletion_protection.enabled"),
+			Value: aws.String(fmt.Sprintf("%t", v.(bool))),
+		})
+	}
+
+	if v, ok := d.GetOk("access_logs"); ok {
+		logs := v.([]interface{})
+		if len(logs) == 1 && logs[0] != nil {
+			log := logs[0].(map[string]interface{})
+
+			enabled := log["enabled"].(bool)
+
+			attributes = append(attributes,
+				&elbv2.LoadBalancerAttribute{
+					Key:   aws.String("access_logs.s3.enabled"),
+					Value: aws.String(strconv.FormatBool(enabled)),
+				})
+			if enabled {
+				attributes = append(attributes,
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.bucket"),
+						Value: aws.String(log["bucket"].(string)),
+					},
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.prefix"),
+						Value: aws.String(log["prefix"].(string)),
+					})
+			}
+		}
+	}
+
+	if len(attributes) != 0 {
+		input := &elbv2.ModifyLoadBalancerAttributesInput{
+			LoadBalancerArn: aws.String(d.Id()),
+			Attributes:      attributes,
+		}
+
+		log.Printf("[DEBUG] ALB Modify Load Balancer Attributes Request: %#v", input)
+		_, err := elbconn.ModifyLoadBalancerAttributes(input)
+		if err != nil {
+			return fmt.Errorf("Failure configuring LB attributes: %s", err)
+		}
+	}
+
+	_, err2 := stateChangeConf(d, elbconn)
+
+	if err2 != nil {
+		return err2
+	}
+
+	return resourceAwsLbRead(d, meta)
 }
 
 func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
@@ -338,9 +401,11 @@ func resourceAwsLbRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
-	if !d.IsNewResource() {
-		if err := setElbV2Tags(elbconn, d); err != nil {
-			return fmt.Errorf("Error Modifying Tags on ALB: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ALB (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -401,7 +466,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("enable_deletion_protection") || d.IsNewResource() {
+	if d.HasChange("enable_deletion_protection") {
 		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 			Key:   aws.String("deletion_protection.enabled"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("enable_deletion_protection").(bool))),
@@ -439,7 +504,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	// and current subnets for new, so this change is redundant when the
 	// resource is just created, so we don't attempt if it is a newly created
 	// resource.
-	if d.HasChange("subnets") && !d.IsNewResource() {
+	if d.HasChange("subnets") {
 		subnets := expandStringList(d.Get("subnets").(*schema.Set).List())
 
 		params := &elbv2.SetSubnetsInput{
@@ -467,31 +532,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"active", "provisioning", "failed"},
-		Target:  []string{"active"},
-		Refresh: func() (interface{}, string, error) {
-			describeResp, err := elbconn.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
-				LoadBalancerArns: []*string{aws.String(d.Id())},
-			})
-			if err != nil {
-				return nil, "", err
-			}
-
-			if len(describeResp.LoadBalancers) != 1 {
-				return nil, "", fmt.Errorf("No load balancers returned for %s", d.Id())
-			}
-			dLb := describeResp.LoadBalancers[0]
-
-			log.Printf("[INFO] LB state: %s", aws.StringValue(dLb.State.Code))
-
-			return describeResp, aws.StringValue(dLb.State.Code), nil
-		},
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
-	}
-	_, err := stateConf.WaitForState()
+	_, err := stateChangeConf(d, elbconn)
 	if err != nil {
 		return err
 	}
@@ -702,20 +743,14 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 		return fmt.Errorf("error setting subnet_mapping: %s", err)
 	}
 
-	respTags, err := elbconn.DescribeTags(&elbv2.DescribeTagsInput{
-		ResourceArns: []*string{lb.LoadBalancerArn},
-	})
+	tags, err := keyvaluetags.Elbv2ListTags(elbconn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("Error retrieving LB Tags: %s", err)
+		return fmt.Errorf("error listing tags for (%s): %s", d.Id(), err)
 	}
 
-	var et []*elbv2.Tag
-	if len(respTags.TagDescriptions) > 0 {
-		et = respTags.TagDescriptions[0].Tags
-	}
-
-	if err := d.Set("tags", tagsToMapELBv2(et)); err != nil {
-		log.Printf("[WARN] Error setting tags for AWS LB (%s): %s", d.Id(), err)
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	attributesResp, err := elbconn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
@@ -811,4 +846,33 @@ func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
 		}
 	}
 	return nil
+}
+
+func stateChangeConf(d *schema.ResourceData, elbconn *elbv2.ELBV2) (interface{}, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"active", "provisioning", "failed"},
+		Target:  []string{"active"},
+		Refresh: func() (interface{}, string, error) {
+			describeResp, err := elbconn.DescribeLoadBalancers(&elbv2.DescribeLoadBalancersInput{
+				LoadBalancerArns: []*string{aws.String(d.Id())},
+			})
+			if err != nil {
+				return nil, "", err
+			}
+
+			if len(describeResp.LoadBalancers) != 1 {
+				return nil, "", fmt.Errorf("No load balancers returned for %s", d.Id())
+			}
+			dLb := describeResp.LoadBalancers[0]
+
+			log.Printf("[INFO] LB state: %s", aws.StringValue(dLb.State.Code))
+
+			return describeResp, aws.StringValue(dLb.State.Code), nil
+		},
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	return stateConf.WaitForState()
 }
