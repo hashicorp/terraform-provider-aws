@@ -1,7 +1,7 @@
 ---
+subcategory: "GuardDuty"
 layout: "aws"
 page_title: "AWS: aws_guardduty_filter"
-sidebar_current: "docs-aws-resource-guardduty-filter"
 description: |-
   Provides a resource to manage a GuardDuty filter
 ---
