@@ -14,6 +14,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_iam_group: Ensure `users` attribute populates fully when group contains more than 100 users [GH-10993]
+* resource/aws_default_route_table: Return helpful not found error on resource creation instead of generic `Provider produced inconsistent result after apply` error when given invalid `default_route_table_id` argument value [GH-10981]
+* resource/aws_default_route_table: Propose resource recreation for missing Default Route Table on refresh instead of returning an error [GH-10981]
 
 ## 2.39.0 (November 21, 2019)
 
