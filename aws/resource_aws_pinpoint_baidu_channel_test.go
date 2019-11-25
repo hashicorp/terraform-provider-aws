@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSPinpointBaiduChannel_basic(t *testing.T) {
@@ -90,17 +90,17 @@ func testAccCheckAWSPinpointBaiduChannelExists(n string, channel *pinpoint.Baidu
 func testAccAWSPinpointBaiduChannelConfig_basic(apiKey, secretKey string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	region = "us-east-1"
+  region = "us-east-1"
 }
 
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_baidu_channel" "channel" {
-    application_id = "${aws_pinpoint_app.test_app.application_id}"
-    
-    enabled    = "false"
-    api_key    = "%s"
-    secret_key = "%s"
+  application_id = "${aws_pinpoint_app.test_app.application_id}"
+
+  enabled    = "false"
+  api_key    = "%s"
+  secret_key = "%s"
 }
 `, apiKey, secretKey)
 }
@@ -108,17 +108,17 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 func testAccAWSPinpointBaiduChannelConfig_update(apiKey, secretKey string) string {
 	return fmt.Sprintf(`
 provider "aws" {
-	region = "us-east-1"
+  region = "us-east-1"
 }
 
 resource "aws_pinpoint_app" "test_app" {}
 
 resource "aws_pinpoint_baidu_channel" "channel" {
-    application_id = "${aws_pinpoint_app.test_app.application_id}"
-    
-    enabled    = "false"
-    api_key    = "%s"
-    secret_key = "%s"
+  application_id = "${aws_pinpoint_app.test_app.application_id}"
+
+  enabled    = "false"
+  api_key    = "%s"
+  secret_key = "%s"
 }
 `, apiKey, secretKey)
 }

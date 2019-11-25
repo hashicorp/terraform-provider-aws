@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsSubnet() *schema.Resource {
@@ -162,7 +163,11 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("default_for_az", subnet.DefaultForAz)
 	d.Set("state", subnet.State)
-	d.Set("tags", tagsToMap(subnet.Tags))
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(subnet.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 

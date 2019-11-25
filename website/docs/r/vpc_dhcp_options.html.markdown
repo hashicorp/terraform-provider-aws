@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_dhcp_options"
-sidebar_current: "docs-aws-resource-vpc-dhcp-options"
 description: |-
   Provides a VPC DHCP Options resource.
 ---
 
-# aws_vpc_dhcp_options
+# Resource: aws_vpc_dhcp_options
 
 Provides a VPC DHCP Options resource.
 

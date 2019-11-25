@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsApiGatewayAccount() *schema.Resource {
@@ -111,6 +111,9 @@ func resourceAwsApiGatewayAccountUpdate(d *schema.ResourceData, meta interface{}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.UpdateAccount(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("Updating API Gateway Account failed: %s", err)
 	}

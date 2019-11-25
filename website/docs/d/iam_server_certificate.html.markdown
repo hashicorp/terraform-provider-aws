@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificate"
-sidebar_current: "docs-aws-iam-server-certificate"
 description: |-
   Get information about a server certificate
 ---

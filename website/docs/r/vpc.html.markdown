@@ -1,14 +1,14 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc"
-sidebar_current: "docs-aws-resource-vpc"
 description: |-
-  Provides an VPC resource.
+  Provides a VPC resource.
 ---
 
-# aws_vpc
+# Resource: aws_vpc
 
-Provides an VPC resource.
+Provides a VPC resource.
 
 ## Example Usage
 

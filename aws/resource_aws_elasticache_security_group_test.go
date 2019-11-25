@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -67,6 +67,13 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 }
 
 func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
+	// Use EC2-Classic enabled us-east-1 for testing
+	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
+
+	resourceName := "aws_elasticache_security_group.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -75,32 +82,13 @@ func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
 			{
 				Config: testAccAWSElasticacheSecurityGroupConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
+					testAccCheckAWSElasticacheSecurityGroupExists(resourceName),
 					resource.TestCheckResourceAttr(
-						"aws_elasticache_security_group.bar", "description", "Managed by Terraform"),
+						resourceName, "description", "Managed by Terraform"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
-	// Use EC2-Classic enabled us-east-1 for testing
-	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
-		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSElasticacheSecurityGroupConfig,
-			},
-
-			{
-				ResourceName:      "aws_elasticache_security_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -157,7 +145,7 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_security_group" "bar" {
+resource "aws_security_group" "test" {
   name = "tf-test-security-group-%03d"
 
   ingress {
@@ -168,8 +156,8 @@ resource "aws_security_group" "bar" {
   }
 }
 
-resource "aws_elasticache_security_group" "bar" {
+resource "aws_elasticache_security_group" "test" {
   name                 = "tf-test-security-group-%03d"
-  security_group_names = ["${aws_security_group.bar.name}"]
+  security_group_names = ["${aws_security_group.test.name}"]
 }
 `, acctest.RandInt(), acctest.RandInt())

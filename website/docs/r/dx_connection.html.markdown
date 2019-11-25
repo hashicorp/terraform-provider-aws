@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_connection"
-sidebar_current: "docs-aws-resource-dx-connection"
 description: |-
   Provides a Connection of Direct Connect.
 ---
 
-# aws_dx_connection
+# Resource: aws_dx_connection
 
 Provides a Connection of Direct Connect.
 

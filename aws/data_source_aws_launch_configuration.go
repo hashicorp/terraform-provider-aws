@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsLaunchConfiguration() *schema.Resource {
@@ -153,6 +153,11 @@ func dataSourceAwsLaunchConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"delete_on_termination": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},

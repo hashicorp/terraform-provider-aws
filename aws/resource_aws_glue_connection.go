@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsGlueConnection() *schema.Resource {
@@ -29,8 +29,9 @@ func resourceAwsGlueConnection() *schema.Resource {
 				Computed: true,
 			},
 			"connection_properties": {
-				Type:     schema.TypeMap,
-				Required: true,
+				Type:      schema.TypeMap,
+				Required:  true,
+				Sensitive: true,
 			},
 			"connection_type": {
 				Type:     schema.TypeString,

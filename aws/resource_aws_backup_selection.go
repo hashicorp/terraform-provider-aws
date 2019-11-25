@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsBackupSelection() *schema.Resource {
@@ -16,6 +19,9 @@ func resourceAwsBackupSelection() *schema.Resource {
 		Create: resourceAwsBackupSelectionCreate,
 		Read:   resourceAwsBackupSelectionRead,
 		Delete: resourceAwsBackupSelectionDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsBackupSelectionImportState,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -47,6 +53,7 @@ func resourceAwsBackupSelection() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								backup.ConditionTypeStringequals,
 							}, false),
@@ -54,10 +61,12 @@ func resourceAwsBackupSelection() *schema.Resource {
 						"key": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"value": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -87,12 +96,34 @@ func resourceAwsBackupSelectionCreate(d *schema.ResourceData, meta interface{}) 
 		BackupSelection: selection,
 	}
 
-	resp, err := conn.CreateBackupSelection(input)
+	// Retry for IAM eventual consistency
+	var output *backup.CreateBackupSelectionOutput
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.CreateBackupSelection(input)
+
+		// Retry on the following error:
+		// InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
+		if isAWSErr(err, backup.ErrCodeInvalidParameterValueException, "cannot be assumed") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateBackupSelection(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating Backup Selection: %s", err)
 	}
 
-	d.SetId(*resp.SelectionId)
+	d.SetId(aws.StringValue(output.SelectionId))
 
 	return resourceAwsBackupSelectionRead(d, meta)
 }
@@ -160,6 +191,21 @@ func resourceAwsBackupSelectionDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	return nil
+}
+
+func resourceAwsBackupSelectionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "|")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", d.Id())
+	}
+
+	planID := idParts[0]
+	selectionID := idParts[1]
+
+	d.Set("plan_id", planID)
+	d.SetId(selectionID)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func expandBackupConditionTags(tagList []interface{}) []*backup.Condition {

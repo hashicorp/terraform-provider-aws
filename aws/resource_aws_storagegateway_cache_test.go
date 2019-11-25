@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestDecodeStorageGatewayCacheID(t *testing.T) {
@@ -76,7 +76,7 @@ func TestAccAWSStorageGatewayCache_FileGateway(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		// Storage Gateway API does not support removing caches
-		// CheckDestroy: testAccCheckAWSStorageGatewayCacheDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayCacheConfig_FileGateway(rName),
@@ -103,7 +103,7 @@ func TestAccAWSStorageGatewayCache_TapeAndVolumeGateway(t *testing.T) {
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		// Storage Gateway API does not support removing caches
-		// CheckDestroy: testAccCheckAWSStorageGatewayCacheDestroy,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSStorageGatewayCacheConfig_TapeAndVolumeGateway(rName),

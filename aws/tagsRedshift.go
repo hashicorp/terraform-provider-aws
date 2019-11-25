@@ -6,11 +6,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func setTagsRedshift(conn *redshift.Redshift, d *schema.ResourceData, arn string) error {
+func setTagsRedshift(conn *redshift.Redshift, d *schema.ResourceData) error {
 	if d.HasChange("tags") {
+		arn := d.Get("arn").(string)
 		oraw, nraw := d.GetChange("tags")
 		o := oraw.(map[string]interface{})
 		n := nraw.(map[string]interface{})

@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acl_rule"
-sidebar_current: "docs-aws-resource-network-acl-rule"
 description: |-
   Provides an network ACL Rule resource.
 ---
 
-# aws_network_acl_rule
+# Resource: aws_network_acl_rule
 
 Creates an entry (a rule) in a network ACL with the specified rule number.
 

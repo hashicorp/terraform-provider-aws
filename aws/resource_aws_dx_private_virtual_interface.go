@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
@@ -88,7 +88,7 @@ func resourceAwsDxPrivateVirtualInterface() *schema.Resource {
 				Type:         schema.TypeInt,
 				Default:      1500,
 				Optional:     true,
-				ValidateFunc: validateIntegerInSlice([]int{1500, 9001}),
+				ValidateFunc: validation.IntInSlice([]int{1500, 9001}),
 			},
 			"jumbo_frame_capable": {
 				Type:     schema.TypeBool,

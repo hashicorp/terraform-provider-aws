@@ -1,12 +1,12 @@
 ---
+subcategory: "Cloud9"
 layout: "aws"
 page_title: "AWS: aws_cloud9_environment_ec2"
-sidebar_current: "docs-aws-resource-cloud9-environment-ec2"
 description: |-
   Provides a Cloud9 EC2 Development Environment.
 ---
 
-# aws_cloud9_environment_ec2
+# Resource: aws_cloud9_environment_ec2
 
 Provides a Cloud9 EC2 Development Environment.
 

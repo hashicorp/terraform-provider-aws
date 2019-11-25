@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsLbTargetGroup() *schema.Resource {
@@ -71,6 +71,8 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 					elbv2.ProtocolEnumHttps,
 					elbv2.ProtocolEnumTcp,
 					elbv2.ProtocolEnumTls,
+					elbv2.ProtocolEnumUdp,
+					elbv2.ProtocolEnumTcpUdp,
 				}, true),
 			},
 
@@ -200,7 +202,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(2, 60),
+							ValidateFunc: validation.IntBetween(2, 120),
 						},
 
 						"healthy_threshold": {

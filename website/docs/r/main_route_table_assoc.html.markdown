@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_main_route_table_association"
-sidebar_current: "docs-aws-resource-main-route-table-assoc"
 description: |-
   Provides a resource for managing the main routing table of a VPC.
 ---
 
-# aws_main_route_table_association
+# Resource: aws_main_route_table_association
 
 Provides a resource for managing the main routing table of a VPC.
 

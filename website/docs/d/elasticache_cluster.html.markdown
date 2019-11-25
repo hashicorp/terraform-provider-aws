@@ -1,7 +1,7 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_cluster"
-sidebar_current: "docs-aws-datasource-elasticache-cluster"
 description: |-
   Get information on an ElastiCache Cluster resource.
 ---

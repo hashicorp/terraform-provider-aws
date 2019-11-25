@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway"
-sidebar_current: "docs-aws-datasource-vpn-gateway"
 description: |-
     Provides details about a specific VPN gateway.
 ---

@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCodePipeline() *schema.Resource {
@@ -161,6 +161,7 @@ func resourceAwsCodePipeline() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -169,6 +170,7 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 	conn := meta.(*AWSClient).codepipelineconn
 	params := &codepipeline.CreatePipelineInput{
 		Pipeline: expandAwsCodePipeline(d),
+		Tags:     tagsFromMapCodePipeline(d.Get("tags").(map[string]interface{})),
 	}
 
 	var resp *codepipeline.CreatePipelineOutput
@@ -183,6 +185,9 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreatePipeline(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating CodePipeline: %s", err)
 	}
@@ -447,6 +452,11 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", metadata.PipelineArn)
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
+
+	if err := saveTagsCodePipeline(conn, d); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -463,6 +473,10 @@ func resourceAwsCodePipelineUpdate(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf(
 			"[ERROR] Error updating CodePipeline (%s): %s",
 			d.Id(), err)
+	}
+
+	if err := setTagsCodePipeline(conn, d); err != nil {
+		return fmt.Errorf("Error updating CodePipeline tags: %s", d.Id())
 	}
 
 	return resourceAwsCodePipelineRead(d, meta)

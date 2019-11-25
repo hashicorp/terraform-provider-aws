@@ -1,14 +1,15 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_partition"
-sidebar_current: "docs-aws-datasource-partition"
 description: |-
   Get AWS partition identifier
 ---
 
 # Data Source: aws_partition
 
-Use this data source to lookup current AWS partition in which Terraform is working
+Use this data source to lookup information about the current AWS partition in
+which Terraform is working.
 
 ## Example Usage
 
@@ -36,4 +37,5 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-`partition` is set to the identifier of the current partition.
+* `partition` is set to the identifier of the current partition.
+* `dns_suffix` is set to the base DNS domain name for the current partition (e.g. `amazonaws.com` in AWS Commercial, `amazonaws.com.cn` in AWS China).

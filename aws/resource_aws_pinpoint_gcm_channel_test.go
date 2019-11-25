@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 /**
@@ -103,7 +103,8 @@ resource "aws_pinpoint_gcm_channel" "test_gcm_channel" {
   application_id = "${aws_pinpoint_app.test_app.application_id}"
   enabled        = "false"
   api_key        = "%s"
-}`, apiKey)
+}
+`, apiKey)
 }
 
 func testAccCheckAWSPinpointGCMChannelDestroy(s *terraform.State) error {

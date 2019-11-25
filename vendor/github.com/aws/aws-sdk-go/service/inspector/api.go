@@ -159,7 +159,7 @@ func (c *Inspector) CreateAssessmentTargetRequest(input *CreateAssessmentTargetI
 // role to grant Amazon Inspector access to AWS Services needed to perform security
 // assessments. You can create up to 50 assessment targets per AWS account.
 // You can run up to 500 concurrent agents per AWS account. For more information,
-// see  Amazon Inspector Assessment Targets (http://docs.aws.amazon.com/inspector/latest/userguide/inspector_applications.html).
+// see Amazon Inspector Assessment Targets (https://docs.aws.amazon.com/inspector/latest/userguide/inspector_applications.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1688,7 +1688,7 @@ func (c *Inspector) GetExclusionsPreviewWithContext(ctx aws.Context, input *GetE
 //    // Example iterating over at most 3 pages of a GetExclusionsPreview operation.
 //    pageNum := 0
 //    err := client.GetExclusionsPreviewPages(params,
-//        func(page *GetExclusionsPreviewOutput, lastPage bool) bool {
+//        func(page *inspector.GetExclusionsPreviewOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1720,10 +1720,12 @@ func (c *Inspector) GetExclusionsPreviewPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetExclusionsPreviewOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetExclusionsPreviewOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1926,7 +1928,7 @@ func (c *Inspector) ListAssessmentRunAgentsWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListAssessmentRunAgents operation.
 //    pageNum := 0
 //    err := client.ListAssessmentRunAgentsPages(params,
-//        func(page *ListAssessmentRunAgentsOutput, lastPage bool) bool {
+//        func(page *inspector.ListAssessmentRunAgentsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1958,10 +1960,12 @@ func (c *Inspector) ListAssessmentRunAgentsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentRunAgentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentRunAgentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2073,7 +2077,7 @@ func (c *Inspector) ListAssessmentRunsWithContext(ctx aws.Context, input *ListAs
 //    // Example iterating over at most 3 pages of a ListAssessmentRuns operation.
 //    pageNum := 0
 //    err := client.ListAssessmentRunsPages(params,
-//        func(page *ListAssessmentRunsOutput, lastPage bool) bool {
+//        func(page *inspector.ListAssessmentRunsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2105,10 +2109,12 @@ func (c *Inspector) ListAssessmentRunsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2164,7 +2170,7 @@ func (c *Inspector) ListAssessmentTargetsRequest(input *ListAssessmentTargetsInp
 //
 // Lists the ARNs of the assessment targets within this AWS account. For more
 // information about assessment targets, see Amazon Inspector Assessment Targets
-// (http://docs.aws.amazon.com/inspector/latest/userguide/inspector_applications.html).
+// (https://docs.aws.amazon.com/inspector/latest/userguide/inspector_applications.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2217,7 +2223,7 @@ func (c *Inspector) ListAssessmentTargetsWithContext(ctx aws.Context, input *Lis
 //    // Example iterating over at most 3 pages of a ListAssessmentTargets operation.
 //    pageNum := 0
 //    err := client.ListAssessmentTargetsPages(params,
-//        func(page *ListAssessmentTargetsOutput, lastPage bool) bool {
+//        func(page *inspector.ListAssessmentTargetsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2249,10 +2255,12 @@ func (c *Inspector) ListAssessmentTargetsPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentTargetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentTargetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2364,7 +2372,7 @@ func (c *Inspector) ListAssessmentTemplatesWithContext(ctx aws.Context, input *L
 //    // Example iterating over at most 3 pages of a ListAssessmentTemplates operation.
 //    pageNum := 0
 //    err := client.ListAssessmentTemplatesPages(params,
-//        func(page *ListAssessmentTemplatesOutput, lastPage bool) bool {
+//        func(page *inspector.ListAssessmentTemplatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2396,10 +2404,12 @@ func (c *Inspector) ListAssessmentTemplatesPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2512,7 +2522,7 @@ func (c *Inspector) ListEventSubscriptionsWithContext(ctx aws.Context, input *Li
 //    // Example iterating over at most 3 pages of a ListEventSubscriptions operation.
 //    pageNum := 0
 //    err := client.ListEventSubscriptionsPages(params,
-//        func(page *ListEventSubscriptionsOutput, lastPage bool) bool {
+//        func(page *inspector.ListEventSubscriptionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2544,10 +2554,12 @@ func (c *Inspector) ListEventSubscriptionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEventSubscriptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEventSubscriptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2658,7 +2670,7 @@ func (c *Inspector) ListExclusionsWithContext(ctx aws.Context, input *ListExclus
 //    // Example iterating over at most 3 pages of a ListExclusions operation.
 //    pageNum := 0
 //    err := client.ListExclusionsPages(params,
-//        func(page *ListExclusionsOutput, lastPage bool) bool {
+//        func(page *inspector.ListExclusionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2690,10 +2702,12 @@ func (c *Inspector) ListExclusionsPagesWithContext(ctx aws.Context, input *ListE
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListExclusionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListExclusionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2805,7 +2819,7 @@ func (c *Inspector) ListFindingsWithContext(ctx aws.Context, input *ListFindings
 //    // Example iterating over at most 3 pages of a ListFindings operation.
 //    pageNum := 0
 //    err := client.ListFindingsPages(params,
-//        func(page *ListFindingsOutput, lastPage bool) bool {
+//        func(page *inspector.ListFindingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2837,10 +2851,12 @@ func (c *Inspector) ListFindingsPagesWithContext(ctx aws.Context, input *ListFin
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFindingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFindingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2947,7 +2963,7 @@ func (c *Inspector) ListRulesPackagesWithContext(ctx aws.Context, input *ListRul
 //    // Example iterating over at most 3 pages of a ListRulesPackages operation.
 //    pageNum := 0
 //    err := client.ListRulesPackagesPages(params,
-//        func(page *ListRulesPackagesOutput, lastPage bool) bool {
+//        func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2979,10 +2995,12 @@ func (c *Inspector) ListRulesPackagesPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRulesPackagesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRulesPackagesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3188,7 +3206,7 @@ func (c *Inspector) PreviewAgentsWithContext(ctx aws.Context, input *PreviewAgen
 //    // Example iterating over at most 3 pages of a PreviewAgents operation.
 //    pageNum := 0
 //    err := client.PreviewAgentsPages(params,
-//        func(page *PreviewAgentsOutput, lastPage bool) bool {
+//        func(page *inspector.PreviewAgentsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3220,10 +3238,12 @@ func (c *Inspector) PreviewAgentsPagesWithContext(ctx aws.Context, input *Previe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*PreviewAgentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*PreviewAgentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7002,7 +7022,7 @@ type GetAssessmentReportInput struct {
 
 	// Specifies the type of the assessment report that you want to generate. There
 	// are two types of assessment reports: a finding report and a full report.
-	// For more information, see Assessment Reports (http://docs.aws.amazon.com/inspector/latest/userguide/inspector_reports.html).
+	// For more information, see Assessment Reports (https://docs.aws.amazon.com/inspector/latest/userguide/inspector_reports.html).
 	//
 	// ReportType is a required field
 	ReportType *string `locationName:"reportType" type:"string" required:"true" enum:"ReportType"`

@@ -1,12 +1,12 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_parameter_group"
-sidebar_current: "docs-aws-resource-docdb-cluster-parameter-group"
 description: |-
   Manages a DocumentDB Cluster Parameter Group
 ---
 
-# aws_docdb_cluster_parameter_group
+# Resource: aws_docdb_cluster_parameter_group
 
 Manages a DocumentDB Cluster Parameter Group
 

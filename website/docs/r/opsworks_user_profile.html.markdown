@@ -1,12 +1,12 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_user_profile"
-sidebar_current: "docs-aws-resource-opsworks-user-profile"
 description: |-
   Provides an OpsWorks User Profile resource.
 ---
 
-# aws_opsworks_user_profile
+# Resource: aws_opsworks_user_profile
 
 Provides an OpsWorks User Profile resource.
 

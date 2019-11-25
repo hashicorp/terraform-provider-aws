@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_secrets"
-sidebar_current: "docs-aws-datasource-kms-secrets"
 description: |-
     Decrypt multiple secrets from data encrypted with the AWS KMS service
 ---

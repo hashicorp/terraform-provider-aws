@@ -1,12 +1,12 @@
 ---
+subcategory: "GuardDuty"
 layout: "aws"
 page_title: "AWS: aws_guardduty_detector"
-sidebar_current: "docs-aws-resource-guardduty-detector"
 description: |-
   Provides a resource to manage a GuardDuty detector
 ---
 
-# aws_guardduty_detector
+# Resource: aws_guardduty_detector
 
 Provides a resource to manage a GuardDuty detector.
 

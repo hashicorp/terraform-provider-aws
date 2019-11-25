@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsDbInstance() *schema.Resource {
@@ -19,6 +19,8 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+
+			"tags": tagsSchemaComputed(),
 
 			"address": {
 				Type:     schema.TypeString,
@@ -174,6 +176,11 @@ func dataSourceAwsDbInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -241,6 +248,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("db_instance_arn", dbInstance.DBInstanceArn)
 	d.Set("db_instance_class", dbInstance.DBInstanceClass)
 	d.Set("db_name", dbInstance.DBName)
+	d.Set("resource_id", dbInstance.DbiResourceId)
 
 	var parameterGroups []string
 	for _, v := range dbInstance.DBParameterGroups {
@@ -305,6 +313,11 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	}
 	if err := d.Set("vpc_security_groups", vpcSecurityGroups); err != nil {
 		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %#v", vpcSecurityGroups, err)
+	}
+
+	// Fetch and save tags
+	if err := saveTagsRDS(conn, d, aws.StringValue(dbInstance.DBInstanceArn)); err != nil {
+		log.Printf("[WARN] Failed to save tags for RDS Instance (%s): %s", aws.StringValue(dbInstance.DBInstanceArn), err)
 	}
 
 	return nil

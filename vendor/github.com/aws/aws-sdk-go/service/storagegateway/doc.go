@@ -5,9 +5,9 @@
 //
 // AWS Storage Gateway is the service that connects an on-premises software
 // appliance with cloud-based storage to provide seamless and secure integration
-// between an organization's on-premises IT environment and AWS's storage infrastructure.
-// The service enables you to securely upload data to the AWS cloud for cost
-// effective backup and rapid disaster recovery.
+// between an organization's on-premises IT environment and the AWS storage
+// infrastructure. The service enables you to securely upload data to the AWS
+// cloud for cost effective backup and rapid disaster recovery.
 //
 // Use the following links to get started using the AWS Storage Gateway Service
 // API Reference:
@@ -29,8 +29,8 @@
 //    of requests and responses.
 //
 //    * AWS Storage Gateway Regions and Endpoints: (http://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
-//    Provides a list of each AWS region and endpoints available for use with
-//    AWS Storage Gateway.
+//    Provides a list of each AWS Region and the endpoints available for use
+//    with AWS Storage Gateway.
 //
 // AWS Storage Gateway resource IDs are in uppercase. When you use these resource
 // IDs with the Amazon EC2 API, EC2 expects resource IDs in lowercase. You must
@@ -46,8 +46,8 @@
 // systems with the new format. For more information, see Longer EC2 and EBS
 // Resource IDs (https://aws.amazon.com/ec2/faqs/#longer-ids).
 //
-//  For example, a volume Amazon Resource Name (ARN) with the longer volume
-// ID format looks like the following:
+// For example, a volume Amazon Resource Name (ARN) with the longer volume ID
+// format looks like the following:
 //
 // arn:aws:storagegateway:us-west-2:111122223333:gateway/sgw-12A3456B/volume/vol-1122AABBCCDDEEFFG.
 //

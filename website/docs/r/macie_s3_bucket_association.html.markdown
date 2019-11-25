@@ -1,12 +1,12 @@
 ---
+subcategory: "Macie"
 layout: "aws"
 page_title: "AWS: aws_macie_s3_bucket_association"
-sidebar_current: "docs-aws-macie-s3-bucket-association"
 description: |-
   Associates an S3 resource with Amazon Macie for monitoring and data classification.
 ---
 
-# aws_macie_s3_bucket_association
+# Resource: aws_macie_s3_bucket_association
 
 Associates an S3 resource with Amazon Macie for monitoring and data classification.
 

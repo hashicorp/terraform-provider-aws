@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb_listener_rule"
-sidebar_current: "docs-aws-resource-elbv2-listener-rule"
 description: |-
   Provides a Load Balancer Listener Rule resource.
 ---
 
-# aws_lb_listener_rule
+# Resource: aws_lb_listener_rule
 
 Provides a Load Balancer Listener Rule resource.
 
@@ -132,7 +132,7 @@ resource "aws_lb_listener_rule" "admin" {
 
 # Authenticate-oidc Action
 
-resource "aws_lb_listener" "admin" {
+resource "aws_lb_listener_rule" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {

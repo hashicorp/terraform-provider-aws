@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -67,7 +67,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithTags(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccAWSBatchComputeEnvironment_createSpot(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -123,7 +123,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -141,7 +141,7 @@ func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func TestAccAWSBatchComputeEnvironment_updateInstanceType(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -195,7 +195,7 @@ func TestAccAWSBatchComputeEnvironment_updateComputeEnvironmentName(t *testing.T
 	expectedUpdatedName := fmt.Sprintf("tf_acc_test_updated_%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -221,7 +221,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithoutComputeResources(t *testi
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -237,7 +237,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -256,7 +256,7 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -280,7 +280,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -296,7 +296,7 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
@@ -373,13 +373,31 @@ func testAccCheckAwsBatchComputeEnvironmentExists() resource.TestCheckFunc {
 	}
 }
 
+func testAccPreCheckAWSBatch(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).batchconn
+
+	input := &batch.DescribeComputeEnvironmentsInput{}
+
+	_, err := conn.DescribeComputeEnvironments(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccAWSBatchComputeEnvironmentConfigBase(rInt int) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
 
 ########## ecs_instance_role ##########
 
 resource "aws_iam_role" "ecs_instance_role" {
   name = "tf_acc_test_batch_inst_role_%d"
+
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -388,7 +406,7 @@ resource "aws_iam_role" "ecs_instance_role" {
 	    "Action": "sts:AssumeRole",
 	    "Effect": "Allow",
 	    "Principal": {
-		"Service": "ec2.amazonaws.com"
+		"Service": "ec2.${data.aws_partition.current.dns_suffix}"
 	    }
 	}
     ]
@@ -398,11 +416,11 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "ecs_instance_role" {
   role       = "${aws_iam_role.ecs_instance_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
 resource "aws_iam_instance_profile" "ecs_instance_role" {
-  name  = "tf_acc_test_batch_ip_%d"
+  name = "tf_acc_test_batch_ip_%d"
   role = "${aws_iam_role.ecs_instance_role.name}"
 }
 
@@ -410,6 +428,7 @@ resource "aws_iam_instance_profile" "ecs_instance_role" {
 
 resource "aws_iam_role" "aws_batch_service_role" {
   name = "tf_acc_test_batch_svc_role_%d"
+
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -418,7 +437,7 @@ resource "aws_iam_role" "aws_batch_service_role" {
 	    "Action": "sts:AssumeRole",
 	    "Effect": "Allow",
 	    "Principal": {
-		"Service": "batch.amazonaws.com"
+		"Service": "batch.${data.aws_partition.current.dns_suffix}"
 	    }
 	}
     ]
@@ -428,13 +447,14 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
   role       = "${aws_iam_role.aws_batch_service_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
 }
 
 ########## aws_ec2_spot_fleet_role ##########
 
 resource "aws_iam_role" "aws_ec2_spot_fleet_role" {
   name = "tf_acc_test_batch_spot_fleet_role_%d"
+
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -443,7 +463,7 @@ resource "aws_iam_role" "aws_ec2_spot_fleet_role" {
 	    "Action": "sts:AssumeRole",
 	    "Effect": "Allow",
 	    "Principal": {
-		"Service": "spotfleet.amazonaws.com"
+		"Service": "spotfleet.${data.aws_partition.current.dns_suffix}"
 	    }
 	}
     ]
@@ -453,7 +473,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "aws_ec2_spot_fleet_role" {
   role       = "${aws_iam_role.aws_ec2_spot_fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 ########## security group ##########
@@ -466,14 +486,16 @@ resource "aws_security_group" "test_acc" {
 
 resource "aws_vpc" "test_acc" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
     Name = "terraform-testacc-batch-compute-environment"
   }
 }
 
 resource "aws_subnet" "test_acc" {
-  vpc_id = "${aws_vpc.test_acc.id}"
+  vpc_id     = "${aws_vpc.test_acc.id}"
   cidr_block = "10.1.1.0/24"
+
   tags = {
     Name = "tf-acc-batch-compute-environment"
   }

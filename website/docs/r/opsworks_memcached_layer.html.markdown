@@ -1,12 +1,12 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_memcached_layer"
-sidebar_current: "docs-aws-resource-opsworks-memcached-layer"
 description: |-
   Provides an OpsWorks memcached layer resource.
 ---
 
-# aws_opsworks_memcached_layer
+# Resource: aws_opsworks_memcached_layer
 
 Provides an OpsWorks memcached layer resource.
 

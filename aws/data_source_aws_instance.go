@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -8,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsInstance() *schema.Resource {
@@ -141,7 +143,7 @@ func dataSourceAwsInstance() *schema.Resource {
 				},
 			},
 			"ephemeral_block_device": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -187,6 +189,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -208,6 +215,14 @@ func dataSourceAwsInstance() *schema.Resource {
 						},
 					},
 				},
+				// This should not be necessary, but currently is (see #7198)
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					return hashcode.String(buf.String())
+				},
 			},
 			"root_block_device": {
 				Type:     schema.TypeSet,
@@ -219,8 +234,18 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 

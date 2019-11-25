@@ -1,12 +1,12 @@
 ---
+subcategory: "WAF"
 layout: "aws"
-page_title: "AWS: waf_rule"
-sidebar_current: "docs-aws-resource-waf-rule"
+page_title: "AWS: aws_waf_rule"
 description: |-
   Provides a AWS WAF rule resource.
 ---
 
-# aws_waf_rule
+# Resource: aws_waf_rule
 
 Provides a WAF Rule Resource
 
@@ -41,7 +41,8 @@ The following arguments are supported:
 
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule. The name can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't contain whitespace.
 * `name` - (Required) The name or description of the rule.
-* `predicates` - (Optional) One of ByteMatchSet, IPSet, SizeConstraintSet, SqlInjectionMatchSet, or XssMatchSet objects to include in a rule.
+* `predicates` - (Optional) The objects to include in a rule (documented below).
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ## Nested Blocks
 
@@ -63,6 +64,7 @@ See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF rule.
+* `arn` - The ARN of the WAF rule.
 
 ## Import
 

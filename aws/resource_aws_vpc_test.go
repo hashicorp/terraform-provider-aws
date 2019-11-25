@@ -10,8 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // add sweeper to delete known test vpcs
@@ -19,12 +22,14 @@ func init() {
 	resource.AddTestSweepers("aws_vpc", &resource.Sweeper{
 		Name: "aws_vpc",
 		Dependencies: []string{
+			"aws_egress_only_internet_gateway",
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
+			"aws_vpc_peering_connection",
 			"aws_vpn_gateway",
 		},
 		F: testSweepVPCs,
@@ -37,51 +42,63 @@ func testSweepVPCs(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeVpcsInput{}
+	var sweeperErrs *multierror.Error
 
-	req := &ec2.DescribeVpcsInput{}
-	resp, err := conn.DescribeVpcs(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeVpcsPages(input, func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
+		for _, vpc := range page.Vpcs {
+			if vpc == nil {
+				continue
+			}
+
+			id := aws.StringValue(vpc.VpcId)
+			input := &ec2.DeleteVpcInput{
+				VpcId: vpc.VpcId,
+			}
+
+			if aws.BoolValue(vpc.IsDefault) {
+				log.Printf("[DEBUG] Skipping default EC2 VPC: %s", id)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting EC2 VPC: %s", id)
+
+			// Handle EC2 eventual consistency
+			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteVpc(input)
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteVpc(input)
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting EC2 VPC (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
 		}
-		return fmt.Errorf("Error describing vpcs: %s", err)
-	}
 
-	if len(resp.Vpcs) == 0 {
-		log.Print("[DEBUG] No aws vpcs to sweep")
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, vpc := range resp.Vpcs {
-		if aws.BoolValue(vpc.IsDefault) {
-			log.Printf("[DEBUG] Skipping Default VPC: %s", aws.StringValue(vpc.VpcId))
-			continue
-		}
-
-		input := &ec2.DeleteVpcInput{
-			VpcId: vpc.VpcId,
-		}
-		log.Printf("[DEBUG] Deleting VPC: %s", input)
-
-		// Handle EC2 eventual consistency
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			_, err := conn.DeleteVpc(input)
-			if isAWSErr(err, "DependencyViolation", "") {
-				return resource.RetryableError(err)
-			}
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-
-		if err != nil {
-			return fmt.Errorf("Error deleting VPC (%s): %s", aws.StringValue(vpc.VpcId), err)
-		}
+	if err != nil {
+		return fmt.Errorf("Error describing vpcs: %s", err)
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSVpc_basic(t *testing.T) {
@@ -135,6 +152,36 @@ func TestAccAWSVpc_disappears(t *testing.T) {
 					testAccCheckVpcDisappears(&vpc),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSVpc_ignoreTags(t *testing.T) {
+	var providers []*schema.Provider
+	var vpc ec2.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcConfigTags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(resourceName, &vpc),
+					testAccCheckVpcUpdateTags(&vpc, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:   testAccProviderConfigIgnoreTagPrefixes1("ignorekey") + testAccVpcConfigTags,
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccProviderConfigIgnoreTags1("ignorekey1") + testAccVpcConfigTags,
+				PlanOnly: true,
 			},
 		},
 	})
@@ -328,6 +375,14 @@ func testAccCheckVpcDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckVpcUpdateTags(vpc *ec2.Vpc, oldTags, newTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		return keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(vpc.VpcId), oldTags, newTags)
+	}
 }
 
 func testAccCheckVpcCidr(vpc *ec2.Vpc, expected string) resource.TestCheckFunc {

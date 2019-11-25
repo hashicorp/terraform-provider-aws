@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudHSM v2"
 layout: "aws"
-page_title: "AWS: cloudhsm_v2_cluster"
-sidebar_current: "docs-aws-datasource-cloudhsm-v2-cluster"
+page_title: "AWS: aws_cloudhsm_v2_cluster"
 description: |-
   Get information on a CloudHSM v2 cluster.
 ---

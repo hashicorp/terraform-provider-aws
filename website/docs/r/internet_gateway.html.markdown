@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_internet_gateway"
-sidebar_current: "docs-aws-resource-internet-gateway"
 description: |-
   Provides a resource to create a VPC Internet Gateway.
 ---
 
-# aws_internet_gateway
+# Resource: aws_internet_gateway
 
 Provides a resource to create a VPC Internet Gateway.
 

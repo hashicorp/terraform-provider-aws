@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acl"
-sidebar_current: "docs-aws-resource-network-acl"
 description: |-
   Provides an network ACL resource.
 ---
 
-# aws_network_acl
+# Resource: aws_network_acl
 
 Provides an network ACL resource. You might set up network ACLs with rules similar
 to your security groups in order to add an additional layer of security to your VPC.

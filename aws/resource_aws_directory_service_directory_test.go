@@ -7,18 +7,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_directory_service_directory", &resource.Sweeper{
-		Name: "aws_directory_service_directory",
-		F:    testSweepDirectoryServiceDirectories,
+		Name:         "aws_directory_service_directory",
+		F:            testSweepDirectoryServiceDirectories,
+		Dependencies: []string{"aws_fsx_windows_file_system"},
 	})
 }
 
@@ -80,23 +80,23 @@ func TestDiffTagsDirectoryService(t *testing.T) {
 		// Basic add/remove
 		{
 			Old: map[string]interface{}{
-				"foo": "bar",
+				"foo": "test",
 			},
 			New: map[string]interface{}{
-				"bar": "baz",
+				"test": "baz",
 			},
 			Create: map[string]string{
-				"bar": "baz",
+				"test": "baz",
 			},
 			Remove: map[string]string{
-				"foo": "bar",
+				"foo": "test",
 			},
 		},
 
 		// Modify
 		{
 			Old: map[string]interface{}{
-				"foo": "bar",
+				"foo": "test",
 			},
 			New: map[string]interface{}{
 				"foo": "baz",
@@ -105,7 +105,7 @@ func TestDiffTagsDirectoryService(t *testing.T) {
 				"foo": "baz",
 			},
 			Remove: map[string]string{
-				"foo": "bar",
+				"foo": "test",
 			},
 		},
 	}
@@ -123,16 +123,24 @@ func TestDiffTagsDirectoryService(t *testing.T) {
 	}
 }
 
-func TestAccAWSDirectoryServiceDirectory_importBasic(t *testing.T) {
-	resourceName := "aws_directory_service_directory.bar"
+func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
+	resourceName := "aws_directory_service_directory.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSDirectoryService(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryServiceDirectoryConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test"),
+					resource.TestCheckResourceAttrSet("aws_directory_service_directory.test", "security_group_id"),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -146,34 +154,51 @@ func TestAccAWSDirectoryServiceDirectory_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDirectoryServiceDirectory_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDirectoryServiceDirectoryConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
-					resource.TestCheckResourceAttrSet("aws_directory_service_directory.bar", "security_group_id"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
+	resourceName := "aws_directory_service_directory.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSDirectoryService(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryServiceDirectoryTagsConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
-					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "tags.%", "2"),
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.foo", "test"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.project", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+			{
+				Config: testAccDirectoryServiceDirectoryUpdateTagsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.%", "3"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.foo", "test"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.project", "test2"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccDirectoryServiceDirectoryRemoveTagsConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.%", "1"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "tags.foo", "test"),
 				),
 			},
 		},
@@ -181,42 +206,68 @@ func TestAccAWSDirectoryServiceDirectory_tags(t *testing.T) {
 }
 
 func TestAccAWSDirectoryServiceDirectory_microsoft(t *testing.T) {
+	resourceName := "aws_directory_service_directory.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryServiceDirectoryConfig_microsoft,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
-					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "edition", directoryservice.DirectoryEditionEnterprise),
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "edition", directoryservice.DirectoryEditionEnterprise),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSDirectoryServiceDirectory_microsoftStandard(t *testing.T) {
+	resourceName := "aws_directory_service_directory.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDirectoryService(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryServiceDirectoryConfig_microsoftStandard,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar"),
-					resource.TestCheckResourceAttr("aws_directory_service_directory.bar", "edition", directoryservice.DirectoryEditionStandard),
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test"),
+					resource.TestCheckResourceAttr("aws_directory_service_directory.test", "edition", directoryservice.DirectoryEditionStandard),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
+	resourceName := "aws_directory_service_directory.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSDirectoryService(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
@@ -227,41 +278,61 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_directory_service_directory.connector", "security_group_id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
 		},
 	})
 }
 
 func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
+	alias := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_directory_service_directory.test2"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSDirectoryService(t)
+			testAccPreCheckAWSDirectoryServiceSimpleDirectory(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDirectoryServiceDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withAlias,
+				Config: testAccDirectoryServiceDirectoryConfig_withAlias(alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
-					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a",
-						fmt.Sprintf("tf-d-%d", randomInteger)),
-					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", false),
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test2"),
+					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.test2", alias),
+					testAccCheckServiceDirectorySso("aws_directory_service_directory.test2", false),
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
+			{
+				Config: testAccDirectoryServiceDirectoryConfig_withSso(alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
-					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a",
-						fmt.Sprintf("tf-d-%d", randomInteger)),
-					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", true),
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test2"),
+					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.test2", alias),
+					testAccCheckServiceDirectorySso("aws_directory_service_directory.test2", true),
 				),
 			},
 			{
-				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified,
+				Config: testAccDirectoryServiceDirectoryConfig_withSso_modified(alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceDirectoryExists("aws_directory_service_directory.bar_a"),
-					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.bar_a",
-						fmt.Sprintf("tf-d-%d", randomInteger)),
-					testAccCheckServiceDirectorySso("aws_directory_service_directory.bar_a", false),
+					testAccCheckServiceDirectoryExists("aws_directory_service_directory.test2"),
+					testAccCheckServiceDirectoryAlias("aws_directory_service_directory.test2", alias),
+					testAccCheckServiceDirectorySso("aws_directory_service_directory.test2", false),
 				),
 			},
 		},
@@ -280,22 +351,21 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		}
 		out, err := dsconn.DescribeDirectories(&input)
+
+		if isAWSErr(err, "EntityDoesNotExistException", "") {
+			continue
+		}
+
 		if err != nil {
-			// EntityDoesNotExistException means it's gone, this is good
-			if dserr, ok := err.(awserr.Error); ok && dserr.Code() == "EntityDoesNotExistException" {
-				return nil
-			}
 			return err
 		}
 
 		if out != nil && len(out.DirectoryDescriptions) > 0 {
 			return fmt.Errorf("Expected AWS Directory Service Directory to be gone, but was still found")
 		}
-
-		return nil
 	}
 
-	return fmt.Errorf("Default error in Service Directory Test")
+	return nil
 }
 
 func testAccCheckServiceDirectoryExists(name string) resource.TestCheckFunc {
@@ -389,15 +459,58 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 	}
 }
 
+func testAccPreCheckAWSDirectoryService(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).dsconn
+
+	input := &directoryservice.DescribeDirectoriesInput{}
+
+	_, err := conn.DescribeDirectories(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+// Certain regions such as AWS GovCloud (US) do not support Simple AD directories
+// and we do not have a good read-only way to determine this situation. Here we
+// opt to perform a creation that will fail so we can determine Simple AD support.
+func testAccPreCheckAWSDirectoryServiceSimpleDirectory(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).dsconn
+
+	input := &directoryservice.CreateDirectoryInput{
+		Name:     aws.String("corp.example.com"),
+		Password: aws.String("PreCheck123"),
+		Size:     aws.String(directoryservice.DirectorySizeSmall),
+	}
+
+	_, err := conn.CreateDirectory(input)
+
+	if isAWSErr(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil && !isAWSErr(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 const testAccDirectoryServiceDirectoryConfig = `
-resource "aws_directory_service_directory" "bar" {
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -410,35 +523,39 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-bar"
+    Name = "tf-acc-directory-service-directory-test"
   }
 }
 `
 
 const testAccDirectoryServiceDirectoryTagsConfig = `
-resource "aws_directory_service_directory" "bar" {
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 
 	tags = {
-		foo = "bar"
+		foo = "test"
 		project = "test"
 	}
 }
@@ -452,31 +569,127 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-tags-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-tags-bar"
+    Name = "tf-acc-directory-service-directory-tags-test"
   }
 }
 `
 
-const testAccDirectoryServiceDirectoryConfig_connector = `
-resource "aws_directory_service_directory" "bar" {
+const testAccDirectoryServiceDirectoryUpdateTagsConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
+  }
+
+	tags = {
+		foo = "test"
+		project = "test2"
+		fizz = "buzz"
+	}
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+	tags = {
+		Name = "terraform-testacc-directory-service-directory-tags"
+	}
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block = "10.0.1.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-foo"
+  }
+}
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block = "10.0.2.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-test"
+  }
+}
+`
+
+const testAccDirectoryServiceDirectoryRemoveTagsConfig = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test" {
+  name = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  size = "Small"
+
+  vpc_settings {
+    vpc_id = "${aws_vpc.main.id}"
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
+  }
+
+	tags = {
+		foo = "test"
+	}
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+	tags = {
+		Name = "terraform-testacc-directory-service-directory-tags"
+	}
+}
+
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block = "10.0.1.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-foo"
+  }
+}
+resource "aws_subnet" "test" {
+  vpc_id = "${aws_vpc.main.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block = "10.0.2.0/24"
+  tags = {
+    Name = "tf-acc-directory-service-directory-tags-test"
+  }
+}
+`
+
+const testAccDirectoryServiceDirectoryConfig_connector = `
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test" {
+  name = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  size = "Small"
+
+  vpc_settings {
+    vpc_id = "${aws_vpc.main.id}"
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -487,10 +700,10 @@ resource "aws_directory_service_directory" "connector" {
   type = "ADConnector"
 
   connect_settings {
-    customer_dns_ips = ["${aws_directory_service_directory.bar.dns_ip_addresses}"]
+    customer_dns_ips = aws_directory_service_directory.test.dns_ip_addresses
     customer_username = "Administrator"
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -503,31 +716,35 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-connector-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-connector-bar"
+    Name = "tf-acc-directory-service-directory-connector-test"
   }
 }
 `
 
 const testAccDirectoryServiceDirectoryConfig_microsoft = `
-resource "aws_directory_service_directory" "bar" {
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type = "MicrosoftAD"
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -540,24 +757,28 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-microsoft-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-microsoft-bar"
+    Name = "tf-acc-directory-service-directory-microsoft-test"
   }
 }
 `
 
 const testAccDirectoryServiceDirectoryConfig_microsoftStandard = `
-resource "aws_directory_service_directory" "bar" {
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   type = "MicrosoftAD"
@@ -565,7 +786,7 @@ resource "aws_directory_service_directory" "bar" {
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -578,33 +799,37 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-microsoft-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-microsoft-bar"
+    Name = "tf-acc-directory-service-directory-microsoft-test"
   }
 }
 `
 
-var randomInteger = acctest.RandInt()
-var testAccDirectoryServiceDirectoryConfig_withAlias = fmt.Sprintf(`
-resource "aws_directory_service_directory" "bar_a" {
+func testAccDirectoryServiceDirectoryConfig_withAlias(alias string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test2" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
-  alias = "tf-d-%d"
+  alias = %[1]q
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -617,33 +842,39 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-with-alias-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-with-alias-bar"
+    Name = "tf-acc-directory-service-directory-with-alias-test"
   }
 }
-`, randomInteger)
+`, alias)
+}
 
-var testAccDirectoryServiceDirectoryConfig_withSso = fmt.Sprintf(`
-resource "aws_directory_service_directory" "bar_a" {
+func testAccDirectoryServiceDirectoryConfig_withSso(alias string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test2" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
-  alias = "tf-d-%d"
+  alias = %[1]q
   enable_sso = true
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -656,33 +887,39 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-with-sso-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-with-sso-bar"
+    Name = "tf-acc-directory-service-directory-with-sso-test"
   }
 }
-`, randomInteger)
+`, alias)
+}
 
-var testAccDirectoryServiceDirectoryConfig_withSso_modified = fmt.Sprintf(`
-resource "aws_directory_service_directory" "bar_a" {
+func testAccDirectoryServiceDirectoryConfig_withSso_modified(alias string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_directory_service_directory" "test2" {
   name = "corp.notexample.com"
   password = "SuperSecretPassw0rd"
   size = "Small"
-  alias = "tf-d-%d"
+  alias = %[1]q
   enable_sso = false
 
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
-    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
+    subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.test.id}"]
   }
 }
 
@@ -695,18 +932,19 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "tf-acc-directory-service-directory-with-sso-foo"
   }
 }
-resource "aws_subnet" "bar" {
+resource "aws_subnet" "test" {
   vpc_id = "${aws_vpc.main.id}"
-  availability_zone = "us-west-2b"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
   cidr_block = "10.0.2.0/24"
   tags = {
-    Name = "tf-acc-directory-service-directory-with-sso-bar"
+    Name = "tf-acc-directory-service-directory-with-sso-test"
   }
 }
-`, randomInteger)
+`, alias)
+}

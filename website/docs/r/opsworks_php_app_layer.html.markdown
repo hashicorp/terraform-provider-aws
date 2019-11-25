@@ -1,12 +1,12 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_php_app_layer"
-sidebar_current: "docs-aws-resource-opsworks-php-app-layer"
 description: |-
   Provides an OpsWorks PHP application layer resource.
 ---
 
-# aws_opsworks_php_app_layer
+# Resource: aws_opsworks_php_app_layer
 
 Provides an OpsWorks PHP application layer resource.
 

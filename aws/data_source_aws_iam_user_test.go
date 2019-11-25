@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSDataSourceIAMUser_basic(t *testing.T) {
@@ -33,12 +33,12 @@ func TestAccAWSDataSourceIAMUser_basic(t *testing.T) {
 func testAccAwsDataSourceIAMUserConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "user" {
-	name = "%s"
-	path = "/"
+  name = "%s"
+  path = "/"
 }
 
 data "aws_iam_user" "test" {
-	  user_name = "${aws_iam_user.user.name}"
+  user_name = "${aws_iam_user.user.name}"
 }
 `, name)
 }

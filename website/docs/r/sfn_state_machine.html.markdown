@@ -1,12 +1,12 @@
 ---
+subcategory: "Step Function (SFN)"
 layout: "aws"
-page_title: "AWS: sfn_state_machine"
-sidebar_current: "docs-aws-resource-sfn-state-machine"
+page_title: "AWS: aws_sfn_state_machine"
 description: |-
   Provides a Step Function State Machine resource.
 ---
 
-# sfn_state_machine
+# Resource: aws_sfn_state_machine
 
 Provides a Step Function State Machine resource
 

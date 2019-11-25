@@ -2,15 +2,25 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/swf"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func testAccPreCheckSwfDomainTestingEnabled(t *testing.T) {
+	if os.Getenv("SWF_DOMAIN_TESTING_ENABLED") == "" {
+		t.Skip(
+			"Environment variable SWF_DOMAIN_TESTING_ENABLED is not set. " +
+				"SWF limits domains per region and the API does not support " +
+				"deletions. Set the environment variable to any value to enable.")
+	}
+}
 
 func TestAccAWSSwfDomain_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -19,6 +29,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
@@ -27,6 +38,7 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 				Config: testAccAWSSwfDomainConfig_Name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSwfDomainExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -40,12 +52,59 @@ func TestAccAWSSwfDomain_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSwfDomain_tags(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_swf_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSwfDomainConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSwfDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSwfDomainConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSwfDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSwfDomainConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSwfDomainExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSwfDomain_NamePrefix(t *testing.T) {
 	resourceName := "aws_swf_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
@@ -73,6 +132,7 @@ func TestAccAWSSwfDomain_GeneratedName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
@@ -99,6 +159,7 @@ func TestAccAWSSwfDomain_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
+			testAccPreCheckSwfDomainTestingEnabled(t)
 		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsSwfDomainDestroy,
@@ -137,8 +198,8 @@ func testAccCheckAwsSwfDomainDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if *resp.DomainInfo.Status != "DEPRECATED" {
-			return fmt.Errorf(`SWF Domain %s status is %s instead of "DEPRECATED". Failing!`, name, *resp.DomainInfo.Status)
+		if *resp.DomainInfo.Status != swf.RegistrationStatusDeprecated {
+			return fmt.Errorf(`SWF Domain %s status is %s instead of %s. Failing!`, name, *resp.DomainInfo.Status, swf.RegistrationStatusDeprecated)
 		}
 	}
 
@@ -168,8 +229,8 @@ func testAccCheckAwsSwfDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SWF Domain %s not found in AWS", name)
 		}
 
-		if *resp.DomainInfo.Status != "REGISTERED" {
-			return fmt.Errorf(`SWF Domain %s status is %s instead of "REGISTERED". Failing!`, name, *resp.DomainInfo.Status)
+		if *resp.DomainInfo.Status != swf.RegistrationStatusRegistered {
+			return fmt.Errorf(`SWF Domain %s status is %s instead of %s. Failing!`, name, *resp.DomainInfo.Status, swf.RegistrationStatusRegistered)
 		}
 		return nil
 	}
@@ -198,6 +259,33 @@ resource "aws_swf_domain" "test" {
   workflow_execution_retention_period_in_days = 1
 }
 `, rName)
+}
+
+func testAccAWSSwfDomainConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_swf_domain" "test" {
+  name                                        = %[1]q
+  workflow_execution_retention_period_in_days = 1
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSSwfDomainConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_swf_domain" "test" {
+  name                                        = %[1]q
+  workflow_execution_retention_period_in_days = 1
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 const testAccAWSSwfDomainConfig_NamePrefix = `

@@ -1,12 +1,12 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster_parameter_group"
-sidebar_current: "docs-aws-resource-aws-neptune-cluster-parameter-group"
 description: |-
   Manages a Neptune Cluster Parameter Group
 ---
 
-# aws_neptune_cluster_parameter_group
+# Resource: aws_neptune_cluster_parameter_group
 
 Manages a Neptune Cluster Parameter Group
 

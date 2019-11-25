@@ -1,12 +1,12 @@
 ---
+subcategory: "Backup"
 layout: "aws"
 page_title: "AWS: aws_backup_plan"
-sidebar_current: "docs-aws-resource-backup-plan"
 description: |-
   Provides an AWS Backup plan resource.
 ---
 
-# aws_backup_plan
+# Resource: aws_backup_plan
 
 Provides an AWS Backup plan resource.
 
@@ -17,10 +17,10 @@ resource "aws_backup_plan" "example" {
   name = "tf_example_backup_plan"
 
   rule {
-    rule_name           = "tf_example_backup_rule"
-      target_vault_name = "${aws_backup_vault.test.name}"
-      schedule          = "cron(0 12 * * ? *)"
-    }
+    rule_name         = "tf_example_backup_rule"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+  }
 }
 ```
 
@@ -46,12 +46,13 @@ For **rule** the following attributes are supported:
 ### Lifecycle Arguments
 For **lifecycle** the following attributes are supported:
 
-* `cold_storage_after` - (Required) Specifies the number of days after creation that a recovery point is moved to cold storage.
-* `delete_after` (Required) - Specifies the number of days after creation that a recovery point is deleted. Must be greater than `cold_storage_after`.
+* `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
+* `delete_after` (Optional) - Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id` - The id of the backup plan.
 * `arn` - The ARN of the backup plan.
-* `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan. 
+* `version` - Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan.

@@ -58,6 +58,11 @@ func (c *Budgets) CreateBudgetRequest(input *CreateBudgetInput) (req *request.Re
 //
 // Creates a budget and, if included, notifications and subscribers.
 //
+// Only one of BudgetLimit or PlannedBudgetLimits can be present in the syntax
+// at one time. Use the syntax that matches your case. The Request Syntax section
+// shows the BudgetLimit syntax. For PlannedBudgetLimits, see the Examples (https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_CreateBudget.html#API_CreateBudget_Examples)
+// section.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -79,6 +84,9 @@ func (c *Budgets) CreateBudgetRequest(input *CreateBudgetInput) (req *request.Re
 //
 //   * ErrCodeDuplicateRecordException "DuplicateRecordException"
 //   The budget name already exists. Budget names must be unique within an account.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) CreateBudget(input *CreateBudgetInput) (*CreateBudgetOutput, error) {
 	req, out := c.CreateBudgetRequest(input)
@@ -172,6 +180,9 @@ func (c *Budgets) CreateNotificationRequest(input *CreateNotificationInput) (req
 //   * ErrCodeDuplicateRecordException "DuplicateRecordException"
 //   The budget name already exists. Budget names must be unique within an account.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) CreateNotification(input *CreateNotificationInput) (*CreateNotificationOutput, error) {
 	req, out := c.CreateNotificationRequest(input)
 	return out, req.Send()
@@ -264,6 +275,9 @@ func (c *Budgets) CreateSubscriberRequest(input *CreateSubscriberInput) (req *re
 //   * ErrCodeNotFoundException "NotFoundException"
 //   We can’t locate the resource that you specified.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) CreateSubscriber(input *CreateSubscriberInput) (*CreateSubscriberOutput, error) {
 	req, out := c.CreateSubscriberRequest(input)
 	return out, req.Send()
@@ -351,6 +365,9 @@ func (c *Budgets) DeleteBudgetRequest(input *DeleteBudgetInput) (req *request.Re
 //
 //   * ErrCodeNotFoundException "NotFoundException"
 //   We can’t locate the resource that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DeleteBudget(input *DeleteBudgetInput) (*DeleteBudgetOutput, error) {
 	req, out := c.DeleteBudgetRequest(input)
@@ -440,6 +457,9 @@ func (c *Budgets) DeleteNotificationRequest(input *DeleteNotificationInput) (req
 //   * ErrCodeNotFoundException "NotFoundException"
 //   We can’t locate the resource that you specified.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) DeleteNotification(input *DeleteNotificationInput) (*DeleteNotificationOutput, error) {
 	req, out := c.DeleteNotificationRequest(input)
 	return out, req.Send()
@@ -527,6 +547,9 @@ func (c *Budgets) DeleteSubscriberRequest(input *DeleteSubscriberInput) (req *re
 //   * ErrCodeNotFoundException "NotFoundException"
 //   We can’t locate the resource that you specified.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) DeleteSubscriber(input *DeleteSubscriberInput) (*DeleteSubscriberOutput, error) {
 	req, out := c.DeleteSubscriberRequest(input)
 	return out, req.Send()
@@ -592,6 +615,10 @@ func (c *Budgets) DescribeBudgetRequest(input *DescribeBudgetInput) (req *reques
 //
 // Describes a budget.
 //
+// The Request Syntax section shows the BudgetLimit syntax. For PlannedBudgetLimits,
+// see the Examples (https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_DescribeBudget.html#API_DescribeBudget_Examples)
+// section.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -610,6 +637,9 @@ func (c *Budgets) DescribeBudgetRequest(input *DescribeBudgetInput) (req *reques
 //
 //   * ErrCodeNotFoundException "NotFoundException"
 //   We can’t locate the resource that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DescribeBudget(input *DescribeBudgetInput) (*DescribeBudgetOutput, error) {
 	req, out := c.DescribeBudgetRequest(input)
@@ -702,6 +732,9 @@ func (c *Budgets) DescribeBudgetPerformanceHistoryRequest(input *DescribeBudgetP
 //   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
 //   The pagination token expired.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) DescribeBudgetPerformanceHistory(input *DescribeBudgetPerformanceHistoryInput) (*DescribeBudgetPerformanceHistoryOutput, error) {
 	req, out := c.DescribeBudgetPerformanceHistoryRequest(input)
 	return out, req.Send()
@@ -767,6 +800,10 @@ func (c *Budgets) DescribeBudgetsRequest(input *DescribeBudgetsInput) (req *requ
 //
 // Lists the budgets that are associated with an account.
 //
+// The Request Syntax section shows the BudgetLimit syntax. For PlannedBudgetLimits,
+// see the Examples (https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_DescribeBudgets.html#API_DescribeBudgets_Examples)
+// section.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -791,6 +828,9 @@ func (c *Budgets) DescribeBudgetsRequest(input *DescribeBudgetsInput) (req *requ
 //
 //   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
 //   The pagination token expired.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) DescribeBudgets(input *DescribeBudgetsInput) (*DescribeBudgetsOutput, error) {
 	req, out := c.DescribeBudgetsRequest(input)
@@ -882,6 +922,9 @@ func (c *Budgets) DescribeNotificationsForBudgetRequest(input *DescribeNotificat
 //   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
 //   The pagination token expired.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) DescribeNotificationsForBudget(input *DescribeNotificationsForBudgetInput) (*DescribeNotificationsForBudgetOutput, error) {
 	req, out := c.DescribeNotificationsForBudgetRequest(input)
 	return out, req.Send()
@@ -972,6 +1015,9 @@ func (c *Budgets) DescribeSubscribersForNotificationRequest(input *DescribeSubsc
 //   * ErrCodeExpiredNextTokenException "ExpiredNextTokenException"
 //   The pagination token expired.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) DescribeSubscribersForNotification(input *DescribeSubscribersForNotificationInput) (*DescribeSubscribersForNotificationOutput, error) {
 	req, out := c.DescribeSubscribersForNotificationRequest(input)
 	return out, req.Send()
@@ -1040,6 +1086,11 @@ func (c *Budgets) UpdateBudgetRequest(input *UpdateBudgetInput) (req *request.Re
 // and the calculatedSpend. When you modify a budget, the calculatedSpend drops
 // to zero until AWS has new usage data to use for forecasting.
 //
+// Only one of BudgetLimit or PlannedBudgetLimits can be present in the syntax
+// at one time. Use the syntax that matches your case. The Request Syntax section
+// shows the BudgetLimit syntax. For PlannedBudgetLimits, see the Examples (https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_UpdateBudget.html#API_UpdateBudget_Examples)
+// section.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1058,6 +1109,9 @@ func (c *Budgets) UpdateBudgetRequest(input *UpdateBudgetInput) (req *request.Re
 //
 //   * ErrCodeNotFoundException "NotFoundException"
 //   We can’t locate the resource that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
 //
 func (c *Budgets) UpdateBudget(input *UpdateBudgetInput) (*UpdateBudgetOutput, error) {
 	req, out := c.UpdateBudgetRequest(input)
@@ -1147,6 +1201,9 @@ func (c *Budgets) UpdateNotificationRequest(input *UpdateNotificationInput) (req
 //   * ErrCodeDuplicateRecordException "DuplicateRecordException"
 //   The budget name already exists. Budget names must be unique within an account.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) UpdateNotification(input *UpdateNotificationInput) (*UpdateNotificationOutput, error) {
 	req, out := c.UpdateNotificationRequest(input)
 	return out, req.Send()
@@ -1235,6 +1292,9 @@ func (c *Budgets) UpdateSubscriberRequest(input *UpdateSubscriberInput) (req *re
 //   * ErrCodeDuplicateRecordException "DuplicateRecordException"
 //   The budget name already exists. Budget names must be unique within an account.
 //
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You are not authorized to use this operation with the given parameters.
+//
 func (c *Budgets) UpdateSubscriber(input *UpdateSubscriberInput) (*UpdateSubscriberOutput, error) {
 	req, out := c.UpdateSubscriberRequest(input)
 	return out, req.Send()
@@ -1266,21 +1326,24 @@ func (c *Budgets) UpdateSubscriberWithContext(ctx aws.Context, input *UpdateSubs
 type Budget struct {
 	_ struct{} `type:"structure"`
 
-	// The total amount of cost, usage, RI utilization, or RI coverage that you
-	// want to track with your budget.
+	// The total amount of cost, usage, RI utilization, RI coverage, Savings Plans
+	// utilization, or Savings Plans coverage that you want to track with your budget.
 	//
-	// BudgetLimit is required for cost or usage budgets, but optional for RI utilization
-	// or coverage budgets. RI utilization or coverage budgets default to 100, which
-	// is the only valid value for RI utilization or coverage budgets.
+	// BudgetLimit is required for cost or usage budgets, but optional for RI or
+	// Savings Plans utilization or coverage budgets. RI and Savings Plans utilization
+	// or coverage budgets default to 100, which is the only valid value for RI
+	// or Savings Plans utilization or coverage budgets. You can't use BudgetLimit
+	// with PlannedBudgetLimits for CreateBudget and UpdateBudget actions.
 	BudgetLimit *Spend `type:"structure"`
 
-	// The name of a budget. The name must be unique within accounts. The : and
+	// The name of a budget. The name must be unique within an account. The : and
 	// \ characters aren't allowed in BudgetName.
 	//
 	// BudgetName is a required field
 	BudgetName *string `min:"1" type:"string" required:"true"`
 
-	// Whether this budget tracks monetary costs, usage, RI utilization, or RI coverage.
+	// Whether this budget tracks costs, usage, RI utilization, RI coverage, Savings
+	// Plans utilization, or Savings Plans coverage.
 	//
 	// BudgetType is a required field
 	BudgetType *string `type:"string" required:"true" enum:"BudgetType"`
@@ -1288,7 +1351,7 @@ type Budget struct {
 	// The actual and forecasted cost or usage that the budget tracks.
 	CalculatedSpend *CalculatedSpend `type:"structure"`
 
-	// The cost filters, such as service or region, that are applied to a budget.
+	// The cost filters, such as service or tag, that are applied to a budget.
 	//
 	// AWS Budgets supports the following services as a filter for RI budgets:
 	//
@@ -1305,11 +1368,44 @@ type Budget struct {
 
 	// The types of costs that are included in this COST budget.
 	//
-	// USAGE, RI_UTILIZATION, and RI_COVERAGE budgets do not have CostTypes.
+	// USAGE, RI_UTILIZATION, RI_COVERAGE, Savings_Plans_Utilization, and Savings_Plans_Coverage
+	// budgets do not have CostTypes.
 	CostTypes *CostTypes `type:"structure"`
 
 	// The last time that you updated this budget.
 	LastUpdatedTime *time.Time `type:"timestamp"`
+
+	// A map containing multiple BudgetLimit, including current or future limits.
+	//
+	// PlannedBudgetLimits is available for cost or usage budget and supports monthly
+	// and quarterly TimeUnit.
+	//
+	// For monthly budgets, provide 12 months of PlannedBudgetLimits values. This
+	// must start from the current month and include the next 11 months. The key
+	// is the start of the month, UTC in epoch seconds.
+	//
+	// For quarterly budgets, provide 4 quarters of PlannedBudgetLimits value entries
+	// in standard calendar quarter increments. This must start from the current
+	// quarter and include the next 3 quarters. The key is the start of the quarter,
+	// UTC in epoch seconds.
+	//
+	// If the planned budget expires before 12 months for monthly or 4 quarters
+	// for quarterly, provide the PlannedBudgetLimits values only for the remaining
+	// periods.
+	//
+	// If the budget begins at a date in the future, provide PlannedBudgetLimits
+	// values from the start date of the budget.
+	//
+	// After all of the BudgetLimit values in PlannedBudgetLimits are used, the
+	// budget continues to use the last limit as the BudgetLimit. At that point,
+	// the planned budget provides the same experience as a fixed budget.
+	//
+	// DescribeBudget and DescribeBudgets response along with PlannedBudgetLimits
+	// will also contain BudgetLimit representing the current month or quarter limit
+	// present in PlannedBudgetLimits. This only applies to budgets created with
+	// PlannedBudgetLimits. Budgets created without PlannedBudgetLimits will only
+	// contain BudgetLimit, and no PlannedBudgetLimits.
+	PlannedBudgetLimits map[string]*Spend `type:"map"`
 
 	// The period of time that is covered by a budget. The period has a start date
 	// and an end date. The start date must come before the end date. The end date
@@ -1331,7 +1427,8 @@ type Budget struct {
 	TimePeriod *TimePeriod `type:"structure"`
 
 	// The length of time until a budget resets the actual and forecasted spend.
-	// DAILY is available only for RI_UTILIZATION and RI_COVERAGE budgets.
+	// DAILY is available only for RI_UTILIZATION, RI_COVERAGE, Savings_Plans_Utilization,
+	// and Savings_Plans_Coverage budgets.
 	//
 	// TimeUnit is a required field
 	TimeUnit *string `type:"string" required:"true" enum:"TimeUnit"`
@@ -1370,6 +1467,16 @@ func (s *Budget) Validate() error {
 	if s.CalculatedSpend != nil {
 		if err := s.CalculatedSpend.Validate(); err != nil {
 			invalidParams.AddNested("CalculatedSpend", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.PlannedBudgetLimits != nil {
+		for i, v := range s.PlannedBudgetLimits {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "PlannedBudgetLimits", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -1418,6 +1525,12 @@ func (s *Budget) SetCostTypes(v *CostTypes) *Budget {
 // SetLastUpdatedTime sets the LastUpdatedTime field's value.
 func (s *Budget) SetLastUpdatedTime(v time.Time) *Budget {
 	s.LastUpdatedTime = &v
+	return s
+}
+
+// SetPlannedBudgetLimits sets the PlannedBudgetLimits field's value.
+func (s *Budget) SetPlannedBudgetLimits(v map[string]*Spend) *Budget {
+	s.PlannedBudgetLimits = v
 	return s
 }
 
@@ -3195,6 +3308,8 @@ type Subscriber struct {
 	// The address that AWS sends budget notifications to, either an SNS topic or
 	// an email.
 	//
+	// When you create a subscriber, the value of Address can't contain line breaks.
+	//
 	// Address is a required field
 	Address *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
@@ -3629,6 +3744,12 @@ const (
 
 	// BudgetTypeRiCoverage is a BudgetType enum value
 	BudgetTypeRiCoverage = "RI_COVERAGE"
+
+	// BudgetTypeSavingsPlansUtilization is a BudgetType enum value
+	BudgetTypeSavingsPlansUtilization = "SAVINGS_PLANS_UTILIZATION"
+
+	// BudgetTypeSavingsPlansCoverage is a BudgetType enum value
+	BudgetTypeSavingsPlansCoverage = "SAVINGS_PLANS_COVERAGE"
 )
 
 // The comparison operator of a notification. Currently the service supports

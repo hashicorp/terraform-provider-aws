@@ -19,14 +19,13 @@ Use the navigation to the left to read about the available resources.
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
-  access_key = "${var.aws_access_key}"
-  secret_key = "${var.aws_secret_key}"
-  region     = "us-east-1"
+  version = "~> 2.0"
+  region  = "us-east-1"
 }
 
-# Create a web server
-resource "aws_instance" "web" {
-  # ...
+# Create a VPC
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
 }
 ```
 
@@ -43,16 +42,20 @@ explained below:
 
 ### Static credentials ###
 
-Static credentials can be provided by adding an `access_key` and `secret_key` in-line in the
-AWS provider block:
+!> **Warning:** Hard-coding credentials into any Terraform configuration is not
+recommended, and risks secret leakage should this file ever be committed to a
+public version control system.
+
+Static credentials can be provided by adding an `access_key` and `secret_key`
+in-line in the AWS provider block:
 
 Usage:
 
 ```hcl
 provider "aws" {
   region     = "us-west-2"
-  access_key = "anaccesskey"
-  secret_key = "asecretkey"
+  access_key = "my-access-key"
+  secret_key = "my-secret-key"
 }
 ```
 
@@ -100,6 +103,9 @@ provider "aws" {
   profile                 = "customprofile"
 }
 ```
+
+If specifying the profile through the `AWS_PROFILE` environment variable, you
+may also need to set `AWS_SDK_LOAD_CONFIG` to a truthy value (e.g. `AWS_SDK_LOAD_CONFIG=1`) for advanced AWS client configurations, such as profiles that use the `source_profile` or `role_arn` configurations.
 
 ### ECS and CodeBuild Task Roles
 
@@ -194,6 +200,14 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   AWS account IDs to prevent you mistakenly using a wrong one (and
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.
+
+* `ignore_tag_prefixes` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.** List of resource tag key prefixes to ignore across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed for situations where external systems are managing certain resource tags. It prevents Terraform from returning any tag key matching the prefixes in any `tags` attributes and displaying any configuration difference for those tag values. If any resource configuration still has a tag matching one of the prefixes configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used. This functionality is only supported in the following resources:
+  - `aws_subnet`
+  - `aws_vpc`
+
+* `ignore_tags` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.** List of exact resource tag keys to ignore across all resources handled by this provider (see the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations). This is designed for situations where external systems are managing certain resource tags. It prevents Terraform from returning the tag in any `tags` attributes and displaying any configuration difference for the tag value. If any resource configuration still has this tag key configured in the `tags` argument, it will display a perpetual difference until the tag is removed from the argument or [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) is also used. This functionality is only supported in the following resources:
+  - `aws_subnet`
+  - `aws_vpc`
 
 * `insecure` - (Optional) Explicitly allow the provider to
   perform "insecure" SSL requests. If omitted, default value is `false`.
@@ -296,7 +310,7 @@ Approaches differ per authentication providers:
  * EC2 instance w/ IAM Instance Profile - [Metadata API](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html)
     is always used. Introduced in Terraform `0.6.16`.
  * All other providers (environment variable, shared credentials file, ...)
-    will try two approaches in the following order
+    will try three approaches in the following order
    * `iam:GetUser` - Typically useful for IAM Users. It also means
       that each user needs to be privileged to call `iam:GetUser` for themselves.
    * `sts:GetCallerIdentity` - _Should_ work for both IAM Users and federated IAM Roles,

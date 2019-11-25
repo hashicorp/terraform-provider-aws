@@ -9,9 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func resourceAwsElasticacheReplicationGroup() *schema.Resource {
@@ -156,10 +158,16 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Required: true,
 			},
 			"replication_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateAwsElastiCacheReplicationGroupId,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 40),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
+					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
+					validateStringNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validateStringNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
 				StateFunc: func(val interface{}) string {
 					return strings.ToLower(val.(string))
 				},
@@ -221,8 +229,20 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+			},
 		},
 		SchemaVersion: 1,
+
+		// SchemaVersion: 1 did not include any state changes via MigrateState.
+		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
+		// Future state migrations should be performed with StateUpgraders.
+		MigrateState: func(v int, inst *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+			return inst, nil
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -289,6 +309,10 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("notification_topic_arn"); ok {
 		params.NotificationTopicArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		params.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("snapshot_retention_limit"); ok {
@@ -411,6 +435,8 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 			log.Printf("Unknown AutomaticFailover state %s", *rgp.AutomaticFailover)
 		}
 	}
+
+	d.Set("kms_key_id", rgp.KmsKeyId)
 
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
@@ -843,8 +869,16 @@ func deleteElasticacheReplicationGroup(replicationGroupID string, conn *elastica
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteReplicationGroup(input)
+	}
+
+	if isAWSErr(err, elasticache.ErrCodeReplicationGroupNotFoundFault, "") {
+		return nil
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting Elasticache Replication Group: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %s", replicationGroupID)
@@ -899,31 +933,6 @@ func waitForModifyElasticacheReplicationGroup(conn *elasticache.ElastiCache, rep
 func validateAwsElastiCacheReplicationGroupEngine(v interface{}, k string) (ws []string, errors []error) {
 	if strings.ToLower(v.(string)) != "redis" {
 		errors = append(errors, fmt.Errorf("The only acceptable Engine type when using Replication Groups is Redis"))
-	}
-	return
-}
-
-func validateAwsElastiCacheReplicationGroupId(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) < 1) || (len(value) > 20) {
-		errors = append(errors, fmt.Errorf(
-			"%q must contain from 1 to 20 alphanumeric characters or hyphens", k))
-	}
-	if !regexp.MustCompile(`^[0-9a-zA-Z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters and hyphens allowed in %q", k))
-	}
-	if !regexp.MustCompile(`^[a-zA-Z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q must be a letter", k))
-	}
-	if regexp.MustCompile(`--`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot contain two consecutive hyphens", k))
-	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot end with a hyphen", k))
 	}
 	return
 }

@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSpotInstanceRequest() *schema.Resource {
@@ -177,7 +177,6 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 
 	var resp *ec2.RequestSpotInstancesOutput
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
 		resp, err = conn.RequestSpotInstances(spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
 		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
@@ -192,6 +191,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 		}
 		return resource.NonRetryableError(err)
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = conn.RequestSpotInstances(spotOpts)
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error requesting spot instances: %s", err)

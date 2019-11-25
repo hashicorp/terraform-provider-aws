@@ -1,12 +1,12 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_mysql_layer"
-sidebar_current: "docs-aws-resource-opsworks-mysql-layer"
 description: |-
   Provides an OpsWorks MySQL layer resource.
 ---
 
-# aws_opsworks_mysql_layer
+# Resource: aws_opsworks_mysql_layer
 
 Provides an OpsWorks MySQL layer resource.
 

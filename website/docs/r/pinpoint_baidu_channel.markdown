@@ -1,12 +1,12 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_baidu_channel"
-sidebar_current: "docs-aws-resource-pinpoint-baidu-channel"
 description: |-
   Provides a Pinpoint Baidu Channel resource.
 ---
 
-# aws_pinpoint_baidu_channel
+# Resource: aws_pinpoint_baidu_channel
 
 Provides a Pinpoint Baidu Channel resource.
 

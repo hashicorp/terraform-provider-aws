@@ -1,12 +1,12 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_security_configuration"
-sidebar_current: "docs-aws-resource-glue-security-configuration"
 description: |-
   Manages a Glue Security Configuration
 ---
 
-# aws_glue_security_configuration
+# Resource: aws_glue_security_configuration
 
 Manages a Glue Security Configuration.
 

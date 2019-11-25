@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsVpcDhcpOptions() *schema.Resource {
@@ -196,7 +196,7 @@ func resourceAwsVpcDhcpOptionsUpdate(d *schema.ResourceData, meta interface{}) e
 func resourceAwsVpcDhcpOptionsDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	return resource.Retry(3*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		log.Printf("[INFO] Deleting DHCP Options ID %s...", d.Id())
 		_, err := conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
 			DhcpOptionsId: aws.String(d.Id()),
@@ -239,6 +239,13 @@ func resourceAwsVpcDhcpOptionsDelete(d *schema.ResourceData, meta interface{}) e
 			return resource.NonRetryableError(err)
 		}
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDhcpOptions(&ec2.DeleteDhcpOptionsInput{
+			DhcpOptionsId: aws.String(d.Id()),
+		})
+	}
+	return err
 }
 
 func findVPCsByDHCPOptionsID(conn *ec2.EC2, id string) ([]*ec2.Vpc, error) {

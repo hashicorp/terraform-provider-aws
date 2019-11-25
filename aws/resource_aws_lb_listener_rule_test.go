@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestLBListenerARNFromRuleARN(t *testing.T) {
@@ -347,19 +347,18 @@ func TestAccAWSLBListenerRule_priority(t *testing.T) {
 
 func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-cognito-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	certificateName := fmt.Sprintf("testcert-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	cognitoPrefix := fmt.Sprintf("testcog-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.cognito",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_cognito(lbName, targetGroupName, certificateName, cognitoPrefix),
+				Config: testAccAWSLBListenerRuleConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.cognito", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "arn"),
@@ -388,18 +387,18 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 
 func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-oidc-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
-	certificateName := fmt.Sprintf("testcert-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener_rule.oidc",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_oidc(lbName, targetGroupName, certificateName),
+				Config: testAccAWSLBListenerRuleConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.oidc", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.oidc", "arn"),
@@ -431,16 +430,18 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 
 func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 	var rule elbv2.Rule
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_Action_Order(rName),
+				Config: testAccAWSLBListenerRuleConfig_Action_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -455,16 +456,18 @@ func TestAccAWSLBListenerRule_Action_Order(t *testing.T) {
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
 func TestAccAWSLBListenerRule_Action_Order_Recreates(t *testing.T) {
 	var rule elbv2.Rule
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_Action_Order(rName),
+				Config: testAccAWSLBListenerRuleConfig_Action_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -578,30 +581,31 @@ func testAccCheckAWSLBListenerRuleDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBListenerRuleConfig_multipleConditions(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*", "static"]
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -610,7 +614,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -619,20 +623,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -685,34 +689,36 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -721,7 +727,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -730,20 +736,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -796,34 +802,36 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfigBackwardsCompatibility(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_alb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_alb_listener_rule" "static" {
   listener_arn = "${aws_alb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = "${aws_alb_target_group.test.arn}"
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_alb_listener" "front_end" {
-   load_balancer_arn = "${aws_alb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_alb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_alb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_alb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_alb" "alb_test" {
@@ -832,7 +840,7 @@ resource "aws_alb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -841,20 +849,20 @@ resource "aws_alb" "alb_test" {
 }
 
 resource "aws_alb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -907,39 +915,43 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_redirect(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "redirect"
+
     redirect {
-      port = "443"
-      protocol = "HTTPS"
+      port        = "443"
+      protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol = "HTTP"
-  port = "80"
+  protocol          = "HTTP"
+  port              = "80"
 
   default_action {
     type = "redirect"
+
     redirect {
-      port = "443"
-      protocol = "HTTPS"
+      port        = "443"
+      protocol    = "HTTPS"
       status_code = "HTTP_301"
     }
   }
@@ -951,7 +963,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1008,40 +1020,44 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_redirect"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_fixedResponse(lbName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "static" {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Fixed response content"
-      status_code = "200"
+      status_code  = "200"
     }
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
-  protocol = "HTTP"
-  port = "80"
+  protocol          = "HTTP"
+  port              = "80"
 
   default_action {
     type = "fixed-response"
+
     fixed_response {
       content_type = "text/plain"
       message_body = "Fixed response content"
-      status_code = "200"
+      status_code  = "200"
     }
   }
 }
@@ -1052,7 +1068,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1109,35 +1125,36 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_fixedresponse"
   }
-}`, lbName)
+}
+`, lbName)
 }
 
 func testAccAWSLBListenerRuleConfig_updateRulePriority(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 101
+  priority     = 101
 
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -1146,7 +1163,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1155,20 +1172,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -1221,46 +1238,47 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_changeRuleArn(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "static" {
   listener_arn = "${aws_lb_listener.front_end_ruleupdate.arn}"
-  priority = 101
+  priority     = 101
 
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb_listener" "front_end_ruleupdate" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "8080"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "8080"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -1269,7 +1287,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1278,20 +1296,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -1344,20 +1362,21 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTP"
-   port = "80"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
@@ -1366,7 +1385,7 @@ resource "aws_lb" "alb_test" {
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1375,20 +1394,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -1441,7 +1460,8 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}`, lbName, targetGroupName)
+}
+`, lbName, targetGroupName)
 }
 
 func testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName string) string {
@@ -1593,83 +1613,63 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
 `)
 }
 
-func testAccAWSLBListenerRuleConfig_cognito(lbName string, targetGroupName string, certificateName string, cognitoPrefix string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "cognito" {
+func testAccAWSLBListenerRuleConfig_cognito(rName, key, certificate string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "cognito" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "authenticate-cognito"
+
     authenticate_cognito {
-      user_pool_arn = "${aws_cognito_user_pool.test.arn}"
+      user_pool_arn       = "${aws_cognito_user_pool.test.arn}"
       user_pool_client_id = "${aws_cognito_user_pool_client.test.id}"
-      user_pool_domain = "${aws_cognito_user_pool_domain.test.domain}"
+      user_pool_domain    = "${aws_cognito_user_pool_domain.test.domain}"
 
       authentication_request_extra_params = {
-        param  = "test"
+        param = "test"
       }
     }
   }
 
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name = "terraform-test-cert-%s"
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.test.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTPS"
-   port = "443"
-   ssl_policy = "ELBSecurityPolicy-2016-08"
-   certificate_arn = "${aws_iam_server_certificate.test.arn}"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${aws_iam_server_certificate.test.arn}"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = "%[1]s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1678,20 +1678,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%[1]s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -1747,107 +1747,88 @@ resource "aws_security_group" "alb_test" {
 }
 
 resource "aws_cognito_user_pool" "test" {
-  name = "%s-pool"
+  name = "%[1]s-pool"
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-  name = "%s-pool-client"
-  user_pool_id = "${aws_cognito_user_pool.test.id}"
-  generate_secret = true
+  name                                 = "%[1]s-pool-client"
+  user_pool_id                         = "${aws_cognito_user_pool.test.id}"
+  generate_secret                      = true
   allowed_oauth_flows_user_pool_client = true
-  allowed_oauth_flows = ["code", "implicit"]
-  allowed_oauth_scopes = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
-  callback_urls = ["https://www.example.com/callback", "https://www.example.com/redirect"]
-  default_redirect_uri = "https://www.example.com/redirect"
-  logout_urls = ["https://www.example.com/login"]
+  allowed_oauth_flows                  = ["code", "implicit"]
+  allowed_oauth_scopes                 = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
+  callback_urls                        = ["https://www.example.com/callback", "https://www.example.com/redirect"]
+  default_redirect_uri                 = "https://www.example.com/redirect"
+  logout_urls                          = ["https://www.example.com/login"]
 }
 
 resource "aws_cognito_user_pool_domain" "test" {
-  domain = "%s-pool-domain"
+  domain       = "%[1]s-pool-domain"
   user_pool_id = "${aws_cognito_user_pool.test.id}"
-}`, lbName, targetGroupName, certificateName, cognitoPrefix, cognitoPrefix, cognitoPrefix)
+}
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccAWSLBListenerRuleConfig_oidc(lbName string, targetGroupName string, certificateName string) string {
-	return fmt.Sprintf(`resource "aws_lb_listener_rule" "oidc" {
+func testAccAWSLBListenerRuleConfig_oidc(rName, key, certificate string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "oidc" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
-  priority = 100
+  priority     = 100
 
   action {
     type = "authenticate-oidc"
+
     authenticate_oidc {
-      authorization_endpoint =  "https://example.com/authorization_endpoint"
-      client_id = "s6BhdRkqt3"
-      client_secret = "7Fjfp0ZBr1KtDRbnfVdmIw"
-      issuer = "https://example.com"
-      token_endpoint = "https://example.com/token_endpoint"
-      user_info_endpoint = "https://example.com/user_info_endpoint"
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "s6BhdRkqt3"
+      client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
 
       authentication_request_extra_params = {
-        param  = "test"
+        param = "test"
       }
     }
   }
 
   action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = "${aws_lb_target_group.test.arn}"
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name = "terraform-test-cert-%s"
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.test.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "front_end" {
-   load_balancer_arn = "${aws_lb.alb_test.id}"
-   protocol = "HTTPS"
-   port = "443"
-   ssl_policy = "ELBSecurityPolicy-2016-08"
-   certificate_arn = "${aws_iam_server_certificate.test.arn}"
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${aws_iam_server_certificate.test.arn}"
 
-   default_action {
-     target_group_arn = "${aws_lb_target_group.test.id}"
-     type = "forward"
-   }
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = "%[1]s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout = 30
+  idle_timeout               = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1856,20 +1837,20 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 8080
+  name     = "%[1]s"
+  port     = 8080
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.alb_test.id}"
+  vpc_id   = "${aws_vpc.alb_test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -1922,13 +1903,14 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_cognito"
   }
-}`, lbName, targetGroupName, certificateName)
+}
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccAWSLBListenerRuleConfig_Action_Order(rName string) string {
+func testAccAWSLBListenerRuleConfig_Action_Order(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 variable "rName" {
-  default = %q
+  default = %[1]q
 }
 
 data "aws_availability_zones" "available" {}
@@ -1938,7 +1920,7 @@ resource "aws_lb_listener_rule" "test" {
 
   action {
     order = 1
-    type = "authenticate-oidc"
+    type  = "authenticate-oidc"
 
     authenticate_oidc {
       authorization_endpoint = "https://example.com/authorization_endpoint"
@@ -1949,7 +1931,7 @@ resource "aws_lb_listener_rule" "test" {
       user_info_endpoint     = "https://example.com/user_info_endpoint"
 
       authentication_request_extra_params = {
-        param  = "test"
+        param = "test"
       }
     }
   }
@@ -1961,36 +1943,15 @@ resource "aws_lb_listener_rule" "test" {
   }
 
   condition {
-    field = "path-pattern"
+    field  = "path-pattern"
     values = ["/static/*"]
   }
 }
 
 resource "aws_iam_server_certificate" "test" {
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  certificate_body = "%[2]s"
   name             = "${var.rName}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {
@@ -2007,10 +1968,10 @@ resource "aws_lb_listener" "test" {
 }
 
 resource "aws_lb" "test" {
-  internal                   = true
-  name                       = "${var.rName}"
-  security_groups            = ["${aws_security_group.test.id}"]
-  subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+  internal        = true
+  name            = "${var.rName}"
+  security_groups = ["${aws_security_group.test.id}"]
+  subnets         = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_lb_target_group" "test" {
@@ -2020,14 +1981,14 @@ resource "aws_lb_target_group" "test" {
   vpc_id   = "${aws_vpc.test.id}"
 
   health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
     unhealthy_threshold = 3
-    matcher = "200-299"
+    matcher             = "200-299"
   }
 }
 
@@ -2053,8 +2014,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "${var.rName}"
-  vpc_id      = "${aws_vpc.test.id}"
+  name   = "${var.rName}"
+  vpc_id = "${aws_vpc.test.id}"
 
   ingress {
     from_port   = 0
@@ -2073,5 +2034,6 @@ resource "aws_security_group" "test" {
   tags = {
     Name = "${var.rName}"
   }
-}`, rName)
+}
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

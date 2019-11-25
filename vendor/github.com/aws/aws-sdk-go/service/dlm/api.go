@@ -361,6 +361,263 @@ func (c *DLM) GetLifecyclePolicyWithContext(ctx aws.Context, input *GetLifecycle
 	return out, req.Send()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/ListTagsForResource
+func (c *DLM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/tags/{resourceArn}",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon Data Lifecycle Manager.
+//
+// Lists the tags for the specified resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Data Lifecycle Manager's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerException "InternalServerException"
+//   The service failed in an unexpected way.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   Bad request. The request is missing required parameters or has invalid parameters.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   A requested resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/ListTagsForResource
+func (c *DLM) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DLM) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/TagResource
+func (c *DLM) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/tags/{resourceArn}",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon Data Lifecycle Manager.
+//
+// Adds the specified tags to the specified resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Data Lifecycle Manager's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerException "InternalServerException"
+//   The service failed in an unexpected way.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   Bad request. The request is missing required parameters or has invalid parameters.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   A requested resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/TagResource
+func (c *DLM) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DLM) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/UntagResource
+func (c *DLM) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/tags/{resourceArn}",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon Data Lifecycle Manager.
+//
+// Removes the specified tags from the specified resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Data Lifecycle Manager's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerException "InternalServerException"
+//   The service failed in an unexpected way.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   Bad request. The request is missing required parameters or has invalid parameters.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   A requested resource was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/UntagResource
+func (c *DLM) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DLM) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateLifecyclePolicy = "UpdateLifecyclePolicy"
 
 // UpdateLifecyclePolicyRequest generates a "aws/request.Request" representing the
@@ -467,8 +724,6 @@ type CreateLifecyclePolicyInput struct {
 
 	// The configuration details of the lifecycle policy.
 	//
-	// Target tags cannot be re-used across lifecycle policies.
-	//
 	// PolicyDetails is a required field
 	PolicyDetails *PolicyDetails `type:"structure" required:"true"`
 
@@ -476,6 +731,9 @@ type CreateLifecyclePolicyInput struct {
 	//
 	// State is a required field
 	State *string `type:"string" required:"true" enum:"SettablePolicyStateValues"`
+
+	// The tags to apply to the lifecycle policy during creation.
+	Tags map[string]*string `min:"1" type:"map"`
 }
 
 // String returns the string representation
@@ -502,6 +760,9 @@ func (s *CreateLifecyclePolicyInput) Validate() error {
 	}
 	if s.State == nil {
 		invalidParams.Add(request.NewErrParamRequired("State"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
 	}
 	if s.PolicyDetails != nil {
 		if err := s.PolicyDetails.Validate(); err != nil {
@@ -539,6 +800,12 @@ func (s *CreateLifecyclePolicyInput) SetState(v string) *CreateLifecyclePolicyIn
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *CreateLifecyclePolicyInput) SetTags(v map[string]*string) *CreateLifecyclePolicyInput {
+	s.Tags = v
+	return s
+}
+
 type CreateLifecyclePolicyOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -566,7 +833,8 @@ func (s *CreateLifecyclePolicyOutput) SetPolicyId(v string) *CreateLifecyclePoli
 type CreateRule struct {
 	_ struct{} `type:"structure"`
 
-	// The interval. The supported values are 12 and 24.
+	// The interval between snapshots. The supported values are 2, 3, 4, 6, 8, 12,
+	// and 24.
 	//
 	// Interval is a required field
 	Interval *int64 `min:"1" type:"integer" required:"true"`
@@ -576,7 +844,7 @@ type CreateRule struct {
 	// IntervalUnit is a required field
 	IntervalUnit *string `type:"string" required:"true" enum:"IntervalUnitValues"`
 
-	// The time, in UTC, to start the operation.
+	// The time, in UTC, to start the operation. The supported format is hh:mm.
 	//
 	// The operation occurs within a one-hour window following the specified time.
 	Times []*string `type:"list"`
@@ -870,6 +1138,9 @@ type LifecyclePolicy struct {
 	// specified by the lifecycle policy.
 	ExecutionRoleArn *string `type:"string"`
 
+	// The Amazon Resource Name (ARN) of the policy.
+	PolicyArn *string `type:"string"`
+
 	// The configuration of the lifecycle policy
 	PolicyDetails *PolicyDetails `type:"structure"`
 
@@ -878,6 +1149,12 @@ type LifecyclePolicy struct {
 
 	// The activation state of the lifecycle policy.
 	State *string `type:"string" enum:"GettablePolicyStateValues"`
+
+	// The description of the status.
+	StatusMessage *string `type:"string"`
+
+	// The tags.
+	Tags map[string]*string `min:"1" type:"map"`
 }
 
 // String returns the string representation
@@ -914,6 +1191,12 @@ func (s *LifecyclePolicy) SetExecutionRoleArn(v string) *LifecyclePolicy {
 	return s
 }
 
+// SetPolicyArn sets the PolicyArn field's value.
+func (s *LifecyclePolicy) SetPolicyArn(v string) *LifecyclePolicy {
+	s.PolicyArn = &v
+	return s
+}
+
 // SetPolicyDetails sets the PolicyDetails field's value.
 func (s *LifecyclePolicy) SetPolicyDetails(v *PolicyDetails) *LifecyclePolicy {
 	s.PolicyDetails = v
@@ -932,6 +1215,18 @@ func (s *LifecyclePolicy) SetState(v string) *LifecyclePolicy {
 	return s
 }
 
+// SetStatusMessage sets the StatusMessage field's value.
+func (s *LifecyclePolicy) SetStatusMessage(v string) *LifecyclePolicy {
+	s.StatusMessage = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *LifecyclePolicy) SetTags(v map[string]*string) *LifecyclePolicy {
+	s.Tags = v
+	return s
+}
+
 // Summary information about a lifecycle policy.
 type LifecyclePolicySummary struct {
 	_ struct{} `type:"structure"`
@@ -944,6 +1239,9 @@ type LifecyclePolicySummary struct {
 
 	// The activation state of the lifecycle policy.
 	State *string `type:"string" enum:"GettablePolicyStateValues"`
+
+	// The tags.
+	Tags map[string]*string `min:"1" type:"map"`
 }
 
 // String returns the string representation
@@ -974,9 +1272,113 @@ func (s *LifecyclePolicySummary) SetState(v string) *LifecyclePolicySummary {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *LifecyclePolicySummary) SetTags(v map[string]*string) *LifecyclePolicySummary {
+	s.Tags = v
+	return s
+}
+
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resourceArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the tags.
+	Tags map[string]*string `min:"1" type:"map"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
+// Optional parameters that can be added to the policy. The set of valid parameters
+// depends on the combination of policyType and resourceType values.
+type Parameters struct {
+	_ struct{} `type:"structure"`
+
+	// When executing an EBS Snapshot Management – Instance policy, execute all
+	// CreateSnapshots calls with the excludeBootVolume set to the supplied field.
+	// Defaults to false. Only valid for EBS Snapshot Management – Instance policies.
+	ExcludeBootVolume *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s Parameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Parameters) GoString() string {
+	return s.String()
+}
+
+// SetExcludeBootVolume sets the ExcludeBootVolume field's value.
+func (s *Parameters) SetExcludeBootVolume(v bool) *Parameters {
+	s.ExcludeBootVolume = &v
+	return s
+}
+
 // Specifies the configuration of a lifecycle policy.
 type PolicyDetails struct {
 	_ struct{} `type:"structure"`
+
+	// A set of optional parameters that can be provided by the policy.
+	Parameters *Parameters `type:"structure"`
+
+	// This field determines the valid target resource types and actions a policy
+	// can manage. This field defaults to EBS_SNAPSHOT_MANAGEMENT if not present.
+	PolicyType *string `type:"string" enum:"PolicyTypeValues"`
 
 	// The resource type.
 	ResourceTypes []*string `min:"1" type:"list"`
@@ -1035,6 +1437,18 @@ func (s *PolicyDetails) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetParameters sets the Parameters field's value.
+func (s *PolicyDetails) SetParameters(v *Parameters) *PolicyDetails {
+	s.Parameters = v
+	return s
+}
+
+// SetPolicyType sets the PolicyType field's value.
+func (s *PolicyDetails) SetPolicyType(v string) *PolicyDetails {
+	s.PolicyType = &v
+	return s
 }
 
 // SetResourceTypes sets the ResourceTypes field's value.
@@ -1101,6 +1515,8 @@ func (s *RetainRule) SetCount(v int64) *RetainRule {
 type Schedule struct {
 	_ struct{} `type:"structure"`
 
+	// Copy all user-defined tags on a source volume to snapshots of the volume
+	// created by this policy.
 	CopyTags *bool `type:"boolean"`
 
 	// The create rule.
@@ -1115,6 +1531,12 @@ type Schedule struct {
 	// The tags to apply to policy-created resources. These user-defined tags are
 	// in addition to the AWS-added lifecycle tags.
 	TagsToAdd []*Tag `type:"list"`
+
+	// A collection of key/value pairs with values determined dynamically when the
+	// policy is executed. Keys may be any valid Amazon EC2 tag key. Values must
+	// be in one of the two following formats: $(instance-id) or $(timestamp). Variable
+	// tags are only valid for EBS Snapshot Management – Instance policies.
+	VariableTags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -1147,6 +1569,16 @@ func (s *Schedule) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TagsToAdd", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.VariableTags != nil {
+		for i, v := range s.VariableTags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "VariableTags", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -1184,6 +1616,12 @@ func (s *Schedule) SetRetainRule(v *RetainRule) *Schedule {
 // SetTagsToAdd sets the TagsToAdd field's value.
 func (s *Schedule) SetTagsToAdd(v []*Tag) *Schedule {
 	s.TagsToAdd = v
+	return s
+}
+
+// SetVariableTags sets the VariableTags field's value.
+func (s *Schedule) SetVariableTags(v []*Tag) *Schedule {
+	s.VariableTags = v
 	return s
 }
 
@@ -1240,6 +1678,150 @@ func (s *Tag) SetValue(v string) *Tag {
 	return s
 }
 
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resourceArn" type:"string" required:"true"`
+
+	// One or more tags.
+	//
+	// Tags is a required field
+	Tags map[string]*string `min:"1" type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v map[string]*string) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resourceArn" type:"string" required:"true"`
+
+	// The tag keys.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `location:"querystring" locationName:"tagKeys" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+	if s.TagKeys != nil && len(s.TagKeys) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TagKeys", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateLifecyclePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1250,9 +1832,8 @@ type UpdateLifecyclePolicyInput struct {
 	// specified by the lifecycle policy.
 	ExecutionRoleArn *string `type:"string"`
 
-	// The configuration of the lifecycle policy.
-	//
-	// Target tags cannot be re-used across policies.
+	// The configuration of the lifecycle policy. You cannot update the policy type
+	// or the resource type.
 	PolicyDetails *PolicyDetails `type:"structure"`
 
 	// The identifier of the lifecycle policy.
@@ -1356,8 +1937,16 @@ const (
 )
 
 const (
+	// PolicyTypeValuesEbsSnapshotManagement is a PolicyTypeValues enum value
+	PolicyTypeValuesEbsSnapshotManagement = "EBS_SNAPSHOT_MANAGEMENT"
+)
+
+const (
 	// ResourceTypeValuesVolume is a ResourceTypeValues enum value
 	ResourceTypeValuesVolume = "VOLUME"
+
+	// ResourceTypeValuesInstance is a ResourceTypeValues enum value
+	ResourceTypeValuesInstance = "INSTANCE"
 )
 
 const (

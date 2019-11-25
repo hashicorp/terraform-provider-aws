@@ -1,12 +1,12 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_web_acl"
-sidebar_current: "docs-aws-resource-waf-webacl"
 description: |-
   Provides a AWS WAF web access control group (ACL) resource.
 ---
 
-# aws_waf_web_acl
+# Resource: aws_waf_web_acl
 
 Provides a WAF Web ACL Resource
 
@@ -64,10 +64,12 @@ resource "aws_waf_web_acl" "example" {
   # ... other configuration ...
   logging_configuration {
     log_destination = "${aws_kinesis_firehose_delivery_stream.example.arn}"
+
     redacted_fields {
       field_to_match {
         type = "URI"
       }
+
       field_to_match {
         data = "referer"
         type = "HEADER"
@@ -84,12 +86,13 @@ The following arguments are supported:
 * `default_action` - (Required) Configuration block with action that you want AWS WAF to take when a request doesn't match the criteria in any of the rules that are associated with the web ACL. Detailed below.
 * `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this web ACL.
 * `name` - (Required) The name or description of the web ACL.
-* `rules` - (Required) Configuration blocks containing rules to associate with the web ACL and the settings for each rule. Detailed below.
+* `rules` - (Optional) Configuration blocks containing rules to associate with the web ACL and the settings for each rule. Detailed below.
 * `logging_configuration` - (Optional) Configuration block to enable WAF logging. Detailed below.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ### `default_action` Configuration Block
 
-* `type` - (Required) Specifies how you want AWS WAF to respond to requests that match the settings in a rule.
+* `type` - (Required) Specifies how you want AWS WAF to respond to requests that don't match the criteria in any of the `rules`.
   e.g. `ALLOW`, `BLOCK` or `COUNT`
 
 ### `logging_configuration` Configuration Block
@@ -126,6 +129,7 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF WebACL.
+* `arn` - The ARN of the WAF WebACL.
 
 ## Import
 

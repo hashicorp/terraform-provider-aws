@@ -874,7 +874,7 @@ func (c *ServerlessApplicationRepository) ListApplicationDependenciesWithContext
 //    // Example iterating over at most 3 pages of a ListApplicationDependencies operation.
 //    pageNum := 0
 //    err := client.ListApplicationDependenciesPages(params,
-//        func(page *ListApplicationDependenciesOutput, lastPage bool) bool {
+//        func(page *serverlessapplicationrepository.ListApplicationDependenciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -906,10 +906,12 @@ func (c *ServerlessApplicationRepository) ListApplicationDependenciesPagesWithCo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationDependenciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationDependenciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1024,7 +1026,7 @@ func (c *ServerlessApplicationRepository) ListApplicationVersionsWithContext(ctx
 //    // Example iterating over at most 3 pages of a ListApplicationVersions operation.
 //    pageNum := 0
 //    err := client.ListApplicationVersionsPages(params,
-//        func(page *ListApplicationVersionsOutput, lastPage bool) bool {
+//        func(page *serverlessapplicationrepository.ListApplicationVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1056,10 +1058,12 @@ func (c *ServerlessApplicationRepository) ListApplicationVersionsPagesWithContex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1170,7 +1174,7 @@ func (c *ServerlessApplicationRepository) ListApplicationsWithContext(ctx aws.Co
 //    // Example iterating over at most 3 pages of a ListApplications operation.
 //    pageNum := 0
 //    err := client.ListApplicationsPages(params,
-//        func(page *ListApplicationsOutput, lastPage bool) bool {
+//        func(page *serverlessapplicationrepository.ListApplicationsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1202,10 +1206,12 @@ func (c *ServerlessApplicationRepository) ListApplicationsPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1254,8 +1260,7 @@ func (c *ServerlessApplicationRepository) PutApplicationPolicyRequest(input *Put
 // PutApplicationPolicy API operation for AWSServerlessApplicationRepository.
 //
 // Sets the permission policy for an application. For the list of actions supported
-// for this operation, see Application Permissions (https://docs.aws.amazon.com/serverlessrepo/latest/devguide/access-control-resource-based.html#application-permissions)
-// .
+// for this operation, see Application Permissions (https://docs.aws.amazon.com/serverlessrepo/latest/devguide/access-control-resource-based.html#application-permissions) .
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3469,7 +3474,7 @@ type Tag struct {
 	Key *string `locationName:"key" type:"string" required:"true"`
 
 	// This property corresponds to the content of the same name for the AWS CloudFormation
-	//  Tag (https://docs.aws.amazon.com/goto/WebAPI/cloudformation-2010-05-15/Tag)
+	// Tag (https://docs.aws.amazon.com/goto/WebAPI/cloudformation-2010-05-15/Tag)
 	// Data Type.
 	//
 	// Value is a required field

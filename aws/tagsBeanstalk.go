@@ -6,7 +6,46 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
+
+// saveTagsBeanstalk is a helper to save the tags for a resource. It expects the
+// tags field to be named "tags"
+func saveTagsBeanstalk(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, arn string) error {
+	resp, err := conn.ListTagsForResource(&elasticbeanstalk.ListTagsForResourceInput{
+		ResourceArn: aws.String(arn),
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := d.Set("tags", tagsToMapBeanstalk(resp.ResourceTags)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// setTags is a helper to set the tags for a resource. It expects the
+// tags field to be named "tags"
+func setTagsBeanstalk(conn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, arn string) error {
+	if d.HasChange("tags") {
+		oraw, nraw := d.GetChange("tags")
+		o := oraw.(map[string]interface{})
+		n := nraw.(map[string]interface{})
+		add, remove := diffTagsBeanstalk(tagsFromMapBeanstalk(o), tagsFromMapBeanstalk(n))
+
+		if _, err := conn.UpdateTagsForResource(&elasticbeanstalk.UpdateTagsForResourceInput{
+			ResourceArn:  aws.String(arn),
+			TagsToAdd:    add,
+			TagsToRemove: remove,
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 // diffTags takes our tags locally and the ones remotely and returns
 // the set of tags that must be created, and the set of tags that must

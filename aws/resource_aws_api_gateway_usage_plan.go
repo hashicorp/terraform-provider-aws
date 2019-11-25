@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsApiGatewayUsagePlan() *schema.Resource {
@@ -237,7 +235,7 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 		UsagePlanId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == apigateway.ErrCodeNotFoundException {
 			log.Printf("[WARN] API Gateway Usage Plan (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -491,15 +489,14 @@ func resourceAwsApiGatewayUsagePlanDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteUsagePlan(&apigateway.DeleteUsagePlanInput{
-			UsagePlanId: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteUsagePlan(&apigateway.DeleteUsagePlanInput{
+		UsagePlanId: aws.String(d.Id()),
 	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API gateway usage plan: %s", err)
+	}
+
+	return nil
+
 }

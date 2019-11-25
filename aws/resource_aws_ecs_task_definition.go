@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEcsTaskDefinition() *schema.Resource {
@@ -230,6 +231,37 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				}, false),
 			},
 
+			"proxy_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"properties": {
+							Type:     schema.TypeMap,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Optional: true,
+							ForceNew: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Default:  ecs.ProxyConfigurationTypeAppmesh,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.ProxyConfigurationTypeAppmesh,
+							}, false),
+						},
+					},
+				},
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -260,7 +292,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 
 	// ClientException: Tags can not be empty.
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapECS(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().EcsTags()
 	}
 
 	if v, ok := d.GetOk("task_role_arn"); ok {
@@ -321,6 +353,34 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		input.RequiresCompatibilities = expandStringList(v.(*schema.Set).List())
 	}
 
+	proxyConfigs := d.Get("proxy_configuration").([]interface{})
+	if len(proxyConfigs) > 0 {
+		proxyConfig := proxyConfigs[0]
+		configMap := proxyConfig.(map[string]interface{})
+
+		containerName := configMap["container_name"].(string)
+		proxyType := configMap["type"].(string)
+
+		rawProperties := configMap["properties"].(map[string]interface{})
+
+		properties := make([]*ecs.KeyValuePair, len(rawProperties))
+		i := 0
+		for name, value := range rawProperties {
+			properties[i] = &ecs.KeyValuePair{
+				Name:  aws.String(name),
+				Value: aws.String(value.(string)),
+			}
+			i++
+		}
+
+		var ecsProxyConfig ecs.ProxyConfiguration
+		ecsProxyConfig.ContainerName = aws.String(containerName)
+		ecsProxyConfig.Type = aws.String(proxyType)
+		ecsProxyConfig.Properties = properties
+
+		input.ProxyConfiguration = &ecsProxyConfig
+	}
+
 	log.Printf("[DEBUG] Registering ECS task definition: %s", input)
 	out, err := conn.RegisterTaskDefinition(&input)
 	if err != nil {
@@ -330,9 +390,9 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 	taskDefinition := *out.TaskDefinition
 
 	log.Printf("[DEBUG] ECS task definition registered: %q (rev. %d)",
-		*taskDefinition.TaskDefinitionArn, *taskDefinition.Revision)
+		aws.StringValue(taskDefinition.TaskDefinitionArn), aws.Int64Value(taskDefinition.Revision))
 
-	d.SetId(*taskDefinition.Family)
+	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 
 	return resourceAwsEcsTaskDefinitionRead(d, meta)
@@ -360,7 +420,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 
-	d.SetId(*taskDefinition.Family)
+	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
@@ -380,7 +440,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 
-	if err := d.Set("tags", tagsToMapECS(out.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(out.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -393,7 +453,11 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err := d.Set("requires_compatibilities", flattenStringList(taskDefinition.RequiresCompatibilities)); err != nil {
-		return err
+		return fmt.Errorf("error setting requires_compatibilities: %s", err)
+	}
+
+	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
+		return fmt.Errorf("error setting proxy_configuration: %s", err)
 	}
 
 	return nil
@@ -413,42 +477,36 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 	return results
 }
 
+func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interface{} {
+	if pc == nil {
+		return nil
+	}
+
+	meshProperties := make(map[string]string)
+	if pc.Properties != nil {
+		for _, prop := range pc.Properties {
+			meshProperties[aws.StringValue(prop.Name)] = aws.StringValue(prop.Value)
+		}
+	}
+
+	config := make(map[string]interface{})
+	config["container_name"] = aws.StringValue(pc.ContainerName)
+	config["type"] = aws.StringValue(pc.Type)
+	config["properties"] = meshProperties
+
+	return []map[string]interface{}{
+		config,
+	}
+}
+
 func resourceAwsEcsTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
 	if d.HasChange("tags") {
-		oldTagsRaw, newTagsRaw := d.GetChange("tags")
-		oldTagsMap := oldTagsRaw.(map[string]interface{})
-		newTagsMap := newTagsRaw.(map[string]interface{})
-		createTags, removeTags := diffTagsECS(tagsFromMapECS(oldTagsMap), tagsFromMapECS(newTagsMap))
+		o, n := d.GetChange("tags")
 
-		if len(removeTags) > 0 {
-			removeTagKeys := make([]*string, len(removeTags))
-			for i, removeTag := range removeTags {
-				removeTagKeys[i] = removeTag.Key
-			}
-
-			input := &ecs.UntagResourceInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
-				TagKeys:     removeTagKeys,
-			}
-
-			log.Printf("[DEBUG] Untagging ECS Cluster: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging ECS Cluster (%s): %s", d.Get("arn").(string), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &ecs.TagResourceInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging ECS Cluster: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging ECS Cluster (%s): %s", d.Get("arn").(string), err)
-			}
+		if err := keyvaluetags.EcsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating ECS Task Definition (%s) tags: %s", d.Id(), err)
 		}
 	}
 

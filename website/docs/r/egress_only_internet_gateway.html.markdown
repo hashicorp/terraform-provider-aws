@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_egress_only_internet_gateway"
-sidebar_current: "docs-aws-resource-egress-only-internet-gateway"
 description: |-
   Provides a resource to create a VPC Egress Only Internet Gateway.
 ---
 
-# aws_egress_only_internet_gateway
+# Resource: aws_egress_only_internet_gateway
 
 [IPv6 only] Creates an egress-only Internet gateway for your VPC.
 An egress-only Internet gateway is used to enable outbound communication

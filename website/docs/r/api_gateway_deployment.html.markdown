@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_deployment"
-sidebar_current: "docs-aws-resource-api-gateway-deployment"
 description: |-
   Provides an API Gateway Deployment.
 ---
 
-# aws_api_gateway_deployment
+# Resource: aws_api_gateway_deployment
 
 Provides an API Gateway Deployment.
 

@@ -1,11 +1,11 @@
 ---
+subcategory: "GuardDuty"
 layout: aws
 page_title: 'AWS: aws_guardduty_ipset'
-sidebar_current: docs-aws-resource-guardduty-ipset
 description: Provides a resource to manage a GuardDuty IPSet
 ---
 
-# aws_guardduty_ipset
+# Resource: aws_guardduty_ipset
 
 Provides a resource to manage a GuardDuty IPSet.
 

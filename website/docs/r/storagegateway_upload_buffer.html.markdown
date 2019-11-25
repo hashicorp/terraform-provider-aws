@@ -1,12 +1,12 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_upload_buffer"
-sidebar_current: "docs-aws-resource-storagegateway-upload-buffer"
 description: |-
   Manages an AWS Storage Gateway upload buffer
 ---
 
-# aws_storagegateway_upload_buffer
+# Resource: aws_storagegateway_upload_buffer
 
 Manages an AWS Storage Gateway upload buffer.
 

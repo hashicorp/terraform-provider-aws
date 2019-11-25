@@ -3,14 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsTransferServer() *schema.Resource {
@@ -32,6 +33,40 @@ func resourceAwsTransferServer() *schema.Resource {
 			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+
+			"endpoint_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  transfer.EndpointTypePublic,
+				ValidateFunc: validation.StringInSlice([]string{
+					transfer.EndpointTypePublic,
+					transfer.EndpointTypeVpcEndpoint,
+				}, false),
+			},
+
+			"endpoint_details": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_endpoint_id": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								validNamePattern := "^vpce-[0-9a-f]{17}$"
+								validName, nameMatchErr := regexp.MatchString(validNamePattern, value)
+								if !validName || nameMatchErr != nil {
+									errors = append(errors, fmt.Errorf(
+										"%q must match regex '%v'", k, validNamePattern))
+								}
+								return
+							},
+						},
+					},
+				},
 			},
 
 			"invocation_role": {
@@ -75,7 +110,7 @@ func resourceAwsTransferServer() *schema.Resource {
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
-	tags := tagsFromMapTransfer(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().TransferTags()
 	createOpts := &transfer.CreateServerInput{}
 
 	if len(tags) != 0 {
@@ -101,6 +136,14 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 
 	if attr, ok := d.GetOk("logging_role"); ok {
 		createOpts.LoggingRole = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("endpoint_type"); ok {
+		createOpts.EndpointType = aws.String(attr.(string))
+	}
+
+	if attr, ok := d.GetOk("endpoint_details"); ok {
+		createOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Create Transfer Server Option: %#v", createOpts)
@@ -144,10 +187,12 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("invocation_role", aws.StringValue(resp.Server.IdentityProviderDetails.InvocationRole))
 		d.Set("url", aws.StringValue(resp.Server.IdentityProviderDetails.Url))
 	}
+	d.Set("endpoint_type", resp.Server.EndpointType)
+	d.Set("endpoint_details", flattenTransferServerEndpointDetails(resp.Server.EndpointDetails))
 	d.Set("identity_provider_type", resp.Server.IdentityProviderType)
 	d.Set("logging_role", resp.Server.LoggingRole)
 
-	if err := d.Set("tags", tagsToMapTransfer(resp.Server.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.TransferKeyValueTags(resp.Server.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
 	}
 	return nil
@@ -178,6 +223,20 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		updateOpts.IdentityProviderDetails = identityProviderDetails
 	}
 
+	if d.HasChange("endpoint_type") {
+		updateFlag = true
+		if attr, ok := d.GetOk("endpoint_type"); ok {
+			updateOpts.EndpointType = aws.String(attr.(string))
+		}
+	}
+
+	if d.HasChange("endpoint_details") {
+		updateFlag = true
+		if attr, ok := d.GetOk("endpoint_details"); ok {
+			updateOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
+		}
+	}
+
 	if updateFlag {
 		_, err := conn.UpdateServer(updateOpts)
 		if err != nil {
@@ -190,8 +249,11 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if err := setTagsTransfer(conn, d); err != nil {
-		return fmt.Errorf("Error update tags: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsTransferServerRead(d, meta)
@@ -233,7 +295,7 @@ func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) err
 		ServerId: aws.String(serverID),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeServer(params)
 
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
@@ -246,6 +308,19 @@ func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) err
 
 		return resource.RetryableError(fmt.Errorf("Transfer Server (%s) still exists", serverID))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeServer(params)
+		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+		if err == nil {
+			return fmt.Errorf("Transfer server (%s) still exists", serverID)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for transfer server deletion: %s", err)
+	}
+	return nil
 }
 
 func deleteTransferUsers(conn *transfer.Transfer, serverID string, nextToken *string) error {
@@ -284,4 +359,27 @@ func deleteTransferUsers(conn *transfer.Transfer, serverID string, nextToken *st
 	}
 
 	return nil
+}
+
+func expandTransferServerEndpointDetails(l []interface{}) *transfer.EndpointDetails {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	e := l[0].(map[string]interface{})
+
+	return &transfer.EndpointDetails{
+		VpcEndpointId: aws.String(e["vpc_endpoint_id"].(string)),
+	}
+}
+
+func flattenTransferServerEndpointDetails(endpointDetails *transfer.EndpointDetails) []interface{} {
+	if endpointDetails == nil {
+		return []interface{}{}
+	}
+
+	e := map[string]interface{}{
+		"vpc_endpoint_id": aws.StringValue(endpointDetails.VpcEndpointId),
+	}
+
+	return []interface{}{e}
 }

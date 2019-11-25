@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsApiGatewayResource(t *testing.T) {
@@ -37,19 +37,19 @@ func TestAccDataSourceAwsApiGatewayResource(t *testing.T) {
 func testAccDataSourceAwsApiGatewayResourceConfig(r string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "example" {
-	name = "%s_example"
+  name = "%s_example"
 }
 
 resource "aws_api_gateway_resource" "example_v1" {
-	rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-    parent_id   = "${aws_api_gateway_rest_api.example.root_resource_id}"
-	path_part   = "v1"
+  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  parent_id   = "${aws_api_gateway_rest_api.example.root_resource_id}"
+  path_part   = "v1"
 }
 
 resource "aws_api_gateway_resource" "example_v1_endpoint" {
-	rest_api_id = "${aws_api_gateway_rest_api.example.id}"
-    parent_id   = "${aws_api_gateway_resource.example_v1.id}"
-	path_part   = "endpoint"
+  rest_api_id = "${aws_api_gateway_rest_api.example.id}"
+  parent_id   = "${aws_api_gateway_resource.example_v1.id}"
+  path_part   = "endpoint"
 }
 
 data "aws_api_gateway_resource" "example_v1" {

@@ -1,7 +1,7 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
-sidebar_current: "docs-aws-datasource-launch-configuration"
 description: |-
   Provides a Launch Configuration data source.
 ---
@@ -50,6 +50,7 @@ In addition to all arguments above, the following attributes are exported:
 `root_block_device` is exported with the following attributes:
 
 * `delete_on_termination` - Whether the EBS Volume will be deleted on instance termination.
+* `encrypted` - Whether the volume is Encrypted.
 * `iops` - The provisioned IOPs of the volume.
 * `volume_size` - The Size of the volume.
 * `volume_type` - The Type of the volume.

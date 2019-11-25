@@ -1,7 +1,7 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_container_definition"
-sidebar_current: "docs-aws-datasource-ecs-container-definition"
 description: |-
     Provides details about a single container within an ecs task definition
 ---

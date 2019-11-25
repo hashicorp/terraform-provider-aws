@@ -1,12 +1,12 @@
 ---
+subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_task"
-sidebar_current: "docs-aws-resource-datasync-task"
 description: |-
   Manages an AWS DataSync Task
 ---
 
-# aws_datasync_task
+# Resource: aws_datasync_task
 
 Manages an AWS DataSync Task, which represents a configuration for synchronization. Starting an execution of these DataSync Tasks (actually synchronizing files) is performed outside of this Terraform resource.
 

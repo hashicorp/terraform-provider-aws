@@ -1,12 +1,12 @@
 ---
+subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_global_table"
-sidebar_current: "docs-aws-resource-dynamodb-global-table"
 description: |-
   Provides a resource to create a DynamoDB Global Table
 ---
 
-# aws_dynamodb_global_table
+# Resource: aws_dynamodb_global_table
 
 Provides a resource to manage a DynamoDB Global Table. These are layered on top of existing DynamoDB Tables.
 

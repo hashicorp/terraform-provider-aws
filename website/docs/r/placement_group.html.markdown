@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_placement_group"
-sidebar_current: "docs-aws-resource-placement-group"
 description: |-
   Provides an EC2 placement group.
 ---
 
-# aws_placement_group
+# Resource: aws_placement_group
 
 Provides an EC2 placement group. Read more about placement groups
 in [AWS Docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html).

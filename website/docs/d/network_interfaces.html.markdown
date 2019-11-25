@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_interfaces"
-sidebar_current: "docs-aws-datasource-network-interfaces"
 description: |-
     Provides a list of network interface ids
 ---

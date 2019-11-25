@@ -6,31 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-func TestAccAWSIotThingType_importBasic(t *testing.T) {
-	resourceName := "aws_iot_thing_type.foo"
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSIotThingTypeDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSIotThingTypeConfig_basic(rInt),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAWSIotThingType_basic(t *testing.T) {
 	rInt := acctest.RandInt()
@@ -46,6 +25,11 @@ func TestAccAWSIotThingType_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_iot_thing_type.foo", "arn"),
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "name", fmt.Sprintf("tf_acc_iot_thing_type_%d", rInt)),
 				),
+			},
+			{
+				ResourceName:      "aws_iot_thing_type.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -67,6 +51,11 @@ func TestAccAWSIotThingType_full(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "properties.0.searchable_attributes.#", "3"),
 					resource.TestCheckResourceAttr("aws_iot_thing_type.foo", "deprecated", "true"),
 				),
+			},
+			{
+				ResourceName:      "aws_iot_thing_type.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSIotThingTypeConfig_fullUpdated(rInt),

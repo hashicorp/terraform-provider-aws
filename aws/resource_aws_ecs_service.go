@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEcsService() *schema.Resource {
@@ -152,7 +153,6 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"elb_name": {
@@ -363,7 +363,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		DeploymentController: expandEcsDeploymentController(d.Get("deployment_controller").([]interface{})),
 		SchedulingStrategy:   aws.String(schedulingStrategy),
 		ServiceName:          aws.String(d.Get("name").(string)),
-		Tags:                 tagsFromMapECS(d.Get("tags").(map[string]interface{})),
+		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(),
 		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
 		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 	}
@@ -487,14 +487,17 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateService(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("%s %q", err, d.Get("name").(string))
 	}
 
 	service := *out.Service
 
-	log.Printf("[DEBUG] ECS service created: %s", *service.ServiceArn)
-	d.SetId(*service.ServiceArn)
+	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(service.ServiceArn))
+	d.SetId(aws.StringValue(service.ServiceArn))
 
 	return resourceAwsEcsServiceRead(d, meta)
 }
@@ -536,11 +539,17 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeServices(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error reading ECS service: %s", err)
 	}
 
 	if len(out.Services) < 1 {
+		if d.IsNewResource() {
+			return fmt.Errorf("ECS service not created: %q", d.Id())
+		}
 		log.Printf("[WARN] Removing ECS service %s (%s) because it's gone", d.Get("name").(string), d.Id())
 		d.SetId("")
 		return nil
@@ -557,7 +566,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Received ECS service %s", service)
 
-	d.SetId(*service.ServiceArn)
+	d.SetId(aws.StringValue(service.ServiceArn))
 	d.Set("name", service.ServiceName)
 
 	// Save task definition in the same format
@@ -623,7 +632,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting service_registries for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tagsToMapECS(service.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(service.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -838,7 +847,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-			out, err := conn.UpdateService(&input)
+			_, err := conn.UpdateService(&input)
 			if err != nil {
 				if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Please verify that the ECS service role being passed has the proper permissions.") {
 					return resource.RetryableError(err)
@@ -848,48 +857,21 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 				}
 				return resource.NonRetryableError(err)
 			}
-
-			log.Printf("[DEBUG] Updated ECS service %s", out.Service)
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateService(&input)
+		}
 		if err != nil {
-			return fmt.Errorf("error updating ECS Service (%s): %s", d.Id(), err)
+			return fmt.Errorf("Error updating ECS Service (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags") {
-		oldTagsRaw, newTagsRaw := d.GetChange("tags")
-		oldTagsMap := oldTagsRaw.(map[string]interface{})
-		newTagsMap := newTagsRaw.(map[string]interface{})
-		createTags, removeTags := diffTagsECS(tagsFromMapECS(oldTagsMap), tagsFromMapECS(newTagsMap))
+		o, n := d.GetChange("tags")
 
-		if len(removeTags) > 0 {
-			removeTagKeys := make([]*string, len(removeTags))
-			for i, removeTag := range removeTags {
-				removeTagKeys[i] = removeTag.Key
-			}
-
-			input := &ecs.UntagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				TagKeys:     removeTagKeys,
-			}
-
-			log.Printf("[DEBUG] Untagging ECS Cluster: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging ECS Cluster (%s): %s", d.Id(), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &ecs.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging ECS Cluster: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging ECS Cluster (%s): %s", d.Id(), err)
-			}
+		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ECS Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -952,9 +934,11 @@ func resourceAwsEcsServiceDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteService(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting ECS service: %s", err)
 	}
 
 	// Wait until it's deleted

@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEip() *schema.Resource {
@@ -141,9 +142,9 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
-	if _, ok := d.GetOk("tags"); ok {
-		if err := setTags(ec2conn, d); err != nil {
-			return fmt.Errorf("Error creating EIP tags: %s", err)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
 
@@ -185,6 +186,9 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			describeAddresses, err = ec2conn.DescribeAddresses(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Error retrieving EIP: %s", err)
 		}
@@ -269,7 +273,9 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(*address.AllocationId)
 	}
 
-	d.Set("tags", tagsToMap(address.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(address.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -340,6 +346,9 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = ec2conn.AssociateAddress(assocOpts)
+		}
 		if err != nil {
 			// Prevent saving instance if association failed
 			// e.g. missing internet gateway in VPC
@@ -349,9 +358,10 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if _, ok := d.GetOk("tags"); ok {
-		if err := setTags(ec2conn, d); err != nil {
-			return fmt.Errorf("Error updating EIP tags: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -377,22 +387,24 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	domain := resourceAwsEipDomain(d)
-	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		var err error
-		switch domain {
-		case "vpc":
-			log.Printf(
-				"[DEBUG] EIP release (destroy) address allocation: %v",
-				d.Id())
-			_, err = ec2conn.ReleaseAddress(&ec2.ReleaseAddressInput{
-				AllocationId: aws.String(d.Id()),
-			})
-		case "standard":
-			log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())
-			_, err = ec2conn.ReleaseAddress(&ec2.ReleaseAddressInput{
-				PublicIp: aws.String(d.Id()),
-			})
+
+	var input *ec2.ReleaseAddressInput
+	switch domain {
+	case "vpc":
+		log.Printf("[DEBUG] EIP release (destroy) address allocation: %v", d.Id())
+		input = &ec2.ReleaseAddressInput{
+			AllocationId: aws.String(d.Id()),
 		}
+	case "standard":
+		log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())
+		input = &ec2.ReleaseAddressInput{
+			PublicIp: aws.String(d.Id()),
+		}
+	}
+
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		var err error
+		_, err = ec2conn.ReleaseAddress(input)
 
 		if err == nil {
 			return nil
@@ -403,6 +415,13 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return resource.RetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = ec2conn.ReleaseAddress(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error releasing EIP address: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsEipDomain(d *schema.ResourceData) string {

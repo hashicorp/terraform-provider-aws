@@ -1,12 +1,12 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_key_pair"
-sidebar_current: "docs-aws-resource-lightsail-key-pair"
 description: |-
   Provides an Lightsail Key Pair
 ---
 
-# aws_lightsail_key_pair
+# Resource: aws_lightsail_key_pair
 
 Provides a Lightsail Key Pair, for use with Lightsail Instances. These key pairs
 are separate from EC2 Key Pairs, and must be created or imported for use with

@@ -468,7 +468,7 @@ func (c *Macie) ListMemberAccountsWithContext(ctx aws.Context, input *ListMember
 //    // Example iterating over at most 3 pages of a ListMemberAccounts operation.
 //    pageNum := 0
 //    err := client.ListMemberAccountsPages(params,
-//        func(page *ListMemberAccountsOutput, lastPage bool) bool {
+//        func(page *macie.ListMemberAccountsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -500,10 +500,12 @@ func (c *Macie) ListMemberAccountsPagesWithContext(ctx aws.Context, input *ListM
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -614,7 +616,7 @@ func (c *Macie) ListS3ResourcesWithContext(ctx aws.Context, input *ListS3Resourc
 //    // Example iterating over at most 3 pages of a ListS3Resources operation.
 //    pageNum := 0
 //    err := client.ListS3ResourcesPages(params,
-//        func(page *ListS3ResourcesOutput, lastPage bool) bool {
+//        func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -646,10 +648,12 @@ func (c *Macie) ListS3ResourcesPagesWithContext(ctx aws.Context, input *ListS3Re
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListS3ResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListS3ResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

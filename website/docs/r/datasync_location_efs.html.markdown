@@ -1,12 +1,12 @@
 ---
+subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_location_efs"
-sidebar_current: "docs-aws-resource-datasync-location-efs"
 description: |-
   Manages an EFS Location within AWS DataSync.
 ---
 
-# aws_datasync_location_efs
+# Resource: aws_datasync_location_efs
 
 Manages an AWS DataSync EFS Location.
 

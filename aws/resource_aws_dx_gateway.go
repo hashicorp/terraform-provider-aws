@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDxGateway() *schema.Resource {
@@ -32,6 +32,10 @@ func resourceAwsDxGateway() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateAmazonSideAsn,
+			},
+			"owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 
@@ -96,6 +100,7 @@ func resourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	dxGw := dxGwRaw.(*directconnect.Gateway)
 	d.Set("name", aws.StringValue(dxGw.DirectConnectGatewayName))
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(dxGw.AmazonSideAsn), 10))
+	d.Set("owner_account_id", aws.StringValue(dxGw.OwnerAccount))
 
 	return nil
 }
@@ -118,6 +123,28 @@ func resourceAwsDxGatewayDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	return nil
+}
+
+func resourceAwsDxGatewayImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*AWSClient).dxconn
+
+	resp, err := conn.DescribeDirectConnectGatewayAssociations(&directconnect.DescribeDirectConnectGatewayAssociationsInput{
+		DirectConnectGatewayId: aws.String(d.Id()),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error reading Direct Connect gateway association: %s", err)
+	}
+
+	results := []*schema.ResourceData{d}
+	for _, assoc := range resp.DirectConnectGatewayAssociations {
+		d := resourceAwsDxGatewayAssociation().Data(nil)
+		d.SetType("aws_dx_gateway_association")
+		d.SetId(dxGatewayAssociationId(aws.StringValue(assoc.DirectConnectGatewayId), aws.StringValue(assoc.AssociatedGateway.Id)))
+		d.Set("dx_gateway_association_id", assoc.AssociationId)
+		results = append(results, d)
+	}
+
+	return results, nil
 }
 
 func dxGatewayStateRefresh(conn *directconnect.DirectConnect, dxgwId string) resource.StateRefreshFunc {

@@ -1,12 +1,12 @@
 ---
+subcategory: "Database Migration Service (DMS)"
 layout: "aws"
 page_title: "AWS: aws_dms_certificate"
-sidebar_current: "docs-aws-resource-dms-certificate"
 description: |-
   Provides a DMS (Data Migration Service) certificate resource.
 ---
 
-# aws_dms_certificate
+# Resource: aws_dms_certificate
 
 Provides a DMS (Data Migration Service) certificate resource. DMS certificates can be created, deleted, and imported.
 

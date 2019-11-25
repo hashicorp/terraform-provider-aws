@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_eip_association"
-sidebar_current: "docs-aws-resource-eip-association"
 description: |-
   Provides an AWS EIP Association
 ---
 
-# aws_eip_association
+# Resource: aws_eip_association
 
 Provides an AWS EIP Association as a top level resource, to associate and
 disassociate Elastic IPs from AWS Instances and Network Interfaces.

@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_key_pair"
-sidebar_current: "docs-aws-resource-key-pair"
 description: |-
   Provides a Key Pair resource. Currently this supports importing an existing key pair but not creating a new key pair.
 ---
 
-# aws_key_pair
+# Resource: aws_key_pair
 
 Provides an [EC2 key pair](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html) resource. A key pair is used to control login access to EC2 instances.
 

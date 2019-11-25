@@ -1,12 +1,12 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
-page_title: "AWS: wafregional_regex_match_set"
-sidebar_current: "docs-aws-resource-wafregional-regex-match-set"
+page_title: "AWS: aws_wafregional_regex_match_set"
 description: |-
   Provides a AWS WAF Regional Regex Match Set resource.
 ---
 
-# aws_wafregional_regex_match_set
+# Resource: aws_wafregional_regex_match_set
 
 Provides a WAF Regional Regex Match Set Resource
 
@@ -66,3 +66,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Regional Regex Match Set.
+
+## Import
+
+WAF Regional Regex Match Set can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_regex_match_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

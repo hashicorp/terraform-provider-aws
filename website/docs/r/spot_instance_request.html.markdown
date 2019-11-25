@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_spot_instance_request"
-sidebar_current: "docs-aws-resource-spot-instance-request"
 description: |-
   Provides a Spot Instance Request resource.
 ---
 
-# aws_spot_instance_request
+# Resource: aws_spot_instance_request
 
 Provides an EC2 Spot Instance Request resource. This allows instances to be
 requested on the spot market.

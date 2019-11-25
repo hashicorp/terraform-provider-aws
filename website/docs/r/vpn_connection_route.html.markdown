@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_connection_route"
-sidebar_current: "docs-aws-resource-vpn-connection-route"
 description: |-
   Provides a static route between a VPN connection and a customer gateway.
 ---
 
-# aws_vpn_connection_route
+# Resource: aws_vpn_connection_route
 
 Provides a static route between a VPN connection and a customer gateway.
 

@@ -1,12 +1,13 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // setTags is a helper to set the tags for a resource. It expects the
@@ -115,4 +116,22 @@ func tagIgnoredSSM(t *ssm.Tag) bool {
 		}
 	}
 	return false
+}
+
+func saveTagsSSM(conn *ssm.SSM, d *schema.ResourceData, id, resourceType string) error {
+	resp, err := conn.ListTagsForResource(&ssm.ListTagsForResourceInput{
+		ResourceId:   aws.String(id),
+		ResourceType: aws.String(resourceType),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving tags for SSM resource (%s): %s", id, err)
+	}
+
+	var dt []*ssm.Tag
+	if len(resp.TagList) > 0 {
+		dt = resp.TagList
+	}
+
+	return d.Set("tags", tagsToMapSSM(dt))
 }

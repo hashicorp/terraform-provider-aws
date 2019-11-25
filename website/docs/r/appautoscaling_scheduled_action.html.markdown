@@ -1,12 +1,12 @@
 ---
+subcategory: "Application Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_appautoscaling_scheduled_action"
-sidebar_current: "docs-aws-resource-appautoscaling-scheduled-action"
 description: |-
   Provides an Application AutoScaling ScheduledAction resource.
 ---
 
-# aws_appautoscaling_scheduled_action
+# Resource: aws_appautoscaling_scheduled_action
 
 Provides an Application AutoScaling ScheduledAction resource.
 

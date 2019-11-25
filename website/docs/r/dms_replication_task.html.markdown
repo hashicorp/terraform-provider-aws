@@ -1,12 +1,12 @@
 ---
+subcategory: "Database Migration Service (DMS)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_task"
-sidebar_current: "docs-aws-resource-dms-replication-task"
 description: |-
   Provides a DMS (Data Migration Service) replication task resource.
 ---
 
-# aws_dms_replication_task
+# Resource: aws_dms_replication_task
 
 Provides a DMS (Data Migration Service) replication task resource. DMS replication tasks can be created, updated, deleted, and imported.
 

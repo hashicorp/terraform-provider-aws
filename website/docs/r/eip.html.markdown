@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_eip"
-sidebar_current: "docs-aws-resource-eip"
 description: |-
   Provides an Elastic IP resource.
 ---
 
-# aws_eip
+# Resource: aws_eip
 
 Provides an Elastic IP resource.
 

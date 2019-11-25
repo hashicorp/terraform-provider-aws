@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsDxGateway() *schema.Resource {
@@ -21,6 +21,10 @@ func dataSourceAwsDxGateway() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"owner_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -61,6 +65,7 @@ func dataSourceAwsDxGatewayRead(d *schema.ResourceData, meta interface{}) error 
 
 	d.SetId(aws.StringValue(gateway.DirectConnectGatewayId))
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(gateway.AmazonSideAsn), 10))
+	d.Set("owner_account_id", aws.StringValue(gateway.OwnerAccount))
 
 	return nil
 }

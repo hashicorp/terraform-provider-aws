@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_snapshot"
-sidebar_current: "docs-aws-datasource-db-snapshot"
 description: |-
   Get information on a DB Snapshot.
 ---
@@ -46,6 +46,8 @@ resource "aws_db_instance" "dev" {
 ```
 
 ## Argument Reference
+
+~> **NOTE:** One of either `db_instance_identifier` or `db_snapshot_identifier` is required.
 
 The following arguments are supported:
 
