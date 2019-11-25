@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIotEventsInput() *schema.Resource {
@@ -103,7 +105,7 @@ func resourceAwsIotInputCreate(d *schema.ResourceData, meta interface{}) error {
 	params := &iotevents.CreateInputInput{
 		InputName:       aws.String(inputName),
 		InputDefinition: prepareInputDefinition(d),
-		Tags:            tagsFromMapIotEvents(d.Get("tags").(map[string]interface{})),
+		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IoteventsTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -140,9 +142,17 @@ func resourceAwsIotInputRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("definition", flattenIoTEventsInputDefinition(out.Input.InputDefinition))
 	d.Set("arn", out.Input.InputConfiguration.InputArn)
 
-	if err := getTagsIotEvents(conn, d); err != nil {
-		return err
+	arn := *out.Input.InputConfiguration.InputArn
+	tags, err := keyvaluetags.IoteventsListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
 	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -167,10 +177,12 @@ func resourceAwsIotInputUpdate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := setTagsIotEvents(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.IoteventsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
-
 	return resourceAwsIotInputRead(d, meta)
 }
 
