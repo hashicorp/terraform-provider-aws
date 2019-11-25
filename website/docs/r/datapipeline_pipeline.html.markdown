@@ -1,7 +1,7 @@
 ---
+subcategory: "DataPipeline"
 layout: "aws"
 page_title: "AWS: aws_datapipeline_pipeline"
-sidebar_current: "docs-aws-resource-datapipeline-pipeline"
 description: |-
   Provides a AWS DataPipeline Pipeline.
 ---

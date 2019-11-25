@@ -1,7 +1,7 @@
 ---
+subcategory: "ACM"
 layout: "aws"
 page_title: "AWS: aws_acm_certificate"
-sidebar_current: "docs-aws-datasource-acm-certificate"
 description: |-
   Get information on a Amazon Certificate Manager (ACM) Certificate
 ---

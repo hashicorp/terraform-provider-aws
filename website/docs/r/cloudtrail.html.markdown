@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudTrail"
 layout: "aws"
 page_title: "AWS: aws_cloudtrail"
-sidebar_current: "docs-aws-resource-cloudtrail"
 description: |-
   Provides a CloudTrail resource.
 ---

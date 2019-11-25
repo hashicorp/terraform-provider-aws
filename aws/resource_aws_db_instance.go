@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDbInstance() *schema.Resource {
@@ -79,6 +79,12 @@ func resourceAwsDbInstance() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				DiffSuppressFunc: suppressAwsDbEngineVersionDiffs,
+			},
+
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 
 			"character_set_name": {
@@ -418,11 +424,6 @@ func resourceAwsDbInstance() *schema.Resource {
 			},
 
 			"resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"ca_cert_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1043,6 +1044,7 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 		if _, ok := d.GetOk("username"); !ok {
 			return fmt.Errorf(`provider.aws: aws_db_instance: %s: "username": required field is not set`, d.Get("name").(string))
 		}
+
 		opts := rds.CreateDBInstanceInput{
 			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
 			DBName:                  aws.String(d.Get("name").(string)),
@@ -1176,8 +1178,9 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 
 		log.Printf("[DEBUG] DB Instance create configuration: %#v", opts)
 		var err error
+		var createdDBInstanceOutput *rds.CreateDBInstanceOutput
 		err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-			_, err = conn.CreateDBInstance(&opts)
+			createdDBInstanceOutput, err = conn.CreateDBInstance(&opts)
 			if err != nil {
 				if isAWSErr(err, "InvalidParameterValue", "ENHANCED_MONITORING") {
 					return resource.RetryableError(err)
@@ -1195,6 +1198,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 				return fmt.Errorf("Error creating DB Instance: %s, %+v", err, opts)
 			}
 			return fmt.Errorf("Error creating DB Instance: %s", err)
+		}
+		// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
+		if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(createdDBInstanceOutput.DBInstance.CACertificateIdentifier) {
+			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+			requiresModifyDbInstance = true
 		}
 	}
 
@@ -1320,13 +1328,8 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
 
-	if v.MonitoringInterval != nil {
-		d.Set("monitoring_interval", v.MonitoringInterval)
-	}
-
-	if v.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", v.MonitoringRoleArn)
-	}
+	d.Set("monitoring_interval", v.MonitoringInterval)
+	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 
 	if err := d.Set("enabled_cloudwatch_logs_exports", flattenStringList(v.EnabledCloudwatchLogsExports)); err != nil {
 		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
@@ -1489,6 +1492,11 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
 		requestUpdate = true
 	}
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
+		requestUpdate = true
+	}
 	if d.HasChange("deletion_protection") {
 		d.SetPartial("deletion_protection")
 		req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
@@ -1646,7 +1654,26 @@ func resourceAwsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error
 	log.Printf("[DEBUG] Send DB Instance Modification request: %t", requestUpdate)
 	if requestUpdate {
 		log.Printf("[DEBUG] DB Instance Modification request: %s", req)
-		_, err := conn.ModifyDBInstance(req)
+
+		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+			_, err := conn.ModifyDBInstance(req)
+
+			// Retry for IAM eventual consistency
+			if isAWSErr(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
+				return resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+
+			return nil
+		})
+
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
+
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}

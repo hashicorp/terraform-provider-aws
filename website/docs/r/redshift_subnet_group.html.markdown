@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_subnet_group"
-sidebar_current: "docs-aws-resource-redshift-subnet-group"
 description: |-
   Provides a Redshift Subnet Group resource.
 ---

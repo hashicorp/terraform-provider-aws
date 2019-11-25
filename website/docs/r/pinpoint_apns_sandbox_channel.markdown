@@ -1,7 +1,7 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_apns_sandbox_channel"
-sidebar_current: "docs-aws-resource-pinpoint-apns_sandbox-channel"
 description: |-
   Provides a Pinpoint APNs Sandbox Channel resource.
 ---

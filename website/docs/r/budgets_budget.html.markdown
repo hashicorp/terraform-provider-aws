@@ -1,7 +1,7 @@
 ---
+subcategory: "Budgets"
 layout: "aws"
 page_title: "AWS: aws_budgets_budget"
-sidebar_current: "docs-aws-resource-budgets-budget"
 description: |-
   Provides a budgets budget resource.
 ---

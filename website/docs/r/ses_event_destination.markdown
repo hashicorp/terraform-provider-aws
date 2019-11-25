@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_event_destination"
-sidebar_current: "docs-aws-resource-ses-event-destination"
 description: |-
   Provides an SES event destination
 ---

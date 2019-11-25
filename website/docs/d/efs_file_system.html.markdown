@@ -1,7 +1,7 @@
 ---
+subcategory: "EFS"
 layout: "aws"
 page_title: "AWS: aws_efs_file_system"
-sidebar_current: "docs-aws-datasource-efs-file-system"
 description: |-
   Provides an Elastic File System (EFS) data source.
 ---

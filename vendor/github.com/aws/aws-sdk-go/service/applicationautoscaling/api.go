@@ -463,10 +463,12 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalableTargetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalableTargetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -617,10 +619,12 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -777,10 +781,12 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalingPoliciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalingPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -815,6 +821,12 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsRequest(input *Describe
 		Name:       opDescribeScheduledActions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -881,6 +893,58 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
+// DescribeScheduledActionsPages iterates over the pages of a DescribeScheduledActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeScheduledActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeScheduledActions operation.
+//    pageNum := 0
+//    err := client.DescribeScheduledActionsPages(params,
+//        func(page *applicationautoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ApplicationAutoScaling) DescribeScheduledActionsPages(input *DescribeScheduledActionsInput, fn func(*DescribeScheduledActionsOutput, bool) bool) error {
+	return c.DescribeScheduledActionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeScheduledActionsPagesWithContext same as DescribeScheduledActionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApplicationAutoScaling) DescribeScheduledActionsPagesWithContext(ctx aws.Context, input *DescribeScheduledActionsInput, fn func(*DescribeScheduledActionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeScheduledActionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeScheduledActionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScheduledActionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opPutScalingPolicy = "PutScalingPolicy"
 
 // PutScalingPolicyRequest generates a "aws/request.Request" representing the
@@ -944,7 +1008,7 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 // more step scaling policies, or both. However, there is a chance that multiple
 // policies could conflict, instructing the scalable target to scale out or
 // in at the same time. Application Auto Scaling gives precedence to the policy
-// that provides the largest capacity for both scale in and scale out. For example,
+// that provides the largest capacity for both scale out and scale in. For example,
 // if one policy increases capacity by 3, another policy increases capacity
 // by 200 percent, and the current capacity is 10, Application Auto Scaling
 // uses the policy with the highest calculated capacity (200% of 10 = 20) and
@@ -2764,9 +2828,8 @@ type PutScalingPolicyInput struct {
 	//
 	// StepScaling—Not supported for Amazon DynamoDB
 	//
-	// For more information, see Step Scaling Policies for Application Auto Scaling
-	// (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
-	// and Target Tracking Scaling Policies for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+	// For more information, see Target Tracking Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+	// and Step Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
 	// in the Application Auto Scaling User Guide.
 	PolicyType *string `type:"string" enum:"PolicyType"`
 
@@ -3264,9 +3327,9 @@ type RegisterScalableTargetInput struct {
 	// to modify the scalable target on your behalf. For more information, see Service-Linked
 	// Roles for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-service-linked-roles.html).
 	//
-	// For resources that are not supported using a service-linked role, this parameter
-	// is required, and it must specify the ARN of an IAM role that allows Application
-	// Auto Scaling to modify the scalable target on your behalf.
+	// For Amazon EMR, this parameter is required, and it must specify the ARN of
+	// an IAM role that allows Application Auto Scaling to modify the scalable target
+	// on your behalf.
 	RoleARN *string `min:"1" type:"string"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -3315,6 +3378,26 @@ type RegisterScalableTargetInput struct {
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
+
+	// An embedded object that contains attributes and attribute values that are
+	// used to suspend and resume automatic scaling. Setting the value of an attribute
+	// to true suspends the specified scaling activities. Setting it to false (default)
+	// resumes the specified scaling activities.
+	//
+	// Suspension Outcomes
+	//
+	//    * For DynamicScalingInSuspended, while a suspension is in effect, all
+	//    scale-in activities that are triggered by a scaling policy are suspended.
+	//
+	//    * For DynamicScalingOutSuspended, while a suspension is in effect, all
+	//    scale-out activities that are triggered by a scaling policy are suspended.
+	//
+	//    * For ScheduledScalingSuspended, while a suspension is in effect, all
+	//    scaling activities that involve scheduled actions are suspended.
+	//
+	// For more information, see Suspend and Resume Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-suspend-resume-scaling.html)
+	// in the Application Auto Scaling User Guide.
+	SuspendedState *SuspendedState `type:"structure"`
 }
 
 // String returns the string representation
@@ -3385,6 +3468,12 @@ func (s *RegisterScalableTargetInput) SetScalableDimension(v string) *RegisterSc
 // SetServiceNamespace sets the ServiceNamespace field's value.
 func (s *RegisterScalableTargetInput) SetServiceNamespace(v string) *RegisterScalableTargetInput {
 	s.ServiceNamespace = &v
+	return s
+}
+
+// SetSuspendedState sets the SuspendedState field's value.
+func (s *RegisterScalableTargetInput) SetSuspendedState(v *SuspendedState) *RegisterScalableTargetInput {
+	s.SuspendedState = v
 	return s
 }
 
@@ -3508,6 +3597,10 @@ type ScalableTarget struct {
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
+
+	// Specifies whether the scaling activities for a scalable target are in a suspended
+	// state.
+	SuspendedState *SuspendedState `type:"structure"`
 }
 
 // String returns the string representation
@@ -3559,6 +3652,12 @@ func (s *ScalableTarget) SetScalableDimension(v string) *ScalableTarget {
 // SetServiceNamespace sets the ServiceNamespace field's value.
 func (s *ScalableTarget) SetServiceNamespace(v string) *ScalableTarget {
 	s.ServiceNamespace = &v
+	return s
+}
+
+// SetSuspendedState sets the SuspendedState field's value.
+func (s *ScalableTarget) SetSuspendedState(v *SuspendedState) *ScalableTarget {
+	s.SuspendedState = v
 	return s
 }
 
@@ -4387,6 +4486,55 @@ func (s *StepScalingPolicyConfiguration) SetMinAdjustmentMagnitude(v int64) *Ste
 // SetStepAdjustments sets the StepAdjustments field's value.
 func (s *StepScalingPolicyConfiguration) SetStepAdjustments(v []*StepAdjustment) *StepScalingPolicyConfiguration {
 	s.StepAdjustments = v
+	return s
+}
+
+// Specifies whether the scaling activities for a scalable target are in a suspended
+// state.
+type SuspendedState struct {
+	_ struct{} `type:"structure"`
+
+	// Whether scale in by a target tracking scaling policy or a step scaling policy
+	// is suspended. Set the value to true if you don't want Application Auto Scaling
+	// to remove capacity when a scaling policy is triggered. The default is false.
+	DynamicScalingInSuspended *bool `type:"boolean"`
+
+	// Whether scale out by a target tracking scaling policy or a step scaling policy
+	// is suspended. Set the value to true if you don't want Application Auto Scaling
+	// to add capacity when a scaling policy is triggered. The default is false.
+	DynamicScalingOutSuspended *bool `type:"boolean"`
+
+	// Whether scheduled scaling is suspended. Set the value to true if you don't
+	// want Application Auto Scaling to add or remove capacity by initiating scheduled
+	// actions. The default is false.
+	ScheduledScalingSuspended *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s SuspendedState) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SuspendedState) GoString() string {
+	return s.String()
+}
+
+// SetDynamicScalingInSuspended sets the DynamicScalingInSuspended field's value.
+func (s *SuspendedState) SetDynamicScalingInSuspended(v bool) *SuspendedState {
+	s.DynamicScalingInSuspended = &v
+	return s
+}
+
+// SetDynamicScalingOutSuspended sets the DynamicScalingOutSuspended field's value.
+func (s *SuspendedState) SetDynamicScalingOutSuspended(v bool) *SuspendedState {
+	s.DynamicScalingOutSuspended = &v
+	return s
+}
+
+// SetScheduledScalingSuspended sets the ScheduledScalingSuspended field's value.
+func (s *SuspendedState) SetScheduledScalingSuspended(v bool) *SuspendedState {
+	s.ScheduledScalingSuspended = &v
 	return s
 }
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "Athena"
 layout: "aws"
 page_title: "AWS: aws_athena_database"
-sidebar_current: "docs-aws-resource-athena-database"
 description: |-
   Provides an Athena database.
 ---

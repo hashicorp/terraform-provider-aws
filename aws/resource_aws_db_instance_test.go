@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -1555,9 +1555,10 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing
 	})
 }
 
-func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
+func TestAccAWSDBInstance_MonitoringInterval(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := acctest.RandString(5)
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1565,11 +1566,160 @@ func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName),
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &dbInstance),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.enhanced_monitoring", "monitoring_interval", "5"),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "60"),
+				),
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
+				),
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_MonitoringRoleArn_EnabledToDisabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_MonitoringRoleArn_EnabledToRemoved(t *testing.T) {
+	var dbInstance rds.DBInstance
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArnRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_MonitoringRoleArn_RemovedToEnabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArnRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
 			},
 		},
@@ -1769,26 +1919,6 @@ func TestAccAWSDBInstance_MinorVersion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBInstanceConfigAutoMinorVersion,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-				),
-			},
-		},
-	})
-}
-
-// See https://github.com/hashicorp/terraform/issues/11881
-func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
-	var v rds.DBInstance
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfigSuppressInitialState(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
 				),
@@ -2453,6 +2583,35 @@ func TestAccAWSDBInstance_SnapshotIdentifier_PerformanceInsightsEnabled(t *testi
 	})
 }
 
+func TestAccAWSDBInstance_CACertificateIdentifier(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	resourceName := "aws_db_instance.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccAWSDBInstanceConfigWithCACertificateIdentifier, "rds-ca-2015"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2015"),
+				),
+			},
+			// Ensure we are able to modify the CACertIdentifier
+			{
+				Config: fmt.Sprintf(testAccAWSDBInstanceConfigWithCACertificateIdentifier, "rds-ca-2019"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
+				),
+			},
+		},
+	})
+}
+
 // Database names cannot collide, and deletion takes so long, that making the
 // name a bit random helps so able we can kill a test that's just waiting for a
 // delete and not be blocked on kicking off another one.
@@ -2559,6 +2718,22 @@ resource "aws_db_instance" "bar" {
 	parameter_group_name = "default.mysql5.6"
 }
 `
+
+const testAccAWSDBInstanceConfigWithCACertificateIdentifier = `
+resource "aws_db_instance" "bar" {
+	allocated_storage = 10
+	engine = "MySQL"
+	instance_class = "db.t2.micro"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
+	ca_cert_identifier = "%s"
+	apply_immediately = true
+	skip_final_snapshot = true
+	timeouts {
+		create = "30m"
+	}
+}`
 
 func testAccAWSDBInstanceConfigWithOptionGroup(rName string) string {
 	return fmt.Sprintf(`
@@ -2792,10 +2967,12 @@ resource "aws_db_instance" "snapshot" {
 `, rInt, rInt)
 }
 
-func testAccSnapshotInstanceConfig_enhancedMonitoring(rName string) string {
+func testAccDbInstanceConfigMonitoringInterval(rName string, monitoringInterval int) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "enhanced_policy_role" {
-  name = "enhanced-monitoring-role-%s"
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -2814,73 +2991,90 @@ resource "aws_iam_role" "enhanced_policy_role" {
 EOF
 }
 
-resource "aws_iam_policy_attachment" "test-attach" {
-  name = "enhanced-monitoring-attachment-%s"
-
-  roles = [
-    "${aws_iam_role.enhanced_policy_role.name}",
-  ]
-
-  policy_arn = "${aws_iam_policy.test.arn}"
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = "${aws_iam_role.test.name}"
 }
 
-resource "aws_iam_policy" "test" {
-  name = "tf-enhanced-monitoring-policy-%s"
+resource "aws_db_instance" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
 
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:PutRetentionPolicy"
-            ],
-            "Resource": [
-                "arn:aws:logs:*:*:log-group:RDS*"
-            ]
-        },
-        {
-            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-                "logs:DescribeLogStreams",
-                "logs:GetLogEvents"
-            ],
-            "Resource": [
-                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
-            ]
-        }
-    ]
-}
-POLICY
-}
-
-resource "aws_db_instance" "enhanced_monitoring" {
-  identifier = "foobarbaz-enhanced-monitoring-%s"
-  depends_on = ["aws_iam_policy_attachment.test-attach"]
-
-  allocated_storage       = 5
-  engine                  = "mysql"
-  engine_version          = "5.6.35"
-  instance_class          = "db.t2.micro"
-  name                    = "baz"
-  password                = "barbarbarbar"
-  username                = "foo"
-  backup_retention_period = 1
-
-  parameter_group_name = "default.mysql5.6"
-
-  monitoring_role_arn = "${aws_iam_role.enhanced_policy_role.arn}"
-  monitoring_interval = "5"
-
+  allocated_storage   = 5
+  engine              = "mysql"
+  engine_version      = "5.6.35"
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  monitoring_interval = %[2]d
+  monitoring_role_arn = "${aws_iam_role.test.arn}"
+  name                = "baz"
+  password            = "barbarbarbar"
   skip_final_snapshot = true
+  username            = "foo"
 }
-`, rName, rName, rName, rName)
+`, rName, monitoringInterval)
+}
+
+func testAccDbInstanceConfigMonitoringRoleArnRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  engine              = "mysql"
+  engine_version      = "5.6.35"
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  name                = "baz"
+  password            = "barbarbarbar"
+  skip_final_snapshot = true
+  username            = "foo"
+}
+`, rName)
+}
+
+func testAccDbInstanceConfigMonitoringRoleArn(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "monitoring.rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = "${aws_iam_role.test.name}"
+}
+
+resource "aws_db_instance" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+
+  allocated_storage   = 5
+  engine              = "mysql"
+  engine_version      = "5.6.35"
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  monitoring_interval = 5
+  monitoring_role_arn = "${aws_iam_role.test.arn}"
+  name                = "baz"
+  password            = "barbarbarbar"
+  skip_final_snapshot = true
+  username            = "foo"
+}
+`, rName)
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
@@ -4010,29 +4204,6 @@ resource "aws_db_instance" "bar" {
   security_group_names = ["default"]
   parameter_group_name = "default.mysql5.6"
   skip_final_snapshot  = true
-}
-`, rInt)
-}
-
-func testAccAWSDBInstanceConfigSuppressInitialState(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_db_instance" "bar" {
-  identifier          = "foobarbaz-test-terraform-%d"
-  allocated_storage   = 10
-  engine              = "MySQL"
-  instance_class      = "db.t2.micro"
-  name                = "baz"
-  password            = "barbarbarbar"
-  username            = "foo"
-  skip_final_snapshot = true
-}
-
-data "template_file" "test" {
-  template = ""
-
-  vars = {
-    test_var = "${aws_db_instance.bar.engine_version}"
-  }
 }
 `, rInt)
 }

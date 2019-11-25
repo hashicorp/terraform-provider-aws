@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Map Reduce (EMR)"
 layout: "aws"
 page_title: "AWS: aws_emr_cluster"
-sidebar_current: "docs-aws-resource-emr-cluster"
 description: |-
   Provides an Elastic MapReduce Cluster
 ---

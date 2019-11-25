@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_organization_custom_rule"
-sidebar_current: "docs-aws-resource-config-organization-managed-rule"
 description: |-
   Manages a Config Organization Custom Rule
 ---

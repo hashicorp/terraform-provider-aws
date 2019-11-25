@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_volume_attachment"
-sidebar_current: "docs-aws-resource-volume-attachment"
 description: |-
   Provides an AWS EBS Volume Attachment
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "Application Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_appautoscaling_target"
-sidebar_current: "docs-aws-resource-appautoscaling-target"
 description: |-
   Provides an Application AutoScaling ScalableTarget resource.
 ---

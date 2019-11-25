@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_receipt_rule"
-sidebar_current: "docs-aws-resource-ses-receipt-rule"
 description: |-
   Provides an SES receipt rule resource
 ---

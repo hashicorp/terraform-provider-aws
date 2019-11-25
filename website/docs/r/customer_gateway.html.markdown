@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_customer_gateway"
-sidebar_current: "docs-aws-resource-customer-gateway"
 description: |-
   Provides a customer gateway inside a VPC. These objects can be
   connected to VPN gateways via VPN connections, and allow you to

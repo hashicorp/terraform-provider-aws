@@ -56,11 +56,11 @@ func (c *StorageGateway) ActivateGatewayRequest(input *ActivateGatewayInput) (re
 // ActivateGateway API operation for AWS Storage Gateway.
 //
 // Activates the gateway you previously deployed on your host. In the activation
-// process, you specify information such as the region you want to use for storing
-// snapshots or tapes, the time zone for scheduled snapshots the gateway snapshot
-// schedule window, an activation key, and a name for your gateway. The activation
-// process also associates your gateway with your account; for more information,
-// see UpdateGatewayInformation.
+// process, you specify information such as the AWS Region that you want to
+// use for storing snapshots or tapes, the time zone for scheduled snapshots
+// the gateway snapshot schedule window, an activation key, and a name for your
+// gateway. The activation process also associates your gateway with your account;
+// for more information, see UpdateGatewayInformation.
 //
 // You must turn on the gateway VM before you can activate your gateway.
 //
@@ -976,10 +976,10 @@ func (c *StorageGateway) CreateNFSFileShareRequest(input *CreateNFSFileShareInpu
 //
 // File gateway requires AWS Security Token Service (AWS STS) to be activated
 // to enable you create a file share. Make sure AWS STS is activated in the
-// region you are creating your file gateway in. If AWS STS is not activated
-// in the region, activate it. For information about how to activate AWS STS,
-// see Activating and Deactivating AWS STS in an AWS Region in the AWS Identity
-// and Access Management User Guide.
+// AWS Region you are creating your file gateway in. If AWS STS is not activated
+// in the AWS Region, activate it. For information about how to activate AWS
+// STS, see Activating and Deactivating AWS STS in an AWS Region in the AWS
+// Identity and Access Management User Guide.
 //
 // File gateway does not support creating hard or symbolic links on a file share.
 //
@@ -3416,10 +3416,12 @@ func (c *StorageGateway) DescribeTapeArchivesPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTapeArchivesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTapeArchivesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3562,10 +3564,12 @@ func (c *StorageGateway) DescribeTapeRecoveryPointsPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTapeRecoveryPointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTapeRecoveryPointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3705,10 +3709,12 @@ func (c *StorageGateway) DescribeTapesPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTapesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTapesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3936,10 +3942,12 @@ func (c *StorageGateway) DescribeVTLDevicesPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVTLDevicesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVTLDevicesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4434,10 +4442,12 @@ func (c *StorageGateway) ListFileSharesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFileSharesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFileSharesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4491,8 +4501,8 @@ func (c *StorageGateway) ListGatewaysRequest(input *ListGatewaysInput) (req *req
 
 // ListGateways API operation for AWS Storage Gateway.
 //
-// Lists gateways owned by an AWS account in a region specified in the request.
-// The returned list is ordered by gateway Amazon Resource Name (ARN).
+// Lists gateways owned by an AWS account in an AWS Region specified in the
+// request. The returned list is ordered by gateway Amazon Resource Name (ARN).
 //
 // By default, the operation returns a maximum of 100 gateways. This operation
 // supports pagination that allows you to optionally reduce the number of gateways
@@ -4584,10 +4594,12 @@ func (c *StorageGateway) ListGatewaysPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListGatewaysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListGatewaysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4818,10 +4830,12 @@ func (c *StorageGateway) ListTagsForResourcePagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4968,10 +4982,12 @@ func (c *StorageGateway) ListTapesPagesWithContext(ctx aws.Context, input *ListT
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTapesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTapesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5296,10 +5312,12 @@ func (c *StorageGateway) ListVolumesPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVolumesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListVolumesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5348,12 +5366,12 @@ func (c *StorageGateway) NotifyWhenUploadedRequest(input *NotifyWhenUploadedInpu
 // NotifyWhenUploaded API operation for AWS Storage Gateway.
 //
 // Sends you notification through CloudWatch Events when all files written to
-// your NFS file share have been uploaded to Amazon S3.
+// your file share have been uploaded to Amazon S3.
 //
 // AWS Storage Gateway can send a notification through Amazon CloudWatch Events
 // when all files written to your file share up to that point in time have been
-// uploaded to Amazon S3. These files include files written to the NFS file
-// share up to the time that you make a request for notification. When the upload
+// uploaded to Amazon S3. These files include files written to the file share
+// up to the time that you make a request for notification. When the upload
 // is done, Storage Gateway sends you notification through an Amazon CloudWatch
 // Event. You can configure CloudWatch Events to send the notification through
 // event targets such as Amazon SNS or AWS Lambda function. This operation is
@@ -6935,6 +6953,10 @@ func (c *StorageGateway) UpdateSMBSecurityStrategyRequest(input *UpdateSMBSecuri
 // Updates the SMB security strategy on a file gateway. This action is only
 // supported in file gateways.
 //
+// This API is called Security level in the User Guide.
+//
+// A higher security level can affect performance of the gateway.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -7191,11 +7213,12 @@ type ActivateGatewayInput struct {
 	// GatewayName is a required field
 	GatewayName *string `min:"2" type:"string" required:"true"`
 
-	// A value that indicates the region where you want to store your data. The
-	// gateway region specified must be the same region as the region in your Host
-	// header in the request. For more information about available regions and endpoints
-	// for AWS Storage Gateway, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
-	// in the Amazon Web Services Glossary.
+	// A value that indicates the AWS Region where you want to store your data.
+	// The gateway AWS Region specified must be the same AWS Region as the AWS Region
+	// in your Host header in the request. For more information about available
+	// AWS Regions and endpoints for AWS Storage Gateway, see Regions and Endpoints
+	// (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region) in the
+	// Amazon Web Services Glossary.
 	//
 	// Valid Values: See AWS Storage Gateway Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
 	// in the AWS General Reference.
@@ -7225,13 +7248,13 @@ type ActivateGatewayInput struct {
 	// Valid Values: "STK-L700", "AWS-Gateway-VTL"
 	MediumChangerType *string `min:"2" type:"string"`
 
-	// A list of up to 50 tags that can be assigned to the gateway. Each tag is
-	// a key-value pair.
+	// A list of up to 50 tags that you can assign to the gateway. Each tag is a
+	// key-value pair.
 	//
-	// Valid characters for key and value are letters, spaces, and numbers representable
-	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
-	// maximum length of a tag's key is 128 characters, and the maximum length for
-	// a tag's value is 256.
+	// Valid characters for key and value are letters, spaces, and numbers that
+	// can be represented in UTF-8 format, and the following special characters:
+	// + - = . _ : / @. The maximum length of a tag's key is 128 characters, and
+	// the maximum length for a tag's value is 256 characters.
 	Tags []*Tag `type:"list"`
 
 	// The value that indicates the type of tape drive to use for tape gateway.
@@ -7354,8 +7377,8 @@ func (s *ActivateGatewayInput) SetTapeDriveType(v string) *ActivateGatewayInput 
 
 // AWS Storage Gateway returns the Amazon Resource Name (ARN) of the activated
 // gateway. It is a string made of information such as your account, gateway
-// name, and region. This ARN is used to reference the gateway in other API
-// operations as well as resource-based authorization.
+// name, and AWS Region. This ARN is used to reference the gateway in other
+// API operations as well as resource-based authorization.
 //
 // For gateways activated prior to September 02, 2015, the gateway ARN contains
 // the gateway name rather than the gateway ID. Changing the name of the gateway
@@ -7364,7 +7387,7 @@ type ActivateGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -7395,7 +7418,7 @@ type AddCacheInput struct {
 	DiskIds []*string `type:"list" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -7446,7 +7469,7 @@ type AddCacheOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -7573,7 +7596,7 @@ type AddUploadBufferInput struct {
 	DiskIds []*string `type:"list" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -7624,7 +7647,7 @@ type AddUploadBufferOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -7658,7 +7681,7 @@ type AddWorkingStorageInput struct {
 	DiskIds []*string `type:"list" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -7711,7 +7734,7 @@ type AddWorkingStorageOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -8123,7 +8146,7 @@ type CancelArchivalInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -8209,7 +8232,7 @@ type CancelRetrievalInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -8357,7 +8380,7 @@ type CreateCachediSCSIVolumeInput struct {
 	ClientToken *string `min:"5" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -8392,13 +8415,13 @@ type CreateCachediSCSIVolumeInput struct {
 	// than the size of the existing volume, in bytes.
 	SourceVolumeARN *string `min:"50" type:"string"`
 
-	// A list of up to 50 tags that can be assigned to a cached volume. Each tag
+	// A list of up to 50 tags that you can assign to a cached volume. Each tag
 	// is a key-value pair.
 	//
-	// Valid characters for key and value are letters, spaces, and numbers representable
-	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
-	// maximum length of a tag's key is 128 characters, and the maximum length for
-	// a tag's value is 256.
+	// Valid characters for key and value are letters, spaces, and numbers that
+	// you can represent in UTF-8 format, and the following special characters:
+	// + - = . _ : / @. The maximum length of a tag's key is 128 characters, and
+	// the maximum length for a tag's value is 256 characters.
 	Tags []*Tag `type:"list"`
 
 	// The name of the iSCSI target used by an initiator to connect to a volume
@@ -8849,9 +8872,12 @@ func (s *CreateNFSFileShareOutput) SetFileShareARN(v string) *CreateNFSFileShare
 type CreateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users or groups in the Active Directory that have administrator
-	// rights to the file share. A group must be prefixed with the @ character.
-	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// A list of users in the Active Directory that will be granted administrator
+	// privileges on the file share. These users can do all file operations as the
+	// super-user.
+	//
+	// Use this option very carefully, because any user in this list can do anything
+	// they like on the file share, regardless of file permissions.
 	AdminUserList []*string `type:"list"`
 
 	// The authentication method that users use to access the file share.
@@ -9145,6 +9171,15 @@ type CreateSnapshotFromVolumeRecoveryPointInput struct {
 	// SnapshotDescription is a required field
 	SnapshotDescription *string `min:"1" type:"string" required:"true"`
 
+	// A list of up to 50 tags that can be assigned to a snapshot. Each tag is a
+	// key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
 	// operation to return to retrieve the TargetARN for specified VolumeARN.
 	//
@@ -9177,6 +9212,16 @@ func (s *CreateSnapshotFromVolumeRecoveryPointInput) Validate() error {
 	if s.VolumeARN != nil && len(*s.VolumeARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("VolumeARN", 50))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -9187,6 +9232,12 @@ func (s *CreateSnapshotFromVolumeRecoveryPointInput) Validate() error {
 // SetSnapshotDescription sets the SnapshotDescription field's value.
 func (s *CreateSnapshotFromVolumeRecoveryPointInput) SetSnapshotDescription(v string) *CreateSnapshotFromVolumeRecoveryPointInput {
 	s.SnapshotDescription = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateSnapshotFromVolumeRecoveryPointInput) SetTags(v []*Tag) *CreateSnapshotFromVolumeRecoveryPointInput {
+	s.Tags = v
 	return s
 }
 
@@ -9386,7 +9437,7 @@ type CreateStorediSCSIVolumeInput struct {
 	DiskId *string `min:"1" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -9604,7 +9655,7 @@ type CreateTapeWithBarcodeInput struct {
 
 	// The unique Amazon Resource Name (ARN) that represents the gateway to associate
 	// the virtual tape with. Use the ListGateways operation to return a list of
-	// gateways for your account and region.
+	// gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -9783,7 +9834,7 @@ type CreateTapesInput struct {
 
 	// The unique Amazon Resource Name (ARN) that represents the gateway to associate
 	// the virtual tapes with. Use the ListGateways operation to return a list of
-	// gateways for your account and region.
+	// gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -9993,7 +10044,7 @@ type DeleteBandwidthRateLimitInput struct {
 	BandwidthType *string `min:"3" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10049,7 +10100,7 @@ type DeleteBandwidthRateLimitOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -10249,7 +10300,7 @@ type DeleteGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10292,7 +10343,7 @@ type DeleteGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -10450,7 +10501,7 @@ type DeleteTapeInput struct {
 
 	// The unique Amazon Resource Name (ARN) of the gateway that the virtual tape
 	// to delete is associated with. Use the ListGateways operation to return a
-	// list of gateways for your account and region.
+	// list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10602,7 +10653,7 @@ type DescribeBandwidthRateLimitInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10653,7 +10704,7 @@ type DescribeBandwidthRateLimitOutput struct {
 	AverageUploadRateLimitInBitsPerSec *int64 `min:"51200" type:"long"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -10689,7 +10740,7 @@ type DescribeCacheInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10757,7 +10808,7 @@ type DescribeCacheOutput struct {
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -10965,7 +11016,7 @@ type DescribeGatewayInformationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11007,6 +11058,10 @@ func (s *DescribeGatewayInformationInput) SetGatewayARN(v string) *DescribeGatew
 type DescribeGatewayInformationOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the Amazon CloudWatch log group that was
+	// used to monitor and log events in the gateway.
+	CloudWatchLogGroupARN *string `type:"string"`
+
 	// The ID of the Amazon EC2 instance that was used to launch the gateway.
 	Ec2InstanceId *string `type:"string"`
 
@@ -11014,7 +11069,7 @@ type DescribeGatewayInformationOutput struct {
 	Ec2InstanceRegion *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The unique identifier assigned to your gateway during activation. This ID
@@ -11066,6 +11121,12 @@ func (s DescribeGatewayInformationOutput) String() string {
 // GoString returns the string representation
 func (s DescribeGatewayInformationOutput) GoString() string {
 	return s.String()
+}
+
+// SetCloudWatchLogGroupARN sets the CloudWatchLogGroupARN field's value.
+func (s *DescribeGatewayInformationOutput) SetCloudWatchLogGroupARN(v string) *DescribeGatewayInformationOutput {
+	s.CloudWatchLogGroupARN = &v
+	return s
 }
 
 // SetEc2InstanceId sets the Ec2InstanceId field's value.
@@ -11151,7 +11212,7 @@ type DescribeMaintenanceStartTimeInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11216,7 +11277,7 @@ type DescribeMaintenanceStartTimeOutput struct {
 	DayOfWeek *int64 `type:"integer"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The hour component of the maintenance start time represented as hh, where
@@ -11418,7 +11479,7 @@ type DescribeSMBSettingsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11463,7 +11524,7 @@ type DescribeSMBSettingsOutput struct {
 	DomainName *string `min:"1" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// This value is true if a password for the guest user “smbguest” is set,
@@ -11472,14 +11533,18 @@ type DescribeSMBSettingsOutput struct {
 
 	// The type of security strategy that was specified for file gateway.
 	//
-	// ClientSpecified: SMBv1 is enabled, SMB signing is offered but not required,
-	// SMB encryption is offered but not required.
+	// ClientSpecified: if you use this option, requests are established based on
+	// what is negotiated by the client. This option is recommended when you want
+	// to maximize compatibility across different clients in your environment.
 	//
-	// MandatorySigning: SMBv1 is disabled, SMB signing is required, SMB encryption
-	// is offered but not required.
+	// MandatorySigning: if you use this option, file gateway only allows connections
+	// from SMBv2 or SMBv3 clients that have signing enabled. This option works
+	// with SMB clients on Microsoft Windows Vista, Windows Server 2008 or newer.
 	//
-	// MandatoryEncryption: SMBv1 is disabled, SMB signing is offered but not required,
-	// SMB encryption is required.
+	// MandatoryEncryption: if you use this option, file gateway only allows connections
+	// from SMBv3 clients that have encryption enabled. This option is highly recommended
+	// for environments that handle sensitive data. This option works with SMB clients
+	// on Microsoft Windows 8, Windows Server 2012 or newer.
 	SMBSecurityStrategy *string `type:"string" enum:"SMBSecurityStrategy"`
 }
 
@@ -11575,6 +11640,11 @@ type DescribeSnapshotScheduleOutput struct {
 	// of the gateway.
 	StartAt *int64 `type:"integer"`
 
+	// A list of up to 50 tags assigned to the snapshot schedule, sorted alphabetically
+	// by key name. Each tag is a key-value pair. For a gateway with more than 10
+	// tags assigned, you can view all tags using the ListTagsForResource API operation.
+	Tags []*Tag `type:"list"`
+
 	// A value that indicates the time zone of the gateway.
 	Timezone *string `min:"3" type:"string"`
 
@@ -11607,6 +11677,12 @@ func (s *DescribeSnapshotScheduleOutput) SetRecurrenceInHours(v int64) *Describe
 // SetStartAt sets the StartAt field's value.
 func (s *DescribeSnapshotScheduleOutput) SetStartAt(v int64) *DescribeSnapshotScheduleOutput {
 	s.StartAt = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeSnapshotScheduleOutput) SetTags(v []*Tag) *DescribeSnapshotScheduleOutput {
+	s.Tags = v
 	return s
 }
 
@@ -11838,7 +11914,7 @@ type DescribeTapeRecoveryPointsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11907,7 +11983,7 @@ type DescribeTapeRecoveryPointsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// An opaque string that indicates the position at which the virtual tape recovery
@@ -11955,7 +12031,7 @@ type DescribeTapesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12076,7 +12152,7 @@ type DescribeUploadBufferInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12124,7 +12200,7 @@ type DescribeUploadBufferOutput struct {
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The total number of bytes allocated in the gateway's as upload buffer.
@@ -12173,7 +12249,7 @@ type DescribeVTLDevicesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12256,7 +12332,7 @@ type DescribeVTLDevicesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// An opaque string that indicates the position at which the VTL devices that
@@ -12303,7 +12379,7 @@ type DescribeWorkingStorageInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12352,7 +12428,7 @@ type DescribeWorkingStorageOutput struct {
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The total working storage in bytes allocated for the gateway. If no working
@@ -12532,7 +12608,7 @@ type DisableGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12738,7 +12814,7 @@ type FileShareInfo struct {
 	FileShareType *string `type:"string" enum:"FileShareType"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -12793,7 +12869,7 @@ type GatewayInfo struct {
 	Ec2InstanceRegion *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The unique identifier assigned to your gateway during activation. This ID
@@ -12880,13 +12956,13 @@ type JoinDomainInput struct {
 	DomainName *string `min:"1" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
-	// The organizational unit (OU) is a container with an Active Directory that
-	// can hold users, groups, computers, and other OUs and this parameter specifies
+	// The organizational unit (OU) is a container in an Active Directory that can
+	// hold users, groups, computers, and other OUs and this parameter specifies
 	// the OU that the gateway will join within the AD domain.
 	OrganizationalUnit *string `min:"1" type:"string"`
 
@@ -13214,7 +13290,7 @@ type ListLocalDisksInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -13261,7 +13337,7 @@ type ListLocalDisksOutput struct {
 	Disks []*Disk `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -13581,7 +13657,7 @@ type ListVolumeRecoveryPointsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -13623,7 +13699,7 @@ type ListVolumeRecoveryPointsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// An array of VolumeRecoveryPointInfo objects.
@@ -13661,7 +13737,7 @@ type ListVolumesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// Specifies that the list of volumes returned be limited to the specified number
@@ -13730,7 +13806,7 @@ type ListVolumesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// Use the marker in your next request to continue pagination of iSCSI volumes.
@@ -13875,7 +13951,7 @@ type NFSFileShareInfo struct {
 	FileShareStatus *string `min:"3" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// A value that enables guessing of the MIME type for uploaded objects based
@@ -14372,7 +14448,7 @@ type ResetCacheInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14414,7 +14490,7 @@ type ResetCacheOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -14440,7 +14516,7 @@ type RetrieveTapeArchiveInput struct {
 
 	// The Amazon Resource Name (ARN) of the gateway you want to retrieve the virtual
 	// tape to. Use the ListGateways operation to return a list of gateways for
-	// your account and region.
+	// your account and AWS Region.
 	//
 	// You retrieve archived virtual tapes to only one gateway and the gateway must
 	// be a tape gateway.
@@ -14528,7 +14604,7 @@ type RetrieveTapeRecoveryPointInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14641,7 +14717,7 @@ type SMBFileShareInfo struct {
 	FileShareStatus *string `min:"3" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// A value that enables guessing of the MIME type for uploaded objects based
@@ -14844,7 +14920,7 @@ type SetLocalConsolePasswordInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14903,7 +14979,7 @@ type SetLocalConsolePasswordOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -14987,7 +15063,7 @@ type SetSMBGuestPasswordOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -15012,7 +15088,7 @@ type ShutdownGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -15055,7 +15131,7 @@ type ShutdownGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -15080,7 +15156,7 @@ type StartGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -15123,7 +15199,7 @@ type StartGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -15617,7 +15693,7 @@ type TapeInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The ID of the pool that you want to add your tape to for archiving. The tape
@@ -15758,7 +15834,7 @@ type UpdateBandwidthRateLimitInput struct {
 	AverageUploadRateLimitInBitsPerSec *int64 `min:"51200" type:"long"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -15820,7 +15896,7 @@ type UpdateBandwidthRateLimitOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -15983,8 +16059,14 @@ func (s *UpdateChapCredentialsOutput) SetTargetARN(v string) *UpdateChapCredenti
 type UpdateGatewayInformationInput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the Amazon CloudWatch log group that you
+	// want to use to monitor and log events in the gateway.
+	//
+	// For more information, see What Is Amazon CloudWatch Logs? (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html).
+	CloudWatchLogGroupARN *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -16028,6 +16110,12 @@ func (s *UpdateGatewayInformationInput) Validate() error {
 	return nil
 }
 
+// SetCloudWatchLogGroupARN sets the CloudWatchLogGroupARN field's value.
+func (s *UpdateGatewayInformationInput) SetCloudWatchLogGroupARN(v string) *UpdateGatewayInformationInput {
+	s.CloudWatchLogGroupARN = &v
+	return s
+}
+
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *UpdateGatewayInformationInput) SetGatewayARN(v string) *UpdateGatewayInformationInput {
 	s.GatewayARN = &v
@@ -16051,7 +16139,7 @@ type UpdateGatewayInformationOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The name you configured for your gateway.
@@ -16085,7 +16173,7 @@ type UpdateGatewaySoftwareNowInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -16128,7 +16216,7 @@ type UpdateGatewaySoftwareNowOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -16172,7 +16260,7 @@ type UpdateMaintenanceStartTimeInput struct {
 	DayOfWeek *int64 `type:"integer"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -16263,7 +16351,7 @@ type UpdateMaintenanceStartTimeOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -16482,9 +16570,9 @@ func (s *UpdateNFSFileShareOutput) SetFileShareARN(v string) *UpdateNFSFileShare
 type UpdateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users or groups in the Active Directory that have administrator
-	// rights to the file share. A group must be prefixed with the @ character.
-	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// A list of users in the Active Directory that have administrator rights to
+	// the file share. A group must be prefixed with the @ character. For example
+	// @group1. Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
 
 	// The default storage class for objects put into an Amazon S3 bucket by the
@@ -16679,21 +16767,25 @@ type UpdateSMBSecurityStrategyInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
 	// Specifies the type of security strategy.
 	//
-	// ClientSpecified: SMBv1 is enabled, SMB signing is offered but not required,
-	// SMB encryption is offered but not required.
+	// ClientSpecified: if you use this option, requests are established based on
+	// what is negotiated by the client. This option is recommended when you want
+	// to maximize compatibility across different clients in your environment.
 	//
-	// MandatorySigning: SMBv1 is disabled, SMB signing is required, SMB encryption
-	// is offered but not required.
+	// MandatorySigning: if you use this option, file gateway only allows connections
+	// from SMBv2 or SMBv3 clients that have signing enabled. This option works
+	// with SMB clients on Microsoft Windows Vista, Windows Server 2008 or newer.
 	//
-	// MandatoryEncryption: SMBv1 is disabled, SMB signing is offered but not required,
-	// SMB encryption is required.
+	// MandatoryEncryption: if you use this option, file gateway only allows connections
+	// from SMBv3 clients that have encryption enabled. This option is highly recommended
+	// for environments that handle sensitive data. This option works with SMB clients
+	// on Microsoft Windows 8, Windows Server 2012 or newer.
 	//
 	// SMBSecurityStrategy is a required field
 	SMBSecurityStrategy *string `type:"string" required:"true" enum:"SMBSecurityStrategy"`
@@ -16744,7 +16836,7 @@ type UpdateSMBSecurityStrategyOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -17060,7 +17152,7 @@ type VolumeInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The unique identifier assigned to your gateway during activation. This ID

@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_certificate"
-sidebar_current: "docs-aws-resource-iot-certificate"
 description: |-
     Creates and manages an AWS IoT certificate.
 ---

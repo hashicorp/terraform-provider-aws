@@ -1,7 +1,7 @@
 ---
+subcategory: "License Manager"
 layout: "aws"
 page_title: "AWS: aws_licensemanager_association"
-sidebar_current: "docs-aws-resource-licensemanager-association"
 description: |-
   Provides a License Manager association resource.
 ---

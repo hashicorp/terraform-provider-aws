@@ -1,7 +1,7 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_notebook_instance"
-sidebar_current: "docs-aws-resource-sagemaker-notebook-instance"
 description: |-
   Provides a Sagemaker Notebook Instance resource.
 ---

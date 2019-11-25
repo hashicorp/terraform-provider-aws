@@ -1,7 +1,7 @@
 ---
+subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_function"
-sidebar_current: "docs-aws-resource-appsync-function"
 description: |-
   Provides an AppSync Function.
 ---

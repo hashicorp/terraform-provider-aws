@@ -1,7 +1,7 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_assessment_target"
-sidebar_current: "docs-aws-resource-inspector-assessment-target"
 description: |-
   Provides a Inspector assessment target.
 ---

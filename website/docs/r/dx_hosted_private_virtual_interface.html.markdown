@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_hosted_private_virtual_interface"
-sidebar_current: "docs-aws-resource-dx-hosted-private-virtual-interface"
 description: |-
   Provides a Direct Connect hosted private virtual interface resource.
 ---

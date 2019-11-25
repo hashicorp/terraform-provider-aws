@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_topic_rule"
-sidebar_current: "docs-aws-resource-iot-topic-rule"
 description: |-
     Creates and manages an AWS IoT topic rule
 ---

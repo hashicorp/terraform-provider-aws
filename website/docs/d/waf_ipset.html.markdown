@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_ipset"
-sidebar_current: "docs-aws-datasource-waf-ipset"
 description: |-
   Retrieves an AWS WAF IP set id.
 ---

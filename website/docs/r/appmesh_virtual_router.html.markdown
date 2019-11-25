@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_router"
-sidebar_current: "docs-aws-resource-appmesh-virtual-router"
 description: |-
   Provides an AWS App Mesh virtual router resource.
 ---

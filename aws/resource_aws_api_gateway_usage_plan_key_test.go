@@ -8,15 +8,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	var conf apigateway.UsagePlanKey
-	name := acctest.RandString(10)
+	rName := acctest.RandString(10)
 	updatedName := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan_key.main"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,39 +25,39 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSApiGatewayUsagePlanKeyBasicConfig(name),
+				Config: testAccAWSApiGatewayUsagePlanKeyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanKeyExists("aws_api_gateway_usage_plan_key.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan_key.main", "key_type", "API_KEY"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "key_id"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "key_type"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "usage_plan_id"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "name"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan_key.main", "value", ""),
+					testAccCheckAWSAPIGatewayUsagePlanKeyExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "usage_plan_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "value", ""),
 				),
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanKeyBasicUpdatedConfig(updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanKeyExists("aws_api_gateway_usage_plan_key.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan_key.main", "key_type", "API_KEY"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "key_id"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "key_type"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "usage_plan_id"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "name"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan_key.main", "value", ""),
+					testAccCheckAWSAPIGatewayUsagePlanKeyExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "usage_plan_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "value", ""),
 				),
 			},
 			{
-				Config: testAccAWSApiGatewayUsagePlanKeyBasicConfig(name),
+				Config: testAccAWSApiGatewayUsagePlanKeyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayUsagePlanKeyExists("aws_api_gateway_usage_plan_key.main", &conf),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan_key.main", "key_type", "API_KEY"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "key_id"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "key_type"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "usage_plan_id"),
-					resource.TestCheckResourceAttrSet("aws_api_gateway_usage_plan_key.main", "name"),
-					resource.TestCheckResourceAttr("aws_api_gateway_usage_plan_key.main", "value", ""),
+					testAccCheckAWSAPIGatewayUsagePlanKeyExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "usage_plan_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "value", ""),
 				),
 			},
 		},
@@ -131,9 +132,10 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccAWSAPIGatewayUsagePlanKeyConfig = `
+func testAccAWSAPIGatewayUsagePlanKeyConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "%[1]s"
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -197,7 +199,7 @@ resource "aws_api_gateway_deployment" "foo" {
 }
 
 resource "aws_api_gateway_usage_plan" "main" {
-  name = "%s"
+  name = "%[1]s"
 
   api_stages {
     api_id = "${aws_api_gateway_rest_api.test.id}"
@@ -206,7 +208,7 @@ resource "aws_api_gateway_usage_plan" "main" {
 }
 
 resource "aws_api_gateway_usage_plan" "secondary" {
-  name = "secondary-%s"
+  name = "secondary-%[1]s"
 
   api_stages {
     api_id = "${aws_api_gateway_rest_api.test.id}"
@@ -215,26 +217,27 @@ resource "aws_api_gateway_usage_plan" "secondary" {
 }
 
 resource "aws_api_gateway_api_key" "mykey" {
-  name = "demo-%s"
+  name = "demo-%[1]s"
 }
-`
+`, rName)
+}
 
 func testAccAWSApiGatewayUsagePlanKeyBasicConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanKeyConfig+`
+	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanKeyConfig(rName) + `
 resource "aws_api_gateway_usage_plan_key" "main" {
   key_id        = "${aws_api_gateway_api_key.mykey.id}"
   key_type      = "API_KEY"
   usage_plan_id = "${aws_api_gateway_usage_plan.main.id}"
 }
-`, rName, rName, rName)
+`)
 }
 
 func testAccAWSApiGatewayUsagePlanKeyBasicUpdatedConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanKeyConfig+`
+	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanKeyConfig(rName) + `
 resource "aws_api_gateway_usage_plan_key" "main" {
   key_id        = "${aws_api_gateway_api_key.mykey.id}"
   key_type      = "API_KEY"
   usage_plan_id = "${aws_api_gateway_usage_plan.secondary.id}"
 }
-`, rName, rName, rName)
+`)
 }

@@ -475,10 +475,12 @@ func (c *S3Control) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -931,7 +933,7 @@ func (s *CreateJobOutput) SetJobId(v string) *CreateJobOutput {
 }
 
 type DeletePublicAccessBlockInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DeletePublicAccessBlockRequest" type:"structure"`
 
 	// The account ID for the AWS account whose block public access configuration
 	// you want to delete.
@@ -993,7 +995,7 @@ func (s DeletePublicAccessBlockOutput) GoString() string {
 }
 
 type DescribeJobInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DescribeJobRequest" type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -1079,7 +1081,7 @@ func (s *DescribeJobOutput) SetJob(v *JobDescriptor) *DescribeJobOutput {
 }
 
 type GetPublicAccessBlockInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetPublicAccessBlockRequest" type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -1896,7 +1898,7 @@ func (s *LambdaInvokeOperation) SetFunctionArn(v string) *LambdaInvokeOperation 
 }
 
 type ListJobsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListJobsRequest" type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -2059,7 +2061,7 @@ func (s *PublicAccessBlockConfiguration) SetRestrictPublicBuckets(v bool) *Publi
 }
 
 type PutPublicAccessBlockInput struct {
-	_ struct{} `type:"structure" payload:"PublicAccessBlockConfiguration"`
+	_ struct{} `locationName:"PutPublicAccessBlockRequest" type:"structure" payload:"PublicAccessBlockConfiguration"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -2874,7 +2876,7 @@ func (s *S3Tag) SetValue(v string) *S3Tag {
 }
 
 type UpdateJobPriorityInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"UpdateJobPriorityRequest" type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -2986,7 +2988,7 @@ func (s *UpdateJobPriorityOutput) SetPriority(v int64) *UpdateJobPriorityOutput 
 }
 
 type UpdateJobStatusInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"UpdateJobStatusRequest" type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`

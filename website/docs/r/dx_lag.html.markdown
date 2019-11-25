@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_lag"
-sidebar_current: "docs-aws-resource-dx-lag"
 description: |-
   Provides a Direct Connect LAG.
 ---

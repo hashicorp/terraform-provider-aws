@@ -2085,6 +2085,10 @@ func (c *APIGateway) DeleteDomainNameRequest(input *DeleteDomainNameInput) (req 
 //   The request has reached its throttling limit. Retry after the specified time
 //   period.
 //
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The submitted request is not valid, for example, the input is incomplete
+//   or incorrect. See the accompanying error message for details.
+//
 func (c *APIGateway) DeleteDomainName(input *DeleteDomainNameInput) (*DeleteDomainNameOutput, error) {
 	req, out := c.DeleteDomainNameRequest(input)
 	return out, req.Send()
@@ -3838,10 +3842,12 @@ func (c *APIGateway) GetApiKeysPagesWithContext(ctx aws.Context, input *GetApiKe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetApiKeysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetApiKeysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4234,10 +4240,12 @@ func (c *APIGateway) GetBasePathMappingsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBasePathMappingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBasePathMappingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4457,10 +4465,12 @@ func (c *APIGateway) GetClientCertificatesPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetClientCertificatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetClientCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4688,10 +4698,12 @@ func (c *APIGateway) GetDeploymentsPagesWithContext(ctx aws.Context, input *GetD
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDeploymentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDeploymentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5248,10 +5260,12 @@ func (c *APIGateway) GetDomainNamesPagesWithContext(ctx aws.Context, input *GetD
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDomainNamesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDomainNamesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6158,10 +6172,12 @@ func (c *APIGateway) GetModelsPagesWithContext(ctx aws.Context, input *GetModels
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetModelsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetModelsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6554,10 +6570,12 @@ func (c *APIGateway) GetResourcesPagesWithContext(ctx aws.Context, input *GetRes
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6777,10 +6795,12 @@ func (c *APIGateway) GetRestApisPagesWithContext(ctx aws.Context, input *GetRest
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetRestApisOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetRestApisOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7426,10 +7446,12 @@ func (c *APIGateway) GetUsagePagesWithContext(ctx aws.Context, input *GetUsageIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*Usage), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*Usage), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7744,10 +7766,12 @@ func (c *APIGateway) GetUsagePlanKeysPagesWithContext(ctx aws.Context, input *Ge
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUsagePlanKeysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUsagePlanKeysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7891,10 +7915,12 @@ func (c *APIGateway) GetUsagePlansPagesWithContext(ctx aws.Context, input *GetUs
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUsagePlansOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUsagePlansOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8114,10 +8140,12 @@ func (c *APIGateway) GetVpcLinksPagesWithContext(ctx aws.Context, input *GetVpcL
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetVpcLinksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetVpcLinksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -15527,6 +15555,10 @@ type EndpointConfiguration struct {
 	// "EDGE". For a regional API and its custom domain name, the endpoint type
 	// is REGIONAL. For a private API, the endpoint type is PRIVATE.
 	Types []*string `locationName:"types" type:"list"`
+
+	// A list of VpcEndpointIds of an API (RestApi) against which to create Route53
+	// ALIASes. It is only supported for PRIVATE endpoint type.
+	VpcEndpointIds []*string `locationName:"vpcEndpointIds" type:"list"`
 }
 
 // String returns the string representation
@@ -15542,6 +15574,12 @@ func (s EndpointConfiguration) GoString() string {
 // SetTypes sets the Types field's value.
 func (s *EndpointConfiguration) SetTypes(v []*string) *EndpointConfiguration {
 	s.Types = v
+	return s
+}
+
+// SetVpcEndpointIds sets the VpcEndpointIds field's value.
+func (s *EndpointConfiguration) SetVpcEndpointIds(v []*string) *EndpointConfiguration {
+	s.VpcEndpointIds = v
 	return s
 }
 

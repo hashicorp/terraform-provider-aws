@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_distribution"
-sidebar_current: "docs-aws-resource-cloudfront-distribution"
 description: |-
   Provides a CloudFront web distribution resource.
 ---

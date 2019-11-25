@@ -6,17 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
 	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_basic_%s", rString)
+	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_basic_%s", rString)
 
 	resourceName := "aws_api_gateway_documentation_version.test"
 
@@ -33,6 +33,11 @@ func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -41,9 +46,9 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	var conf apigateway.DocumentationVersion
 
 	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_method_%s", rString)
-	stageName := fmt.Sprintf("tf_acc_stage_%s", rString)
+	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_version_method_%s", rString)
+	stageName := fmt.Sprintf("tf-acc-test_stage_%s", rString)
 	description := fmt.Sprintf("Tf Acc Test description %s", rString)
 	uDescription := fmt.Sprintf("Tf Acc Test description updated %s", rString)
 
@@ -64,6 +69,11 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, uDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationVersionExists(resourceName, &conf),
@@ -71,56 +81,6 @@ func TestAccAWSAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", uDescription),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayDocumentationVersion_importBasic(t *testing.T) {
-	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_import_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_import_%s", rString)
-
-	resourceName := "aws_api_gateway_documentation_version.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayDocumentationVersion_importAllFields(t *testing.T) {
-	rString := acctest.RandString(8)
-	version := fmt.Sprintf("tf_acc_version_import_af_%s", rString)
-	apiName := fmt.Sprintf("tf_acc_api_doc_version_import_af_%s", rString)
-	stageName := fmt.Sprintf("tf_acc_stage_%s", rString)
-	description := fmt.Sprintf("Tf Acc Test description %s", rString)
-
-	resourceName := "aws_api_gateway_documentation_version.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationVersionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, description),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

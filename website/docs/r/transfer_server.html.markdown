@@ -1,7 +1,7 @@
 ---
+subcategory: "Transfer"
 layout: "aws"
 page_title: "AWS: aws_transfer_server"
-sidebar_current: "docs-aws-resource-transfer-server"
 description: |-
   Provides a AWS Transfer Server resource.
 ---
@@ -68,7 +68,7 @@ resource "aws_transfer_server" "foo" {
 The following arguments are supported:
 
 * `endpoint_details` - (Optional) The virtual private cloud (VPC) endpoint settings that you want to configure for your SFTP server. Fields documented below.
-* `endpoint_type` - (Optional) The type of endpoint that you want your SFTP server connect to. If you connect to a `VPC_ENDPOINT`, your SFTP server isn't accessible over the public internet. If you want to connect your SFTP server via public internet, set `PUBLIC`.
+* `endpoint_type` - (Optional) The type of endpoint that you want your SFTP server connect to. If you connect to a `VPC_ENDPOINT`, your SFTP server isn't accessible over the public internet. If you want to connect your SFTP server via public internet, set `PUBLIC`.  Defaults to `PUBLIC`.
 * `invocation_role` - (Optional) Amazon Resource Name (ARN) of the IAM role used to authenticate the user account with an `identity_provider_type` of `API_GATEWAY`.
 * `url` - (Optional) - URL of the service endpoint used to authenticate users with an `identity_provider_type` of `API_GATEWAY`.
 * `identity_provider_type` - (Optional) The mode of authentication enabled for this service. The default value is `SERVICE_MANAGED`, which allows you to store and access SFTP user credentials within the service. `API_GATEWAY` indicates that user authentication requires a call to an API Gateway endpoint URL provided by you to integrate an identity provider of your choice.

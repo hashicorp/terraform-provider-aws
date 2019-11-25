@@ -110,6 +110,8 @@ const (
 
 	// ErrCodeServiceLinkedRoleNotFoundFault for service response error code
 	// "ServiceLinkedRoleNotFoundFault".
+	//
+	// The specified service linked role (SLR) was not found.
 	ErrCodeServiceLinkedRoleNotFoundFault = "ServiceLinkedRoleNotFoundFault"
 
 	// ErrCodeSubnetGroupAlreadyExistsFault for service response error code

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_route_table"
-sidebar_current: "docs-aws-datasource-route-table-x"
 description: |-
     Provides details about a specific Route Table
 ---

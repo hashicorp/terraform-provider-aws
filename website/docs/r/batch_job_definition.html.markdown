@@ -1,7 +1,7 @@
 ---
+subcategory: "Batch"
 layout: "aws"
 page_title: "AWS: aws_batch_job_definition"
-sidebar_current: "docs-aws-resource-batch-job-definition"
 description: |-
   Provides a Batch Job Definition resource.
 ---

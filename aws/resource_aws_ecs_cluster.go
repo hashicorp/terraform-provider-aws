@@ -8,8 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEcsCluster() *schema.Resource {
@@ -33,6 +35,26 @@ func resourceAwsEcsCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"setting": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.ClusterSettingNameContainerInsights,
+							}, false),
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -55,16 +77,22 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	clusterName := d.Get("name").(string)
 	log.Printf("[DEBUG] Creating ECS cluster %s", clusterName)
 
-	out, err := conn.CreateCluster(&ecs.CreateClusterInput{
+	input := ecs.CreateClusterInput{
 		ClusterName: aws.String(clusterName),
-		Tags:        tagsFromMapECS(d.Get("tags").(map[string]interface{})),
-	})
+		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(),
+	}
+
+	if v, ok := d.GetOk("setting"); ok {
+		input.Settings = expandEcsSettings(v.(*schema.Set).List())
+	}
+
+	out, err := conn.CreateCluster(&input)
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] ECS cluster %s created", *out.Cluster.ClusterArn)
+	log.Printf("[DEBUG] ECS cluster %s created", aws.StringValue(out.Cluster.ClusterArn))
 
-	d.SetId(*out.Cluster.ClusterArn)
+	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
 	return resourceAwsEcsClusterRead(d, meta)
 }
@@ -134,7 +162,11 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
 
-	if err := d.Set("tags", tagsToMapECS(cluster.Tags)); err != nil {
+	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
+		return fmt.Errorf("error setting setting: %s", err)
+	}
+
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -144,39 +176,23 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
-	if d.HasChange("tags") {
-		oldTagsRaw, newTagsRaw := d.GetChange("tags")
-		oldTagsMap := oldTagsRaw.(map[string]interface{})
-		newTagsMap := newTagsRaw.(map[string]interface{})
-		createTags, removeTags := diffTagsECS(tagsFromMapECS(oldTagsMap), tagsFromMapECS(newTagsMap))
-
-		if len(removeTags) > 0 {
-			removeTagKeys := make([]*string, len(removeTags))
-			for i, removeTag := range removeTags {
-				removeTagKeys[i] = removeTag.Key
-			}
-
-			input := &ecs.UntagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				TagKeys:     removeTagKeys,
-			}
-
-			log.Printf("[DEBUG] Untagging ECS Cluster: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging ECS Cluster (%s): %s", d.Id(), err)
-			}
+	if d.HasChange("setting") {
+		input := ecs.UpdateClusterSettingsInput{
+			Cluster:  aws.String(d.Id()),
+			Settings: expandEcsSettings(d.Get("setting").(*schema.Set).List()),
 		}
 
-		if len(createTags) > 0 {
-			input := &ecs.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
+		_, err := conn.UpdateClusterSettings(&input)
+		if err != nil {
+			return fmt.Errorf("error changing ECS cluster settings (%s): %s", d.Id(), err)
+		}
+	}
 
-			log.Printf("[DEBUG] Tagging ECS Cluster: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging ECS Cluster (%s): %s", d.Id(), err)
-			}
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ECS Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -259,4 +275,42 @@ func ecsClusterInactive(out *ecs.DescribeClustersOutput, clusterName string) boo
 		}
 	}
 	return false
+}
+
+func expandEcsSettings(configured []interface{}) []*ecs.ClusterSetting {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	settings := make([]*ecs.ClusterSetting, 0, len(configured))
+
+	for _, raw := range configured {
+		data := raw.(map[string]interface{})
+
+		setting := &ecs.ClusterSetting{
+			Name:  aws.String(data["name"].(string)),
+			Value: aws.String(data["value"].(string)),
+		}
+
+		settings = append(settings, setting)
+	}
+
+	return settings
+}
+
+func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
+	if len(list) == 0 {
+		return nil
+	}
+
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, setting := range list {
+		l := map[string]interface{}{
+			"name":  aws.StringValue(setting.Name),
+			"value": aws.StringValue(setting.Value),
+		}
+
+		result = append(result, l)
+	}
+	return result
 }

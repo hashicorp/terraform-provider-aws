@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_model"
-sidebar_current: "docs-aws-resource-api-gateway-model"
 description: |-
   Provides a Model for a API Gateway.
 ---

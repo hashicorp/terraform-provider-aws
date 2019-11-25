@@ -6,13 +6,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // This is used for testing aws_codebuild_webhook as well as aws_codebuild_project.
@@ -37,27 +37,6 @@ func testAccAWSCodeBuildGitHubSourceLocationFromEnv() string {
 		return "https://github.com/hashibot-test/aws-test.git"
 	}
 	return sourceLocation
-}
-
-func TestAccAWSCodeBuildProject_importBasic(t *testing.T) {
-	resourceName := "aws_codebuild_project.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCodeBuildProjectConfig_basic(rName),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
 }
 
 func TestAccAWSCodeBuildProject_basic(t *testing.T) {
@@ -130,6 +109,11 @@ func TestAccAWSCodeBuildProject_BadgeEnabled(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "badge_url", regexp.MustCompile(`\b(https?).*\b`)),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -150,6 +134,11 @@ func TestAccAWSCodeBuildProject_BuildTimeout(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "build_timeout", "120"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_BuildTimeout(rName, 240),
@@ -183,6 +172,11 @@ func TestAccAWSCodeBuildProject_Cache(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", "NO_CACHE"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_basic(rName),
@@ -249,6 +243,11 @@ func TestAccAWSCodeBuildProject_Description(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCodeBuildProjectConfig_Description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
@@ -275,6 +274,11 @@ func TestAccAWSCodeBuildProject_EncryptionKey(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestMatchResourceAttr(resourceName, "encryption_key", regexp.MustCompile(`.+`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -349,6 +353,11 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Type(rName, "PARAMETER_STORE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
@@ -378,6 +387,11 @@ func TestAccAWSCodeBuildProject_Environment_Certificate(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					testAccCheckAWSCodeBuildProjectCertificate(&project, fmt.Sprintf("%s/%s", bName, oName)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -495,6 +509,11 @@ func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.3680505372.auth.2706882902.type", "OAUTH"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -515,6 +534,11 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.1181740906.git_clone_depth", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName, 2),
@@ -545,6 +569,11 @@ func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
@@ -571,6 +600,11 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T)
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.2876219937.report_build_status", "true"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_Bitbucket(rName, false),
@@ -601,6 +635,11 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHub(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
@@ -627,6 +666,11 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *tes
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.2964899175.report_build_status", "true"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName, false),
@@ -656,6 +700,11 @@ func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.3210444828.type", "BITBUCKET"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -676,6 +725,11 @@ func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.3715340088.type", "CODECOMMIT"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -698,6 +752,11 @@ func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.2280907000.type", "CODEPIPELINE"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -719,6 +778,11 @@ func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.553628638.type", "GITHUB_ENTERPRISE"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -738,6 +802,11 @@ func TestAccAWSCodeBuildProject_Source_Type_S3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -765,6 +834,11 @@ phases:
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.2726343112.type", "NO_SOURCE"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -816,6 +890,11 @@ func TestAccAWSCodeBuildProject_Tags(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSCodeBuildProjectConfig_Tags(rName, "tag2", "tag2value-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
@@ -847,6 +926,11 @@ func TestAccAWSCodeBuildProject_VpcConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_config.0.vpc_id", regexp.MustCompile(`^vpc-`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_VpcConfig1(rName),
@@ -891,6 +975,11 @@ func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.image_pull_credentials_type", "CODEBUILD"),
 					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.type", "WINDOWS_CONTAINER"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1625,6 +1714,11 @@ func TestAccAWSCodeBuildProject_SecondarySources_CodeCommit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3525046785.source_identifier", "secondarySource1"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2644986630.source_identifier", "secondarySource2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

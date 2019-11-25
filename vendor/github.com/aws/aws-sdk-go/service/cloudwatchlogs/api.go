@@ -360,7 +360,7 @@ func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req 
 //
 // Creates a log group with the specified name.
 //
-// You can create up to 5000 log groups per account.
+// You can create up to 20,000 log groups per account.
 //
 // You must use the following guidelines when naming a log group:
 //
@@ -369,7 +369,8 @@ func (c *CloudWatchLogs) CreateLogGroupRequest(input *CreateLogGroupInput) (req 
 //    * Log group names can be between 1 and 512 characters long.
 //
 //    * Log group names consist of the following characters: a-z, A-Z, 0-9,
-//    '_' (underscore), '-' (hyphen), '/' (forward slash), and '.' (period).
+//    '_' (underscore), '-' (hyphen), '/' (forward slash), '.' (period), and
+//    '#' (number sign)
 //
 // If you associate a AWS Key Management Service (AWS KMS) customer master key
 // (CMK) with the log group, ingested data is encrypted using the CMK. This
@@ -1287,10 +1288,12 @@ func (c *CloudWatchLogs) DescribeDestinationsPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDestinationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDestinationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1510,10 +1513,12 @@ func (c *CloudWatchLogs) DescribeLogGroupsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeLogGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeLogGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1657,10 +1662,12 @@ func (c *CloudWatchLogs) DescribeLogStreamsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeLogStreamsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeLogStreamsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1801,10 +1808,12 @@ func (c *CloudWatchLogs) DescribeMetricFiltersPagesWithContext(ctx aws.Context, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeMetricFiltersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeMetricFiltersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2115,10 +2124,12 @@ func (c *CloudWatchLogs) DescribeSubscriptionFiltersPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSubscriptionFiltersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSubscriptionFiltersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2362,10 +2373,12 @@ func (c *CloudWatchLogs) FilterLogEventsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*FilterLogEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*FilterLogEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2509,10 +2522,12 @@ func (c *CloudWatchLogs) GetLogEventsPagesWithContext(ctx aws.Context, input *Ge
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetLogEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetLogEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2926,11 +2941,12 @@ func (c *CloudWatchLogs) PutDestinationRequest(input *PutDestinationInput) (req 
 
 // PutDestination API operation for Amazon CloudWatch Logs.
 //
-// Creates or updates a destination. A destination encapsulates a physical resource
-// (such as an Amazon Kinesis stream) and enables you to subscribe to a real-time
-// stream of log events for a different account, ingested using PutLogEvents.
-// A destination can be an Amazon Kinesis stream, Amazon Kinesis Data Firehose
-// strea, or an AWS Lambda function.
+// Creates or updates a destination. This operation is used only to create destinations
+// for cross-account subscriptions.
+//
+// A destination encapsulates a physical resource (such as an Amazon Kinesis
+// stream) and enables you to subscribe to a real-time stream of log events
+// for a different account, ingested using PutLogEvents.
 //
 // Through an access policy, a destination controls what is written to it. By
 // default, PutDestination does not set any access policy with the destination,
@@ -6311,6 +6327,8 @@ type GetLogEventsInput struct {
 
 	// The token for the next set of items to return. (You received this token from
 	// a previous call.)
+	//
+	// Using this token works only when you specify true for startFromHead.
 	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// If the value is true, the earliest log events are returned first. If the
@@ -6956,9 +6974,9 @@ type LogStream struct {
 
 	// The number of bytes stored.
 	//
-	// IMPORTANT: Starting on June 17, 2019, this parameter will be deprecated for
-	// log streams, and will be reported as zero. This change applies only to log
-	// streams. The storedBytes parameter for log groups is not affected.
+	// IMPORTANT:On June 17, 2019, this parameter was deprecated for log streams,
+	// and is always reported as zero. This change applies only to log streams.
+	// The storedBytes parameter for log groups is not affected.
 	//
 	// Deprecated: Starting on June 17, 2019, this parameter will be deprecated for log streams, and will be reported as zero. This change applies only to log streams. The storedBytes parameter for log groups is not affected.
 	StoredBytes *int64 `locationName:"storedBytes" deprecated:"true" type:"long"`
@@ -8306,6 +8324,7 @@ type StartQueryInput struct {
 
 	// The maximum number of log events to return in the query. If the query string
 	// uses the fields command, only the specified fields and their values are returned.
+	// The default is 1000.
 	Limit *int64 `locationName:"limit" min:"1" type:"integer"`
 
 	// The log group on which to perform the query.

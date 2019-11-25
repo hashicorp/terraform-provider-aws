@@ -1,7 +1,7 @@
 ---
+subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_configuration"
-sidebar_current: "docs-aws-resource-mq-configuration"
 description: |-
   Provides an MQ configuration Resource
 ---

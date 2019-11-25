@@ -2,15 +2,15 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/validation"
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudHsm2Cluster() *schema.Resource {
@@ -212,16 +212,19 @@ func resourceAwsCloudHsm2ClusterCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if err := setTagsAwsCloudHsm2Cluster(cloudhsm2, d); err != nil {
-		return err
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Cloudhsmv2UpdateTags(cloudhsm2, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsCloudHsm2ClusterRead(d, meta)
 }
 
 func resourceAwsCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).cloudhsmv2conn
 
-	cluster, err := describeCloudHsm2Cluster(meta.(*AWSClient).cloudhsmv2conn, d.Id())
+	cluster, err := describeCloudHsm2Cluster(conn, d.Id())
 
 	if cluster == nil {
 		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found", d.Id())
@@ -249,14 +252,27 @@ func resourceAwsCloudHsm2ClusterRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
+	tags, err := keyvaluetags.Cloudhsmv2ListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
 func resourceAwsCloudHsm2ClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	cloudhsm2 := meta.(*AWSClient).cloudhsmv2conn
+	conn := meta.(*AWSClient).cloudhsmv2conn
 
-	if err := setTagsAwsCloudHsm2Cluster(cloudhsm2, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Cloudhsmv2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsCloudHsm2ClusterRead(d, meta)
@@ -286,65 +302,11 @@ func resourceAwsCloudHsm2ClusterDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return err
-	}
-	log.Println("[INFO] Waiting for CloudHSMv2 Cluster to be deleted")
-
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
-		Target:     []string{cloudhsmv2.ClusterStateDeleted},
-		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(cloudhsm2, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 30 * time.Second,
-		Delay:      30 * time.Second,
+		return fmt.Errorf("error deleting CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, errWait := stateConf.WaitForState()
-	if errWait != nil {
-		return fmt.Errorf("Error waiting for CloudHSMv2 Cluster state to be \"DELETED\": %s", errWait)
-	}
-
-	return nil
-}
-
-func setTagsAwsCloudHsm2Cluster(conn *cloudhsmv2.CloudHSMV2, d *schema.ResourceData) error {
-	if d.HasChange("tags") {
-		oraw, nraw := d.GetChange("tags")
-		create, remove := diffTagsGeneric(oraw.(map[string]interface{}), nraw.(map[string]interface{}))
-
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			keys := make([]*string, 0, len(remove))
-			for k := range remove {
-				keys = append(keys, aws.String(k))
-			}
-
-			_, err := conn.UntagResource(&cloudhsmv2.UntagResourceInput{
-				ResourceId: aws.String(d.Id()),
-				TagKeyList: keys,
-			})
-			if err != nil {
-				return err
-			}
-		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags: %#v", create)
-			tagList := make([]*cloudhsmv2.Tag, 0, len(create))
-			for k, v := range create {
-				tagList = append(tagList, &cloudhsmv2.Tag{
-					Key:   &k,
-					Value: v,
-				})
-			}
-			_, err := conn.TagResource(&cloudhsmv2.TagResourceInput{
-				ResourceId: aws.String(d.Id()),
-				TagList:    tagList,
-			})
-			if err != nil {
-				return err
-			}
-		}
+	if err := waitForCloudhsmv2ClusterDeletion(cloudhsm2, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
@@ -366,4 +328,19 @@ func readCloudHsm2ClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]
 		return []map[string]interface{}{certs}
 	}
 	return []map[string]interface{}{}
+}
+
+func waitForCloudhsmv2ClusterDeletion(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{cloudhsmv2.ClusterStateDeleteInProgress},
+		Target:     []string{cloudhsmv2.ClusterStateDeleted},
+		Refresh:    resourceAwsCloudHsm2ClusterRefreshFunc(conn, id),
+		Timeout:    timeout,
+		MinTimeout: 30 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

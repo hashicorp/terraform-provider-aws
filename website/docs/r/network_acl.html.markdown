@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acl"
-sidebar_current: "docs-aws-resource-network-acl"
 description: |-
   Provides an network ACL resource.
 ---
