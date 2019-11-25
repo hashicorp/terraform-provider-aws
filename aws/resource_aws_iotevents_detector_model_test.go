@@ -26,7 +26,7 @@ func TestAccAWSIoTEventsDetectorModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "name", fmt.Sprintf("test_detector_%s", rString)),
 					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "description", "Example detector model"),
 					resource.TestCheckResourceAttr("aws_iotevents_detector_model.detector", "tags.tagKey", "tagValue"),
-					testAccDetectorModleBasic(rString),
+					testAccDetectorModelBasic(rString),
 				),
 			},
 		},
@@ -270,7 +270,7 @@ func testTransitionEvent(transitionEvent *iotevents.TransitionEvent, expectedTra
 	return nil
 }
 
-func testAccDetectorModleBasic(rString string) resource.TestCheckFunc {
+func testAccDetectorModelBasic(rString string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ioteventsconn
 
