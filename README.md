@@ -13,6 +13,18 @@ Requirements
 - [Terraform](https://www.terraform.io/downloads.html) 0.10+
 - [Go](https://golang.org/doc/install) 1.13 (to build the provider plugin)
 
+Summary of Terraform
+--------------------
+
+Deliver infrastructure as code with Terraform:
+
+- Write declarative configuration files 
+- Collaborate and share configurations
+- Evolve and version your infrastructure
+- Automate provisioning
+
+Define infrastructure as code to manage the full lifecycle — create new resources, manage existing ones, and destroy those no longer needed.
+
 Developing the Provider
 ---------------------
 
