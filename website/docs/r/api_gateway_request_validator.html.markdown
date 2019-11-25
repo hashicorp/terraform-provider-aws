@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_request_validator"
-sidebar_current: "docs-aws-resource-api-gateway-request-validator"
 description: |-
   Manages an API Gateway Request Validator.
 ---

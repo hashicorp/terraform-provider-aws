@@ -1,7 +1,7 @@
 ---
+subcategory: "RAM"
 layout: "aws"
 page_title: "AWS: aws_ram_resource_share_accepter"
-sidebar_current: "docs-aws-resource-ram-resource-share-accepter"
 description: |-
   Manages accepting a Resource Access Manager (RAM) Resource Share invitation.
 ---

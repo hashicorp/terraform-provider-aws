@@ -1,7 +1,7 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_static_web_layer"
-sidebar_current: "docs-aws-resource-opsworks-static-web-layer"
 description: |-
   Provides an OpsWorks static web server layer resource.
 ---

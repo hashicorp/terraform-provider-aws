@@ -1,7 +1,7 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_cluster"
-sidebar_current: "docs-aws-resource-dax-cluster"
 description: |-
   Provides an DAX Cluster resource.
 ---

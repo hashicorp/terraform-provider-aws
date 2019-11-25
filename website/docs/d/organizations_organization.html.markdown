@@ -1,7 +1,7 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_organization"
-sidebar_current: "docs-aws-datasource-organizations-organization"
 description: |-
   Get information about the organization that the user's account belongs to
 ---

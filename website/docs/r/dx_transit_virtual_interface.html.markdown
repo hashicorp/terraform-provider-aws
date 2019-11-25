@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_transit_virtual_interface"
-sidebar_current: "docs-aws-resource-dx-transit-virtual-interface"
 description: |-
   Provides a Direct Connect transit virtual interface resource.
 ---

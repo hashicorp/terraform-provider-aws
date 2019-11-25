@@ -1,7 +1,7 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_adm_channel"
-sidebar_current: "docs-aws-resource-pinpoint-adm-channel"
 description: |-
   Provides a Pinpoint ADM Channel resource.
 ---

@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/sqs"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsLambdaEventSourceMapping() *schema.Resource {
@@ -96,6 +96,10 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"maximum_batching_window_in_seconds": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -142,6 +146,10 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 
 	if batchSize, ok := d.GetOk("batch_size"); ok {
 		params.BatchSize = aws.Int64(int64(batchSize.(int)))
+	}
+
+	if batchWindow, ok := d.GetOk("maximum_batching_window_in_seconds"); ok {
+		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(batchWindow.(int)))
 	}
 
 	if startingPosition, ok := d.GetOk("starting_position"); ok {
@@ -210,6 +218,7 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	}
 
 	d.Set("batch_size", eventSourceMappingConfiguration.BatchSize)
+	d.Set("maximum_batching_window_in_seconds", eventSourceMappingConfiguration.MaximumBatchingWindowInSeconds)
 	d.Set("event_source_arn", eventSourceMappingConfiguration.EventSourceArn)
 	d.Set("function_arn", eventSourceMappingConfiguration.FunctionArn)
 	d.Set("last_modified", eventSourceMappingConfiguration.LastModified)
@@ -278,7 +287,14 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		Enabled:      aws.Bool(d.Get("enabled").(bool)),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	// AWS API will fail if this parameter is set (even as default value) for sqs event source.  Ideally this should be implemented in GO SDK or AWS API itself.
+	eventSourceArn, err := arn.Parse(d.Get("event_source_arn").(string))
+
+	if err == nil && eventSourceArn.Service != "sqs" {
+		params.MaximumBatchingWindowInSeconds = aws.Int64(int64(d.Get("maximum_batching_window_in_seconds").(int)))
+	}
+
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(params)
 		if err != nil {
 			if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "") ||

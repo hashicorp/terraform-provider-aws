@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_receipt_filter"
-sidebar_current: "docs-aws-resource-ses-receipt-filter"
 description: |-
   Provides an SES receipt filter
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
-sidebar_current: "docs-aws-datasource-kms-alias"
 description: |-
   Get information on a AWS Key Management Service (KMS) Alias
 ---

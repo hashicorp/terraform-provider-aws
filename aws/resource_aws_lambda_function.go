@@ -14,9 +14,9 @@ import (
 
 	"errors"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -28,15 +28,18 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeDotnetcore21,
 	lambda.RuntimeGo1X,
 	lambda.RuntimeJava8,
+	lambda.RuntimeJava11,
 	lambda.RuntimeNodejs43,
 	lambda.RuntimeNodejs43Edge,
 	lambda.RuntimeNodejs610,
 	lambda.RuntimeNodejs810,
 	lambda.RuntimeNodejs10X,
+	lambda.RuntimeNodejs12X,
 	lambda.RuntimeProvided,
 	lambda.RuntimePython27,
 	lambda.RuntimePython36,
 	lambda.RuntimePython37,
+	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
 }
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_service"
-sidebar_current: "docs-aws-resource-ecs-service"
 description: |-
   Provides an ECS service.
 ---

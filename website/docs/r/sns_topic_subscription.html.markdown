@@ -1,7 +1,7 @@
 ---
+subcategory: "SNS"
 layout: "aws"
 page_title: "AWS: aws_sns_topic_subscription"
-sidebar_current: "docs-aws-resource-sns-topic-subscription"
 description: |-
   Provides a resource for subscribing to SNS topics.
 ---

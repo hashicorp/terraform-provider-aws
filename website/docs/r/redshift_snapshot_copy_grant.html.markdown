@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_snapshot_copy_grant"
-sidebar_current: "docs-aws-resource-redshift-snapshot-copy-grant"
 description: |-
   Creates a snapshot copy grant that allows AWS Redshift to encrypt copied snapshots with a customer master key from AWS KMS in a destination region.
 ---

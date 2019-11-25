@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb"
-sidebar_current: "docs-aws-resource-elbv2"
 description: |-
   Provides a Load Balancer resource.
 ---

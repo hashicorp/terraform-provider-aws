@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_event_subscription"
-sidebar_current: "docs-aws-resource-db-event-subscription"
 description: |-
   Provides a DB event subscription resource.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet"
-sidebar_current: "docs-aws-datasource-subnet-x"
 description: |-
     Provides details about a specific VPC subnet
 ---

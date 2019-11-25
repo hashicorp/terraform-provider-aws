@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_vpc_dhcp_options"
-sidebar_current: "docs-aws-resource-default-vpc-dhcp-options"
 description: |-
   Manage the default VPC DHCP Options resource.
 ---

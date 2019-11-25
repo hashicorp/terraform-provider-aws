@@ -7,24 +7,39 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // return a slice of s3 tags associated with the given s3 bucket. Essentially
 // s3.GetBucketTagging, except returns an empty slice instead of an error when
 // there are no tags.
 func getTagSetS3Bucket(conn *s3.S3, bucket string) ([]*s3.Tag, error) {
-	resp, err := conn.GetBucketTagging(&s3.GetBucketTaggingInput{
+	input := &s3.GetBucketTaggingInput{
 		Bucket: aws.String(bucket),
+	}
+
+	// Retry due to S3 eventual consistency
+	outputRaw, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+		return conn.GetBucketTagging(input)
 	})
+
+	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
+	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
+	// and the AWS Go SDK has neither as a constant.
+	if isAWSErr(err, "NoSuchTagSet", "") {
+		return nil, nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, "NoSuchTagSet", "") {
-			return nil, nil
-		}
 		return nil, err
 	}
 
-	return resp.TagSet, nil
+	var tagSet []*s3.Tag
+	if output, ok := outputRaw.(*s3.GetBucketTaggingOutput); ok {
+		tagSet = output.TagSet
+	}
+
+	return tagSet, nil
 }
 
 // setTags is a helper to set the tags for a resource. It expects the

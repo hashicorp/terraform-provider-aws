@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -28,10 +28,6 @@ func testSweepBatchJobQueues(region string) error {
 	}
 	conn := client.(*AWSClient).batchconn
 
-	prefixes := []string{
-		"tf_acc",
-	}
-
 	out, err := conn.DescribeJobQueues(&batch.DescribeJobQueuesInput{})
 	if err != nil {
 		if testSweepSkipSweepError(err) {
@@ -42,17 +38,6 @@ func testSweepBatchJobQueues(region string) error {
 	}
 	for _, jobQueue := range out.JobQueues {
 		name := jobQueue.JobQueueName
-		skip := true
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(*name, prefix) {
-				skip = false
-				break
-			}
-		}
-		if skip {
-			log.Printf("[INFO] Skipping Batch Job Queue: %s", *name)
-			continue
-		}
 
 		log.Printf("[INFO] Disabling Batch Job Queue: %s", *name)
 		err := disableBatchJobQueue(*name, conn)

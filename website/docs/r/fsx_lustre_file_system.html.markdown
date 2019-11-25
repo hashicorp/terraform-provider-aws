@@ -1,7 +1,7 @@
 ---
+subcategory: "File System (FSx)"
 layout: "aws"
 page_title: "AWS: aws_fsx_lustre_file_system"
-sidebar_current: "docs-aws-resource-fsx-lustre-file-system"
 description: |-
   Manages a FSx Lustre File System.
 ---

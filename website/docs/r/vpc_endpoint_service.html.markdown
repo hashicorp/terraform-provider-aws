@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service"
-sidebar_current: "docs-aws-resource-vpc-endpoint-service"
 description: |-
   Provides a VPC Endpoint Service resource.
 ---

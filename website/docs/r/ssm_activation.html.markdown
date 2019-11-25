@@ -1,7 +1,7 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_activation"
-sidebar_current: "docs-aws-resource-ssm-activation"
 description: |-
   Registers an on-premises server or virtual machine with Amazon EC2 so that it can be managed using Run Command.
 ---

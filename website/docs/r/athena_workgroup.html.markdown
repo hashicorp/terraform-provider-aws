@@ -1,7 +1,7 @@
 ---
+subcategory: "Athena"
 layout: "aws"
 page_title: "AWS: aws_athena_workgroup"
-sidebar_current: "docs-aws-resource-athena-workgroup"
 description: |-
   Manages an Athena Workgroup.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_secret"
-sidebar_current: "docs-aws-datasource-kms-secret-x"
 description: |-
     Provides secret data encrypted with the KMS service
 ---

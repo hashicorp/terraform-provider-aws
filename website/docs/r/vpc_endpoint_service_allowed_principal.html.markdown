@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service_allowed_principal"
-sidebar_current: "docs-aws-resource-vpc-endpoint-service-allowed-principal"
 description: |-
   Provides a resource to allow a principal to discover a VPC endpoint service.
 ---

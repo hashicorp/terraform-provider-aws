@@ -1,7 +1,7 @@
 ---
+subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_standards_subscription"
-sidebar_current: "docs-aws-resource-securityhub-standards-subscription"
 description: |-
   Subscribes to a Security Hub standard.
 ---

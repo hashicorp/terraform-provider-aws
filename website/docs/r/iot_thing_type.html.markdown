@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_thing_type"
-sidebar_current: "docs-aws-resource-iot-thing-type"
 description: |-
     Creates and manages an AWS IoT Thing Type.
 ---
@@ -31,3 +31,11 @@ resource "aws_iot_thing_type" "foo" {
 In addition to the arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the created AWS IoT Thing Type.
+
+## Import
+
+IOT Thing Types can be imported using the name, e.g.
+
+```
+$ terraform import aws_iot_thing_type.example example
+```

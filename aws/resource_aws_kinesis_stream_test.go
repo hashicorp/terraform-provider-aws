@@ -2,23 +2,79 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
 
-	"regexp"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_kinesis_stream", &resource.Sweeper{
+		Name: "aws_kinesis_stream",
+		F:    testSweepKinesisStreams,
+	})
+}
+
+func testSweepKinesisStreams(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).kinesisconn
+	input := &kinesis.ListStreamsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
+		for _, streamNamePtr := range page.StreamNames {
+			if streamNamePtr == nil {
+				continue
+			}
+
+			streamName := aws.StringValue(streamNamePtr)
+			input := &kinesis.DeleteStreamInput{
+				EnforceConsumerDeletion: aws.Bool(false),
+				StreamName:              streamNamePtr,
+			}
+
+			log.Printf("[INFO] Deleting Kinesis Stream: %s", streamName)
+
+			_, err := conn.DeleteStream(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Kinesis Stream (%s): %w", streamName, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Kinesis Stream sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error listing Kinesis Streams: %s", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSKinesisStream_basic(t *testing.T) {
 	var stream kinesis.StreamDescription
-
+	resourceName := "aws_kinesis_stream.test"
 	rInt := acctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -28,9 +84,16 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 		},
 	})
@@ -38,8 +101,9 @@ func TestAccAWSKinesisStream_basic(t *testing.T) {
 
 func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 	var stream kinesis.StreamDescription
-
+	resourceName := "aws_kinesis_stream.test"
 	rInt := acctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d-0", rInt) // We can get away with just import testing one of them
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -49,27 +113,34 @@ func TestAccAWSKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfigConcurrent(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.0", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.1", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.2", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.3", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.4", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.5", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.6", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.7", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.8", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.9", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.10", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.11", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.12", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.13", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.14", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.15", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.16", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.17", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.18", &stream),
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream.19", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.0", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.1", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.2", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.3", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.4", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.5", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.6", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.7", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.8", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.9", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.10", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.11", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.12", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.13", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.14", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.15", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.16", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.17", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.18", &stream),
+					testAccCheckKinesisStreamExists("aws_kinesis_stream.test.19", &stream),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 		},
 	})
@@ -94,43 +165,7 @@ func TestAccAWSKinesisStream_encryptionWithoutKmsKeyThrowsError(t *testing.T) {
 func TestAccAWSKinesisStream_encryption(t *testing.T) {
 	var stream kinesis.StreamDescription
 	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisStreamDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccKinesisStreamConfigWithEncryption(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
-					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "encryption_type", "KMS"),
-				),
-			},
-			{
-				Config: testAccKinesisStreamConfig(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
-					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "encryption_type", "NONE"),
-				),
-			},
-			{
-				Config: testAccKinesisStreamConfigWithEncryption(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
-					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "encryption_type", "KMS"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisStream_importBasic(t *testing.T) {
-	rInt := acctest.RandInt()
-	resourceName := "aws_kinesis_stream.test_stream"
+	resourceName := "aws_kinesis_stream.test"
 	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -139,15 +174,35 @@ func TestAccAWSKinesisStream_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisStreamConfig(rInt),
+				Config: testAccKinesisStreamConfigWithEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(
+						resourceName, "encryption_type", "KMS"),
+				),
 			},
-
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           streamName,
 				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
+			{
+				Config: testAccKinesisStreamConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(
+						resourceName, "encryption_type", "NONE"),
+				),
+			},
+			{
+				Config: testAccKinesisStreamConfigWithEncryption(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamExists(resourceName, &stream),
+					resource.TestCheckResourceAttr(
+						resourceName, "encryption_type", "KMS"),
+				),
 			},
 		},
 	})
@@ -167,6 +222,8 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 	}
 
 	rInt := acctest.RandInt()
+	resourceName := "aws_kinesis_stream.test"
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -176,21 +233,27 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "shard_count", "2"),
+						resourceName, "shard_count", "2"),
 				),
 			},
-
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
 			{
 				Config: testAccKinesisStreamConfigUpdateShardCount(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &updatedStream),
+					testAccCheckKinesisStreamExists(resourceName, &updatedStream),
 					testAccCheckAWSKinesisStreamAttributes(&updatedStream),
 					testCheckStreamNotDestroyed(),
 					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "shard_count", "4"),
+						resourceName, "shard_count", "4"),
 				),
 			},
 		},
@@ -199,8 +262,9 @@ func TestAccAWSKinesisStream_shardCount(t *testing.T) {
 
 func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 	var stream kinesis.StreamDescription
-
+	resourceName := "aws_kinesis_stream.test"
 	rInt := acctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -210,30 +274,36 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "retention_period", "24"),
+						resourceName, "retention_period", "24"),
 				),
 			},
-
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
 			{
 				Config: testAccKinesisStreamConfigUpdateRetentionPeriod(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "retention_period", "100"),
+						resourceName, "retention_period", "100"),
 				),
 			},
 
 			{
 				Config: testAccKinesisStreamConfigDecreaseRetentionPeriod(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "retention_period", "28"),
+						resourceName, "retention_period", "28"),
 				),
 			},
 		},
@@ -242,8 +312,9 @@ func TestAccAWSKinesisStream_retentionPeriod(t *testing.T) {
 
 func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 	var stream kinesis.StreamDescription
-
+	resourceName := "aws_kinesis_stream.test"
 	rInt := acctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -253,30 +324,36 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					resource.TestCheckNoResourceAttr(
-						"aws_kinesis_stream.test_stream", "shard_level_metrics"),
+						resourceName, "shard_level_metrics"),
 				),
 			},
-
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
+			},
 			{
 				Config: testAccKinesisStreamConfigAllShardLevelMetrics(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "shard_level_metrics.#", "7"),
+						resourceName, "shard_level_metrics.#", "7"),
 				),
 			},
 
 			{
 				Config: testAccKinesisStreamConfigSingleShardLevelMetric(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					resource.TestCheckResourceAttr(
-						"aws_kinesis_stream.test_stream", "shard_level_metrics.#", "1"),
+						resourceName, "shard_level_metrics.#", "1"),
 				),
 			},
 		},
@@ -285,8 +362,9 @@ func TestAccAWSKinesisStream_shardLevelMetrics(t *testing.T) {
 
 func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 	var stream kinesis.StreamDescription
-
+	resourceName := "aws_kinesis_stream.test"
 	rInt := acctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -296,10 +374,17 @@ func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 			{
 				Config: testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisStreamExists("aws_kinesis_stream.test_stream", &stream),
+					testAccCheckKinesisStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisStreamAttributes(&stream),
 					testAccAWSKinesisStreamRegisterStreamConsumer(&stream, fmt.Sprintf("tf-test-%d", rInt)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 		},
 	})
@@ -308,8 +393,8 @@ func TestAccAWSKinesisStream_enforceConsumerDeletion(t *testing.T) {
 func TestAccAWSKinesisStream_Tags(t *testing.T) {
 	var stream kinesis.StreamDescription
 	resourceName := "aws_kinesis_stream.test"
-
 	rInt := acctest.RandInt()
+	streamName := fmt.Sprintf("terraform-kinesis-test-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -322,6 +407,13 @@ func TestAccAWSKinesisStream_Tags(t *testing.T) {
 					testAccCheckKinesisStreamExists(resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "21"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateId:           streamName,
+				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 			{
 				Config: testAccKinesisStreamConfig_Tags(rInt, 9),
@@ -421,7 +513,7 @@ func testAccAWSKinesisStreamRegisterStreamConsumer(stream *kinesis.StreamDescrip
 
 func testAccKinesisStreamConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name        = "terraform-kinesis-test-%d"
   shard_count = 2
 
@@ -434,7 +526,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccKinesisStreamConfigConcurrent(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   count       = 20
   name        = "terraform-kinesis-test-%d-${count.index}"
   shard_count = 2
@@ -448,7 +540,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccKinesisStreamConfigWithEncryptionAndNoKmsKey(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name            = "terraform-kinesis-test-%d"
   shard_count     = 2
   encryption_type = "KMS"
@@ -462,7 +554,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccKinesisStreamConfigWithEncryption(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name            = "terraform-kinesis-test-%d"
   shard_count     = 2
   encryption_type = "KMS"
@@ -500,7 +592,7 @@ POLICY
 
 func testAccKinesisStreamConfigUpdateShardCount(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name        = "terraform-kinesis-test-%d"
   shard_count = 4
 
@@ -513,7 +605,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccKinesisStreamConfigUpdateRetentionPeriod(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name             = "terraform-kinesis-test-%d"
   shard_count      = 2
   retention_period = 100
@@ -527,7 +619,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccKinesisStreamConfigDecreaseRetentionPeriod(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name             = "terraform-kinesis-test-%d"
   shard_count      = 2
   retention_period = 28
@@ -541,7 +633,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccKinesisStreamConfigAllShardLevelMetrics(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name        = "terraform-kinesis-test-%d"
   shard_count = 2
 
@@ -564,7 +656,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 func testAccKinesisStreamConfigSingleShardLevelMetric(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name        = "terraform-kinesis-test-%d"
   shard_count = 2
 
@@ -599,7 +691,7 @@ resource "aws_kinesis_stream" "test" {
 
 func testAccKinesisStreamConfigWithEnforceConsumerDeletion(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_stream" "test_stream" {
+resource "aws_kinesis_stream" "test" {
   name                      = "terraform-kinesis-test-%d"
   shard_count               = 2
   enforce_consumer_deletion = true

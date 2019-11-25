@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_resource"
-sidebar_current: "docs-aws_api_gateway_resource"
 description: |-
   Get information on a API Gateway Resource
 ---

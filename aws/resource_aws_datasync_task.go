@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDataSyncTask() *schema.Resource {
@@ -99,7 +99,6 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							Optional: true,
 							Default:  datasync.PosixPermissionsPreserve,
 							ValidateFunc: validation.StringInSlice([]string{
-								datasync.PosixPermissionsBestEffort,
 								datasync.PosixPermissionsNone,
 								datasync.PosixPermissionsPreserve,
 							}, false),

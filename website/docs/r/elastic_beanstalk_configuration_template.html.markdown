@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_configuration_template"
-sidebar_current: "docs-aws-resource-elastic-beanstalk-configuration-template"
 description: |-
   Provides an Elastic Beanstalk Configuration Template
 ---

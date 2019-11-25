@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsOpsworksApplication() *schema.Resource {
@@ -444,12 +444,16 @@ func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks
 		if v.Username != nil {
 			m["username"] = *v.Username
 		}
-		if v.Password != nil {
-			m["password"] = *v.Password
-		}
 		if v.Revision != nil {
 			m["revision"] = *v.Revision
 		}
+
+		// v.Password and v.SshKey will, on read, contain the placeholder string
+		// "*****FILTERED*****", so we ignore it on read and let persist
+		// the value already in the state.
+		m["password"] = d.Get("app_source.0.password").(string)
+		m["ssh_key"] = d.Get("app_source.0.ssh_key").(string)
+
 		nv = append(nv, m)
 	}
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_mesh"
-sidebar_current: "docs-aws-resource-appmesh-mesh"
 description: |-
   Provides an AWS App Mesh service mesh resource.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeBuild"
 layout: "aws"
 page_title: "AWS: aws_codebuild_webhook"
-sidebar_current: "docs-aws-resource-codebuild-webhook"
 description: |-
   Provides a CodeBuild Webhook resource.
 ---

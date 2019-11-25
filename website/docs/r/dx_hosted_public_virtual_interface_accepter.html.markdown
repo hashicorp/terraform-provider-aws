@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_hosted_public_virtual_interface_accepter"
-sidebar_current: "docs-aws-resource-dx-hosted-public-virtual-interface-accepter"
 description: |-
   Provides a resource to manage the accepter's side of a Direct Connect hosted public virtual interface.
 ---

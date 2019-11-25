@@ -1,7 +1,7 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_endpoint"
-sidebar_current: "docs-aws-resource-sagemaker-endpoint"
 description: |-
   Provides a SageMaker Endpoint resource.
 ---

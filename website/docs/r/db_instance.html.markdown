@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_instance"
-sidebar_current: "docs-aws-resource-db-instance"
 description: |-
   Provides an RDS instance resource.
 ---
@@ -89,6 +89,7 @@ between `0` and `35`. Must be greater than `0` if the database is used as a sour
 * `backup_window` - (Optional) The daily time range (in UTC) during which
 automated backups are created if they are enabled. Example: "09:46-10:16". Must
 not overlap with `maintenance_window`.
+* `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
 encoding in Oracle instances. This can't be changed. See [Oracle Character Sets
 Supported in Amazon
