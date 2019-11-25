@@ -111,10 +111,12 @@ resource "aws_autoscaling_group" "example" {
 
       override {
         instance_type = "c4.large"
+        weighted_capacity = "3"
       }
 
       override {
         instance_type = "c3.large"
+        weighted_capacity = "2"
       }
     }
   }
@@ -245,7 +247,7 @@ The top-level `launch_template` block supports the following:
 ### mixed_instances_policy
 
 * `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
-* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
+* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types and weights. Defined below.
 
 #### mixed_instances_policy instances_distribution
 
@@ -280,6 +282,7 @@ This configuration block supports the following:
 This configuration block supports the following:
 
 * `instance_type` - (Optional) Override the instance type in the Launch Template.
+* `weighted_capacity` - (Optional) The number of capacity units, which gives the instance type a proportional weight to other instance types.
 
 ### tag and tags
 
