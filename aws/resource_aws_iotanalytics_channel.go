@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func generateChannelCustomerManagedS3Schema() *schema.Resource {
@@ -178,7 +180,7 @@ func resourceAwsIotAnalyticsChannelCreate(d *schema.ResourceData, meta interface
 	}
 
 	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
-		params.Tags = tagsFromMapIotAnalytics(tags)
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IotanalyticsTags()
 	}
 
 	channelStorageSet := d.Get("storage").(*schema.Set).List()
@@ -309,8 +311,15 @@ func resourceAwsIotAnalyticsChannelRead(d *schema.ResourceData, meta interface{}
 	d.Set("retention_period", wrapMapInList(retentionPeriod))
 	d.Set("arn", out.Channel.Arn)
 
-	if err := getTagsIotAnalytics(conn, d); err != nil {
-		return err
+	arn := *out.Channel.Arn
+	tags, err := keyvaluetags.IotanalyticsListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 	return nil
 }
@@ -358,8 +367,11 @@ func resourceAwsIotAnalyticsChannelUpdate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	if err := setTagsIotAnalytics(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.IotanalyticsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsIotAnalyticsChannelRead(d, meta)
