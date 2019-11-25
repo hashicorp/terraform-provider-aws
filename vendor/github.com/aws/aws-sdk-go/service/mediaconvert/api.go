@@ -6671,6 +6671,11 @@ type DvbSubDestinationSettings struct {
 	// burn-in and DVB-Sub font settings must match.
 	ShadowYOffset *int64 `locationName:"shadowYOffset" type:"integer"`
 
+	// Specify whether your DVB subtitles are standard or for hearing impaired.
+	// Choose hearing impaired if your subtitles include audio descriptions and
+	// dialogue. Choose standard if your subtitles include only dialogue.
+	SubtitlingType *string `locationName:"subtitlingType" type:"string" enum:"DvbSubtitlingType"`
+
 	// Only applies to jobs with input captions in Teletext or STL formats. Specify
 	// whether the spacing between letters in your captions is set by the captions
 	// grid or varies depending on letter width. Choose fixed grid to conform to
@@ -6807,6 +6812,12 @@ func (s *DvbSubDestinationSettings) SetShadowXOffset(v int64) *DvbSubDestination
 // SetShadowYOffset sets the ShadowYOffset field's value.
 func (s *DvbSubDestinationSettings) SetShadowYOffset(v int64) *DvbSubDestinationSettings {
 	s.ShadowYOffset = &v
+	return s
+}
+
+// SetSubtitlingType sets the SubtitlingType field's value.
+func (s *DvbSubDestinationSettings) SetSubtitlingType(v string) *DvbSubDestinationSettings {
+	s.SubtitlingType = &v
 	return s
 }
 
@@ -17229,6 +17240,13 @@ func (s *VideoPreprocessor) SetTimecodeBurnin(v *TimecodeBurnin) *VideoPreproces
 type VideoSelector struct {
 	_ struct{} `type:"structure"`
 
+	// Ignore this setting unless this input is a QuickTime animation. Specify which
+	// part of this input MediaConvert uses for your outputs. Leave this setting
+	// set to DISCARD in order to delete the alpha channel and preserve the video.
+	// Use REMAP_TO_LUMA for this setting to delete the video and map the alpha
+	// channel to the luma channel of your outputs.
+	AlphaBehavior *string `locationName:"alphaBehavior" type:"string" enum:"AlphaBehavior"`
+
 	// If your input video has accurate color space metadata, or if you don't know
 	// about color space, leave this set to the default value Follow (FOLLOW). The
 	// service will automatically detect your input color space. If your input video
@@ -17310,6 +17328,12 @@ func (s *VideoSelector) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlphaBehavior sets the AlphaBehavior field's value.
+func (s *VideoSelector) SetAlphaBehavior(v string) *VideoSelector {
+	s.AlphaBehavior = &v
+	return s
 }
 
 // SetColorSpace sets the ColorSpace field's value.
@@ -17651,6 +17675,19 @@ const (
 
 	// AfdSignalingFixed is a AfdSignaling enum value
 	AfdSignalingFixed = "FIXED"
+)
+
+// Ignore this setting unless this input is a QuickTime animation. Specify which
+// part of this input MediaConvert uses for your outputs. Leave this setting
+// set to DISCARD in order to delete the alpha channel and preserve the video.
+// Use REMAP_TO_LUMA for this setting to delete the video and map the alpha
+// channel to the luma channel of your outputs.
+const (
+	// AlphaBehaviorDiscard is a AlphaBehavior enum value
+	AlphaBehaviorDiscard = "DISCARD"
+
+	// AlphaBehaviorRemapToLuma is a AlphaBehavior enum value
+	AlphaBehaviorRemapToLuma = "REMAP_TO_LUMA"
 )
 
 // Specify whether this set of input captions appears in your outputs in both
@@ -18531,6 +18568,17 @@ const (
 
 	// DvbSubtitleTeletextSpacingProportional is a DvbSubtitleTeletextSpacing enum value
 	DvbSubtitleTeletextSpacingProportional = "PROPORTIONAL"
+)
+
+// Specify whether your DVB subtitles are standard or for hearing impaired.
+// Choose hearing impaired if your subtitles include audio descriptions and
+// dialogue. Choose standard if your subtitles include only dialogue.
+const (
+	// DvbSubtitlingTypeHearingImpaired is a DvbSubtitlingType enum value
+	DvbSubtitlingTypeHearingImpaired = "HEARING_IMPAIRED"
+
+	// DvbSubtitlingTypeStandard is a DvbSubtitlingType enum value
+	DvbSubtitlingTypeStandard = "STANDARD"
 )
 
 // Specify the bitstream mode for the E-AC-3 stream that the encoder emits.

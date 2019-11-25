@@ -8861,6 +8861,12 @@ func (c *RDS) ModifyDBClusterParameterGroupRequest(input *ModifyDBClusterParamet
 // or the DescribeDBClusterParameters action to verify that your DB cluster
 // parameter group has been created or modified.
 //
+// If the modified DB cluster parameter group is used by an Aurora Serverless
+// cluster, Aurora applies the update immediately. The cluster restart might
+// interrupt your workload. In that case, your application must reopen any connections
+// and retry any transactions that were active when the parameter changes took
+// effect.
+//
 // This action only applies to Aurora DB clusters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -12818,7 +12824,7 @@ type ApplyPendingMaintenanceActionInput struct {
 
 	// The pending maintenance action to apply to this resource.
 	//
-	// Valid values: system-update, db-upgrade, hardware-maintenance
+	// Valid values: system-update, db-upgrade, hardware-maintenance, ca-certificate-rotation
 	//
 	// ApplyAction is a required field
 	ApplyAction *string `type:"string" required:"true"`
@@ -14382,6 +14388,9 @@ type CreateDBClusterEndpointInput struct {
 
 	// List of DB instance identifiers that are part of the custom endpoint group.
 	StaticMembers []*string `type:"list"`
+
+	// The tags to be assigned to the Amazon RDS resource.
+	Tags []*Tag `locationNameList:"Tag" type:"list"`
 }
 
 // String returns the string representation
@@ -14440,6 +14449,12 @@ func (s *CreateDBClusterEndpointInput) SetExcludedMembers(v []*string) *CreateDB
 // SetStaticMembers sets the StaticMembers field's value.
 func (s *CreateDBClusterEndpointInput) SetStaticMembers(v []*string) *CreateDBClusterEndpointInput {
 	s.StaticMembers = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateDBClusterEndpointInput) SetTags(v []*Tag) *CreateDBClusterEndpointInput {
+	s.Tags = v
 	return s
 }
 
@@ -15739,8 +15754,10 @@ type CreateDBInstanceInput struct {
 	// values, see Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
 	// in the Amazon RDS User Guide.
 	//
-	// Constraints: Must be a multiple between 1 and 50 of the storage amount for
-	// the DB instance.
+	// Constraints: For MariaDB, MySQL, Oracle, and PostgreSQL DB instances, must
+	// be a multiple between .5 and 50 of the storage amount for the DB instance.
+	// For SQL Server DB instances, must be a multiple between 1 and 50 of the storage
+	// amount for the DB instance.
 	Iops *int64 `type:"integer"`
 
 	// The AWS KMS key identifier for an encrypted DB instance.
@@ -31495,7 +31512,7 @@ type PendingMaintenanceAction struct {
 	_ struct{} `type:"structure"`
 
 	// The type of pending maintenance action that is available for the resource.
-	// Valid actions are system-update, db-upgrade, and hardware-maintenance.
+	// Valid actions are system-update, db-upgrade, hardware-maintenance, and ca-certificate-rotation.
 	Action *string `type:"string"`
 
 	// The date of the maintenance window when the action is applied. The maintenance

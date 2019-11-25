@@ -11734,6 +11734,101 @@ func (c *SSM) UpdatePatchBaselineWithContext(ctx aws.Context, input *UpdatePatch
 	return out, req.Send()
 }
 
+const opUpdateResourceDataSync = "UpdateResourceDataSync"
+
+// UpdateResourceDataSyncRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateResourceDataSync operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateResourceDataSync for more information on using the UpdateResourceDataSync
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateResourceDataSyncRequest method.
+//    req, resp := client.UpdateResourceDataSyncRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateResourceDataSync
+func (c *SSM) UpdateResourceDataSyncRequest(input *UpdateResourceDataSyncInput) (req *request.Request, output *UpdateResourceDataSyncOutput) {
+	op := &request.Operation{
+		Name:       opUpdateResourceDataSync,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateResourceDataSyncInput{}
+	}
+
+	output = &UpdateResourceDataSyncOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
+//
+// Update a resource data sync. After you create a resource data sync for a
+// Region, you can't change the account options for that sync. For example,
+// if you create a sync in the us-east-2 (Ohio) Region and you choose the Include
+// only the current account option, you can't edit that sync later and choose
+// the Include all accounts from my AWS Organizations configuration option.
+// Instead, you must delete the first resource data sync, and create a new one.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation UpdateResourceDataSync for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
+//   The specified sync name was not found.
+//
+//   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
+//   The specified sync configuration is invalid.
+//
+//   * ErrCodeResourceDataSyncConflictException "ResourceDataSyncConflictException"
+//   Another UpdateResourceDataSync request is being processed. Wait a few minutes
+//   and try again.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateResourceDataSync
+func (c *SSM) UpdateResourceDataSync(input *UpdateResourceDataSyncInput) (*UpdateResourceDataSyncOutput, error) {
+	req, out := c.UpdateResourceDataSyncRequest(input)
+	return out, req.Send()
+}
+
+// UpdateResourceDataSyncWithContext is the same as UpdateResourceDataSync with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateResourceDataSync for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) UpdateResourceDataSyncWithContext(ctx aws.Context, input *UpdateResourceDataSyncInput, opts ...request.Option) (*UpdateResourceDataSyncOutput, error) {
+	req, out := c.UpdateResourceDataSyncRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateServiceSetting = "UpdateServiceSetting"
 
 // UpdateServiceSettingRequest generates a "aws/request.Request" representing the
@@ -11834,6 +11929,40 @@ func (c *SSM) UpdateServiceSettingWithContext(ctx aws.Context, input *UpdateServ
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Information includes the AWS account ID where the current document is shared
+// and the version shared with that account.
+type AccountSharingInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS account ID where the current document is shared.
+	AccountId *string `type:"string"`
+
+	// The version of the current document shared with the account.
+	SharedDocumentVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AccountSharingInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountSharingInfo) GoString() string {
+	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *AccountSharingInfo) SetAccountId(v string) *AccountSharingInfo {
+	s.AccountId = &v
+	return s
+}
+
+// SetSharedDocumentVersion sets the SharedDocumentVersion field's value.
+func (s *AccountSharingInfo) SetSharedDocumentVersion(v string) *AccountSharingInfo {
+	s.SharedDocumentVersion = &v
+	return s
 }
 
 // An activation registers one or more on-premises servers or virtual machines
@@ -15746,6 +15875,10 @@ type CreateDocumentInput struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
+
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
 	// a resource in different ways, such as by purpose, owner, or environment.
 	// For example, you might want to tag an SSM document to identify the types
@@ -15796,6 +15929,9 @@ func (s *CreateDocumentInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Requires != nil && len(s.Requires) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Requires", 1))
+	}
 	if s.Attachments != nil {
 		for i, v := range s.Attachments {
 			if v == nil {
@@ -15803,6 +15939,16 @@ func (s *CreateDocumentInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Attachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Requires != nil {
+		for i, v := range s.Requires {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Requires", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -15850,6 +15996,12 @@ func (s *CreateDocumentInput) SetDocumentType(v string) *CreateDocumentInput {
 // SetName sets the Name field's value.
 func (s *CreateDocumentInput) SetName(v string) *CreateDocumentInput {
 	s.Name = &v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *CreateDocumentInput) SetRequires(v []*DocumentRequires) *CreateDocumentInput {
+	s.Requires = v
 	return s
 }
 
@@ -16799,6 +16951,12 @@ type DeleteDocumentInput struct {
 	// versions of the document are deleted.
 	DocumentVersion *string `type:"string"`
 
+	// Some SSM document types require that you specify a Force flag before you
+	// can delete the document. For example, you must specify a Force flag to delete
+	// a document of type ApplicationConfigurationSchema. You can restrict access
+	// to the Force flag in an AWS Identity and Access Management (IAM) policy.
+	Force *bool `type:"boolean"`
+
 	// The name of the document.
 	//
 	// Name is a required field
@@ -16835,6 +16993,12 @@ func (s *DeleteDocumentInput) Validate() error {
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *DeleteDocumentInput) SetDocumentVersion(v string) *DeleteDocumentInput {
 	s.DocumentVersion = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteDocumentInput) SetForce(v bool) *DeleteDocumentInput {
+	s.Force = &v
 	return s
 }
 
@@ -18585,6 +18749,10 @@ type DescribeDocumentPermissionOutput struct {
 	// The account IDs that have permission to use this document. The ID can be
 	// either an AWS account or All.
 	AccountIds []*string `type:"list"`
+
+	// A list of of AWS accounts where the current document is shared and the version
+	// shared with each account.
+	AccountSharingInfoList []*AccountSharingInfo `type:"list"`
 }
 
 // String returns the string representation
@@ -18600,6 +18768,12 @@ func (s DescribeDocumentPermissionOutput) GoString() string {
 // SetAccountIds sets the AccountIds field's value.
 func (s *DescribeDocumentPermissionOutput) SetAccountIds(v []*string) *DescribeDocumentPermissionOutput {
 	s.AccountIds = v
+	return s
+}
+
+// SetAccountSharingInfoList sets the AccountSharingInfoList field's value.
+func (s *DescribeDocumentPermissionOutput) SetAccountSharingInfoList(v []*AccountSharingInfo) *DescribeDocumentPermissionOutput {
+	s.AccountSharingInfoList = v
 	return s
 }
 
@@ -20839,6 +21013,10 @@ type DescribePatchGroupStateOutput struct {
 	// The number of instances with installed patches.
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
+	// The number of instances with patches installed that have not been rebooted
+	// after the patch installation. The status of these instances is NON_COMPLIANT.
+	InstancesWithInstalledPendingRebootPatches *int64 `type:"integer"`
+
 	// The number of instances with patches installed that are specified in a RejectedPatches
 	// list. Patches with a status of INSTALLED_REJECTED were typically installed
 	// before they were added to a RejectedPatches list.
@@ -20889,6 +21067,12 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledOtherPatches(v 
 // SetInstancesWithInstalledPatches sets the InstancesWithInstalledPatches field's value.
 func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledPatches(v int64) *DescribePatchGroupStateOutput {
 	s.InstancesWithInstalledPatches = &v
+	return s
+}
+
+// SetInstancesWithInstalledPendingRebootPatches sets the InstancesWithInstalledPendingRebootPatches field's value.
+func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledPendingRebootPatches(v int64) *DescribePatchGroupStateOutput {
+	s.InstancesWithInstalledPendingRebootPatches = &v
 	return s
 }
 
@@ -21347,6 +21531,10 @@ type DocumentDescription struct {
 	// The list of OS platforms compatible with this Systems Manager document.
 	PlatformTypes []*string `type:"list"`
 
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
+
 	// The schema version.
 	SchemaVersion *string `type:"string"`
 
@@ -21466,6 +21654,12 @@ func (s *DocumentDescription) SetParameters(v []*DocumentParameter) *DocumentDes
 // SetPlatformTypes sets the PlatformTypes field's value.
 func (s *DocumentDescription) SetPlatformTypes(v []*string) *DocumentDescription {
 	s.PlatformTypes = v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *DocumentDescription) SetRequires(v []*DocumentRequires) *DocumentDescription {
+	s.Requires = v
 	return s
 }
 
@@ -21589,6 +21783,10 @@ type DocumentIdentifier struct {
 	// The operating system platform.
 	PlatformTypes []*string `type:"list"`
 
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
+
 	// The schema version.
 	SchemaVersion *string `type:"string"`
 
@@ -21650,6 +21848,12 @@ func (s *DocumentIdentifier) SetOwner(v string) *DocumentIdentifier {
 // SetPlatformTypes sets the PlatformTypes field's value.
 func (s *DocumentIdentifier) SetPlatformTypes(v []*string) *DocumentIdentifier {
 	s.PlatformTypes = v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *DocumentIdentifier) SetRequires(v []*DocumentRequires) *DocumentIdentifier {
+	s.Requires = v
 	return s
 }
 
@@ -21798,6 +22002,55 @@ func (s *DocumentParameter) SetName(v string) *DocumentParameter {
 // SetType sets the Type field's value.
 func (s *DocumentParameter) SetType(v string) *DocumentParameter {
 	s.Type = &v
+	return s
+}
+
+// An SSM document required by the current document.
+type DocumentRequires struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the required SSM document. The name can be an Amazon Resource
+	// Name (ARN).
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The document version required by the current document.
+	Version *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DocumentRequires) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DocumentRequires) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DocumentRequires) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DocumentRequires"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DocumentRequires) SetName(v string) *DocumentRequires {
+	s.Name = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *DocumentRequires) SetVersion(v string) *DocumentRequires {
+	s.Version = &v
 	return s
 }
 
@@ -22720,6 +22973,10 @@ type GetDocumentOutput struct {
 	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
+
 	// The status of the Systems Manager document, such as Creating, Active, Updating,
 	// Failed, and Deleting.
 	Status *string `type:"string" enum:"DocumentStatus"`
@@ -22779,6 +23036,12 @@ func (s *GetDocumentOutput) SetDocumentVersion(v string) *GetDocumentOutput {
 // SetName sets the Name field's value.
 func (s *GetDocumentOutput) SetName(v string) *GetDocumentOutput {
 	s.Name = &v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *GetDocumentOutput) SetRequires(v []*DocumentRequires) *GetDocumentOutput {
+	s.Requires = v
 	return s
 }
 
@@ -25578,6 +25841,9 @@ type InstancePatchState struct {
 	// on the instance.
 	InstalledOtherCount *int64 `type:"integer"`
 
+	// The number of patches installed since the last time the instance was rebooted.
+	InstalledPendingRebootCount *int64 `type:"integer"`
+
 	// The number of instances with patches installed that are specified in a RejectedPatches
 	// list. Patches with a status of InstalledRejected were typically installed
 	// before they were added to a RejectedPatches list.
@@ -25591,6 +25857,10 @@ type InstancePatchState struct {
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
+
+	// The time of the last attempt to patch the instance with NoReboot specified
+	// as the reboot option.
+	LastNoRebootInstallOperationTime *time.Time `type:"timestamp"`
 
 	// The number of patches from the patch baseline that are applicable for the
 	// instance but aren't currently installed.
@@ -25626,6 +25896,20 @@ type InstancePatchState struct {
 	//
 	// PatchGroup is a required field
 	PatchGroup *string `min:"1" type:"string" required:"true"`
+
+	// Indicates the reboot option specified in the patch baseline.
+	//
+	// Reboot options apply to Install operations only. Reboots are not attempted
+	// for Patch Manager Scan operations.
+	//
+	//    * RebootIfNeeded: Patch Manager tries to reboot the instance if it installed
+	//    any patches, or if any patches are detected with a status of InstalledPendingReboot.
+	//
+	//    * NoReboot: Patch Manager attempts to install missing packages without
+	//    trying to reboot the system. Patches installed with this option are assigned
+	//    a status of InstalledPendingReboot. These patches might not be in effect
+	//    until a reboot is performed.
+	RebootOption *string `type:"string" enum:"RebootOption"`
 
 	// The ID of the patch baseline snapshot used during the patching operation
 	// when this compliance data was collected.
@@ -25676,6 +25960,12 @@ func (s *InstancePatchState) SetInstalledOtherCount(v int64) *InstancePatchState
 	return s
 }
 
+// SetInstalledPendingRebootCount sets the InstalledPendingRebootCount field's value.
+func (s *InstancePatchState) SetInstalledPendingRebootCount(v int64) *InstancePatchState {
+	s.InstalledPendingRebootCount = &v
+	return s
+}
+
 // SetInstalledRejectedCount sets the InstalledRejectedCount field's value.
 func (s *InstancePatchState) SetInstalledRejectedCount(v int64) *InstancePatchState {
 	s.InstalledRejectedCount = &v
@@ -25685,6 +25975,12 @@ func (s *InstancePatchState) SetInstalledRejectedCount(v int64) *InstancePatchSt
 // SetInstanceId sets the InstanceId field's value.
 func (s *InstancePatchState) SetInstanceId(v string) *InstancePatchState {
 	s.InstanceId = &v
+	return s
+}
+
+// SetLastNoRebootInstallOperationTime sets the LastNoRebootInstallOperationTime field's value.
+func (s *InstancePatchState) SetLastNoRebootInstallOperationTime(v time.Time) *InstancePatchState {
+	s.LastNoRebootInstallOperationTime = &v
 	return s
 }
 
@@ -25727,6 +26023,12 @@ func (s *InstancePatchState) SetOwnerInformation(v string) *InstancePatchState {
 // SetPatchGroup sets the PatchGroup field's value.
 func (s *InstancePatchState) SetPatchGroup(v string) *InstancePatchState {
 	s.PatchGroup = &v
+	return s
+}
+
+// SetRebootOption sets the RebootOption field's value.
+func (s *InstancePatchState) SetRebootOption(v string) *InstancePatchState {
+	s.RebootOption = &v
 	return s
 }
 
@@ -27317,7 +27619,7 @@ type ListDocumentVersionsInput struct {
 	// results.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// The name of the document about which you want version information.
+	// The name of the document. You can specify an Amazon Resource Name (ARN).
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -29227,6 +29529,10 @@ type ModifyDocumentPermissionInput struct {
 	//
 	// PermissionType is a required field
 	PermissionType *string `type:"string" required:"true" enum:"DocumentPermissionType"`
+
+	// (Optional) The version of the document to share. If it's not specified, the
+	// system choose the Default version to share.
+	SharedDocumentVersion *string `type:"string"`
 }
 
 // String returns the string representation
@@ -29276,6 +29582,12 @@ func (s *ModifyDocumentPermissionInput) SetName(v string) *ModifyDocumentPermiss
 // SetPermissionType sets the PermissionType field's value.
 func (s *ModifyDocumentPermissionInput) SetPermissionType(v string) *ModifyDocumentPermissionInput {
 	s.PermissionType = &v
+	return s
+}
+
+// SetSharedDocumentVersion sets the SharedDocumentVersion field's value.
+func (s *ModifyDocumentPermissionInput) SetSharedDocumentVersion(v string) *ModifyDocumentPermissionInput {
+	s.SharedDocumentVersion = &v
 	return s
 }
 
@@ -31769,7 +32081,11 @@ type PutParameterInput struct {
 	//
 	// The maximum length constraint listed below includes capacity for additional
 	// system attributes that are not part of the name. The maximum length for the
-	// fully qualified parameter name is 1011 characters.
+	// fully qualified parameter name is 1011 characters, including the full length
+	// of the parameter ARN. For example, the following fully qualified parameter
+	// name is 65 characters, not 20 characters:
+	//
+	// arn:aws:ssm:us-east-2:111122223333:parameter/ExampleParameterName
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -37520,6 +37836,100 @@ func (s *UpdatePatchBaselineOutput) SetSources(v []*PatchSource) *UpdatePatchBas
 	return s
 }
 
+type UpdateResourceDataSyncInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the resource data sync you want to update.
+	//
+	// SyncName is a required field
+	SyncName *string `min:"1" type:"string" required:"true"`
+
+	// Specify information about the data sources to synchronize.
+	//
+	// SyncSource is a required field
+	SyncSource *ResourceDataSyncSource `type:"structure" required:"true"`
+
+	// The type of resource data sync. If SyncType is SyncToDestination, then the
+	// resource data sync synchronizes data to an Amazon S3 bucket. If the SyncType
+	// is SyncFromSource then the resource data sync synchronizes data from AWS
+	// Organizations or from multiple AWS Regions.
+	//
+	// SyncType is a required field
+	SyncType *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateResourceDataSyncInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateResourceDataSyncInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateResourceDataSyncInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateResourceDataSyncInput"}
+	if s.SyncName == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncName"))
+	}
+	if s.SyncName != nil && len(*s.SyncName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
+	}
+	if s.SyncSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncSource"))
+	}
+	if s.SyncType == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncType"))
+	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
+	if s.SyncSource != nil {
+		if err := s.SyncSource.Validate(); err != nil {
+			invalidParams.AddNested("SyncSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSyncName sets the SyncName field's value.
+func (s *UpdateResourceDataSyncInput) SetSyncName(v string) *UpdateResourceDataSyncInput {
+	s.SyncName = &v
+	return s
+}
+
+// SetSyncSource sets the SyncSource field's value.
+func (s *UpdateResourceDataSyncInput) SetSyncSource(v *ResourceDataSyncSource) *UpdateResourceDataSyncInput {
+	s.SyncSource = v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *UpdateResourceDataSyncInput) SetSyncType(v string) *UpdateResourceDataSyncInput {
+	s.SyncType = &v
+	return s
+}
+
+type UpdateResourceDataSyncOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateResourceDataSyncOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateResourceDataSyncOutput) GoString() string {
+	return s.String()
+}
+
 // The request body of the UpdateServiceSetting API action.
 type UpdateServiceSettingInput struct {
 	_ struct{} `type:"structure"`
@@ -37977,6 +38387,15 @@ const (
 
 	// DocumentTypePackage is a DocumentType enum value
 	DocumentTypePackage = "Package"
+
+	// DocumentTypeApplicationConfiguration is a DocumentType enum value
+	DocumentTypeApplicationConfiguration = "ApplicationConfiguration"
+
+	// DocumentTypeApplicationConfigurationSchema is a DocumentType enum value
+	DocumentTypeApplicationConfigurationSchema = "ApplicationConfigurationSchema"
+
+	// DocumentTypeDeploymentStrategy is a DocumentType enum value
+	DocumentTypeDeploymentStrategy = "DeploymentStrategy"
 )
 
 const (
@@ -38340,6 +38759,9 @@ const (
 	// PatchComplianceDataStateInstalledOther is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalledOther = "INSTALLED_OTHER"
 
+	// PatchComplianceDataStateInstalledPendingReboot is a PatchComplianceDataState enum value
+	PatchComplianceDataStateInstalledPendingReboot = "INSTALLED_PENDING_REBOOT"
+
 	// PatchComplianceDataStateInstalledRejected is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalledRejected = "INSTALLED_REJECTED"
 
@@ -38469,6 +38891,14 @@ const (
 
 	// PlatformTypeLinux is a PlatformType enum value
 	PlatformTypeLinux = "Linux"
+)
+
+const (
+	// RebootOptionRebootIfNeeded is a RebootOption enum value
+	RebootOptionRebootIfNeeded = "RebootIfNeeded"
+
+	// RebootOptionNoReboot is a RebootOption enum value
+	RebootOptionNoReboot = "NoReboot"
 )
 
 const (

@@ -372,6 +372,190 @@ func (c *MediaLive) CreateInputSecurityGroupWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opCreateMultiplex = "CreateMultiplex"
+
+// CreateMultiplexRequest generates a "aws/request.Request" representing the
+// client's request for the CreateMultiplex operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateMultiplex for more information on using the CreateMultiplex
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateMultiplexRequest method.
+//    req, resp := client.CreateMultiplexRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplex
+func (c *MediaLive) CreateMultiplexRequest(input *CreateMultiplexInput) (req *request.Request, output *CreateMultiplexOutput) {
+	op := &request.Operation{
+		Name:       opCreateMultiplex,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/multiplexes",
+	}
+
+	if input == nil {
+		input = &CreateMultiplexInput{}
+	}
+
+	output = &CreateMultiplexOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateMultiplex API operation for AWS Elemental MediaLive.
+//
+// Create a new multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation CreateMultiplex for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplex
+func (c *MediaLive) CreateMultiplex(input *CreateMultiplexInput) (*CreateMultiplexOutput, error) {
+	req, out := c.CreateMultiplexRequest(input)
+	return out, req.Send()
+}
+
+// CreateMultiplexWithContext is the same as CreateMultiplex with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateMultiplex for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) CreateMultiplexWithContext(ctx aws.Context, input *CreateMultiplexInput, opts ...request.Option) (*CreateMultiplexOutput, error) {
+	req, out := c.CreateMultiplexRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateMultiplexProgram = "CreateMultiplexProgram"
+
+// CreateMultiplexProgramRequest generates a "aws/request.Request" representing the
+// client's request for the CreateMultiplexProgram operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateMultiplexProgram for more information on using the CreateMultiplexProgram
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateMultiplexProgramRequest method.
+//    req, resp := client.CreateMultiplexProgramRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplexProgram
+func (c *MediaLive) CreateMultiplexProgramRequest(input *CreateMultiplexProgramInput) (req *request.Request, output *CreateMultiplexProgramOutput) {
+	op := &request.Operation{
+		Name:       opCreateMultiplexProgram,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}/programs",
+	}
+
+	if input == nil {
+		input = &CreateMultiplexProgramInput{}
+	}
+
+	output = &CreateMultiplexProgramOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateMultiplexProgram API operation for AWS Elemental MediaLive.
+//
+// Create a new program in the multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation CreateMultiplexProgram for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplexProgram
+func (c *MediaLive) CreateMultiplexProgram(input *CreateMultiplexProgramInput) (*CreateMultiplexProgramOutput, error) {
+	req, out := c.CreateMultiplexProgramRequest(input)
+	return out, req.Send()
+}
+
+// CreateMultiplexProgramWithContext is the same as CreateMultiplexProgram with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateMultiplexProgram for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) CreateMultiplexProgramWithContext(ctx aws.Context, input *CreateMultiplexProgramInput, opts ...request.Option) (*CreateMultiplexProgramOutput, error) {
+	req, out := c.CreateMultiplexProgramRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateTags = "CreateTags"
 
 // CreateTagsRequest generates a "aws/request.Request" representing the
@@ -728,6 +912,190 @@ func (c *MediaLive) DeleteInputSecurityGroup(input *DeleteInputSecurityGroupInpu
 // for more information on using Contexts.
 func (c *MediaLive) DeleteInputSecurityGroupWithContext(ctx aws.Context, input *DeleteInputSecurityGroupInput, opts ...request.Option) (*DeleteInputSecurityGroupOutput, error) {
 	req, out := c.DeleteInputSecurityGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteMultiplex = "DeleteMultiplex"
+
+// DeleteMultiplexRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteMultiplex operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteMultiplex for more information on using the DeleteMultiplex
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteMultiplexRequest method.
+//    req, resp := client.DeleteMultiplexRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplex
+func (c *MediaLive) DeleteMultiplexRequest(input *DeleteMultiplexInput) (req *request.Request, output *DeleteMultiplexOutput) {
+	op := &request.Operation{
+		Name:       opDeleteMultiplex,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}",
+	}
+
+	if input == nil {
+		input = &DeleteMultiplexInput{}
+	}
+
+	output = &DeleteMultiplexOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteMultiplex API operation for AWS Elemental MediaLive.
+//
+// Delete a multiplex. The multiplex must be idle.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DeleteMultiplex for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplex
+func (c *MediaLive) DeleteMultiplex(input *DeleteMultiplexInput) (*DeleteMultiplexOutput, error) {
+	req, out := c.DeleteMultiplexRequest(input)
+	return out, req.Send()
+}
+
+// DeleteMultiplexWithContext is the same as DeleteMultiplex with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMultiplex for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DeleteMultiplexWithContext(ctx aws.Context, input *DeleteMultiplexInput, opts ...request.Option) (*DeleteMultiplexOutput, error) {
+	req, out := c.DeleteMultiplexRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteMultiplexProgram = "DeleteMultiplexProgram"
+
+// DeleteMultiplexProgramRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteMultiplexProgram operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteMultiplexProgram for more information on using the DeleteMultiplexProgram
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteMultiplexProgramRequest method.
+//    req, resp := client.DeleteMultiplexProgramRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplexProgram
+func (c *MediaLive) DeleteMultiplexProgramRequest(input *DeleteMultiplexProgramInput) (req *request.Request, output *DeleteMultiplexProgramOutput) {
+	op := &request.Operation{
+		Name:       opDeleteMultiplexProgram,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}/programs/{programName}",
+	}
+
+	if input == nil {
+		input = &DeleteMultiplexProgramInput{}
+	}
+
+	output = &DeleteMultiplexProgramOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteMultiplexProgram API operation for AWS Elemental MediaLive.
+//
+// Delete a program from a multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DeleteMultiplexProgram for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplexProgram
+func (c *MediaLive) DeleteMultiplexProgram(input *DeleteMultiplexProgramInput) (*DeleteMultiplexProgramOutput, error) {
+	req, out := c.DeleteMultiplexProgramRequest(input)
+	return out, req.Send()
+}
+
+// DeleteMultiplexProgramWithContext is the same as DeleteMultiplexProgram with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteMultiplexProgram for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DeleteMultiplexProgramWithContext(ctx aws.Context, input *DeleteMultiplexProgramInput, opts ...request.Option) (*DeleteMultiplexProgramOutput, error) {
+	req, out := c.DeleteMultiplexProgramRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1266,6 +1634,186 @@ func (c *MediaLive) DescribeInputSecurityGroup(input *DescribeInputSecurityGroup
 // for more information on using Contexts.
 func (c *MediaLive) DescribeInputSecurityGroupWithContext(ctx aws.Context, input *DescribeInputSecurityGroupInput, opts ...request.Option) (*DescribeInputSecurityGroupOutput, error) {
 	req, out := c.DescribeInputSecurityGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeMultiplex = "DescribeMultiplex"
+
+// DescribeMultiplexRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeMultiplex operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeMultiplex for more information on using the DescribeMultiplex
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeMultiplexRequest method.
+//    req, resp := client.DescribeMultiplexRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplex
+func (c *MediaLive) DescribeMultiplexRequest(input *DescribeMultiplexInput) (req *request.Request, output *DescribeMultiplexOutput) {
+	op := &request.Operation{
+		Name:       opDescribeMultiplex,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}",
+	}
+
+	if input == nil {
+		input = &DescribeMultiplexInput{}
+	}
+
+	output = &DescribeMultiplexOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeMultiplex API operation for AWS Elemental MediaLive.
+//
+// Gets details about a multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeMultiplex for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplex
+func (c *MediaLive) DescribeMultiplex(input *DescribeMultiplexInput) (*DescribeMultiplexOutput, error) {
+	req, out := c.DescribeMultiplexRequest(input)
+	return out, req.Send()
+}
+
+// DescribeMultiplexWithContext is the same as DescribeMultiplex with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeMultiplex for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeMultiplexWithContext(ctx aws.Context, input *DescribeMultiplexInput, opts ...request.Option) (*DescribeMultiplexOutput, error) {
+	req, out := c.DescribeMultiplexRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeMultiplexProgram = "DescribeMultiplexProgram"
+
+// DescribeMultiplexProgramRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeMultiplexProgram operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeMultiplexProgram for more information on using the DescribeMultiplexProgram
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeMultiplexProgramRequest method.
+//    req, resp := client.DescribeMultiplexProgramRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplexProgram
+func (c *MediaLive) DescribeMultiplexProgramRequest(input *DescribeMultiplexProgramInput) (req *request.Request, output *DescribeMultiplexProgramOutput) {
+	op := &request.Operation{
+		Name:       opDescribeMultiplexProgram,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}/programs/{programName}",
+	}
+
+	if input == nil {
+		input = &DescribeMultiplexProgramInput{}
+	}
+
+	output = &DescribeMultiplexProgramOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeMultiplexProgram API operation for AWS Elemental MediaLive.
+//
+// Get the details for a program in a multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation DescribeMultiplexProgram for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplexProgram
+func (c *MediaLive) DescribeMultiplexProgram(input *DescribeMultiplexProgramInput) (*DescribeMultiplexProgramOutput, error) {
+	req, out := c.DescribeMultiplexProgramRequest(input)
+	return out, req.Send()
+}
+
+// DescribeMultiplexProgramWithContext is the same as DescribeMultiplexProgram with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeMultiplexProgram for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) DescribeMultiplexProgramWithContext(ctx aws.Context, input *DescribeMultiplexProgramInput, opts ...request.Option) (*DescribeMultiplexProgramOutput, error) {
+	req, out := c.DescribeMultiplexProgramRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2037,6 +2585,300 @@ func (c *MediaLive) ListInputsPagesWithContext(ctx aws.Context, input *ListInput
 	return p.Err()
 }
 
+const opListMultiplexPrograms = "ListMultiplexPrograms"
+
+// ListMultiplexProgramsRequest generates a "aws/request.Request" representing the
+// client's request for the ListMultiplexPrograms operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListMultiplexPrograms for more information on using the ListMultiplexPrograms
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListMultiplexProgramsRequest method.
+//    req, resp := client.ListMultiplexProgramsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexPrograms
+func (c *MediaLive) ListMultiplexProgramsRequest(input *ListMultiplexProgramsInput) (req *request.Request, output *ListMultiplexProgramsOutput) {
+	op := &request.Operation{
+		Name:       opListMultiplexPrograms,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}/programs",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListMultiplexProgramsInput{}
+	}
+
+	output = &ListMultiplexProgramsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListMultiplexPrograms API operation for AWS Elemental MediaLive.
+//
+// List the programs that currently exist for a specific multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation ListMultiplexPrograms for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexPrograms
+func (c *MediaLive) ListMultiplexPrograms(input *ListMultiplexProgramsInput) (*ListMultiplexProgramsOutput, error) {
+	req, out := c.ListMultiplexProgramsRequest(input)
+	return out, req.Send()
+}
+
+// ListMultiplexProgramsWithContext is the same as ListMultiplexPrograms with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMultiplexPrograms for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListMultiplexProgramsWithContext(ctx aws.Context, input *ListMultiplexProgramsInput, opts ...request.Option) (*ListMultiplexProgramsOutput, error) {
+	req, out := c.ListMultiplexProgramsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListMultiplexProgramsPages iterates over the pages of a ListMultiplexPrograms operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListMultiplexPrograms method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListMultiplexPrograms operation.
+//    pageNum := 0
+//    err := client.ListMultiplexProgramsPages(params,
+//        func(page *medialive.ListMultiplexProgramsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaLive) ListMultiplexProgramsPages(input *ListMultiplexProgramsInput, fn func(*ListMultiplexProgramsOutput, bool) bool) error {
+	return c.ListMultiplexProgramsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListMultiplexProgramsPagesWithContext same as ListMultiplexProgramsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListMultiplexProgramsPagesWithContext(ctx aws.Context, input *ListMultiplexProgramsInput, fn func(*ListMultiplexProgramsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListMultiplexProgramsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListMultiplexProgramsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListMultiplexProgramsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListMultiplexes = "ListMultiplexes"
+
+// ListMultiplexesRequest generates a "aws/request.Request" representing the
+// client's request for the ListMultiplexes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListMultiplexes for more information on using the ListMultiplexes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListMultiplexesRequest method.
+//    req, resp := client.ListMultiplexesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexes
+func (c *MediaLive) ListMultiplexesRequest(input *ListMultiplexesInput) (req *request.Request, output *ListMultiplexesOutput) {
+	op := &request.Operation{
+		Name:       opListMultiplexes,
+		HTTPMethod: "GET",
+		HTTPPath:   "/prod/multiplexes",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListMultiplexesInput{}
+	}
+
+	output = &ListMultiplexesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListMultiplexes API operation for AWS Elemental MediaLive.
+//
+// Retrieve a list of the existing multiplexes.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation ListMultiplexes for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexes
+func (c *MediaLive) ListMultiplexes(input *ListMultiplexesInput) (*ListMultiplexesOutput, error) {
+	req, out := c.ListMultiplexesRequest(input)
+	return out, req.Send()
+}
+
+// ListMultiplexesWithContext is the same as ListMultiplexes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListMultiplexes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListMultiplexesWithContext(ctx aws.Context, input *ListMultiplexesInput, opts ...request.Option) (*ListMultiplexesOutput, error) {
+	req, out := c.ListMultiplexesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListMultiplexesPages iterates over the pages of a ListMultiplexes operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListMultiplexes method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListMultiplexes operation.
+//    pageNum := 0
+//    err := client.ListMultiplexesPages(params,
+//        func(page *medialive.ListMultiplexesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *MediaLive) ListMultiplexesPages(input *ListMultiplexesInput, fn func(*ListMultiplexesOutput, bool) bool) error {
+	return c.ListMultiplexesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListMultiplexesPagesWithContext same as ListMultiplexesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) ListMultiplexesPagesWithContext(ctx aws.Context, input *ListMultiplexesInput, fn func(*ListMultiplexesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListMultiplexesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListMultiplexesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListMultiplexesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListOfferings = "ListOfferings"
 
 // ListOfferingsRequest generates a "aws/request.Request" representing the
@@ -2597,6 +3439,99 @@ func (c *MediaLive) StartChannelWithContext(ctx aws.Context, input *StartChannel
 	return out, req.Send()
 }
 
+const opStartMultiplex = "StartMultiplex"
+
+// StartMultiplexRequest generates a "aws/request.Request" representing the
+// client's request for the StartMultiplex operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartMultiplex for more information on using the StartMultiplex
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartMultiplexRequest method.
+//    req, resp := client.StartMultiplexRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartMultiplex
+func (c *MediaLive) StartMultiplexRequest(input *StartMultiplexInput) (req *request.Request, output *StartMultiplexOutput) {
+	op := &request.Operation{
+		Name:       opStartMultiplex,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}/start",
+	}
+
+	if input == nil {
+		input = &StartMultiplexInput{}
+	}
+
+	output = &StartMultiplexOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartMultiplex API operation for AWS Elemental MediaLive.
+//
+// Start (run) the multiplex. Starting the multiplex does not start the channels.
+// You must explicitly start each channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation StartMultiplex for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartMultiplex
+func (c *MediaLive) StartMultiplex(input *StartMultiplexInput) (*StartMultiplexOutput, error) {
+	req, out := c.StartMultiplexRequest(input)
+	return out, req.Send()
+}
+
+// StartMultiplexWithContext is the same as StartMultiplex with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartMultiplex for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) StartMultiplexWithContext(ctx aws.Context, input *StartMultiplexInput, opts ...request.Option) (*StartMultiplexOutput, error) {
+	req, out := c.StartMultiplexRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStopChannel = "StopChannel"
 
 // StopChannelRequest generates a "aws/request.Request" representing the
@@ -2684,6 +3619,99 @@ func (c *MediaLive) StopChannel(input *StopChannelInput) (*StopChannelOutput, er
 // for more information on using Contexts.
 func (c *MediaLive) StopChannelWithContext(ctx aws.Context, input *StopChannelInput, opts ...request.Option) (*StopChannelOutput, error) {
 	req, out := c.StopChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopMultiplex = "StopMultiplex"
+
+// StopMultiplexRequest generates a "aws/request.Request" representing the
+// client's request for the StopMultiplex operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopMultiplex for more information on using the StopMultiplex
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopMultiplexRequest method.
+//    req, resp := client.StopMultiplexRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopMultiplex
+func (c *MediaLive) StopMultiplexRequest(input *StopMultiplexInput) (req *request.Request, output *StopMultiplexOutput) {
+	op := &request.Operation{
+		Name:       opStopMultiplex,
+		HTTPMethod: "POST",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}/stop",
+	}
+
+	if input == nil {
+		input = &StopMultiplexInput{}
+	}
+
+	output = &StopMultiplexOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StopMultiplex API operation for AWS Elemental MediaLive.
+//
+// Stops a running multiplex. If the multiplex isn't running, this action has
+// no effect.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation StopMultiplex for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopMultiplex
+func (c *MediaLive) StopMultiplex(input *StopMultiplexInput) (*StopMultiplexOutput, error) {
+	req, out := c.StopMultiplexRequest(input)
+	return out, req.Send()
+}
+
+// StopMultiplexWithContext is the same as StopMultiplex with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopMultiplex for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) StopMultiplexWithContext(ctx aws.Context, input *StopMultiplexInput, opts ...request.Option) (*StopMultiplexOutput, error) {
+	req, out := c.StopMultiplexRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3048,6 +4076,190 @@ func (c *MediaLive) UpdateInputSecurityGroup(input *UpdateInputSecurityGroupInpu
 // for more information on using Contexts.
 func (c *MediaLive) UpdateInputSecurityGroupWithContext(ctx aws.Context, input *UpdateInputSecurityGroupInput, opts ...request.Option) (*UpdateInputSecurityGroupOutput, error) {
 	req, out := c.UpdateInputSecurityGroupRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateMultiplex = "UpdateMultiplex"
+
+// UpdateMultiplexRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateMultiplex operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateMultiplex for more information on using the UpdateMultiplex
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateMultiplexRequest method.
+//    req, resp := client.UpdateMultiplexRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplex
+func (c *MediaLive) UpdateMultiplexRequest(input *UpdateMultiplexInput) (req *request.Request, output *UpdateMultiplexOutput) {
+	op := &request.Operation{
+		Name:       opUpdateMultiplex,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}",
+	}
+
+	if input == nil {
+		input = &UpdateMultiplexInput{}
+	}
+
+	output = &UpdateMultiplexOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateMultiplex API operation for AWS Elemental MediaLive.
+//
+// Updates a multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateMultiplex for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplex
+func (c *MediaLive) UpdateMultiplex(input *UpdateMultiplexInput) (*UpdateMultiplexOutput, error) {
+	req, out := c.UpdateMultiplexRequest(input)
+	return out, req.Send()
+}
+
+// UpdateMultiplexWithContext is the same as UpdateMultiplex with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMultiplex for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateMultiplexWithContext(ctx aws.Context, input *UpdateMultiplexInput, opts ...request.Option) (*UpdateMultiplexOutput, error) {
+	req, out := c.UpdateMultiplexRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateMultiplexProgram = "UpdateMultiplexProgram"
+
+// UpdateMultiplexProgramRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateMultiplexProgram operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateMultiplexProgram for more information on using the UpdateMultiplexProgram
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateMultiplexProgramRequest method.
+//    req, resp := client.UpdateMultiplexProgramRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplexProgram
+func (c *MediaLive) UpdateMultiplexProgramRequest(input *UpdateMultiplexProgramInput) (req *request.Request, output *UpdateMultiplexProgramOutput) {
+	op := &request.Operation{
+		Name:       opUpdateMultiplexProgram,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/prod/multiplexes/{multiplexId}/programs/{programName}",
+	}
+
+	if input == nil {
+		input = &UpdateMultiplexProgramInput{}
+	}
+
+	output = &UpdateMultiplexProgramOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateMultiplexProgram API operation for AWS Elemental MediaLive.
+//
+// Update a program in a multiplex.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Elemental MediaLive's
+// API operation UpdateMultiplexProgram for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//
+//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//
+//   * ErrCodeBadGatewayException "BadGatewayException"
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//
+//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//
+//   * ErrCodeConflictException "ConflictException"
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplexProgram
+func (c *MediaLive) UpdateMultiplexProgram(input *UpdateMultiplexProgramInput) (*UpdateMultiplexProgramOutput, error) {
+	req, out := c.UpdateMultiplexProgramRequest(input)
+	return out, req.Send()
+}
+
+// UpdateMultiplexProgramWithContext is the same as UpdateMultiplexProgram with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMultiplexProgram for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *MediaLive) UpdateMultiplexProgramWithContext(ctx aws.Context, input *UpdateMultiplexProgramInput, opts ...request.Option) (*UpdateMultiplexProgramOutput, error) {
+	req, out := c.UpdateMultiplexProgramRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4854,8 +6066,7 @@ func (s *BurnInDestinationSettings) SetYPosition(v int64) *BurnInDestinationSett
 	return s
 }
 
-// Output groups for this Live Event. Output groups contain information about
-// where streams should be distributed.
+// Caption Description
 type CaptionDescription struct {
 	_ struct{} `type:"structure"`
 
@@ -6004,6 +7215,213 @@ func (s *CreateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup)
 	return s
 }
 
+type CreateMultiplexInput struct {
+	_ struct{} `type:"structure"`
+
+	// AvailabilityZones is a required field
+	AvailabilityZones []*string `locationName:"availabilityZones" type:"list" required:"true"`
+
+	// Contains configuration for a Multiplex event
+	//
+	// MultiplexSettings is a required field
+	MultiplexSettings *MultiplexSettings `locationName:"multiplexSettings" type:"structure" required:"true"`
+
+	// Name is a required field
+	Name *string `locationName:"name" type:"string" required:"true"`
+
+	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s CreateMultiplexInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMultiplexInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateMultiplexInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateMultiplexInput"}
+	if s.AvailabilityZones == nil {
+		invalidParams.Add(request.NewErrParamRequired("AvailabilityZones"))
+	}
+	if s.MultiplexSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexSettings"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.MultiplexSettings != nil {
+		if err := s.MultiplexSettings.Validate(); err != nil {
+			invalidParams.AddNested("MultiplexSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *CreateMultiplexInput) SetAvailabilityZones(v []*string) *CreateMultiplexInput {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *CreateMultiplexInput) SetMultiplexSettings(v *MultiplexSettings) *CreateMultiplexInput {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *CreateMultiplexInput) SetName(v string) *CreateMultiplexInput {
+	s.Name = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *CreateMultiplexInput) SetRequestId(v string) *CreateMultiplexInput {
+	s.RequestId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateMultiplexInput) SetTags(v map[string]*string) *CreateMultiplexInput {
+	s.Tags = v
+	return s
+}
+
+type CreateMultiplexOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The multiplex object.
+	Multiplex *Multiplex `locationName:"multiplex" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateMultiplexOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMultiplexOutput) GoString() string {
+	return s.String()
+}
+
+// SetMultiplex sets the Multiplex field's value.
+func (s *CreateMultiplexOutput) SetMultiplex(v *Multiplex) *CreateMultiplexOutput {
+	s.Multiplex = v
+	return s
+}
+
+type CreateMultiplexProgramInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+
+	// Multiplex Program settings configuration.
+	//
+	// MultiplexProgramSettings is a required field
+	MultiplexProgramSettings *MultiplexProgramSettings `locationName:"multiplexProgramSettings" type:"structure" required:"true"`
+
+	// ProgramName is a required field
+	ProgramName *string `locationName:"programName" type:"string" required:"true"`
+
+	RequestId *string `locationName:"requestId" type:"string" idempotencyToken:"true"`
+}
+
+// String returns the string representation
+func (s CreateMultiplexProgramInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMultiplexProgramInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateMultiplexProgramInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateMultiplexProgramInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+	if s.MultiplexProgramSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexProgramSettings"))
+	}
+	if s.ProgramName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProgramName"))
+	}
+	if s.MultiplexProgramSettings != nil {
+		if err := s.MultiplexProgramSettings.Validate(); err != nil {
+			invalidParams.AddNested("MultiplexProgramSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *CreateMultiplexProgramInput) SetMultiplexId(v string) *CreateMultiplexProgramInput {
+	s.MultiplexId = &v
+	return s
+}
+
+// SetMultiplexProgramSettings sets the MultiplexProgramSettings field's value.
+func (s *CreateMultiplexProgramInput) SetMultiplexProgramSettings(v *MultiplexProgramSettings) *CreateMultiplexProgramInput {
+	s.MultiplexProgramSettings = v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *CreateMultiplexProgramInput) SetProgramName(v string) *CreateMultiplexProgramInput {
+	s.ProgramName = &v
+	return s
+}
+
+// SetRequestId sets the RequestId field's value.
+func (s *CreateMultiplexProgramInput) SetRequestId(v string) *CreateMultiplexProgramInput {
+	s.RequestId = &v
+	return s
+}
+
+type CreateMultiplexProgramOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The multiplex program object.
+	MultiplexProgram *MultiplexProgram `locationName:"multiplexProgram" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateMultiplexProgramOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateMultiplexProgramOutput) GoString() string {
+	return s.String()
+}
+
+// SetMultiplexProgram sets the MultiplexProgram field's value.
+func (s *CreateMultiplexProgramOutput) SetMultiplexProgram(v *MultiplexProgram) *CreateMultiplexProgramOutput {
+	s.MultiplexProgram = v
+	return s
+}
+
 type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6346,6 +7764,243 @@ func (s DeleteInputSecurityGroupOutput) String() string {
 // GoString returns the string representation
 func (s DeleteInputSecurityGroupOutput) GoString() string {
 	return s.String()
+}
+
+type DeleteMultiplexInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteMultiplexInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMultiplexInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteMultiplexInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteMultiplexInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *DeleteMultiplexInput) SetMultiplexId(v string) *DeleteMultiplexInput {
+	s.MultiplexId = &v
+	return s
+}
+
+type DeleteMultiplexOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	AvailabilityZones []*string `locationName:"availabilityZones" type:"list"`
+
+	Destinations []*MultiplexOutputDestination `locationName:"destinations" type:"list"`
+
+	Id *string `locationName:"id" type:"string"`
+
+	// Contains configuration for a Multiplex event
+	MultiplexSettings *MultiplexSettings `locationName:"multiplexSettings" type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
+
+	ProgramCount *int64 `locationName:"programCount" type:"integer"`
+
+	// The current state of the multiplex.
+	State *string `locationName:"state" type:"string" enum:"MultiplexState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s DeleteMultiplexOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMultiplexOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DeleteMultiplexOutput) SetArn(v string) *DeleteMultiplexOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *DeleteMultiplexOutput) SetAvailabilityZones(v []*string) *DeleteMultiplexOutput {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *DeleteMultiplexOutput) SetDestinations(v []*MultiplexOutputDestination) *DeleteMultiplexOutput {
+	s.Destinations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteMultiplexOutput) SetId(v string) *DeleteMultiplexOutput {
+	s.Id = &v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *DeleteMultiplexOutput) SetMultiplexSettings(v *MultiplexSettings) *DeleteMultiplexOutput {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DeleteMultiplexOutput) SetName(v string) *DeleteMultiplexOutput {
+	s.Name = &v
+	return s
+}
+
+// SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
+func (s *DeleteMultiplexOutput) SetPipelinesRunningCount(v int64) *DeleteMultiplexOutput {
+	s.PipelinesRunningCount = &v
+	return s
+}
+
+// SetProgramCount sets the ProgramCount field's value.
+func (s *DeleteMultiplexOutput) SetProgramCount(v int64) *DeleteMultiplexOutput {
+	s.ProgramCount = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DeleteMultiplexOutput) SetState(v string) *DeleteMultiplexOutput {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DeleteMultiplexOutput) SetTags(v map[string]*string) *DeleteMultiplexOutput {
+	s.Tags = v
+	return s
+}
+
+type DeleteMultiplexProgramInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+
+	// ProgramName is a required field
+	ProgramName *string `location:"uri" locationName:"programName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteMultiplexProgramInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMultiplexProgramInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteMultiplexProgramInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteMultiplexProgramInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+	if s.ProgramName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProgramName"))
+	}
+	if s.ProgramName != nil && len(*s.ProgramName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProgramName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *DeleteMultiplexProgramInput) SetMultiplexId(v string) *DeleteMultiplexProgramInput {
+	s.MultiplexId = &v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *DeleteMultiplexProgramInput) SetProgramName(v string) *DeleteMultiplexProgramInput {
+	s.ProgramName = &v
+	return s
+}
+
+type DeleteMultiplexProgramOutput struct {
+	_ struct{} `type:"structure"`
+
+	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// Multiplex Program settings configuration.
+	MultiplexProgramSettings *MultiplexProgramSettings `locationName:"multiplexProgramSettings" type:"structure"`
+
+	// Packet identifiers map for a given Multiplex program.
+	PacketIdentifiersMap *MultiplexProgramPacketIdentifiersMap `locationName:"packetIdentifiersMap" type:"structure"`
+
+	ProgramName *string `locationName:"programName" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteMultiplexProgramOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteMultiplexProgramOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *DeleteMultiplexProgramOutput) SetChannelId(v string) *DeleteMultiplexProgramOutput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetMultiplexProgramSettings sets the MultiplexProgramSettings field's value.
+func (s *DeleteMultiplexProgramOutput) SetMultiplexProgramSettings(v *MultiplexProgramSettings) *DeleteMultiplexProgramOutput {
+	s.MultiplexProgramSettings = v
+	return s
+}
+
+// SetPacketIdentifiersMap sets the PacketIdentifiersMap field's value.
+func (s *DeleteMultiplexProgramOutput) SetPacketIdentifiersMap(v *MultiplexProgramPacketIdentifiersMap) *DeleteMultiplexProgramOutput {
+	s.PacketIdentifiersMap = v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *DeleteMultiplexProgramOutput) SetProgramName(v string) *DeleteMultiplexProgramOutput {
+	s.ProgramName = &v
+	return s
 }
 
 type DeleteReservationInput struct {
@@ -7112,6 +8767,243 @@ func (s *DescribeInputSecurityGroupOutput) SetTags(v map[string]*string) *Descri
 // SetWhitelistRules sets the WhitelistRules field's value.
 func (s *DescribeInputSecurityGroupOutput) SetWhitelistRules(v []*InputWhitelistRule) *DescribeInputSecurityGroupOutput {
 	s.WhitelistRules = v
+	return s
+}
+
+type DescribeMultiplexInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeMultiplexInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMultiplexInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMultiplexInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMultiplexInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *DescribeMultiplexInput) SetMultiplexId(v string) *DescribeMultiplexInput {
+	s.MultiplexId = &v
+	return s
+}
+
+type DescribeMultiplexOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	AvailabilityZones []*string `locationName:"availabilityZones" type:"list"`
+
+	Destinations []*MultiplexOutputDestination `locationName:"destinations" type:"list"`
+
+	Id *string `locationName:"id" type:"string"`
+
+	// Contains configuration for a Multiplex event
+	MultiplexSettings *MultiplexSettings `locationName:"multiplexSettings" type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
+
+	ProgramCount *int64 `locationName:"programCount" type:"integer"`
+
+	// The current state of the multiplex.
+	State *string `locationName:"state" type:"string" enum:"MultiplexState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s DescribeMultiplexOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMultiplexOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *DescribeMultiplexOutput) SetArn(v string) *DescribeMultiplexOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *DescribeMultiplexOutput) SetAvailabilityZones(v []*string) *DescribeMultiplexOutput {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *DescribeMultiplexOutput) SetDestinations(v []*MultiplexOutputDestination) *DescribeMultiplexOutput {
+	s.Destinations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *DescribeMultiplexOutput) SetId(v string) *DescribeMultiplexOutput {
+	s.Id = &v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *DescribeMultiplexOutput) SetMultiplexSettings(v *MultiplexSettings) *DescribeMultiplexOutput {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *DescribeMultiplexOutput) SetName(v string) *DescribeMultiplexOutput {
+	s.Name = &v
+	return s
+}
+
+// SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
+func (s *DescribeMultiplexOutput) SetPipelinesRunningCount(v int64) *DescribeMultiplexOutput {
+	s.PipelinesRunningCount = &v
+	return s
+}
+
+// SetProgramCount sets the ProgramCount field's value.
+func (s *DescribeMultiplexOutput) SetProgramCount(v int64) *DescribeMultiplexOutput {
+	s.ProgramCount = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *DescribeMultiplexOutput) SetState(v string) *DescribeMultiplexOutput {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *DescribeMultiplexOutput) SetTags(v map[string]*string) *DescribeMultiplexOutput {
+	s.Tags = v
+	return s
+}
+
+type DescribeMultiplexProgramInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+
+	// ProgramName is a required field
+	ProgramName *string `location:"uri" locationName:"programName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeMultiplexProgramInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMultiplexProgramInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeMultiplexProgramInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeMultiplexProgramInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+	if s.ProgramName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProgramName"))
+	}
+	if s.ProgramName != nil && len(*s.ProgramName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProgramName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *DescribeMultiplexProgramInput) SetMultiplexId(v string) *DescribeMultiplexProgramInput {
+	s.MultiplexId = &v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *DescribeMultiplexProgramInput) SetProgramName(v string) *DescribeMultiplexProgramInput {
+	s.ProgramName = &v
+	return s
+}
+
+type DescribeMultiplexProgramOutput struct {
+	_ struct{} `type:"structure"`
+
+	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// Multiplex Program settings configuration.
+	MultiplexProgramSettings *MultiplexProgramSettings `locationName:"multiplexProgramSettings" type:"structure"`
+
+	// Packet identifiers map for a given Multiplex program.
+	PacketIdentifiersMap *MultiplexProgramPacketIdentifiersMap `locationName:"packetIdentifiersMap" type:"structure"`
+
+	ProgramName *string `locationName:"programName" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeMultiplexProgramOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeMultiplexProgramOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *DescribeMultiplexProgramOutput) SetChannelId(v string) *DescribeMultiplexProgramOutput {
+	s.ChannelId = &v
+	return s
+}
+
+// SetMultiplexProgramSettings sets the MultiplexProgramSettings field's value.
+func (s *DescribeMultiplexProgramOutput) SetMultiplexProgramSettings(v *MultiplexProgramSettings) *DescribeMultiplexProgramOutput {
+	s.MultiplexProgramSettings = v
+	return s
+}
+
+// SetPacketIdentifiersMap sets the PacketIdentifiersMap field's value.
+func (s *DescribeMultiplexProgramOutput) SetPacketIdentifiersMap(v *MultiplexProgramPacketIdentifiersMap) *DescribeMultiplexProgramOutput {
+	s.PacketIdentifiersMap = v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *DescribeMultiplexProgramOutput) SetProgramName(v string) *DescribeMultiplexProgramOutput {
+	s.ProgramName = &v
 	return s
 }
 
@@ -8351,6 +10243,9 @@ type EncoderSettings struct {
 	// Configuration settings that apply to the event as a whole.
 	GlobalConfiguration *GlobalConfiguration `locationName:"globalConfiguration" type:"structure"`
 
+	// Nielsen configuration settings.
+	NielsenConfiguration *NielsenConfiguration `locationName:"nielsenConfiguration" type:"structure"`
+
 	// OutputGroups is a required field
 	OutputGroups []*OutputGroup `locationName:"outputGroups" type:"list" required:"true"`
 
@@ -8493,6 +10388,12 @@ func (s *EncoderSettings) SetCaptionDescriptions(v []*CaptionDescription) *Encod
 // SetGlobalConfiguration sets the GlobalConfiguration field's value.
 func (s *EncoderSettings) SetGlobalConfiguration(v *GlobalConfiguration) *EncoderSettings {
 	s.GlobalConfiguration = v
+	return s
+}
+
+// SetNielsenConfiguration sets the NielsenConfiguration field's value.
+func (s *EncoderSettings) SetNielsenConfiguration(v *NielsenConfiguration) *EncoderSettings {
+	s.NielsenConfiguration = v
 	return s
 }
 
@@ -8750,8 +10651,8 @@ func (s *FrameCaptureOutputSettings) SetNameModifier(v string) *FrameCaptureOutp
 type FrameCaptureSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The frequency, in seconds, for capturing frames for inclusion in the output.
-	// For example, "10" means capture a frame every 10 seconds.
+	// The frequency at which to capture frames for inclusion in the output. May
+	// be specified in either seconds or milliseconds, as specified by captureIntervalUnits.
 	//
 	// CaptureInterval is a required field
 	CaptureInterval *int64 `locationName:"captureInterval" min:"1" type:"integer" required:"true"`
@@ -9000,8 +10901,10 @@ type H264Settings struct {
 	// Number of B-frames between reference frames.
 	GopNumBFrames *int64 `locationName:"gopNumBFrames" type:"integer"`
 
-	// GOP size (keyframe interval) in units of either frames or seconds per gopSizeUnits.
-	// Must be greater than zero.
+	// GOP size (keyframe interval) in units of either frames or seconds per gopSizeUnits.If
+	// gopSizeUnits is frames, gopSize must be an integer and must be greater than
+	// or equal to 1.If gopSizeUnits is seconds, gopSize must be greater than 0,
+	// but need not be an integer.
 	GopSize *float64 `locationName:"gopSize" type:"double"`
 
 	// Indicates if the gopSize is specified in frames or seconds. If seconds the
@@ -9019,13 +10922,13 @@ type H264Settings struct {
 	// in order to accommodate expected spikes in the complexity of the video.
 	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
 
-	// Only meaningful if sceneChangeDetect is set to enabled. Enforces separation
-	// between repeated (cadence) I-frames and I-frames inserted by Scene Change
-	// Detection. If a scene change I-frame is within I-interval frames of a cadence
-	// I-frame, the GOP is shrunk and/or stretched to the scene change I-frame.
-	// GOP stretch requires enabling lookahead as well as setting I-interval. The
-	// normal cadence resumes for the next GOP. Note: Maximum GOP stretch = GOP
-	// size + Min-I-interval - 1
+	// Only meaningful if sceneChangeDetect is set to enabled. Defaults to 5 if
+	// multiplex rate control is used. Enforces separation between repeated (cadence)
+	// I-frames and I-frames inserted by Scene Change Detection. If a scene change
+	// I-frame is within I-interval frames of a cadence I-frame, the GOP is shrunk
+	// and/or stretched to the scene change I-frame. GOP stretch requires enabling
+	// lookahead as well as setting I-interval. The normal cadence resumes for the
+	// next GOP. Note: Maximum GOP stretch = GOP size + Min-I-interval - 1
 	MinIInterval *int64 `locationName:"minIInterval" type:"integer"`
 
 	// Number of reference frames to use. The encoder may use more than requested
@@ -9484,8 +11387,10 @@ type H265Settings struct {
 	// as quickly as possible. Setting this value to 0 will break output segmenting.
 	GopClosedCadence *int64 `locationName:"gopClosedCadence" type:"integer"`
 
-	// GOP size (keyframe interval) in units of either frames or seconds per gopSizeUnits.
-	// Must be greater than zero.
+	// GOP size (keyframe interval) in units of either frames or seconds per gopSizeUnits.If
+	// gopSizeUnits is frames, gopSize must be an integer and must be greater than
+	// or equal to 1.If gopSizeUnits is seconds, gopSize must be greater than 0,
+	// but need not be an integer.
 	GopSize *float64 `locationName:"gopSize" type:"double"`
 
 	// Indicates if the gopSize is specified in frames or seconds. If seconds the
@@ -9502,13 +11407,13 @@ type H265Settings struct {
 	// For QVBR: See the tooltip for Quality level
 	MaxBitrate *int64 `locationName:"maxBitrate" min:"100000" type:"integer"`
 
-	// Only meaningful if sceneChangeDetect is set to enabled. Enforces separation
-	// between repeated (cadence) I-frames and I-frames inserted by Scene Change
-	// Detection. If a scene change I-frame is within I-interval frames of a cadence
-	// I-frame, the GOP is shrunk and/or stretched to the scene change I-frame.
-	// GOP stretch requires enabling lookahead as well as setting I-interval. The
-	// normal cadence resumes for the next GOP. Note: Maximum GOP stretch = GOP
-	// size + Min-I-interval - 1
+	// Only meaningful if sceneChangeDetect is set to enabled. Defaults to 5 if
+	// multiplex rate control is used. Enforces separation between repeated (cadence)
+	// I-frames and I-frames inserted by Scene Change Detection. If a scene change
+	// I-frame is within I-interval frames of a cadence I-frame, the GOP is shrunk
+	// and/or stretched to the scene change I-frame. GOP stretch requires enabling
+	// lookahead as well as setting I-interval. The normal cadence resumes for the
+	// next GOP. Note: Maximum GOP stretch = GOP size + Min-I-interval - 1
 	MinIInterval *int64 `locationName:"minIInterval" type:"integer"`
 
 	// Pixel Aspect Ratio denominator.
@@ -12161,6 +14066,167 @@ func (s *ListInputsOutput) SetNextToken(v string) *ListInputsOutput {
 	return s
 }
 
+type ListMultiplexProgramsInput struct {
+	_ struct{} `type:"structure"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMultiplexProgramsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMultiplexProgramsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListMultiplexProgramsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListMultiplexProgramsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListMultiplexProgramsInput) SetMaxResults(v int64) *ListMultiplexProgramsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *ListMultiplexProgramsInput) SetMultiplexId(v string) *ListMultiplexProgramsInput {
+	s.MultiplexId = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMultiplexProgramsInput) SetNextToken(v string) *ListMultiplexProgramsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListMultiplexProgramsOutput struct {
+	_ struct{} `type:"structure"`
+
+	MultiplexPrograms []*MultiplexProgramSummary `locationName:"multiplexPrograms" type:"list"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMultiplexProgramsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMultiplexProgramsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMultiplexPrograms sets the MultiplexPrograms field's value.
+func (s *ListMultiplexProgramsOutput) SetMultiplexPrograms(v []*MultiplexProgramSummary) *ListMultiplexProgramsOutput {
+	s.MultiplexPrograms = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMultiplexProgramsOutput) SetNextToken(v string) *ListMultiplexProgramsOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListMultiplexesInput struct {
+	_ struct{} `type:"structure"`
+
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMultiplexesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMultiplexesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListMultiplexesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListMultiplexesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListMultiplexesInput) SetMaxResults(v int64) *ListMultiplexesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMultiplexesInput) SetNextToken(v string) *ListMultiplexesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListMultiplexesOutput struct {
+	_ struct{} `type:"structure"`
+
+	Multiplexes []*MultiplexSummary `locationName:"multiplexes" type:"list"`
+
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListMultiplexesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListMultiplexesOutput) GoString() string {
+	return s.String()
+}
+
+// SetMultiplexes sets the Multiplexes field's value.
+func (s *ListMultiplexesOutput) SetMultiplexes(v []*MultiplexSummary) *ListMultiplexesOutput {
+	s.Multiplexes = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListMultiplexesOutput) SetNextToken(v string) *ListMultiplexesOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListOfferingsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12169,6 +14235,8 @@ type ListOfferingsInput struct {
 	ChannelConfiguration *string `location:"querystring" locationName:"channelConfiguration" type:"string"`
 
 	Codec *string `location:"querystring" locationName:"codec" type:"string"`
+
+	Duration *string `location:"querystring" locationName:"duration" type:"string"`
 
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
@@ -12225,6 +14293,12 @@ func (s *ListOfferingsInput) SetChannelConfiguration(v string) *ListOfferingsInp
 // SetCodec sets the Codec field's value.
 func (s *ListOfferingsInput) SetCodec(v string) *ListOfferingsInput {
 	s.Codec = &v
+	return s
+}
+
+// SetDuration sets the Duration field's value.
+func (s *ListOfferingsInput) SetDuration(v string) *ListOfferingsInput {
+	s.Duration = &v
 	return s
 }
 
@@ -12632,6 +14706,11 @@ type M2tsSettings struct {
 	// be in the range of 32 (or 0x20)..8182 (or 0x1ff6).
 	KlvDataPids *string `locationName:"klvDataPids" type:"string"`
 
+	// If set to passthrough, Nielsen inaudible tones for media tracking will be
+	// detected in the input audio and an equivalent ID3 tag will be inserted in
+	// the output.
+	NielsenId3Behavior *string `locationName:"nielsenId3Behavior" type:"string" enum:"M2tsNielsenId3Behavior"`
+
 	// Value in bits per second of extra null packets to insert into the transport
 	// stream. This can be used if a downstream encryption system requires periodic
 	// null packets.
@@ -12927,6 +15006,12 @@ func (s *M2tsSettings) SetKlvDataPids(v string) *M2tsSettings {
 	return s
 }
 
+// SetNielsenId3Behavior sets the NielsenId3Behavior field's value.
+func (s *M2tsSettings) SetNielsenId3Behavior(v string) *M2tsSettings {
+	s.NielsenId3Behavior = &v
+	return s
+}
+
 // SetNullPacketBitrate sets the NullPacketBitrate field's value.
 func (s *M2tsSettings) SetNullPacketBitrate(v float64) *M2tsSettings {
 	s.NullPacketBitrate = &v
@@ -13056,6 +15141,11 @@ type M3u8Settings struct {
 	// This parameter is unused and deprecated.
 	EcmPid *string `locationName:"ecmPid" type:"string"`
 
+	// If set to passthrough, Nielsen inaudible tones for media tracking will be
+	// detected in the input audio and an equivalent ID3 tag will be inserted in
+	// the output.
+	NielsenId3Behavior *string `locationName:"nielsenId3Behavior" type:"string" enum:"M3u8NielsenId3Behavior"`
+
 	// The number of milliseconds between instances of this table in the output
 	// transport stream. A value of \"0\" writes out the PMT once per segment file.
 	PatInterval *int64 `locationName:"patInterval" type:"integer"`
@@ -13134,6 +15224,12 @@ func (s *M3u8Settings) SetAudioPids(v string) *M3u8Settings {
 // SetEcmPid sets the EcmPid field's value.
 func (s *M3u8Settings) SetEcmPid(v string) *M3u8Settings {
 	s.EcmPid = &v
+	return s
+}
+
+// SetNielsenId3Behavior sets the NielsenId3Behavior field's value.
+func (s *M3u8Settings) SetNielsenId3Behavior(v string) *M3u8Settings {
+	s.NielsenId3Behavior = &v
 	return s
 }
 
@@ -13662,6 +15758,919 @@ func (s *MsSmoothOutputSettings) SetNameModifier(v string) *MsSmoothOutputSettin
 	return s
 }
 
+// The multiplex object.
+type Multiplex struct {
+	_ struct{} `type:"structure"`
+
+	// The unique arn of the multiplex.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// A list of availability zones for the multiplex.
+	AvailabilityZones []*string `locationName:"availabilityZones" type:"list"`
+
+	// A list of the multiplex output destinations.
+	Destinations []*MultiplexOutputDestination `locationName:"destinations" type:"list"`
+
+	// The unique id of the multiplex.
+	Id *string `locationName:"id" type:"string"`
+
+	// Configuration for a multiplex event.
+	MultiplexSettings *MultiplexSettings `locationName:"multiplexSettings" type:"structure"`
+
+	// The name of the multiplex.
+	Name *string `locationName:"name" type:"string"`
+
+	// The number of currently healthy pipelines.
+	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
+
+	// The number of programs in the multiplex.
+	ProgramCount *int64 `locationName:"programCount" type:"integer"`
+
+	// The current state of the multiplex.
+	State *string `locationName:"state" type:"string" enum:"MultiplexState"`
+
+	// A collection of key-value pairs.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s Multiplex) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Multiplex) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *Multiplex) SetArn(v string) *Multiplex {
+	s.Arn = &v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *Multiplex) SetAvailabilityZones(v []*string) *Multiplex {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *Multiplex) SetDestinations(v []*MultiplexOutputDestination) *Multiplex {
+	s.Destinations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *Multiplex) SetId(v string) *Multiplex {
+	s.Id = &v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *Multiplex) SetMultiplexSettings(v *MultiplexSettings) *Multiplex {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *Multiplex) SetName(v string) *Multiplex {
+	s.Name = &v
+	return s
+}
+
+// SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
+func (s *Multiplex) SetPipelinesRunningCount(v int64) *Multiplex {
+	s.PipelinesRunningCount = &v
+	return s
+}
+
+// SetProgramCount sets the ProgramCount field's value.
+func (s *Multiplex) SetProgramCount(v int64) *Multiplex {
+	s.ProgramCount = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *Multiplex) SetState(v string) *Multiplex {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *Multiplex) SetTags(v map[string]*string) *Multiplex {
+	s.Tags = v
+	return s
+}
+
+// Multiplex Group Settings
+type MultiplexGroupSettings struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s MultiplexGroupSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexGroupSettings) GoString() string {
+	return s.String()
+}
+
+// Multiplex MediaConnect output destination settings.
+type MultiplexMediaConnectOutputDestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The MediaConnect entitlement ARN available as a Flow source.
+	EntitlementArn *string `locationName:"entitlementArn" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s MultiplexMediaConnectOutputDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexMediaConnectOutputDestinationSettings) GoString() string {
+	return s.String()
+}
+
+// SetEntitlementArn sets the EntitlementArn field's value.
+func (s *MultiplexMediaConnectOutputDestinationSettings) SetEntitlementArn(v string) *MultiplexMediaConnectOutputDestinationSettings {
+	s.EntitlementArn = &v
+	return s
+}
+
+// Multiplex output destination settings
+type MultiplexOutputDestination struct {
+	_ struct{} `type:"structure"`
+
+	// Multiplex MediaConnect output destination settings.
+	MediaConnectSettings *MultiplexMediaConnectOutputDestinationSettings `locationName:"mediaConnectSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s MultiplexOutputDestination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexOutputDestination) GoString() string {
+	return s.String()
+}
+
+// SetMediaConnectSettings sets the MediaConnectSettings field's value.
+func (s *MultiplexOutputDestination) SetMediaConnectSettings(v *MultiplexMediaConnectOutputDestinationSettings) *MultiplexOutputDestination {
+	s.MediaConnectSettings = v
+	return s
+}
+
+// Multiplex Output Settings
+type MultiplexOutputSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Destination is a Multiplex.
+	//
+	// Destination is a required field
+	Destination *OutputLocationRef `locationName:"destination" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s MultiplexOutputSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexOutputSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MultiplexOutputSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MultiplexOutputSettings"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *MultiplexOutputSettings) SetDestination(v *OutputLocationRef) *MultiplexOutputSettings {
+	s.Destination = v
+	return s
+}
+
+// The multiplex program object.
+type MultiplexProgram struct {
+	_ struct{} `type:"structure"`
+
+	// The MediaLive channel associated with the program.
+	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// The settings for this multiplex program.
+	MultiplexProgramSettings *MultiplexProgramSettings `locationName:"multiplexProgramSettings" type:"structure"`
+
+	// The packet identifier map for this multiplex program.
+	PacketIdentifiersMap *MultiplexProgramPacketIdentifiersMap `locationName:"packetIdentifiersMap" type:"structure"`
+
+	// The name of the multiplex program.
+	ProgramName *string `locationName:"programName" type:"string"`
+}
+
+// String returns the string representation
+func (s MultiplexProgram) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexProgram) GoString() string {
+	return s.String()
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *MultiplexProgram) SetChannelId(v string) *MultiplexProgram {
+	s.ChannelId = &v
+	return s
+}
+
+// SetMultiplexProgramSettings sets the MultiplexProgramSettings field's value.
+func (s *MultiplexProgram) SetMultiplexProgramSettings(v *MultiplexProgramSettings) *MultiplexProgram {
+	s.MultiplexProgramSettings = v
+	return s
+}
+
+// SetPacketIdentifiersMap sets the PacketIdentifiersMap field's value.
+func (s *MultiplexProgram) SetPacketIdentifiersMap(v *MultiplexProgramPacketIdentifiersMap) *MultiplexProgram {
+	s.PacketIdentifiersMap = v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *MultiplexProgram) SetProgramName(v string) *MultiplexProgram {
+	s.ProgramName = &v
+	return s
+}
+
+// Multiplex Program Input Destination Settings for outputting a Channel to
+// a Multiplex
+type MultiplexProgramChannelDestinationSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Multiplex that the encoder is providing output to. You do not
+	// need to specify the individual inputs to the Multiplex; MediaLive will handle
+	// the connection of the two MediaLive pipelines to the two Multiplex instances.The
+	// Multiplex must be in the same region as the Channel.
+	MultiplexId *string `locationName:"multiplexId" min:"1" type:"string"`
+
+	// The program name of the Multiplex program that the encoder is providing output
+	// to.
+	ProgramName *string `locationName:"programName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s MultiplexProgramChannelDestinationSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexProgramChannelDestinationSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MultiplexProgramChannelDestinationSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MultiplexProgramChannelDestinationSettings"}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+	if s.ProgramName != nil && len(*s.ProgramName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProgramName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *MultiplexProgramChannelDestinationSettings) SetMultiplexId(v string) *MultiplexProgramChannelDestinationSettings {
+	s.MultiplexId = &v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *MultiplexProgramChannelDestinationSettings) SetProgramName(v string) *MultiplexProgramChannelDestinationSettings {
+	s.ProgramName = &v
+	return s
+}
+
+// Packet identifiers map for a given Multiplex program.
+type MultiplexProgramPacketIdentifiersMap struct {
+	_ struct{} `type:"structure"`
+
+	AudioPids []*int64 `locationName:"audioPids" type:"list"`
+
+	DvbSubPids []*int64 `locationName:"dvbSubPids" type:"list"`
+
+	DvbTeletextPid *int64 `locationName:"dvbTeletextPid" type:"integer"`
+
+	EtvPlatformPid *int64 `locationName:"etvPlatformPid" type:"integer"`
+
+	EtvSignalPid *int64 `locationName:"etvSignalPid" type:"integer"`
+
+	KlvDataPids []*int64 `locationName:"klvDataPids" type:"list"`
+
+	PcrPid *int64 `locationName:"pcrPid" type:"integer"`
+
+	PmtPid *int64 `locationName:"pmtPid" type:"integer"`
+
+	PrivateMetadataPid *int64 `locationName:"privateMetadataPid" type:"integer"`
+
+	Scte27Pids []*int64 `locationName:"scte27Pids" type:"list"`
+
+	Scte35Pid *int64 `locationName:"scte35Pid" type:"integer"`
+
+	TimedMetadataPid *int64 `locationName:"timedMetadataPid" type:"integer"`
+
+	VideoPid *int64 `locationName:"videoPid" type:"integer"`
+}
+
+// String returns the string representation
+func (s MultiplexProgramPacketIdentifiersMap) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexProgramPacketIdentifiersMap) GoString() string {
+	return s.String()
+}
+
+// SetAudioPids sets the AudioPids field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetAudioPids(v []*int64) *MultiplexProgramPacketIdentifiersMap {
+	s.AudioPids = v
+	return s
+}
+
+// SetDvbSubPids sets the DvbSubPids field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetDvbSubPids(v []*int64) *MultiplexProgramPacketIdentifiersMap {
+	s.DvbSubPids = v
+	return s
+}
+
+// SetDvbTeletextPid sets the DvbTeletextPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetDvbTeletextPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.DvbTeletextPid = &v
+	return s
+}
+
+// SetEtvPlatformPid sets the EtvPlatformPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetEtvPlatformPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.EtvPlatformPid = &v
+	return s
+}
+
+// SetEtvSignalPid sets the EtvSignalPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetEtvSignalPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.EtvSignalPid = &v
+	return s
+}
+
+// SetKlvDataPids sets the KlvDataPids field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetKlvDataPids(v []*int64) *MultiplexProgramPacketIdentifiersMap {
+	s.KlvDataPids = v
+	return s
+}
+
+// SetPcrPid sets the PcrPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetPcrPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.PcrPid = &v
+	return s
+}
+
+// SetPmtPid sets the PmtPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetPmtPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.PmtPid = &v
+	return s
+}
+
+// SetPrivateMetadataPid sets the PrivateMetadataPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetPrivateMetadataPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.PrivateMetadataPid = &v
+	return s
+}
+
+// SetScte27Pids sets the Scte27Pids field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetScte27Pids(v []*int64) *MultiplexProgramPacketIdentifiersMap {
+	s.Scte27Pids = v
+	return s
+}
+
+// SetScte35Pid sets the Scte35Pid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetScte35Pid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.Scte35Pid = &v
+	return s
+}
+
+// SetTimedMetadataPid sets the TimedMetadataPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetTimedMetadataPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.TimedMetadataPid = &v
+	return s
+}
+
+// SetVideoPid sets the VideoPid field's value.
+func (s *MultiplexProgramPacketIdentifiersMap) SetVideoPid(v int64) *MultiplexProgramPacketIdentifiersMap {
+	s.VideoPid = &v
+	return s
+}
+
+// Transport stream service descriptor configuration for the Multiplex program.
+type MultiplexProgramServiceDescriptor struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the provider.
+	//
+	// ProviderName is a required field
+	ProviderName *string `locationName:"providerName" type:"string" required:"true"`
+
+	// Name of the service.
+	//
+	// ServiceName is a required field
+	ServiceName *string `locationName:"serviceName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s MultiplexProgramServiceDescriptor) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexProgramServiceDescriptor) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MultiplexProgramServiceDescriptor) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MultiplexProgramServiceDescriptor"}
+	if s.ProviderName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProviderName"))
+	}
+	if s.ServiceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ServiceName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetProviderName sets the ProviderName field's value.
+func (s *MultiplexProgramServiceDescriptor) SetProviderName(v string) *MultiplexProgramServiceDescriptor {
+	s.ProviderName = &v
+	return s
+}
+
+// SetServiceName sets the ServiceName field's value.
+func (s *MultiplexProgramServiceDescriptor) SetServiceName(v string) *MultiplexProgramServiceDescriptor {
+	s.ServiceName = &v
+	return s
+}
+
+// Multiplex Program settings configuration.
+type MultiplexProgramSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Unique program number.
+	//
+	// ProgramNumber is a required field
+	ProgramNumber *int64 `locationName:"programNumber" type:"integer" required:"true"`
+
+	// Transport stream service descriptor configuration for the Multiplex program.
+	ServiceDescriptor *MultiplexProgramServiceDescriptor `locationName:"serviceDescriptor" type:"structure"`
+
+	// Program video settings configuration.
+	VideoSettings *MultiplexVideoSettings `locationName:"videoSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s MultiplexProgramSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexProgramSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MultiplexProgramSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MultiplexProgramSettings"}
+	if s.ProgramNumber == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProgramNumber"))
+	}
+	if s.ServiceDescriptor != nil {
+		if err := s.ServiceDescriptor.Validate(); err != nil {
+			invalidParams.AddNested("ServiceDescriptor", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.VideoSettings != nil {
+		if err := s.VideoSettings.Validate(); err != nil {
+			invalidParams.AddNested("VideoSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetProgramNumber sets the ProgramNumber field's value.
+func (s *MultiplexProgramSettings) SetProgramNumber(v int64) *MultiplexProgramSettings {
+	s.ProgramNumber = &v
+	return s
+}
+
+// SetServiceDescriptor sets the ServiceDescriptor field's value.
+func (s *MultiplexProgramSettings) SetServiceDescriptor(v *MultiplexProgramServiceDescriptor) *MultiplexProgramSettings {
+	s.ServiceDescriptor = v
+	return s
+}
+
+// SetVideoSettings sets the VideoSettings field's value.
+func (s *MultiplexProgramSettings) SetVideoSettings(v *MultiplexVideoSettings) *MultiplexProgramSettings {
+	s.VideoSettings = v
+	return s
+}
+
+type MultiplexProgramSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The MediaLive Channel associated with the program.
+	ChannelId *string `locationName:"channelId" type:"string"`
+
+	// The name of the multiplex program.
+	ProgramName *string `locationName:"programName" type:"string"`
+}
+
+// String returns the string representation
+func (s MultiplexProgramSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexProgramSummary) GoString() string {
+	return s.String()
+}
+
+// SetChannelId sets the ChannelId field's value.
+func (s *MultiplexProgramSummary) SetChannelId(v string) *MultiplexProgramSummary {
+	s.ChannelId = &v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *MultiplexProgramSummary) SetProgramName(v string) *MultiplexProgramSummary {
+	s.ProgramName = &v
+	return s
+}
+
+// Contains configuration for a Multiplex event
+type MultiplexSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum video buffer delay in milliseconds.
+	MaximumVideoBufferDelayMilliseconds *int64 `locationName:"maximumVideoBufferDelayMilliseconds" min:"1000" type:"integer"`
+
+	// Transport stream bit rate.
+	//
+	// TransportStreamBitrate is a required field
+	TransportStreamBitrate *int64 `locationName:"transportStreamBitrate" min:"1e+06" type:"integer" required:"true"`
+
+	// Transport stream ID.
+	//
+	// TransportStreamId is a required field
+	TransportStreamId *int64 `locationName:"transportStreamId" type:"integer" required:"true"`
+
+	// Transport stream reserved bit rate.
+	TransportStreamReservedBitrate *int64 `locationName:"transportStreamReservedBitrate" type:"integer"`
+}
+
+// String returns the string representation
+func (s MultiplexSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MultiplexSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MultiplexSettings"}
+	if s.MaximumVideoBufferDelayMilliseconds != nil && *s.MaximumVideoBufferDelayMilliseconds < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumVideoBufferDelayMilliseconds", 1000))
+	}
+	if s.TransportStreamBitrate == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransportStreamBitrate"))
+	}
+	if s.TransportStreamBitrate != nil && *s.TransportStreamBitrate < 1e+06 {
+		invalidParams.Add(request.NewErrParamMinValue("TransportStreamBitrate", 1e+06))
+	}
+	if s.TransportStreamId == nil {
+		invalidParams.Add(request.NewErrParamRequired("TransportStreamId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumVideoBufferDelayMilliseconds sets the MaximumVideoBufferDelayMilliseconds field's value.
+func (s *MultiplexSettings) SetMaximumVideoBufferDelayMilliseconds(v int64) *MultiplexSettings {
+	s.MaximumVideoBufferDelayMilliseconds = &v
+	return s
+}
+
+// SetTransportStreamBitrate sets the TransportStreamBitrate field's value.
+func (s *MultiplexSettings) SetTransportStreamBitrate(v int64) *MultiplexSettings {
+	s.TransportStreamBitrate = &v
+	return s
+}
+
+// SetTransportStreamId sets the TransportStreamId field's value.
+func (s *MultiplexSettings) SetTransportStreamId(v int64) *MultiplexSettings {
+	s.TransportStreamId = &v
+	return s
+}
+
+// SetTransportStreamReservedBitrate sets the TransportStreamReservedBitrate field's value.
+func (s *MultiplexSettings) SetTransportStreamReservedBitrate(v int64) *MultiplexSettings {
+	s.TransportStreamReservedBitrate = &v
+	return s
+}
+
+// Contains summary configuration for a Multiplex event.
+type MultiplexSettingsSummary struct {
+	_ struct{} `type:"structure"`
+
+	// Transport stream bit rate.
+	TransportStreamBitrate *int64 `locationName:"transportStreamBitrate" min:"1e+06" type:"integer"`
+}
+
+// String returns the string representation
+func (s MultiplexSettingsSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexSettingsSummary) GoString() string {
+	return s.String()
+}
+
+// SetTransportStreamBitrate sets the TransportStreamBitrate field's value.
+func (s *MultiplexSettingsSummary) SetTransportStreamBitrate(v int64) *MultiplexSettingsSummary {
+	s.TransportStreamBitrate = &v
+	return s
+}
+
+// Statmux rate control settings
+type MultiplexStatmuxVideoSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum statmux bitrate.
+	MaximumBitrate *int64 `locationName:"maximumBitrate" min:"100000" type:"integer"`
+
+	// Minimum statmux bitrate.
+	MinimumBitrate *int64 `locationName:"minimumBitrate" min:"100000" type:"integer"`
+}
+
+// String returns the string representation
+func (s MultiplexStatmuxVideoSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexStatmuxVideoSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MultiplexStatmuxVideoSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MultiplexStatmuxVideoSettings"}
+	if s.MaximumBitrate != nil && *s.MaximumBitrate < 100000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumBitrate", 100000))
+	}
+	if s.MinimumBitrate != nil && *s.MinimumBitrate < 100000 {
+		invalidParams.Add(request.NewErrParamMinValue("MinimumBitrate", 100000))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumBitrate sets the MaximumBitrate field's value.
+func (s *MultiplexStatmuxVideoSettings) SetMaximumBitrate(v int64) *MultiplexStatmuxVideoSettings {
+	s.MaximumBitrate = &v
+	return s
+}
+
+// SetMinimumBitrate sets the MinimumBitrate field's value.
+func (s *MultiplexStatmuxVideoSettings) SetMinimumBitrate(v int64) *MultiplexStatmuxVideoSettings {
+	s.MinimumBitrate = &v
+	return s
+}
+
+type MultiplexSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The unique arn of the multiplex.
+	Arn *string `locationName:"arn" type:"string"`
+
+	// A list of availability zones for the multiplex.
+	AvailabilityZones []*string `locationName:"availabilityZones" type:"list"`
+
+	// The unique id of the multiplex.
+	Id *string `locationName:"id" type:"string"`
+
+	// Configuration for a multiplex event.
+	MultiplexSettings *MultiplexSettingsSummary `locationName:"multiplexSettings" type:"structure"`
+
+	// The name of the multiplex.
+	Name *string `locationName:"name" type:"string"`
+
+	// The number of currently healthy pipelines.
+	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
+
+	// The number of programs in the multiplex.
+	ProgramCount *int64 `locationName:"programCount" type:"integer"`
+
+	// The current state of the multiplex.
+	State *string `locationName:"state" type:"string" enum:"MultiplexState"`
+
+	// A collection of key-value pairs.
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s MultiplexSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexSummary) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *MultiplexSummary) SetArn(v string) *MultiplexSummary {
+	s.Arn = &v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *MultiplexSummary) SetAvailabilityZones(v []*string) *MultiplexSummary {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *MultiplexSummary) SetId(v string) *MultiplexSummary {
+	s.Id = &v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *MultiplexSummary) SetMultiplexSettings(v *MultiplexSettingsSummary) *MultiplexSummary {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *MultiplexSummary) SetName(v string) *MultiplexSummary {
+	s.Name = &v
+	return s
+}
+
+// SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
+func (s *MultiplexSummary) SetPipelinesRunningCount(v int64) *MultiplexSummary {
+	s.PipelinesRunningCount = &v
+	return s
+}
+
+// SetProgramCount sets the ProgramCount field's value.
+func (s *MultiplexSummary) SetProgramCount(v int64) *MultiplexSummary {
+	s.ProgramCount = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *MultiplexSummary) SetState(v string) *MultiplexSummary {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *MultiplexSummary) SetTags(v map[string]*string) *MultiplexSummary {
+	s.Tags = v
+	return s
+}
+
+type MultiplexValidationError struct {
+	_ struct{} `type:"structure"`
+
+	// Path to the source of the error.
+	ElementPath *string `locationName:"elementPath" type:"string"`
+
+	// The error message.
+	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+}
+
+// String returns the string representation
+func (s MultiplexValidationError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexValidationError) GoString() string {
+	return s.String()
+}
+
+// SetElementPath sets the ElementPath field's value.
+func (s *MultiplexValidationError) SetElementPath(v string) *MultiplexValidationError {
+	s.ElementPath = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *MultiplexValidationError) SetErrorMessage(v string) *MultiplexValidationError {
+	s.ErrorMessage = &v
+	return s
+}
+
+// The video configuration for each program in a multiplex.
+type MultiplexVideoSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The constant bitrate configuration for the video encode.When this field is
+	// defined, StatmuxSettings must be undefined.
+	ConstantBitrate *int64 `locationName:"constantBitrate" min:"100000" type:"integer"`
+
+	// Statmux rate control settings.When this field is defined, ConstantBitrate
+	// must be undefined.
+	StatmuxSettings *MultiplexStatmuxVideoSettings `locationName:"statmuxSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s MultiplexVideoSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MultiplexVideoSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MultiplexVideoSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MultiplexVideoSettings"}
+	if s.ConstantBitrate != nil && *s.ConstantBitrate < 100000 {
+		invalidParams.Add(request.NewErrParamMinValue("ConstantBitrate", 100000))
+	}
+	if s.StatmuxSettings != nil {
+		if err := s.StatmuxSettings.Validate(); err != nil {
+			invalidParams.AddNested("StatmuxSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConstantBitrate sets the ConstantBitrate field's value.
+func (s *MultiplexVideoSettings) SetConstantBitrate(v int64) *MultiplexVideoSettings {
+	s.ConstantBitrate = &v
+	return s
+}
+
+// SetStatmuxSettings sets the StatmuxSettings field's value.
+func (s *MultiplexVideoSettings) SetStatmuxSettings(v *MultiplexStatmuxVideoSettings) *MultiplexVideoSettings {
+	s.StatmuxSettings = v
+	return s
+}
+
 // Network source to transcode. Must be accessible to the Elemental Live node
 // that is running the live event through a network connection.
 type NetworkInputSettings struct {
@@ -13698,6 +16707,39 @@ func (s *NetworkInputSettings) SetHlsInputSettings(v *HlsInputSettings) *Network
 // SetServerValidation sets the ServerValidation field's value.
 func (s *NetworkInputSettings) SetServerValidation(v string) *NetworkInputSettings {
 	s.ServerValidation = &v
+	return s
+}
+
+// Nielsen Configuration
+type NielsenConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// Enter the Distributor ID assigned to your organization by Nielsen.
+	DistributorId *string `locationName:"distributorId" type:"string"`
+
+	// Enables Nielsen PCM to ID3 tagging
+	NielsenPcmToId3Tagging *string `locationName:"nielsenPcmToId3Tagging" type:"string" enum:"NielsenPcmToId3TaggingState"`
+}
+
+// String returns the string representation
+func (s NielsenConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NielsenConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetDistributorId sets the DistributorId field's value.
+func (s *NielsenConfiguration) SetDistributorId(v string) *NielsenConfiguration {
+	s.DistributorId = &v
+	return s
+}
+
+// SetNielsenPcmToId3Tagging sets the NielsenPcmToId3Tagging field's value.
+func (s *NielsenConfiguration) SetNielsenPcmToId3Tagging(v string) *NielsenConfiguration {
+	s.NielsenPcmToId3Tagging = &v
 	return s
 }
 
@@ -13909,6 +16951,9 @@ type OutputDestination struct {
 	// encoders.
 	MediaPackageSettings []*MediaPackageOutputDestinationSettings `locationName:"mediaPackageSettings" type:"list"`
 
+	// Destination settings for a Multiplex output; one destination for both encoders.
+	MultiplexSettings *MultiplexProgramChannelDestinationSettings `locationName:"multiplexSettings" type:"structure"`
+
 	// Destination settings for a standard output; one destination for each redundant
 	// encoder.
 	Settings []*OutputDestinationSettings `locationName:"settings" type:"list"`
@@ -13937,6 +16982,11 @@ func (s *OutputDestination) Validate() error {
 			}
 		}
 	}
+	if s.MultiplexSettings != nil {
+		if err := s.MultiplexSettings.Validate(); err != nil {
+			invalidParams.AddNested("MultiplexSettings", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13953,6 +17003,12 @@ func (s *OutputDestination) SetId(v string) *OutputDestination {
 // SetMediaPackageSettings sets the MediaPackageSettings field's value.
 func (s *OutputDestination) SetMediaPackageSettings(v []*MediaPackageOutputDestinationSettings) *OutputDestination {
 	s.MediaPackageSettings = v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *OutputDestination) SetMultiplexSettings(v *MultiplexProgramChannelDestinationSettings) *OutputDestination {
+	s.MultiplexSettings = v
 	return s
 }
 
@@ -14108,6 +17164,9 @@ type OutputGroupSettings struct {
 	// Ms Smooth Group Settings
 	MsSmoothGroupSettings *MsSmoothGroupSettings `locationName:"msSmoothGroupSettings" type:"structure"`
 
+	// Multiplex Group Settings
+	MultiplexGroupSettings *MultiplexGroupSettings `locationName:"multiplexGroupSettings" type:"structure"`
+
 	// Rtmp Group Settings
 	RtmpGroupSettings *RtmpGroupSettings `locationName:"rtmpGroupSettings" type:"structure"`
 
@@ -14195,6 +17254,12 @@ func (s *OutputGroupSettings) SetMsSmoothGroupSettings(v *MsSmoothGroupSettings)
 	return s
 }
 
+// SetMultiplexGroupSettings sets the MultiplexGroupSettings field's value.
+func (s *OutputGroupSettings) SetMultiplexGroupSettings(v *MultiplexGroupSettings) *OutputGroupSettings {
+	s.MultiplexGroupSettings = v
+	return s
+}
+
 // SetRtmpGroupSettings sets the RtmpGroupSettings field's value.
 func (s *OutputGroupSettings) SetRtmpGroupSettings(v *RtmpGroupSettings) *OutputGroupSettings {
 	s.RtmpGroupSettings = v
@@ -14249,6 +17314,9 @@ type OutputSettings struct {
 	// Ms Smooth Output Settings
 	MsSmoothOutputSettings *MsSmoothOutputSettings `locationName:"msSmoothOutputSettings" type:"structure"`
 
+	// Multiplex Output Settings
+	MultiplexOutputSettings *MultiplexOutputSettings `locationName:"multiplexOutputSettings" type:"structure"`
+
 	// Rtmp Output Settings
 	RtmpOutputSettings *RtmpOutputSettings `locationName:"rtmpOutputSettings" type:"structure"`
 
@@ -14277,6 +17345,11 @@ func (s *OutputSettings) Validate() error {
 	if s.HlsOutputSettings != nil {
 		if err := s.HlsOutputSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsOutputSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.MultiplexOutputSettings != nil {
+		if err := s.MultiplexOutputSettings.Validate(); err != nil {
+			invalidParams.AddNested("MultiplexOutputSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.RtmpOutputSettings != nil {
@@ -14323,6 +17396,12 @@ func (s *OutputSettings) SetMediaPackageOutputSettings(v *MediaPackageOutputSett
 // SetMsSmoothOutputSettings sets the MsSmoothOutputSettings field's value.
 func (s *OutputSettings) SetMsSmoothOutputSettings(v *MsSmoothOutputSettings) *OutputSettings {
 	s.MsSmoothOutputSettings = v
+	return s
+}
+
+// SetMultiplexOutputSettings sets the MultiplexOutputSettings field's value.
+func (s *OutputSettings) SetMultiplexOutputSettings(v *MultiplexOutputSettings) *OutputSettings {
+	s.MultiplexOutputSettings = v
 	return s
 }
 
@@ -14889,7 +17968,7 @@ type ReservationResourceSpecification struct {
 	// Resolution, e.g. 'HD'
 	Resolution *string `locationName:"resolution" type:"string" enum:"ReservationResolution"`
 
-	// Resource type, 'INPUT', 'OUTPUT', or 'CHANNEL'
+	// Resource type, 'INPUT', 'OUTPUT', 'MULTIPLEX', or 'CHANNEL'
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ReservationResourceType"`
 
 	// Special feature, e.g. 'AUDIO_NORMALIZATION' (Channels only)
@@ -16368,6 +19447,141 @@ func (s *StartChannelOutput) SetTags(v map[string]*string) *StartChannelOutput {
 	return s
 }
 
+type StartMultiplexInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartMultiplexInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMultiplexInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartMultiplexInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartMultiplexInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *StartMultiplexInput) SetMultiplexId(v string) *StartMultiplexInput {
+	s.MultiplexId = &v
+	return s
+}
+
+type StartMultiplexOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	AvailabilityZones []*string `locationName:"availabilityZones" type:"list"`
+
+	Destinations []*MultiplexOutputDestination `locationName:"destinations" type:"list"`
+
+	Id *string `locationName:"id" type:"string"`
+
+	// Contains configuration for a Multiplex event
+	MultiplexSettings *MultiplexSettings `locationName:"multiplexSettings" type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
+
+	ProgramCount *int64 `locationName:"programCount" type:"integer"`
+
+	// The current state of the multiplex.
+	State *string `locationName:"state" type:"string" enum:"MultiplexState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s StartMultiplexOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartMultiplexOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *StartMultiplexOutput) SetArn(v string) *StartMultiplexOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *StartMultiplexOutput) SetAvailabilityZones(v []*string) *StartMultiplexOutput {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *StartMultiplexOutput) SetDestinations(v []*MultiplexOutputDestination) *StartMultiplexOutput {
+	s.Destinations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *StartMultiplexOutput) SetId(v string) *StartMultiplexOutput {
+	s.Id = &v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *StartMultiplexOutput) SetMultiplexSettings(v *MultiplexSettings) *StartMultiplexOutput {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *StartMultiplexOutput) SetName(v string) *StartMultiplexOutput {
+	s.Name = &v
+	return s
+}
+
+// SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
+func (s *StartMultiplexOutput) SetPipelinesRunningCount(v int64) *StartMultiplexOutput {
+	s.PipelinesRunningCount = &v
+	return s
+}
+
+// SetProgramCount sets the ProgramCount field's value.
+func (s *StartMultiplexOutput) SetProgramCount(v int64) *StartMultiplexOutput {
+	s.ProgramCount = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *StartMultiplexOutput) SetState(v string) *StartMultiplexOutput {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StartMultiplexOutput) SetTags(v map[string]*string) *StartMultiplexOutput {
+	s.Tags = v
+	return s
+}
+
 // Settings to identify the start of the clip.
 type StartTimecode struct {
 	_ struct{} `type:"structure"`
@@ -16808,6 +20022,141 @@ func (s *StopChannelOutput) SetState(v string) *StopChannelOutput {
 
 // SetTags sets the Tags field's value.
 func (s *StopChannelOutput) SetTags(v map[string]*string) *StopChannelOutput {
+	s.Tags = v
+	return s
+}
+
+type StopMultiplexInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopMultiplexInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopMultiplexInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopMultiplexInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopMultiplexInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *StopMultiplexInput) SetMultiplexId(v string) *StopMultiplexInput {
+	s.MultiplexId = &v
+	return s
+}
+
+type StopMultiplexOutput struct {
+	_ struct{} `type:"structure"`
+
+	Arn *string `locationName:"arn" type:"string"`
+
+	AvailabilityZones []*string `locationName:"availabilityZones" type:"list"`
+
+	Destinations []*MultiplexOutputDestination `locationName:"destinations" type:"list"`
+
+	Id *string `locationName:"id" type:"string"`
+
+	// Contains configuration for a Multiplex event
+	MultiplexSettings *MultiplexSettings `locationName:"multiplexSettings" type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+
+	PipelinesRunningCount *int64 `locationName:"pipelinesRunningCount" type:"integer"`
+
+	ProgramCount *int64 `locationName:"programCount" type:"integer"`
+
+	// The current state of the multiplex.
+	State *string `locationName:"state" type:"string" enum:"MultiplexState"`
+
+	Tags map[string]*string `locationName:"tags" type:"map"`
+}
+
+// String returns the string representation
+func (s StopMultiplexOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopMultiplexOutput) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *StopMultiplexOutput) SetArn(v string) *StopMultiplexOutput {
+	s.Arn = &v
+	return s
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *StopMultiplexOutput) SetAvailabilityZones(v []*string) *StopMultiplexOutput {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *StopMultiplexOutput) SetDestinations(v []*MultiplexOutputDestination) *StopMultiplexOutput {
+	s.Destinations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *StopMultiplexOutput) SetId(v string) *StopMultiplexOutput {
+	s.Id = &v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *StopMultiplexOutput) SetMultiplexSettings(v *MultiplexSettings) *StopMultiplexOutput {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *StopMultiplexOutput) SetName(v string) *StopMultiplexOutput {
+	s.Name = &v
+	return s
+}
+
+// SetPipelinesRunningCount sets the PipelinesRunningCount field's value.
+func (s *StopMultiplexOutput) SetPipelinesRunningCount(v int64) *StopMultiplexOutput {
+	s.PipelinesRunningCount = &v
+	return s
+}
+
+// SetProgramCount sets the ProgramCount field's value.
+func (s *StopMultiplexOutput) SetProgramCount(v int64) *StopMultiplexOutput {
+	s.ProgramCount = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *StopMultiplexOutput) SetState(v string) *StopMultiplexOutput {
+	s.State = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StopMultiplexOutput) SetTags(v map[string]*string) *StopMultiplexOutput {
 	s.Tags = v
 	return s
 }
@@ -17572,6 +20921,181 @@ func (s *UpdateInputSecurityGroupOutput) SetSecurityGroup(v *InputSecurityGroup)
 	return s
 }
 
+type UpdateMultiplexInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+
+	// Contains configuration for a Multiplex event
+	MultiplexSettings *MultiplexSettings `locationName:"multiplexSettings" type:"structure"`
+
+	Name *string `locationName:"name" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateMultiplexInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMultiplexInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateMultiplexInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateMultiplexInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+	if s.MultiplexSettings != nil {
+		if err := s.MultiplexSettings.Validate(); err != nil {
+			invalidParams.AddNested("MultiplexSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *UpdateMultiplexInput) SetMultiplexId(v string) *UpdateMultiplexInput {
+	s.MultiplexId = &v
+	return s
+}
+
+// SetMultiplexSettings sets the MultiplexSettings field's value.
+func (s *UpdateMultiplexInput) SetMultiplexSettings(v *MultiplexSettings) *UpdateMultiplexInput {
+	s.MultiplexSettings = v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *UpdateMultiplexInput) SetName(v string) *UpdateMultiplexInput {
+	s.Name = &v
+	return s
+}
+
+type UpdateMultiplexOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The multiplex object.
+	Multiplex *Multiplex `locationName:"multiplex" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateMultiplexOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMultiplexOutput) GoString() string {
+	return s.String()
+}
+
+// SetMultiplex sets the Multiplex field's value.
+func (s *UpdateMultiplexOutput) SetMultiplex(v *Multiplex) *UpdateMultiplexOutput {
+	s.Multiplex = v
+	return s
+}
+
+type UpdateMultiplexProgramInput struct {
+	_ struct{} `type:"structure"`
+
+	// MultiplexId is a required field
+	MultiplexId *string `location:"uri" locationName:"multiplexId" type:"string" required:"true"`
+
+	// Multiplex Program settings configuration.
+	MultiplexProgramSettings *MultiplexProgramSettings `locationName:"multiplexProgramSettings" type:"structure"`
+
+	// ProgramName is a required field
+	ProgramName *string `location:"uri" locationName:"programName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateMultiplexProgramInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMultiplexProgramInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateMultiplexProgramInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateMultiplexProgramInput"}
+	if s.MultiplexId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MultiplexId"))
+	}
+	if s.MultiplexId != nil && len(*s.MultiplexId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MultiplexId", 1))
+	}
+	if s.ProgramName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProgramName"))
+	}
+	if s.ProgramName != nil && len(*s.ProgramName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProgramName", 1))
+	}
+	if s.MultiplexProgramSettings != nil {
+		if err := s.MultiplexProgramSettings.Validate(); err != nil {
+			invalidParams.AddNested("MultiplexProgramSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMultiplexId sets the MultiplexId field's value.
+func (s *UpdateMultiplexProgramInput) SetMultiplexId(v string) *UpdateMultiplexProgramInput {
+	s.MultiplexId = &v
+	return s
+}
+
+// SetMultiplexProgramSettings sets the MultiplexProgramSettings field's value.
+func (s *UpdateMultiplexProgramInput) SetMultiplexProgramSettings(v *MultiplexProgramSettings) *UpdateMultiplexProgramInput {
+	s.MultiplexProgramSettings = v
+	return s
+}
+
+// SetProgramName sets the ProgramName field's value.
+func (s *UpdateMultiplexProgramInput) SetProgramName(v string) *UpdateMultiplexProgramInput {
+	s.ProgramName = &v
+	return s
+}
+
+type UpdateMultiplexProgramOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The multiplex program object.
+	MultiplexProgram *MultiplexProgram `locationName:"multiplexProgram" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateMultiplexProgramOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMultiplexProgramOutput) GoString() string {
+	return s.String()
+}
+
+// SetMultiplexProgram sets the MultiplexProgram field's value.
+func (s *UpdateMultiplexProgramOutput) SetMultiplexProgram(v *MultiplexProgram) *UpdateMultiplexProgramOutput {
+	s.MultiplexProgram = v
+	return s
+}
+
 type UpdateReservationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -17639,36 +21163,6 @@ func (s UpdateReservationOutput) GoString() string {
 // SetReservation sets the Reservation field's value.
 func (s *UpdateReservationOutput) SetReservation(v *Reservation) *UpdateReservationOutput {
 	s.Reservation = v
-	return s
-}
-
-type ValidationError struct {
-	_ struct{} `type:"structure"`
-
-	ElementPath *string `locationName:"elementPath" type:"string"`
-
-	ErrorMessage *string `locationName:"errorMessage" type:"string"`
-}
-
-// String returns the string representation
-func (s ValidationError) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s ValidationError) GoString() string {
-	return s.String()
-}
-
-// SetElementPath sets the ElementPath field's value.
-func (s *ValidationError) SetElementPath(v string) *ValidationError {
-	s.ElementPath = &v
-	return s
-}
-
-// SetErrorMessage sets the ErrorMessage field's value.
-func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
-	s.ErrorMessage = &v
 	return s
 }
 
@@ -19169,6 +22663,9 @@ const (
 	// H265RateControlModeCbr is a H265RateControlMode enum value
 	H265RateControlModeCbr = "CBR"
 
+	// H265RateControlModeMultiplex is a H265RateControlMode enum value
+	H265RateControlModeMultiplex = "MULTIPLEX"
+
 	// H265RateControlModeQvbr is a H265RateControlMode enum value
 	H265RateControlModeQvbr = "QVBR"
 )
@@ -19764,6 +23261,15 @@ const (
 	M2tsKlvPassthrough = "PASSTHROUGH"
 )
 
+// M2ts Nielsen Id3 Behavior
+const (
+	// M2tsNielsenId3BehaviorNoPassthrough is a M2tsNielsenId3Behavior enum value
+	M2tsNielsenId3BehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// M2tsNielsenId3BehaviorPassthrough is a M2tsNielsenId3Behavior enum value
+	M2tsNielsenId3BehaviorPassthrough = "PASSTHROUGH"
+)
+
 // M2ts Pcr Control
 const (
 	// M2tsPcrControlConfiguredPcrPeriod is a M2tsPcrControl enum value
@@ -19830,6 +23336,15 @@ const (
 	M2tsTimedMetadataBehaviorPassthrough = "PASSTHROUGH"
 )
 
+// M3u8 Nielsen Id3 Behavior
+const (
+	// M3u8NielsenId3BehaviorNoPassthrough is a M3u8NielsenId3Behavior enum value
+	M3u8NielsenId3BehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// M3u8NielsenId3BehaviorPassthrough is a M3u8NielsenId3Behavior enum value
+	M3u8NielsenId3BehaviorPassthrough = "PASSTHROUGH"
+)
+
 // M3u8 Pcr Control
 const (
 	// M3u8PcrControlConfiguredPcrPeriod is a M3u8PcrControl enum value
@@ -19875,6 +23390,36 @@ const (
 	MsSmoothH265PackagingTypeHvc1 = "HVC1"
 )
 
+// The current state of the multiplex.
+const (
+	// MultiplexStateCreating is a MultiplexState enum value
+	MultiplexStateCreating = "CREATING"
+
+	// MultiplexStateCreateFailed is a MultiplexState enum value
+	MultiplexStateCreateFailed = "CREATE_FAILED"
+
+	// MultiplexStateIdle is a MultiplexState enum value
+	MultiplexStateIdle = "IDLE"
+
+	// MultiplexStateStarting is a MultiplexState enum value
+	MultiplexStateStarting = "STARTING"
+
+	// MultiplexStateRunning is a MultiplexState enum value
+	MultiplexStateRunning = "RUNNING"
+
+	// MultiplexStateRecovering is a MultiplexState enum value
+	MultiplexStateRecovering = "RECOVERING"
+
+	// MultiplexStateStopping is a MultiplexState enum value
+	MultiplexStateStopping = "STOPPING"
+
+	// MultiplexStateDeleting is a MultiplexState enum value
+	MultiplexStateDeleting = "DELETING"
+
+	// MultiplexStateDeleted is a MultiplexState enum value
+	MultiplexStateDeleted = "DELETED"
+)
+
 // Network Input Server Validation
 const (
 	// NetworkInputServerValidationCheckCryptographyAndValidateName is a NetworkInputServerValidation enum value
@@ -19882,6 +23427,15 @@ const (
 
 	// NetworkInputServerValidationCheckCryptographyOnly is a NetworkInputServerValidation enum value
 	NetworkInputServerValidationCheckCryptographyOnly = "CHECK_CRYPTOGRAPHY_ONLY"
+)
+
+// State of Nielsen PCM to ID3 tagging
+const (
+	// NielsenPcmToId3TaggingStateDisabled is a NielsenPcmToId3TaggingState enum value
+	NielsenPcmToId3TaggingStateDisabled = "DISABLED"
+
+	// NielsenPcmToId3TaggingStateEnabled is a NielsenPcmToId3TaggingState enum value
+	NielsenPcmToId3TaggingStateEnabled = "ENABLED"
 )
 
 // Units for duration, e.g. 'MONTHS'
@@ -19942,7 +23496,7 @@ const (
 )
 
 // Resolution based on lines of vertical resolution; SD is less than 720 lines,
-// HD is 720 to 1080 lines, UHD is greater than 1080 lines
+// HD is 720 to 1080 lines, FHD is 1080 lines, UHD is greater than 1080 lines
 const (
 	// ReservationResolutionSd is a ReservationResolution enum value
 	ReservationResolutionSd = "SD"
@@ -19950,17 +23504,23 @@ const (
 	// ReservationResolutionHd is a ReservationResolution enum value
 	ReservationResolutionHd = "HD"
 
+	// ReservationResolutionFhd is a ReservationResolution enum value
+	ReservationResolutionFhd = "FHD"
+
 	// ReservationResolutionUhd is a ReservationResolution enum value
 	ReservationResolutionUhd = "UHD"
 )
 
-// Resource type, 'INPUT', 'OUTPUT', or 'CHANNEL'
+// Resource type, 'INPUT', 'OUTPUT', 'MULTIPLEX', or 'CHANNEL'
 const (
 	// ReservationResourceTypeInput is a ReservationResourceType enum value
 	ReservationResourceTypeInput = "INPUT"
 
 	// ReservationResourceTypeOutput is a ReservationResourceType enum value
 	ReservationResourceTypeOutput = "OUTPUT"
+
+	// ReservationResourceTypeMultiplex is a ReservationResourceType enum value
+	ReservationResourceTypeMultiplex = "MULTIPLEX"
 
 	// ReservationResourceTypeChannel is a ReservationResourceType enum value
 	ReservationResourceTypeChannel = "CHANNEL"

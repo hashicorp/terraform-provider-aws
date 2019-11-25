@@ -32,9 +32,8 @@ const (
 	//    a service linked role.
 	//
 	//    * For PutConformancePack and PutOrganizationConformancePack, a conformance
-	//    pack cannot be created becuase you do not have permissions: To call IAM
+	//    pack cannot be created because you do not have permissions: To call IAM
 	//    GetRole action or create a service linked role. To read Amazon S3 bucket.
-	//    To create a rule and a stack.
 	ErrCodeInsufficientPermissionsException = "InsufficientPermissionsException"
 
 	// ErrCodeInvalidConfigurationRecorderNameException for service response error code
@@ -131,6 +130,13 @@ const (
 	// of accounts and aggregators exceeds the limit.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
+	// ErrCodeMaxActiveResourcesExceededException for service response error code
+	// "MaxActiveResourcesExceededException".
+	//
+	// You have reached the limit (100,000) of active custom resource types in your
+	// account. Delete unused resources using DeleteResourceConfig.
+	ErrCodeMaxActiveResourcesExceededException = "MaxActiveResourcesExceededException"
+
 	// ErrCodeMaxNumberOfConfigRulesExceededException for service response error code
 	// "MaxNumberOfConfigRulesExceededException".
 	//
@@ -148,8 +154,8 @@ const (
 	// ErrCodeMaxNumberOfConformancePacksExceededException for service response error code
 	// "MaxNumberOfConformancePacksExceededException".
 	//
-	// You have reached the limit (20) of the number of conformance packs in an
-	// account.
+	// You have reached the limit (6) of the number of conformance packs in an account
+	// (6 conformance pack with 25 AWS Config rules per pack).
 	ErrCodeMaxNumberOfConformancePacksExceededException = "MaxNumberOfConformancePacksExceededException"
 
 	// ErrCodeMaxNumberOfDeliveryChannelsExceededException for service response error code
@@ -168,8 +174,9 @@ const (
 	// ErrCodeMaxNumberOfOrganizationConformancePacksExceededException for service response error code
 	// "MaxNumberOfOrganizationConformancePacksExceededException".
 	//
-	// You have reached the limit (10) of the number of organization conformance
-	// packs in an account.
+	// You have reached the limit (6) of the number of organization conformance
+	// packs in an account (6 conformance pack with 25 AWS Config rules per pack
+	// per account).
 	ErrCodeMaxNumberOfOrganizationConformancePacksExceededException = "MaxNumberOfOrganizationConformancePacksExceededException"
 
 	// ErrCodeMaxNumberOfRetentionConfigurationsExceededException for service response error code
