@@ -1,5 +1,9 @@
 ## 2.40.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_datasync_task: The DataSync API and SDK have removed `BEST_EFFORT` as a valid value for the `options` configuration block `posix_permissions` argument. The value has been removed from the validation in this resource to match those changes. [GH-10985]
+
 FEATURES:
 
 * **New Resource:** `aws_dx_hosted_transit_virtual_interface` [GH-8523]
