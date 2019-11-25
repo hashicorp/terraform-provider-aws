@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func generateQueryFilterSchema() *schema.Resource {
@@ -406,8 +408,6 @@ func parseVersioningConfiguration(rawVersioningConfiguration map[string]interfac
 }
 
 func resourceAwsIotAnalyticsDatasetCreate(d *schema.ResourceData, meta interface{}) error {
-	// TODO: make function that return structure of ready-to-use fields to fill
-	// CreateDatasetInput and UpdateDatasetInput structures
 	conn := meta.(*AWSClient).iotanalyticsconn
 
 	name := d.Get("name").(string)
@@ -416,7 +416,7 @@ func resourceAwsIotAnalyticsDatasetCreate(d *schema.ResourceData, meta interface
 	}
 
 	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
-		params.Tags = tagsFromMapIotAnalytics(tags)
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IotanalyticsTags()
 	}
 
 	rawActions := d.Get("action").(*schema.Set).List()
@@ -653,8 +653,15 @@ func resourceAwsIotAnalyticsDatasetRead(d *schema.ResourceData, meta interface{}
 	d.Set("versioning_configuration", wrapMapInList(rawVersioningConfiguration))
 	d.Set("arn", out.Dataset.Arn)
 
-	if err := getTagsIotAnalytics(conn, d); err != nil {
-		return err
+	arn := *out.Dataset.Arn
+	tags, err := keyvaluetags.IotanalyticsListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -711,8 +718,11 @@ func resourceAwsIotAnalyticsDatasetUpdate(d *schema.ResourceData, meta interface
 		return err
 	}
 
-	if err := setTagsIotAnalytics(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.IotanalyticsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsIotAnalyticsDatasetRead(d, meta)
