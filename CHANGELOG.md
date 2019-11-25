@@ -7,9 +7,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_eks_cluster: Add `vpc_config` nested block `cluster_security_group_id` attribute [GH-11002]
 * resource/aws_cloudwatch_metric_alarm: Add `threshold_metric_id` argument (support Anomaly Detection metrics) [GH-9828]
 * resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates [GH-10935]
 * resource/aws_ebs_snapshot_copy: Support tagging-on-create and in-place `tags` updates [GH-10936]
+* resource/aws_eks_cluster: Add `vpc_config` configuration block `cluster_security_group_id` attribute [GH-11002]
 
 BUG FIXES:
 
