@@ -11,6 +11,10 @@ ENHANCEMENTS:
 * resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates [GH-10935]
 * resource/aws_ebs_snapshot_copy: Support tagging-on-create and in-place `tags` updates [GH-10936]
 
+BUG FIXES:
+
+* data-source/aws_iam_group: Ensure `users` attribute populates fully when group contains more than 100 users [GH-10993]
+
 ## 2.39.0 (November 21, 2019)
 
 FEATURES:
