@@ -1,32 +1,32 @@
-## 2.40.0 (Unreleased)
+## 2.40.0 (November 26, 2019)
 
 NOTES:
 
-* resource/aws_datasync_task: The DataSync API and SDK have removed `BEST_EFFORT` as a valid value for the `options` configuration block `posix_permissions` argument. The value has been removed from the validation in this resource to match those changes. [GH-10985]
+* resource/aws_datasync_task: The DataSync API and SDK have removed `BEST_EFFORT` as a valid value for the `options` configuration block `posix_permissions` argument. The value has been removed from the validation in this resource to match those changes. ([#10985](https://github.com/terraform-providers/terraform-provider-aws/issues/10985))
 
 FEATURES:
 
-* **New Resource:** `aws_dx_hosted_transit_virtual_interface` [GH-8523]
-* **New Resource:** `aws_dx_hosted_transit_virtual_interface_accepter` [GH-8523]
+* **New Resource:** `aws_dx_hosted_transit_virtual_interface` ([#8523](https://github.com/terraform-providers/terraform-provider-aws/issues/8523))
+* **New Resource:** `aws_dx_hosted_transit_virtual_interface_accepter` ([#8523](https://github.com/terraform-providers/terraform-provider-aws/issues/8523))
 
 ENHANCEMENTS:
 
-* data-source/aws_eks_cluster: Add `vpc_config` nested block `cluster_security_group_id` attribute [GH-11002]
-* resource/aws_cloudwatch_metric_alarm: Add `threshold_metric_id` argument (support Anomaly Detection metrics) [GH-9828]
+* data-source/aws_eks_cluster: Add `vpc_config` nested block `cluster_security_group_id` attribute ([#11002](https://github.com/terraform-providers/terraform-provider-aws/issues/11002))
+* resource/aws_cloudwatch_metric_alarm: Add `threshold_metric_id` argument (support Anomaly Detection metrics) ([#9828](https://github.com/terraform-providers/terraform-provider-aws/issues/9828))
 * resource/aws_codebuild_projectL Add support for BUILD_GENERAL1_2XLARGE CodeBuild compute type [GH11015]
-* resource/aws_dx_private_virtual_interface: Support tagging-on-create [GH-9572]
-* resource/aws_dx_private_virtual_interface: Validate Virtual Interface type on import [GH-9572]
-* resource/aws_dx_public_virtual_interface: Validate Virtual Interface type on import [GH-9572]
-* resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates [GH-10935]
-* resource/aws_ebs_snapshot_copy: Support tagging-on-create and in-place `tags` updates [GH-10936]
-* resource/aws_eks_cluster: Add `vpc_config` configuration block `cluster_security_group_id` attribute [GH-11002]
-* resource/aws_lambda_function: Support waiting for function creation and configuration updates [GH-11016]
+* resource/aws_dx_private_virtual_interface: Support tagging-on-create ([#9572](https://github.com/terraform-providers/terraform-provider-aws/issues/9572))
+* resource/aws_dx_private_virtual_interface: Validate Virtual Interface type on import ([#9572](https://github.com/terraform-providers/terraform-provider-aws/issues/9572))
+* resource/aws_dx_public_virtual_interface: Validate Virtual Interface type on import ([#9572](https://github.com/terraform-providers/terraform-provider-aws/issues/9572))
+* resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates ([#10935](https://github.com/terraform-providers/terraform-provider-aws/issues/10935))
+* resource/aws_ebs_snapshot_copy: Support tagging-on-create and in-place `tags` updates ([#10936](https://github.com/terraform-providers/terraform-provider-aws/issues/10936))
+* resource/aws_eks_cluster: Add `vpc_config` configuration block `cluster_security_group_id` attribute ([#11002](https://github.com/terraform-providers/terraform-provider-aws/issues/11002))
+* resource/aws_lambda_function: Support waiting for function creation and configuration updates ([#11016](https://github.com/terraform-providers/terraform-provider-aws/issues/11016))
 
 BUG FIXES:
 
-* data-source/aws_iam_group: Ensure `users` attribute populates fully when group contains more than 100 users [GH-10993]
-* resource/aws_default_route_table: Return helpful not found error on resource creation instead of generic `Provider produced inconsistent result after apply` error when given invalid `default_route_table_id` argument value [GH-10981]
-* resource/aws_default_route_table: Propose resource recreation for missing Default Route Table on refresh instead of returning an error [GH-10981]
+* data-source/aws_iam_group: Ensure `users` attribute populates fully when group contains more than 100 users ([#10993](https://github.com/terraform-providers/terraform-provider-aws/issues/10993))
+* resource/aws_default_route_table: Return helpful not found error on resource creation instead of generic `Provider produced inconsistent result after apply` error when given invalid `default_route_table_id` argument value ([#10981](https://github.com/terraform-providers/terraform-provider-aws/issues/10981))
+* resource/aws_default_route_table: Propose resource recreation for missing Default Route Table on refresh instead of returning an error ([#10981](https://github.com/terraform-providers/terraform-provider-aws/issues/10981))
 
 ## 2.39.0 (November 21, 2019)
 
