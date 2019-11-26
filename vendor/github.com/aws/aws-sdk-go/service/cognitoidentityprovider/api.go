@@ -27000,6 +27000,9 @@ const (
 	// IdentityProviderTypeTypeLoginWithAmazon is a IdentityProviderTypeType enum value
 	IdentityProviderTypeTypeLoginWithAmazon = "LoginWithAmazon"
 
+	// IdentityProviderTypeTypeSignInWithApple is a IdentityProviderTypeType enum value
+	IdentityProviderTypeTypeSignInWithApple = "SignInWithApple"
+
 	// IdentityProviderTypeTypeOidc is a IdentityProviderTypeType enum value
 	IdentityProviderTypeTypeOidc = "OIDC"
 )

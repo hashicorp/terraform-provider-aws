@@ -16021,6 +16021,11 @@ func (s *Resource) Validate() error {
 	if s.ResourceDataContainer == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceDataContainer"))
 	}
+	if s.ResourceDataContainer != nil {
+		if err := s.ResourceDataContainer.Validate(); err != nil {
+			invalidParams.AddNested("ResourceDataContainer", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -16130,6 +16135,26 @@ func (s ResourceDataContainer) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataContainer) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataContainer"}
+	if s.S3MachineLearningModelResourceData != nil {
+		if err := s.S3MachineLearningModelResourceData.Validate(); err != nil {
+			invalidParams.AddNested("S3MachineLearningModelResourceData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SageMakerMachineLearningModelResourceData != nil {
+		if err := s.SageMakerMachineLearningModelResourceData.Validate(); err != nil {
+			invalidParams.AddNested("SageMakerMachineLearningModelResourceData", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetLocalDeviceResourceData sets the LocalDeviceResourceData field's value.
 func (s *ResourceDataContainer) SetLocalDeviceResourceData(v *LocalDeviceResourceData) *ResourceDataContainer {
 	s.LocalDeviceResourceData = v
@@ -16204,12 +16229,71 @@ func (s *ResourceDefinitionVersion) SetResources(v []*Resource) *ResourceDefinit
 	return s
 }
 
+// The owner setting for downloaded machine learning resources.
+type ResourceDownloadOwnerSetting struct {
+	_ struct{} `type:"structure"`
+
+	// The group owner of the resource. This is the name of an existing Linux OS
+	// group on the system or a GID. The group's permissions are added to the Lambda
+	// process.
+	//
+	// GroupOwner is a required field
+	GroupOwner *string `type:"string" required:"true"`
+
+	// The permissions that the group owner has to the resource. Valid values are
+	// ''rw'' (read/write) or ''ro'' (read-only).
+	//
+	// GroupPermission is a required field
+	GroupPermission *string `type:"string" required:"true" enum:"Permission"`
+}
+
+// String returns the string representation
+func (s ResourceDownloadOwnerSetting) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDownloadOwnerSetting) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDownloadOwnerSetting) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDownloadOwnerSetting"}
+	if s.GroupOwner == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupOwner"))
+	}
+	if s.GroupPermission == nil {
+		invalidParams.Add(request.NewErrParamRequired("GroupPermission"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGroupOwner sets the GroupOwner field's value.
+func (s *ResourceDownloadOwnerSetting) SetGroupOwner(v string) *ResourceDownloadOwnerSetting {
+	s.GroupOwner = &v
+	return s
+}
+
+// SetGroupPermission sets the GroupPermission field's value.
+func (s *ResourceDownloadOwnerSetting) SetGroupPermission(v string) *ResourceDownloadOwnerSetting {
+	s.GroupPermission = &v
+	return s
+}
+
 // Attributes that define an Amazon S3 machine learning resource.
 type S3MachineLearningModelResourceData struct {
 	_ struct{} `type:"structure"`
 
 	// The absolute local path of the resource inside the Lambda environment.
 	DestinationPath *string `type:"string"`
+
+	// The owner setting for downloaded machine learning resources.
+	OwnerSetting *ResourceDownloadOwnerSetting `type:"structure"`
 
 	// The URI of the source model in an S3 bucket. The model package must be in
 	// tar.gz or .zip format.
@@ -16226,9 +16310,30 @@ func (s S3MachineLearningModelResourceData) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3MachineLearningModelResourceData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3MachineLearningModelResourceData"}
+	if s.OwnerSetting != nil {
+		if err := s.OwnerSetting.Validate(); err != nil {
+			invalidParams.AddNested("OwnerSetting", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetDestinationPath sets the DestinationPath field's value.
 func (s *S3MachineLearningModelResourceData) SetDestinationPath(v string) *S3MachineLearningModelResourceData {
 	s.DestinationPath = &v
+	return s
+}
+
+// SetOwnerSetting sets the OwnerSetting field's value.
+func (s *S3MachineLearningModelResourceData) SetOwnerSetting(v *ResourceDownloadOwnerSetting) *S3MachineLearningModelResourceData {
+	s.OwnerSetting = v
 	return s
 }
 
@@ -16245,6 +16350,9 @@ type SageMakerMachineLearningModelResourceData struct {
 	// The absolute local path of the resource inside the Lambda environment.
 	DestinationPath *string `type:"string"`
 
+	// The owner setting for downloaded machine learning resources.
+	OwnerSetting *ResourceDownloadOwnerSetting `type:"structure"`
+
 	// The ARN of the Amazon SageMaker training job that represents the source model.
 	SageMakerJobArn *string `type:"string"`
 }
@@ -16259,9 +16367,30 @@ func (s SageMakerMachineLearningModelResourceData) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SageMakerMachineLearningModelResourceData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SageMakerMachineLearningModelResourceData"}
+	if s.OwnerSetting != nil {
+		if err := s.OwnerSetting.Validate(); err != nil {
+			invalidParams.AddNested("OwnerSetting", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetDestinationPath sets the DestinationPath field's value.
 func (s *SageMakerMachineLearningModelResourceData) SetDestinationPath(v string) *SageMakerMachineLearningModelResourceData {
 	s.DestinationPath = &v
+	return s
+}
+
+// SetOwnerSetting sets the OwnerSetting field's value.
+func (s *SageMakerMachineLearningModelResourceData) SetOwnerSetting(v *ResourceDownloadOwnerSetting) *SageMakerMachineLearningModelResourceData {
+	s.OwnerSetting = v
 	return s
 }
 
@@ -17586,9 +17715,6 @@ const (
 
 	// UpdateTargetsArchitectureAarch64 is a UpdateTargetsArchitecture enum value
 	UpdateTargetsArchitectureAarch64 = "aarch64"
-
-	// UpdateTargetsArchitectureOpenwrt is a UpdateTargetsArchitecture enum value
-	UpdateTargetsArchitectureOpenwrt = "openwrt"
 )
 
 // The operating system of the cores which are the targets of an update.
@@ -17601,4 +17727,7 @@ const (
 
 	// UpdateTargetsOperatingSystemAmazonLinux is a UpdateTargetsOperatingSystem enum value
 	UpdateTargetsOperatingSystemAmazonLinux = "amazon_linux"
+
+	// UpdateTargetsOperatingSystemOpenwrt is a UpdateTargetsOperatingSystem enum value
+	UpdateTargetsOperatingSystemOpenwrt = "openwrt"
 )

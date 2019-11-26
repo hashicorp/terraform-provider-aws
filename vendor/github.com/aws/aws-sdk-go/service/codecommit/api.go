@@ -13,6 +13,246 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
+const opAssociateApprovalRuleTemplateWithRepository = "AssociateApprovalRuleTemplateWithRepository"
+
+// AssociateApprovalRuleTemplateWithRepositoryRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateApprovalRuleTemplateWithRepository operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateApprovalRuleTemplateWithRepository for more information on using the AssociateApprovalRuleTemplateWithRepository
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateApprovalRuleTemplateWithRepositoryRequest method.
+//    req, resp := client.AssociateApprovalRuleTemplateWithRepositoryRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/AssociateApprovalRuleTemplateWithRepository
+func (c *CodeCommit) AssociateApprovalRuleTemplateWithRepositoryRequest(input *AssociateApprovalRuleTemplateWithRepositoryInput) (req *request.Request, output *AssociateApprovalRuleTemplateWithRepositoryOutput) {
+	op := &request.Operation{
+		Name:       opAssociateApprovalRuleTemplateWithRepository,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssociateApprovalRuleTemplateWithRepositoryInput{}
+	}
+
+	output = &AssociateApprovalRuleTemplateWithRepositoryOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AssociateApprovalRuleTemplateWithRepository API operation for AWS CodeCommit.
+//
+// Creates an association between an approval rule template and a specified
+// repository. Then, the next time a pull request is created in the repository
+// where the destination reference (if specified) matches the destination reference
+// (branch) for the pull request, an approval rule that matches the template
+// conditions is automatically created for that pull request. If no destination
+// references are specified in the template, an approval rule that matches the
+// template contents is created for all pull requests in that repository.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation AssociateApprovalRuleTemplateWithRepository for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeMaximumRuleTemplatesAssociatedWithRepositoryException "MaximumRuleTemplatesAssociatedWithRepositoryException"
+//   The maximum number of approval rule templates for a repository has been exceeded.
+//   You cannot associate more than 25 approval rule templates with a repository.
+//
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required, but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   A specified repository name is not valid.
+//
+//   This exception occurs only when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/AssociateApprovalRuleTemplateWithRepository
+func (c *CodeCommit) AssociateApprovalRuleTemplateWithRepository(input *AssociateApprovalRuleTemplateWithRepositoryInput) (*AssociateApprovalRuleTemplateWithRepositoryOutput, error) {
+	req, out := c.AssociateApprovalRuleTemplateWithRepositoryRequest(input)
+	return out, req.Send()
+}
+
+// AssociateApprovalRuleTemplateWithRepositoryWithContext is the same as AssociateApprovalRuleTemplateWithRepository with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateApprovalRuleTemplateWithRepository for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) AssociateApprovalRuleTemplateWithRepositoryWithContext(ctx aws.Context, input *AssociateApprovalRuleTemplateWithRepositoryInput, opts ...request.Option) (*AssociateApprovalRuleTemplateWithRepositoryOutput, error) {
+	req, out := c.AssociateApprovalRuleTemplateWithRepositoryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchAssociateApprovalRuleTemplateWithRepositories = "BatchAssociateApprovalRuleTemplateWithRepositories"
+
+// BatchAssociateApprovalRuleTemplateWithRepositoriesRequest generates a "aws/request.Request" representing the
+// client's request for the BatchAssociateApprovalRuleTemplateWithRepositories operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchAssociateApprovalRuleTemplateWithRepositories for more information on using the BatchAssociateApprovalRuleTemplateWithRepositories
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchAssociateApprovalRuleTemplateWithRepositoriesRequest method.
+//    req, resp := client.BatchAssociateApprovalRuleTemplateWithRepositoriesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchAssociateApprovalRuleTemplateWithRepositories
+func (c *CodeCommit) BatchAssociateApprovalRuleTemplateWithRepositoriesRequest(input *BatchAssociateApprovalRuleTemplateWithRepositoriesInput) (req *request.Request, output *BatchAssociateApprovalRuleTemplateWithRepositoriesOutput) {
+	op := &request.Operation{
+		Name:       opBatchAssociateApprovalRuleTemplateWithRepositories,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchAssociateApprovalRuleTemplateWithRepositoriesInput{}
+	}
+
+	output = &BatchAssociateApprovalRuleTemplateWithRepositoriesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchAssociateApprovalRuleTemplateWithRepositories API operation for AWS CodeCommit.
+//
+// Creates an association between an approval rule template and one or more
+// specified repositories.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation BatchAssociateApprovalRuleTemplateWithRepositories for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeRepositoryNamesRequiredException "RepositoryNamesRequiredException"
+//   At least one repository name object is required, but was not specified.
+//
+//   * ErrCodeMaximumRepositoryNamesExceededException "MaximumRepositoryNamesExceededException"
+//   The maximum number of allowed repository names was exceeded. Currently, this
+//   number is 100.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchAssociateApprovalRuleTemplateWithRepositories
+func (c *CodeCommit) BatchAssociateApprovalRuleTemplateWithRepositories(input *BatchAssociateApprovalRuleTemplateWithRepositoriesInput) (*BatchAssociateApprovalRuleTemplateWithRepositoriesOutput, error) {
+	req, out := c.BatchAssociateApprovalRuleTemplateWithRepositoriesRequest(input)
+	return out, req.Send()
+}
+
+// BatchAssociateApprovalRuleTemplateWithRepositoriesWithContext is the same as BatchAssociateApprovalRuleTemplateWithRepositories with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchAssociateApprovalRuleTemplateWithRepositories for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) BatchAssociateApprovalRuleTemplateWithRepositoriesWithContext(ctx aws.Context, input *BatchAssociateApprovalRuleTemplateWithRepositoriesInput, opts ...request.Option) (*BatchAssociateApprovalRuleTemplateWithRepositoriesOutput, error) {
+	req, out := c.BatchAssociateApprovalRuleTemplateWithRepositoriesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opBatchDescribeMergeConflicts = "BatchDescribeMergeConflicts"
 
 // BatchDescribeMergeConflictsRequest generates a "aws/request.Request" representing the
@@ -69,12 +309,12 @@ func (c *CodeCommit) BatchDescribeMergeConflictsRequest(input *BatchDescribeMerg
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -122,8 +362,8 @@ func (c *CodeCommit) BatchDescribeMergeConflictsRequest(input *BatchDescribeMerg
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -157,6 +397,118 @@ func (c *CodeCommit) BatchDescribeMergeConflicts(input *BatchDescribeMergeConfli
 // for more information on using Contexts.
 func (c *CodeCommit) BatchDescribeMergeConflictsWithContext(ctx aws.Context, input *BatchDescribeMergeConflictsInput, opts ...request.Option) (*BatchDescribeMergeConflictsOutput, error) {
 	req, out := c.BatchDescribeMergeConflictsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchDisassociateApprovalRuleTemplateFromRepositories = "BatchDisassociateApprovalRuleTemplateFromRepositories"
+
+// BatchDisassociateApprovalRuleTemplateFromRepositoriesRequest generates a "aws/request.Request" representing the
+// client's request for the BatchDisassociateApprovalRuleTemplateFromRepositories operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchDisassociateApprovalRuleTemplateFromRepositories for more information on using the BatchDisassociateApprovalRuleTemplateFromRepositories
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchDisassociateApprovalRuleTemplateFromRepositoriesRequest method.
+//    req, resp := client.BatchDisassociateApprovalRuleTemplateFromRepositoriesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchDisassociateApprovalRuleTemplateFromRepositories
+func (c *CodeCommit) BatchDisassociateApprovalRuleTemplateFromRepositoriesRequest(input *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput) (req *request.Request, output *BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput) {
+	op := &request.Operation{
+		Name:       opBatchDisassociateApprovalRuleTemplateFromRepositories,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &BatchDisassociateApprovalRuleTemplateFromRepositoriesInput{}
+	}
+
+	output = &BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchDisassociateApprovalRuleTemplateFromRepositories API operation for AWS CodeCommit.
+//
+// Removes the association between an approval rule template and one or more
+// specified repositories.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation BatchDisassociateApprovalRuleTemplateFromRepositories for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeRepositoryNamesRequiredException "RepositoryNamesRequiredException"
+//   At least one repository name object is required, but was not specified.
+//
+//   * ErrCodeMaximumRepositoryNamesExceededException "MaximumRepositoryNamesExceededException"
+//   The maximum number of allowed repository names was exceeded. Currently, this
+//   number is 100.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/BatchDisassociateApprovalRuleTemplateFromRepositories
+func (c *CodeCommit) BatchDisassociateApprovalRuleTemplateFromRepositories(input *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput) (*BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput, error) {
+	req, out := c.BatchDisassociateApprovalRuleTemplateFromRepositoriesRequest(input)
+	return out, req.Send()
+}
+
+// BatchDisassociateApprovalRuleTemplateFromRepositoriesWithContext is the same as BatchDisassociateApprovalRuleTemplateFromRepositories with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchDisassociateApprovalRuleTemplateFromRepositories for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) BatchDisassociateApprovalRuleTemplateFromRepositoriesWithContext(ctx aws.Context, input *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput, opts ...request.Option) (*BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput, error) {
+	req, out := c.BatchDisassociateApprovalRuleTemplateFromRepositoriesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -217,6 +569,8 @@ func (c *CodeCommit) BatchGetCommitsRequest(input *BatchGetCommitsInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeCommitIdsListRequiredException "CommitIdsListRequiredException"
+//   A list of commit IDs is required, but was either not specified or the list
+//   was empty.
 //
 //   * ErrCodeCommitIdsLimitExceededException "CommitIdsLimitExceededException"
 //   The maximum number of allowed commit IDs in a batch request is 100. Verify
@@ -224,12 +578,12 @@ func (c *CodeCommit) BatchGetCommitsRequest(input *BatchGetCommitsInput) (req *r
 //   again.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -321,9 +675,9 @@ func (c *CodeCommit) BatchGetRepositoriesRequest(input *BatchGetRepositoriesInpu
 //
 // The description field for a repository accepts all HTML characters and all
 // valid Unicode characters. Applications that do not HTML-encode the description
-// and display it in a web page could expose users to potentially malicious
-// code. Make sure that you HTML-encode the description field in any application
-// that uses this API to display the repository description on a web page.
+// and display it in a webpage can expose users to potentially malicious code.
+// Make sure that you HTML-encode the description field in any application that
+// uses this API to display the repository description on a webpage.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -334,16 +688,16 @@ func (c *CodeCommit) BatchGetRepositoriesRequest(input *BatchGetRepositoriesInpu
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNamesRequiredException "RepositoryNamesRequiredException"
-//   A repository names object is required but was not specified.
+//   At least one repository name object is required, but was not specified.
 //
 //   * ErrCodeMaximumRepositoryNamesExceededException "MaximumRepositoryNamesExceededException"
 //   The maximum number of allowed repository names was exceeded. Currently, this
-//   number is 25.
+//   number is 100.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -379,6 +733,115 @@ func (c *CodeCommit) BatchGetRepositories(input *BatchGetRepositoriesInput) (*Ba
 // for more information on using Contexts.
 func (c *CodeCommit) BatchGetRepositoriesWithContext(ctx aws.Context, input *BatchGetRepositoriesInput, opts ...request.Option) (*BatchGetRepositoriesOutput, error) {
 	req, out := c.BatchGetRepositoriesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateApprovalRuleTemplate = "CreateApprovalRuleTemplate"
+
+// CreateApprovalRuleTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the CreateApprovalRuleTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateApprovalRuleTemplate for more information on using the CreateApprovalRuleTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateApprovalRuleTemplateRequest method.
+//    req, resp := client.CreateApprovalRuleTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreateApprovalRuleTemplate
+func (c *CodeCommit) CreateApprovalRuleTemplateRequest(input *CreateApprovalRuleTemplateInput) (req *request.Request, output *CreateApprovalRuleTemplateOutput) {
+	op := &request.Operation{
+		Name:       opCreateApprovalRuleTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateApprovalRuleTemplateInput{}
+	}
+
+	output = &CreateApprovalRuleTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateApprovalRuleTemplate API operation for AWS CodeCommit.
+//
+// Creates a template for approval rules that can then be associated with one
+// or more repositories in your AWS account. When you associate a template with
+// a repository, AWS CodeCommit creates an approval rule that matches the conditions
+// of the template for all pull requests that meet the conditions of the template.
+// For more information, see AssociateApprovalRuleTemplateWithRepository.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation CreateApprovalRuleTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateNameAlreadyExistsException "ApprovalRuleTemplateNameAlreadyExistsException"
+//   You cannot create an approval rule template with that name because a template
+//   with that name already exists in this AWS Region for your AWS account. Approval
+//   rule template names must be unique.
+//
+//   * ErrCodeApprovalRuleTemplateContentRequiredException "ApprovalRuleTemplateContentRequiredException"
+//   The content for the approval rule template is empty. You must provide some
+//   content for an approval rule template. The content cannot be null.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateContentException "InvalidApprovalRuleTemplateContentException"
+//   The content of the approval rule template is not valid.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateDescriptionException "InvalidApprovalRuleTemplateDescriptionException"
+//   The description for the approval rule template is not valid because it exceeds
+//   the maximum characters allowed for a description. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeNumberOfRuleTemplatesExceededException "NumberOfRuleTemplatesExceededException"
+//   The maximum number of approval rule templates has been exceeded for this
+//   AWS Region.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreateApprovalRuleTemplate
+func (c *CodeCommit) CreateApprovalRuleTemplate(input *CreateApprovalRuleTemplateInput) (*CreateApprovalRuleTemplateOutput, error) {
+	req, out := c.CreateApprovalRuleTemplateRequest(input)
+	return out, req.Send()
+}
+
+// CreateApprovalRuleTemplateWithContext is the same as CreateApprovalRuleTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateApprovalRuleTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) CreateApprovalRuleTemplateWithContext(ctx aws.Context, input *CreateApprovalRuleTemplateInput, opts ...request.Option) (*CreateApprovalRuleTemplateOutput, error) {
+	req, out := c.CreateApprovalRuleTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -429,7 +892,7 @@ func (c *CodeCommit) CreateBranchRequest(input *CreateBranchInput) (req *request
 
 // CreateBranch API operation for AWS CodeCommit.
 //
-// Creates a new branch in a repository and points the branch to a commit.
+// Creates a branch in a repository and points the branch to a commit.
 //
 // Calling the create branch operation does not set a repository's default branch.
 // To do this, call the update default branch operation.
@@ -443,12 +906,12 @@ func (c *CodeCommit) CreateBranchRequest(input *CreateBranchInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -456,7 +919,7 @@ func (c *CodeCommit) CreateBranchRequest(input *CreateBranchInput) (req *request
 //   The specified repository does not exist.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeBranchNameExistsException "BranchNameExistsException"
 //   The specified branch name already exists.
@@ -566,12 +1029,12 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -598,7 +1061,7 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 //   current head of the branch, use GetBranch.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
 //   The specified reference name is not valid.
@@ -607,9 +1070,9 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 //   The specified branch does not exist.
 //
 //   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
-//   The specified branch name is not valid because it is a tag name. Type the
-//   name of a current branch in the repository. For a list of valid branch names,
-//   use ListBranches.
+//   The specified branch name is not valid because it is a tag name. Enter the
+//   name of a branch in the repository. For a list of valid branch names, use
+//   ListBranches.
 //
 //   * ErrCodeFileEntryRequiredException "FileEntryRequiredException"
 //   The commit cannot be created because no files have been specified as added,
@@ -631,7 +1094,7 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 //   * ErrCodeFileContentAndSourceFileSpecifiedException "FileContentAndSourceFileSpecifiedException"
 //   The commit cannot be created because both a source file and file content
 //   have been specified for the same file. You cannot provide both. Either specify
-//   a source file, or provide the file content directly.
+//   a source file or provide the file content directly.
 //
 //   * ErrCodePathRequiredException "PathRequiredException"
 //   The folderPath for a location cannot be null.
@@ -646,13 +1109,13 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 //   and a move request to the same file as part of the same commit.
 //
 //   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
-//   The specified file does not exist. Verify that you have provided the correct
-//   name of the file, including its full path and extension.
+//   The specified file does not exist. Verify that you have used the correct
+//   file name, full path, and extension.
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
-//   The file cannot be added because it is too large. The maximum file size that
-//   can be added is 6 MB, and the combined file content change size is 7 MB.
-//   Consider making these changes using a Git client.
+//   The file cannot be added because it is too large. The maximum file size is
+//   6 MB, and the combined file content change size is 7 MB. Consider making
+//   these changes using a Git client.
 //
 //   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
 //   The commit cannot be created because at least one of the overall changes
@@ -668,8 +1131,8 @@ func (c *CodeCommit) CreateCommitRequest(input *CreateCommitInput) (req *request
 //   or moving a .gitkeep file.
 //
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
-//   The commit cannot be created because a file mode is required to update mode
-//   permissions for an existing file, but no file mode has been specified.
+//   The commit cannot be created because no file mode has been specified. A file
+//   mode is required to update mode permissions for a file.
 //
 //   * ErrCodeInvalidFileModeException "InvalidFileModeException"
 //   The specified file mode permission is not valid. For a list of valid file
@@ -800,12 +1263,12 @@ func (c *CodeCommit) CreatePullRequestRequest(input *CreatePullRequestInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -829,24 +1292,24 @@ func (c *CodeCommit) CreatePullRequestRequest(input *CreatePullRequestInput) (re
 //
 //   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
 //   A client request token is required. A client request token is an unique,
-//   client-generated idempotency token that when provided in a request, ensures
+//   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
-//   received with the same parameters and a token is included, the request will
-//   return information about the initial request that used that token.
+//   received with the same parameters and a token is included, the request returns
+//   information about the initial request that used that token.
 //
 //   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
 //   The client request token is not valid.
 //
 //   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
 //   The client request token is not valid. Either the token is not in a valid
-//   format, or the token has been used in a previous request and cannot be re-used.
+//   format, or the token has been used in a previous request and cannot be reused.
 //
 //   * ErrCodeReferenceNameRequiredException "ReferenceNameRequiredException"
 //   A reference name is required, but none was provided.
 //
 //   * ErrCodeInvalidReferenceNameException "InvalidReferenceNameException"
 //   The specified reference name format is not valid. Reference names must conform
-//   to the Git references format, for example refs/heads/master. For more information,
+//   to the Git references format (for example, refs/heads/master). For more information,
 //   see Git Internals - Git References (https://git-scm.com/book/en/v2/Git-Internals-Git-References)
 //   or consult your Git documentation.
 //
@@ -864,8 +1327,8 @@ func (c *CodeCommit) CreatePullRequestRequest(input *CreatePullRequestInput) (re
 //   100 characters in length.
 //
 //   * ErrCodeInvalidDescriptionException "InvalidDescriptionException"
-//   The pull request description is not valid. Descriptions are limited to 1,000
-//   characters in length.
+//   The pull request description is not valid. Descriptions cannot be more than
+//   1,000 characters.
 //
 //   * ErrCodeTargetsRequiredException "TargetsRequiredException"
 //   An array of target objects is required. It cannot be empty or null.
@@ -897,8 +1360,8 @@ func (c *CodeCommit) CreatePullRequestRequest(input *CreatePullRequestInput) (re
 //   is 1,000. Close one or more open pull requests, and then try again.
 //
 //   * ErrCodeSourceAndDestinationAreSameException "SourceAndDestinationAreSameException"
-//   The source branch and the destination branch for the pull request are the
-//   same. You must specify different branches for the source and destination.
+//   The source branch and destination branch for the pull request are the same.
+//   You must specify different branches for the source and destination.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreatePullRequest
 func (c *CodeCommit) CreatePullRequest(input *CreatePullRequestInput) (*CreatePullRequestOutput, error) {
@@ -917,6 +1380,133 @@ func (c *CodeCommit) CreatePullRequest(input *CreatePullRequestInput) (*CreatePu
 // for more information on using Contexts.
 func (c *CodeCommit) CreatePullRequestWithContext(ctx aws.Context, input *CreatePullRequestInput, opts ...request.Option) (*CreatePullRequestOutput, error) {
 	req, out := c.CreatePullRequestRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreatePullRequestApprovalRule = "CreatePullRequestApprovalRule"
+
+// CreatePullRequestApprovalRuleRequest generates a "aws/request.Request" representing the
+// client's request for the CreatePullRequestApprovalRule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreatePullRequestApprovalRule for more information on using the CreatePullRequestApprovalRule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreatePullRequestApprovalRuleRequest method.
+//    req, resp := client.CreatePullRequestApprovalRuleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreatePullRequestApprovalRule
+func (c *CodeCommit) CreatePullRequestApprovalRuleRequest(input *CreatePullRequestApprovalRuleInput) (req *request.Request, output *CreatePullRequestApprovalRuleOutput) {
+	op := &request.Operation{
+		Name:       opCreatePullRequestApprovalRule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreatePullRequestApprovalRuleInput{}
+	}
+
+	output = &CreatePullRequestApprovalRuleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreatePullRequestApprovalRule API operation for AWS CodeCommit.
+//
+// Creates an approval rule for a pull request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation CreatePullRequestApprovalRule for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleNameRequiredException "ApprovalRuleNameRequiredException"
+//   An approval rule name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleNameException "InvalidApprovalRuleNameException"
+//   The name for the approval rule is not valid.
+//
+//   * ErrCodeApprovalRuleNameAlreadyExistsException "ApprovalRuleNameAlreadyExistsException"
+//   An approval rule with that name already exists. Approval rule names must
+//   be unique within the scope of a pull request.
+//
+//   * ErrCodeApprovalRuleContentRequiredException "ApprovalRuleContentRequiredException"
+//   The content for the approval rule is empty. You must provide some content
+//   for an approval rule. The content cannot be null.
+//
+//   * ErrCodeInvalidApprovalRuleContentException "InvalidApprovalRuleContentException"
+//   The content for the approval rule is not valid.
+//
+//   * ErrCodeNumberOfRulesExceededException "NumberOfRulesExceededException"
+//   The approval rule cannot be added. The pull request has the maximum number
+//   of approval rules associated with it.
+//
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   The pull request status cannot be updated because it is already closed.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/CreatePullRequestApprovalRule
+func (c *CodeCommit) CreatePullRequestApprovalRule(input *CreatePullRequestApprovalRuleInput) (*CreatePullRequestApprovalRuleOutput, error) {
+	req, out := c.CreatePullRequestApprovalRuleRequest(input)
+	return out, req.Send()
+}
+
+// CreatePullRequestApprovalRuleWithContext is the same as CreatePullRequestApprovalRule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreatePullRequestApprovalRule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) CreatePullRequestApprovalRuleWithContext(ctx aws.Context, input *CreatePullRequestApprovalRuleInput, opts ...request.Option) (*CreatePullRequestApprovalRuleOutput, error) {
+	req, out := c.CreatePullRequestApprovalRuleRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -980,12 +1570,12 @@ func (c *CodeCommit) CreateRepositoryRequest(input *CreateRepositoryInput) (req 
 //   The specified repository name already exists.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -1091,7 +1681,7 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 // Creates an unreferenced commit that represents the result of merging two
 // branches using a specified merge strategy. This can help you determine the
 // outcome of a potential merge. This API cannot be used with the fast-forward
-// merge strategy, as that strategy does not create a merge commit.
+// merge strategy because that strategy does not create a merge commit.
 //
 // This unreferenced merge commit can only be accessed using the GetCommit API
 // or through git commands such as git fetch. To retrieve this commit, you must
@@ -1106,12 +1696,12 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -1168,7 +1758,7 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //   type is not valid.
 //
 //   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
-//   USE_NEW_CONTENT was specified but no replacement content has been provided.
+//   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
 //   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
 //   Automerge was specified for resolving the conflict, but the replacement type
@@ -1181,9 +1771,9 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //   The specified path is not valid.
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
-//   The file cannot be added because it is too large. The maximum file size that
-//   can be added is 6 MB, and the combined file content change size is 7 MB.
-//   Consider making these changes using a Git client.
+//   The file cannot be added because it is too large. The maximum file size is
+//   6 MB, and the combined file content change size is 7 MB. Consider making
+//   these changes using a Git client.
 //
 //   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
 //   The commit cannot be created because at least one of the overall changes
@@ -1195,8 +1785,8 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeConcurrentReferenceUpdateException "ConcurrentReferenceUpdateException"
 //   The merge cannot be completed because the target branch has been modified.
@@ -1204,8 +1794,8 @@ func (c *CodeCommit) CreateUnreferencedMergeCommitRequest(input *CreateUnreferen
 //   progress. Wait a few minutes, and then try again.
 //
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
-//   The commit cannot be created because a file mode is required to update mode
-//   permissions for an existing file, but no file mode has been specified.
+//   The commit cannot be created because no file mode has been specified. A file
+//   mode is required to update mode permissions for a file.
 //
 //   * ErrCodeInvalidFileModeException "InvalidFileModeException"
 //   The specified file mode permission is not valid. For a list of valid file
@@ -1255,6 +1845,96 @@ func (c *CodeCommit) CreateUnreferencedMergeCommit(input *CreateUnreferencedMerg
 // for more information on using Contexts.
 func (c *CodeCommit) CreateUnreferencedMergeCommitWithContext(ctx aws.Context, input *CreateUnreferencedMergeCommitInput, opts ...request.Option) (*CreateUnreferencedMergeCommitOutput, error) {
 	req, out := c.CreateUnreferencedMergeCommitRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteApprovalRuleTemplate = "DeleteApprovalRuleTemplate"
+
+// DeleteApprovalRuleTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteApprovalRuleTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteApprovalRuleTemplate for more information on using the DeleteApprovalRuleTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteApprovalRuleTemplateRequest method.
+//    req, resp := client.DeleteApprovalRuleTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeleteApprovalRuleTemplate
+func (c *CodeCommit) DeleteApprovalRuleTemplateRequest(input *DeleteApprovalRuleTemplateInput) (req *request.Request, output *DeleteApprovalRuleTemplateOutput) {
+	op := &request.Operation{
+		Name:       opDeleteApprovalRuleTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteApprovalRuleTemplateInput{}
+	}
+
+	output = &DeleteApprovalRuleTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteApprovalRuleTemplate API operation for AWS CodeCommit.
+//
+// Deletes a specified approval rule template. Deleting a template does not
+// remove approval rules on pull requests already created with the template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation DeleteApprovalRuleTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateInUseException "ApprovalRuleTemplateInUseException"
+//   The approval rule template is associated with one or more repositories. You
+//   cannot delete a template that is associated with a repository. Remove all
+//   associations, and then try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeleteApprovalRuleTemplate
+func (c *CodeCommit) DeleteApprovalRuleTemplate(input *DeleteApprovalRuleTemplateInput) (*DeleteApprovalRuleTemplateOutput, error) {
+	req, out := c.DeleteApprovalRuleTemplateRequest(input)
+	return out, req.Send()
+}
+
+// DeleteApprovalRuleTemplateWithContext is the same as DeleteApprovalRuleTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteApprovalRuleTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) DeleteApprovalRuleTemplateWithContext(ctx aws.Context, input *DeleteApprovalRuleTemplateInput, opts ...request.Option) (*DeleteApprovalRuleTemplateOutput, error) {
+	req, out := c.DeleteApprovalRuleTemplateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1316,20 +1996,20 @@ func (c *CodeCommit) DeleteBranchRequest(input *DeleteBranchInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
 //   The specified reference name is not valid.
@@ -1431,8 +2111,8 @@ func (c *CodeCommit) DeleteCommentContentRequest(input *DeleteCommentContentInpu
 //
 // Returned Error Codes:
 //   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
-//   No comment exists with the provided ID. Verify that you have provided the
-//   correct ID, and then try again.
+//   No comment exists with the provided ID. Verify that you have used the correct
+//   ID, and then try again.
 //
 //   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
 //   The comment ID is missing or null. A comment ID is required.
@@ -1512,8 +2192,8 @@ func (c *CodeCommit) DeleteFileRequest(input *DeleteFileInput) (req *request.Req
 // DeleteFile API operation for AWS CodeCommit.
 //
 // Deletes a specified file from a specified branch. A commit is created on
-// the branch that contains the revision. The file will still exist in the commits
-// prior to the commit that contains the deletion.
+// the branch that contains the revision. The file still exists in the commits
+// earlier to the commit that contains the deletion.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1524,12 +2204,12 @@ func (c *CodeCommit) DeleteFileRequest(input *DeleteFileInput) (req *request.Req
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -1562,11 +2242,11 @@ func (c *CodeCommit) DeleteFileRequest(input *DeleteFileInput) (req *request.Req
 //   The specified path is not valid.
 //
 //   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
-//   The specified file does not exist. Verify that you have provided the correct
-//   name of the file, including its full path and extension.
+//   The specified file does not exist. Verify that you have used the correct
+//   file name, full path, and extension.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
 //   The specified reference name is not valid.
@@ -1575,9 +2255,9 @@ func (c *CodeCommit) DeleteFileRequest(input *DeleteFileInput) (req *request.Req
 //   The specified branch does not exist.
 //
 //   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
-//   The specified branch name is not valid because it is a tag name. Type the
-//   name of a current branch in the repository. For a list of valid branch names,
-//   use ListBranches.
+//   The specified branch name is not valid because it is a tag name. Enter the
+//   name of a branch in the repository. For a list of valid branch names, use
+//   ListBranches.
 //
 //   * ErrCodeNameLengthExceededException "NameLengthExceededException"
 //   The user name is not valid because it has exceeded the character limit for
@@ -1628,6 +2308,127 @@ func (c *CodeCommit) DeleteFileWithContext(ctx aws.Context, input *DeleteFileInp
 	return out, req.Send()
 }
 
+const opDeletePullRequestApprovalRule = "DeletePullRequestApprovalRule"
+
+// DeletePullRequestApprovalRuleRequest generates a "aws/request.Request" representing the
+// client's request for the DeletePullRequestApprovalRule operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeletePullRequestApprovalRule for more information on using the DeletePullRequestApprovalRule
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeletePullRequestApprovalRuleRequest method.
+//    req, resp := client.DeletePullRequestApprovalRuleRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeletePullRequestApprovalRule
+func (c *CodeCommit) DeletePullRequestApprovalRuleRequest(input *DeletePullRequestApprovalRuleInput) (req *request.Request, output *DeletePullRequestApprovalRuleOutput) {
+	op := &request.Operation{
+		Name:       opDeletePullRequestApprovalRule,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeletePullRequestApprovalRuleInput{}
+	}
+
+	output = &DeletePullRequestApprovalRuleOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeletePullRequestApprovalRule API operation for AWS CodeCommit.
+//
+// Deletes an approval rule from a specified pull request. Approval rules can
+// be deleted from a pull request only if the pull request is open, and if the
+// approval rule was created specifically for a pull request and not generated
+// from an approval rule template associated with the repository where the pull
+// request was created. You cannot delete an approval rule from a merged or
+// closed pull request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation DeletePullRequestApprovalRule for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   The pull request status cannot be updated because it is already closed.
+//
+//   * ErrCodeApprovalRuleNameRequiredException "ApprovalRuleNameRequiredException"
+//   An approval rule name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleNameException "InvalidApprovalRuleNameException"
+//   The name for the approval rule is not valid.
+//
+//   * ErrCodeCannotDeleteApprovalRuleFromTemplateException "CannotDeleteApprovalRuleFromTemplateException"
+//   The approval rule cannot be deleted from the pull request because it was
+//   created by an approval rule template and applied to the pull request automatically.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DeletePullRequestApprovalRule
+func (c *CodeCommit) DeletePullRequestApprovalRule(input *DeletePullRequestApprovalRuleInput) (*DeletePullRequestApprovalRuleOutput, error) {
+	req, out := c.DeletePullRequestApprovalRuleRequest(input)
+	return out, req.Send()
+}
+
+// DeletePullRequestApprovalRuleWithContext is the same as DeletePullRequestApprovalRule with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeletePullRequestApprovalRule for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) DeletePullRequestApprovalRuleWithContext(ctx aws.Context, input *DeletePullRequestApprovalRuleInput, opts ...request.Option) (*DeletePullRequestApprovalRuleOutput, error) {
+	req, out := c.DeletePullRequestApprovalRuleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteRepository = "DeleteRepository"
 
 // DeleteRepositoryRequest generates a "aws/request.Request" representing the
@@ -1673,11 +2474,11 @@ func (c *CodeCommit) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req 
 // DeleteRepository API operation for AWS CodeCommit.
 //
 // Deletes a repository. If a specified repository was already deleted, a null
-// repository ID will be returned.
+// repository ID is returned.
 //
 // Deleting a repository also deletes all associated objects and metadata. After
 // a repository is deleted, all future push calls to the deleted repository
-// will fail.
+// fail.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1688,12 +2489,12 @@ func (c *CodeCommit) DeleteRepositoryRequest(input *DeleteRepositoryInput) (req 
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -1787,7 +2588,7 @@ func (c *CodeCommit) DescribeMergeConflictsRequest(input *DescribeMergeConflicts
 // Returns information about one or more merge conflicts in the attempted merge
 // of two commit specifiers using the squash or three-way merge strategy. If
 // the merge option for the attempted merge is specified as FAST_FORWARD_MERGE,
-// an exception will be thrown.
+// an exception is thrown.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1798,12 +2599,12 @@ func (c *CodeCommit) DescribeMergeConflictsRequest(input *DescribeMergeConflicts
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -1842,8 +2643,8 @@ func (c *CodeCommit) DescribeMergeConflictsRequest(input *DescribeMergeConflicts
 //   The specified path is not valid.
 //
 //   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
-//   The specified file does not exist. Verify that you have provided the correct
-//   name of the file, including its full path and extension.
+//   The specified file does not exist. Verify that you have used the correct
+//   file name, full path, and extension.
 //
 //   * ErrCodeInvalidMaxMergeHunksException "InvalidMaxMergeHunksException"
 //   The specified value for the number of merge hunks to return is not valid.
@@ -1858,8 +2659,8 @@ func (c *CodeCommit) DescribeMergeConflictsRequest(input *DescribeMergeConflicts
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -2128,6 +2929,330 @@ func (c *CodeCommit) DescribePullRequestEventsPagesWithContext(ctx aws.Context, 
 	return p.Err()
 }
 
+const opDisassociateApprovalRuleTemplateFromRepository = "DisassociateApprovalRuleTemplateFromRepository"
+
+// DisassociateApprovalRuleTemplateFromRepositoryRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateApprovalRuleTemplateFromRepository operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateApprovalRuleTemplateFromRepository for more information on using the DisassociateApprovalRuleTemplateFromRepository
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateApprovalRuleTemplateFromRepositoryRequest method.
+//    req, resp := client.DisassociateApprovalRuleTemplateFromRepositoryRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DisassociateApprovalRuleTemplateFromRepository
+func (c *CodeCommit) DisassociateApprovalRuleTemplateFromRepositoryRequest(input *DisassociateApprovalRuleTemplateFromRepositoryInput) (req *request.Request, output *DisassociateApprovalRuleTemplateFromRepositoryOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateApprovalRuleTemplateFromRepository,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateApprovalRuleTemplateFromRepositoryInput{}
+	}
+
+	output = &DisassociateApprovalRuleTemplateFromRepositoryOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateApprovalRuleTemplateFromRepository API operation for AWS CodeCommit.
+//
+// Removes the association between a template and a repository so that approval
+// rules based on the template are not automatically created when pull requests
+// are created in the specified repository. This does not delete any approval
+// rules previously created for pull requests through the template association.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation DisassociateApprovalRuleTemplateFromRepository for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required, but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   A specified repository name is not valid.
+//
+//   This exception occurs only when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/DisassociateApprovalRuleTemplateFromRepository
+func (c *CodeCommit) DisassociateApprovalRuleTemplateFromRepository(input *DisassociateApprovalRuleTemplateFromRepositoryInput) (*DisassociateApprovalRuleTemplateFromRepositoryOutput, error) {
+	req, out := c.DisassociateApprovalRuleTemplateFromRepositoryRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateApprovalRuleTemplateFromRepositoryWithContext is the same as DisassociateApprovalRuleTemplateFromRepository with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateApprovalRuleTemplateFromRepository for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) DisassociateApprovalRuleTemplateFromRepositoryWithContext(ctx aws.Context, input *DisassociateApprovalRuleTemplateFromRepositoryInput, opts ...request.Option) (*DisassociateApprovalRuleTemplateFromRepositoryOutput, error) {
+	req, out := c.DisassociateApprovalRuleTemplateFromRepositoryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opEvaluatePullRequestApprovalRules = "EvaluatePullRequestApprovalRules"
+
+// EvaluatePullRequestApprovalRulesRequest generates a "aws/request.Request" representing the
+// client's request for the EvaluatePullRequestApprovalRules operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See EvaluatePullRequestApprovalRules for more information on using the EvaluatePullRequestApprovalRules
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the EvaluatePullRequestApprovalRulesRequest method.
+//    req, resp := client.EvaluatePullRequestApprovalRulesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/EvaluatePullRequestApprovalRules
+func (c *CodeCommit) EvaluatePullRequestApprovalRulesRequest(input *EvaluatePullRequestApprovalRulesInput) (req *request.Request, output *EvaluatePullRequestApprovalRulesOutput) {
+	op := &request.Operation{
+		Name:       opEvaluatePullRequestApprovalRules,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &EvaluatePullRequestApprovalRulesInput{}
+	}
+
+	output = &EvaluatePullRequestApprovalRulesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// EvaluatePullRequestApprovalRules API operation for AWS CodeCommit.
+//
+// Evaluates whether a pull request has met all the conditions specified in
+// its associated approval rules.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation EvaluatePullRequestApprovalRules for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   The revision ID is not valid. Use GetPullRequest to determine the value.
+//
+//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   A revision ID is required, but was not provided.
+//
+//   * ErrCodeRevisionNotCurrentException "RevisionNotCurrentException"
+//   The revision ID provided in the request does not match the current revision
+//   ID. Use GetPullRequest to retrieve the current revision ID.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/EvaluatePullRequestApprovalRules
+func (c *CodeCommit) EvaluatePullRequestApprovalRules(input *EvaluatePullRequestApprovalRulesInput) (*EvaluatePullRequestApprovalRulesOutput, error) {
+	req, out := c.EvaluatePullRequestApprovalRulesRequest(input)
+	return out, req.Send()
+}
+
+// EvaluatePullRequestApprovalRulesWithContext is the same as EvaluatePullRequestApprovalRules with the addition of
+// the ability to pass a context and additional request options.
+//
+// See EvaluatePullRequestApprovalRules for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) EvaluatePullRequestApprovalRulesWithContext(ctx aws.Context, input *EvaluatePullRequestApprovalRulesInput, opts ...request.Option) (*EvaluatePullRequestApprovalRulesOutput, error) {
+	req, out := c.EvaluatePullRequestApprovalRulesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetApprovalRuleTemplate = "GetApprovalRuleTemplate"
+
+// GetApprovalRuleTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the GetApprovalRuleTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetApprovalRuleTemplate for more information on using the GetApprovalRuleTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetApprovalRuleTemplateRequest method.
+//    req, resp := client.GetApprovalRuleTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetApprovalRuleTemplate
+func (c *CodeCommit) GetApprovalRuleTemplateRequest(input *GetApprovalRuleTemplateInput) (req *request.Request, output *GetApprovalRuleTemplateOutput) {
+	op := &request.Operation{
+		Name:       opGetApprovalRuleTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetApprovalRuleTemplateInput{}
+	}
+
+	output = &GetApprovalRuleTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetApprovalRuleTemplate API operation for AWS CodeCommit.
+//
+// Returns information about a specified approval rule template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation GetApprovalRuleTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetApprovalRuleTemplate
+func (c *CodeCommit) GetApprovalRuleTemplate(input *GetApprovalRuleTemplateInput) (*GetApprovalRuleTemplateOutput, error) {
+	req, out := c.GetApprovalRuleTemplateRequest(input)
+	return out, req.Send()
+}
+
+// GetApprovalRuleTemplateWithContext is the same as GetApprovalRuleTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetApprovalRuleTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) GetApprovalRuleTemplateWithContext(ctx aws.Context, input *GetApprovalRuleTemplateInput, opts ...request.Option) (*GetApprovalRuleTemplateOutput, error) {
+	req, out := c.GetApprovalRuleTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetBlob = "GetBlob"
 
 // GetBlobRequest generates a "aws/request.Request" representing the
@@ -2172,7 +3297,7 @@ func (c *CodeCommit) GetBlobRequest(input *GetBlobInput) (req *request.Request, 
 
 // GetBlob API operation for AWS CodeCommit.
 //
-// Returns the base-64 encoded content of an individual blob within a repository.
+// Returns the base-64 encoded content of an individual blob in a repository.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2183,12 +3308,12 @@ func (c *CodeCommit) GetBlobRequest(input *GetBlobInput) (req *request.Request, 
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -2196,7 +3321,7 @@ func (c *CodeCommit) GetBlobRequest(input *GetBlobInput) (req *request.Request, 
 //   The specified repository does not exist.
 //
 //   * ErrCodeBlobIdRequiredException "BlobIdRequiredException"
-//   A blob ID is required but was not specified.
+//   A blob ID is required, but was not specified.
 //
 //   * ErrCodeInvalidBlobIdException "InvalidBlobIdException"
 //   The specified blob is not valid.
@@ -2302,20 +3427,20 @@ func (c *CodeCommit) GetBranchRequest(input *GetBranchInput) (req *request.Reque
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
 //   The specified reference name is not valid.
@@ -2415,8 +3540,8 @@ func (c *CodeCommit) GetCommentRequest(input *GetCommentInput) (req *request.Req
 //
 // Returned Error Codes:
 //   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
-//   No comment exists with the provided ID. Verify that you have provided the
-//   correct ID, and then try again.
+//   No comment exists with the provided ID. Verify that you have used the correct
+//   ID, and then try again.
 //
 //   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
 //   The comment ID is missing or null. A comment ID is required.
@@ -2512,15 +3637,15 @@ func (c *CodeCommit) GetCommentsForComparedCommitRequest(input *GetCommentsForCo
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -2702,15 +3827,15 @@ func (c *CodeCommit) GetCommentsForPullRequestRequest(input *GetCommentsForPullR
 //   again.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -2880,12 +4005,12 @@ func (c *CodeCommit) GetCommitRequest(input *GetCommitInput) (req *request.Reque
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -2989,7 +4114,7 @@ func (c *CodeCommit) GetDifferencesRequest(input *GetDifferencesInput) (req *req
 // GetDifferences API operation for AWS CodeCommit.
 //
 // Returns information about the differences in a valid commit specifier (such
-// as a branch, tag, HEAD, commit ID or other fully qualified reference). Results
+// as a branch, tag, HEAD, commit ID, or other fully qualified reference). Results
 // can be limited to a specified path.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3001,15 +4126,15 @@ func (c *CodeCommit) GetDifferencesRequest(input *GetDifferencesInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -3182,12 +4307,12 @@ func (c *CodeCommit) GetFileRequest(input *GetFileInput) (req *request.Request, 
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -3208,8 +4333,8 @@ func (c *CodeCommit) GetFileRequest(input *GetFileInput) (req *request.Request, 
 //   The specified path is not valid.
 //
 //   * ErrCodeFileDoesNotExistException "FileDoesNotExistException"
-//   The specified file does not exist. Verify that you have provided the correct
-//   name of the file, including its full path and extension.
+//   The specified file does not exist. Verify that you have used the correct
+//   file name, full path, and extension.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -3308,12 +4433,12 @@ func (c *CodeCommit) GetFolderRequest(input *GetFolderInput) (req *request.Reque
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -3335,7 +4460,7 @@ func (c *CodeCommit) GetFolderRequest(input *GetFolderInput) (req *request.Reque
 //
 //   * ErrCodeFolderDoesNotExistException "FolderDoesNotExistException"
 //   The specified folder does not exist. Either the folder name is not correct,
-//   or you did not provide the full path to the folder.
+//   or you did not enter the full path to the folder.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -3429,12 +4554,12 @@ func (c *CodeCommit) GetMergeCommitRequest(input *GetMergeCommitInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -3556,12 +4681,12 @@ func (c *CodeCommit) GetMergeConflictsRequest(input *GetMergeConflictsInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -3614,8 +4739,8 @@ func (c *CodeCommit) GetMergeConflictsRequest(input *GetMergeConflictsInput) (re
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -3751,8 +4876,8 @@ func (c *CodeCommit) GetMergeOptionsRequest(input *GetMergeOptionsInput) (req *r
 // GetMergeOptions API operation for AWS CodeCommit.
 //
 // Returns information about the merge options available for merging two specified
-// branches. For details about why a particular merge option is not available,
-// use GetMergeConflicts or DescribeMergeConflicts.
+// branches. For details about why a merge option is not available, use GetMergeConflicts
+// or DescribeMergeConflicts.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3763,12 +4888,12 @@ func (c *CodeCommit) GetMergeOptionsRequest(input *GetMergeOptionsInput) (req *r
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -3800,8 +4925,8 @@ func (c *CodeCommit) GetMergeOptionsRequest(input *GetMergeOptionsInput) (req *r
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -3943,6 +5068,228 @@ func (c *CodeCommit) GetPullRequestWithContext(ctx aws.Context, input *GetPullRe
 	return out, req.Send()
 }
 
+const opGetPullRequestApprovalStates = "GetPullRequestApprovalStates"
+
+// GetPullRequestApprovalStatesRequest generates a "aws/request.Request" representing the
+// client's request for the GetPullRequestApprovalStates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPullRequestApprovalStates for more information on using the GetPullRequestApprovalStates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPullRequestApprovalStatesRequest method.
+//    req, resp := client.GetPullRequestApprovalStatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetPullRequestApprovalStates
+func (c *CodeCommit) GetPullRequestApprovalStatesRequest(input *GetPullRequestApprovalStatesInput) (req *request.Request, output *GetPullRequestApprovalStatesOutput) {
+	op := &request.Operation{
+		Name:       opGetPullRequestApprovalStates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetPullRequestApprovalStatesInput{}
+	}
+
+	output = &GetPullRequestApprovalStatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPullRequestApprovalStates API operation for AWS CodeCommit.
+//
+// Gets information about the approval states for a specified pull request.
+// Approval states only apply to pull requests that have one or more approval
+// rules applied to them.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation GetPullRequestApprovalStates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   The revision ID is not valid. Use GetPullRequest to determine the value.
+//
+//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   A revision ID is required, but was not provided.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetPullRequestApprovalStates
+func (c *CodeCommit) GetPullRequestApprovalStates(input *GetPullRequestApprovalStatesInput) (*GetPullRequestApprovalStatesOutput, error) {
+	req, out := c.GetPullRequestApprovalStatesRequest(input)
+	return out, req.Send()
+}
+
+// GetPullRequestApprovalStatesWithContext is the same as GetPullRequestApprovalStates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPullRequestApprovalStates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) GetPullRequestApprovalStatesWithContext(ctx aws.Context, input *GetPullRequestApprovalStatesInput, opts ...request.Option) (*GetPullRequestApprovalStatesOutput, error) {
+	req, out := c.GetPullRequestApprovalStatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetPullRequestOverrideState = "GetPullRequestOverrideState"
+
+// GetPullRequestOverrideStateRequest generates a "aws/request.Request" representing the
+// client's request for the GetPullRequestOverrideState operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetPullRequestOverrideState for more information on using the GetPullRequestOverrideState
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetPullRequestOverrideStateRequest method.
+//    req, resp := client.GetPullRequestOverrideStateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetPullRequestOverrideState
+func (c *CodeCommit) GetPullRequestOverrideStateRequest(input *GetPullRequestOverrideStateInput) (req *request.Request, output *GetPullRequestOverrideStateOutput) {
+	op := &request.Operation{
+		Name:       opGetPullRequestOverrideState,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetPullRequestOverrideStateInput{}
+	}
+
+	output = &GetPullRequestOverrideStateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetPullRequestOverrideState API operation for AWS CodeCommit.
+//
+// Returns information about whether approval rules have been set aside (overridden)
+// for a pull request, and if so, the Amazon Resource Name (ARN) of the user
+// or identity that overrode the rules and their requirements for the pull request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation GetPullRequestOverrideState for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   The revision ID is not valid. Use GetPullRequest to determine the value.
+//
+//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   A revision ID is required, but was not provided.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/GetPullRequestOverrideState
+func (c *CodeCommit) GetPullRequestOverrideState(input *GetPullRequestOverrideStateInput) (*GetPullRequestOverrideStateOutput, error) {
+	req, out := c.GetPullRequestOverrideStateRequest(input)
+	return out, req.Send()
+}
+
+// GetPullRequestOverrideStateWithContext is the same as GetPullRequestOverrideState with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetPullRequestOverrideState for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) GetPullRequestOverrideStateWithContext(ctx aws.Context, input *GetPullRequestOverrideStateInput, opts ...request.Option) (*GetPullRequestOverrideStateOutput, error) {
+	req, out := c.GetPullRequestOverrideStateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetRepository = "GetRepository"
 
 // GetRepositoryRequest generates a "aws/request.Request" representing the
@@ -3991,9 +5338,9 @@ func (c *CodeCommit) GetRepositoryRequest(input *GetRepositoryInput) (req *reque
 //
 // The description field for a repository accepts all HTML characters and all
 // valid Unicode characters. Applications that do not HTML-encode the description
-// and display it in a web page could expose users to potentially malicious
-// code. Make sure that you HTML-encode the description field in any application
-// that uses this API to display the repository description on a web page.
+// and display it in a webpage can expose users to potentially malicious code.
+// Make sure that you HTML-encode the description field in any application that
+// uses this API to display the repository description on a webpage.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4004,15 +5351,15 @@ func (c *CodeCommit) GetRepositoryRequest(input *GetRepositoryInput) (req *reque
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -4108,12 +5455,12 @@ func (c *CodeCommit) GetRepositoryTriggersRequest(input *GetRepositoryTriggersIn
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -4155,6 +5502,316 @@ func (c *CodeCommit) GetRepositoryTriggersWithContext(ctx aws.Context, input *Ge
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opListApprovalRuleTemplates = "ListApprovalRuleTemplates"
+
+// ListApprovalRuleTemplatesRequest generates a "aws/request.Request" representing the
+// client's request for the ListApprovalRuleTemplates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListApprovalRuleTemplates for more information on using the ListApprovalRuleTemplates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListApprovalRuleTemplatesRequest method.
+//    req, resp := client.ListApprovalRuleTemplatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListApprovalRuleTemplates
+func (c *CodeCommit) ListApprovalRuleTemplatesRequest(input *ListApprovalRuleTemplatesInput) (req *request.Request, output *ListApprovalRuleTemplatesOutput) {
+	op := &request.Operation{
+		Name:       opListApprovalRuleTemplates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListApprovalRuleTemplatesInput{}
+	}
+
+	output = &ListApprovalRuleTemplatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListApprovalRuleTemplates API operation for AWS CodeCommit.
+//
+// Lists all approval rule templates in the specified AWS Region in your AWS
+// account. If an AWS Region is not specified, the AWS Region where you are
+// signed in is used.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation ListApprovalRuleTemplates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   The specified number of maximum results is not valid.
+//
+//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   The specified continuation token is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListApprovalRuleTemplates
+func (c *CodeCommit) ListApprovalRuleTemplates(input *ListApprovalRuleTemplatesInput) (*ListApprovalRuleTemplatesOutput, error) {
+	req, out := c.ListApprovalRuleTemplatesRequest(input)
+	return out, req.Send()
+}
+
+// ListApprovalRuleTemplatesWithContext is the same as ListApprovalRuleTemplates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListApprovalRuleTemplates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) ListApprovalRuleTemplatesWithContext(ctx aws.Context, input *ListApprovalRuleTemplatesInput, opts ...request.Option) (*ListApprovalRuleTemplatesOutput, error) {
+	req, out := c.ListApprovalRuleTemplatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListApprovalRuleTemplatesPages iterates over the pages of a ListApprovalRuleTemplates operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListApprovalRuleTemplates method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListApprovalRuleTemplates operation.
+//    pageNum := 0
+//    err := client.ListApprovalRuleTemplatesPages(params,
+//        func(page *codecommit.ListApprovalRuleTemplatesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeCommit) ListApprovalRuleTemplatesPages(input *ListApprovalRuleTemplatesInput, fn func(*ListApprovalRuleTemplatesOutput, bool) bool) error {
+	return c.ListApprovalRuleTemplatesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListApprovalRuleTemplatesPagesWithContext same as ListApprovalRuleTemplatesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) ListApprovalRuleTemplatesPagesWithContext(ctx aws.Context, input *ListApprovalRuleTemplatesInput, fn func(*ListApprovalRuleTemplatesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListApprovalRuleTemplatesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListApprovalRuleTemplatesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListApprovalRuleTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListAssociatedApprovalRuleTemplatesForRepository = "ListAssociatedApprovalRuleTemplatesForRepository"
+
+// ListAssociatedApprovalRuleTemplatesForRepositoryRequest generates a "aws/request.Request" representing the
+// client's request for the ListAssociatedApprovalRuleTemplatesForRepository operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAssociatedApprovalRuleTemplatesForRepository for more information on using the ListAssociatedApprovalRuleTemplatesForRepository
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAssociatedApprovalRuleTemplatesForRepositoryRequest method.
+//    req, resp := client.ListAssociatedApprovalRuleTemplatesForRepositoryRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListAssociatedApprovalRuleTemplatesForRepository
+func (c *CodeCommit) ListAssociatedApprovalRuleTemplatesForRepositoryRequest(input *ListAssociatedApprovalRuleTemplatesForRepositoryInput) (req *request.Request, output *ListAssociatedApprovalRuleTemplatesForRepositoryOutput) {
+	op := &request.Operation{
+		Name:       opListAssociatedApprovalRuleTemplatesForRepository,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListAssociatedApprovalRuleTemplatesForRepositoryInput{}
+	}
+
+	output = &ListAssociatedApprovalRuleTemplatesForRepositoryOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAssociatedApprovalRuleTemplatesForRepository API operation for AWS CodeCommit.
+//
+// Lists all approval rule templates that are associated with a specified repository.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation ListAssociatedApprovalRuleTemplatesForRepository for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
+//   A repository name is required, but was not specified.
+//
+//   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
+//   A specified repository name is not valid.
+//
+//   This exception occurs only when a specified repository name is not valid.
+//   Other exceptions occur when a required repository parameter is missing, or
+//   when a specified repository does not exist.
+//
+//   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
+//   The specified repository does not exist.
+//
+//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   The specified number of maximum results is not valid.
+//
+//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   The specified continuation token is not valid.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListAssociatedApprovalRuleTemplatesForRepository
+func (c *CodeCommit) ListAssociatedApprovalRuleTemplatesForRepository(input *ListAssociatedApprovalRuleTemplatesForRepositoryInput) (*ListAssociatedApprovalRuleTemplatesForRepositoryOutput, error) {
+	req, out := c.ListAssociatedApprovalRuleTemplatesForRepositoryRequest(input)
+	return out, req.Send()
+}
+
+// ListAssociatedApprovalRuleTemplatesForRepositoryWithContext is the same as ListAssociatedApprovalRuleTemplatesForRepository with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAssociatedApprovalRuleTemplatesForRepository for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) ListAssociatedApprovalRuleTemplatesForRepositoryWithContext(ctx aws.Context, input *ListAssociatedApprovalRuleTemplatesForRepositoryInput, opts ...request.Option) (*ListAssociatedApprovalRuleTemplatesForRepositoryOutput, error) {
+	req, out := c.ListAssociatedApprovalRuleTemplatesForRepositoryRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListAssociatedApprovalRuleTemplatesForRepositoryPages iterates over the pages of a ListAssociatedApprovalRuleTemplatesForRepository operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAssociatedApprovalRuleTemplatesForRepository method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAssociatedApprovalRuleTemplatesForRepository operation.
+//    pageNum := 0
+//    err := client.ListAssociatedApprovalRuleTemplatesForRepositoryPages(params,
+//        func(page *codecommit.ListAssociatedApprovalRuleTemplatesForRepositoryOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeCommit) ListAssociatedApprovalRuleTemplatesForRepositoryPages(input *ListAssociatedApprovalRuleTemplatesForRepositoryInput, fn func(*ListAssociatedApprovalRuleTemplatesForRepositoryOutput, bool) bool) error {
+	return c.ListAssociatedApprovalRuleTemplatesForRepositoryPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAssociatedApprovalRuleTemplatesForRepositoryPagesWithContext same as ListAssociatedApprovalRuleTemplatesForRepositoryPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) ListAssociatedApprovalRuleTemplatesForRepositoryPagesWithContext(ctx aws.Context, input *ListAssociatedApprovalRuleTemplatesForRepositoryInput, fn func(*ListAssociatedApprovalRuleTemplatesForRepositoryOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAssociatedApprovalRuleTemplatesForRepositoryInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAssociatedApprovalRuleTemplatesForRepositoryRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAssociatedApprovalRuleTemplatesForRepositoryOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListBranches = "ListBranches"
@@ -4218,15 +5875,15 @@ func (c *CodeCommit) ListBranchesRequest(input *ListBranchesInput) (req *request
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -4395,12 +6052,12 @@ func (c *CodeCommit) ListPullRequestsRequest(input *ListPullRequestsInput) (req 
 //   The specified Amazon Resource Name (ARN) does not exist in the AWS account.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -4645,6 +6302,174 @@ func (c *CodeCommit) ListRepositoriesPagesWithContext(ctx aws.Context, input *Li
 	return p.Err()
 }
 
+const opListRepositoriesForApprovalRuleTemplate = "ListRepositoriesForApprovalRuleTemplate"
+
+// ListRepositoriesForApprovalRuleTemplateRequest generates a "aws/request.Request" representing the
+// client's request for the ListRepositoriesForApprovalRuleTemplate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListRepositoriesForApprovalRuleTemplate for more information on using the ListRepositoriesForApprovalRuleTemplate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListRepositoriesForApprovalRuleTemplateRequest method.
+//    req, resp := client.ListRepositoriesForApprovalRuleTemplateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListRepositoriesForApprovalRuleTemplate
+func (c *CodeCommit) ListRepositoriesForApprovalRuleTemplateRequest(input *ListRepositoriesForApprovalRuleTemplateInput) (req *request.Request, output *ListRepositoriesForApprovalRuleTemplateOutput) {
+	op := &request.Operation{
+		Name:       opListRepositoriesForApprovalRuleTemplate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListRepositoriesForApprovalRuleTemplateInput{}
+	}
+
+	output = &ListRepositoriesForApprovalRuleTemplateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListRepositoriesForApprovalRuleTemplate API operation for AWS CodeCommit.
+//
+// Lists all repositories associated with the specified approval rule template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation ListRepositoriesForApprovalRuleTemplate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeInvalidMaxResultsException "InvalidMaxResultsException"
+//   The specified number of maximum results is not valid.
+//
+//   * ErrCodeInvalidContinuationTokenException "InvalidContinuationTokenException"
+//   The specified continuation token is not valid.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/ListRepositoriesForApprovalRuleTemplate
+func (c *CodeCommit) ListRepositoriesForApprovalRuleTemplate(input *ListRepositoriesForApprovalRuleTemplateInput) (*ListRepositoriesForApprovalRuleTemplateOutput, error) {
+	req, out := c.ListRepositoriesForApprovalRuleTemplateRequest(input)
+	return out, req.Send()
+}
+
+// ListRepositoriesForApprovalRuleTemplateWithContext is the same as ListRepositoriesForApprovalRuleTemplate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListRepositoriesForApprovalRuleTemplate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) ListRepositoriesForApprovalRuleTemplateWithContext(ctx aws.Context, input *ListRepositoriesForApprovalRuleTemplateInput, opts ...request.Option) (*ListRepositoriesForApprovalRuleTemplateOutput, error) {
+	req, out := c.ListRepositoriesForApprovalRuleTemplateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListRepositoriesForApprovalRuleTemplatePages iterates over the pages of a ListRepositoriesForApprovalRuleTemplate operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListRepositoriesForApprovalRuleTemplate method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListRepositoriesForApprovalRuleTemplate operation.
+//    pageNum := 0
+//    err := client.ListRepositoriesForApprovalRuleTemplatePages(params,
+//        func(page *codecommit.ListRepositoriesForApprovalRuleTemplateOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *CodeCommit) ListRepositoriesForApprovalRuleTemplatePages(input *ListRepositoriesForApprovalRuleTemplateInput, fn func(*ListRepositoriesForApprovalRuleTemplateOutput, bool) bool) error {
+	return c.ListRepositoriesForApprovalRuleTemplatePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListRepositoriesForApprovalRuleTemplatePagesWithContext same as ListRepositoriesForApprovalRuleTemplatePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) ListRepositoriesForApprovalRuleTemplatePagesWithContext(ctx aws.Context, input *ListRepositoriesForApprovalRuleTemplateInput, fn func(*ListRepositoriesForApprovalRuleTemplateOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListRepositoriesForApprovalRuleTemplateInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListRepositoriesForApprovalRuleTemplateRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListRepositoriesForApprovalRuleTemplateOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTagsForResource = "ListTagsForResource"
 
 // ListTagsForResourceRequest generates a "aws/request.Request" representing the
@@ -4706,9 +6531,9 @@ func (c *CodeCommit) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -4800,12 +6625,12 @@ func (c *CodeCommit) MergeBranchesByFastForwardRequest(input *MergeBranchesByFas
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -4834,12 +6659,12 @@ func (c *CodeCommit) MergeBranchesByFastForwardRequest(input *MergeBranchesByFas
 //   The specified reference name is not valid.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
-//   The specified branch name is not valid because it is a tag name. Type the
-//   name of a current branch in the repository. For a list of valid branch names,
-//   use ListBranches.
+//   The specified branch name is not valid because it is a tag name. Enter the
+//   name of a branch in the repository. For a list of valid branch names, use
+//   ListBranches.
 //
 //   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
 //   The specified branch does not exist.
@@ -4945,12 +6770,12 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -4979,12 +6804,12 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //   The specified reference name is not valid.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
-//   The specified branch name is not valid because it is a tag name. Type the
-//   name of a current branch in the repository. For a list of valid branch names,
-//   use ListBranches.
+//   The specified branch name is not valid because it is a tag name. Enter the
+//   name of a branch in the repository. For a list of valid branch names, use
+//   ListBranches.
 //
 //   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
 //   The specified branch does not exist.
@@ -5017,7 +6842,7 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //   type is not valid.
 //
 //   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
-//   USE_NEW_CONTENT was specified but no replacement content has been provided.
+//   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
 //   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
 //   Automerge was specified for resolving the conflict, but the replacement type
@@ -5030,9 +6855,9 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //   The specified path is not valid.
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
-//   The file cannot be added because it is too large. The maximum file size that
-//   can be added is 6 MB, and the combined file content change size is 7 MB.
-//   Consider making these changes using a Git client.
+//   The file cannot be added because it is too large. The maximum file size is
+//   6 MB, and the combined file content change size is 7 MB. Consider making
+//   these changes using a Git client.
 //
 //   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
 //   The commit cannot be created because at least one of the overall changes
@@ -5044,12 +6869,12 @@ func (c *CodeCommit) MergeBranchesBySquashRequest(input *MergeBranchesBySquashIn
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
-//   The commit cannot be created because a file mode is required to update mode
-//   permissions for an existing file, but no file mode has been specified.
+//   The commit cannot be created because no file mode has been specified. A file
+//   mode is required to update mode permissions for a file.
 //
 //   * ErrCodeInvalidFileModeException "InvalidFileModeException"
 //   The specified file mode permission is not valid. For a list of valid file
@@ -5164,12 +6989,12 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -5198,12 +7023,12 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //   The specified reference name is not valid.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
-//   The specified branch name is not valid because it is a tag name. Type the
-//   name of a current branch in the repository. For a list of valid branch names,
-//   use ListBranches.
+//   The specified branch name is not valid because it is a tag name. Enter the
+//   name of a branch in the repository. For a list of valid branch names, use
+//   ListBranches.
 //
 //   * ErrCodeBranchDoesNotExistException "BranchDoesNotExistException"
 //   The specified branch does not exist.
@@ -5241,7 +7066,7 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //   type is not valid.
 //
 //   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
-//   USE_NEW_CONTENT was specified but no replacement content has been provided.
+//   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
 //   * ErrCodeInvalidReplacementContentException "InvalidReplacementContentException"
 //   Automerge was specified for resolving the conflict, but the replacement type
@@ -5254,9 +7079,9 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //   The specified path is not valid.
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
-//   The file cannot be added because it is too large. The maximum file size that
-//   can be added is 6 MB, and the combined file content change size is 7 MB.
-//   Consider making these changes using a Git client.
+//   The file cannot be added because it is too large. The maximum file size is
+//   6 MB, and the combined file content change size is 7 MB. Consider making
+//   these changes using a Git client.
 //
 //   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
 //   The commit cannot be created because at least one of the overall changes
@@ -5268,12 +7093,12 @@ func (c *CodeCommit) MergeBranchesByThreeWayRequest(input *MergeBranchesByThreeW
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeFileModeRequiredException "FileModeRequiredException"
-//   The commit cannot be created because a file mode is required to update mode
-//   permissions for an existing file, but no file mode has been specified.
+//   The commit cannot be created because no file mode has been specified. A file
+//   mode is required to update mode permissions for a file.
 //
 //   * ErrCodeInvalidFileModeException "InvalidFileModeException"
 //   The specified file mode permission is not valid. For a list of valid file
@@ -5421,12 +7246,12 @@ func (c *CodeCommit) MergePullRequestByFastForwardRequest(input *MergePullReques
 //   request ID.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -5437,6 +7262,10 @@ func (c *CodeCommit) MergePullRequestByFastForwardRequest(input *MergePullReques
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
+//
+//   * ErrCodePullRequestApprovalRulesNotSatisfiedException "PullRequestApprovalRulesNotSatisfiedException"
+//   The pull request cannot be merged because one or more approval rules applied
+//   to the pull request have conditions that have not been met.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -5596,7 +7425,7 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //   can have only one conflict resolution entry.
 //
 //   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
-//   USE_NEW_CONTENT was specified but no replacement content has been provided.
+//   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
 //   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
 //   The number of allowed conflict resolution entries was exceeded.
@@ -5621,9 +7450,9 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //   is not valid or content is missing.
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
-//   The file cannot be added because it is too large. The maximum file size that
-//   can be added is 6 MB, and the combined file content change size is 7 MB.
-//   Consider making these changes using a Git client.
+//   The file cannot be added because it is too large. The maximum file size is
+//   6 MB, and the combined file content change size is 7 MB. Consider making
+//   these changes using a Git client.
 //
 //   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
 //   The commit cannot be created because at least one of the overall changes
@@ -5635,16 +7464,16 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -5655,6 +7484,10 @@ func (c *CodeCommit) MergePullRequestBySquashRequest(input *MergePullRequestBySq
 //   The repository does not contain any pull requests with that pull request
 //   ID. Use GetPullRequest to verify the correct repository name for the pull
 //   request ID.
+//
+//   * ErrCodePullRequestApprovalRulesNotSatisfiedException "PullRequestApprovalRulesNotSatisfiedException"
+//   The pull request cannot be merged because one or more approval rules applied
+//   to the pull request have conditions that have not been met.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -5815,7 +7648,7 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //   can have only one conflict resolution entry.
 //
 //   * ErrCodeReplacementContentRequiredException "ReplacementContentRequiredException"
-//   USE_NEW_CONTENT was specified but no replacement content has been provided.
+//   USE_NEW_CONTENT was specified, but no replacement content has been provided.
 //
 //   * ErrCodeMaximumConflictResolutionEntriesExceededException "MaximumConflictResolutionEntriesExceededException"
 //   The number of allowed conflict resolution entries was exceeded.
@@ -5835,9 +7668,9 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //   is not valid or content is missing.
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
-//   The file cannot be added because it is too large. The maximum file size that
-//   can be added is 6 MB, and the combined file content change size is 7 MB.
-//   Consider making these changes using a Git client.
+//   The file cannot be added because it is too large. The maximum file size is
+//   6 MB, and the combined file content change size is 7 MB. Consider making
+//   these changes using a Git client.
 //
 //   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
 //   The commit cannot be created because at least one of the overall changes
@@ -5849,16 +7682,16 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //   The number of files to load exceeds the allowed limit.
 //
 //   * ErrCodeMaximumItemsToCompareExceededException "MaximumItemsToCompareExceededException"
-//   The maximum number of items to compare between the source or destination
-//   branches and the merge base has exceeded the maximum allowed.
+//   The number of items to compare between the source or destination branches
+//   and the merge base has exceeded the maximum allowed.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -5874,6 +7707,10 @@ func (c *CodeCommit) MergePullRequestByThreeWayRequest(input *MergePullRequestBy
 //   The merge cannot be completed because the target branch has been modified.
 //   Another user might have modified the target branch while the merge was in
 //   progress. Wait a few minutes, and then try again.
+//
+//   * ErrCodePullRequestApprovalRulesNotSatisfiedException "PullRequestApprovalRulesNotSatisfiedException"
+//   The pull request cannot be merged because one or more approval rules applied
+//   to the pull request have conditions that have not been met.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -5907,6 +7744,134 @@ func (c *CodeCommit) MergePullRequestByThreeWay(input *MergePullRequestByThreeWa
 // for more information on using Contexts.
 func (c *CodeCommit) MergePullRequestByThreeWayWithContext(ctx aws.Context, input *MergePullRequestByThreeWayInput, opts ...request.Option) (*MergePullRequestByThreeWayOutput, error) {
 	req, out := c.MergePullRequestByThreeWayRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opOverridePullRequestApprovalRules = "OverridePullRequestApprovalRules"
+
+// OverridePullRequestApprovalRulesRequest generates a "aws/request.Request" representing the
+// client's request for the OverridePullRequestApprovalRules operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See OverridePullRequestApprovalRules for more information on using the OverridePullRequestApprovalRules
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the OverridePullRequestApprovalRulesRequest method.
+//    req, resp := client.OverridePullRequestApprovalRulesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/OverridePullRequestApprovalRules
+func (c *CodeCommit) OverridePullRequestApprovalRulesRequest(input *OverridePullRequestApprovalRulesInput) (req *request.Request, output *OverridePullRequestApprovalRulesOutput) {
+	op := &request.Operation{
+		Name:       opOverridePullRequestApprovalRules,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &OverridePullRequestApprovalRulesInput{}
+	}
+
+	output = &OverridePullRequestApprovalRulesOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// OverridePullRequestApprovalRules API operation for AWS CodeCommit.
+//
+// Sets aside (overrides) all approval rule requirements for a specified pull
+// request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation OverridePullRequestApprovalRules for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   The revision ID is not valid. Use GetPullRequest to determine the value.
+//
+//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   A revision ID is required, but was not provided.
+//
+//   * ErrCodeInvalidOverrideStatusException "InvalidOverrideStatusException"
+//   The override status is not valid. Valid statuses are OVERRIDE and REVOKE.
+//
+//   * ErrCodeOverrideStatusRequiredException "OverrideStatusRequiredException"
+//   An override status is required, but no value was provided. Valid values include
+//   OVERRIDE and REVOKE.
+//
+//   * ErrCodeOverrideAlreadySetException "OverrideAlreadySetException"
+//   The pull request has already had its approval rules set to override.
+//
+//   * ErrCodeRevisionNotCurrentException "RevisionNotCurrentException"
+//   The revision ID provided in the request does not match the current revision
+//   ID. Use GetPullRequest to retrieve the current revision ID.
+//
+//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   The pull request status cannot be updated because it is already closed.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/OverridePullRequestApprovalRules
+func (c *CodeCommit) OverridePullRequestApprovalRules(input *OverridePullRequestApprovalRulesInput) (*OverridePullRequestApprovalRulesOutput, error) {
+	req, out := c.OverridePullRequestApprovalRulesRequest(input)
+	return out, req.Send()
+}
+
+// OverridePullRequestApprovalRulesWithContext is the same as OverridePullRequestApprovalRules with the addition of
+// the ability to pass a context and additional request options.
+//
+// See OverridePullRequestApprovalRules for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) OverridePullRequestApprovalRulesWithContext(ctx aws.Context, input *OverridePullRequestApprovalRulesInput, opts ...request.Option) (*OverridePullRequestApprovalRulesOutput, error) {
+	req, out := c.OverridePullRequestApprovalRulesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5967,31 +7932,31 @@ func (c *CodeCommit) PostCommentForComparedCommitRequest(input *PostCommentForCo
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
 //   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
 //   A client request token is required. A client request token is an unique,
-//   client-generated idempotency token that when provided in a request, ensures
+//   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
-//   received with the same parameters and a token is included, the request will
-//   return information about the initial request that used that token.
+//   received with the same parameters and a token is included, the request returns
+//   information about the initial request that used that token.
 //
 //   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
 //   The client request token is not valid.
 //
 //   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
 //   The client request token is not valid. Either the token is not in a valid
-//   format, or the token has been used in a previous request and cannot be re-used.
+//   format, or the token has been used in a previous request and cannot be reused.
 //
 //   * ErrCodeCommentContentRequiredException "CommentContentRequiredException"
 //   The comment is empty. You must provide some content for a comment. The content
@@ -6001,8 +7966,8 @@ func (c *CodeCommit) PostCommentForComparedCommitRequest(input *PostCommentForCo
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
 //   * ErrCodeInvalidFileLocationException "InvalidFileLocationException"
-//   The location of the file is not valid. Make sure that you include the extension
-//   of the file as well as the file name.
+//   The location of the file is not valid. Make sure that you include the file
+//   name and extension.
 //
 //   * ErrCodeInvalidRelativeFileVersionEnumException "InvalidRelativeFileVersionEnumException"
 //   Either the enum is not in a valid format, or the specified file version enum
@@ -6144,31 +8109,31 @@ func (c *CodeCommit) PostCommentForPullRequestRequest(input *PostCommentForPullR
 //   request ID.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
 //   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
 //   A client request token is required. A client request token is an unique,
-//   client-generated idempotency token that when provided in a request, ensures
+//   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
-//   received with the same parameters and a token is included, the request will
-//   return information about the initial request that used that token.
+//   received with the same parameters and a token is included, the request returns
+//   information about the initial request that used that token.
 //
 //   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
 //   The client request token is not valid.
 //
 //   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
 //   The client request token is not valid. Either the token is not in a valid
-//   format, or the token has been used in a previous request and cannot be re-used.
+//   format, or the token has been used in a previous request and cannot be reused.
 //
 //   * ErrCodeCommentContentRequiredException "CommentContentRequiredException"
 //   The comment is empty. You must provide some content for a comment. The content
@@ -6178,8 +8143,8 @@ func (c *CodeCommit) PostCommentForPullRequestRequest(input *PostCommentForPullR
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
 //   * ErrCodeInvalidFileLocationException "InvalidFileLocationException"
-//   The location of the file is not valid. Make sure that you include the extension
-//   of the file as well as the file name.
+//   The location of the file is not valid. Make sure that you include the file
+//   name and extension.
 //
 //   * ErrCodeInvalidRelativeFileVersionEnumException "InvalidRelativeFileVersionEnumException"
 //   Either the enum is not in a valid format, or the specified file version enum
@@ -6309,17 +8274,17 @@ func (c *CodeCommit) PostCommentReplyRequest(input *PostCommentReplyInput) (req 
 // Returned Error Codes:
 //   * ErrCodeClientRequestTokenRequiredException "ClientRequestTokenRequiredException"
 //   A client request token is required. A client request token is an unique,
-//   client-generated idempotency token that when provided in a request, ensures
+//   client-generated idempotency token that, when provided in a request, ensures
 //   the request cannot be repeated with a changed parameter. If a request is
-//   received with the same parameters and a token is included, the request will
-//   return information about the initial request that used that token.
+//   received with the same parameters and a token is included, the request returns
+//   information about the initial request that used that token.
 //
 //   * ErrCodeInvalidClientRequestTokenException "InvalidClientRequestTokenException"
 //   The client request token is not valid.
 //
 //   * ErrCodeIdempotencyParameterMismatchException "IdempotencyParameterMismatchException"
 //   The client request token is not valid. Either the token is not in a valid
-//   format, or the token has been used in a previous request and cannot be re-used.
+//   format, or the token has been used in a previous request and cannot be reused.
 //
 //   * ErrCodeCommentContentRequiredException "CommentContentRequiredException"
 //   The comment is empty. You must provide some content for a comment. The content
@@ -6329,8 +8294,8 @@ func (c *CodeCommit) PostCommentReplyRequest(input *PostCommentReplyInput) (req 
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
 //   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
-//   No comment exists with the provided ID. Verify that you have provided the
-//   correct ID, and then try again.
+//   No comment exists with the provided ID. Verify that you have used the correct
+//   ID, and then try again.
 //
 //   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
 //   The comment ID is missing or null. A comment ID is required.
@@ -6417,12 +8382,12 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -6453,9 +8418,9 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //   to the repository with this API.
 //
 //   * ErrCodeFileContentSizeLimitExceededException "FileContentSizeLimitExceededException"
-//   The file cannot be added because it is too large. The maximum file size that
-//   can be added is 6 MB, and the combined file content change size is 7 MB.
-//   Consider making these changes using a Git client.
+//   The file cannot be added because it is too large. The maximum file size is
+//   6 MB, and the combined file content change size is 7 MB. Consider making
+//   these changes using a Git client.
 //
 //   * ErrCodeFolderContentSizeLimitExceededException "FolderContentSizeLimitExceededException"
 //   The commit cannot be created because at least one of the overall changes
@@ -6470,7 +8435,7 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //   The specified path is not valid.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
 //   The specified reference name is not valid.
@@ -6479,9 +8444,9 @@ func (c *CodeCommit) PutFileRequest(input *PutFileInput) (req *request.Request, 
 //   The specified branch does not exist.
 //
 //   * ErrCodeBranchNameIsTagNameException "BranchNameIsTagNameException"
-//   The specified branch name is not valid because it is a tag name. Type the
-//   name of a current branch in the repository. For a list of valid branch names,
-//   use ListBranches.
+//   The specified branch name is not valid because it is a tag name. Enter the
+//   name of a branch in the repository. For a list of valid branch names, use
+//   ListBranches.
 //
 //   * ErrCodeInvalidFileModeException "InvalidFileModeException"
 //   The specified file mode permission is not valid. For a list of valid file
@@ -6605,8 +8570,7 @@ func (c *CodeCommit) PutRepositoryTriggersRequest(input *PutRepositoryTriggersIn
 
 // PutRepositoryTriggers API operation for AWS CodeCommit.
 //
-// Replaces all triggers for a repository. This can be used to create or delete
-// triggers.
+// Replaces all triggers for a repository. Used to create or delete triggers.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6620,17 +8584,17 @@ func (c *CodeCommit) PutRepositoryTriggersRequest(input *PutRepositoryTriggersIn
 //   The specified repository does not exist.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
 //   * ErrCodeRepositoryTriggersListRequiredException "RepositoryTriggersListRequiredException"
-//   The list of triggers for the repository is required but was not specified.
+//   The list of triggers for the repository is required, but was not specified.
 //
 //   * ErrCodeMaximumRepositoryTriggersExceededException "MaximumRepositoryTriggersExceededException"
 //   The number of triggers allowed for the repository was exceeded.
@@ -6644,8 +8608,9 @@ func (c *CodeCommit) PutRepositoryTriggersRequest(input *PutRepositoryTriggersIn
 //   meet the requirements for the service type.
 //
 //   * ErrCodeInvalidRepositoryTriggerRegionException "InvalidRepositoryTriggerRegionException"
-//   The region for the trigger target does not match the region for the repository.
-//   Triggers must be created in the same region as the target for the trigger.
+//   The AWS Region for the trigger target does not match the AWS Region for the
+//   repository. Triggers must be created in the same Region as the target for
+//   the trigger.
 //
 //   * ErrCodeInvalidRepositoryTriggerCustomDataException "InvalidRepositoryTriggerCustomDataException"
 //   The custom data provided for the trigger is not valid.
@@ -6661,18 +8626,18 @@ func (c *CodeCommit) PutRepositoryTriggersRequest(input *PutRepositoryTriggersIn
 //   sure that all events specified match the requirements for allowed events.
 //
 //   * ErrCodeRepositoryTriggerNameRequiredException "RepositoryTriggerNameRequiredException"
-//   A name for the trigger is required but was not specified.
+//   A name for the trigger is required, but was not specified.
 //
 //   * ErrCodeRepositoryTriggerDestinationArnRequiredException "RepositoryTriggerDestinationArnRequiredException"
-//   A destination ARN for the target service for the trigger is required but
+//   A destination ARN for the target service for the trigger is required, but
 //   was not specified.
 //
 //   * ErrCodeRepositoryTriggerBranchNameListRequiredException "RepositoryTriggerBranchNameListRequiredException"
-//   At least one branch name is required but was not specified in the trigger
+//   At least one branch name is required, but was not specified in the trigger
 //   configuration.
 //
 //   * ErrCodeRepositoryTriggerEventsListRequiredException "RepositoryTriggerEventsListRequiredException"
-//   At least one event for the trigger is required but was not specified.
+//   At least one event for the trigger is required, but was not specified.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -6772,9 +8737,9 @@ func (c *CodeCommit) TagResourceRequest(input *TagResourceInput) (req *request.R
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -6872,8 +8837,8 @@ func (c *CodeCommit) TestRepositoryTriggersRequest(input *TestRepositoryTriggers
 //
 // Tests the functionality of repository triggers by sending information to
 // the trigger target. If real data is available in the repository, the test
-// will send data from the last commit. If no data is available, sample data
-// will be generated.
+// sends data from the last commit. If no data is available, sample data is
+// generated.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6887,17 +8852,17 @@ func (c *CodeCommit) TestRepositoryTriggersRequest(input *TestRepositoryTriggers
 //   The specified repository does not exist.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
 //   * ErrCodeRepositoryTriggersListRequiredException "RepositoryTriggersListRequiredException"
-//   The list of triggers for the repository is required but was not specified.
+//   The list of triggers for the repository is required, but was not specified.
 //
 //   * ErrCodeMaximumRepositoryTriggersExceededException "MaximumRepositoryTriggersExceededException"
 //   The number of triggers allowed for the repository was exceeded.
@@ -6911,8 +8876,9 @@ func (c *CodeCommit) TestRepositoryTriggersRequest(input *TestRepositoryTriggers
 //   meet the requirements for the service type.
 //
 //   * ErrCodeInvalidRepositoryTriggerRegionException "InvalidRepositoryTriggerRegionException"
-//   The region for the trigger target does not match the region for the repository.
-//   Triggers must be created in the same region as the target for the trigger.
+//   The AWS Region for the trigger target does not match the AWS Region for the
+//   repository. Triggers must be created in the same Region as the target for
+//   the trigger.
 //
 //   * ErrCodeInvalidRepositoryTriggerCustomDataException "InvalidRepositoryTriggerCustomDataException"
 //   The custom data provided for the trigger is not valid.
@@ -6928,18 +8894,18 @@ func (c *CodeCommit) TestRepositoryTriggersRequest(input *TestRepositoryTriggers
 //   sure that all events specified match the requirements for allowed events.
 //
 //   * ErrCodeRepositoryTriggerNameRequiredException "RepositoryTriggerNameRequiredException"
-//   A name for the trigger is required but was not specified.
+//   A name for the trigger is required, but was not specified.
 //
 //   * ErrCodeRepositoryTriggerDestinationArnRequiredException "RepositoryTriggerDestinationArnRequiredException"
-//   A destination ARN for the target service for the trigger is required but
+//   A destination ARN for the target service for the trigger is required, but
 //   was not specified.
 //
 //   * ErrCodeRepositoryTriggerBranchNameListRequiredException "RepositoryTriggerBranchNameListRequiredException"
-//   At least one branch name is required but was not specified in the trigger
+//   At least one branch name is required, but was not specified in the trigger
 //   configuration.
 //
 //   * ErrCodeRepositoryTriggerEventsListRequiredException "RepositoryTriggerEventsListRequiredException"
-//   At least one event for the trigger is required but was not specified.
+//   At least one event for the trigger is required, but was not specified.
 //
 //   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
 //   An encryption integrity check failed.
@@ -7039,9 +9005,9 @@ func (c *CodeCommit) UntagResourceRequest(input *UntagResourceInput) (req *reque
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -7088,6 +9054,295 @@ func (c *CodeCommit) UntagResource(input *UntagResourceInput) (*UntagResourceOut
 // for more information on using Contexts.
 func (c *CodeCommit) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
 	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateApprovalRuleTemplateContent = "UpdateApprovalRuleTemplateContent"
+
+// UpdateApprovalRuleTemplateContentRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateApprovalRuleTemplateContent operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateApprovalRuleTemplateContent for more information on using the UpdateApprovalRuleTemplateContent
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateApprovalRuleTemplateContentRequest method.
+//    req, resp := client.UpdateApprovalRuleTemplateContentRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateApprovalRuleTemplateContent
+func (c *CodeCommit) UpdateApprovalRuleTemplateContentRequest(input *UpdateApprovalRuleTemplateContentInput) (req *request.Request, output *UpdateApprovalRuleTemplateContentOutput) {
+	op := &request.Operation{
+		Name:       opUpdateApprovalRuleTemplateContent,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateApprovalRuleTemplateContentInput{}
+	}
+
+	output = &UpdateApprovalRuleTemplateContentOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateApprovalRuleTemplateContent API operation for AWS CodeCommit.
+//
+// Updates the content of an approval rule template. You can change the number
+// of required approvals, the membership of the approval rule, and whether an
+// approval pool is defined.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation UpdateApprovalRuleTemplateContent for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateContentException "InvalidApprovalRuleTemplateContentException"
+//   The content of the approval rule template is not valid.
+//
+//   * ErrCodeInvalidRuleContentSha256Exception "InvalidRuleContentSha256Exception"
+//   The SHA-256 hash signature for the rule content is not valid.
+//
+//   * ErrCodeApprovalRuleTemplateContentRequiredException "ApprovalRuleTemplateContentRequiredException"
+//   The content for the approval rule template is empty. You must provide some
+//   content for an approval rule template. The content cannot be null.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateApprovalRuleTemplateContent
+func (c *CodeCommit) UpdateApprovalRuleTemplateContent(input *UpdateApprovalRuleTemplateContentInput) (*UpdateApprovalRuleTemplateContentOutput, error) {
+	req, out := c.UpdateApprovalRuleTemplateContentRequest(input)
+	return out, req.Send()
+}
+
+// UpdateApprovalRuleTemplateContentWithContext is the same as UpdateApprovalRuleTemplateContent with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateApprovalRuleTemplateContent for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) UpdateApprovalRuleTemplateContentWithContext(ctx aws.Context, input *UpdateApprovalRuleTemplateContentInput, opts ...request.Option) (*UpdateApprovalRuleTemplateContentOutput, error) {
+	req, out := c.UpdateApprovalRuleTemplateContentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateApprovalRuleTemplateDescription = "UpdateApprovalRuleTemplateDescription"
+
+// UpdateApprovalRuleTemplateDescriptionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateApprovalRuleTemplateDescription operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateApprovalRuleTemplateDescription for more information on using the UpdateApprovalRuleTemplateDescription
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateApprovalRuleTemplateDescriptionRequest method.
+//    req, resp := client.UpdateApprovalRuleTemplateDescriptionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateApprovalRuleTemplateDescription
+func (c *CodeCommit) UpdateApprovalRuleTemplateDescriptionRequest(input *UpdateApprovalRuleTemplateDescriptionInput) (req *request.Request, output *UpdateApprovalRuleTemplateDescriptionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateApprovalRuleTemplateDescription,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateApprovalRuleTemplateDescriptionInput{}
+	}
+
+	output = &UpdateApprovalRuleTemplateDescriptionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateApprovalRuleTemplateDescription API operation for AWS CodeCommit.
+//
+// Updates the description for a specified approval rule template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation UpdateApprovalRuleTemplateDescription for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeInvalidApprovalRuleTemplateDescriptionException "InvalidApprovalRuleTemplateDescriptionException"
+//   The description for the approval rule template is not valid because it exceeds
+//   the maximum characters allowed for a description. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateApprovalRuleTemplateDescription
+func (c *CodeCommit) UpdateApprovalRuleTemplateDescription(input *UpdateApprovalRuleTemplateDescriptionInput) (*UpdateApprovalRuleTemplateDescriptionOutput, error) {
+	req, out := c.UpdateApprovalRuleTemplateDescriptionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateApprovalRuleTemplateDescriptionWithContext is the same as UpdateApprovalRuleTemplateDescription with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateApprovalRuleTemplateDescription for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) UpdateApprovalRuleTemplateDescriptionWithContext(ctx aws.Context, input *UpdateApprovalRuleTemplateDescriptionInput, opts ...request.Option) (*UpdateApprovalRuleTemplateDescriptionOutput, error) {
+	req, out := c.UpdateApprovalRuleTemplateDescriptionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateApprovalRuleTemplateName = "UpdateApprovalRuleTemplateName"
+
+// UpdateApprovalRuleTemplateNameRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateApprovalRuleTemplateName operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateApprovalRuleTemplateName for more information on using the UpdateApprovalRuleTemplateName
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateApprovalRuleTemplateNameRequest method.
+//    req, resp := client.UpdateApprovalRuleTemplateNameRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateApprovalRuleTemplateName
+func (c *CodeCommit) UpdateApprovalRuleTemplateNameRequest(input *UpdateApprovalRuleTemplateNameInput) (req *request.Request, output *UpdateApprovalRuleTemplateNameOutput) {
+	op := &request.Operation{
+		Name:       opUpdateApprovalRuleTemplateName,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateApprovalRuleTemplateNameInput{}
+	}
+
+	output = &UpdateApprovalRuleTemplateNameOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateApprovalRuleTemplateName API operation for AWS CodeCommit.
+//
+// Updates the name of a specified approval rule template.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation UpdateApprovalRuleTemplateName for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidApprovalRuleTemplateNameException "InvalidApprovalRuleTemplateNameException"
+//   The name of the approval rule template is not valid. Template names must
+//   be between 1 and 100 valid characters in length. For more information about
+//   limits in AWS CodeCommit, see AWS CodeCommit User Guide (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html).
+//
+//   * ErrCodeApprovalRuleTemplateNameRequiredException "ApprovalRuleTemplateNameRequiredException"
+//   An approval rule template name is required, but was not specified.
+//
+//   * ErrCodeApprovalRuleTemplateDoesNotExistException "ApprovalRuleTemplateDoesNotExistException"
+//   The specified approval rule template does not exist. Verify that the name
+//   is correct and that you are signed in to the AWS Region where the template
+//   was created, and then try again.
+//
+//   * ErrCodeApprovalRuleTemplateNameAlreadyExistsException "ApprovalRuleTemplateNameAlreadyExistsException"
+//   You cannot create an approval rule template with that name because a template
+//   with that name already exists in this AWS Region for your AWS account. Approval
+//   rule template names must be unique.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdateApprovalRuleTemplateName
+func (c *CodeCommit) UpdateApprovalRuleTemplateName(input *UpdateApprovalRuleTemplateNameInput) (*UpdateApprovalRuleTemplateNameOutput, error) {
+	req, out := c.UpdateApprovalRuleTemplateNameRequest(input)
+	return out, req.Send()
+}
+
+// UpdateApprovalRuleTemplateNameWithContext is the same as UpdateApprovalRuleTemplateName with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateApprovalRuleTemplateName for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) UpdateApprovalRuleTemplateNameWithContext(ctx aws.Context, input *UpdateApprovalRuleTemplateNameInput, opts ...request.Option) (*UpdateApprovalRuleTemplateNameOutput, error) {
+	req, out := c.UpdateApprovalRuleTemplateNameRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7155,8 +9410,8 @@ func (c *CodeCommit) UpdateCommentRequest(input *UpdateCommentInput) (req *reque
 //   The comment is too large. Comments are limited to 1,000 characters.
 //
 //   * ErrCodeCommentDoesNotExistException "CommentDoesNotExistException"
-//   No comment exists with the provided ID. Verify that you have provided the
-//   correct ID, and then try again.
+//   No comment exists with the provided ID. Verify that you have used the correct
+//   ID, and then try again.
 //
 //   * ErrCodeCommentIdRequiredException "CommentIdRequiredException"
 //   The comment ID is missing or null. A comment ID is required.
@@ -7255,20 +9510,20 @@ func (c *CodeCommit) UpdateDefaultBranchRequest(input *UpdateDefaultBranchInput)
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
 //   * ErrCodeBranchNameRequiredException "BranchNameRequiredException"
-//   A branch name is required but was not specified.
+//   A branch name is required, but was not specified.
 //
 //   * ErrCodeInvalidBranchNameException "InvalidBranchNameException"
 //   The specified reference name is not valid.
@@ -7308,6 +9563,271 @@ func (c *CodeCommit) UpdateDefaultBranch(input *UpdateDefaultBranchInput) (*Upda
 // for more information on using Contexts.
 func (c *CodeCommit) UpdateDefaultBranchWithContext(ctx aws.Context, input *UpdateDefaultBranchInput, opts ...request.Option) (*UpdateDefaultBranchOutput, error) {
 	req, out := c.UpdateDefaultBranchRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdatePullRequestApprovalRuleContent = "UpdatePullRequestApprovalRuleContent"
+
+// UpdatePullRequestApprovalRuleContentRequest generates a "aws/request.Request" representing the
+// client's request for the UpdatePullRequestApprovalRuleContent operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdatePullRequestApprovalRuleContent for more information on using the UpdatePullRequestApprovalRuleContent
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdatePullRequestApprovalRuleContentRequest method.
+//    req, resp := client.UpdatePullRequestApprovalRuleContentRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestApprovalRuleContent
+func (c *CodeCommit) UpdatePullRequestApprovalRuleContentRequest(input *UpdatePullRequestApprovalRuleContentInput) (req *request.Request, output *UpdatePullRequestApprovalRuleContentOutput) {
+	op := &request.Operation{
+		Name:       opUpdatePullRequestApprovalRuleContent,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdatePullRequestApprovalRuleContentInput{}
+	}
+
+	output = &UpdatePullRequestApprovalRuleContentOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdatePullRequestApprovalRuleContent API operation for AWS CodeCommit.
+//
+// Updates the structure of an approval rule created specifically for a pull
+// request. For example, you can change the number of required approvers and
+// the approval pool for approvers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation UpdatePullRequestApprovalRuleContent for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   The pull request status cannot be updated because it is already closed.
+//
+//   * ErrCodeApprovalRuleNameRequiredException "ApprovalRuleNameRequiredException"
+//   An approval rule name is required, but was not specified.
+//
+//   * ErrCodeInvalidApprovalRuleNameException "InvalidApprovalRuleNameException"
+//   The name for the approval rule is not valid.
+//
+//   * ErrCodeApprovalRuleDoesNotExistException "ApprovalRuleDoesNotExistException"
+//   The specified approval rule does not exist.
+//
+//   * ErrCodeInvalidRuleContentSha256Exception "InvalidRuleContentSha256Exception"
+//   The SHA-256 hash signature for the rule content is not valid.
+//
+//   * ErrCodeApprovalRuleContentRequiredException "ApprovalRuleContentRequiredException"
+//   The content for the approval rule is empty. You must provide some content
+//   for an approval rule. The content cannot be null.
+//
+//   * ErrCodeInvalidApprovalRuleContentException "InvalidApprovalRuleContentException"
+//   The content for the approval rule is not valid.
+//
+//   * ErrCodeCannotModifyApprovalRuleFromTemplateException "CannotModifyApprovalRuleFromTemplateException"
+//   The approval rule cannot be modified for the pull request because it was
+//   created by an approval rule template and applied to the pull request automatically.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestApprovalRuleContent
+func (c *CodeCommit) UpdatePullRequestApprovalRuleContent(input *UpdatePullRequestApprovalRuleContentInput) (*UpdatePullRequestApprovalRuleContentOutput, error) {
+	req, out := c.UpdatePullRequestApprovalRuleContentRequest(input)
+	return out, req.Send()
+}
+
+// UpdatePullRequestApprovalRuleContentWithContext is the same as UpdatePullRequestApprovalRuleContent with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdatePullRequestApprovalRuleContent for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) UpdatePullRequestApprovalRuleContentWithContext(ctx aws.Context, input *UpdatePullRequestApprovalRuleContentInput, opts ...request.Option) (*UpdatePullRequestApprovalRuleContentOutput, error) {
+	req, out := c.UpdatePullRequestApprovalRuleContentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdatePullRequestApprovalState = "UpdatePullRequestApprovalState"
+
+// UpdatePullRequestApprovalStateRequest generates a "aws/request.Request" representing the
+// client's request for the UpdatePullRequestApprovalState operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdatePullRequestApprovalState for more information on using the UpdatePullRequestApprovalState
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdatePullRequestApprovalStateRequest method.
+//    req, resp := client.UpdatePullRequestApprovalStateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestApprovalState
+func (c *CodeCommit) UpdatePullRequestApprovalStateRequest(input *UpdatePullRequestApprovalStateInput) (req *request.Request, output *UpdatePullRequestApprovalStateOutput) {
+	op := &request.Operation{
+		Name:       opUpdatePullRequestApprovalState,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdatePullRequestApprovalStateInput{}
+	}
+
+	output = &UpdatePullRequestApprovalStateOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdatePullRequestApprovalState API operation for AWS CodeCommit.
+//
+// Updates the state of a user's approval on a pull request. The user is derived
+// from the signed-in account when the request is made.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeCommit's
+// API operation UpdatePullRequestApprovalState for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodePullRequestDoesNotExistException "PullRequestDoesNotExistException"
+//   The pull request ID could not be found. Make sure that you have specified
+//   the correct repository name and pull request ID, and then try again.
+//
+//   * ErrCodeInvalidPullRequestIdException "InvalidPullRequestIdException"
+//   The pull request ID is not valid. Make sure that you have provided the full
+//   ID and that the pull request is in the specified repository, and then try
+//   again.
+//
+//   * ErrCodePullRequestIdRequiredException "PullRequestIdRequiredException"
+//   A pull request ID is required, but none was provided.
+//
+//   * ErrCodeInvalidRevisionIdException "InvalidRevisionIdException"
+//   The revision ID is not valid. Use GetPullRequest to determine the value.
+//
+//   * ErrCodeRevisionIdRequiredException "RevisionIdRequiredException"
+//   A revision ID is required, but was not provided.
+//
+//   * ErrCodeInvalidApprovalStateException "InvalidApprovalStateException"
+//   The state for the approval is not valid. Valid values include APPROVE and
+//   REVOKE.
+//
+//   * ErrCodeApprovalStateRequiredException "ApprovalStateRequiredException"
+//   An approval state is required, but was not specified.
+//
+//   * ErrCodePullRequestCannotBeApprovedByAuthorException "PullRequestCannotBeApprovedByAuthorException"
+//   The approval cannot be applied because the user approving the pull request
+//   matches the user who created the pull request. You cannot approve a pull
+//   request that you created.
+//
+//   * ErrCodeRevisionNotCurrentException "RevisionNotCurrentException"
+//   The revision ID provided in the request does not match the current revision
+//   ID. Use GetPullRequest to retrieve the current revision ID.
+//
+//   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
+//   The pull request status cannot be updated because it is already closed.
+//
+//   * ErrCodeMaximumNumberOfApprovalsExceededException "MaximumNumberOfApprovalsExceededException"
+//   The number of approvals required for the approval rule exceeds the maximum
+//   number allowed.
+//
+//   * ErrCodeEncryptionIntegrityChecksFailedException "EncryptionIntegrityChecksFailedException"
+//   An encryption integrity check failed.
+//
+//   * ErrCodeEncryptionKeyAccessDeniedException "EncryptionKeyAccessDeniedException"
+//   An encryption key could not be accessed.
+//
+//   * ErrCodeEncryptionKeyDisabledException "EncryptionKeyDisabledException"
+//   The encryption key is disabled.
+//
+//   * ErrCodeEncryptionKeyNotFoundException "EncryptionKeyNotFoundException"
+//   No encryption key was found.
+//
+//   * ErrCodeEncryptionKeyUnavailableException "EncryptionKeyUnavailableException"
+//   The encryption key is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codecommit-2015-04-13/UpdatePullRequestApprovalState
+func (c *CodeCommit) UpdatePullRequestApprovalState(input *UpdatePullRequestApprovalStateInput) (*UpdatePullRequestApprovalStateOutput, error) {
+	req, out := c.UpdatePullRequestApprovalStateRequest(input)
+	return out, req.Send()
+}
+
+// UpdatePullRequestApprovalStateWithContext is the same as UpdatePullRequestApprovalState with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdatePullRequestApprovalState for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeCommit) UpdatePullRequestApprovalStateWithContext(ctx aws.Context, input *UpdatePullRequestApprovalStateInput, opts ...request.Option) (*UpdatePullRequestApprovalStateOutput, error) {
+	req, out := c.UpdatePullRequestApprovalStateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7380,8 +9900,8 @@ func (c *CodeCommit) UpdatePullRequestDescriptionRequest(input *UpdatePullReques
 //   A pull request ID is required, but none was provided.
 //
 //   * ErrCodeInvalidDescriptionException "InvalidDescriptionException"
-//   The pull request description is not valid. Descriptions are limited to 1,000
-//   characters in length.
+//   The pull request description is not valid. Descriptions cannot be more than
+//   1,000 characters.
 //
 //   * ErrCodePullRequestAlreadyClosedException "PullRequestAlreadyClosedException"
 //   The pull request status cannot be updated because it is already closed.
@@ -7669,9 +10189,9 @@ func (c *CodeCommit) UpdateRepositoryDescriptionRequest(input *UpdateRepositoryD
 //
 // The description field for a repository accepts all HTML characters and all
 // valid Unicode characters. Applications that do not HTML-encode the description
-// and display it in a web page could expose users to potentially malicious
-// code. Make sure that you HTML-encode the description field in any application
-// that uses this API to display the repository description on a web page.
+// and display it in a webpage can expose users to potentially malicious code.
+// Make sure that you HTML-encode the description field in any application that
+// uses this API to display the repository description on a webpage.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7682,15 +10202,15 @@ func (c *CodeCommit) UpdateRepositoryDescriptionRequest(input *UpdateRepositoryD
 //
 // Returned Error Codes:
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeRepositoryDoesNotExistException "RepositoryDoesNotExistException"
 //   The specified repository does not exist.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -7780,10 +10300,10 @@ func (c *CodeCommit) UpdateRepositoryNameRequest(input *UpdateRepositoryNameInpu
 // UpdateRepositoryName API operation for AWS CodeCommit.
 //
 // Renames a repository. The repository name must be unique across the calling
-// AWS account. In addition, repository names are limited to 100 alphanumeric,
-// dash, and underscore characters, and cannot include certain characters. The
-// suffix ".git" is prohibited. For a full description of the limits on repository
-// names, see Limits (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html)
+// AWS account. Repository names are limited to 100 alphanumeric, dash, and
+// underscore characters, and cannot include certain characters. The suffix
+// .git is prohibited. For more information about the limits on repository names,
+// see Limits (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html)
 // in the AWS CodeCommit User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7801,12 +10321,12 @@ func (c *CodeCommit) UpdateRepositoryNameRequest(input *UpdateRepositoryNameInpu
 //   The specified repository name already exists.
 //
 //   * ErrCodeRepositoryNameRequiredException "RepositoryNameRequiredException"
-//   A repository name is required but was not specified.
+//   A repository name is required, but was not specified.
 //
 //   * ErrCodeInvalidRepositoryNameException "InvalidRepositoryNameException"
-//   At least one specified repository name is not valid.
+//   A specified repository name is not valid.
 //
-//   This exception only occurs when a specified repository name is not valid.
+//   This exception occurs only when a specified repository name is not valid.
 //   Other exceptions occur when a required repository parameter is missing, or
 //   when a specified repository does not exist.
 //
@@ -7832,7 +10352,538 @@ func (c *CodeCommit) UpdateRepositoryNameWithContext(ctx aws.Context, input *Upd
 	return out, req.Send()
 }
 
-// Information about errors in a BatchDescribeMergeConflicts operation.
+// Returns information about a specific approval on a pull request.
+type Approval struct {
+	_ struct{} `type:"structure"`
+
+	// The state of the approval, APPROVE or REVOKE. REVOKE states are not stored.
+	ApprovalState *string `locationName:"approvalState" type:"string" enum:"ApprovalState"`
+
+	// The Amazon Resource Name (ARN) of the user.
+	UserArn *string `locationName:"userArn" type:"string"`
+}
+
+// String returns the string representation
+func (s Approval) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Approval) GoString() string {
+	return s.String()
+}
+
+// SetApprovalState sets the ApprovalState field's value.
+func (s *Approval) SetApprovalState(v string) *Approval {
+	s.ApprovalState = &v
+	return s
+}
+
+// SetUserArn sets the UserArn field's value.
+func (s *Approval) SetUserArn(v string) *Approval {
+	s.UserArn = &v
+	return s
+}
+
+// Returns information about an approval rule.
+type ApprovalRule struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the approval rule.
+	ApprovalRuleContent *string `locationName:"approvalRuleContent" min:"1" type:"string"`
+
+	// The system-generated ID of the approval rule.
+	ApprovalRuleId *string `locationName:"approvalRuleId" type:"string"`
+
+	// The name of the approval rule.
+	ApprovalRuleName *string `locationName:"approvalRuleName" min:"1" type:"string"`
+
+	// The date the approval rule was created, in timestamp format.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The date the approval rule was most recently changed, in timestamp format.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of the user who made the most recent changes
+	// to the approval rule.
+	LastModifiedUser *string `locationName:"lastModifiedUser" type:"string"`
+
+	// The approval rule template used to create the rule.
+	OriginApprovalRuleTemplate *OriginApprovalRuleTemplate `locationName:"originApprovalRuleTemplate" type:"structure"`
+
+	// The SHA-256 hash signature for the content of the approval rule.
+	RuleContentSha256 *string `locationName:"ruleContentSha256" type:"string"`
+}
+
+// String returns the string representation
+func (s ApprovalRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRule) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleContent sets the ApprovalRuleContent field's value.
+func (s *ApprovalRule) SetApprovalRuleContent(v string) *ApprovalRule {
+	s.ApprovalRuleContent = &v
+	return s
+}
+
+// SetApprovalRuleId sets the ApprovalRuleId field's value.
+func (s *ApprovalRule) SetApprovalRuleId(v string) *ApprovalRule {
+	s.ApprovalRuleId = &v
+	return s
+}
+
+// SetApprovalRuleName sets the ApprovalRuleName field's value.
+func (s *ApprovalRule) SetApprovalRuleName(v string) *ApprovalRule {
+	s.ApprovalRuleName = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *ApprovalRule) SetCreationDate(v time.Time) *ApprovalRule {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *ApprovalRule) SetLastModifiedDate(v time.Time) *ApprovalRule {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetLastModifiedUser sets the LastModifiedUser field's value.
+func (s *ApprovalRule) SetLastModifiedUser(v string) *ApprovalRule {
+	s.LastModifiedUser = &v
+	return s
+}
+
+// SetOriginApprovalRuleTemplate sets the OriginApprovalRuleTemplate field's value.
+func (s *ApprovalRule) SetOriginApprovalRuleTemplate(v *OriginApprovalRuleTemplate) *ApprovalRule {
+	s.OriginApprovalRuleTemplate = v
+	return s
+}
+
+// SetRuleContentSha256 sets the RuleContentSha256 field's value.
+func (s *ApprovalRule) SetRuleContentSha256(v string) *ApprovalRule {
+	s.RuleContentSha256 = &v
+	return s
+}
+
+// Returns information about an event for an approval rule.
+type ApprovalRuleEventMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the approval rule.
+	ApprovalRuleContent *string `locationName:"approvalRuleContent" min:"1" type:"string"`
+
+	// The system-generated ID of the approval rule.
+	ApprovalRuleId *string `locationName:"approvalRuleId" type:"string"`
+
+	// The name of the approval rule.
+	ApprovalRuleName *string `locationName:"approvalRuleName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ApprovalRuleEventMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleEventMetadata) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleContent sets the ApprovalRuleContent field's value.
+func (s *ApprovalRuleEventMetadata) SetApprovalRuleContent(v string) *ApprovalRuleEventMetadata {
+	s.ApprovalRuleContent = &v
+	return s
+}
+
+// SetApprovalRuleId sets the ApprovalRuleId field's value.
+func (s *ApprovalRuleEventMetadata) SetApprovalRuleId(v string) *ApprovalRuleEventMetadata {
+	s.ApprovalRuleId = &v
+	return s
+}
+
+// SetApprovalRuleName sets the ApprovalRuleName field's value.
+func (s *ApprovalRuleEventMetadata) SetApprovalRuleName(v string) *ApprovalRuleEventMetadata {
+	s.ApprovalRuleName = &v
+	return s
+}
+
+// Returns information about an override event for approval rules for a pull
+// request.
+type ApprovalRuleOverriddenEventMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the override event.
+	OverrideStatus *string `locationName:"overrideStatus" type:"string" enum:"OverrideStatus"`
+
+	// The revision ID of the pull request when the override event occurred.
+	RevisionId *string `locationName:"revisionId" type:"string"`
+}
+
+// String returns the string representation
+func (s ApprovalRuleOverriddenEventMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleOverriddenEventMetadata) GoString() string {
+	return s.String()
+}
+
+// SetOverrideStatus sets the OverrideStatus field's value.
+func (s *ApprovalRuleOverriddenEventMetadata) SetOverrideStatus(v string) *ApprovalRuleOverriddenEventMetadata {
+	s.OverrideStatus = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *ApprovalRuleOverriddenEventMetadata) SetRevisionId(v string) *ApprovalRuleOverriddenEventMetadata {
+	s.RevisionId = &v
+	return s
+}
+
+// Returns information about an approval rule template.
+type ApprovalRuleTemplate struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the approval rule template.
+	ApprovalRuleTemplateContent *string `locationName:"approvalRuleTemplateContent" min:"1" type:"string"`
+
+	// The description of the approval rule template.
+	ApprovalRuleTemplateDescription *string `locationName:"approvalRuleTemplateDescription" type:"string"`
+
+	// The system-generated ID of the approval rule template.
+	ApprovalRuleTemplateId *string `locationName:"approvalRuleTemplateId" type:"string"`
+
+	// The name of the approval rule template.
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string"`
+
+	// The date the approval rule template was created, in timestamp format.
+	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
+
+	// The date the approval rule template was most recently changed, in timestamp
+	// format.
+	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
+
+	// The Amazon Resource Name (ARN) of the user who made the most recent changes
+	// to the approval rule template.
+	LastModifiedUser *string `locationName:"lastModifiedUser" type:"string"`
+
+	// The SHA-256 hash signature for the content of the approval rule template.
+	RuleContentSha256 *string `locationName:"ruleContentSha256" type:"string"`
+}
+
+// String returns the string representation
+func (s ApprovalRuleTemplate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalRuleTemplate) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplateContent sets the ApprovalRuleTemplateContent field's value.
+func (s *ApprovalRuleTemplate) SetApprovalRuleTemplateContent(v string) *ApprovalRuleTemplate {
+	s.ApprovalRuleTemplateContent = &v
+	return s
+}
+
+// SetApprovalRuleTemplateDescription sets the ApprovalRuleTemplateDescription field's value.
+func (s *ApprovalRuleTemplate) SetApprovalRuleTemplateDescription(v string) *ApprovalRuleTemplate {
+	s.ApprovalRuleTemplateDescription = &v
+	return s
+}
+
+// SetApprovalRuleTemplateId sets the ApprovalRuleTemplateId field's value.
+func (s *ApprovalRuleTemplate) SetApprovalRuleTemplateId(v string) *ApprovalRuleTemplate {
+	s.ApprovalRuleTemplateId = &v
+	return s
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *ApprovalRuleTemplate) SetApprovalRuleTemplateName(v string) *ApprovalRuleTemplate {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *ApprovalRuleTemplate) SetCreationDate(v time.Time) *ApprovalRuleTemplate {
+	s.CreationDate = &v
+	return s
+}
+
+// SetLastModifiedDate sets the LastModifiedDate field's value.
+func (s *ApprovalRuleTemplate) SetLastModifiedDate(v time.Time) *ApprovalRuleTemplate {
+	s.LastModifiedDate = &v
+	return s
+}
+
+// SetLastModifiedUser sets the LastModifiedUser field's value.
+func (s *ApprovalRuleTemplate) SetLastModifiedUser(v string) *ApprovalRuleTemplate {
+	s.LastModifiedUser = &v
+	return s
+}
+
+// SetRuleContentSha256 sets the RuleContentSha256 field's value.
+func (s *ApprovalRuleTemplate) SetRuleContentSha256(v string) *ApprovalRuleTemplate {
+	s.RuleContentSha256 = &v
+	return s
+}
+
+// Returns information about a change in the approval state for a pull request.
+type ApprovalStateChangedEventMetadata struct {
+	_ struct{} `type:"structure"`
+
+	// The approval status for the pull request.
+	ApprovalStatus *string `locationName:"approvalStatus" type:"string" enum:"ApprovalState"`
+
+	// The revision ID of the pull request when the approval state changed.
+	RevisionId *string `locationName:"revisionId" type:"string"`
+}
+
+// String returns the string representation
+func (s ApprovalStateChangedEventMetadata) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApprovalStateChangedEventMetadata) GoString() string {
+	return s.String()
+}
+
+// SetApprovalStatus sets the ApprovalStatus field's value.
+func (s *ApprovalStateChangedEventMetadata) SetApprovalStatus(v string) *ApprovalStateChangedEventMetadata {
+	s.ApprovalStatus = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *ApprovalStateChangedEventMetadata) SetRevisionId(v string) *ApprovalStateChangedEventMetadata {
+	s.RevisionId = &v
+	return s
+}
+
+type AssociateApprovalRuleTemplateWithRepositoryInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name for the approval rule template.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+
+	// The name of the repository that you want to associate with the template.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateApprovalRuleTemplateWithRepositoryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateApprovalRuleTemplateWithRepositoryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateApprovalRuleTemplateWithRepositoryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateApprovalRuleTemplateWithRepositoryInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *AssociateApprovalRuleTemplateWithRepositoryInput) SetApprovalRuleTemplateName(v string) *AssociateApprovalRuleTemplateWithRepositoryInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *AssociateApprovalRuleTemplateWithRepositoryInput) SetRepositoryName(v string) *AssociateApprovalRuleTemplateWithRepositoryInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type AssociateApprovalRuleTemplateWithRepositoryOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociateApprovalRuleTemplateWithRepositoryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateApprovalRuleTemplateWithRepositoryOutput) GoString() string {
+	return s.String()
+}
+
+// Returns information about errors in a BatchAssociateApprovalRuleTemplateWithRepositories
+// operation.
+type BatchAssociateApprovalRuleTemplateWithRepositoriesError struct {
+	_ struct{} `type:"structure"`
+
+	// An error code that specifies whether the repository name was not valid or
+	// not found.
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// An error message that provides details about why the repository name was
+	// not found or not valid.
+	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+
+	// The name of the repository where the association was not made.
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchAssociateApprovalRuleTemplateWithRepositoriesError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchAssociateApprovalRuleTemplateWithRepositoriesError) GoString() string {
+	return s.String()
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesError) SetErrorCode(v string) *BatchAssociateApprovalRuleTemplateWithRepositoriesError {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesError) SetErrorMessage(v string) *BatchAssociateApprovalRuleTemplateWithRepositoriesError {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesError) SetRepositoryName(v string) *BatchAssociateApprovalRuleTemplateWithRepositoriesError {
+	s.RepositoryName = &v
+	return s
+}
+
+type BatchAssociateApprovalRuleTemplateWithRepositoriesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the template you want to associate with one or more repositories.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+
+	// The names of the repositories you want to associate with the template.
+	//
+	// The length constraint limit is for each string in the array. The array itself
+	// can be empty.
+	//
+	// RepositoryNames is a required field
+	RepositoryNames []*string `locationName:"repositoryNames" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchAssociateApprovalRuleTemplateWithRepositoriesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchAssociateApprovalRuleTemplateWithRepositoriesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchAssociateApprovalRuleTemplateWithRepositoriesInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+	if s.RepositoryNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesInput) SetApprovalRuleTemplateName(v string) *BatchAssociateApprovalRuleTemplateWithRepositoriesInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetRepositoryNames sets the RepositoryNames field's value.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesInput) SetRepositoryNames(v []*string) *BatchAssociateApprovalRuleTemplateWithRepositoriesInput {
+	s.RepositoryNames = v
+	return s
+}
+
+type BatchAssociateApprovalRuleTemplateWithRepositoriesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of names of the repositories that have been associated with the template.
+	//
+	// AssociatedRepositoryNames is a required field
+	AssociatedRepositoryNames []*string `locationName:"associatedRepositoryNames" type:"list" required:"true"`
+
+	// A list of any errors that might have occurred while attempting to create
+	// the association between the template and the repositories.
+	//
+	// Errors is a required field
+	Errors []*BatchAssociateApprovalRuleTemplateWithRepositoriesError `locationName:"errors" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchAssociateApprovalRuleTemplateWithRepositoriesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchAssociateApprovalRuleTemplateWithRepositoriesOutput) GoString() string {
+	return s.String()
+}
+
+// SetAssociatedRepositoryNames sets the AssociatedRepositoryNames field's value.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesOutput) SetAssociatedRepositoryNames(v []*string) *BatchAssociateApprovalRuleTemplateWithRepositoriesOutput {
+	s.AssociatedRepositoryNames = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *BatchAssociateApprovalRuleTemplateWithRepositoriesOutput) SetErrors(v []*BatchAssociateApprovalRuleTemplateWithRepositoriesError) *BatchAssociateApprovalRuleTemplateWithRepositoriesOutput {
+	s.Errors = v
+	return s
+}
+
+// Returns information about errors in a BatchDescribeMergeConflicts operation.
 type BatchDescribeMergeConflictsError struct {
 	_ struct{} `type:"structure"`
 
@@ -7884,20 +10935,19 @@ type BatchDescribeMergeConflictsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
@@ -7917,7 +10967,7 @@ type BatchDescribeMergeConflictsInput struct {
 	// MergeOption is a required field
 	MergeOption *string `locationName:"mergeOption" type:"string" required:"true" enum:"MergeOptionTypeEnum"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
@@ -7928,7 +10978,7 @@ type BatchDescribeMergeConflictsInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
@@ -8107,6 +11157,149 @@ func (s *BatchDescribeMergeConflictsOutput) SetSourceCommitId(v string) *BatchDe
 	return s
 }
 
+// Returns information about errors in a BatchDisassociateApprovalRuleTemplateFromRepositories
+// operation.
+type BatchDisassociateApprovalRuleTemplateFromRepositoriesError struct {
+	_ struct{} `type:"structure"`
+
+	// An error code that specifies whether the repository name was not valid or
+	// not found.
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	// An error message that provides details about why the repository name was
+	// either not found or not valid.
+	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+
+	// The name of the repository where the association with the template was not
+	// able to be removed.
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s BatchDisassociateApprovalRuleTemplateFromRepositoriesError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDisassociateApprovalRuleTemplateFromRepositoriesError) GoString() string {
+	return s.String()
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesError) SetErrorCode(v string) *BatchDisassociateApprovalRuleTemplateFromRepositoriesError {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesError) SetErrorMessage(v string) *BatchDisassociateApprovalRuleTemplateFromRepositoriesError {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesError) SetRepositoryName(v string) *BatchDisassociateApprovalRuleTemplateFromRepositoriesError {
+	s.RepositoryName = &v
+	return s
+}
+
+type BatchDisassociateApprovalRuleTemplateFromRepositoriesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the template that you want to disassociate from one or more repositories.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+
+	// The repository names that you want to disassociate from the approval rule
+	// template.
+	//
+	// The length constraint limit is for each string in the array. The array itself
+	// can be empty.
+	//
+	// RepositoryNames is a required field
+	RepositoryNames []*string `locationName:"repositoryNames" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchDisassociateApprovalRuleTemplateFromRepositoriesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDisassociateApprovalRuleTemplateFromRepositoriesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchDisassociateApprovalRuleTemplateFromRepositoriesInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+	if s.RepositoryNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput) SetApprovalRuleTemplateName(v string) *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetRepositoryNames sets the RepositoryNames field's value.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput) SetRepositoryNames(v []*string) *BatchDisassociateApprovalRuleTemplateFromRepositoriesInput {
+	s.RepositoryNames = v
+	return s
+}
+
+type BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of repository names that have had their association with the template
+	// removed.
+	//
+	// DisassociatedRepositoryNames is a required field
+	DisassociatedRepositoryNames []*string `locationName:"disassociatedRepositoryNames" type:"list" required:"true"`
+
+	// A list of any errors that might have occurred while attempting to remove
+	// the association between the template and the repositories.
+	//
+	// Errors is a required field
+	Errors []*BatchDisassociateApprovalRuleTemplateFromRepositoriesError `locationName:"errors" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput) GoString() string {
+	return s.String()
+}
+
+// SetDisassociatedRepositoryNames sets the DisassociatedRepositoryNames field's value.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput) SetDisassociatedRepositoryNames(v []*string) *BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput {
+	s.DisassociatedRepositoryNames = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput) SetErrors(v []*BatchDisassociateApprovalRuleTemplateFromRepositoriesError) *BatchDisassociateApprovalRuleTemplateFromRepositoriesOutput {
+	s.Errors = v
+	return s
+}
+
 // Returns information about errors in a BatchGetCommits operation.
 type BatchGetCommitsError struct {
 	_ struct{} `type:"structure"`
@@ -8155,7 +11348,8 @@ type BatchGetCommitsInput struct {
 
 	// The full commit IDs of the commits to get information about.
 	//
-	// You must supply the full SHAs of each commit. You cannot use shortened SHAs.
+	// You must supply the full SHA IDs of each commit. You cannot use shortened
+	// SHA IDs.
 	//
 	// CommitIds is a required field
 	CommitIds []*string `locationName:"commitIds" type:"list" required:"true"`
@@ -8215,9 +11409,8 @@ type BatchGetCommitsOutput struct {
 	Commits []*Commit `locationName:"commits" type:"list"`
 
 	// Returns any commit IDs for which information could not be found. For example,
-	// if one of the commit IDs was a shortened SHA or that commit was not found
-	// in the specified repository, the ID will return an error object with additional
-	// information.
+	// if one of the commit IDs was a shortened SHA ID or that commit was not found
+	// in the specified repository, the ID returns an error object with more information.
 	Errors []*BatchGetCommitsError `locationName:"errors" type:"list"`
 }
 
@@ -8248,6 +11441,9 @@ type BatchGetRepositoriesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The names of the repositories to get information about.
+	//
+	// The length constraint limit is for each string in the array. The array itself
+	// can be empty.
 	//
 	// RepositoryNames is a required field
 	RepositoryNames []*string `locationName:"repositoryNames" type:"list" required:"true"`
@@ -8333,7 +11529,7 @@ type BlobMetadata struct {
 	//    * 120000 indicates a symlink
 	Mode *string `locationName:"mode" type:"string"`
 
-	// The path to the blob and any associated file name, if any.
+	// The path to the blob and associated file name, if any.
 	Path *string `locationName:"path" type:"string"`
 }
 
@@ -8405,10 +11601,10 @@ type Comment struct {
 	// The Amazon Resource Name (ARN) of the person who posted the comment.
 	AuthorArn *string `locationName:"authorArn" type:"string"`
 
-	// A unique, client-generated idempotency token that when provided in a request,
+	// A unique, client-generated idempotency token that, when provided in a request,
 	// ensures the request cannot be repeated with a changed parameter. If a request
 	// is received with the same parameters and a token is included, the request
-	// will return information about the initial request that used that token.
+	// returns information about the initial request that used that token.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string"`
 
 	// The system-generated comment ID.
@@ -8492,16 +11688,16 @@ func (s *Comment) SetLastModifiedDate(v time.Time) *Comment {
 type CommentsForComparedCommit struct {
 	_ struct{} `type:"structure"`
 
-	// The full blob ID of the commit used to establish the 'after' of the comparison.
+	// The full blob ID of the commit used to establish the after of the comparison.
 	AfterBlobId *string `locationName:"afterBlobId" type:"string"`
 
-	// The full commit ID of the commit used to establish the 'after' of the comparison.
+	// The full commit ID of the commit used to establish the after of the comparison.
 	AfterCommitId *string `locationName:"afterCommitId" type:"string"`
 
-	// The full blob ID of the commit used to establish the 'before' of the comparison.
+	// The full blob ID of the commit used to establish the before of the comparison.
 	BeforeBlobId *string `locationName:"beforeBlobId" type:"string"`
 
-	// The full commit ID of the commit used to establish the 'before' of the comparison.
+	// The full commit ID of the commit used to establish the before of the comparison.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
 	// An array of comment objects. Each comment object contains information about
@@ -8510,7 +11706,7 @@ type CommentsForComparedCommit struct {
 
 	// Location information about the comment on the comparison, including the file
 	// name, line number, and whether the version of the file where the comment
-	// was made is 'BEFORE' or 'AFTER'.
+	// was made is BEFORE or AFTER.
 	Location *Location `locationName:"location" type:"structure"`
 
 	// The name of the repository that contains the compared commits.
@@ -8576,7 +11772,7 @@ type CommentsForPullRequest struct {
 	// The full blob ID of the file on which you want to comment on the source commit.
 	AfterBlobId *string `locationName:"afterBlobId" type:"string"`
 
-	// he full commit ID of the commit that was the tip of the source branch at
+	// The full commit ID of the commit that was the tip of the source branch at
 	// the time the comment was made.
 	AfterCommitId *string `locationName:"afterCommitId" type:"string"`
 
@@ -8585,9 +11781,9 @@ type CommentsForPullRequest struct {
 	BeforeBlobId *string `locationName:"beforeBlobId" type:"string"`
 
 	// The full commit ID of the commit that was the tip of the destination branch
-	// when the pull request was created. This commit will be superceded by the
-	// after commit in the source branch when and if you merge the source branch
-	// into the destination branch.
+	// when the pull request was created. This commit is superceded by the after
+	// commit in the source branch when and if you merge the source branch into
+	// the destination branch.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
 	// An array of comment objects. Each comment object contains information about
@@ -8596,7 +11792,7 @@ type CommentsForPullRequest struct {
 
 	// Location information about the comment on the pull request, including the
 	// file name, line number, and whether the version of the file where the comment
-	// was made is 'BEFORE' (destination branch) or 'AFTER' (source branch).
+	// was made is BEFORE (destination branch) or AFTER (source branch).
 	Location *Location `locationName:"location" type:"structure"`
 
 	// The system-generated ID of the pull request.
@@ -8668,7 +11864,7 @@ func (s *CommentsForPullRequest) SetRepositoryName(v string) *CommentsForPullReq
 type Commit struct {
 	_ struct{} `type:"structure"`
 
-	// Any additional data associated with the specified commit.
+	// Any other data associated with the specified commit.
 	AdditionalData *string `locationName:"additionalData" type:"string"`
 
 	// Information about the author of the specified commit. Information includes
@@ -8676,7 +11872,7 @@ type Commit struct {
 	// the email address for the author, as configured in Git.
 	Author *UserInfo `locationName:"author" type:"structure"`
 
-	// The full SHA of the specified commit.
+	// The full SHA ID of the specified commit.
 	CommitId *string `locationName:"commitId" type:"string"`
 
 	// Information about the person who committed the specified commit, also known
@@ -8896,18 +12092,18 @@ func (s *ConflictMetadata) SetObjectTypes(v *ObjectTypes) *ConflictMetadata {
 	return s
 }
 
-// A list of inputs to use when resolving conflicts during a merge if AUTOMERGE
-// is chosen as the conflict resolution strategy.
+// If AUTOMERGE is the conflict resolution strategy, a list of inputs to use
+// when resolving conflicts during a merge.
 type ConflictResolution struct {
 	_ struct{} `type:"structure"`
 
-	// Files that will be deleted as part of the merge conflict resolution.
+	// Files to be deleted as part of the merge conflict resolution.
 	DeleteFiles []*DeleteFileEntry `locationName:"deleteFiles" type:"list"`
 
-	// Files that will have content replaced as part of the merge conflict resolution.
+	// Files to have content replaced as part of the merge conflict resolution.
 	ReplaceContents []*ReplaceContentEntry `locationName:"replaceContents" type:"list"`
 
-	// File modes that will be set as part of the merge conflict resolution.
+	// File modes that are set as part of the merge conflict resolution.
 	SetFileModes []*SetFileModeEntry `locationName:"setFileModes" type:"list"`
 }
 
@@ -8976,6 +12172,127 @@ func (s *ConflictResolution) SetReplaceContents(v []*ReplaceContentEntry) *Confl
 // SetSetFileModes sets the SetFileModes field's value.
 func (s *ConflictResolution) SetSetFileModes(v []*SetFileModeEntry) *ConflictResolution {
 	s.SetFileModes = v
+	return s
+}
+
+type CreateApprovalRuleTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the approval rule that is created on pull requests in associated
+	// repositories. If you specify one or more destination references (branches),
+	// approval rules are created in an associated repository only if their destination
+	// references (branches) match those specified in the template.
+	//
+	// When you create the content of the approval rule template, you can specify
+	// approvers in an approval pool in one of two ways:
+	//
+	//    * CodeCommitApprovers: This option only requires an AWS account and a
+	//    resource. It can be used for both IAM users and federated access users
+	//    whose name matches the provided resource name. This is a very powerful
+	//    option that offers a great deal of flexibility. For example, if you specify
+	//    the AWS account 123456789012 and Mary_Major, all of the following are
+	//    counted as approvals coming from that user: An IAM user in the account
+	//    (arn:aws:iam::123456789012:user/Mary_Major) A federated user identified
+	//    in IAM as Mary_Major (arn:aws:sts::123456789012:federated-user/Mary_Major)
+	//    This option does not recognize an active session of someone assuming the
+	//    role of CodeCommitReview with a role session name of Mary_Major (arn:aws:sts::123456789012:assumed-role/CodeCommitReview/Mary_Major)
+	//    unless you include a wildcard (*Mary_Major).
+	//
+	//    * Fully qualified ARN: This option allows you to specify the fully qualified
+	//    Amazon Resource Name (ARN) of the IAM user or role.
+	//
+	// For more information about IAM ARNs, wildcards, and formats, see IAM Identifiers
+	// (https://docs.aws.amazon.com/iam/latest/UserGuide/reference_identifiers.html)
+	// in the IAM User Guide.
+	//
+	// ApprovalRuleTemplateContent is a required field
+	ApprovalRuleTemplateContent *string `locationName:"approvalRuleTemplateContent" min:"1" type:"string" required:"true"`
+
+	// The description of the approval rule template. Consider providing a description
+	// that explains what this template does and when it might be appropriate to
+	// associate it with repositories.
+	ApprovalRuleTemplateDescription *string `locationName:"approvalRuleTemplateDescription" type:"string"`
+
+	// The name of the approval rule template. Provide descriptive names, because
+	// this name is applied to the approval rules created automatically in associated
+	// repositories.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateApprovalRuleTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateApprovalRuleTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateApprovalRuleTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateApprovalRuleTemplateInput"}
+	if s.ApprovalRuleTemplateContent == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateContent"))
+	}
+	if s.ApprovalRuleTemplateContent != nil && len(*s.ApprovalRuleTemplateContent) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateContent", 1))
+	}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateContent sets the ApprovalRuleTemplateContent field's value.
+func (s *CreateApprovalRuleTemplateInput) SetApprovalRuleTemplateContent(v string) *CreateApprovalRuleTemplateInput {
+	s.ApprovalRuleTemplateContent = &v
+	return s
+}
+
+// SetApprovalRuleTemplateDescription sets the ApprovalRuleTemplateDescription field's value.
+func (s *CreateApprovalRuleTemplateInput) SetApprovalRuleTemplateDescription(v string) *CreateApprovalRuleTemplateInput {
+	s.ApprovalRuleTemplateDescription = &v
+	return s
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *CreateApprovalRuleTemplateInput) SetApprovalRuleTemplateName(v string) *CreateApprovalRuleTemplateInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+type CreateApprovalRuleTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The content and structure of the created approval rule template.
+	//
+	// ApprovalRuleTemplate is a required field
+	ApprovalRuleTemplate *ApprovalRuleTemplate `locationName:"approvalRuleTemplate" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateApprovalRuleTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateApprovalRuleTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplate sets the ApprovalRuleTemplate field's value.
+func (s *CreateApprovalRuleTemplateOutput) SetApprovalRuleTemplate(v *ApprovalRuleTemplate) *CreateApprovalRuleTemplateOutput {
+	s.ApprovalRuleTemplate = v
 	return s
 }
 
@@ -9069,40 +12386,38 @@ func (s CreateBranchOutput) GoString() string {
 type CreateCommitInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the author who created the commit. This information will be used
-	// as both the author and committer for the commit.
+	// The name of the author who created the commit. This information is used as
+	// both the author and committer for the commit.
 	AuthorName *string `locationName:"authorName" type:"string"`
 
-	// The name of the branch where you will create the commit.
+	// The name of the branch where you create the commit.
 	//
 	// BranchName is a required field
 	BranchName *string `locationName:"branchName" min:"1" type:"string" required:"true"`
 
-	// The commit message you want to include as part of creating the commit. Commit
-	// messages are limited to 256 KB. If no message is specified, a default message
-	// will be used.
+	// The commit message you want to include in the commit. Commit messages are
+	// limited to 256 KB. If no message is specified, a default message is used.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
-	// The files to delete in this commit. These files will still exist in prior
-	// commits.
+	// The files to delete in this commit. These files still exist in earlier commits.
 	DeleteFiles []*DeleteFileEntry `locationName:"deleteFiles" type:"list"`
 
 	// The email address of the person who created the commit.
 	Email *string `locationName:"email" type:"string"`
 
 	// If the commit contains deletions, whether to keep a folder or folder structure
-	// if the changes leave the folders empty. If this is specified as true, a .gitkeep
-	// file will be created for empty folders. The default is false.
+	// if the changes leave the folders empty. If true, a ..gitkeep file is created
+	// for empty folders. The default is false.
 	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
 
-	// The ID of the commit that is the parent of the commit you will create. If
-	// this is an empty repository, this is not required.
+	// The ID of the commit that is the parent of the commit you create. Not required
+	// if this is an empty repository.
 	ParentCommitId *string `locationName:"parentCommitId" type:"string"`
 
 	// The files to add or update in this commit.
 	PutFiles []*PutFileEntry `locationName:"putFiles" type:"list"`
 
-	// The name of the repository where you will create the commit.
+	// The name of the repository where you create the commit.
 	//
 	// RepositoryName is a required field
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
@@ -9293,31 +12608,153 @@ func (s *CreateCommitOutput) SetTreeId(v string) *CreateCommitOutput {
 	return s
 }
 
+type CreatePullRequestApprovalRuleInput struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the approval rule, including the number of approvals needed
+	// and the structure of an approval pool defined for approvals, if any. For
+	// more information about approval pools, see the AWS CodeCommit User Guide.
+	//
+	// When you create the content of the approval rule, you can specify approvers
+	// in an approval pool in one of two ways:
+	//
+	//    * CodeCommitApprovers: This option only requires an AWS account and a
+	//    resource. It can be used for both IAM users and federated access users
+	//    whose name matches the provided resource name. This is a very powerful
+	//    option that offers a great deal of flexibility. For example, if you specify
+	//    the AWS account 123456789012 and Mary_Major, all of the following would
+	//    be counted as approvals coming from that user: An IAM user in the account
+	//    (arn:aws:iam::123456789012:user/Mary_Major) A federated user identified
+	//    in IAM as Mary_Major (arn:aws:sts::123456789012:federated-user/Mary_Major)
+	//    This option does not recognize an active session of someone assuming the
+	//    role of CodeCommitReview with a role session name of Mary_Major (arn:aws:sts::123456789012:assumed-role/CodeCommitReview/Mary_Major)
+	//    unless you include a wildcard (*Mary_Major).
+	//
+	//    * Fully qualified ARN: This option allows you to specify the fully qualified
+	//    Amazon Resource Name (ARN) of the IAM user or role.
+	//
+	// For more information about IAM ARNs, wildcards, and formats, see IAM Identifiers
+	// (https://docs.aws.amazon.com/iam/latest/UserGuide/reference_identifiers.html)
+	// in the IAM User Guide.
+	//
+	// ApprovalRuleContent is a required field
+	ApprovalRuleContent *string `locationName:"approvalRuleContent" min:"1" type:"string" required:"true"`
+
+	// The name for the approval rule.
+	//
+	// ApprovalRuleName is a required field
+	ApprovalRuleName *string `locationName:"approvalRuleName" min:"1" type:"string" required:"true"`
+
+	// The system-generated ID of the pull request for which you want to create
+	// the approval rule.
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CreatePullRequestApprovalRuleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreatePullRequestApprovalRuleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreatePullRequestApprovalRuleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreatePullRequestApprovalRuleInput"}
+	if s.ApprovalRuleContent == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleContent"))
+	}
+	if s.ApprovalRuleContent != nil && len(*s.ApprovalRuleContent) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleContent", 1))
+	}
+	if s.ApprovalRuleName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleName"))
+	}
+	if s.ApprovalRuleName != nil && len(*s.ApprovalRuleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleName", 1))
+	}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleContent sets the ApprovalRuleContent field's value.
+func (s *CreatePullRequestApprovalRuleInput) SetApprovalRuleContent(v string) *CreatePullRequestApprovalRuleInput {
+	s.ApprovalRuleContent = &v
+	return s
+}
+
+// SetApprovalRuleName sets the ApprovalRuleName field's value.
+func (s *CreatePullRequestApprovalRuleInput) SetApprovalRuleName(v string) *CreatePullRequestApprovalRuleInput {
+	s.ApprovalRuleName = &v
+	return s
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *CreatePullRequestApprovalRuleInput) SetPullRequestId(v string) *CreatePullRequestApprovalRuleInput {
+	s.PullRequestId = &v
+	return s
+}
+
+type CreatePullRequestApprovalRuleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the created approval rule.
+	//
+	// ApprovalRule is a required field
+	ApprovalRule *ApprovalRule `locationName:"approvalRule" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreatePullRequestApprovalRuleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreatePullRequestApprovalRuleOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRule sets the ApprovalRule field's value.
+func (s *CreatePullRequestApprovalRuleOutput) SetApprovalRule(v *ApprovalRule) *CreatePullRequestApprovalRuleOutput {
+	s.ApprovalRule = v
+	return s
+}
+
 type CreatePullRequestInput struct {
 	_ struct{} `type:"structure"`
 
-	// A unique, client-generated idempotency token that when provided in a request,
+	// A unique, client-generated idempotency token that, when provided in a request,
 	// ensures the request cannot be repeated with a changed parameter. If a request
 	// is received with the same parameters and a token is included, the request
-	// will return information about the initial request that used that token.
+	// returns information about the initial request that used that token.
 	//
-	// The AWS SDKs prepopulate client request tokens. If using an AWS SDK, you
-	// do not have to generate an idempotency token, as this will be done for you.
+	// The AWS SDKs prepopulate client request tokens. If you are using an AWS SDK,
+	// an idempotency token is created for you.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
 
 	// A description of the pull request.
 	Description *string `locationName:"description" type:"string"`
 
 	// The targets for the pull request, including the source of the code to be
-	// reviewed (the source branch), and the destination where the creator of the
+	// reviewed (the source branch) and the destination where the creator of the
 	// pull request intends the code to be merged after the pull request is closed
 	// (the destination branch).
 	//
 	// Targets is a required field
 	Targets []*Target `locationName:"targets" type:"list" required:"true"`
 
-	// The title of the pull request. This title will be used to identify the pull
-	// request to other users in the repository.
+	// The title of the pull request. This title is used to identify the pull request
+	// to other users in the repository.
 	//
 	// Title is a required field
 	Title *string `locationName:"title" type:"string" required:"true"`
@@ -9416,18 +12853,18 @@ type CreateRepositoryInput struct {
 	//
 	// The description field for a repository accepts all HTML characters and all
 	// valid Unicode characters. Applications that do not HTML-encode the description
-	// and display it in a web page could expose users to potentially malicious
-	// code. Make sure that you HTML-encode the description field in any application
-	// that uses this API to display the repository description on a web page.
+	// and display it in a webpage can expose users to potentially malicious code.
+	// Make sure that you HTML-encode the description field in any application that
+	// uses this API to display the repository description on a webpage.
 	RepositoryDescription *string `locationName:"repositoryDescription" type:"string"`
 
 	// The name of the new repository to be created.
 	//
-	// The repository name must be unique across the calling AWS account. In addition,
-	// repository names are limited to 100 alphanumeric, dash, and underscore characters,
-	// and cannot include certain characters. For a full description of the limits
+	// The repository name must be unique across the calling AWS account. Repository
+	// names are limited to 100 alphanumeric, dash, and underscore characters, and
+	// cannot include certain characters. For more information about the limits
 	// on repository names, see Limits (https://docs.aws.amazon.com/codecommit/latest/userguide/limits.html)
-	// in the AWS CodeCommit User Guide. The suffix ".git" is prohibited.
+	// in the AWS CodeCommit User Guide. The suffix .git is prohibited.
 	//
 	// RepositoryName is a required field
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
@@ -9508,31 +12945,30 @@ type CreateUnreferencedMergeCommitInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the author who created the unreferenced commit. This information
-	// will be used as both the author and committer for the commit.
+	// is used as both the author and committer for the commit.
 	AuthorName *string `locationName:"authorName" type:"string"`
 
 	// The commit message for the unreferenced commit.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
-	// A list of inputs to use when resolving conflicts during a merge if AUTOMERGE
-	// is chosen as the conflict resolution strategy.
+	// If AUTOMERGE is the conflict resolution strategy, a list of inputs to use
+	// when resolving conflicts during a merge.
 	ConflictResolution *ConflictResolution `locationName:"conflictResolution" type:"structure"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
@@ -9542,7 +12978,7 @@ type CreateUnreferencedMergeCommitInput struct {
 
 	// If the commit contains deletions, whether to keep a folder or folder structure
 	// if the changes leave the folders empty. If this is specified as true, a .gitkeep
-	// file will be created for empty folders. The default is false.
+	// file is created for empty folders. The default is false.
 	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
 
 	// The merge option or strategy you want to use to merge the code.
@@ -9557,7 +12993,7 @@ type CreateUnreferencedMergeCommitInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
@@ -9699,6 +13135,73 @@ func (s *CreateUnreferencedMergeCommitOutput) SetCommitId(v string) *CreateUnref
 // SetTreeId sets the TreeId field's value.
 func (s *CreateUnreferencedMergeCommitOutput) SetTreeId(v string) *CreateUnreferencedMergeCommitOutput {
 	s.TreeId = &v
+	return s
+}
+
+type DeleteApprovalRuleTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the approval rule template to delete.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteApprovalRuleTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApprovalRuleTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteApprovalRuleTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteApprovalRuleTemplateInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *DeleteApprovalRuleTemplateInput) SetApprovalRuleTemplateName(v string) *DeleteApprovalRuleTemplateInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+type DeleteApprovalRuleTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The system-generated ID of the deleted approval rule template. If the template
+	// has been previously deleted, the only response is a 200 OK.
+	//
+	// ApprovalRuleTemplateId is a required field
+	ApprovalRuleTemplateId *string `locationName:"approvalRuleTemplateId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteApprovalRuleTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApprovalRuleTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplateId sets the ApprovalRuleTemplateId field's value.
+func (s *DeleteApprovalRuleTemplateOutput) SetApprovalRuleTemplateId(v string) *DeleteApprovalRuleTemplateOutput {
+	s.ApprovalRuleTemplateId = &v
 	return s
 }
 
@@ -9848,12 +13351,11 @@ func (s *DeleteCommentContentOutput) SetComment(v *Comment) *DeleteCommentConten
 	return s
 }
 
-// A file that will be deleted as part of a commit.
+// A file that is deleted as part of a commit.
 type DeleteFileEntry struct {
 	_ struct{} `type:"structure"`
 
-	// The full path of the file that will be deleted, including the name of the
-	// file.
+	// The full path of the file to be deleted, including the name of the file.
 	//
 	// FilePath is a required field
 	FilePath *string `locationName:"filePath" type:"string" required:"true"`
@@ -9891,43 +13393,42 @@ func (s *DeleteFileEntry) SetFilePath(v string) *DeleteFileEntry {
 type DeleteFileInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the branch where the commit will be made deleting the file.
+	// The name of the branch where the commit that deletes the file is made.
 	//
 	// BranchName is a required field
 	BranchName *string `locationName:"branchName" min:"1" type:"string" required:"true"`
 
 	// The commit message you want to include as part of deleting the file. Commit
 	// messages are limited to 256 KB. If no message is specified, a default message
-	// will be used.
+	// is used.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
 	// The email address for the commit that deletes the file. If no email address
-	// is specified, the email address will be left blank.
+	// is specified, the email address is left blank.
 	Email *string `locationName:"email" type:"string"`
 
-	// The fully-qualified path to the file that will be deleted, including the
-	// full name and extension of that file. For example, /examples/file.md is a
-	// fully qualified path to a file named file.md in a folder named examples.
+	// The fully qualified path to the file that to be deleted, including the full
+	// name and extension of that file. For example, /examples/file.md is a fully
+	// qualified path to a file named file.md in a folder named examples.
 	//
 	// FilePath is a required field
 	FilePath *string `locationName:"filePath" type:"string" required:"true"`
 
-	// Specifies whether to delete the folder or directory that contains the file
-	// you want to delete if that file is the only object in the folder or directory.
-	// By default, empty folders will be deleted. This includes empty folders that
-	// are part of the directory structure. For example, if the path to a file is
-	// dir1/dir2/dir3/dir4, and dir2 and dir3 are empty, deleting the last file
-	// in dir4 will also delete the empty folders dir4, dir3, and dir2.
+	// If a file is the only object in the folder or directory, specifies whether
+	// to delete the folder or directory that contains the file. By default, empty
+	// folders are deleted. This includes empty folders that are part of the directory
+	// structure. For example, if the path to a file is dir1/dir2/dir3/dir4, and
+	// dir2 and dir3 are empty, deleting the last file in dir4 also deletes the
+	// empty folders dir4, dir3, and dir2.
 	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
 
 	// The name of the author of the commit that deletes the file. If no name is
-	// specified, the user's ARN will be used as the author name and committer name.
+	// specified, the user's ARN is used as the author name and committer name.
 	Name *string `locationName:"name" type:"string"`
 
 	// The ID of the commit that is the tip of the branch where you want to create
-	// the commit that will delete the file. This must be the HEAD commit for the
-	// branch. The commit that deletes the file will be created from this commit
-	// ID.
+	// the commit that deletes the file. This must be the HEAD commit for the branch.
+	// The commit that deletes the file is created from this commit ID.
 	//
 	// ParentCommitId is a required field
 	ParentCommitId *string `locationName:"parentCommitId" type:"string" required:"true"`
@@ -10038,8 +13539,8 @@ type DeleteFileOutput struct {
 	// CommitId is a required field
 	CommitId *string `locationName:"commitId" type:"string" required:"true"`
 
-	// The fully-qualified path to the file that will be deleted, including the
-	// full name and extension of that file.
+	// The fully qualified path to the file to be deleted, including the full name
+	// and extension of that file.
 	//
 	// FilePath is a required field
 	FilePath *string `locationName:"filePath" type:"string" required:"true"`
@@ -10082,6 +13583,90 @@ func (s *DeleteFileOutput) SetFilePath(v string) *DeleteFileOutput {
 // SetTreeId sets the TreeId field's value.
 func (s *DeleteFileOutput) SetTreeId(v string) *DeleteFileOutput {
 	s.TreeId = &v
+	return s
+}
+
+type DeletePullRequestApprovalRuleInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the approval rule you want to delete.
+	//
+	// ApprovalRuleName is a required field
+	ApprovalRuleName *string `locationName:"approvalRuleName" min:"1" type:"string" required:"true"`
+
+	// The system-generated ID of the pull request that contains the approval rule
+	// you want to delete.
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeletePullRequestApprovalRuleInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePullRequestApprovalRuleInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeletePullRequestApprovalRuleInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeletePullRequestApprovalRuleInput"}
+	if s.ApprovalRuleName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleName"))
+	}
+	if s.ApprovalRuleName != nil && len(*s.ApprovalRuleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleName", 1))
+	}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleName sets the ApprovalRuleName field's value.
+func (s *DeletePullRequestApprovalRuleInput) SetApprovalRuleName(v string) *DeletePullRequestApprovalRuleInput {
+	s.ApprovalRuleName = &v
+	return s
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *DeletePullRequestApprovalRuleInput) SetPullRequestId(v string) *DeletePullRequestApprovalRuleInput {
+	s.PullRequestId = &v
+	return s
+}
+
+type DeletePullRequestApprovalRuleOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the deleted approval rule.
+	//
+	// If the approval rule was deleted in an earlier API call, the response is
+	// 200 OK without content.
+	//
+	// ApprovalRuleId is a required field
+	ApprovalRuleId *string `locationName:"approvalRuleId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeletePullRequestApprovalRuleOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePullRequestApprovalRuleOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleId sets the ApprovalRuleId field's value.
+func (s *DeletePullRequestApprovalRuleOutput) SetApprovalRuleId(v string) *DeletePullRequestApprovalRuleOutput {
+	s.ApprovalRuleId = &v
 	return s
 }
 
@@ -10155,20 +13740,19 @@ type DescribeMergeConflictsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
@@ -10186,7 +13770,7 @@ type DescribeMergeConflictsInput struct {
 	// MergeOption is a required field
 	MergeOption *string `locationName:"mergeOption" type:"string" required:"true" enum:"MergeOptionTypeEnum"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
@@ -10197,7 +13781,7 @@ type DescribeMergeConflictsInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
@@ -10377,16 +13961,16 @@ type DescribePullRequestEventsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the user whose actions resulted in the
-	// event. Examples include updating the pull request with additional commits
-	// or changing the status of a pull request.
+	// event. Examples include updating the pull request with more commits or changing
+	// the status of a pull request.
 	ActorArn *string `locationName:"actorArn" type:"string"`
 
-	// A non-negative integer used to limit the number of returned results. The
-	// default is 100 events, which is also the maximum number of events that can
-	// be returned in a result.
+	// A non-zero, non-negative integer used to limit the number of returned results.
+	// The default is 100 events, which is also the maximum number of events that
+	// can be returned in a result.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
@@ -10532,11 +14116,217 @@ func (s *Difference) SetChangeType(v string) *Difference {
 	return s
 }
 
+type DisassociateApprovalRuleTemplateFromRepositoryInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the approval rule template to disassociate from a specified repository.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+
+	// The name of the repository you want to disassociate from the template.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateApprovalRuleTemplateFromRepositoryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateApprovalRuleTemplateFromRepositoryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateApprovalRuleTemplateFromRepositoryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateApprovalRuleTemplateFromRepositoryInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *DisassociateApprovalRuleTemplateFromRepositoryInput) SetApprovalRuleTemplateName(v string) *DisassociateApprovalRuleTemplateFromRepositoryInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *DisassociateApprovalRuleTemplateFromRepositoryInput) SetRepositoryName(v string) *DisassociateApprovalRuleTemplateFromRepositoryInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type DisassociateApprovalRuleTemplateFromRepositoryOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateApprovalRuleTemplateFromRepositoryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateApprovalRuleTemplateFromRepositoryOutput) GoString() string {
+	return s.String()
+}
+
+type EvaluatePullRequestApprovalRulesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The system-generated ID of the pull request you want to evaluate.
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+
+	// The system-generated ID for the pull request revision. To retrieve the most
+	// recent revision ID for a pull request, use GetPullRequest.
+	//
+	// RevisionId is a required field
+	RevisionId *string `locationName:"revisionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s EvaluatePullRequestApprovalRulesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EvaluatePullRequestApprovalRulesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EvaluatePullRequestApprovalRulesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EvaluatePullRequestApprovalRulesInput"}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+	if s.RevisionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RevisionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *EvaluatePullRequestApprovalRulesInput) SetPullRequestId(v string) *EvaluatePullRequestApprovalRulesInput {
+	s.PullRequestId = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *EvaluatePullRequestApprovalRulesInput) SetRevisionId(v string) *EvaluatePullRequestApprovalRulesInput {
+	s.RevisionId = &v
+	return s
+}
+
+type EvaluatePullRequestApprovalRulesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The result of the evaluation, including the names of the rules whose conditions
+	// have been met (if any), the names of the rules whose conditions have not
+	// been met (if any), whether the pull request is in the approved state, and
+	// whether the pull request approval rule has been set aside by an override.
+	//
+	// Evaluation is a required field
+	Evaluation *Evaluation `locationName:"evaluation" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s EvaluatePullRequestApprovalRulesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EvaluatePullRequestApprovalRulesOutput) GoString() string {
+	return s.String()
+}
+
+// SetEvaluation sets the Evaluation field's value.
+func (s *EvaluatePullRequestApprovalRulesOutput) SetEvaluation(v *Evaluation) *EvaluatePullRequestApprovalRulesOutput {
+	s.Evaluation = v
+	return s
+}
+
+// Returns information about the approval rules applied to a pull request and
+// whether conditions have been met.
+type Evaluation struct {
+	_ struct{} `type:"structure"`
+
+	// The names of the approval rules that have not had their conditions met.
+	ApprovalRulesNotSatisfied []*string `locationName:"approvalRulesNotSatisfied" type:"list"`
+
+	// The names of the approval rules that have had their conditions met.
+	ApprovalRulesSatisfied []*string `locationName:"approvalRulesSatisfied" type:"list"`
+
+	// Whether the state of the pull request is approved.
+	Approved *bool `locationName:"approved" type:"boolean"`
+
+	// Whether the approval rule requirements for the pull request have been overridden
+	// and no longer need to be met.
+	Overridden *bool `locationName:"overridden" type:"boolean"`
+}
+
+// String returns the string representation
+func (s Evaluation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Evaluation) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRulesNotSatisfied sets the ApprovalRulesNotSatisfied field's value.
+func (s *Evaluation) SetApprovalRulesNotSatisfied(v []*string) *Evaluation {
+	s.ApprovalRulesNotSatisfied = v
+	return s
+}
+
+// SetApprovalRulesSatisfied sets the ApprovalRulesSatisfied field's value.
+func (s *Evaluation) SetApprovalRulesSatisfied(v []*string) *Evaluation {
+	s.ApprovalRulesSatisfied = v
+	return s
+}
+
+// SetApproved sets the Approved field's value.
+func (s *Evaluation) SetApproved(v bool) *Evaluation {
+	s.Approved = &v
+	return s
+}
+
+// SetOverridden sets the Overridden field's value.
+func (s *Evaluation) SetOverridden(v bool) *Evaluation {
+	s.Overridden = &v
+	return s
+}
+
 // Returns information about a file in a repository.
 type File struct {
 	_ struct{} `type:"structure"`
 
-	// The fully-qualified path to the file in the repository.
+	// The fully qualified path to the file in the repository.
 	AbsolutePath *string `locationName:"absolutePath" type:"string"`
 
 	// The blob ID that contains the file information.
@@ -10584,12 +14374,12 @@ func (s *File) SetRelativePath(v string) *File {
 	return s
 }
 
-// A file that will be added, updated, or deleted as part of a commit.
+// A file to be added, updated, or deleted as part of a commit.
 type FileMetadata struct {
 	_ struct{} `type:"structure"`
 
-	// The full path to the file that will be added or updated, including the name
-	// of the file.
+	// The full path to the file to be added or updated, including the name of the
+	// file.
 	AbsolutePath *string `locationName:"absolutePath" type:"string"`
 
 	// The blob ID that contains the file information.
@@ -10716,7 +14506,7 @@ func (s *FileSizes) SetSource(v int64) *FileSizes {
 type Folder struct {
 	_ struct{} `type:"structure"`
 
-	// The fully-qualified path of the folder in the repository.
+	// The fully qualified path of the folder in the repository.
 	AbsolutePath *string `locationName:"absolutePath" type:"string"`
 
 	// The relative path of the specified folder from the folder where the query
@@ -10753,6 +14543,72 @@ func (s *Folder) SetRelativePath(v string) *Folder {
 // SetTreeId sets the TreeId field's value.
 func (s *Folder) SetTreeId(v string) *Folder {
 	s.TreeId = &v
+	return s
+}
+
+type GetApprovalRuleTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the approval rule template for which you want to get information.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetApprovalRuleTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetApprovalRuleTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetApprovalRuleTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetApprovalRuleTemplateInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *GetApprovalRuleTemplateInput) SetApprovalRuleTemplateName(v string) *GetApprovalRuleTemplateInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+type GetApprovalRuleTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The content and structure of the approval rule template.
+	//
+	// ApprovalRuleTemplate is a required field
+	ApprovalRuleTemplate *ApprovalRuleTemplate `locationName:"approvalRuleTemplate" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetApprovalRuleTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetApprovalRuleTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplate sets the ApprovalRuleTemplate field's value.
+func (s *GetApprovalRuleTemplateOutput) SetApprovalRuleTemplate(v *ApprovalRuleTemplate) *GetApprovalRuleTemplateOutput {
+	s.ApprovalRuleTemplate = v
 	return s
 }
 
@@ -10980,17 +14836,17 @@ type GetCommentsForComparedCommitInput struct {
 	_ struct{} `type:"structure"`
 
 	// To establish the directionality of the comparison, the full commit ID of
-	// the 'after' commit.
+	// the after commit.
 	//
 	// AfterCommitId is a required field
 	AfterCommitId *string `locationName:"afterCommitId" type:"string" required:"true"`
 
 	// To establish the directionality of the comparison, the full commit ID of
-	// the 'before' commit.
+	// the before commit.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
-	// A non-negative integer used to limit the number of returned results. The
-	// default is 100 comments, and is configurable up to 500.
+	// A non-zero, non-negative integer used to limit the number of returned results.
+	// The default is 100 comments, but you can configure up to 500.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
 	// An enumeration token that when provided in a request, returns the next batch
@@ -11106,12 +14962,12 @@ type GetCommentsForPullRequestInput struct {
 	// of the branch at the time the pull request was created.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
-	// A non-negative integer used to limit the number of returned results. The
-	// default is 100 comments. You can return up to 500 comments with a single
+	// A non-zero, non-negative integer used to limit the number of returned results.
+	// The default is 100 comments. You can return up to 500 comments with a single
 	// request.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
@@ -11223,7 +15079,7 @@ func (s *GetCommentsForPullRequestOutput) SetNextToken(v string) *GetCommentsFor
 type GetCommitInput struct {
 	_ struct{} `type:"structure"`
 
-	// The commit ID. Commit IDs are the full SHA of the commit.
+	// The commit ID. Commit IDs are the full SHA ID of the commit.
 	//
 	// CommitId is a required field
 	CommitId *string `locationName:"commitId" type:"string" required:"true"`
@@ -11312,26 +15168,26 @@ type GetDifferencesInput struct {
 
 	// The file path in which to check differences. Limits the results to this path.
 	// Can also be used to specify the changed name of a directory or folder, if
-	// it has changed. If not specified, differences will be shown for all paths.
+	// it has changed. If not specified, differences are shown for all paths.
 	AfterPath *string `locationName:"afterPath" type:"string"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, the full commit ID. Optional. If not specified, all
-	// changes prior to the afterCommitSpecifier value will be shown. If you do
-	// not use beforeCommitSpecifier in your request, consider limiting the results
-	// with maxResults.
+	// a commit (for example, the full commit ID). Optional. If not specified, all
+	// changes before the afterCommitSpecifier value are shown. If you do not use
+	// beforeCommitSpecifier in your request, consider limiting the results with
+	// maxResults.
 	BeforeCommitSpecifier *string `locationName:"beforeCommitSpecifier" type:"string"`
 
 	// The file path in which to check for differences. Limits the results to this
 	// path. Can also be used to specify the previous name of a directory or folder.
-	// If beforePath and afterPath are not specified, differences will be shown
-	// for all paths.
+	// If beforePath and afterPath are not specified, differences are shown for
+	// all paths.
 	BeforePath *string `locationName:"beforePath" type:"string"`
 
-	// A non-negative integer used to limit the number of returned results.
+	// A non-zero, non-negative integer used to limit the number of returned results.
 	MaxResults *int64 `type:"integer"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `type:"string"`
 
@@ -11415,8 +15271,8 @@ func (s *GetDifferencesInput) SetRepositoryName(v string) *GetDifferencesInput {
 type GetDifferencesOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A differences data type object that contains information about the differences,
-	// including whether the difference is added, modified, or deleted (A, D, M).
+	// A data type object that contains information about the differences, including
+	// whether the difference is added, modified, or deleted (A, D, M).
 	Differences []*Difference `locationName:"differences" type:"list"`
 
 	// An enumeration token that can be used in a request to return the next batch
@@ -11449,14 +15305,14 @@ func (s *GetDifferencesOutput) SetNextToken(v string) *GetDifferencesOutput {
 type GetFileInput struct {
 	_ struct{} `type:"structure"`
 
-	// The fully-quaified reference that identifies the commit that contains the
-	// file. For example, you could specify a full commit ID, a tag, a branch name,
-	// or a reference such as refs/heads/master. If none is provided, then the head
-	// commit will be used.
+	// The fully quaified reference that identifies the commit that contains the
+	// file. For example, you can specify a full commit ID, a tag, a branch name,
+	// or a reference such as refs/heads/master. If none is provided, the head commit
+	// is used.
 	CommitSpecifier *string `locationName:"commitSpecifier" type:"string"`
 
-	// The fully-qualified path to the file, including the full name and extension
-	// of the file. For example, /examples/file.md is the fully-qualified path to
+	// The fully qualified path to the file, including the full name and extension
+	// of the file. For example, /examples/file.md is the fully qualified path to
 	// a file named file.md in a folder named examples.
 	//
 	// FilePath is a required field
@@ -11541,13 +15397,13 @@ type GetFileOutput struct {
 	//
 	// The file mode permissions returned by this API are not the standard file
 	// mode permission values, such as 100644, but rather extrapolated values. See
-	// below for a full list of supported return values.
+	// the supported return values.
 	//
 	// FileMode is a required field
 	FileMode *string `locationName:"fileMode" type:"string" required:"true" enum:"FileModeTypeEnum"`
 
-	// The fully qualified path to the specified file. This returns the name and
-	// extension of the file.
+	// The fully qualified path to the specified file. Returns the name and extension
+	// of the file.
 	//
 	// FilePath is a required field
 	FilePath *string `locationName:"filePath" type:"string" required:"true"`
@@ -11607,13 +15463,13 @@ func (s *GetFileOutput) SetFileSize(v int64) *GetFileOutput {
 type GetFolderInput struct {
 	_ struct{} `type:"structure"`
 
-	// A fully-qualified reference used to identify a commit that contains the version
-	// of the folder's content to return. A fully-qualified reference can be a commit
+	// A fully qualified reference used to identify a commit that contains the version
+	// of the folder's content to return. A fully qualified reference can be a commit
 	// ID, branch name, tag, or reference such as HEAD. If no specifier is provided,
-	// the folder content will be returned as it exists in the HEAD commit.
+	// the folder content is returned as it exists in the HEAD commit.
 	CommitSpecifier *string `locationName:"commitSpecifier" type:"string"`
 
-	// The fully-qualified path to the folder whose contents will be returned, including
+	// The fully qualified path to the folder whose contents are returned, including
 	// the folder name. For example, /examples is a fully-qualified path to a folder
 	// named examples that was created off of the root directory (/) of a repository.
 	//
@@ -11676,28 +15532,28 @@ func (s *GetFolderInput) SetRepositoryName(v string) *GetFolderInput {
 type GetFolderOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The full commit ID used as a reference for which version of the folder content
-	// is returned.
+	// The full commit ID used as a reference for the returned version of the folder
+	// content.
 	//
 	// CommitId is a required field
 	CommitId *string `locationName:"commitId" type:"string" required:"true"`
 
-	// The list of files that exist in the specified folder, if any.
+	// The list of files in the specified folder, if any.
 	Files []*File `locationName:"files" type:"list"`
 
-	// The fully-qualified path of the folder whose contents are returned.
+	// The fully qualified path of the folder whose contents are returned.
 	//
 	// FolderPath is a required field
 	FolderPath *string `locationName:"folderPath" type:"string" required:"true"`
 
-	// The list of folders that exist beneath the specified folder, if any.
+	// The list of folders that exist under the specified folder, if any.
 	SubFolders []*Folder `locationName:"subFolders" type:"list"`
 
-	// The list of submodules that exist in the specified folder, if any.
+	// The list of submodules in the specified folder, if any.
 	SubModules []*SubModule `locationName:"subModules" type:"list"`
 
-	// The list of symbolic links to other files and folders that exist in the specified
-	// folder, if any.
+	// The list of symbolic links to other files and folders in the specified folder,
+	// if any.
 	SymbolicLinks []*SymbolicLink `locationName:"symbolicLinks" type:"list"`
 
 	// The full SHA-1 pointer of the tree information for the commit that contains
@@ -11761,20 +15617,19 @@ type GetMergeCommitInput struct {
 	_ struct{} `type:"structure"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
@@ -11786,7 +15641,7 @@ type GetMergeCommitInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
@@ -11866,7 +15721,7 @@ type GetMergeCommitOutput struct {
 
 	// The commit ID for the merge commit created when the source branch was merged
 	// into the destination branch. If the fast-forward merge strategy was used,
-	// no merge commit exists.
+	// there is no merge commit.
 	MergedCommitId *string `locationName:"mergedCommitId" type:"string"`
 
 	// The commit ID of the source commit specifier that was used in the merge evaluation.
@@ -11911,20 +15766,19 @@ type GetMergeConflictsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
@@ -11937,7 +15791,7 @@ type GetMergeConflictsInput struct {
 	// MergeOption is a required field
 	MergeOption *string `locationName:"mergeOption" type:"string" required:"true" enum:"MergeOptionTypeEnum"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
@@ -11947,7 +15801,7 @@ type GetMergeConflictsInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
@@ -12043,7 +15897,7 @@ type GetMergeConflictsOutput struct {
 	BaseCommitId *string `locationName:"baseCommitId" type:"string"`
 
 	// A list of metadata for any conflicting files. If the specified merge strategy
-	// is FAST_FORWARD_MERGE, this list will always be empty.
+	// is FAST_FORWARD_MERGE, this list is always empty.
 	//
 	// ConflictMetadataList is a required field
 	ConflictMetadataList []*ConflictMetadata `locationName:"conflictMetadataList" type:"list" required:"true"`
@@ -12120,20 +15974,19 @@ type GetMergeOptionsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
@@ -12145,7 +15998,7 @@ type GetMergeOptionsInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
@@ -12272,6 +16125,81 @@ func (s *GetMergeOptionsOutput) SetSourceCommitId(v string) *GetMergeOptionsOutp
 	return s
 }
 
+type GetPullRequestApprovalStatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The system-generated ID for the pull request.
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+
+	// The system-generated ID for the pull request revision.
+	//
+	// RevisionId is a required field
+	RevisionId *string `locationName:"revisionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetPullRequestApprovalStatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPullRequestApprovalStatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPullRequestApprovalStatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPullRequestApprovalStatesInput"}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+	if s.RevisionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RevisionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *GetPullRequestApprovalStatesInput) SetPullRequestId(v string) *GetPullRequestApprovalStatesInput {
+	s.PullRequestId = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *GetPullRequestApprovalStatesInput) SetRevisionId(v string) *GetPullRequestApprovalStatesInput {
+	s.RevisionId = &v
+	return s
+}
+
+type GetPullRequestApprovalStatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about users who have approved the pull request.
+	Approvals []*Approval `locationName:"approvals" type:"list"`
+}
+
+// String returns the string representation
+func (s GetPullRequestApprovalStatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPullRequestApprovalStatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovals sets the Approvals field's value.
+func (s *GetPullRequestApprovalStatesOutput) SetApprovals(v []*Approval) *GetPullRequestApprovalStatesOutput {
+	s.Approvals = v
+	return s
+}
+
 type GetPullRequestInput struct {
 	_ struct{} `type:"structure"`
 
@@ -12332,6 +16260,94 @@ func (s GetPullRequestOutput) GoString() string {
 // SetPullRequest sets the PullRequest field's value.
 func (s *GetPullRequestOutput) SetPullRequest(v *PullRequest) *GetPullRequestOutput {
 	s.PullRequest = v
+	return s
+}
+
+type GetPullRequestOverrideStateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the pull request for which you want to get information about whether
+	// approval rules have been set aside (overridden).
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+
+	// The system-generated ID of the revision for the pull request. To retrieve
+	// the most recent revision ID, use GetPullRequest.
+	//
+	// RevisionId is a required field
+	RevisionId *string `locationName:"revisionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetPullRequestOverrideStateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPullRequestOverrideStateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetPullRequestOverrideStateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetPullRequestOverrideStateInput"}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+	if s.RevisionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RevisionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *GetPullRequestOverrideStateInput) SetPullRequestId(v string) *GetPullRequestOverrideStateInput {
+	s.PullRequestId = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *GetPullRequestOverrideStateInput) SetRevisionId(v string) *GetPullRequestOverrideStateInput {
+	s.RevisionId = &v
+	return s
+}
+
+type GetPullRequestOverrideStateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A Boolean value that indicates whether a pull request has had its rules set
+	// aside (TRUE) or whether all approval rules still apply (FALSE).
+	Overridden *bool `locationName:"overridden" type:"boolean"`
+
+	// The Amazon Resource Name (ARN) of the user or identity that overrode the
+	// rules and their requirements for the pull request.
+	Overrider *string `locationName:"overrider" type:"string"`
+}
+
+// String returns the string representation
+func (s GetPullRequestOverrideStateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetPullRequestOverrideStateOutput) GoString() string {
+	return s.String()
+}
+
+// SetOverridden sets the Overridden field's value.
+func (s *GetPullRequestOverrideStateOutput) SetOverridden(v bool) *GetPullRequestOverrideStateOutput {
+	s.Overridden = &v
+	return s
+}
+
+// SetOverrider sets the Overrider field's value.
+func (s *GetPullRequestOverrideStateOutput) SetOverrider(v string) *GetPullRequestOverrideStateOutput {
+	s.Overrider = &v
 	return s
 }
 
@@ -12522,6 +16538,167 @@ func (s *IsBinaryFile) SetSource(v bool) *IsBinaryFile {
 	return s
 }
 
+type ListApprovalRuleTemplatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// A non-zero, non-negative integer used to limit the number of returned results.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// An enumeration token that, when provided in a request, returns the next batch
+	// of the results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListApprovalRuleTemplatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListApprovalRuleTemplatesInput) GoString() string {
+	return s.String()
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListApprovalRuleTemplatesInput) SetMaxResults(v int64) *ListApprovalRuleTemplatesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListApprovalRuleTemplatesInput) SetNextToken(v string) *ListApprovalRuleTemplatesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListApprovalRuleTemplatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The names of all the approval rule templates found in the AWS Region for
+	// your AWS account.
+	ApprovalRuleTemplateNames []*string `locationName:"approvalRuleTemplateNames" type:"list"`
+
+	// An enumeration token that allows the operation to batch the next results
+	// of the operation.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListApprovalRuleTemplatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListApprovalRuleTemplatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplateNames sets the ApprovalRuleTemplateNames field's value.
+func (s *ListApprovalRuleTemplatesOutput) SetApprovalRuleTemplateNames(v []*string) *ListApprovalRuleTemplatesOutput {
+	s.ApprovalRuleTemplateNames = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListApprovalRuleTemplatesOutput) SetNextToken(v string) *ListApprovalRuleTemplatesOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListAssociatedApprovalRuleTemplatesForRepositoryInput struct {
+	_ struct{} `type:"structure"`
+
+	// A non-zero, non-negative integer used to limit the number of returned results.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// An enumeration token that, when provided in a request, returns the next batch
+	// of the results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The name of the repository for which you want to list all associated approval
+	// rule templates.
+	//
+	// RepositoryName is a required field
+	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListAssociatedApprovalRuleTemplatesForRepositoryInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssociatedApprovalRuleTemplatesForRepositoryInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAssociatedApprovalRuleTemplatesForRepositoryInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAssociatedApprovalRuleTemplatesForRepositoryInput"}
+	if s.RepositoryName == nil {
+		invalidParams.Add(request.NewErrParamRequired("RepositoryName"))
+	}
+	if s.RepositoryName != nil && len(*s.RepositoryName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RepositoryName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListAssociatedApprovalRuleTemplatesForRepositoryInput) SetMaxResults(v int64) *ListAssociatedApprovalRuleTemplatesForRepositoryInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAssociatedApprovalRuleTemplatesForRepositoryInput) SetNextToken(v string) *ListAssociatedApprovalRuleTemplatesForRepositoryInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRepositoryName sets the RepositoryName field's value.
+func (s *ListAssociatedApprovalRuleTemplatesForRepositoryInput) SetRepositoryName(v string) *ListAssociatedApprovalRuleTemplatesForRepositoryInput {
+	s.RepositoryName = &v
+	return s
+}
+
+type ListAssociatedApprovalRuleTemplatesForRepositoryOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The names of all approval rule templates associated with the repository.
+	ApprovalRuleTemplateNames []*string `locationName:"approvalRuleTemplateNames" type:"list"`
+
+	// An enumeration token that allows the operation to batch the next results
+	// of the operation.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAssociatedApprovalRuleTemplatesForRepositoryOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAssociatedApprovalRuleTemplatesForRepositoryOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplateNames sets the ApprovalRuleTemplateNames field's value.
+func (s *ListAssociatedApprovalRuleTemplatesForRepositoryOutput) SetApprovalRuleTemplateNames(v []*string) *ListAssociatedApprovalRuleTemplatesForRepositoryOutput {
+	s.ApprovalRuleTemplateNames = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListAssociatedApprovalRuleTemplatesForRepositoryOutput) SetNextToken(v string) *ListAssociatedApprovalRuleTemplatesForRepositoryOutput {
+	s.NextToken = &v
+	return s
+}
+
 // Represents the input of a list branches operation.
 type ListBranchesInput struct {
 	_ struct{} `type:"structure"`
@@ -12614,10 +16791,10 @@ type ListPullRequestsInput struct {
 	// user.
 	AuthorArn *string `locationName:"authorArn" type:"string"`
 
-	// A non-negative integer used to limit the number of returned results.
+	// A non-zero, non-negative integer used to limit the number of returned results.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
@@ -12690,8 +16867,8 @@ func (s *ListPullRequestsInput) SetRepositoryName(v string) *ListPullRequestsInp
 type ListPullRequestsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An enumeration token that when provided in a request, returns the next batch
-	// of the results.
+	// An enumeration token that allows the operation to batch the next results
+	// of the operation.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The system-generated IDs of the pull requests.
@@ -12719,6 +16896,101 @@ func (s *ListPullRequestsOutput) SetNextToken(v string) *ListPullRequestsOutput 
 // SetPullRequestIds sets the PullRequestIds field's value.
 func (s *ListPullRequestsOutput) SetPullRequestIds(v []*string) *ListPullRequestsOutput {
 	s.PullRequestIds = v
+	return s
+}
+
+type ListRepositoriesForApprovalRuleTemplateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the approval rule template for which you want to list repositories
+	// that are associated with that template.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+
+	// A non-zero, non-negative integer used to limit the number of returned results.
+	MaxResults *int64 `locationName:"maxResults" type:"integer"`
+
+	// An enumeration token that, when provided in a request, returns the next batch
+	// of the results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListRepositoriesForApprovalRuleTemplateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRepositoriesForApprovalRuleTemplateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListRepositoriesForApprovalRuleTemplateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListRepositoriesForApprovalRuleTemplateInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *ListRepositoriesForApprovalRuleTemplateInput) SetApprovalRuleTemplateName(v string) *ListRepositoriesForApprovalRuleTemplateInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListRepositoriesForApprovalRuleTemplateInput) SetMaxResults(v int64) *ListRepositoriesForApprovalRuleTemplateInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListRepositoriesForApprovalRuleTemplateInput) SetNextToken(v string) *ListRepositoriesForApprovalRuleTemplateInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListRepositoriesForApprovalRuleTemplateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An enumeration token that allows the operation to batch the next results
+	// of the operation.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// A list of repository names that are associated with the specified approval
+	// rule template.
+	RepositoryNames []*string `locationName:"repositoryNames" type:"list"`
+}
+
+// String returns the string representation
+func (s ListRepositoriesForApprovalRuleTemplateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListRepositoriesForApprovalRuleTemplateOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListRepositoriesForApprovalRuleTemplateOutput) SetNextToken(v string) *ListRepositoriesForApprovalRuleTemplateOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetRepositoryNames sets the RepositoryNames field's value.
+func (s *ListRepositoriesForApprovalRuleTemplateOutput) SetRepositoryNames(v []*string) *ListRepositoriesForApprovalRuleTemplateOutput {
+	s.RepositoryNames = v
 	return s
 }
 
@@ -12806,7 +17078,7 @@ func (s *ListRepositoriesOutput) SetRepositories(v []*RepositoryNameIdPair) *Lis
 type ListTagsForResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// An enumeration token that when provided in a request, returns the next batch
+	// An enumeration token that, when provided in a request, returns the next batch
 	// of the results.
 	NextToken *string `locationName:"nextToken" type:"string"`
 
@@ -12894,11 +17166,11 @@ type Location struct {
 	// if any.
 	FilePath *string `locationName:"filePath" type:"string"`
 
-	// The position of a change within a compared file, in line number format.
+	// The position of a change in a compared file, in line number format.
 	FilePosition *int64 `locationName:"filePosition" type:"long"`
 
 	// In a comparison of commits or a pull request, whether the change is in the
-	// 'before' or 'after' of that comparison.
+	// before or after of that comparison.
 	RelativeFileVersion *string `locationName:"relativeFileVersion" type:"string" enum:"RelativeFileVersionEnum"`
 }
 
@@ -12934,7 +17206,7 @@ type MergeBranchesByFastForwardInput struct {
 	_ struct{} `type:"structure"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
@@ -12945,12 +17217,12 @@ type MergeBranchesByFastForwardInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
 
-	// The branch where the merge will be applied.
+	// The branch where the merge is applied.
 	TargetBranch *string `locationName:"targetBranch" min:"1" type:"string"`
 }
 
@@ -13048,43 +17320,42 @@ func (s *MergeBranchesByFastForwardOutput) SetTreeId(v string) *MergeBranchesByF
 type MergeBranchesBySquashInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the author who created the commit. This information will be used
-	// as both the author and committer for the commit.
+	// The name of the author who created the commit. This information is used as
+	// both the author and committer for the commit.
 	AuthorName *string `locationName:"authorName" type:"string"`
 
 	// The commit message for the merge.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
-	// A list of inputs to use when resolving conflicts during a merge if AUTOMERGE
-	// is chosen as the conflict resolution strategy.
+	// If AUTOMERGE is the conflict resolution strategy, a list of inputs to use
+	// when resolving conflicts during a merge.
 	ConflictResolution *ConflictResolution `locationName:"conflictResolution" type:"structure"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
 
-	// The email address of the person merging the branches. This information will
-	// be used in the commit information for the merge.
+	// The email address of the person merging the branches. This information is
+	// used in the commit information for the merge.
 	Email *string `locationName:"email" type:"string"`
 
 	// If the commit contains deletions, whether to keep a folder or folder structure
 	// if the changes leave the folders empty. If this is specified as true, a .gitkeep
-	// file will be created for empty folders. The default is false.
+	// file is created for empty folders. The default is false.
 	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
 
 	// The name of the repository where you want to merge two branches.
@@ -13093,12 +17364,12 @@ type MergeBranchesBySquashInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
 
-	// The branch where the merge will be applied.
+	// The branch where the merge is applied.
 	TargetBranch *string `locationName:"targetBranch" min:"1" type:"string"`
 }
 
@@ -13243,43 +17514,42 @@ func (s *MergeBranchesBySquashOutput) SetTreeId(v string) *MergeBranchesBySquash
 type MergeBranchesByThreeWayInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the author who created the commit. This information will be used
-	// as both the author and committer for the commit.
+	// The name of the author who created the commit. This information is used as
+	// both the author and committer for the commit.
 	AuthorName *string `locationName:"authorName" type:"string"`
 
 	// The commit message to include in the commit information for the merge.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
-	// A list of inputs to use when resolving conflicts during a merge if AUTOMERGE
-	// is chosen as the conflict resolution strategy.
+	// If AUTOMERGE is the conflict resolution strategy, a list of inputs to use
+	// when resolving conflicts during a merge.
 	ConflictResolution *ConflictResolution `locationName:"conflictResolution" type:"structure"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// DestinationCommitSpecifier is a required field
 	DestinationCommitSpecifier *string `locationName:"destinationCommitSpecifier" type:"string" required:"true"`
 
-	// The email address of the person merging the branches. This information will
-	// be used in the commit information for the merge.
+	// The email address of the person merging the branches. This information is
+	// used in the commit information for the merge.
 	Email *string `locationName:"email" type:"string"`
 
 	// If the commit contains deletions, whether to keep a folder or folder structure
-	// if the changes leave the folders empty. If this is specified as true, a .gitkeep
-	// file will be created for empty folders. The default is false.
+	// if the changes leave the folders empty. If true, a .gitkeep file is created
+	// for empty folders. The default is false.
 	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
 
 	// The name of the repository where you want to merge two branches.
@@ -13288,12 +17558,12 @@ type MergeBranchesByThreeWayInput struct {
 	RepositoryName *string `locationName:"repositoryName" min:"1" type:"string" required:"true"`
 
 	// The branch, tag, HEAD, or other fully qualified reference used to identify
-	// a commit. For example, a branch name or a full commit ID.
+	// a commit (for example, a branch name or a full commit ID).
 	//
 	// SourceCommitSpecifier is a required field
 	SourceCommitSpecifier *string `locationName:"sourceCommitSpecifier" type:"string" required:"true"`
 
-	// The branch where the merge will be applied.
+	// The branch where the merge is applied.
 	TargetBranch *string `locationName:"targetBranch" min:"1" type:"string"`
 }
 
@@ -13448,9 +17718,9 @@ type MergeHunk struct {
 	// A Boolean value indicating whether a combination of hunks contains a conflict.
 	// Conflicts occur when the same file or the same lines in a file were modified
 	// in both the source and destination of a merge or pull request. Valid values
-	// include true, false, and null. This will be true when the hunk represents
-	// a conflict and one or more files contains a line conflict. File mode conflicts
-	// in a merge will not set this to be true.
+	// include true, false, and null. True when the hunk represents a conflict and
+	// one or more files contains a line conflict. File mode conflicts in a merge
+	// do not set this to true.
 	IsConflict *bool `locationName:"isConflict" type:"boolean"`
 
 	// Information about the merge hunk in the source of a merge or pull request.
@@ -13499,8 +17769,8 @@ type MergeHunkDetail struct {
 	// The end position of the hunk in the merge result.
 	EndLine *int64 `locationName:"endLine" type:"integer"`
 
-	// The base-64 encoded content of the hunk merged region that might or might
-	// not contain a conflict.
+	// The base-64 encoded content of the hunk merged region that might contain
+	// a conflict.
 	HunkContent *string `locationName:"hunkContent" type:"string"`
 
 	// The start position of the hunk in the merge result.
@@ -13594,8 +17864,8 @@ type MergeOperations struct {
 	// The operation on a file in the destination of a merge or pull request.
 	Destination *string `locationName:"destination" type:"string" enum:"ChangeTypeEnum"`
 
-	// The operation on a file (add, modify, or delete) of a file in the source
-	// of a merge or pull request.
+	// The operation (add, modify, or delete) on a file in the source of a merge
+	// or pull request.
 	Source *string `locationName:"source" type:"string" enum:"ChangeTypeEnum"`
 }
 
@@ -13690,8 +17960,7 @@ func (s *MergePullRequestByFastForwardInput) SetSourceCommitId(v string) *MergeP
 type MergePullRequestByFastForwardOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Information about the specified pull request, including information about
-	// the merge.
+	// Information about the specified pull request, including the merge.
 	PullRequest *PullRequest `locationName:"pullRequest" type:"structure"`
 }
 
@@ -13714,37 +17983,36 @@ func (s *MergePullRequestByFastForwardOutput) SetPullRequest(v *PullRequest) *Me
 type MergePullRequestBySquashInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the author who created the commit. This information will be used
-	// as both the author and committer for the commit.
+	// The name of the author who created the commit. This information is used as
+	// both the author and committer for the commit.
 	AuthorName *string `locationName:"authorName" type:"string"`
 
 	// The commit message to include in the commit information for the merge.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
-	// A list of inputs to use when resolving conflicts during a merge if AUTOMERGE
-	// is chosen as the conflict resolution strategy.
+	// If AUTOMERGE is the conflict resolution strategy, a list of inputs to use
+	// when resolving conflicts during a merge.
 	ConflictResolution *ConflictResolution `locationName:"conflictResolution" type:"structure"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
-	// The email address of the person merging the branches. This information will
-	// be used in the commit information for the merge.
+	// The email address of the person merging the branches. This information is
+	// used in the commit information for the merge.
 	Email *string `locationName:"email" type:"string"`
 
 	// If the commit contains deletions, whether to keep a folder or folder structure
-	// if the changes leave the folders empty. If this is specified as true, a .gitkeep
-	// file will be created for empty folders. The default is false.
+	// if the changes leave the folders empty. If true, a .gitkeep file is created
+	// for empty folders. The default is false.
 	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
 
 	// The system-generated ID of the pull request. To get this ID, use ListPullRequests.
@@ -13883,37 +18151,36 @@ func (s *MergePullRequestBySquashOutput) SetPullRequest(v *PullRequest) *MergePu
 type MergePullRequestByThreeWayInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the author who created the commit. This information will be used
-	// as both the author and committer for the commit.
+	// The name of the author who created the commit. This information is used as
+	// both the author and committer for the commit.
 	AuthorName *string `locationName:"authorName" type:"string"`
 
 	// The commit message to include in the commit information for the merge.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
 	// The level of conflict detail to use. If unspecified, the default FILE_LEVEL
-	// is used, which will return a not mergeable result if the same file has differences
-	// in both branches. If LINE_LEVEL is specified, a conflict will be considered
-	// not mergeable if the same file in both branches has differences on the same
-	// line.
+	// is used, which returns a not-mergeable result if the same file has differences
+	// in both branches. If LINE_LEVEL is specified, a conflict is considered not
+	// mergeable if the same file in both branches has differences on the same line.
 	ConflictDetailLevel *string `locationName:"conflictDetailLevel" type:"string" enum:"ConflictDetailLevelTypeEnum"`
 
-	// A list of inputs to use when resolving conflicts during a merge if AUTOMERGE
-	// is chosen as the conflict resolution strategy.
+	// If AUTOMERGE is the conflict resolution strategy, a list of inputs to use
+	// when resolving conflicts during a merge.
 	ConflictResolution *ConflictResolution `locationName:"conflictResolution" type:"structure"`
 
 	// Specifies which branch to use when resolving conflicts, or whether to attempt
 	// automatically merging two versions of a file. The default is NONE, which
 	// requires any conflicts to be resolved manually before the merge operation
-	// will be successful.
+	// is successful.
 	ConflictResolutionStrategy *string `locationName:"conflictResolutionStrategy" type:"string" enum:"ConflictResolutionStrategyTypeEnum"`
 
-	// The email address of the person merging the branches. This information will
-	// be used in the commit information for the merge.
+	// The email address of the person merging the branches. This information is
+	// used in the commit information for the merge.
 	Email *string `locationName:"email" type:"string"`
 
 	// If the commit contains deletions, whether to keep a folder or folder structure
-	// if the changes leave the folders empty. If this is specified as true, a .gitkeep
-	// file will be created for empty folders. The default is false.
+	// if the changes leave the folders empty. If true, a .gitkeep file is created
+	// for empty folders. The default is false.
 	KeepEmptyFolders *bool `locationName:"keepEmptyFolders" type:"boolean"`
 
 	// The system-generated ID of the pull request. To get this ID, use ListPullRequests.
@@ -14091,26 +18358,143 @@ func (s *ObjectTypes) SetSource(v string) *ObjectTypes {
 	return s
 }
 
+// Returns information about the template that created the approval rule for
+// a pull request.
+type OriginApprovalRuleTemplate struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the template that created the approval rule.
+	ApprovalRuleTemplateId *string `locationName:"approvalRuleTemplateId" type:"string"`
+
+	// The name of the template that created the approval rule.
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s OriginApprovalRuleTemplate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OriginApprovalRuleTemplate) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplateId sets the ApprovalRuleTemplateId field's value.
+func (s *OriginApprovalRuleTemplate) SetApprovalRuleTemplateId(v string) *OriginApprovalRuleTemplate {
+	s.ApprovalRuleTemplateId = &v
+	return s
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *OriginApprovalRuleTemplate) SetApprovalRuleTemplateName(v string) *OriginApprovalRuleTemplate {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+type OverridePullRequestApprovalRulesInput struct {
+	_ struct{} `type:"structure"`
+
+	// Whether you want to set aside approval rule requirements for the pull request
+	// (OVERRIDE) or revoke a previous override and apply approval rule requirements
+	// (REVOKE). REVOKE status is not stored.
+	//
+	// OverrideStatus is a required field
+	OverrideStatus *string `locationName:"overrideStatus" type:"string" required:"true" enum:"OverrideStatus"`
+
+	// The system-generated ID of the pull request for which you want to override
+	// all approval rule requirements. To get this information, use GetPullRequest.
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+
+	// The system-generated ID of the most recent revision of the pull request.
+	// You cannot override approval rules for anything but the most recent revision
+	// of a pull request. To get the revision ID, use GetPullRequest.
+	//
+	// RevisionId is a required field
+	RevisionId *string `locationName:"revisionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s OverridePullRequestApprovalRulesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OverridePullRequestApprovalRulesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OverridePullRequestApprovalRulesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OverridePullRequestApprovalRulesInput"}
+	if s.OverrideStatus == nil {
+		invalidParams.Add(request.NewErrParamRequired("OverrideStatus"))
+	}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+	if s.RevisionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RevisionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOverrideStatus sets the OverrideStatus field's value.
+func (s *OverridePullRequestApprovalRulesInput) SetOverrideStatus(v string) *OverridePullRequestApprovalRulesInput {
+	s.OverrideStatus = &v
+	return s
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *OverridePullRequestApprovalRulesInput) SetPullRequestId(v string) *OverridePullRequestApprovalRulesInput {
+	s.PullRequestId = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *OverridePullRequestApprovalRulesInput) SetRevisionId(v string) *OverridePullRequestApprovalRulesInput {
+	s.RevisionId = &v
+	return s
+}
+
+type OverridePullRequestApprovalRulesOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s OverridePullRequestApprovalRulesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OverridePullRequestApprovalRulesOutput) GoString() string {
+	return s.String()
+}
+
 type PostCommentForComparedCommitInput struct {
 	_ struct{} `type:"structure"`
 
 	// To establish the directionality of the comparison, the full commit ID of
-	// the 'after' commit.
+	// the after commit.
 	//
 	// AfterCommitId is a required field
 	AfterCommitId *string `locationName:"afterCommitId" type:"string" required:"true"`
 
 	// To establish the directionality of the comparison, the full commit ID of
-	// the 'before' commit.
-	//
-	// This is required for commenting on any commit unless that commit is the initial
-	// commit.
+	// the before commit. Required for commenting on any commit unless that commit
+	// is the initial commit.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
-	// A unique, client-generated idempotency token that when provided in a request,
+	// A unique, client-generated idempotency token that, when provided in a request,
 	// ensures the request cannot be repeated with a changed parameter. If a request
 	// is received with the same parameters and a token is included, the request
-	// will return information about the initial request that used that token.
+	// returns information about the initial request that used that token.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
 
 	// The content of the comment you want to make.
@@ -14199,18 +18583,16 @@ func (s *PostCommentForComparedCommitInput) SetRepositoryName(v string) *PostCom
 type PostCommentForComparedCommitOutput struct {
 	_ struct{} `type:"structure"`
 
-	// In the directionality you established, the blob ID of the 'after' blob.
+	// In the directionality you established, the blob ID of the after blob.
 	AfterBlobId *string `locationName:"afterBlobId" type:"string"`
 
-	// In the directionality you established, the full commit ID of the 'after'
-	// commit.
+	// In the directionality you established, the full commit ID of the after commit.
 	AfterCommitId *string `locationName:"afterCommitId" type:"string"`
 
-	// In the directionality you established, the blob ID of the 'before' blob.
+	// In the directionality you established, the blob ID of the before blob.
 	BeforeBlobId *string `locationName:"beforeBlobId" type:"string"`
 
-	// In the directionality you established, the full commit ID of the 'before'
-	// commit.
+	// In the directionality you established, the full commit ID of the before commit.
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string"`
 
 	// The content of the comment you posted.
@@ -14291,10 +18673,10 @@ type PostCommentForPullRequestInput struct {
 	// BeforeCommitId is a required field
 	BeforeCommitId *string `locationName:"beforeCommitId" type:"string" required:"true"`
 
-	// A unique, client-generated idempotency token that when provided in a request,
+	// A unique, client-generated idempotency token that, when provided in a request,
 	// ensures the request cannot be repeated with a changed parameter. If a request
 	// is received with the same parameters and a token is included, the request
-	// will return information about the initial request that used that token.
+	// returns information about the initial request that used that token.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
 
 	// The content of your comment on the change.
@@ -14303,8 +18685,8 @@ type PostCommentForPullRequestInput struct {
 	Content *string `locationName:"content" type:"string" required:"true"`
 
 	// The location of the change where you want to post your comment. If no location
-	// is provided, the comment will be posted as a general comment on the pull
-	// request difference between the before commit ID and the after commit ID.
+	// is provided, the comment is posted as a general comment on the pull request
+	// difference between the before commit ID and the after commit ID.
 	Location *Location `locationName:"location" type:"structure"`
 
 	// The system-generated ID of the pull request. To get this ID, use ListPullRequests.
@@ -14401,14 +18783,14 @@ func (s *PostCommentForPullRequestInput) SetRepositoryName(v string) *PostCommen
 type PostCommentForPullRequestOutput struct {
 	_ struct{} `type:"structure"`
 
-	// In the directionality of the pull request, the blob ID of the 'after' blob.
+	// In the directionality of the pull request, the blob ID of the after blob.
 	AfterBlobId *string `locationName:"afterBlobId" type:"string"`
 
 	// The full commit ID of the commit in the destination branch where the pull
-	// request will be merged.
+	// request is merged.
 	AfterCommitId *string `locationName:"afterCommitId" type:"string"`
 
-	// In the directionality of the pull request, the blob ID of the 'before' blob.
+	// In the directionality of the pull request, the blob ID of the before blob.
 	BeforeBlobId *string `locationName:"beforeBlobId" type:"string"`
 
 	// The full commit ID of the commit in the source branch used to create the
@@ -14490,10 +18872,10 @@ func (s *PostCommentForPullRequestOutput) SetRepositoryName(v string) *PostComme
 type PostCommentReplyInput struct {
 	_ struct{} `type:"structure"`
 
-	// A unique, client-generated idempotency token that when provided in a request,
+	// A unique, client-generated idempotency token that, when provided in a request,
 	// ensures the request cannot be repeated with a changed parameter. If a request
 	// is received with the same parameters and a token is included, the request
-	// will return information about the initial request that used that token.
+	// returns information about the initial request that used that token.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
 
 	// The contents of your reply to a comment.
@@ -14579,13 +18961,16 @@ func (s *PostCommentReplyOutput) SetComment(v *Comment) *PostCommentReplyOutput 
 type PullRequest struct {
 	_ struct{} `type:"structure"`
 
+	// The approval rules applied to the pull request.
+	ApprovalRules []*ApprovalRule `locationName:"approvalRules" type:"list"`
+
 	// The Amazon Resource Name (ARN) of the user who created the pull request.
 	AuthorArn *string `locationName:"authorArn" type:"string"`
 
-	// A unique, client-generated idempotency token that when provided in a request,
+	// A unique, client-generated idempotency token that, when provided in a request,
 	// ensures the request cannot be repeated with a changed parameter. If a request
 	// is received with the same parameters and a token is included, the request
-	// will return information about the initial request that used that token.
+	// returns information about the initial request that used that token.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string"`
 
 	// The date and time the pull request was originally created, in timestamp format.
@@ -14610,8 +18995,11 @@ type PullRequest struct {
 	// branch for the pull request.
 	PullRequestTargets []*PullRequestTarget `locationName:"pullRequestTargets" type:"list"`
 
+	// The system-generated revision ID for the pull request.
+	RevisionId *string `locationName:"revisionId" type:"string"`
+
 	// The user-defined title of the pull request. This title is displayed in the
-	// list of pull requests to other users of the repository.
+	// list of pull requests to other repository users.
 	Title *string `locationName:"title" type:"string"`
 }
 
@@ -14623,6 +19011,12 @@ func (s PullRequest) String() string {
 // GoString returns the string representation
 func (s PullRequest) GoString() string {
 	return s.String()
+}
+
+// SetApprovalRules sets the ApprovalRules field's value.
+func (s *PullRequest) SetApprovalRules(v []*ApprovalRule) *PullRequest {
+	s.ApprovalRules = v
+	return s
 }
 
 // SetAuthorArn sets the AuthorArn field's value.
@@ -14670,6 +19064,12 @@ func (s *PullRequest) SetPullRequestStatus(v string) *PullRequest {
 // SetPullRequestTargets sets the PullRequestTargets field's value.
 func (s *PullRequest) SetPullRequestTargets(v []*PullRequestTarget) *PullRequest {
 	s.PullRequestTargets = v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *PullRequest) SetRevisionId(v string) *PullRequest {
+	s.RevisionId = &v
 	return s
 }
 
@@ -14738,9 +19138,18 @@ type PullRequestEvent struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the user whose actions resulted in the
-	// event. Examples include updating the pull request with additional commits
-	// or changing the status of a pull request.
+	// event. Examples include updating the pull request with more commits or changing
+	// the status of a pull request.
 	ActorArn *string `locationName:"actorArn" type:"string"`
+
+	// Information about a pull request event.
+	ApprovalRuleEventMetadata *ApprovalRuleEventMetadata `locationName:"approvalRuleEventMetadata" type:"structure"`
+
+	// Information about an approval rule override event for a pull request.
+	ApprovalRuleOverriddenEventMetadata *ApprovalRuleOverriddenEventMetadata `locationName:"approvalRuleOverriddenEventMetadata" type:"structure"`
+
+	// Information about an approval state change for a pull request.
+	ApprovalStateChangedEventMetadata *ApprovalStateChangedEventMetadata `locationName:"approvalStateChangedEventMetadata" type:"structure"`
 
 	// The day and time of the pull request event, in timestamp format.
 	EventDate *time.Time `locationName:"eventDate" type:"timestamp"`
@@ -14748,8 +19157,8 @@ type PullRequestEvent struct {
 	// Information about the source and destination branches for the pull request.
 	PullRequestCreatedEventMetadata *PullRequestCreatedEventMetadata `locationName:"pullRequestCreatedEventMetadata" type:"structure"`
 
-	// The type of the pull request event, for example a status change event (PULL_REQUEST_STATUS_CHANGED)
-	// or update event (PULL_REQUEST_SOURCE_REFERENCE_UPDATED).
+	// The type of the pull request event (for example, a status change event (PULL_REQUEST_STATUS_CHANGED)
+	// or update event (PULL_REQUEST_SOURCE_REFERENCE_UPDATED)).
 	PullRequestEventType *string `locationName:"pullRequestEventType" type:"string" enum:"PullRequestEventType"`
 
 	// The system-generated ID of the pull request.
@@ -14778,6 +19187,24 @@ func (s PullRequestEvent) GoString() string {
 // SetActorArn sets the ActorArn field's value.
 func (s *PullRequestEvent) SetActorArn(v string) *PullRequestEvent {
 	s.ActorArn = &v
+	return s
+}
+
+// SetApprovalRuleEventMetadata sets the ApprovalRuleEventMetadata field's value.
+func (s *PullRequestEvent) SetApprovalRuleEventMetadata(v *ApprovalRuleEventMetadata) *PullRequestEvent {
+	s.ApprovalRuleEventMetadata = v
+	return s
+}
+
+// SetApprovalRuleOverriddenEventMetadata sets the ApprovalRuleOverriddenEventMetadata field's value.
+func (s *PullRequestEvent) SetApprovalRuleOverriddenEventMetadata(v *ApprovalRuleOverriddenEventMetadata) *PullRequestEvent {
+	s.ApprovalRuleOverriddenEventMetadata = v
+	return s
+}
+
+// SetApprovalStateChangedEventMetadata sets the ApprovalStateChangedEventMetadata field's value.
+func (s *PullRequestEvent) SetApprovalStateChangedEventMetadata(v *ApprovalStateChangedEventMetadata) *PullRequestEvent {
+	s.ApprovalStateChangedEventMetadata = v
 	return s
 }
 
@@ -14828,7 +19255,7 @@ func (s *PullRequestEvent) SetPullRequestStatusChangedEventMetadata(v *PullReque
 type PullRequestMergedStateChangedEventMetadata struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the branch that the pull request will be merged into.
+	// The name of the branch that the pull request is merged into.
 	DestinationReference *string `locationName:"destinationReference" type:"string"`
 
 	// Information about the merge state change event.
@@ -14952,8 +19379,8 @@ type PullRequestTarget struct {
 	// commit where the pull request was or will be merged.
 	DestinationCommit *string `locationName:"destinationCommit" type:"string"`
 
-	// The branch of the repository where the pull request changes will be merged
-	// into. Also known as the destination branch.
+	// The branch of the repository where the pull request changes are merged. Also
+	// known as the destination branch.
 	DestinationReference *string `locationName:"destinationReference" type:"string"`
 
 	// The commit ID of the most recent commit that the source branch and the destination
@@ -14970,7 +19397,7 @@ type PullRequestTarget struct {
 
 	// The full commit ID of the tip of the source branch used to create the pull
 	// request. If the pull request branch is updated by a push while the pull request
-	// is open, the commit ID will change to reflect the new tip of the branch.
+	// is open, the commit ID changes to reflect the new tip of the branch.
 	SourceCommit *string `locationName:"sourceCommit" type:"string"`
 
 	// The branch of the repository that contains the changes for the pull request.
@@ -15030,7 +19457,7 @@ func (s *PullRequestTarget) SetSourceReference(v string) *PullRequestTarget {
 	return s
 }
 
-// Information about a file that will be added or updated as part of a commit.
+// Information about a file added or updated as part of a commit.
 type PutFileEntry struct {
 	_ struct{} `type:"structure"`
 
@@ -15109,14 +19536,13 @@ type PutFileInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the branch where you want to add or update the file. If this
-	// is an empty repository, this branch will be created.
+	// is an empty repository, this branch is created.
 	//
 	// BranchName is a required field
 	BranchName *string `locationName:"branchName" min:"1" type:"string" required:"true"`
 
-	// A message about why this file was added or updated. While optional, adding
-	// a message is strongly encouraged in order to provide a more useful commit
-	// history for your repository.
+	// A message about why this file was added or updated. Although it is optional,
+	// a message makes the commit history for your repository more useful.
 	CommitMessage *string `locationName:"commitMessage" type:"string"`
 
 	// An email address for the person adding or updating the file.
@@ -15130,29 +19556,28 @@ type PutFileInput struct {
 	FileContent []byte `locationName:"fileContent" type:"blob" required:"true"`
 
 	// The file mode permissions of the blob. Valid file mode permissions are listed
-	// below.
+	// here.
 	FileMode *string `locationName:"fileMode" type:"string" enum:"FileModeTypeEnum"`
 
 	// The name of the file you want to add or update, including the relative path
 	// to the file in the repository.
 	//
-	// If the path does not currently exist in the repository, the path will be
-	// created as part of adding the file.
+	// If the path does not currently exist in the repository, the path is created
+	// as part of adding the file.
 	//
 	// FilePath is a required field
 	FilePath *string `locationName:"filePath" type:"string" required:"true"`
 
-	// The name of the person adding or updating the file. While optional, adding
-	// a name is strongly encouraged in order to provide a more useful commit history
-	// for your repository.
+	// The name of the person adding or updating the file. Although it is optional,
+	// a name makes the commit history for your repository more useful.
 	Name *string `locationName:"name" type:"string"`
 
 	// The full commit ID of the head commit in the branch where you want to add
 	// or update the file. If this is an empty repository, no commit ID is required.
 	// If this is not an empty repository, a commit ID is required.
 	//
-	// The commit ID must match the ID of the head commit at the time of the operation,
-	// or an error will occur, and the file will not be added or updated.
+	// The commit ID must match the ID of the head commit at the time of the operation.
+	// Otherwise, an error occurs, and the file is not added or updated.
 	ParentCommitId *string `locationName:"parentCommitId" type:"string"`
 
 	// The name of the repository where you want to add or update the file.
@@ -15261,7 +19686,7 @@ type PutFileOutput struct {
 	// BlobId is a required field
 	BlobId *string `locationName:"blobId" type:"string" required:"true"`
 
-	// The full SHA of the commit that contains this file change.
+	// The full SHA ID of the commit that contains this file change.
 	//
 	// CommitId is a required field
 	CommitId *string `locationName:"commitId" type:"string" required:"true"`
@@ -15301,7 +19726,7 @@ func (s *PutFileOutput) SetTreeId(v string) *PutFileOutput {
 	return s
 }
 
-// Represents the input ofa put repository triggers operation.
+// Represents the input of a put repository triggers operation.
 type PutRepositoryTriggersInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15607,25 +20032,25 @@ func (s *RepositoryNameIdPair) SetRepositoryName(v string) *RepositoryNameIdPair
 type RepositoryTrigger struct {
 	_ struct{} `type:"structure"`
 
-	// The branches that will be included in the trigger configuration. If you specify
-	// an empty array, the trigger will apply to all branches.
+	// The branches to be included in the trigger configuration. If you specify
+	// an empty array, the trigger applies to all branches.
 	//
 	// Although no content is required in the array, you must include the array
 	// itself.
 	Branches []*string `locationName:"branches" type:"list"`
 
-	// Any custom data associated with the trigger that will be included in the
-	// information sent to the target of the trigger.
+	// Any custom data associated with the trigger to be included in the information
+	// sent to the target of the trigger.
 	CustomData *string `locationName:"customData" type:"string"`
 
-	// The ARN of the resource that is the target for a trigger. For example, the
-	// ARN of a topic in Amazon SNS.
+	// The ARN of the resource that is the target for a trigger (for example, the
+	// ARN of a topic in Amazon SNS).
 	//
 	// DestinationArn is a required field
 	DestinationArn *string `locationName:"destinationArn" type:"string" required:"true"`
 
-	// The repository events that will cause the trigger to run actions in another
-	// service, such as sending a notification through Amazon SNS.
+	// The repository events that cause the trigger to run actions in another service,
+	// such as sending a notification through Amazon SNS.
 	//
 	// The valid value "all" cannot be used with any other values.
 	//
@@ -15701,7 +20126,7 @@ func (s *RepositoryTrigger) SetName(v string) *RepositoryTrigger {
 type RepositoryTriggerExecutionFailure struct {
 	_ struct{} `type:"structure"`
 
-	// Additional message information about the trigger that did not run.
+	// Message information about the trigger that did not run.
 	FailureMessage *string `locationName:"failureMessage" type:"string"`
 
 	// The name of the trigger that did not run.
@@ -15878,7 +20303,7 @@ func (s *SubModule) SetRelativePath(v string) *SubModule {
 type SymbolicLink struct {
 	_ struct{} `type:"structure"`
 
-	// The fully-qualified path to the folder that contains the symbolic link.
+	// The fully qualified path to the folder that contains the symbolic link.
 	AbsolutePath *string `locationName:"absolutePath" type:"string"`
 
 	// The blob ID that contains the information about the symbolic link.
@@ -15997,8 +20422,8 @@ func (s TagResourceOutput) GoString() string {
 type Target struct {
 	_ struct{} `type:"structure"`
 
-	// The branch of the repository where the pull request changes will be merged
-	// into. Also known as the destination branch.
+	// The branch of the repository where the pull request changes are merged. Also
+	// known as the destination branch.
 	DestinationReference *string `locationName:"destinationReference" type:"string"`
 
 	// The name of the repository that contains the pull request.
@@ -16130,8 +20555,8 @@ func (s *TestRepositoryTriggersInput) SetTriggers(v []*RepositoryTrigger) *TestR
 type TestRepositoryTriggersOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The list of triggers that were not able to be tested. This list provides
-	// the names of the triggers that could not be tested, separated by commas.
+	// The list of triggers that were not tested. This list provides the names of
+	// the triggers that could not be tested, separated by commas.
 	FailedExecutions []*RepositoryTriggerExecutionFailure `locationName:"failedExecutions" type:"list"`
 
 	// The list of triggers that were successfully tested. This list provides the
@@ -16228,6 +20653,264 @@ func (s UntagResourceOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateApprovalRuleTemplateContentInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the approval rule template where you want to update the content
+	// of the rule.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+
+	// The SHA-256 hash signature for the content of the approval rule. You can
+	// retrieve this information by using GetPullRequest.
+	ExistingRuleContentSha256 *string `locationName:"existingRuleContentSha256" type:"string"`
+
+	// The content that replaces the existing content of the rule. Content statements
+	// must be complete. You cannot provide only the changes.
+	//
+	// NewRuleContent is a required field
+	NewRuleContent *string `locationName:"newRuleContent" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateApprovalRuleTemplateContentInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApprovalRuleTemplateContentInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateApprovalRuleTemplateContentInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateApprovalRuleTemplateContentInput"}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+	if s.NewRuleContent == nil {
+		invalidParams.Add(request.NewErrParamRequired("NewRuleContent"))
+	}
+	if s.NewRuleContent != nil && len(*s.NewRuleContent) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NewRuleContent", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *UpdateApprovalRuleTemplateContentInput) SetApprovalRuleTemplateName(v string) *UpdateApprovalRuleTemplateContentInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetExistingRuleContentSha256 sets the ExistingRuleContentSha256 field's value.
+func (s *UpdateApprovalRuleTemplateContentInput) SetExistingRuleContentSha256(v string) *UpdateApprovalRuleTemplateContentInput {
+	s.ExistingRuleContentSha256 = &v
+	return s
+}
+
+// SetNewRuleContent sets the NewRuleContent field's value.
+func (s *UpdateApprovalRuleTemplateContentInput) SetNewRuleContent(v string) *UpdateApprovalRuleTemplateContentInput {
+	s.NewRuleContent = &v
+	return s
+}
+
+type UpdateApprovalRuleTemplateContentOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Returns information about an approval rule template.
+	//
+	// ApprovalRuleTemplate is a required field
+	ApprovalRuleTemplate *ApprovalRuleTemplate `locationName:"approvalRuleTemplate" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateApprovalRuleTemplateContentOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApprovalRuleTemplateContentOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplate sets the ApprovalRuleTemplate field's value.
+func (s *UpdateApprovalRuleTemplateContentOutput) SetApprovalRuleTemplate(v *ApprovalRuleTemplate) *UpdateApprovalRuleTemplateContentOutput {
+	s.ApprovalRuleTemplate = v
+	return s
+}
+
+type UpdateApprovalRuleTemplateDescriptionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The updated description of the approval rule template.
+	//
+	// ApprovalRuleTemplateDescription is a required field
+	ApprovalRuleTemplateDescription *string `locationName:"approvalRuleTemplateDescription" type:"string" required:"true"`
+
+	// The name of the template for which you want to update the description.
+	//
+	// ApprovalRuleTemplateName is a required field
+	ApprovalRuleTemplateName *string `locationName:"approvalRuleTemplateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateApprovalRuleTemplateDescriptionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApprovalRuleTemplateDescriptionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateApprovalRuleTemplateDescriptionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateApprovalRuleTemplateDescriptionInput"}
+	if s.ApprovalRuleTemplateDescription == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateDescription"))
+	}
+	if s.ApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleTemplateName"))
+	}
+	if s.ApprovalRuleTemplateName != nil && len(*s.ApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleTemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleTemplateDescription sets the ApprovalRuleTemplateDescription field's value.
+func (s *UpdateApprovalRuleTemplateDescriptionInput) SetApprovalRuleTemplateDescription(v string) *UpdateApprovalRuleTemplateDescriptionInput {
+	s.ApprovalRuleTemplateDescription = &v
+	return s
+}
+
+// SetApprovalRuleTemplateName sets the ApprovalRuleTemplateName field's value.
+func (s *UpdateApprovalRuleTemplateDescriptionInput) SetApprovalRuleTemplateName(v string) *UpdateApprovalRuleTemplateDescriptionInput {
+	s.ApprovalRuleTemplateName = &v
+	return s
+}
+
+type UpdateApprovalRuleTemplateDescriptionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The structure and content of the updated approval rule template.
+	//
+	// ApprovalRuleTemplate is a required field
+	ApprovalRuleTemplate *ApprovalRuleTemplate `locationName:"approvalRuleTemplate" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateApprovalRuleTemplateDescriptionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApprovalRuleTemplateDescriptionOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplate sets the ApprovalRuleTemplate field's value.
+func (s *UpdateApprovalRuleTemplateDescriptionOutput) SetApprovalRuleTemplate(v *ApprovalRuleTemplate) *UpdateApprovalRuleTemplateDescriptionOutput {
+	s.ApprovalRuleTemplate = v
+	return s
+}
+
+type UpdateApprovalRuleTemplateNameInput struct {
+	_ struct{} `type:"structure"`
+
+	// The new name you want to apply to the approval rule template.
+	//
+	// NewApprovalRuleTemplateName is a required field
+	NewApprovalRuleTemplateName *string `locationName:"newApprovalRuleTemplateName" min:"1" type:"string" required:"true"`
+
+	// The current name of the approval rule template.
+	//
+	// OldApprovalRuleTemplateName is a required field
+	OldApprovalRuleTemplateName *string `locationName:"oldApprovalRuleTemplateName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateApprovalRuleTemplateNameInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApprovalRuleTemplateNameInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateApprovalRuleTemplateNameInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateApprovalRuleTemplateNameInput"}
+	if s.NewApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("NewApprovalRuleTemplateName"))
+	}
+	if s.NewApprovalRuleTemplateName != nil && len(*s.NewApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NewApprovalRuleTemplateName", 1))
+	}
+	if s.OldApprovalRuleTemplateName == nil {
+		invalidParams.Add(request.NewErrParamRequired("OldApprovalRuleTemplateName"))
+	}
+	if s.OldApprovalRuleTemplateName != nil && len(*s.OldApprovalRuleTemplateName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OldApprovalRuleTemplateName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNewApprovalRuleTemplateName sets the NewApprovalRuleTemplateName field's value.
+func (s *UpdateApprovalRuleTemplateNameInput) SetNewApprovalRuleTemplateName(v string) *UpdateApprovalRuleTemplateNameInput {
+	s.NewApprovalRuleTemplateName = &v
+	return s
+}
+
+// SetOldApprovalRuleTemplateName sets the OldApprovalRuleTemplateName field's value.
+func (s *UpdateApprovalRuleTemplateNameInput) SetOldApprovalRuleTemplateName(v string) *UpdateApprovalRuleTemplateNameInput {
+	s.OldApprovalRuleTemplateName = &v
+	return s
+}
+
+type UpdateApprovalRuleTemplateNameOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The structure and content of the updated approval rule template.
+	//
+	// ApprovalRuleTemplate is a required field
+	ApprovalRuleTemplate *ApprovalRuleTemplate `locationName:"approvalRuleTemplate" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateApprovalRuleTemplateNameOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApprovalRuleTemplateNameOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRuleTemplate sets the ApprovalRuleTemplate field's value.
+func (s *UpdateApprovalRuleTemplateNameOutput) SetApprovalRuleTemplate(v *ApprovalRuleTemplate) *UpdateApprovalRuleTemplateNameOutput {
+	s.ApprovalRuleTemplate = v
+	return s
+}
+
 type UpdateCommentInput struct {
 	_ struct{} `type:"structure"`
 
@@ -16237,8 +20920,7 @@ type UpdateCommentInput struct {
 	// CommentId is a required field
 	CommentId *string `locationName:"commentId" type:"string" required:"true"`
 
-	// The updated content with which you want to replace the existing content of
-	// the comment.
+	// The updated content to replace the existing content of the comment.
 	//
 	// Content is a required field
 	Content *string `locationName:"content" type:"string" required:"true"`
@@ -16378,11 +21060,220 @@ func (s UpdateDefaultBranchOutput) GoString() string {
 	return s.String()
 }
 
+type UpdatePullRequestApprovalRuleContentInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the approval rule you want to update.
+	//
+	// ApprovalRuleName is a required field
+	ApprovalRuleName *string `locationName:"approvalRuleName" min:"1" type:"string" required:"true"`
+
+	// The SHA-256 hash signature for the content of the approval rule. You can
+	// retrieve this information by using GetPullRequest.
+	ExistingRuleContentSha256 *string `locationName:"existingRuleContentSha256" type:"string"`
+
+	// The updated content for the approval rule.
+	//
+	// When you update the content of the approval rule, you can specify approvers
+	// in an approval pool in one of two ways:
+	//
+	//    * CodeCommitApprovers: This option only requires an AWS account and a
+	//    resource. It can be used for both IAM users and federated access users
+	//    whose name matches the provided resource name. This is a very powerful
+	//    option that offers a great deal of flexibility. For example, if you specify
+	//    the AWS account 123456789012 and Mary_Major, all of the following are
+	//    counted as approvals coming from that user: An IAM user in the account
+	//    (arn:aws:iam::123456789012:user/Mary_Major) A federated user identified
+	//    in IAM as Mary_Major (arn:aws:sts::123456789012:federated-user/Mary_Major)
+	//    This option does not recognize an active session of someone assuming the
+	//    role of CodeCommitReview with a role session name of Mary_Major (arn:aws:sts::123456789012:assumed-role/CodeCommitReview/Mary_Major)
+	//    unless you include a wildcard (*Mary_Major).
+	//
+	//    * Fully qualified ARN: This option allows you to specify the fully qualified
+	//    Amazon Resource Name (ARN) of the IAM user or role.
+	//
+	// For more information about IAM ARNs, wildcards, and formats, see IAM Identifiers
+	// (https://docs.aws.amazon.com/iam/latest/UserGuide/reference_identifiers.html)
+	// in the IAM User Guide.
+	//
+	// NewRuleContent is a required field
+	NewRuleContent *string `locationName:"newRuleContent" min:"1" type:"string" required:"true"`
+
+	// The system-generated ID of the pull request.
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdatePullRequestApprovalRuleContentInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdatePullRequestApprovalRuleContentInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdatePullRequestApprovalRuleContentInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdatePullRequestApprovalRuleContentInput"}
+	if s.ApprovalRuleName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalRuleName"))
+	}
+	if s.ApprovalRuleName != nil && len(*s.ApprovalRuleName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApprovalRuleName", 1))
+	}
+	if s.NewRuleContent == nil {
+		invalidParams.Add(request.NewErrParamRequired("NewRuleContent"))
+	}
+	if s.NewRuleContent != nil && len(*s.NewRuleContent) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NewRuleContent", 1))
+	}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalRuleName sets the ApprovalRuleName field's value.
+func (s *UpdatePullRequestApprovalRuleContentInput) SetApprovalRuleName(v string) *UpdatePullRequestApprovalRuleContentInput {
+	s.ApprovalRuleName = &v
+	return s
+}
+
+// SetExistingRuleContentSha256 sets the ExistingRuleContentSha256 field's value.
+func (s *UpdatePullRequestApprovalRuleContentInput) SetExistingRuleContentSha256(v string) *UpdatePullRequestApprovalRuleContentInput {
+	s.ExistingRuleContentSha256 = &v
+	return s
+}
+
+// SetNewRuleContent sets the NewRuleContent field's value.
+func (s *UpdatePullRequestApprovalRuleContentInput) SetNewRuleContent(v string) *UpdatePullRequestApprovalRuleContentInput {
+	s.NewRuleContent = &v
+	return s
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *UpdatePullRequestApprovalRuleContentInput) SetPullRequestId(v string) *UpdatePullRequestApprovalRuleContentInput {
+	s.PullRequestId = &v
+	return s
+}
+
+type UpdatePullRequestApprovalRuleContentOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the updated approval rule.
+	//
+	// ApprovalRule is a required field
+	ApprovalRule *ApprovalRule `locationName:"approvalRule" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdatePullRequestApprovalRuleContentOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdatePullRequestApprovalRuleContentOutput) GoString() string {
+	return s.String()
+}
+
+// SetApprovalRule sets the ApprovalRule field's value.
+func (s *UpdatePullRequestApprovalRuleContentOutput) SetApprovalRule(v *ApprovalRule) *UpdatePullRequestApprovalRuleContentOutput {
+	s.ApprovalRule = v
+	return s
+}
+
+type UpdatePullRequestApprovalStateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The approval state to associate with the user on the pull request.
+	//
+	// ApprovalState is a required field
+	ApprovalState *string `locationName:"approvalState" type:"string" required:"true" enum:"ApprovalState"`
+
+	// The system-generated ID of the pull request.
+	//
+	// PullRequestId is a required field
+	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
+
+	// The system-generated ID of the revision.
+	//
+	// RevisionId is a required field
+	RevisionId *string `locationName:"revisionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdatePullRequestApprovalStateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdatePullRequestApprovalStateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdatePullRequestApprovalStateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdatePullRequestApprovalStateInput"}
+	if s.ApprovalState == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApprovalState"))
+	}
+	if s.PullRequestId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PullRequestId"))
+	}
+	if s.RevisionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RevisionId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApprovalState sets the ApprovalState field's value.
+func (s *UpdatePullRequestApprovalStateInput) SetApprovalState(v string) *UpdatePullRequestApprovalStateInput {
+	s.ApprovalState = &v
+	return s
+}
+
+// SetPullRequestId sets the PullRequestId field's value.
+func (s *UpdatePullRequestApprovalStateInput) SetPullRequestId(v string) *UpdatePullRequestApprovalStateInput {
+	s.PullRequestId = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *UpdatePullRequestApprovalStateInput) SetRevisionId(v string) *UpdatePullRequestApprovalStateInput {
+	s.RevisionId = &v
+	return s
+}
+
+type UpdatePullRequestApprovalStateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdatePullRequestApprovalStateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdatePullRequestApprovalStateOutput) GoString() string {
+	return s.String()
+}
+
 type UpdatePullRequestDescriptionInput struct {
 	_ struct{} `type:"structure"`
 
 	// The updated content of the description for the pull request. This content
-	// will replace the existing description.
+	// replaces the existing description.
 	//
 	// Description is a required field
 	Description *string `locationName:"description" type:"string" required:"true"`
@@ -16465,7 +21356,7 @@ type UpdatePullRequestStatusInput struct {
 	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
 
 	// The status of the pull request. The only valid operations are to update the
-	// status from OPEN to OPEN, OPEN to CLOSED or from from CLOSED to CLOSED.
+	// status from OPEN to OPEN, OPEN to CLOSED or from CLOSED to CLOSED.
 	//
 	// PullRequestStatus is a required field
 	PullRequestStatus *string `locationName:"pullRequestStatus" type:"string" required:"true" enum:"PullRequestStatusEnum"`
@@ -16542,7 +21433,7 @@ type UpdatePullRequestTitleInput struct {
 	// PullRequestId is a required field
 	PullRequestId *string `locationName:"pullRequestId" type:"string" required:"true"`
 
-	// The updated title of the pull request. This will replace the existing title.
+	// The updated title of the pull request. This replaces the existing title.
 	//
 	// Title is a required field
 	Title *string `locationName:"title" type:"string" required:"true"`
@@ -16686,7 +21577,7 @@ type UpdateRepositoryNameInput struct {
 	// NewName is a required field
 	NewName *string `locationName:"newName" min:"1" type:"string" required:"true"`
 
-	// The existing name of the repository.
+	// The current name of the repository.
 	//
 	// OldName is a required field
 	OldName *string `locationName:"oldName" min:"1" type:"string" required:"true"`
@@ -16794,6 +21685,14 @@ func (s *UserInfo) SetName(v string) *UserInfo {
 }
 
 const (
+	// ApprovalStateApprove is a ApprovalState enum value
+	ApprovalStateApprove = "APPROVE"
+
+	// ApprovalStateRevoke is a ApprovalState enum value
+	ApprovalStateRevoke = "REVOKE"
+)
+
+const (
 	// ChangeTypeEnumA is a ChangeTypeEnum enum value
 	ChangeTypeEnumA = "A"
 
@@ -16871,6 +21770,14 @@ const (
 )
 
 const (
+	// OverrideStatusOverride is a OverrideStatus enum value
+	OverrideStatusOverride = "OVERRIDE"
+
+	// OverrideStatusRevoke is a OverrideStatus enum value
+	OverrideStatusRevoke = "REVOKE"
+)
+
+const (
 	// PullRequestEventTypePullRequestCreated is a PullRequestEventType enum value
 	PullRequestEventTypePullRequestCreated = "PULL_REQUEST_CREATED"
 
@@ -16882,6 +21789,21 @@ const (
 
 	// PullRequestEventTypePullRequestMergeStateChanged is a PullRequestEventType enum value
 	PullRequestEventTypePullRequestMergeStateChanged = "PULL_REQUEST_MERGE_STATE_CHANGED"
+
+	// PullRequestEventTypePullRequestApprovalRuleCreated is a PullRequestEventType enum value
+	PullRequestEventTypePullRequestApprovalRuleCreated = "PULL_REQUEST_APPROVAL_RULE_CREATED"
+
+	// PullRequestEventTypePullRequestApprovalRuleUpdated is a PullRequestEventType enum value
+	PullRequestEventTypePullRequestApprovalRuleUpdated = "PULL_REQUEST_APPROVAL_RULE_UPDATED"
+
+	// PullRequestEventTypePullRequestApprovalRuleDeleted is a PullRequestEventType enum value
+	PullRequestEventTypePullRequestApprovalRuleDeleted = "PULL_REQUEST_APPROVAL_RULE_DELETED"
+
+	// PullRequestEventTypePullRequestApprovalRuleOverridden is a PullRequestEventType enum value
+	PullRequestEventTypePullRequestApprovalRuleOverridden = "PULL_REQUEST_APPROVAL_RULE_OVERRIDDEN"
+
+	// PullRequestEventTypePullRequestApprovalStateChanged is a PullRequestEventType enum value
+	PullRequestEventTypePullRequestApprovalStateChanged = "PULL_REQUEST_APPROVAL_STATE_CHANGED"
 )
 
 const (

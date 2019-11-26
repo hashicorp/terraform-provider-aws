@@ -1600,6 +1600,102 @@ func (c *Redshift) CreateHsmConfigurationWithContext(ctx aws.Context, input *Cre
 	return out, req.Send()
 }
 
+const opCreateScheduledAction = "CreateScheduledAction"
+
+// CreateScheduledActionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateScheduledAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateScheduledAction for more information on using the CreateScheduledAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateScheduledActionRequest method.
+//    req, resp := client.CreateScheduledActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/CreateScheduledAction
+func (c *Redshift) CreateScheduledActionRequest(input *CreateScheduledActionInput) (req *request.Request, output *CreateScheduledActionOutput) {
+	op := &request.Operation{
+		Name:       opCreateScheduledAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CreateScheduledActionInput{}
+	}
+
+	output = &CreateScheduledActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateScheduledAction API operation for Amazon Redshift.
+//
+// Creates a scheduled action. A scheduled action contains a schedule and an
+// Amazon Redshift API action. For example, you can create a schedule of when
+// to run the ResizeCluster API operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation CreateScheduledAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeScheduledActionAlreadyExistsFault "ScheduledActionAlreadyExists"
+//   The scheduled action already exists.
+//
+//   * ErrCodeScheduledActionQuotaExceededFault "ScheduledActionQuotaExceeded"
+//   The quota for scheduled actions exceeded.
+//
+//   * ErrCodeScheduledActionTypeUnsupportedFault "ScheduledActionTypeUnsupported"
+//   The action type specified for a scheduled action is not supported.
+//
+//   * ErrCodeInvalidScheduleFault "InvalidSchedule"
+//   The schedule you submitted isn't valid.
+//
+//   * ErrCodeInvalidScheduledActionFault "InvalidScheduledAction"
+//   The scheduled action is not valid.
+//
+//   * ErrCodeUnauthorizedOperation "UnauthorizedOperation"
+//   Your account is not authorized to perform the requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/CreateScheduledAction
+func (c *Redshift) CreateScheduledAction(input *CreateScheduledActionInput) (*CreateScheduledActionOutput, error) {
+	req, out := c.CreateScheduledActionRequest(input)
+	return out, req.Send()
+}
+
+// CreateScheduledActionWithContext is the same as CreateScheduledAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateScheduledAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) CreateScheduledActionWithContext(ctx aws.Context, input *CreateScheduledActionInput, opts ...request.Option) (*CreateScheduledActionOutput, error) {
+	req, out := c.CreateScheduledActionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateSnapshotCopyGrant = "CreateSnapshotCopyGrant"
 
 // CreateSnapshotCopyGrantRequest generates a "aws/request.Request" representing the
@@ -2600,6 +2696,89 @@ func (c *Redshift) DeleteHsmConfiguration(input *DeleteHsmConfigurationInput) (*
 // for more information on using Contexts.
 func (c *Redshift) DeleteHsmConfigurationWithContext(ctx aws.Context, input *DeleteHsmConfigurationInput, opts ...request.Option) (*DeleteHsmConfigurationOutput, error) {
 	req, out := c.DeleteHsmConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteScheduledAction = "DeleteScheduledAction"
+
+// DeleteScheduledActionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteScheduledAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteScheduledAction for more information on using the DeleteScheduledAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteScheduledActionRequest method.
+//    req, resp := client.DeleteScheduledActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DeleteScheduledAction
+func (c *Redshift) DeleteScheduledActionRequest(input *DeleteScheduledActionInput) (req *request.Request, output *DeleteScheduledActionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteScheduledAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteScheduledActionInput{}
+	}
+
+	output = &DeleteScheduledActionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(query.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteScheduledAction API operation for Amazon Redshift.
+//
+// Deletes a scheduled action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation DeleteScheduledAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeScheduledActionNotFoundFault "ScheduledActionNotFound"
+//   The scheduled action cannot be found.
+//
+//   * ErrCodeUnauthorizedOperation "UnauthorizedOperation"
+//   Your account is not authorized to perform the requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DeleteScheduledAction
+func (c *Redshift) DeleteScheduledAction(input *DeleteScheduledActionInput) (*DeleteScheduledActionOutput, error) {
+	req, out := c.DeleteScheduledActionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteScheduledActionWithContext is the same as DeleteScheduledAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteScheduledAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) DeleteScheduledActionWithContext(ctx aws.Context, input *DeleteScheduledActionInput, opts ...request.Option) (*DeleteScheduledActionOutput, error) {
+	req, out := c.DeleteScheduledActionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5109,6 +5288,13 @@ func (c *Redshift) DescribeNodeConfigurationOptionsRequest(input *DescribeNodeCo
 //   The specified cluster snapshot is not in the available state, or other accounts
 //   are authorized to access the snapshot.
 //
+//   * ErrCodeClusterNotFoundFault "ClusterNotFound"
+//   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+//   * ErrCodeAccessToSnapshotDeniedFault "AccessToSnapshotDenied"
+//   The owner of the specified snapshot has not authorized your account to access
+//   the snapshot.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeNodeConfigurationOptions
 func (c *Redshift) DescribeNodeConfigurationOptions(input *DescribeNodeConfigurationOptionsInput) (*DescribeNodeConfigurationOptionsOutput, error) {
 	req, out := c.DescribeNodeConfigurationOptionsRequest(input)
@@ -5703,6 +5889,146 @@ func (c *Redshift) DescribeResizeWithContext(ctx aws.Context, input *DescribeRes
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opDescribeScheduledActions = "DescribeScheduledActions"
+
+// DescribeScheduledActionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeScheduledActions operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeScheduledActions for more information on using the DescribeScheduledActions
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeScheduledActionsRequest method.
+//    req, resp := client.DescribeScheduledActionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeScheduledActions
+func (c *Redshift) DescribeScheduledActionsRequest(input *DescribeScheduledActionsInput) (req *request.Request, output *DescribeScheduledActionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeScheduledActions,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"Marker"},
+			LimitToken:      "MaxRecords",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeScheduledActionsInput{}
+	}
+
+	output = &DescribeScheduledActionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeScheduledActions API operation for Amazon Redshift.
+//
+// Describes properties of scheduled actions.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation DescribeScheduledActions for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeScheduledActionNotFoundFault "ScheduledActionNotFound"
+//   The scheduled action cannot be found.
+//
+//   * ErrCodeUnauthorizedOperation "UnauthorizedOperation"
+//   Your account is not authorized to perform the requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/DescribeScheduledActions
+func (c *Redshift) DescribeScheduledActions(input *DescribeScheduledActionsInput) (*DescribeScheduledActionsOutput, error) {
+	req, out := c.DescribeScheduledActionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeScheduledActionsWithContext is the same as DescribeScheduledActions with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeScheduledActions for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) DescribeScheduledActionsWithContext(ctx aws.Context, input *DescribeScheduledActionsInput, opts ...request.Option) (*DescribeScheduledActionsOutput, error) {
+	req, out := c.DescribeScheduledActionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeScheduledActionsPages iterates over the pages of a DescribeScheduledActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeScheduledActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeScheduledActions operation.
+//    pageNum := 0
+//    err := client.DescribeScheduledActionsPages(params,
+//        func(page *redshift.DescribeScheduledActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Redshift) DescribeScheduledActionsPages(input *DescribeScheduledActionsInput, fn func(*DescribeScheduledActionsOutput, bool) bool) error {
+	return c.DescribeScheduledActionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeScheduledActionsPagesWithContext same as DescribeScheduledActionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) DescribeScheduledActionsPagesWithContext(ctx aws.Context, input *DescribeScheduledActionsInput, fn func(*DescribeScheduledActionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeScheduledActionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeScheduledActionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScheduledActionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeSnapshotCopyGrants = "DescribeSnapshotCopyGrants"
@@ -7587,6 +7913,97 @@ func (c *Redshift) ModifyEventSubscription(input *ModifyEventSubscriptionInput) 
 // for more information on using Contexts.
 func (c *Redshift) ModifyEventSubscriptionWithContext(ctx aws.Context, input *ModifyEventSubscriptionInput, opts ...request.Option) (*ModifyEventSubscriptionOutput, error) {
 	req, out := c.ModifyEventSubscriptionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opModifyScheduledAction = "ModifyScheduledAction"
+
+// ModifyScheduledActionRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyScheduledAction operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyScheduledAction for more information on using the ModifyScheduledAction
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyScheduledActionRequest method.
+//    req, resp := client.ModifyScheduledActionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ModifyScheduledAction
+func (c *Redshift) ModifyScheduledActionRequest(input *ModifyScheduledActionInput) (req *request.Request, output *ModifyScheduledActionOutput) {
+	op := &request.Operation{
+		Name:       opModifyScheduledAction,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyScheduledActionInput{}
+	}
+
+	output = &ModifyScheduledActionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyScheduledAction API operation for Amazon Redshift.
+//
+// Modify a scheduled action.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation ModifyScheduledAction for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeScheduledActionNotFoundFault "ScheduledActionNotFound"
+//   The scheduled action cannot be found.
+//
+//   * ErrCodeScheduledActionTypeUnsupportedFault "ScheduledActionTypeUnsupported"
+//   The action type specified for a scheduled action is not supported.
+//
+//   * ErrCodeInvalidScheduleFault "InvalidSchedule"
+//   The schedule you submitted isn't valid.
+//
+//   * ErrCodeInvalidScheduledActionFault "InvalidScheduledAction"
+//   The scheduled action is not valid.
+//
+//   * ErrCodeUnauthorizedOperation "UnauthorizedOperation"
+//   Your account is not authorized to perform the requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ModifyScheduledAction
+func (c *Redshift) ModifyScheduledAction(input *ModifyScheduledActionInput) (*ModifyScheduledActionOutput, error) {
+	req, out := c.ModifyScheduledActionRequest(input)
+	return out, req.Send()
+}
+
+// ModifyScheduledActionWithContext is the same as ModifyScheduledAction with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyScheduledAction for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) ModifyScheduledActionWithContext(ctx aws.Context, input *ModifyScheduledActionInput, opts ...request.Option) (*ModifyScheduledActionOutput, error) {
+	req, out := c.ModifyScheduledActionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -12128,6 +12545,250 @@ func (s *CreateHsmConfigurationOutput) SetHsmConfiguration(v *HsmConfiguration) 
 	return s
 }
 
+type CreateScheduledActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// If true, the schedule is enabled. If false, the scheduled action does not
+	// trigger. For more information about state of the scheduled action, see ScheduledAction.
+	Enable *bool `type:"boolean"`
+
+	// The end time in UTC of the scheduled action. After this time, the scheduled
+	// action does not trigger. For more information about this parameter, see ScheduledAction.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The IAM role to assume to run the target action. For more information about
+	// this parameter, see ScheduledAction.
+	//
+	// IamRole is a required field
+	IamRole *string `type:"string" required:"true"`
+
+	// The schedule in at( ) or cron( ) format. For more information about this
+	// parameter, see ScheduledAction.
+	//
+	// Schedule is a required field
+	Schedule *string `type:"string" required:"true"`
+
+	// The description of the scheduled action.
+	ScheduledActionDescription *string `type:"string"`
+
+	// The name of the scheduled action. The name must be unique within an account.
+	// For more information about this parameter, see ScheduledAction.
+	//
+	// ScheduledActionName is a required field
+	ScheduledActionName *string `type:"string" required:"true"`
+
+	// The start time in UTC of the scheduled action. Before this time, the scheduled
+	// action does not trigger. For more information about this parameter, see ScheduledAction.
+	StartTime *time.Time `type:"timestamp"`
+
+	// A JSON format string of the Amazon Redshift API operation with input parameters.
+	// For more information about this parameter, see ScheduledAction.
+	//
+	// TargetAction is a required field
+	TargetAction *ScheduledActionType `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateScheduledActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateScheduledActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateScheduledActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateScheduledActionInput"}
+	if s.IamRole == nil {
+		invalidParams.Add(request.NewErrParamRequired("IamRole"))
+	}
+	if s.Schedule == nil {
+		invalidParams.Add(request.NewErrParamRequired("Schedule"))
+	}
+	if s.ScheduledActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScheduledActionName"))
+	}
+	if s.TargetAction == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetAction"))
+	}
+	if s.TargetAction != nil {
+		if err := s.TargetAction.Validate(); err != nil {
+			invalidParams.AddNested("TargetAction", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnable sets the Enable field's value.
+func (s *CreateScheduledActionInput) SetEnable(v bool) *CreateScheduledActionInput {
+	s.Enable = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *CreateScheduledActionInput) SetEndTime(v time.Time) *CreateScheduledActionInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetIamRole sets the IamRole field's value.
+func (s *CreateScheduledActionInput) SetIamRole(v string) *CreateScheduledActionInput {
+	s.IamRole = &v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *CreateScheduledActionInput) SetSchedule(v string) *CreateScheduledActionInput {
+	s.Schedule = &v
+	return s
+}
+
+// SetScheduledActionDescription sets the ScheduledActionDescription field's value.
+func (s *CreateScheduledActionInput) SetScheduledActionDescription(v string) *CreateScheduledActionInput {
+	s.ScheduledActionDescription = &v
+	return s
+}
+
+// SetScheduledActionName sets the ScheduledActionName field's value.
+func (s *CreateScheduledActionInput) SetScheduledActionName(v string) *CreateScheduledActionInput {
+	s.ScheduledActionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *CreateScheduledActionInput) SetStartTime(v time.Time) *CreateScheduledActionInput {
+	s.StartTime = &v
+	return s
+}
+
+// SetTargetAction sets the TargetAction field's value.
+func (s *CreateScheduledActionInput) SetTargetAction(v *ScheduledActionType) *CreateScheduledActionInput {
+	s.TargetAction = v
+	return s
+}
+
+// Describes a scheduled action. You can use a scheduled action to trigger some
+// Amazon Redshift API operations on a schedule. For information about which
+// API operations can be scheduled, see ScheduledActionType.
+type CreateScheduledActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The end time in UTC when the schedule is no longer active. After this time,
+	// the scheduled action does not trigger.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The IAM role to assume to run the scheduled action. This IAM role must have
+	// permission to run the Amazon Redshift API operation in the scheduled action.
+	// This IAM role must allow the Amazon Redshift scheduler (Principal scheduler.redshift.amazonaws.com)
+	// to assume permissions on your behalf. For more information about the IAM
+	// role to use with the Amazon Redshift scheduler, see Using Identity-Based
+	// Policies for Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/redshift-iam-access-control-identity-based.html)
+	// in the Amazon Redshift Cluster Management Guide.
+	IamRole *string `type:"string"`
+
+	// List of times when the scheduled action will run.
+	NextInvocations []*time.Time `locationNameList:"ScheduledActionTime" type:"list"`
+
+	// The schedule for a one-time (at format) or recurring (cron format) scheduled
+	// action. Schedule invocations must be separated by at least one hour.
+	//
+	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
+	//
+	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
+	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
+	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// in the Amazon CloudWatch Events User Guide.
+	Schedule *string `type:"string"`
+
+	// The description of the scheduled action.
+	ScheduledActionDescription *string `type:"string"`
+
+	// The name of the scheduled action.
+	ScheduledActionName *string `type:"string"`
+
+	// The start time in UTC when the schedule is active. Before this time, the
+	// scheduled action does not trigger.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The state of the scheduled action. For example, DISABLED.
+	State *string `type:"string" enum:"ScheduledActionState"`
+
+	// A JSON format string of the Amazon Redshift API operation with input parameters.
+	//
+	// "{\"ResizeCluster\":{\"NodeType\":\"ds2.8xlarge\",\"ClusterIdentifier\":\"my-test-cluster\",\"NumberOfNodes\":3}}".
+	TargetAction *ScheduledActionType `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateScheduledActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateScheduledActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *CreateScheduledActionOutput) SetEndTime(v time.Time) *CreateScheduledActionOutput {
+	s.EndTime = &v
+	return s
+}
+
+// SetIamRole sets the IamRole field's value.
+func (s *CreateScheduledActionOutput) SetIamRole(v string) *CreateScheduledActionOutput {
+	s.IamRole = &v
+	return s
+}
+
+// SetNextInvocations sets the NextInvocations field's value.
+func (s *CreateScheduledActionOutput) SetNextInvocations(v []*time.Time) *CreateScheduledActionOutput {
+	s.NextInvocations = v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *CreateScheduledActionOutput) SetSchedule(v string) *CreateScheduledActionOutput {
+	s.Schedule = &v
+	return s
+}
+
+// SetScheduledActionDescription sets the ScheduledActionDescription field's value.
+func (s *CreateScheduledActionOutput) SetScheduledActionDescription(v string) *CreateScheduledActionOutput {
+	s.ScheduledActionDescription = &v
+	return s
+}
+
+// SetScheduledActionName sets the ScheduledActionName field's value.
+func (s *CreateScheduledActionOutput) SetScheduledActionName(v string) *CreateScheduledActionOutput {
+	s.ScheduledActionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *CreateScheduledActionOutput) SetStartTime(v time.Time) *CreateScheduledActionOutput {
+	s.StartTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *CreateScheduledActionOutput) SetState(v string) *CreateScheduledActionOutput {
+	s.State = &v
+	return s
+}
+
+// SetTargetAction sets the TargetAction field's value.
+func (s *CreateScheduledActionOutput) SetTargetAction(v *ScheduledActionType) *CreateScheduledActionOutput {
+	s.TargetAction = v
+	return s
+}
+
 // The result of the CreateSnapshotCopyGrant action.
 type CreateSnapshotCopyGrantInput struct {
 	_ struct{} `type:"structure"`
@@ -13173,6 +13834,58 @@ func (s DeleteHsmConfigurationOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteHsmConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteScheduledActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the scheduled action to delete.
+	//
+	// ScheduledActionName is a required field
+	ScheduledActionName *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteScheduledActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteScheduledActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteScheduledActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteScheduledActionInput"}
+	if s.ScheduledActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScheduledActionName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScheduledActionName sets the ScheduledActionName field's value.
+func (s *DeleteScheduledActionInput) SetScheduledActionName(v string) *DeleteScheduledActionInput {
+	s.ScheduledActionName = &v
+	return s
+}
+
+type DeleteScheduledActionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteScheduledActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteScheduledActionOutput) GoString() string {
 	return s.String()
 }
 
@@ -15217,11 +15930,16 @@ func (s *DescribeLoggingStatusInput) SetClusterIdentifier(v string) *DescribeLog
 type DescribeNodeConfigurationOptionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The action type to evaluate for possible node configurations. Currently,
-	// it must be "restore-cluster".
+	// The action type to evaluate for possible node configurations. Specify "restore-cluster"
+	// to get configuration combinations based on an existing snapshot. Specify
+	// "recommend-node-config" to get configuration recommendations based on an
+	// existing cluster or snapshot.
 	//
 	// ActionType is a required field
 	ActionType *string `type:"string" required:"true" enum:"ActionType"`
+
+	// The identifier of the cluster to evaluate for possible node configurations.
+	ClusterIdentifier *string `type:"string"`
 
 	// A set of name, operator, and value items to filter the results.
 	Filters []*NodeConfigurationOptionsFilter `locationName:"Filter" locationNameList:"NodeConfigurationOptionsFilter" type:"list"`
@@ -15278,6 +15996,12 @@ func (s *DescribeNodeConfigurationOptionsInput) Validate() error {
 // SetActionType sets the ActionType field's value.
 func (s *DescribeNodeConfigurationOptionsInput) SetActionType(v string) *DescribeNodeConfigurationOptionsInput {
 	s.ActionType = &v
+	return s
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *DescribeNodeConfigurationOptionsInput) SetClusterIdentifier(v string) *DescribeNodeConfigurationOptionsInput {
+	s.ClusterIdentifier = &v
 	return s
 }
 
@@ -15855,6 +16579,164 @@ func (s *DescribeResizeOutput) SetTargetNumberOfNodes(v int64) *DescribeResizeOu
 // SetTotalResizeDataInMegaBytes sets the TotalResizeDataInMegaBytes field's value.
 func (s *DescribeResizeOutput) SetTotalResizeDataInMegaBytes(v int64) *DescribeResizeOutput {
 	s.TotalResizeDataInMegaBytes = &v
+	return s
+}
+
+type DescribeScheduledActionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// If true, retrieve only active scheduled actions. If false, retrieve only
+	// disabled scheduled actions.
+	Active *bool `type:"boolean"`
+
+	// The end time in UTC of the scheduled action to retrieve. Only active scheduled
+	// actions that have invocations before this time are retrieved.
+	EndTime *time.Time `type:"timestamp"`
+
+	// List of scheduled action filters.
+	Filters []*ScheduledActionFilter `locationNameList:"ScheduledActionFilter" type:"list"`
+
+	// An optional parameter that specifies the starting point to return a set of
+	// response records. When the results of a DescribeScheduledActions request
+	// exceed the value specified in MaxRecords, AWS returns a value in the Marker
+	// field of the response. You can retrieve the next set of response records
+	// by providing the returned marker value in the Marker parameter and retrying
+	// the request.
+	Marker *string `type:"string"`
+
+	// The maximum number of response records to return in each call. If the number
+	// of remaining response records exceeds the specified MaxRecords value, a value
+	// is returned in a marker field of the response. You can retrieve the next
+	// set of records by retrying the command with the returned marker value.
+	//
+	// Default: 100
+	//
+	// Constraints: minimum 20, maximum 100.
+	MaxRecords *int64 `type:"integer"`
+
+	// The name of the scheduled action to retrieve.
+	ScheduledActionName *string `type:"string"`
+
+	// The start time in UTC of the scheduled actions to retrieve. Only active scheduled
+	// actions that have invocations after this time are retrieved.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The type of the scheduled actions to retrieve.
+	TargetActionType *string `type:"string" enum:"ScheduledActionTypeValues"`
+}
+
+// String returns the string representation
+func (s DescribeScheduledActionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeScheduledActionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeScheduledActionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeScheduledActionsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetActive sets the Active field's value.
+func (s *DescribeScheduledActionsInput) SetActive(v bool) *DescribeScheduledActionsInput {
+	s.Active = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *DescribeScheduledActionsInput) SetEndTime(v time.Time) *DescribeScheduledActionsInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeScheduledActionsInput) SetFilters(v []*ScheduledActionFilter) *DescribeScheduledActionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeScheduledActionsInput) SetMarker(v string) *DescribeScheduledActionsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeScheduledActionsInput) SetMaxRecords(v int64) *DescribeScheduledActionsInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetScheduledActionName sets the ScheduledActionName field's value.
+func (s *DescribeScheduledActionsInput) SetScheduledActionName(v string) *DescribeScheduledActionsInput {
+	s.ScheduledActionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *DescribeScheduledActionsInput) SetStartTime(v time.Time) *DescribeScheduledActionsInput {
+	s.StartTime = &v
+	return s
+}
+
+// SetTargetActionType sets the TargetActionType field's value.
+func (s *DescribeScheduledActionsInput) SetTargetActionType(v string) *DescribeScheduledActionsInput {
+	s.TargetActionType = &v
+	return s
+}
+
+type DescribeScheduledActionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An optional parameter that specifies the starting point to return a set of
+	// response records. When the results of a DescribeScheduledActions request
+	// exceed the value specified in MaxRecords, AWS returns a value in the Marker
+	// field of the response. You can retrieve the next set of response records
+	// by providing the returned marker value in the Marker parameter and retrying
+	// the request.
+	Marker *string `type:"string"`
+
+	// List of retrieved scheduled actions.
+	ScheduledActions []*ScheduledAction `locationNameList:"ScheduledAction" type:"list"`
+}
+
+// String returns the string representation
+func (s DescribeScheduledActionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeScheduledActionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeScheduledActionsOutput) SetMarker(v string) *DescribeScheduledActionsOutput {
+	s.Marker = &v
+	return s
+}
+
+// SetScheduledActions sets the ScheduledActions field's value.
+func (s *DescribeScheduledActionsOutput) SetScheduledActions(v []*ScheduledAction) *DescribeScheduledActionsOutput {
+	s.ScheduledActions = v
 	return s
 }
 
@@ -18824,6 +19706,234 @@ func (s *ModifyEventSubscriptionOutput) SetEventSubscription(v *EventSubscriptio
 	return s
 }
 
+type ModifyScheduledActionInput struct {
+	_ struct{} `type:"structure"`
+
+	// A modified enable flag of the scheduled action. If true, the scheduled action
+	// is active. If false, the scheduled action is disabled.
+	Enable *bool `type:"boolean"`
+
+	// A modified end time of the scheduled action. For more information about this
+	// parameter, see ScheduledAction.
+	EndTime *time.Time `type:"timestamp"`
+
+	// A different IAM role to assume to run the target action. For more information
+	// about this parameter, see ScheduledAction.
+	IamRole *string `type:"string"`
+
+	// A modified schedule in either at( ) or cron( ) format. For more information
+	// about this parameter, see ScheduledAction.
+	Schedule *string `type:"string"`
+
+	// A modified description of the scheduled action.
+	ScheduledActionDescription *string `type:"string"`
+
+	// The name of the scheduled action to modify.
+	//
+	// ScheduledActionName is a required field
+	ScheduledActionName *string `type:"string" required:"true"`
+
+	// A modified start time of the scheduled action. For more information about
+	// this parameter, see ScheduledAction.
+	StartTime *time.Time `type:"timestamp"`
+
+	// A modified JSON format of the scheduled action. For more information about
+	// this parameter, see ScheduledAction.
+	TargetAction *ScheduledActionType `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyScheduledActionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyScheduledActionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyScheduledActionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyScheduledActionInput"}
+	if s.ScheduledActionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScheduledActionName"))
+	}
+	if s.TargetAction != nil {
+		if err := s.TargetAction.Validate(); err != nil {
+			invalidParams.AddNested("TargetAction", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnable sets the Enable field's value.
+func (s *ModifyScheduledActionInput) SetEnable(v bool) *ModifyScheduledActionInput {
+	s.Enable = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *ModifyScheduledActionInput) SetEndTime(v time.Time) *ModifyScheduledActionInput {
+	s.EndTime = &v
+	return s
+}
+
+// SetIamRole sets the IamRole field's value.
+func (s *ModifyScheduledActionInput) SetIamRole(v string) *ModifyScheduledActionInput {
+	s.IamRole = &v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *ModifyScheduledActionInput) SetSchedule(v string) *ModifyScheduledActionInput {
+	s.Schedule = &v
+	return s
+}
+
+// SetScheduledActionDescription sets the ScheduledActionDescription field's value.
+func (s *ModifyScheduledActionInput) SetScheduledActionDescription(v string) *ModifyScheduledActionInput {
+	s.ScheduledActionDescription = &v
+	return s
+}
+
+// SetScheduledActionName sets the ScheduledActionName field's value.
+func (s *ModifyScheduledActionInput) SetScheduledActionName(v string) *ModifyScheduledActionInput {
+	s.ScheduledActionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ModifyScheduledActionInput) SetStartTime(v time.Time) *ModifyScheduledActionInput {
+	s.StartTime = &v
+	return s
+}
+
+// SetTargetAction sets the TargetAction field's value.
+func (s *ModifyScheduledActionInput) SetTargetAction(v *ScheduledActionType) *ModifyScheduledActionInput {
+	s.TargetAction = v
+	return s
+}
+
+// Describes a scheduled action. You can use a scheduled action to trigger some
+// Amazon Redshift API operations on a schedule. For information about which
+// API operations can be scheduled, see ScheduledActionType.
+type ModifyScheduledActionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The end time in UTC when the schedule is no longer active. After this time,
+	// the scheduled action does not trigger.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The IAM role to assume to run the scheduled action. This IAM role must have
+	// permission to run the Amazon Redshift API operation in the scheduled action.
+	// This IAM role must allow the Amazon Redshift scheduler (Principal scheduler.redshift.amazonaws.com)
+	// to assume permissions on your behalf. For more information about the IAM
+	// role to use with the Amazon Redshift scheduler, see Using Identity-Based
+	// Policies for Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/redshift-iam-access-control-identity-based.html)
+	// in the Amazon Redshift Cluster Management Guide.
+	IamRole *string `type:"string"`
+
+	// List of times when the scheduled action will run.
+	NextInvocations []*time.Time `locationNameList:"ScheduledActionTime" type:"list"`
+
+	// The schedule for a one-time (at format) or recurring (cron format) scheduled
+	// action. Schedule invocations must be separated by at least one hour.
+	//
+	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
+	//
+	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
+	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
+	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// in the Amazon CloudWatch Events User Guide.
+	Schedule *string `type:"string"`
+
+	// The description of the scheduled action.
+	ScheduledActionDescription *string `type:"string"`
+
+	// The name of the scheduled action.
+	ScheduledActionName *string `type:"string"`
+
+	// The start time in UTC when the schedule is active. Before this time, the
+	// scheduled action does not trigger.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The state of the scheduled action. For example, DISABLED.
+	State *string `type:"string" enum:"ScheduledActionState"`
+
+	// A JSON format string of the Amazon Redshift API operation with input parameters.
+	//
+	// "{\"ResizeCluster\":{\"NodeType\":\"ds2.8xlarge\",\"ClusterIdentifier\":\"my-test-cluster\",\"NumberOfNodes\":3}}".
+	TargetAction *ScheduledActionType `type:"structure"`
+}
+
+// String returns the string representation
+func (s ModifyScheduledActionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyScheduledActionOutput) GoString() string {
+	return s.String()
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *ModifyScheduledActionOutput) SetEndTime(v time.Time) *ModifyScheduledActionOutput {
+	s.EndTime = &v
+	return s
+}
+
+// SetIamRole sets the IamRole field's value.
+func (s *ModifyScheduledActionOutput) SetIamRole(v string) *ModifyScheduledActionOutput {
+	s.IamRole = &v
+	return s
+}
+
+// SetNextInvocations sets the NextInvocations field's value.
+func (s *ModifyScheduledActionOutput) SetNextInvocations(v []*time.Time) *ModifyScheduledActionOutput {
+	s.NextInvocations = v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *ModifyScheduledActionOutput) SetSchedule(v string) *ModifyScheduledActionOutput {
+	s.Schedule = &v
+	return s
+}
+
+// SetScheduledActionDescription sets the ScheduledActionDescription field's value.
+func (s *ModifyScheduledActionOutput) SetScheduledActionDescription(v string) *ModifyScheduledActionOutput {
+	s.ScheduledActionDescription = &v
+	return s
+}
+
+// SetScheduledActionName sets the ScheduledActionName field's value.
+func (s *ModifyScheduledActionOutput) SetScheduledActionName(v string) *ModifyScheduledActionOutput {
+	s.ScheduledActionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ModifyScheduledActionOutput) SetStartTime(v time.Time) *ModifyScheduledActionOutput {
+	s.StartTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ModifyScheduledActionOutput) SetState(v string) *ModifyScheduledActionOutput {
+	s.State = &v
+	return s
+}
+
+// SetTargetAction sets the TargetAction field's value.
+func (s *ModifyScheduledActionOutput) SetTargetAction(v *ScheduledActionType) *ModifyScheduledActionOutput {
+	s.TargetAction = v
+	return s
+}
+
 type ModifySnapshotCopyRetentionPeriodInput struct {
 	_ struct{} `type:"structure"`
 
@@ -19072,6 +20182,9 @@ type NodeConfigurationOption struct {
 	// The estimated disk utilizaton percentage.
 	EstimatedDiskUtilizationPercent *float64 `type:"double"`
 
+	// The category of the node configuration recommendation.
+	Mode *string `type:"string" enum:"Mode"`
+
 	// The node type, such as, "ds2.8xlarge".
 	NodeType *string `type:"string"`
 
@@ -19092,6 +20205,12 @@ func (s NodeConfigurationOption) GoString() string {
 // SetEstimatedDiskUtilizationPercent sets the EstimatedDiskUtilizationPercent field's value.
 func (s *NodeConfigurationOption) SetEstimatedDiskUtilizationPercent(v float64) *NodeConfigurationOption {
 	s.EstimatedDiskUtilizationPercent = &v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *NodeConfigurationOption) SetMode(v string) *NodeConfigurationOption {
+	s.Mode = &v
 	return s
 }
 
@@ -19995,6 +21114,88 @@ func (s *ResizeClusterInput) SetNumberOfNodes(v int64) *ResizeClusterInput {
 	return s
 }
 
+type ResizeClusterMessage struct {
+	_ struct{} `type:"structure"`
+
+	// A boolean value indicating whether the resize operation is using the classic
+	// resize process. If you don't provide this parameter or set the value to false,
+	// the resize type is elastic.
+	Classic *bool `type:"boolean"`
+
+	// The unique identifier for the cluster to resize.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+
+	// The new cluster type for the specified cluster.
+	ClusterType *string `type:"string"`
+
+	// The new node type for the nodes you are adding. If not specified, the cluster's
+	// current node type is used.
+	NodeType *string `type:"string"`
+
+	// The new number of nodes for the cluster.
+	//
+	// NumberOfNodes is a required field
+	NumberOfNodes *int64 `type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s ResizeClusterMessage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResizeClusterMessage) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResizeClusterMessage) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResizeClusterMessage"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+	if s.NumberOfNodes == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNodes"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClassic sets the Classic field's value.
+func (s *ResizeClusterMessage) SetClassic(v bool) *ResizeClusterMessage {
+	s.Classic = &v
+	return s
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *ResizeClusterMessage) SetClusterIdentifier(v string) *ResizeClusterMessage {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+// SetClusterType sets the ClusterType field's value.
+func (s *ResizeClusterMessage) SetClusterType(v string) *ResizeClusterMessage {
+	s.ClusterType = &v
+	return s
+}
+
+// SetNodeType sets the NodeType field's value.
+func (s *ResizeClusterMessage) SetNodeType(v string) *ResizeClusterMessage {
+	s.NodeType = &v
+	return s
+}
+
+// SetNumberOfNodes sets the NumberOfNodes field's value.
+func (s *ResizeClusterMessage) SetNumberOfNodes(v int64) *ResizeClusterMessage {
+	s.NumberOfNodes = &v
+	return s
+}
+
 type ResizeClusterOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -20458,21 +21659,26 @@ type RestoreStatus struct {
 	_ struct{} `type:"structure"`
 
 	// The number of megabytes per second being transferred from the backup storage.
-	// Returns the average rate for a completed backup.
+	// Returns the average rate for a completed backup. This field is only updated
+	// when you restore to DC2 and DS2 node types.
 	CurrentRestoreRateInMegaBytesPerSecond *float64 `type:"double"`
 
 	// The amount of time an in-progress restore has been running, or the amount
-	// of time it took a completed restore to finish.
+	// of time it took a completed restore to finish. This field is only updated
+	// when you restore to DC2 and DS2 node types.
 	ElapsedTimeInSeconds *int64 `type:"long"`
 
 	// The estimate of the time remaining before the restore will complete. Returns
-	// 0 for a completed restore.
+	// 0 for a completed restore. This field is only updated when you restore to
+	// DC2 and DS2 node types.
 	EstimatedTimeToCompletionInSeconds *int64 `type:"long"`
 
 	// The number of megabytes that have been transferred from snapshot storage.
+	// This field is only updated when you restore to DC2 and DS2 node types.
 	ProgressInMegaBytes *int64 `type:"long"`
 
-	// The size of the set of snapshot data used to restore the cluster.
+	// The size of the set of snapshot data used to restore the cluster. This field
+	// is only updated when you restore to DC2 and DS2 node types.
 	SnapshotSizeInMegaBytes *int64 `type:"long"`
 
 	// The status of the restore action. Returns starting, restoring, completed,
@@ -20962,6 +22168,216 @@ func (s RotateEncryptionKeyOutput) GoString() string {
 // SetCluster sets the Cluster field's value.
 func (s *RotateEncryptionKeyOutput) SetCluster(v *Cluster) *RotateEncryptionKeyOutput {
 	s.Cluster = v
+	return s
+}
+
+// Describes a scheduled action. You can use a scheduled action to trigger some
+// Amazon Redshift API operations on a schedule. For information about which
+// API operations can be scheduled, see ScheduledActionType.
+type ScheduledAction struct {
+	_ struct{} `type:"structure"`
+
+	// The end time in UTC when the schedule is no longer active. After this time,
+	// the scheduled action does not trigger.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The IAM role to assume to run the scheduled action. This IAM role must have
+	// permission to run the Amazon Redshift API operation in the scheduled action.
+	// This IAM role must allow the Amazon Redshift scheduler (Principal scheduler.redshift.amazonaws.com)
+	// to assume permissions on your behalf. For more information about the IAM
+	// role to use with the Amazon Redshift scheduler, see Using Identity-Based
+	// Policies for Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/redshift-iam-access-control-identity-based.html)
+	// in the Amazon Redshift Cluster Management Guide.
+	IamRole *string `type:"string"`
+
+	// List of times when the scheduled action will run.
+	NextInvocations []*time.Time `locationNameList:"ScheduledActionTime" type:"list"`
+
+	// The schedule for a one-time (at format) or recurring (cron format) scheduled
+	// action. Schedule invocations must be separated by at least one hour.
+	//
+	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
+	//
+	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
+	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
+	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// in the Amazon CloudWatch Events User Guide.
+	Schedule *string `type:"string"`
+
+	// The description of the scheduled action.
+	ScheduledActionDescription *string `type:"string"`
+
+	// The name of the scheduled action.
+	ScheduledActionName *string `type:"string"`
+
+	// The start time in UTC when the schedule is active. Before this time, the
+	// scheduled action does not trigger.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The state of the scheduled action. For example, DISABLED.
+	State *string `type:"string" enum:"ScheduledActionState"`
+
+	// A JSON format string of the Amazon Redshift API operation with input parameters.
+	//
+	// "{\"ResizeCluster\":{\"NodeType\":\"ds2.8xlarge\",\"ClusterIdentifier\":\"my-test-cluster\",\"NumberOfNodes\":3}}".
+	TargetAction *ScheduledActionType `type:"structure"`
+}
+
+// String returns the string representation
+func (s ScheduledAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScheduledAction) GoString() string {
+	return s.String()
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *ScheduledAction) SetEndTime(v time.Time) *ScheduledAction {
+	s.EndTime = &v
+	return s
+}
+
+// SetIamRole sets the IamRole field's value.
+func (s *ScheduledAction) SetIamRole(v string) *ScheduledAction {
+	s.IamRole = &v
+	return s
+}
+
+// SetNextInvocations sets the NextInvocations field's value.
+func (s *ScheduledAction) SetNextInvocations(v []*time.Time) *ScheduledAction {
+	s.NextInvocations = v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *ScheduledAction) SetSchedule(v string) *ScheduledAction {
+	s.Schedule = &v
+	return s
+}
+
+// SetScheduledActionDescription sets the ScheduledActionDescription field's value.
+func (s *ScheduledAction) SetScheduledActionDescription(v string) *ScheduledAction {
+	s.ScheduledActionDescription = &v
+	return s
+}
+
+// SetScheduledActionName sets the ScheduledActionName field's value.
+func (s *ScheduledAction) SetScheduledActionName(v string) *ScheduledAction {
+	s.ScheduledActionName = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *ScheduledAction) SetStartTime(v time.Time) *ScheduledAction {
+	s.StartTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ScheduledAction) SetState(v string) *ScheduledAction {
+	s.State = &v
+	return s
+}
+
+// SetTargetAction sets the TargetAction field's value.
+func (s *ScheduledAction) SetTargetAction(v *ScheduledActionType) *ScheduledAction {
+	s.TargetAction = v
+	return s
+}
+
+// A set of elements to filter the returned scheduled actions.
+type ScheduledActionFilter struct {
+	_ struct{} `type:"structure"`
+
+	// The type of element to filter.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true" enum:"ScheduledActionFilterName"`
+
+	// List of values. Compare if the value (of type defined by Name) equals an
+	// item in the list of scheduled actions.
+	//
+	// Values is a required field
+	Values []*string `locationNameList:"item" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ScheduledActionFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScheduledActionFilter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ScheduledActionFilter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ScheduledActionFilter"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Values == nil {
+		invalidParams.Add(request.NewErrParamRequired("Values"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *ScheduledActionFilter) SetName(v string) *ScheduledActionFilter {
+	s.Name = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *ScheduledActionFilter) SetValues(v []*string) *ScheduledActionFilter {
+	s.Values = v
+	return s
+}
+
+// The action type that specifies an Amazon Redshift API operation that is supported
+// by the Amazon Redshift scheduler.
+type ScheduledActionType struct {
+	_ struct{} `type:"structure"`
+
+	// An action that runs a ResizeCluster API operation.
+	ResizeCluster *ResizeClusterMessage `type:"structure"`
+}
+
+// String returns the string representation
+func (s ScheduledActionType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ScheduledActionType) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ScheduledActionType) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ScheduledActionType"}
+	if s.ResizeCluster != nil {
+		if err := s.ResizeCluster.Validate(); err != nil {
+			invalidParams.AddNested("ResizeCluster", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResizeCluster sets the ResizeCluster field's value.
+func (s *ScheduledActionType) SetResizeCluster(v *ResizeClusterMessage) *ScheduledActionType {
+	s.ResizeCluster = v
 	return s
 }
 
@@ -21948,6 +23364,17 @@ func (s *VpcSecurityGroupMembership) SetVpcSecurityGroupId(v string) *VpcSecurit
 const (
 	// ActionTypeRestoreCluster is a ActionType enum value
 	ActionTypeRestoreCluster = "restore-cluster"
+
+	// ActionTypeRecommendNodeConfig is a ActionType enum value
+	ActionTypeRecommendNodeConfig = "recommend-node-config"
+)
+
+const (
+	// ModeStandard is a Mode enum value
+	ModeStandard = "standard"
+
+	// ModeHighPerformance is a Mode enum value
+	ModeHighPerformance = "high-performance"
 )
 
 const (
@@ -21959,6 +23386,9 @@ const (
 
 	// NodeConfigurationOptionsFilterNameEstimatedDiskUtilizationPercent is a NodeConfigurationOptionsFilterName enum value
 	NodeConfigurationOptionsFilterNameEstimatedDiskUtilizationPercent = "EstimatedDiskUtilizationPercent"
+
+	// NodeConfigurationOptionsFilterNameMode is a NodeConfigurationOptionsFilterName enum value
+	NodeConfigurationOptionsFilterNameMode = "Mode"
 )
 
 const (
@@ -22012,6 +23442,27 @@ const (
 )
 
 const (
+	// ScheduledActionFilterNameClusterIdentifier is a ScheduledActionFilterName enum value
+	ScheduledActionFilterNameClusterIdentifier = "cluster-identifier"
+
+	// ScheduledActionFilterNameIamRole is a ScheduledActionFilterName enum value
+	ScheduledActionFilterNameIamRole = "iam-role"
+)
+
+const (
+	// ScheduledActionStateActive is a ScheduledActionState enum value
+	ScheduledActionStateActive = "ACTIVE"
+
+	// ScheduledActionStateDisabled is a ScheduledActionState enum value
+	ScheduledActionStateDisabled = "DISABLED"
+)
+
+const (
+	// ScheduledActionTypeValuesResizeCluster is a ScheduledActionTypeValues enum value
+	ScheduledActionTypeValuesResizeCluster = "ResizeCluster"
+)
+
+const (
 	// SnapshotAttributeToSortBySourceType is a SnapshotAttributeToSortBy enum value
 	SnapshotAttributeToSortBySourceType = "SOURCE_TYPE"
 
@@ -22042,6 +23493,9 @@ const (
 
 	// SourceTypeClusterSnapshot is a SourceType enum value
 	SourceTypeClusterSnapshot = "cluster-snapshot"
+
+	// SourceTypeScheduledAction is a SourceType enum value
+	SourceTypeScheduledAction = "scheduled-action"
 )
 
 const (
