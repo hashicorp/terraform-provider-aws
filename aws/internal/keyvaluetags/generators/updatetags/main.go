@@ -61,6 +61,7 @@ var serviceNames = []string{
 	"fsx",
 	"glue",
 	"guardduty",
+	"greengrass",
 	"iot",
 	"iotanalytics",
 	"iotevents",
