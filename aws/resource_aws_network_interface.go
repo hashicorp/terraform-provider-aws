@@ -102,6 +102,11 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+			"interface_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -126,6 +131,10 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("description"); ok {
 		request.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("interface_type"); ok {
+		request.InterfaceType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("private_ips_count"); ok {
@@ -177,6 +186,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.Set("description", eni.Description)
+	d.Set("interface_type", eni.InterfaceType)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
 
