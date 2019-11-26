@@ -26,6 +26,7 @@ func TestAccAWSGreengrassDeviceDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("device_definition_%s", rString)),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr("aws_greengrass_device_definition.test", "tags.tagKey", "tagValue"),
 				),
 			},
 			{
@@ -159,6 +160,10 @@ func testAccAWSGreengrassDeviceDefinitionConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_greengrass_device_definition" "test" {
   name = "device_definition_%s"
+
+  tags = {
+	"tagKey" = "tagValue"
+  } 
 }
 `, rString)
 }

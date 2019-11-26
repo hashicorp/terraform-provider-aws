@@ -26,7 +26,8 @@ resource "aws_greengrass_device_definition" "test" {
 
 ## Argument Reference
 * `name` - (Required) The name of the device definition.
-* `device_definition_version` - (Optional) Object.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the device definition.
+* `device_definition_version` - (Optional) Object. Information about a device definition version.
 
 The `device_definition_version` object has such arguments.
 * `device` - (Optional) List of Object. A list of references to devices in this version, with their corresponding configuration settings.
