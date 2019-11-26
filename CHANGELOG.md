@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `vpc_config` nested block `cluster_security_group_id` attribute [GH-11002]
 * resource/aws_cloudwatch_metric_alarm: Add `threshold_metric_id` argument (support Anomaly Detection metrics) [GH-9828]
+* resource/aws_codebuild_projectL Add support for BUILD_GENERAL1_2XLARGE CodeBuild compute type [GH11015]
 * resource/aws_dx_private_virtual_interface: Support tagging-on-create [GH-9572]
 * resource/aws_dx_private_virtual_interface: Validate Virtual Interface type on import [GH-9572]
 * resource/aws_dx_public_virtual_interface: Validate Virtual Interface type on import [GH-9572]
