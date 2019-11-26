@@ -26,6 +26,7 @@ func TestAccAWSGreengrassSubscriptionDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("subscription_definition_%s", rString)),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr("aws_greengrass_subscription_definition.test", "tags.tagKey", "tagValue"),
 				),
 			},
 			{
@@ -154,6 +155,10 @@ func testAccAWSGreengrassSubscriptionDefinitionConfig_basic(rString string) stri
 	return fmt.Sprintf(`
 resource "aws_greengrass_subscription_definition" "test" {
   name = "subscription_definition_%s"
+
+  tags = {
+	"tagKey" = "tagValue"
+  } 
 }
 `, rString)
 }

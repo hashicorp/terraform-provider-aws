@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGreengrassSubscriptionDefinition() *schema.Resource {
@@ -29,6 +31,7 @@ func resourceAwsGreengrassSubscriptionDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 			"latest_definition_version_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -118,6 +121,10 @@ func resourceAwsGreengrassSubscriptionDefinitionCreate(d *schema.ResourceData, m
 		Name: aws.String(d.Get("name").(string)),
 	}
 
+	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GreengrassTags()
+	}
+
 	log.Printf("[DEBUG] Creating Greengrass Subscription Definition: %s", params)
 	out, err := conn.CreateSubscriptionDefinition(params)
 	if err != nil {
@@ -185,6 +192,16 @@ func resourceAwsGreengrassSubscriptionDefinitionRead(d *schema.ResourceData, met
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
 
+	arn := *out.Arn
+	tags, err := keyvaluetags.GreengrassListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	if out.LatestVersion != nil {
 		err = setSubscriptionDefinitionVersion(*out.LatestVersion, d, conn)
 
@@ -215,6 +232,14 @@ func resourceAwsGreengrassSubscriptionDefinitionUpdate(d *schema.ResourceData, m
 			return err
 		}
 	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.GreengrassUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
 	return resourceAwsGreengrassSubscriptionDefinitionRead(d, meta)
 }
 

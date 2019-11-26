@@ -26,7 +26,8 @@ resource "aws_greengrass_subscription_definition" "test" {
 
 ## Argument Reference
 * `name` - (Required) The name of the subscription definition.
-* `subscription_definition_version` - (Optional) Object.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the subscription definition.
+* `subscription_definition_version` - (Optional) Object. Information about a subscription definition version.
 
 The `subscription_definition_version` object has such arguments.
 * `subscription` - (Optional) List of Object. A list of subscriptions.
