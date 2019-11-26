@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIotThingGroup() *schema.Resource {
@@ -97,7 +99,7 @@ func resourceAwsIotThingGroupCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if tags := d.Get("tags").(map[string]interface{}); len(tags) > 0 {
-		params.Tags = tagsFromMapIot(tags)
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().IotTags()
 	}
 
 	if v, ok := d.GetOk("parent_group_name"); ok {
@@ -160,8 +162,15 @@ func resourceAwsIotThingGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("properties", properties)
 	d.Set("version", out.Version)
 
-	if err := getTagsIot(conn, d); err != nil {
-		return err
+	arn := *out.ThingGroupArn
+	tags, err := keyvaluetags.IotListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -186,8 +195,11 @@ func resourceAwsIotThingGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	if err := setTagsIot(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.IotUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsIotThingGroupRead(d, meta)
