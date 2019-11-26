@@ -82,7 +82,6 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 
 	resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
 		DirectoryIds: []*string{aws.String(d.Id())},
-		Limit:        aws.Int64(1),
 	})
 	if err != nil {
 		return err
@@ -134,7 +133,6 @@ func workspacesDirectoryRefreshStateFunc(conn *workspaces.WorkSpaces, directoryI
 	return func() (interface{}, string, error) {
 		resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
 			DirectoryIds: []*string{aws.String(directoryID)},
-			Limit:        aws.Int64(1),
 		})
 		if err != nil {
 			return nil, workspaces.WorkspaceDirectoryStateError, err

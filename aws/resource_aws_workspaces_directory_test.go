@@ -62,7 +62,6 @@ func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
 
 		resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-			Limit:        aws.Int64(1),
 		})
 		if err != nil {
 			return err
@@ -91,7 +90,6 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string) resource.TestCheckFunc {
 		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
 		resp, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
-			Limit:        aws.Int64(1),
 		})
 		if err != nil {
 			return err
