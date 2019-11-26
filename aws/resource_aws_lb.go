@@ -324,10 +324,35 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	if _, ok := d.GetOk("access_logs"); ok {
-		err := elbAccessLogs(d, attributes)
-		if err != nil {
-			return fmt.Errorf("Failure configuring LB Access Logs: %s", err)
+	if v, ok := d.GetOk("access_logs"); ok {
+		logs := v.([]interface{})
+
+		if len(logs) == 1 && logs[0] != nil {
+			log := logs[0].(map[string]interface{})
+
+			enabled := log["enabled"].(bool)
+
+			attributes = append(attributes,
+				&elbv2.LoadBalancerAttribute{
+					Key:   aws.String("access_logs.s3.enabled"),
+					Value: aws.String(strconv.FormatBool(enabled)),
+				})
+			if enabled {
+				attributes = append(attributes,
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.bucket"),
+						Value: aws.String(log["bucket"].(string)),
+					},
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.prefix"),
+						Value: aws.String(log["prefix"].(string)),
+					})
+			}
+		} else {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("access_logs.s3.enabled"),
+				Value: aws.String("false"),
+			})
 		}
 	}
 
@@ -393,9 +418,34 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
 	if d.HasChange("access_logs") {
-		err := elbAccessLogs(d, attributes)
-		if err != nil {
-			return fmt.Errorf("Failure configuring LB Access Logs: %s", err)
+		logs := d.Get("access_logs").([]interface{})
+
+		if len(logs) == 1 && logs[0] != nil {
+			log := logs[0].(map[string]interface{})
+
+			enabled := log["enabled"].(bool)
+
+			attributes = append(attributes,
+				&elbv2.LoadBalancerAttribute{
+					Key:   aws.String("access_logs.s3.enabled"),
+					Value: aws.String(strconv.FormatBool(enabled)),
+				})
+			if enabled {
+				attributes = append(attributes,
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.bucket"),
+						Value: aws.String(log["bucket"].(string)),
+					},
+					&elbv2.LoadBalancerAttribute{
+						Key:   aws.String("access_logs.s3.prefix"),
+						Value: aws.String(log["prefix"].(string)),
+					})
+			}
+		} else {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String("access_logs.s3.enabled"),
+				Value: aws.String("false"),
+			})
 		}
 	}
 
@@ -831,38 +881,4 @@ func stateChangeConf(d *schema.ResourceData, elbconn *elbv2.ELBV2) (interface{},
 	}
 
 	return stateConf.WaitForState()
-}
-
-func elbAccessLogs(d *schema.ResourceData, attributes []*elbv2.LoadBalancerAttribute) error {
-	logs := d.Get("access_logs").([]interface{})
-
-	if len(logs) == 1 && logs[0] != nil {
-		log := logs[0].(map[string]interface{})
-
-		enabled := log["enabled"].(bool)
-
-		attributes = append(attributes,
-			&elbv2.LoadBalancerAttribute{
-				Key:   aws.String("access_logs.s3.enabled"),
-				Value: aws.String(strconv.FormatBool(enabled)),
-			})
-		if enabled {
-			attributes = append(attributes,
-				&elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.bucket"),
-					Value: aws.String(log["bucket"].(string)),
-				},
-				&elbv2.LoadBalancerAttribute{
-					Key:   aws.String("access_logs.s3.prefix"),
-					Value: aws.String(log["prefix"].(string)),
-				})
-		}
-	} else {
-		attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-			Key:   aws.String("access_logs.s3.enabled"),
-			Value: aws.String("false"),
-		})
-	}
-
-	return nil
 }
