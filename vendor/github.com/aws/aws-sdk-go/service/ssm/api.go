@@ -7013,9 +7013,7 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 
 // GetParametersByPath API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieve parameters in a specific hierarchy. For more information, see Working
-// with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html)
-// in the AWS Systems Manager User Guide.
+// Retrieve information about one or more parameters in a specific hierarchy.
 //
 // Request results are returned on a best-effort basis. If you specify MaxResults
 // in the request, the response includes information up to the limit specified.
@@ -7024,8 +7022,6 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 // the results, it stops the operation and returns the matching values up to
 // that point and a NextToken. You can specify the NextToken in a subsequent
 // call to get the next set of results.
-//
-// This API action doesn't support filtering by tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -20483,7 +20479,7 @@ func (s *DescribeOpsItemsOutput) SetOpsItemSummaries(v []*OpsItemSummary) *Descr
 type DescribeParametersInput struct {
 	_ struct{} `type:"structure"`
 
-	// One or more filters. Use a filter to return a more specific list of results.
+	// This data type is deprecated. Instead, use ParameterFilters.
 	Filters []*ParametersFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -24282,8 +24278,6 @@ type GetParametersByPathInput struct {
 	NextToken *string `type:"string"`
 
 	// Filters to limit the request results.
-	//
-	// You can't filter using the parameter name.
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/)
@@ -30313,9 +30307,19 @@ func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
 
 // One or more filters. Use a filter to return a more specific list of results.
 //
-// The Name and Tier filter keys can't be used with the GetParametersByPath
-// API action. Also, the Label filter key can't be used with the DescribeParameters
-// API action.
+// The ParameterStringFilter object is used by the DescribeParameters and GetParametersByPath
+// API actions. However, not all of the pattern values listed for Key can be
+// used with both actions.
+//
+// For DescribeActions, all of the listed patterns are valid, with the exception
+// of Label.
+//
+// For GetParametersByPath, the following patterns listed for Key are not valid:
+// Name, Path, and Tier.
+//
+// For examples of CLI commands demonstrating valid parameter filter constructions,
+// see Searching for Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
+// in the AWS Systems Manager User Guide.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -30324,8 +30328,14 @@ type ParameterStringFilter struct {
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
-	// Valid options are Equals and BeginsWith. For Path filter, valid options are
-	// Recursive and OneLevel.
+	// For all filters used with DescribeParameters, valid options include Equals
+	// and BeginsWith. The Name filter additionally supports the Contains option.
+	// (Exception: For filters using the key Path, valid options include Recursive
+	// and OneLevel.)
+	//
+	// For filters used with GetParametersByPath, valid options include Equals and
+	// BeginsWith. (Exception: For filters using the key Label, the only valid option
+	// is Equals.)
 	Option *string `min:"1" type:"string"`
 
 	// The value you want to search for.
@@ -34768,16 +34778,8 @@ func (s *Tag) SetValue(v string) *Tag {
 //    * Key=tag-key,Values=Name,Instance-Type,CostCenter
 //
 //    * (Maintenance window targets only) Key=resource-groups:Name,Values=ProductionResourceGroup
-//    This example demonstrates how to target all resources in the resource
-//    group ProductionResourceGroup in your maintenance window.
 //
 //    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
-//    This example demonstrates how to target only Amazon EC2 instances and
-//    VPCs in your maintenance window.
-//
-//    * (State Manager association targets only) Key=InstanceIds,Values=* This
-//    example demonstrates how to target all managed instances in the AWS Region
-//    where the association was created.
 //
 // For information about how to send commands that target instances using Key,Value
 // parameters, see Using Targets and Rate Controls to Send Commands to a Fleet
