@@ -1,12 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGreengrassConnectorDefinition() *schema.Resource {
@@ -122,7 +124,7 @@ func resourceAwsGreengrassConnectorDefinitionCreate(d *schema.ResourceData, meta
 	}
 
 	if rawTags := d.Get("tags").(map[string]interface{}); len(rawTags) > 0 {
-		params.Tags = parseTagsSchemaAsMap(rawTags)
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GreengrassTags()
 	}
 
 	log.Printf("[DEBUG] Creating Greengrass Connector Definition: %s", params)
@@ -197,8 +199,14 @@ func resourceAwsGreengrassConnectorDefinitionRead(d *schema.ResourceData, meta i
 	d.Set("arn", out.Arn)
 	d.Set("name", out.Name)
 
-	if err := getTagsGreengrass(conn, d); err != nil {
-		return err
+	arn := *out.Arn
+	tags, err := keyvaluetags.GreengrassListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	if out.LatestVersion != nil {
@@ -232,9 +240,13 @@ func resourceAwsGreengrassConnectorDefinitionUpdate(d *schema.ResourceData, meta
 		}
 	}
 
-	if err := setTagsGreengrass(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.GreengrassUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
+
 	return resourceAwsGreengrassConnectorDefinitionRead(d, meta)
 }
 

@@ -25,7 +25,8 @@ resource "aws_greengrass_connector_definition" "definition" {
 
 ## Argument Reference
 * `name` - (Required) The name of the connector definition.
-* `connector_definition_version` - (Optional) Object.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the connector definition.
+* `connector_definition_version` - (Optional) Object. Information about a connector definition version.
 
 The `connector_definition_version` object has such arguments.
 * `connector` - (Optional) List of Object. A list of references to connectors in this version, with their corresponding configuration settings.
