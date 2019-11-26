@@ -19,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_ebs_snapshot: Support tagging-on-create and in-place `tags` updates [GH-10935]
 * resource/aws_ebs_snapshot_copy: Support tagging-on-create and in-place `tags` updates [GH-10936]
 * resource/aws_eks_cluster: Add `vpc_config` configuration block `cluster_security_group_id` attribute [GH-11002]
+* resource/aws_lambda_function: Support waiting for function creation and configuration updates [GH-11016]
 
 BUG FIXES:
 
