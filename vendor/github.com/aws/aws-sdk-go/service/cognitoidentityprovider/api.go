@@ -18476,6 +18476,22 @@ func (s *DomainDescriptionType) SetVersion(v string) *DomainDescriptionType {
 type EmailConfigurationType struct {
 	_ struct{} `type:"structure"`
 
+	// The set of configuration rules that can be applied to emails sent using Amazon
+	// SES. A configuration set is applied to an email by including a reference
+	// to the configuration set in the headers of the email. Once applied, all of
+	// the rules in that configuration set are applied to the email. Configuration
+	// sets can be used to apply the following types of rules to emails:
+	//
+	//    * Event publishing – Amazon SES can track the number of send, delivery,
+	//    open, click, bounce, and complaint events for each email sent. Use event
+	//    publishing to send information about these events to other AWS services
+	//    such as SNS and CloudWatch.
+	//
+	//    * IP pool management – When leasing dedicated IP addresses with Amazon
+	//    SES, you can create groups of IP addresses, called dedicated IP pools.
+	//    You can then associate the dedicated IP pools with configuration sets.
+	ConfigurationSet *string `min:"1" type:"string"`
+
 	// Specifies whether Amazon Cognito emails your users by using its built-in
 	// email functionality or your Amazon SES email configuration. Specify one of
 	// the following values:
@@ -18518,6 +18534,11 @@ type EmailConfigurationType struct {
 	// in the Amazon Cognito Developer Guide.
 	EmailSendingAccount *string `type:"string" enum:"EmailSendingAccountType"`
 
+	// Identifies either the sender’s email address or the sender’s name with
+	// their email address. For example, testuser@example.com or Test User <testuser@example.com>.
+	// This address will appear before the body of the email.
+	From *string `type:"string"`
+
 	// The destination to which the receiver of the email should reply to.
 	ReplyToEmailAddress *string `type:"string"`
 
@@ -18547,6 +18568,9 @@ func (s EmailConfigurationType) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *EmailConfigurationType) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "EmailConfigurationType"}
+	if s.ConfigurationSet != nil && len(*s.ConfigurationSet) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConfigurationSet", 1))
+	}
 	if s.SourceArn != nil && len(*s.SourceArn) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("SourceArn", 20))
 	}
@@ -18557,9 +18581,21 @@ func (s *EmailConfigurationType) Validate() error {
 	return nil
 }
 
+// SetConfigurationSet sets the ConfigurationSet field's value.
+func (s *EmailConfigurationType) SetConfigurationSet(v string) *EmailConfigurationType {
+	s.ConfigurationSet = &v
+	return s
+}
+
 // SetEmailSendingAccount sets the EmailSendingAccount field's value.
 func (s *EmailConfigurationType) SetEmailSendingAccount(v string) *EmailConfigurationType {
 	s.EmailSendingAccount = &v
+	return s
+}
+
+// SetFrom sets the From field's value.
+func (s *EmailConfigurationType) SetFrom(v string) *EmailConfigurationType {
+	s.From = &v
 	return s
 }
 
