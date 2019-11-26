@@ -34,6 +34,7 @@ resource "aws_greengrass_resource_definition" "test" {
 
 ## Argument Reference
 * `name` - (Required) The name of the resource definition.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the resource definition.
 * `resource_definition_version` - (Optional) Object. Information about a resource definition version.
 
 The `resource_definition_version` object has such arguments.
