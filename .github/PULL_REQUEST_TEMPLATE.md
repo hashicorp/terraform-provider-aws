@@ -23,6 +23,11 @@ If change is not user facing, just write "NONE" in the release-note block below.
 
 Output from acceptance testing:
 
+<!--
+Replace TestAccXXX with a pattern that matches the tests affected by this PR.
+
+For more information on the `-run` flag, see the `go test` documentation at https://tip.golang.org/cmd/go/#hdr-Testing_flags.
+-->
 ```
 $ make testacc TESTARGS='-run=TestAccXXX'
 
