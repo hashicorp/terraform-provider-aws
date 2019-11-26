@@ -67,6 +67,10 @@ func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
 			return err
 		}
 
+		if len(resp.Directories) == 0 {
+			return nil
+		}
+
 		dir := resp.Directories[0]
 		if *dir.State != workspaces.WorkspaceDirectoryStateDeregistering && *dir.State != workspaces.WorkspaceDirectoryStateDeregistered {
 			return fmt.Errorf("directory %q was not deregistered", rs.Primary.ID)

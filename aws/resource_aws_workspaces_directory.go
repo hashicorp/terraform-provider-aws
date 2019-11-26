@@ -137,7 +137,9 @@ func workspacesDirectoryRefreshStateFunc(conn *workspaces.WorkSpaces, directoryI
 		if err != nil {
 			return nil, workspaces.WorkspaceDirectoryStateError, err
 		}
-		directory := resp.Directories[0]
-		return directory, *directory.State, nil
+		if len(resp.Directories) == 0 {
+			return resp, workspaces.WorkspaceDirectoryStateDeregistered, nil
+		}
+		return resp, *resp.Directories[0].State, nil
 	}
 }
