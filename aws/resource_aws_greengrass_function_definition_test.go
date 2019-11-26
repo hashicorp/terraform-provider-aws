@@ -27,6 +27,7 @@ func TestAccAWSGreengrassFunctionDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("function_definition_%s", rString)),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr("aws_greengrass_function_definition.test", "tags.tagKey", "tagValue"),
 				),
 			},
 			{
@@ -359,6 +360,10 @@ func testAccAWSGreengrassFunctionDefinitionConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_greengrass_function_definition" "test" {
   name = "function_definition_%s"
+
+  tags = {
+	"tagKey" = "tagValue"
+  } 
 }
 `, rString)
 }

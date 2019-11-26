@@ -60,7 +60,8 @@ resource "aws_greengrass_function_definition" "test" {
 
 ## Argument Reference
 * `name` - (Required) The name of the function definition.
-* `function_definition_version` - (Optional) Object.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the function definition.
+* `function_definition_version` - (Optional) Object. Information about a function definition version.
 
 The `function_definition_version` object has such arguments.
 * `default_config` - (Optional) Object. The default configuration that applies to all Lambda functions in this function definition version. Individual Lambda functions can override these settings.
