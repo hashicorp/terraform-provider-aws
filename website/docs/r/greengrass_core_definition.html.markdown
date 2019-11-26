@@ -26,7 +26,8 @@ resource "aws_greengrass_core_definition" "test" {
 
 ## Argument Reference
 * `name` - (Required) The name of the core definition.
-* `core_definition_version` - (Optional) Object.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the core definition.
+* `core_definition_version` - (Optional) Object. Information about a core definition version.
 
 The `core_definition_version` object has such arguments.
 * `core` - (Optional) List of Object. A list of references to cores in this version, with their corresponding configuration settings.
