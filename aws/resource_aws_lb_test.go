@@ -319,6 +319,14 @@ func TestAccAWSLB_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Production"),
 				),
 			},
+			{
+				Config: testAccAWSLBConfig_basic(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSALB_basic"),
+				),
+			},
 		},
 	})
 }
