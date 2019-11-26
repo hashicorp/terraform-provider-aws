@@ -26,6 +26,7 @@ func TestAccAWSGreengrassLoggerDefinition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("logger_definition_%s", rString)),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr("aws_greengrass_logger_definition.test", "tags.tagKey", "tagValue"),
 				),
 			},
 			{
@@ -160,6 +161,10 @@ func testAccAWSGreengrassLoggerDefinitionConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_greengrass_logger_definition" "test" {
   name = "logger_definition_%s"
+
+  tags = {
+	"tagKey" = "tagValue"
+  } 
 }
 `, rString)
 }

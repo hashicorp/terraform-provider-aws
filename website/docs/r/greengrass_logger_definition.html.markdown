@@ -27,7 +27,8 @@ resource "aws_greengrass_logger_definition" "test" {
 
 ## Argument Reference
 * `name` - (Required) The name of the logger definition.
-* `logger_definition_version` - (Optional) Object.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the logger definition.
+* `logger_definition_version` - (Optional) Object. Information about a logger definition version.
 
 The `logger_definition_version` object has such arguments.
 * `logger` - (Optional) List of Object. A list of loggers.
