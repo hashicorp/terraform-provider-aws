@@ -2060,6 +2060,47 @@ func testAccCheckAWSClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 	}
 }
 
+func TestAccAWSRDSCluster_DataApiEnabled(t *testing.T) {
+	var dbCluster rds.DBCluster
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_DataApiEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "data_api_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
+			},
+			{
+				Config: testAccAWSRDSClusterConfig_DataApiEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "data_api_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSClusterConfig(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
@@ -3319,4 +3360,25 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot             = true
 }
 `, n, f)
+}
+
+func testAccAWSRDSClusterConfig_DataApiEnabled(rName string, dataApiEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %q
+  engine_mode         = "serverless"
+  master_password     = "barbarbarbar"
+  master_username     = "foo"
+  skip_final_snapshot = true
+  data_api_enabled    = %t
+
+  scaling_configuration {
+    auto_pause               = false
+    max_capacity             = 128
+    min_capacity             = 4
+    seconds_until_auto_pause = 301
+    timeout_action           = "RollbackCapacityChange"
+  }
+}
+`, rName, dataApiEnabled)
 }

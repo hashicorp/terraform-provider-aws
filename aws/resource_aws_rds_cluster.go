@@ -403,6 +403,11 @@ func resourceAwsRDSCluster() *schema.Resource {
 					}, false),
 				},
 			},
+			"data_api_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 
 			"tags": tagsSchema(),
 		},
@@ -775,6 +780,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.MasterUsername = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("data_api_enabled"); ok {
+			createOpts.EnableHttpEndpoint = aws.Bool(v.(bool))
+		}
 		// Need to check value > 0 due to:
 		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
 		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
@@ -1024,6 +1032,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set("data_api_enabled", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
@@ -1137,6 +1146,12 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("scaling_configuration") {
 		d.SetPartial("scaling_configuration")
 		req.ScalingConfiguration = expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{}))
+		requestUpdate = true
+	}
+
+	if d.HasChange("data_api_enabled") {
+		d.SetPartial("data_api_enabled")
+		req.EnableHttpEndpoint = aws.Bool(d.Get("data_api_enabled").(bool))
 		requestUpdate = true
 	}
 
