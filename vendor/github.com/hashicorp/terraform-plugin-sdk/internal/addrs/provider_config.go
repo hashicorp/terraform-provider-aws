@@ -18,14 +18,6 @@ type ProviderConfig struct {
 	Alias string
 }
 
-// NewDefaultProviderConfig returns the address of the default (un-aliased)
-// configuration for the provider with the given type name.
-func NewDefaultProviderConfig(typeName string) ProviderConfig {
-	return ProviderConfig{
-		Type: typeName,
-	}
-}
-
 // ParseProviderConfigCompact parses the given absolute traversal as a relative
 // provider address in compact form. The following are examples of traversals
 // that can be successfully parsed as compact relative provider configuration

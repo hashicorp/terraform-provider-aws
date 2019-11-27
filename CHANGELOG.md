@@ -1,5 +1,10 @@
 ## 2.41.0 (Unreleased)
 
+BUG FIXES:
+
+* resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency [GH-10984]
+* resource/aws_launch_template: Only set associate_public_ip_address on network interfaces if it's explicitly set to avoid problems with multiple network interfaces [GH-10157]
+
 ## 2.40.0 (November 26, 2019)
 
 NOTES:
