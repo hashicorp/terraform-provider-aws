@@ -291,6 +291,12 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(lb.LoadBalancerArn))
 	log.Printf("[INFO] LB ID: %s", d.Id())
 
+	_, err = stateChangeConf(d, elbconn)
+
+	if err != nil {
+		return err
+	}
+
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
 	switch d.Get("load_balancer_type").(string) {
@@ -369,10 +375,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	_, err2 := stateChangeConf(d, elbconn)
+	_, err = stateChangeConf(d, elbconn)
 
-	if err2 != nil {
-		return err2
+	if err != nil {
+		return err
 	}
 
 	return resourceAwsLbRead(d, meta)
