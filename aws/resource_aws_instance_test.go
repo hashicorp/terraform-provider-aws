@@ -4597,8 +4597,8 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 func testAccAwsInstanceVpcConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "current" {
-  # Exclude us-west-2d as it has limited instance types.
-  blacklisted_names = ["us-west-2d"]
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
 }
 
 resource "aws_vpc" "test" {
