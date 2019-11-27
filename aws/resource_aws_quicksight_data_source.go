@@ -472,12 +472,10 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"actions": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
 						},
 						"principal": {
 							Type:         schema.TypeString,
@@ -537,6 +535,7 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).quicksightconn
 
 	awsAccountID := meta.(*AWSClient).accountid
+	id := d.Get("id").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
@@ -544,7 +543,7 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 
 	params := &quicksight.CreateDataSourceInput{
 		AwsAccountId: aws.String(awsAccountID),
-		DataSourceId: aws.String(d.Get("id").(string)),
+		DataSourceId: aws.String(id),
 	}
 
 	if v := d.Get("credentials"); v != nil {
@@ -933,12 +932,66 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
+	d.Set("type", params.Type)
+
+	if v := d.Get("permissions"); v != nil {
+		params.Permissions = make([]*quicksight.ResourcePermission, 0)
+
+		for _, v := range v.(*schema.Set).List() {
+			permissionResource := v.(map[string]interface{})
+			permission := &quicksight.ResourcePermission{
+				Actions:   expandStringSet(permissionResource["actions"].(*schema.Set)),
+				Principal: aws.String(permissionResource["principal"].(string)),
+			}
+
+			params.Permissions = append(params.Permissions, permission)
+		}
+	}
+
+	if v := d.Get("ssl_properties"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			sslProperties := v.(map[string]interface{})
+
+			if v, present := sslProperties["disable_ssl"]; present {
+				params.SslProperties = &quicksight.SslProperties{
+					DisableSsl: aws.Bool(v.(bool)),
+				}
+			}
+		}
+	}
+
+	if v, exists := d.GetOk("tags"); exists {
+		tags := make([]*quicksight.Tag, 0)
+		for k, v := range v.(map[string]interface{}) {
+			if !tagIgnoredGeneric(k) {
+				tags = append(tags, &quicksight.Tag{
+					Key:   aws.String(k),
+					Value: aws.String(v.(string)),
+				})
+			}
+		}
+
+		params.Tags = tags
+	}
+
+	if v := d.Get("vpc_connection_properties"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			vpcConnectionProperties := v.(map[string]interface{})
+
+			if v := vpcConnectionProperties["vpc_connection_arn"]; v != nil && v.(string) != "" {
+				params.VpcConnectionProperties = &quicksight.VpcConnectionProperties{
+					VpcConnectionArn: aws.String(v.(string)),
+				}
+			}
+		}
+	}
+
 	_, err := conn.CreateDataSource(params)
 	if err != nil {
 		return fmt.Errorf("Error creating QuickSight Data Source: %s", err)
 	}
 
-	//d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.DataSource.DataSourceName)))
+	d.SetId(fmt.Sprintf("%s/%s", awsAccountID, id))
 
 	return nil
 	//return resourceAwsQuickSightDataSourceRead(d, meta)
@@ -1032,7 +1085,7 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 //
 //	return nil
 //}
-//
+
 //func resourceAwsQuickSightDataSourceParseID(id string) (string, string, string, error) {
 //	parts := strings.SplitN(id, "/", 3)
 //	if len(parts) < 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
