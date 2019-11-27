@@ -1,4 +1,9 @@
 ## 2.41.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency [GH-10984]
+
 ## 2.40.0 (November 26, 2019)
 
 NOTES:
