@@ -168,21 +168,21 @@ func resourceAwsLb() *schema.Resource {
 				Type:             schema.TypeInt,
 				Optional:         true,
 				Default:          60,
-				DiffSuppressFunc: suppressIfLBType("network"),
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
 			},
 
 			"enable_cross_zone_load_balancing": {
 				Type:             schema.TypeBool,
 				Optional:         true,
 				Default:          false,
-				DiffSuppressFunc: suppressIfLBType("application"),
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumApplication),
 			},
 
 			"enable_http2": {
 				Type:             schema.TypeBool,
 				Optional:         true,
 				Default:          true,
-				DiffSuppressFunc: suppressIfLBType("network"),
+				DiffSuppressFunc: suppressIfLBType(elbv2.LoadBalancerTypeEnumNetwork),
 			},
 
 			"ip_address_type": {
@@ -294,7 +294,7 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 	attributes := make([]*elbv2.LoadBalancerAttribute, 0)
 
 	switch d.Get("load_balancer_type").(string) {
-	case "application":
+	case elbv2.LoadBalancerTypeEnumApplication:
 		if v, ok := d.GetOk("idle_timeout"); ok {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("idle_timeout.timeout_seconds"),
@@ -305,10 +305,10 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 		if v, ok := d.GetOk("enable_http2"); ok {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http2.enabled"),
-				Value: aws.String(strconv.FormatBool(v.(bool))),
+				Value: aws.String(fmt.Sprintf("%t", v.(bool))),
 			})
 		}
-	case "network":
+	case elbv2.LoadBalancerTypeEnumNetwork:
 		if v, ok := d.GetOk("enable_cross_zone_load_balancing"); ok {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
@@ -450,20 +450,21 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	switch d.Get("load_balancer_type").(string) {
-	case "application":
+	case elbv2.LoadBalancerTypeEnumApplication:
 		if d.HasChange("idle_timeout") {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("idle_timeout.timeout_seconds"),
 				Value: aws.String(fmt.Sprintf("%d", d.Get("idle_timeout").(int))),
 			})
 		}
+
 		if d.HasChange("enable_http2") {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http2.enabled"),
-				Value: aws.String(strconv.FormatBool(d.Get("enable_http2").(bool))),
+				Value: aws.String(fmt.Sprintf("%t", d.Get("enable_http2").(bool))),
 			})
 		}
-	case "network":
+	case elbv2.LoadBalancerTypeEnumNetwork:
 		if d.HasChange("enable_cross_zone_load_balancing") {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("load_balancing.cross_zone.enabled"),
@@ -823,7 +824,7 @@ func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
 	// Application Load Balancers, so the logic below is simple individual checks.
 	// If other differences arise we'll want to refactor to check other
 	// conditions in combinations, but for now all we handle is subnets
-	if lbType := diff.Get("load_balancer_type").(string); lbType != "network" {
+	if lbType := diff.Get("load_balancer_type").(string); lbType != elbv2.LoadBalancerTypeEnumNetwork {
 		return nil
 	}
 
