@@ -308,10 +308,11 @@ func resourceAwsLbCreate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		if v, ok := d.GetOk("enable_http2"); ok {
+		enableHttp2 := d.Get("enable_http2").(bool)
+		if !enableHttp2 {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("routing.http2.enabled"),
-				Value: aws.String(fmt.Sprintf("%t", v.(bool))),
+				Value: aws.String(fmt.Sprintf("%t", enableHttp2)),
 			})
 		}
 	case elbv2.LoadBalancerTypeEnumNetwork:
