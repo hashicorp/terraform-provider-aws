@@ -464,7 +464,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 				},
 			},
 
-			"permissions": {
+			"permission": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 1,
@@ -520,11 +520,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 						},
 					},
 				},
-			},
-
-			"creation_status": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -991,6 +986,8 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountID, id))
+
+	// TODO: loop while creation pending (creation status)
 
 	return resourceAwsQuickSightDataSourceRead(d, meta)
 }
