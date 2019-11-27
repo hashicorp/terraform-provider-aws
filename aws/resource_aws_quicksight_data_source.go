@@ -2,8 +2,8 @@ package aws
 
 import (
 	"fmt"
-	//	"log"
-	//	"strings"
+	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -14,7 +14,7 @@ import (
 func resourceAwsQuickSightDataSource() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsQuickSightDataSourceCreate,
-		//		Read:   resourceAwsQuickSightDataSourceRead,
+		Read:   resourceAwsQuickSightDataSourceRead,
 		//		Update: resourceAwsQuickSightDataSourceUpdate,
 		//		Delete: resourceAwsQuickSightDataSourceDelete,
 
@@ -141,7 +141,6 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									// TODO: Extract common
 									"database": {
 										Type:         schema.TypeString,
 										Required:     true,
@@ -993,42 +992,208 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountID, id))
 
-	return nil
-	//return resourceAwsQuickSightDataSourceRead(d, meta)
+	return resourceAwsQuickSightDataSourceRead(d, meta)
 }
 
-//func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{}) error {
-//	conn := meta.(*AWSClient).quicksightconn
-//
-//	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
-//	if err != nil {
-//		return err
-//	}
-//
-//	descOpts := &quicksight.DescribeDataSourceInput{
-//		AwsAccountId: aws.String(awsAccountID),
-//		Namespace:    aws.String(namespace),
-//		DataSourceName:    aws.String(groupName),
-//	}
-//
-//	resp, err := conn.DescribeDataSource(descOpts)
-//	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-//		log.Printf("[WARN] QuickSight DataSource %s is already gone", d.Id())
-//		d.SetId("")
-//		return nil
-//	}
-//	if err != nil {
-//		return fmt.Errorf("Error describing QuickSight DataSource (%s): %s", d.Id(), err)
-//	}
-//
-//	d.Set("arn", resp.DataSource.Arn)
-//	d.Set("aws_account_id", awsAccountID)
-//	d.Set("group_name", resp.DataSource.DataSourceName)
-//	d.Set("description", resp.DataSource.Description)
-//	d.Set("namespace", namespace)
+func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).quicksightconn
 
-//	return nil
-//}
+	awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+	if err != nil {
+		return err
+	}
+
+	descOpts := &quicksight.DescribeDataSourceInput{
+		AwsAccountId: aws.String(awsAccountID),
+		DataSourceId: aws.String(dataSourceId),
+	}
+
+	resp, err := conn.DescribeDataSource(descOpts)
+	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] QuickSight Data Source %s is already gone", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("Error describing QuickSight Data Source (%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", resp.DataSource.Arn)
+	d.Set("id", resp.DataSource.DataSourceId)
+	d.Set("aws_account_id", awsAccountID)
+
+	if resp.DataSource.DataSourceParameters.AmazonElasticsearchParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"amazon_elasticsearch": {
+				"domain": resp.DataSource.DataSourceParameters.AmazonElasticsearchParameters.Domain,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.AthenaParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"athena": {
+				"work_group": resp.DataSource.DataSourceParameters.AthenaParameters.WorkGroup,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.AuroraParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"aurora": {
+				"database": resp.DataSource.DataSourceParameters.AuroraParameters.Database,
+				"host":     resp.DataSource.DataSourceParameters.AuroraParameters.Host,
+				"port":     resp.DataSource.DataSourceParameters.AuroraParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"aurora_postgre_sql": {
+				"database": resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters.Database,
+				"host":     resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters.Host,
+				"port":     resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.AwsIotAnalyticsParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"aws_iot_analytics": {
+				"data_set_name": resp.DataSource.DataSourceParameters.AwsIotAnalyticsParameters.DataSetName,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.JiraParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"jira": {
+				"site_base_url": resp.DataSource.DataSourceParameters.JiraParameters.SiteBaseUrl,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.MariaDbParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"maria_db": {
+				"database": resp.DataSource.DataSourceParameters.MariaDbParameters.Database,
+				"host":     resp.DataSource.DataSourceParameters.MariaDbParameters.Host,
+				"port":     resp.DataSource.DataSourceParameters.MariaDbParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.MySqlParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"mysql": {
+				"database": resp.DataSource.DataSourceParameters.MySqlParameters.Database,
+				"host":     resp.DataSource.DataSourceParameters.MySqlParameters.Host,
+				"port":     resp.DataSource.DataSourceParameters.MySqlParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.PostgreSqlParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"postgresql": {
+				"database": resp.DataSource.DataSourceParameters.PostgreSqlParameters.Database,
+				"host":     resp.DataSource.DataSourceParameters.PostgreSqlParameters.Host,
+				"port":     resp.DataSource.DataSourceParameters.PostgreSqlParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.PrestoParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"presto": {
+				"catalog": resp.DataSource.DataSourceParameters.PrestoParameters.Catalog,
+				"host":    resp.DataSource.DataSourceParameters.PrestoParameters.Host,
+				"port":    resp.DataSource.DataSourceParameters.PrestoParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.RedshiftParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"redshift": {
+				"cluster_id": resp.DataSource.DataSourceParameters.RedshiftParameters.ClusterId,
+				"database":   resp.DataSource.DataSourceParameters.RedshiftParameters.Database,
+				"host":       resp.DataSource.DataSourceParameters.RedshiftParameters.Host,
+				"port":       resp.DataSource.DataSourceParameters.RedshiftParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.S3Parameters != nil {
+		d.Set("parameters", map[string]map[string]map[string]interface{}{
+			"s3": {
+				"manifest_file_location": {
+					"bucket": resp.DataSource.DataSourceParameters.S3Parameters.ManifestFileLocation.Bucket,
+					"key":    resp.DataSource.DataSourceParameters.S3Parameters.ManifestFileLocation.Key,
+				},
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.ServiceNowParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"service_now": {
+				"site_base_url": resp.DataSource.DataSourceParameters.ServiceNowParameters.SiteBaseUrl,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.SnowflakeParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"snowflake": {
+				"database":  resp.DataSource.DataSourceParameters.SnowflakeParameters.Database,
+				"host":      resp.DataSource.DataSourceParameters.SnowflakeParameters.Host,
+				"warehouse": resp.DataSource.DataSourceParameters.SnowflakeParameters.Warehouse,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.SparkParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"spark": {
+				"host": resp.DataSource.DataSourceParameters.SparkParameters.Host,
+				"port": resp.DataSource.DataSourceParameters.SparkParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.SqlServerParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"sql_server": {
+				"database": resp.DataSource.DataSourceParameters.SqlServerParameters.Database,
+				"host":     resp.DataSource.DataSourceParameters.SqlServerParameters.Host,
+				"port":     resp.DataSource.DataSourceParameters.SqlServerParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.TeradataParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"teradata": {
+				"database": resp.DataSource.DataSourceParameters.TeradataParameters.Database,
+				"host":     resp.DataSource.DataSourceParameters.TeradataParameters.Host,
+				"port":     resp.DataSource.DataSourceParameters.TeradataParameters.Port,
+			},
+		})
+	}
+
+	if resp.DataSource.DataSourceParameters.TwitterParameters != nil {
+		d.Set("parameters", map[string]map[string]interface{}{
+			"twitter": {
+				"max_rows": resp.DataSource.DataSourceParameters.TwitterParameters.MaxRows,
+				"query":    resp.DataSource.DataSourceParameters.TwitterParameters.Query,
+			},
+		})
+	}
+
+	return nil
+}
 
 //
 //func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -1086,10 +1251,10 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 //	return nil
 //}
 
-//func resourceAwsQuickSightDataSourceParseID(id string) (string, string, string, error) {
-//	parts := strings.SplitN(id, "/", 3)
-//	if len(parts) < 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-//		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
-//	}
-//	return parts[0], parts[1], parts[2], nil
-//}
+func resourceAwsQuickSightDataSourceParseID(id string) (string, string, error) {
+	parts := strings.SplitN(id, "/", 2)
+	if len(parts) < 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
+	}
+	return parts[0], parts[1], nil
+}
