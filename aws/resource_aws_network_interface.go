@@ -105,7 +105,6 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			"interface_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}

@@ -86,7 +86,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 			},
 			"interface_type": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"ipv6_addresses": {
 				Type:     schema.TypeSet,
