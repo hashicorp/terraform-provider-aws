@@ -1,19 +1,19 @@
 package aws
 
 import (
-	// "fmt"
+	"fmt"
 	//	"log"
 	//	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	// "github.com/aws/aws-sdk-go/aws"
-	// "github.com/aws/aws-sdk-go/service/quicksight"
 )
 
 func resourceAwsQuickSightDataSource() *schema.Resource {
 	return &schema.Resource{
-		//		Create: resourceAwsQuickSightDataSourceCreate,
+		Create: resourceAwsQuickSightDataSourceCreate,
 		//		Read:   resourceAwsQuickSightDataSourceRead,
 		//		Update: resourceAwsQuickSightDataSourceUpdate,
 		//		Delete: resourceAwsQuickSightDataSourceDelete,
@@ -551,75 +551,76 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 	}
 }
 
-//func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
-//	conn := meta.(*AWSClient).quicksightconn
-//
-//	awsAccountID := meta.(*AWSClient).accountid
-//
-//	if v, ok := d.GetOk("aws_account_id"); ok {
-//		awsAccountID = v.(string)
-//	}
-//
-//	params := &quicksight.CreateDataSourceInput{
-//		AwsAccountId: aws.String(awsAccountID),
-//		DataSourceId: aws.String(d.Get("id").(string)),
-//	}
-//
-//	if v := d.Get("credentials"); v != nil {
-//		for _, v := range v.(*schema.Set).List() {
-//			credentials := v.(map[string]interface{})
-//
-//			if v := credentials["credential_pair"]; v != nil && v.(*schema.Set) != nil {
-//				for _, v := range (v.(*schema.Set)).List() {
-//					credentialPairResource := v.(map[string]interface{})
-//					credentialPair := &quicksight.CredentialPair{}
-//
-//					if v, ok := credentialPairResource["username"]; ok && v.(string) != "" {
-//						credentialPair.Username = aws.String(v.(string))
-//					}
-//
-//					if v, ok := credentialPairResource["password"]; ok && v.(string) != "" {
-//						credentialPair.Password = aws.String(v.(string))
-//					}
-//
-//					params.Credentials = &quicksight.DataSourceCredentials{
-//						CredentialPair: credentialPair,
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//	//	if v := d.Get("parameters"); v != nil {
-//	//		for _, v := range v.(*schema.Set).List() {
-//	//			dataSourceParams := v.(map[string]interface{})
-//	//			dataSourceParamsResource := &quicksight.DataSourceParameters{}
-//	//
-//	//			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.(*schema.Set) != nil {
-//	//				for _, v := range (v.(*schema.Set)).List() {
-//	//					psResource := v.(map[string]interface{})
-//	//					ps := &quicksight.AmazonElasticsearchParameters{}
-//	//
-//	//					if v, ok := psResource["domain"]; ok && v.(string) != "" {
-//	//						ps.Domain = aws.String(v.(string))
-//	//					}
-//	//
-//	//					//params.Type = aws.String(quicksight.DataSourceTypeAmazonElasticsearch)
-//	//					dataSourceParamsResource.AmazonElasticsearchParameters = ps
-//	//				}
-//	//			}
-//	//		}
-//	//	}
-//
-//	_, err := conn.CreateDataSource(params)
-//	if err != nil {
-//		return fmt.Errorf("Error creating QuickSight Data Source: %s", err)
-//	}
-//
-//	//d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.DataSource.DataSourceName)))
-//
-//	return resourceAwsQuickSightDataSourceRead(d, meta)
-//}
+func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).quicksightconn
+
+	awsAccountID := meta.(*AWSClient).accountid
+
+	if v, ok := d.GetOk("aws_account_id"); ok {
+		awsAccountID = v.(string)
+	}
+
+	params := &quicksight.CreateDataSourceInput{
+		AwsAccountId: aws.String(awsAccountID),
+		DataSourceId: aws.String(d.Get("id").(string)),
+	}
+
+	if v := d.Get("credentials"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			credentials := v.(map[string]interface{})
+
+			if v := credentials["credential_pair"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					credentialPairResource := v.(map[string]interface{})
+					credentialPair := &quicksight.CredentialPair{}
+
+					if v, ok := credentialPairResource["username"]; ok && v.(string) != "" {
+						credentialPair.Username = aws.String(v.(string))
+					}
+
+					if v, ok := credentialPairResource["password"]; ok && v.(string) != "" {
+						credentialPair.Password = aws.String(v.(string))
+					}
+
+					params.Credentials = &quicksight.DataSourceCredentials{
+						CredentialPair: credentialPair,
+					}
+				}
+			}
+		}
+	}
+
+	if v := d.Get("parameters"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			dataSourceParams := v.(map[string]interface{})
+			dataSourceParamsResource := &quicksight.DataSourceParameters{}
+
+			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					ps := &quicksight.AmazonElasticsearchParameters{}
+
+					if v, ok := psResource["domain"]; ok && v.(string) != "" {
+						ps.Domain = aws.String(v.(string))
+					}
+
+					params.Type = aws.String(quicksight.DataSourceTypeAmazonElasticsearch)
+					dataSourceParamsResource.AmazonElasticsearchParameters = ps
+				}
+			}
+		}
+	}
+
+	_, err := conn.CreateDataSource(params)
+	if err != nil {
+		return fmt.Errorf("Error creating QuickSight Data Source: %s", err)
+	}
+
+	//d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.DataSource.DataSourceName)))
+
+	return nil
+	//return resourceAwsQuickSightDataSourceRead(d, meta)
+}
 
 //func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 //	conn := meta.(*AWSClient).quicksightconn
