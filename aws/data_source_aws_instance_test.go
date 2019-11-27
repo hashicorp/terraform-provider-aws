@@ -237,19 +237,18 @@ func TestAccAWSInstanceDataSource_VPC(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
-	rStr := acctest.RandString(5)
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_PlacementGroup(rStr),
+				Config: testAccInstanceDataSourceConfig_PlacementGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
-					resource.TestCheckResourceAttr("data.aws_instance.test", "placement_group", fmt.Sprintf("testAccInstanceDataSourceConfig_PlacementGroup_%s", rStr)),
 				),
 			},
 		},
@@ -282,18 +281,19 @@ func TestAccAWSInstanceDataSource_SecurityGroups(t *testing.T) {
 func TestAccAWSInstanceDataSource_VPCSecurityGroups(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_VPCSecurityGroups,
+				Config: testAccInstanceDataSourceConfig_VPCSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_security_group_ids.#", resourceName, "vpc_security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "security_groups.#", resourceName, "security_groups.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "vpc_security_group_ids.#", resourceName, "vpc_security_group_ids.#"),
 				),
 			},
 		},
@@ -621,44 +621,7 @@ data "aws_instance" "test" {
 `
 
 func testAccInstanceDataSourceConfig_privateIP(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
-  blacklisted_names = ["us-west-2d"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
@@ -669,26 +632,11 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`, rName)
+`)
 }
 
 func testAccInstanceDataSourceConfig_keyPair(rName string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
@@ -700,14 +648,14 @@ resource "aws_instance" "test" {
   key_name      = "${aws_key_pair.test.key_name}"
 
   tags = {
-    Name = "testAccInstanceDataSourceConfigKeyPair_TestAMI"
+    Name = %[1]q
   }
 }
 
 data "aws_instance" "test" {
   filter {
     name   = "tag:Name"
-    values = ["testAccInstanceDataSourceConfigKeyPair_TestAMI"]
+    values = [%[1]q]
   }
 
   filter {
@@ -719,44 +667,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_VPC(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
-  blacklisted_names = ["us-west-2d"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type               = "m1.small"
@@ -770,37 +681,19 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`, rName)
+`)
 }
 
-func testAccInstanceDataSourceConfig_PlacementGroup(rStr string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-instance-data-source-placement-group"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "tf-acc-instance-data-source-placement-group"
-  }
-}
-
+func testAccInstanceDataSourceConfig_PlacementGroup(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName) + fmt.Sprintf(`
 resource "aws_placement_group" "test" {
-  name     = "testAccInstanceDataSourceConfig_PlacementGroup_%s"
+  name     = %[1]q
   strategy = "cluster"
 }
 
 # Limitations: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html#concepts-placement-groups
 resource "aws_instance" "test" {
-  # us-west-2
-  ami                         = "ami-55a7ea65"
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type               = "c3.large"
   subnet_id                   = "${aws_subnet.test.id}"
   associate_public_ip_address = true
@@ -813,7 +706,7 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`, rStr)
+`, rName)
 }
 
 func testAccInstanceDataSourceConfig_SecurityGroups(rInt int) string {
@@ -847,55 +740,42 @@ data "aws_instance" "test" {
 `, rInt)
 }
 
-const testAccInstanceDataSourceConfig_VPCSecurityGroups = `
-resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.foo.id}"
+func testAccInstanceDataSourceConfig_VPCSecurityGroups(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName) + fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-    Name = "terraform-testacc-instance-data-source-vpc-sgs"
+    Name = %[1]q
   }
 }
 
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-instance-data-source-vpc-sgs"
-  }
-}
-
-resource "aws_security_group" "tf_test_foo" {
-  name = "tf_test_foo"
-  description = "foo"
-  vpc_id="${aws_vpc.foo.id}"
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "test"
+  vpc_id      = "${aws_vpc.test.id}"
 
   ingress {
-    protocol = "icmp"
-    from_port = -1
-    to_port = -1
-    self = true
-  }
-}
-
-resource "aws_subnet" "foo" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
-  tags = {
-    Name = "tf-acc-instance-data-source-vpc-sgs"
+    protocol    = "icmp"
+    from_port   = -1
+    to_port     = -1
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 resource "aws_instance" "test" {
-  ami = "ami-21f78e11"
-  instance_type = "t1.micro"
-  vpc_security_group_ids = ["${aws_security_group.tf_test_foo.id}"]
-  subnet_id = "${aws_subnet.foo.id}"
-  depends_on = ["aws_internet_gateway.gw"]
+  ami                    = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type          = "t1.micro"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.id}"
+  depends_on             = ["aws_internet_gateway.test"]
 }
 
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`
+`, rName)
+}
 
 func testAccInstanceDataSourceConfig_getPasswordData(val bool, rInt int) string {
 	return fmt.Sprintf(`
@@ -930,44 +810,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfigGetUserData(rName string, getUserData bool) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  blacklisted_names = ["us-west-2d"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "172.16.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "172.16.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
@@ -988,44 +831,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfigGetUserDataNoUserData(rName string, getUserData bool) string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-data "aws_availability_zones" "current" {
-  blacklisted_names = ["us-west-2d"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "172.16.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "172.16.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
@@ -1040,44 +846,7 @@ data "aws_instance" "test" {
 }
 
 func testAccInstanceDataSourceConfig_creditSpecification(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
-  blacklisted_names = ["us-west-2d"]
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.current.names[0]}"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-	most_recent = true
-	owners      = ["amazon"]
-
-	filter {
-	  name = "name"
-	  values = ["amzn-ami-minimal-hvm-*"]
-	}
-
-	filter {
-	  name = "root-device-type"
-	  values = ["ebs"]
-	}
-  }
-
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName) + fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.micro"
@@ -1091,5 +860,5 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
-`, rName)
+`)
 }
