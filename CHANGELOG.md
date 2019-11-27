@@ -20,7 +20,7 @@ ENHANCEMENTS:
 
 * data-source/aws_eks_cluster: Add `vpc_config` nested block `cluster_security_group_id` attribute ([#11002](https://github.com/terraform-providers/terraform-provider-aws/issues/11002))
 * resource/aws_cloudwatch_metric_alarm: Add `threshold_metric_id` argument (support Anomaly Detection metrics) ([#9828](https://github.com/terraform-providers/terraform-provider-aws/issues/9828))
-* resource/aws_codebuild_projectL Add support for BUILD_GENERAL1_2XLARGE CodeBuild compute type [GH11015]
+* resource/aws_codebuild_project: Add support for BUILD_GENERAL1_2XLARGE CodeBuild compute type [GH11015]
 * resource/aws_dx_private_virtual_interface: Support tagging-on-create ([#9572](https://github.com/terraform-providers/terraform-provider-aws/issues/9572))
 * resource/aws_dx_private_virtual_interface: Validate Virtual Interface type on import ([#9572](https://github.com/terraform-providers/terraform-provider-aws/issues/9572))
 * resource/aws_dx_public_virtual_interface: Validate Virtual Interface type on import ([#9572](https://github.com/terraform-providers/terraform-provider-aws/issues/9572))
