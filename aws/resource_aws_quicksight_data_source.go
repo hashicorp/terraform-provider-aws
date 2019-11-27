@@ -1,23 +1,22 @@
 package aws
 
 import (
-	"fmt"
-	"log"
-	"strings"
+	// "fmt"
+	//	"log"
+	//	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	// "github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/service/quicksight"
 )
 
 func resourceAwsQuickSightDataSource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsQuickSightDataSourceCreate,
-		Read:   resourceAwsQuickSightDataSourceRead,
-		Update: resourceAwsQuickSightDataSourceUpdate,
-		Delete: resourceAwsQuickSightDataSourceDelete,
+		//		Create: resourceAwsQuickSightDataSourceCreate,
+		//		Read:   resourceAwsQuickSightDataSourceRead,
+		//		Update: resourceAwsQuickSightDataSourceUpdate,
+		//		Delete: resourceAwsQuickSightDataSourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -58,7 +57,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 					},
@@ -66,8 +65,9 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 			},
 
 			"id": {
-				Type:         schema.TypeString,
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 
 			"name": {
@@ -78,8 +78,9 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 
 			"parameters": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
+				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"amazon_elasticsearch": {
@@ -93,7 +94,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 						"athena": {
@@ -107,7 +108,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 						"aurora": {
@@ -131,7 +132,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"aurora_postgre_sql": {
@@ -156,7 +157,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"aws_iot_analytics": {
@@ -170,7 +171,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 						"jira": {
@@ -184,7 +185,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 						"maria_db": {
@@ -208,7 +209,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"mysql": {
@@ -232,7 +233,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"postgresql": {
@@ -256,7 +257,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"presto": {
@@ -266,8 +267,8 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"catalog": {
-										Type:         schema.TypeString,
-										Required:     true,
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"host": {
 										Type:         schema.TypeString,
@@ -279,7 +280,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"rds": {
@@ -298,7 +299,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 						"redshift": {
@@ -318,14 +319,14 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										ValidateFunc: validation.NoZeroValues,
 									},
 									"host": {
-										Type:         schema.TypeString,
-										Optional:     true,
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"port": {
-										Type:         schema.TypeInt,
-										Optional:     true,
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
-								}
+								},
 							},
 						},
 						"s3": {
@@ -350,10 +351,10 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.NoZeroValues,
 												},
-											}
-										}
-									}
-								}
+											},
+										},
+									},
+								},
 							},
 						},
 						"service_now": {
@@ -367,7 +368,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 						"snowflake": {
@@ -387,10 +388,10 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										ValidateFunc: validation.NoZeroValues,
 									},
 									"warehouse": {
-										Type:         schema.TypeString,
-										Required:     true,
+										Type:     schema.TypeString,
+										Required: true,
 									},
-								}
+								},
 							},
 						},
 						"spark": {
@@ -400,15 +401,15 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
-										Type:         schema.TypeString,
-										Required:     true,
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"port": {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"sql_server": {
@@ -432,7 +433,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"teradata": {
@@ -456,7 +457,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-								}
+								},
 							},
 						},
 						"twitter": {
@@ -475,163 +476,244 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.NoZeroValues,
 									},
-								}
+								},
 							},
 						},
 					},
 				},
 			},
 
-			// TODO
 			"permissions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"actions": {
+							Type:     schema.TypeList,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"principal": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+					},
+				},
 			},
 
-			// TODO
 			"ssl_properties": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"disable_ssl": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
 			},
 
-			// TODO
-			"tags": {
-			},
+			"tags": tagsSchema(),
 
-			// TODO
+			// This will be inferred from the passed `parameters` value
 			"type": {
-			},
-
-			// TODO
-			"vpc_connection_properties": {
-			},
-
-			// TODO: this is a tough one...
-			"creation_stauts": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"vpc_connection_properties": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"vpc_connection_arn": {
+							Type:         schema.TypeBool,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
+
+			"creation_status": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
 }
 
-func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
+//func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
+//	conn := meta.(*AWSClient).quicksightconn
+//
+//	awsAccountID := meta.(*AWSClient).accountid
+//
+//	if v, ok := d.GetOk("aws_account_id"); ok {
+//		awsAccountID = v.(string)
+//	}
+//
+//	params := &quicksight.CreateDataSourceInput{
+//		AwsAccountId: aws.String(awsAccountID),
+//		DataSourceId: aws.String(d.Get("id").(string)),
+//	}
+//
+//	if v := d.Get("credentials"); v != nil {
+//		for _, v := range v.(*schema.Set).List() {
+//			credentials := v.(map[string]interface{})
+//
+//			if v := credentials["credential_pair"]; v != nil && v.(*schema.Set) != nil {
+//				for _, v := range (v.(*schema.Set)).List() {
+//					credentialPairResource := v.(map[string]interface{})
+//					credentialPair := &quicksight.CredentialPair{}
+//
+//					if v, ok := credentialPairResource["username"]; ok && v.(string) != "" {
+//						credentialPair.Username = aws.String(v.(string))
+//					}
+//
+//					if v, ok := credentialPairResource["password"]; ok && v.(string) != "" {
+//						credentialPair.Password = aws.String(v.(string))
+//					}
+//
+//					params.Credentials = &quicksight.DataSourceCredentials{
+//						CredentialPair: credentialPair,
+//					}
+//				}
+//			}
+//		}
+//	}
+//
+//	//	if v := d.Get("parameters"); v != nil {
+//	//		for _, v := range v.(*schema.Set).List() {
+//	//			dataSourceParams := v.(map[string]interface{})
+//	//			dataSourceParamsResource := &quicksight.DataSourceParameters{}
+//	//
+//	//			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.(*schema.Set) != nil {
+//	//				for _, v := range (v.(*schema.Set)).List() {
+//	//					psResource := v.(map[string]interface{})
+//	//					ps := &quicksight.AmazonElasticsearchParameters{}
+//	//
+//	//					if v, ok := psResource["domain"]; ok && v.(string) != "" {
+//	//						ps.Domain = aws.String(v.(string))
+//	//					}
+//	//
+//	//					//params.Type = aws.String(quicksight.DataSourceTypeAmazonElasticsearch)
+//	//					dataSourceParamsResource.AmazonElasticsearchParameters = ps
+//	//				}
+//	//			}
+//	//		}
+//	//	}
+//
+//	_, err := conn.CreateDataSource(params)
+//	if err != nil {
+//		return fmt.Errorf("Error creating QuickSight Data Source: %s", err)
+//	}
+//
+//	//d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.DataSource.DataSourceName)))
+//
+//	return resourceAwsQuickSightDataSourceRead(d, meta)
+//}
 
-	awsAccountID := meta.(*AWSClient).accountid
-	namespace := d.Get("namespace").(string)
+//func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{}) error {
+//	conn := meta.(*AWSClient).quicksightconn
+//
+//	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+//	if err != nil {
+//		return err
+//	}
+//
+//	descOpts := &quicksight.DescribeDataSourceInput{
+//		AwsAccountId: aws.String(awsAccountID),
+//		Namespace:    aws.String(namespace),
+//		DataSourceName:    aws.String(groupName),
+//	}
+//
+//	resp, err := conn.DescribeDataSource(descOpts)
+//	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+//		log.Printf("[WARN] QuickSight DataSource %s is already gone", d.Id())
+//		d.SetId("")
+//		return nil
+//	}
+//	if err != nil {
+//		return fmt.Errorf("Error describing QuickSight DataSource (%s): %s", d.Id(), err)
+//	}
+//
+//	d.Set("arn", resp.DataSource.Arn)
+//	d.Set("aws_account_id", awsAccountID)
+//	d.Set("group_name", resp.DataSource.DataSourceName)
+//	d.Set("description", resp.DataSource.Description)
+//	d.Set("namespace", namespace)
 
-	if v, ok := d.GetOk("aws_account_id"); ok {
-		awsAccountID = v.(string)
-	}
+//	return nil
+//}
 
-	createOpts := &quicksight.CreateDataSourceInput{
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-		DataSourceName:    aws.String(d.Get("group_name").(string)),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		createOpts.Description = aws.String(v.(string))
-	}
-
-	resp, err := conn.CreateDataSource(createOpts)
-	if err != nil {
-		return fmt.Errorf("Error creating QuickSight DataSource: %s", err)
-	}
-
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.DataSource.DataSourceName)))
-
-	return resourceAwsQuickSightDataSourceRead(d, meta)
-}
-
-func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
-
-	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	descOpts := &quicksight.DescribeDataSourceInput{
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-		DataSourceName:    aws.String(groupName),
-	}
-
-	resp, err := conn.DescribeDataSource(descOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] QuickSight DataSource %s is already gone", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("Error describing QuickSight DataSource (%s): %s", d.Id(), err)
-	}
-
-	d.Set("arn", resp.DataSource.Arn)
-	d.Set("aws_account_id", awsAccountID)
-	d.Set("group_name", resp.DataSource.DataSourceName)
-	d.Set("description", resp.DataSource.Description)
-	d.Set("namespace", namespace)
-
-	return nil
-}
-
-func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
-
-	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	updateOpts := &quicksight.UpdateDataSourceInput{
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-		DataSourceName:    aws.String(groupName),
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		updateOpts.Description = aws.String(v.(string))
-	}
-
-	_, err = conn.UpdateDataSource(updateOpts)
-	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] QuickSight DataSource %s is already gone", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("Error updating QuickSight DataSource %s: %s", d.Id(), err)
-	}
-
-	return resourceAwsQuickSightDataSourceRead(d, meta)
-}
-
-func resourceAwsQuickSightDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).quicksightconn
-
-	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
-	if err != nil {
-		return err
-	}
-
-	deleteOpts := &quicksight.DeleteDataSourceInput{
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-		DataSourceName:    aws.String(groupName),
-	}
-
-	if _, err := conn.DeleteDataSource(deleteOpts); err != nil {
-		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-			return nil
-		}
-		return fmt.Errorf("Error deleting QuickSight DataSource %s: %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func resourceAwsQuickSightDataSourceParseID(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, "/", 3)
-	if len(parts) < 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
-		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
-	}
-	return parts[0], parts[1], parts[2], nil
-}
+//
+//func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
+//	conn := meta.(*AWSClient).quicksightconn
+//
+//	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+//	if err != nil {
+//		return err
+//	}
+//
+//	updateOpts := &quicksight.UpdateDataSourceInput{
+//		AwsAccountId: aws.String(awsAccountID),
+//		Namespace:    aws.String(namespace),
+//		DataSourceName:    aws.String(groupName),
+//	}
+//
+//	if v, ok := d.GetOk("description"); ok {
+//		updateOpts.Description = aws.String(v.(string))
+//	}
+//
+//	_, err = conn.UpdateDataSource(updateOpts)
+//	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+//		log.Printf("[WARN] QuickSight DataSource %s is already gone", d.Id())
+//		d.SetId("")
+//		return nil
+//	}
+//	if err != nil {
+//		return fmt.Errorf("Error updating QuickSight DataSource %s: %s", d.Id(), err)
+//	}
+//
+//	return resourceAwsQuickSightDataSourceRead(d, meta)
+//}
+//
+//func resourceAwsQuickSightDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
+//	conn := meta.(*AWSClient).quicksightconn
+//
+//	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+//	if err != nil {
+//		return err
+//	}
+//
+//	deleteOpts := &quicksight.DeleteDataSourceInput{
+//		AwsAccountId: aws.String(awsAccountID),
+//		Namespace:    aws.String(namespace),
+//		DataSourceName:    aws.String(groupName),
+//	}
+//
+//	if _, err := conn.DeleteDataSource(deleteOpts); err != nil {
+//		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+//			return nil
+//		}
+//		return fmt.Errorf("Error deleting QuickSight DataSource %s: %s", d.Id(), err)
+//	}
+//
+//	return nil
+//}
+//
+//func resourceAwsQuickSightDataSourceParseID(id string) (string, string, string, error) {
+//	parts := strings.SplitN(id, "/", 3)
+//	if len(parts) < 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+//		return "", "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
+//	}
+//	return parts[0], parts[1], parts[2], nil
+//}
