@@ -32,26 +32,6 @@ var awsAccountIDRegexp = regexp.MustCompile(awsAccountIDRegexpPattern)
 var awsPartitionRegexp = regexp.MustCompile(awsPartitionRegexpPattern)
 var awsRegionRegexp = regexp.MustCompile(awsRegionRegexpPattern)
 
-// validateStringDoesNotContainAny returns a SchemaValidateFunc which validates that the
-// provided value does not contain any of the specified Unicode code points in chars.
-// This function should be migrated to the Terraform Provider SDK.
-func validateStringDoesNotContainAny(chars string) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(string)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be string", k))
-			return
-		}
-
-		if strings.ContainsAny(v, chars) {
-			es = append(es, fmt.Errorf("expected value of %s to not contain any of %q", k, chars))
-			return
-		}
-
-		return
-	}
-}
-
 // validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
 // Some arguments require three values: true, false, and "" (unspecified).
 // This ValidateFunc returns a custom message since the message with

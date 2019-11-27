@@ -44,7 +44,7 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexp.MustCompile(`^[[:print:]]+$`), "must be printable"),
-					validateStringDoesNotContainAny("|:/"),
+					validation.StringDoesNotContainAny("|:/"),
 				),
 			},
 
