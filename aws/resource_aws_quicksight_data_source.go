@@ -24,13 +24,11 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			// OK
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			// OK
 			"aws_account_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -38,20 +36,450 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 				ForceNew: true,
 			},
 
-			// TODO
 			"credentials": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"credential_pair": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"password": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"username": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+					},
+				},
 			},
 
-			// TODO
 			"id": {
+				Type:         schema.TypeString,
+				Required:     true,
 			},
 
-			// TODO
 			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 
-			// TODO
 			"parameters": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"amazon_elasticsearch": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"domain": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+						"athena": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"work_group": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+						"aurora": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"aurora_postgre_sql": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									// TODO: Extract common
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"aws_iot_analytics": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+						"jira": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"site_base_url": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+						"maria_db": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"mysql": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"postgresql": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"presto": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"catalog": {
+										Type:         schema.TypeString,
+										Required:     true,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"rds": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"instance_id": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+						"redshift": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Optional:     true,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+									},
+								}
+							},
+						},
+						"s3": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"manifest_file_location": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.NoZeroValues,
+												},
+												"key": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.NoZeroValues,
+												},
+											}
+										}
+									}
+								}
+							},
+						},
+						"service_now": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"site_base_url": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+						"snowflake": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"warehouse": {
+										Type:         schema.TypeString,
+										Required:     true,
+									},
+								}
+							},
+						},
+						"spark": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"sql_server": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"teradata": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"database": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"host": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+									"port": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								}
+							},
+						},
+						"twitter": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"max_rows": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"query": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.NoZeroValues,
+									},
+								}
+							},
+						},
+					},
+				},
 			},
 
 			// TODO
