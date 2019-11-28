@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* resource/aws_batch_compute_environment: Forces new resource when `launch_template` contents are changed [GH-11057]
 * resource/aws_codebuild_project: Add Linux GPU worker [GH-11035]
 * resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency [GH-10984]
 * resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter [GH-11041]
