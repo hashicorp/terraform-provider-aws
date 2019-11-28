@@ -570,18 +570,8 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		params.SslProperties = sslProperties
 	}
 
-	if v, exists := d.GetOk("tags"); exists {
-		tags := make([]*quicksight.Tag, 0)
-		for k, v := range v.(map[string]interface{}) {
-			if !tagIgnoredGeneric(k) {
-				tags = append(tags, &quicksight.Tag{
-					Key:   aws.String(k),
-					Value: aws.String(v.(string)),
-				})
-			}
-		}
-
-		params.Tags = tags
+	if v, ok := d.GetOk("tags"); ok {
+		params.Tags = tagsFromMapQuickSight(v.(map[string]interface{}))
 	}
 
 	if vpcConnectionProperties := resourceAwsQuickSightDataSourceVpcConnectionProperties(d); vpcConnectionProperties != nil {
@@ -848,7 +838,32 @@ func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interfac
 		params.SslProperties = sslProperties
 	}
 
-	// TODO: Handle tags
+	if d.HasChange("tags") {
+		oraw, nraw := d.GetChange("tags")
+		o := oraw.(map[string]interface{})
+		n := nraw.(map[string]interface{})
+		c, r := diffTagsQuickSight(tagsFromMapQuickSight(o), tagsFromMapQuickSight(n))
+
+		if len(r) > 0 {
+			_, err := conn.UntagResource(&quicksight.UntagResourceInput{
+				ResourceArn: aws.String(quicksightDataSourceArn(meta.(*AWSClient).region, awsAccountId, dataSourceId)),
+				TagKeys:     tagKeysQuickSight(r),
+			})
+			if err != nil {
+				return fmt.Errorf("Error deleting QuickSight Data Source tags: %s", err)
+			}
+		}
+
+		if len(c) > 0 {
+			_, err := conn.TagResource(&quicksight.TagResourceInput{
+				ResourceArn: aws.String(quicksightDataSourceArn(meta.(*AWSClient).region, awsAccountId, dataSourceId)),
+				Tags:        c,
+			})
+			if err != nil {
+				return fmt.Errorf("Error updating QuickSight Data Source tags: %s", err)
+			}
+		}
+	}
 
 	if vpcConnectionProperties := resourceAwsQuickSightDataSourceVpcConnectionProperties(d); vpcConnectionProperties != nil {
 		params.VpcConnectionProperties = vpcConnectionProperties
@@ -1199,4 +1214,8 @@ func resourceAwsQuickSightDataSourceParseID(id string) (string, string, error) {
 		return "", "", fmt.Errorf("unexpected format of ID (%s), expected AWS_ACCOUNT_ID/DATA_SOURCE_ID", id)
 	}
 	return parts[0], parts[1], nil
+}
+
+func quicksightDataSourceArn(awsRegion string, awsAccountId string, dataSourceId string) string {
+	return fmt.Sprintf("arn:aws:quicksight:%s:%s:datasource/%s", awsRegion, awsAccountId, dataSourceId)
 }
