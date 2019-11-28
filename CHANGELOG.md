@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* resource/aws_codebuild_project: Add Linux GPU worker [GH-11035]
 * resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency [GH-10984]
 * resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter [GH-11041]
 * resource/aws_iam_access_key: Remove deprecation from `secret` and mark `secret` and `ses_smtp_password` to sensitive [GH-10908]
