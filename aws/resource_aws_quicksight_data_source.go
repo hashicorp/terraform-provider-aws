@@ -15,7 +15,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsQuickSightDataSourceCreate,
 		Read:   resourceAwsQuickSightDataSourceRead,
-		//		Update: resourceAwsQuickSightDataSourceUpdate,
+		//Update: resourceAwsQuickSightDataSourceUpdate,
 		//		Delete: resourceAwsQuickSightDataSourceDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -540,393 +540,15 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		DataSourceId: aws.String(id),
 	}
 
-	if v := d.Get("credentials"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
-			credentials := v.(map[string]interface{})
-
-			if v := credentials["credential_pair"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					credentialPairResource := v.(map[string]interface{})
-					credentialPair := &quicksight.CredentialPair{}
-
-					if v, ok := credentialPairResource["username"]; ok && v.(string) != "" {
-						credentialPair.Username = aws.String(v.(string))
-					}
-
-					if v, ok := credentialPairResource["password"]; ok && v.(string) != "" {
-						credentialPair.Password = aws.String(v.(string))
-					}
-
-					params.Credentials = &quicksight.DataSourceCredentials{
-						CredentialPair: credentialPair,
-					}
-				}
-			}
-		}
+	if credentials := resourceAwsQuickSightDataSourceCredentials(d); credentials != nil {
+		params.Credentials = credentials
 	}
 
-	if v := d.Get("parameters"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
-			dataSourceParams := v.(map[string]interface{})
-			dataSourceParamsResource := &quicksight.DataSourceParameters{}
-
-			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.AmazonElasticsearchParameters{}
-
-					if v, ok := psResource["domain"]; ok && v.(string) != "" {
-						ps.Domain = aws.String(v.(string))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeAmazonElasticsearch)
-					dataSourceParamsResource.AmazonElasticsearchParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["athena"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.AthenaParameters{}
-
-					if v, ok := psResource["work_group"]; ok && v.(string) != "" {
-						ps.WorkGroup = aws.String(v.(string))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeAthena)
-					dataSourceParamsResource.AthenaParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["aurora"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.AuroraParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeAurora)
-					dataSourceParamsResource.AuroraParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["aurora_postgre_sql"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.AuroraPostgreSqlParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeAuroraPostgresql)
-					dataSourceParamsResource.AuroraPostgreSqlParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["aws_iot_analytics"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.AwsIotAnalyticsParameters{}
-
-					if v, ok := psResource["data_set_name"]; ok && v.(string) != "" {
-						ps.DataSetName = aws.String(v.(string))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeAwsIotAnalytics)
-					dataSourceParamsResource.AwsIotAnalyticsParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["jira"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.JiraParameters{}
-
-					if v, ok := psResource["site_base_url"]; ok && v.(string) != "" {
-						ps.SiteBaseUrl = aws.String(v.(string))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeJira)
-					dataSourceParamsResource.JiraParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["maria_db"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.MariaDbParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeMariadb)
-					dataSourceParamsResource.MariaDbParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["mysql"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.MySqlParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeMysql)
-					dataSourceParamsResource.MySqlParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["postgresql"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.PostgreSqlParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypePostgresql)
-					dataSourceParamsResource.PostgreSqlParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["presto"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.PrestoParameters{}
-
-					if v, ok := psResource["catalog"]; ok && v.(string) != "" {
-						ps.Catalog = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypePresto)
-					dataSourceParamsResource.PrestoParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["redshift"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.RedshiftParameters{}
-
-					if v, ok := psResource["cluster_id"]; ok && v.(string) != "" {
-						ps.ClusterId = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeRedshift)
-					dataSourceParamsResource.RedshiftParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["s3"]; v != nil && v.(*schema.Set) != nil {
-				s3 := v.(map[string]interface{})
-
-				if v := s3["manifest_file_location"]; v != nil && v.(*schema.Set) != nil {
-					for _, v := range (v.(*schema.Set)).List() {
-						psResource := v.(map[string]interface{})
-						ps := &quicksight.S3Parameters{
-							ManifestFileLocation: &quicksight.ManifestFileLocation{},
-						}
-
-						if v, ok := psResource["bucket"]; ok && v.(string) != "" {
-							ps.ManifestFileLocation.Bucket = aws.String(v.(string))
-						}
-
-						if v, ok := psResource["key"]; ok && v.(string) != "" {
-							ps.ManifestFileLocation.Key = aws.String(v.(string))
-						}
-
-						params.Type = aws.String(quicksight.DataSourceTypeS3)
-						dataSourceParamsResource.S3Parameters = ps
-					}
-				}
-			}
-
-			if v := dataSourceParams["service_now"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.ServiceNowParameters{}
-
-					if v, ok := psResource["site_base_url"]; ok && v.(string) != "" {
-						ps.SiteBaseUrl = aws.String(v.(string))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeServicenow)
-					dataSourceParamsResource.ServiceNowParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["snowflake"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.SnowflakeParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["warehouse"]; ok && v.(string) != "" {
-						ps.Warehouse = aws.String(v.(string))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeSnowflake)
-					dataSourceParamsResource.SnowflakeParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["spark"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.SparkParameters{}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeSpark)
-					dataSourceParamsResource.SparkParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["sql_server"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.SqlServerParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeSqlserver)
-					dataSourceParamsResource.SqlServerParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["teradata"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.TeradataParameters{}
-
-					if v, ok := psResource["database"]; ok && v.(string) != "" {
-						ps.Database = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["host"]; ok && v.(string) != "" {
-						ps.Host = aws.String(v.(string))
-					}
-
-					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
-						ps.Port = aws.Int64(v.(int64))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeTeradata)
-					dataSourceParamsResource.TeradataParameters = ps
-				}
-			}
-
-			if v := dataSourceParams["twitter"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
-					psResource := v.(map[string]interface{})
-					ps := &quicksight.TwitterParameters{}
-
-					if v, ok := psResource["max_rows"]; ok && v.(int64) != 0 {
-						ps.MaxRows = aws.Int64(v.(int64))
-					}
-
-					if v, ok := psResource["query"]; ok && v.(string) != "" {
-						ps.Query = aws.String(v.(string))
-					}
-
-					params.Type = aws.String(quicksight.DataSourceTypeTwitter)
-					dataSourceParamsResource.TwitterParameters = ps
-				}
-			}
-		}
+	if dataSourceType, dataSourceParameters := resourceAwsQuickSightDataSourceParameters(d); dataSourceParameters != nil {
+		params.Type = dataSourceType
+		params.DataSourceParameters = dataSourceParameters
+		d.Set("type", dataSourceType)
 	}
-
-	d.Set("type", params.Type)
 
 	if v := d.Get("permissions"); v != nil {
 		params.Permissions = make([]*quicksight.ResourcePermission, 0)
@@ -986,8 +608,6 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", awsAccountID, id))
-
-	// TODO: loop while creation pending (creation status)
 
 	return resourceAwsQuickSightDataSourceRead(d, meta)
 }
@@ -1192,19 +812,17 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-//
 //func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 //	conn := meta.(*AWSClient).quicksightconn
 //
-//	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+//	awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
 //	if err != nil {
 //		return err
 //	}
 //
-//	updateOpts := &quicksight.UpdateDataSourceInput{
+//	params := &quicksight.UpdateDataSetInput{
 //		AwsAccountId: aws.String(awsAccountID),
-//		Namespace:    aws.String(namespace),
-//		DataSourceName:    aws.String(groupName),
+//		DataSourceId: aws.String(id),
 //	}
 //
 //	if v, ok := d.GetOk("description"); ok {
@@ -1223,6 +841,7 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 //
 //	return resourceAwsQuickSightDataSourceRead(d, meta)
 //}
+
 //
 //func resourceAwsQuickSightDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 //	conn := meta.(*AWSClient).quicksightconn
@@ -1247,6 +866,277 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 //
 //	return nil
 //}
+
+func resourceAwsQuickSightDataSourceCredentials(d *schema.ResourceData) *quicksight.DataSourceCredentials {
+	if v := d.Get("credentials"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			credentials := v.(map[string]interface{})
+
+			if v := credentials["credential_pair"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					credentialPairResource := v.(map[string]interface{})
+					credentialPair := &quicksight.CredentialPair{}
+
+					if v, ok := credentialPairResource["username"]; ok && v.(string) != "" {
+						credentialPair.Username = aws.String(v.(string))
+					}
+
+					if v, ok := credentialPairResource["password"]; ok && v.(string) != "" {
+						credentialPair.Password = aws.String(v.(string))
+					}
+
+					return &quicksight.DataSourceCredentials{
+						CredentialPair: credentialPair,
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string, *quicksight.DataSourceParameters) {
+	if v := d.Get("parameters"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			dataSourceParams := v.(map[string]interface{})
+			dataSourceParamsResource := &quicksight.DataSourceParameters{}
+			dataSourceType := ""
+
+			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeAmazonElasticsearch
+					dataSourceParamsResource.AmazonElasticsearchParameters = &quicksight.AmazonElasticsearchParameters{
+						Domain: aws.String(psResource["domain"].(string)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["athena"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					ps := &quicksight.AthenaParameters{}
+
+					if v, ok := psResource["work_group"]; ok && v.(string) != "" {
+						ps.WorkGroup = aws.String(v.(string))
+					}
+
+					dataSourceType = quicksight.DataSourceTypeAthena
+					dataSourceParamsResource.AthenaParameters = ps
+				}
+			}
+
+			if v := dataSourceParams["aurora"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeAurora
+					dataSourceParamsResource.AuroraParameters = &quicksight.AuroraParameters{
+						Database: aws.String(psResource["database"].(string)),
+						Host:     aws.String(psResource["host"].(string)),
+						Port:     aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["aurora_postgre_sql"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeAuroraPostgresql
+					dataSourceParamsResource.AuroraPostgreSqlParameters = &quicksight.AuroraPostgreSqlParameters{
+						Database: aws.String(psResource["database"].(string)),
+						Host:     aws.String(psResource["host"].(string)),
+						Port:     aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["aws_iot_analytics"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeAwsIotAnalytics
+					dataSourceParamsResource.AwsIotAnalyticsParameters = &quicksight.AwsIotAnalyticsParameters{
+						DataSetName: aws.String(psResource["data_set_name"].(string)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["jira"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+
+					dataSourceType = quicksight.DataSourceTypeJira
+					dataSourceParamsResource.JiraParameters = &quicksight.JiraParameters{
+						SiteBaseUrl: aws.String(psResource["site_base_url"].(string)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["maria_db"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+
+					dataSourceType = quicksight.DataSourceTypeMariadb
+					dataSourceParamsResource.MariaDbParameters = &quicksight.MariaDbParameters{
+						Database: aws.String(psResource["database"].(string)),
+						Host:     aws.String(psResource["host"].(string)),
+						Port:     aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["mysql"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+
+					dataSourceType = quicksight.DataSourceTypeMysql
+					dataSourceParamsResource.MySqlParameters = &quicksight.MySqlParameters{
+						Database: aws.String(psResource["database"].(string)),
+						Host:     aws.String(psResource["host"].(string)),
+						Port:     aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["postgresql"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypePostgresql
+					dataSourceParamsResource.PostgreSqlParameters = &quicksight.PostgreSqlParameters{
+						Database: aws.String(psResource["database"].(string)),
+						Host:     aws.String(psResource["host"].(string)),
+						Port:     aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["presto"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypePresto
+					dataSourceParamsResource.PrestoParameters = &quicksight.PrestoParameters{
+						Catalog: aws.String(psResource["catalog"].(string)),
+						Host:    aws.String(psResource["host"].(string)),
+						Port:    aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["redshift"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					ps := &quicksight.RedshiftParameters{
+						Database: aws.String(psResource["database"].(string)),
+					}
+
+					if v, ok := psResource["cluster_id"]; ok && v.(string) != "" {
+						ps.ClusterId = aws.String(v.(string))
+					}
+
+					if v, ok := psResource["host"]; ok && v.(string) != "" {
+						ps.Host = aws.String(v.(string))
+					}
+
+					if v, ok := psResource["port"]; ok && v.(int64) != 0 {
+						ps.Port = aws.Int64(v.(int64))
+					}
+
+					dataSourceType = quicksight.DataSourceTypeRedshift
+					dataSourceParamsResource.RedshiftParameters = ps
+				}
+			}
+
+			if v := dataSourceParams["s3"]; v != nil && v.(*schema.Set) != nil {
+				s3 := v.(map[string]interface{})
+
+				if v := s3["manifest_file_location"]; v != nil && v.(*schema.Set) != nil {
+					for _, v := range (v.(*schema.Set)).List() {
+						psResource := v.(map[string]interface{})
+						dataSourceType = quicksight.DataSourceTypeS3
+						dataSourceParamsResource.S3Parameters = &quicksight.S3Parameters{
+							ManifestFileLocation: &quicksight.ManifestFileLocation{
+								Bucket: aws.String(psResource["bucket"].(string)),
+								Key:    aws.String(psResource["key"].(string)),
+							},
+						}
+					}
+				}
+			}
+
+			if v := dataSourceParams["service_now"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeServicenow
+					dataSourceParamsResource.ServiceNowParameters = &quicksight.ServiceNowParameters{
+						SiteBaseUrl: aws.String(psResource["site_base_url"].(string)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["snowflake"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeSnowflake
+					dataSourceParamsResource.SnowflakeParameters = &quicksight.SnowflakeParameters{
+						Database:  aws.String(psResource["database"].(string)),
+						Host:      aws.String(psResource["host"].(string)),
+						Warehouse: aws.String(psResource["warehouse"].(string)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["spark"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeSpark
+					dataSourceParamsResource.SparkParameters = &quicksight.SparkParameters{
+						Host: aws.String(psResource["host"].(string)),
+						Port: aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["sql_server"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeSqlserver
+					dataSourceParamsResource.SqlServerParameters = &quicksight.SqlServerParameters{
+						Database: aws.String(psResource["database"].(string)),
+						Host:     aws.String(psResource["host"].(string)),
+						Port:     aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["teradata"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeTeradata
+					dataSourceParamsResource.TeradataParameters = &quicksight.TeradataParameters{
+						Database: aws.String(psResource["database"].(string)),
+						Host:     aws.String(psResource["host"].(string)),
+						Port:     aws.Int64(psResource["port"].(int64)),
+					}
+				}
+			}
+
+			if v := dataSourceParams["twitter"]; v != nil && v.(*schema.Set) != nil {
+				for _, v := range (v.(*schema.Set)).List() {
+					psResource := v.(map[string]interface{})
+					dataSourceType = quicksight.DataSourceTypeTwitter
+					dataSourceParamsResource.TwitterParameters = &quicksight.TwitterParameters{
+						MaxRows: aws.Int64(psResource["max_rows"].(int64)),
+						Query:   aws.String(psResource["query"].(string)),
+					}
+				}
+			}
+
+			return aws.String(dataSourceType), dataSourceParamsResource
+		}
+	}
+
+	return aws.String(""), nil
+}
 
 func resourceAwsQuickSightDataSourceParseID(id string) (string, string, error) {
 	parts := strings.SplitN(id, "/", 2)
