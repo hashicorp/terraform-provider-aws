@@ -159,6 +159,12 @@ func resourceAwsDocDBClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 
 			"writer": {
@@ -306,6 +312,7 @@ func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
 	if err := saveTagsDocDB(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -343,6 +350,12 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("promotion_tier") {
 		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
 
