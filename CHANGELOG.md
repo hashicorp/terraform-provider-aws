@@ -1,13 +1,16 @@
 ## 2.41.0 (Unreleased)
 
-BUG FIXES:
+ENHANCEMENTS:
 
-* resource/aws_batch_compute_environment: Forces new resource when `launch_template` contents are changed [GH-11057]
 * resource/aws_codebuild_project: Add Linux GPU worker [GH-11035]
-* resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency [GH-10984]
 * resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter [GH-11041]
 * resource/aws_iam_access_key: Remove deprecation from `secret` and mark `secret` and `ses_smtp_password` to sensitive [GH-10908]
 * resource/aws_iam_user: Delete a user's virtual MFA devices when `force_destroy` is enabled [GH-11040]
+
+BUG FIXES:
+
+* resource/aws_batch_compute_environment: Forces new resource when `launch_template` contents are changed [GH-11057]
+* resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency [GH-10984]
 * resource/aws_launch_template: Only set associate_public_ip_address on network interfaces if it's explicitly set to avoid problems with multiple network interfaces [GH-10157]
 
 ## 2.40.0 (November 26, 2019)
