@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
@@ -609,7 +611,29 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 		DataSourceId: aws.String(dataSourceId),
 	}
 
-	resp, err := conn.DescribeDataSource(descOpts)
+	var resp *quicksight.DescribeDataSourceOutput
+	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err := conn.DescribeDataSource(descOpts)
+
+		if resp != nil && resp.DataSource != nil {
+			status := aws.StringValue(resp.DataSource.Status)
+
+			if status == quicksight.ResourceStatusCreationInProgress || status == quicksight.ResourceStatusUpdateInProgress {
+				return resource.RetryableError(fmt.Errorf("Data Source operation still in progress (%s): %s", d.Id(), status))
+			}
+			if status == quicksight.ResourceStatusCreationFailed || status == quicksight.ResourceStatusUpdateFailed {
+				return resource.NonRetryableError(fmt.Errorf("Data Source operation failed (%s): %s", d.Id(), status))
+			}
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
 	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
 		log.Printf("[WARN] QuickSight Data Source %s is already gone", d.Id())
 		d.SetId("")
