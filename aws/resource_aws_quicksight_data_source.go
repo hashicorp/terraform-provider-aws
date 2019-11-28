@@ -17,8 +17,8 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsQuickSightDataSourceCreate,
 		Read:   resourceAwsQuickSightDataSourceRead,
-		//Update: resourceAwsQuickSightDataSourceUpdate,
-		//		Delete: resourceAwsQuickSightDataSourceDelete,
+		Update: resourceAwsQuickSightDataSourceUpdate,
+		Delete: resourceAwsQuickSightDataSourceDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -530,15 +530,15 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).quicksightconn
 
-	awsAccountID := meta.(*AWSClient).accountid
+	awsAccountId := meta.(*AWSClient).accountid
 	id := d.Get("id").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
-		awsAccountID = v.(string)
+		awsAccountId = v.(string)
 	}
 
 	params := &quicksight.CreateDataSourceInput{
-		AwsAccountId: aws.String(awsAccountID),
+		AwsAccountId: aws.String(awsAccountId),
 		DataSourceId: aws.String(id),
 	}
 
@@ -593,7 +593,7 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating QuickSight Data Source: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", awsAccountID, id))
+	d.SetId(fmt.Sprintf("%s/%s", awsAccountId, id))
 
 	return resourceAwsQuickSightDataSourceRead(d, meta)
 }
@@ -601,13 +601,13 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).quicksightconn
 
-	awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	descOpts := &quicksight.DescribeDataSourceInput{
-		AwsAccountId: aws.String(awsAccountID),
+		AwsAccountId: aws.String(awsAccountId),
 		DataSourceId: aws.String(dataSourceId),
 	}
 
@@ -645,7 +645,7 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 
 	d.Set("arn", resp.DataSource.Arn)
 	d.Set("id", resp.DataSource.DataSourceId)
-	d.Set("aws_account_id", awsAccountID)
+	d.Set("aws_account_id", awsAccountId)
 
 	if resp.DataSource.DataSourceParameters.AmazonElasticsearchParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
@@ -823,13 +823,13 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).quicksightconn
 
-	awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	params := &quicksight.UpdateDataSourceInput{
-		AwsAccountId: aws.String(awsAccountID),
+		AwsAccountId: aws.String(awsAccountId),
 		DataSourceId: aws.String(dataSourceId),
 	}
 
@@ -867,30 +867,28 @@ func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interfac
 	return resourceAwsQuickSightDataSourceRead(d, meta)
 }
 
-//
-//func resourceAwsQuickSightDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
-//	conn := meta.(*AWSClient).quicksightconn
-//
-//	awsAccountID, namespace, groupName, err := resourceAwsQuickSightDataSourceParseID(d.Id())
-//	if err != nil {
-//		return err
-//	}
-//
-//	deleteOpts := &quicksight.DeleteDataSourceInput{
-//		AwsAccountId: aws.String(awsAccountID),
-//		Namespace:    aws.String(namespace),
-//		DataSourceName:    aws.String(groupName),
-//	}
-//
-//	if _, err := conn.DeleteDataSource(deleteOpts); err != nil {
-//		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-//			return nil
-//		}
-//		return fmt.Errorf("Error deleting QuickSight DataSource %s: %s", d.Id(), err)
-//	}
-//
-//	return nil
-//}
+func resourceAwsQuickSightDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).quicksightconn
+
+	awsAccountId, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+	if err != nil {
+		return err
+	}
+
+	deleteOpts := &quicksight.DeleteDataSourceInput{
+		AwsAccountId: aws.String(awsAccountId),
+		DataSourceId: aws.String(dataSourceId),
+	}
+
+	if _, err := conn.DeleteDataSource(deleteOpts); err != nil {
+		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+		return fmt.Errorf("Error deleting QuickSight Data Source %s: %s", d.Id(), err)
+	}
+
+	return nil
+}
 
 func resourceAwsQuickSightDataSourceCredentials(d *schema.ResourceData) *quicksight.DataSourceCredentials {
 	if v := d.Get("credentials"); v != nil {
