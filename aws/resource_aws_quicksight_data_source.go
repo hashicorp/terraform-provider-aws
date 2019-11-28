@@ -820,35 +820,52 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-//func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
-//	conn := meta.(*AWSClient).quicksightconn
-//
-//	awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
-//	if err != nil {
-//		return err
-//	}
-//
-//	params := &quicksight.UpdateDataSetInput{
-//		AwsAccountId: aws.String(awsAccountID),
-//		DataSourceId: aws.String(id),
-//	}
-//
-//	if v, ok := d.GetOk("description"); ok {
-//		updateOpts.Description = aws.String(v.(string))
-//	}
-//
-//	_, err = conn.UpdateDataSource(updateOpts)
-//	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-//		log.Printf("[WARN] QuickSight DataSource %s is already gone", d.Id())
-//		d.SetId("")
-//		return nil
-//	}
-//	if err != nil {
-//		return fmt.Errorf("Error updating QuickSight DataSource %s: %s", d.Id(), err)
-//	}
-//
-//	return resourceAwsQuickSightDataSourceRead(d, meta)
-//}
+func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).quicksightconn
+
+	awsAccountID, dataSourceId, err := resourceAwsQuickSightDataSourceParseID(d.Id())
+	if err != nil {
+		return err
+	}
+
+	params := &quicksight.UpdateDataSourceInput{
+		AwsAccountId: aws.String(awsAccountID),
+		DataSourceId: aws.String(dataSourceId),
+	}
+
+	if credentials := resourceAwsQuickSightDataSourceCredentials(d); credentials != nil {
+		params.Credentials = credentials
+	}
+
+	if dataSourceType, dataSourceParameters := resourceAwsQuickSightDataSourceParameters(d); dataSourceParameters != nil {
+		params.DataSourceParameters = dataSourceParameters
+		d.Set("type", dataSourceType)
+	}
+
+	// TODO: Handle permissions
+
+	if sslProperties := resourceAwsQuickSightDataSourceSslProperties(d); sslProperties != nil {
+		params.SslProperties = sslProperties
+	}
+
+	// TODO: Handle tags
+
+	if vpcConnectionProperties := resourceAwsQuickSightDataSourceVpcConnectionProperties(d); vpcConnectionProperties != nil {
+		params.VpcConnectionProperties = vpcConnectionProperties
+	}
+
+	_, err = conn.UpdateDataSource(params)
+	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
+		log.Printf("[WARN] QuickSight Data Source %s is already gone", d.Id())
+		d.SetId("")
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("Error updating QuickSight Data Source %s: %s", d.Id(), err)
+	}
+
+	return resourceAwsQuickSightDataSourceRead(d, meta)
+}
 
 //
 //func resourceAwsQuickSightDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
