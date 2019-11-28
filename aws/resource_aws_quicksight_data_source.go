@@ -564,16 +564,8 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if v := d.Get("ssl_properties"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
-			sslProperties := v.(map[string]interface{})
-
-			if v, present := sslProperties["disable_ssl"]; present {
-				params.SslProperties = &quicksight.SslProperties{
-					DisableSsl: aws.Bool(v.(bool)),
-				}
-			}
-		}
+	if sslProperties := resourceAwsQuickSightDataSourceSslProperties(d); sslProperties != nil {
+		params.SslProperties = sslProperties
 	}
 
 	if v, exists := d.GetOk("tags"); exists {
@@ -590,16 +582,8 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		params.Tags = tags
 	}
 
-	if v := d.Get("vpc_connection_properties"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
-			vpcConnectionProperties := v.(map[string]interface{})
-
-			if v := vpcConnectionProperties["vpc_connection_arn"]; v != nil && v.(string) != "" {
-				params.VpcConnectionProperties = &quicksight.VpcConnectionProperties{
-					VpcConnectionArn: aws.String(v.(string)),
-				}
-			}
-		}
+	if vpcConnectionProperties := resourceAwsQuickSightDataSourceVpcConnectionProperties(d); vpcConnectionProperties != nil {
+		params.VpcConnectionProperties = vpcConnectionProperties
 	}
 
 	_, err := conn.CreateDataSource(params)
@@ -1136,6 +1120,38 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 	}
 
 	return aws.String(""), nil
+}
+
+func resourceAwsQuickSightDataSourceSslProperties(d *schema.ResourceData) *quicksight.SslProperties {
+	if v := d.Get("ssl_properties"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			sslProperties := v.(map[string]interface{})
+
+			if v, present := sslProperties["disable_ssl"]; present {
+				return &quicksight.SslProperties{
+					DisableSsl: aws.Bool(v.(bool)),
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func resourceAwsQuickSightDataSourceVpcConnectionProperties(d *schema.ResourceData) *quicksight.VpcConnectionProperties {
+	if v := d.Get("vpc_connection_properties"); v != nil {
+		for _, v := range v.(*schema.Set).List() {
+			vpcConnectionProperties := v.(map[string]interface{})
+
+			if v := vpcConnectionProperties["vpc_connection_arn"]; v != nil && v.(string) != "" {
+				return &quicksight.VpcConnectionProperties{
+					VpcConnectionArn: aws.String(v.(string)),
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsQuickSightDataSourceParseID(id string) (string, string, error) {
