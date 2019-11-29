@@ -19,6 +19,7 @@ resource "aws_greengrass_group" "test" {
 ## Argument Reference
 
 * `name` - (Required). The name of the group.
+* `tags` - (Optional) Map. Map of tags. Metadata that can be used to manage the group.
 * `group_version` - (Optional). Information about a group version.
 
 The `group_version` object takes such following argument.

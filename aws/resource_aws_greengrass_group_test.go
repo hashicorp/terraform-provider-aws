@@ -25,6 +25,7 @@ func TestAccAWSGreengrassGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("group_%s", rString)),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
+					resource.TestCheckResourceAttr("aws_greengrass_group.test", "tags.tagKey", "tagValue"),
 				),
 			},
 			{
@@ -89,6 +90,10 @@ func testAccAWSGreengrassGroupConfig_basic(rString string) string {
 	return fmt.Sprintf(`
 resource "aws_greengrass_group" "test" {
   name = "group_%s"
+
+  tags = {
+	"tagKey" = "tagValue"
+  } 
 }
 `, rString)
 }

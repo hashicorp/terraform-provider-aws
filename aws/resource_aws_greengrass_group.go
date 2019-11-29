@@ -1,11 +1,13 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGreengrassGroup() *schema.Resource {
@@ -29,6 +31,7 @@ func resourceAwsGreengrassGroup() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
+			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -138,6 +141,10 @@ func resourceAwsGreengrassGroupCreate(d *schema.ResourceData, meta interface{}) 
 		Name: aws.String(d.Get("name").(string)),
 	}
 
+	if rawTags := d.Get("tags").(map[string]interface{}); len(rawTags) > 0 {
+		params.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().GreengrassTags()
+	}
+
 	log.Printf("[DEBUG] Creating Greengrass Group: %s", params)
 	out, err := conn.CreateGroup(params)
 	if err != nil {
@@ -202,11 +209,20 @@ func resourceAwsGreengrassGroupRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", out.Name)
 	d.Set("group_id", out.Id)
 
+	arn := *out.Arn
+	tags, err := keyvaluetags.GreengrassListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	if out.LatestVersion != nil {
 		err = readGroupVersion(*out.LatestVersion, d, conn)
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -228,6 +244,13 @@ func resourceAwsGreengrassGroupUpdate(d *schema.ResourceData, meta interface{}) 
 		err = createGroupVersion(d, conn)
 		if err != nil {
 			return err
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.GreengrassUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
