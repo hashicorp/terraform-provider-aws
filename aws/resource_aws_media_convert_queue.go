@@ -51,6 +51,7 @@ func resourceAwsMediaConvertQueue() *schema.Resource {
 			"reservation_plan_settings": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -115,7 +116,7 @@ func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}
 		createOpts.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("reservation_plan_settings"); ok {
+	if v, ok := d.Get("reservation_plan_settings").([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		reservationPlanSettings := v.([]interface{})[0].(map[string]interface{})
 		createOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(reservationPlanSettings)
 	}
@@ -194,6 +195,7 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error creating AWS session: %s", err)
 	}
 	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
+	if d.HasChange("description") || d.HasChange("reservation_plan_settings") || d.HasChange("status") {
 
 		updateOpts := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
