@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/keyvaluetags"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
@@ -107,7 +108,7 @@ func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}
 		Name:        aws.String(d.Get("name").(string)),
 		Status:      aws.String(d.Get("status").(string)),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Tags:        tagsFromMapGeneric(d.Get("tags").(map[string]interface{})),
+		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().MediaconvertTags(),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -167,8 +168,14 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error setting Media Convert Queue reservation_plan_settings: %s", err)
 	}
 
-	if err := saveTagsMediaConvert(conn, d, aws.StringValue(resp.Queue.Arn)); err != nil {
-		return fmt.Errorf("Error setting Media Convert Queue tags: %s", err)
+	tags, err := keyvaluetags.MediaconvertListTags(conn, aws.StringValue(resp.Queue.Arn))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -188,32 +195,36 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 	}
 	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
-	updateOpts := &mediaconvert.UpdateQueueInput{
-		Name:   aws.String(d.Id()),
-		Status: aws.String(d.Get("status").(string)),
+		updateOpts := &mediaconvert.UpdateQueueInput{
+			Name:   aws.String(d.Id()),
+			Status: aws.String(d.Get("status").(string)),
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			updateOpts.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("reservation_plan_settings"); ok {
+			reservationPlanSettings := v.([]interface{})[0].(map[string]interface{})
+			updateOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(reservationPlanSettings)
+		}
+
+		_, err = conn.UpdateQueue(updateOpts)
+		if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
+			log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("Error updating Media Convert Queue: %s", err)
+		}
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		updateOpts.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("reservation_plan_settings"); ok {
-		reservationPlanSettings := v.([]interface{})[0].(map[string]interface{})
-		updateOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(reservationPlanSettings)
-	}
-
-	_, err = conn.UpdateQueue(updateOpts)
-	if isAWSErr(err, mediaconvert.ErrCodeNotFoundException, "") {
-		log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("Error updating Media Convert Queue: %s", err)
-	}
-
-	if err := setTagsMediaConvert(conn, d, d.Get("arn").(string)); err != nil {
-		return fmt.Errorf("error updating Media Convert Queue (%s) tags: %s", d.Id(), err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.MediaconvertUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsMediaConvertQueueRead(d, meta)
