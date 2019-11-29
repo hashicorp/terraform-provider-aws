@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/appmesh"
@@ -1523,6 +1524,72 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 	}
 
 	return []interface{}{envs}
+}
+
+func expandLambdaEventSourceMappingDestinationConfigOnSuccess(vDest []interface{}) *lambda.OnSuccess {
+	onSuccess := &lambda.OnSuccess{}
+	if len(vDest) > 0 {
+		if config, ok := vDest[0].(map[string]interface{}); ok {
+			if vOnSuccess, ok := config["on_success"].([]interface{}); ok && len(vOnSuccess) > 0 && vOnSuccess[0] != nil {
+				mOnSuccess := vOnSuccess[0].(map[string]interface{})
+				onSuccess.SetDestination(mOnSuccess["destination_arn"].(string))
+			}
+		}
+	}
+	return onSuccess
+}
+
+func expandLambdaEventSourceMappingDestinationConfigOnFailure(vDest []interface{}) *lambda.OnFailure {
+	onFailure := &lambda.OnFailure{}
+	if len(vDest) > 0 {
+		if config, ok := vDest[0].(map[string]interface{}); ok {
+			if vOnFailure, ok := config["on_failure"].([]interface{}); ok && len(vOnFailure) > 0 && vOnFailure[0] != nil {
+				mOnFailure := vOnFailure[0].(map[string]interface{})
+				onFailure.SetDestination(mOnFailure["destination_arn"].(string))
+			}
+		}
+	}
+	return onFailure
+}
+
+func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}, eventSourceArn string) *lambda.DestinationConfig {
+	dest := &lambda.DestinationConfig{}
+	onSuccess := &lambda.OnSuccess{}
+	onFailure := &lambda.OnFailure{}
+
+	esArn, err := arn.Parse(eventSourceArn)
+	if err == nil {
+		if esArn.Service == "sqs" {
+			onSuccess = expandLambdaEventSourceMappingDestinationConfigOnSuccess(vDest)
+			dest.SetOnSuccess(onSuccess)
+		}
+		onFailure = expandLambdaEventSourceMappingDestinationConfigOnFailure(vDest)
+		dest.SetOnFailure(onFailure)
+	}
+	return dest
+}
+
+func flattenLambdaEventSourceMappingDestinationConfig(dest *lambda.DestinationConfig) []interface{} {
+	mDest := map[string]interface{}{}
+	mOnSuccess := map[string]interface{}{}
+	mOnFailure := map[string]interface{}{}
+
+	if dest.OnSuccess != nil {
+		if dest.OnSuccess.Destination != nil {
+			mOnSuccess["destination_arn"] = *dest.OnSuccess.Destination
+		}
+	}
+
+	if dest.OnFailure != nil {
+		if dest.OnFailure.Destination != nil {
+			mOnFailure["destination_arn"] = *dest.OnFailure.Destination
+		}
+	}
+
+	mDest["on_success"] = []interface{}{mOnSuccess}
+	mDest["on_failure"] = []interface{}{mOnFailure}
+
+	return []interface{}{mDest}
 }
 
 func flattenLambdaLayers(layers []*lambda.Layer) []interface{} {
