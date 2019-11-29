@@ -92,18 +92,10 @@ func resourceAwsMediaConvertQueue() *schema.Resource {
 }
 
 func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	originalConn := meta.(*AWSClient).mediaconvertconn
-
-	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
-
-	sess, err := session.NewSession(&originalConn.Config)
-	if err != nil {
-		return fmt.Errorf("Error creating AWS session: %s", err)
-	}
-	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 	createOpts := &mediaconvert.CreateQueueInput{
 		Name:        aws.String(d.Get("name").(string)),
@@ -132,18 +124,10 @@ func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) error {
-	originalConn := meta.(*AWSClient).mediaconvertconn
-
-	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
-
-	sess, err := session.NewSession(&originalConn.Config)
-	if err != nil {
-		return fmt.Errorf("Error creating AWS session: %s", err)
-	}
-	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 	getOpts := &mediaconvert.GetQueueInput{
 		Name: aws.String(d.Id()),
@@ -183,18 +167,11 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	originalConn := meta.(*AWSClient).mediaconvertconn
-
-	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
 
-	sess, err := session.NewSession(&originalConn.Config)
-	if err != nil {
-		return fmt.Errorf("Error creating AWS session: %s", err)
-	}
-	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 	if d.HasChange("description") || d.HasChange("reservation_plan_settings") || d.HasChange("status") {
 
 		updateOpts := &mediaconvert.UpdateQueueInput{
@@ -235,16 +212,10 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}) error {
 	originalConn := meta.(*AWSClient).mediaconvertconn
 
-	endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
 	if err != nil {
-		return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
-
-	sess, err := session.NewSession(&originalConn.Config)
-	if err != nil {
-		return fmt.Errorf("Error creating AWS session: %s", err)
-	}
-	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 	delOpts := &mediaconvert.DeleteQueueInput{
 		Name: aws.String(d.Id()),
@@ -261,17 +232,40 @@ func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func getAwsMediaConvertEndpoint(conn *mediaconvert.MediaConvert) (string, error) {
-	descOpts := &mediaconvert.DescribeEndpointsInput{
+func getAwsMediaConvertAccountClient(awsClient *AWSClient) (*mediaconvert.MediaConvert, error) {
+	const mutexKey = `mediaconvertaccountconn`
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
+
+	if awsClient.mediaconvertaccountconn != nil {
+		return awsClient.mediaconvertaccountconn
+	}
+
+	input := &mediaconvert.DescribeEndpointsInput{
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	resp, err := conn.DescribeEndpoints(descOpts)
+	output, err := conn.DescribeEndpoints(input)
+
 	if err != nil {
-		return "", err
+		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)
 	}
 
-	endpoint := resp.Endpoints[0]
+	if output == nil || len(output.Endpoints) == 0 || output.Endpoints[0] == nil || output.Endpoints[0].Url == nil {
+		return nil, fmt.Errorf("error describing MediaConvert Endpoints: empty response or URL")
+	}
 
-	return aws.StringValue(endpoint.Url), nil
+	endpointURL := aws.StringValue(output.Endpoints[0].Url)
+
+	sess, err := session.NewSession(&awsClient.mediaconvertconn.Config)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating AWS MediaConvert session: %w", err)
+	}
+
+	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
+
+	*awsClient.mediaconvertaccountconn = *conn
+
+	return conn, nil
 }
