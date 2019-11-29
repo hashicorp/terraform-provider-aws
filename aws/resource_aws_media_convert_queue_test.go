@@ -43,7 +43,7 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSMediaConvertReservedQueue_basic(t *testing.T) {
+func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
