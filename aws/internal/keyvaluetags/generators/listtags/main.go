@@ -68,6 +68,7 @@ var serviceNames = []string{
 	"lambda",
 	"licensemanager",
 	"mediaconnect",
+	"mediaconvert",
 	"medialive",
 	"mediapackage",
 	"mediastore",
@@ -287,6 +288,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "KeyId"
 	case "lambda":
 		return "Resource"
+	case "mediaconvert":
+		return "Arn"
 	case "mediastore":
 		return "Resource"
 	case "neptune":
@@ -359,6 +362,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "TagList"
 	case "elbv2":
 		return "TagDescriptions[0].Tags"
+	case "mediaconvert":
+		return "ResourceTags.Tags"
 	case "neptune":
 		return "TagList"
 	case "rds":
