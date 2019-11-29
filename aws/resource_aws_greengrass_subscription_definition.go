@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/greengrass"
@@ -30,6 +29,11 @@ func resourceAwsGreengrassSubscriptionDefinition() *schema.Resource {
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"amzn_client_token": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"tags": tagsSchema(),
 			"latest_definition_version_arn": {
@@ -87,7 +91,7 @@ func createSubscriptionDefinitionVersion(d *schema.ResourceData, conn *greengras
 		SubscriptionDefinitionId: aws.String(d.Id()),
 	}
 
-	if v := os.Getenv("AMZN_CLIENT_TOKEN"); v != "" {
+	if v := d.Get("amzn_client_token").(string); v != "" {
 		params.AmznClientToken = aws.String(v)
 	}
 

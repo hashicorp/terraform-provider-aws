@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	// "reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
