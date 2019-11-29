@@ -1,4 +1,5 @@
 ---
+subcategory: "MediaConvert"
 layout: "aws"
 page_title: "AWS: aws_media_convert_queue"
 sidebar_current: "docs-aws-resource-media-convert-queue"
@@ -43,3 +44,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The same as `name`
 * `arn` - The Arn of the queue
+
+## Import
+
+Media Convert Queue can be imported via the queue name, e.g.
+
+```
+$ terraform import aws_media_convert_queue.test tf-test-queue
+```
