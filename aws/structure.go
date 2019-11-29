@@ -1559,8 +1559,7 @@ func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}, eventS
 
 	esArn, err := arn.Parse(eventSourceArn)
 	if err == nil {
-		s := esArn.Service
-		if s == "sqs" {
+		if esArn.Service == "sqs" {
 			onSuccess = expandLambdaEventSourceMappingDestinationConfigOnSuccess(vDest)
 			dest.SetOnSuccess(onSuccess)
 		}
