@@ -5782,9 +5782,8 @@ type ContainerDefinition struct {
 	// AMI (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
-	// This parameter is available for tasks using the Fargate launch type in the
-	// Ohio (us-east-2) region only and the task or service requires platform version
-	// 1.3.0 or later.
+	// For tasks using the Fargate launch type, the task or service requires platform
+	// version 1.3.0 or later.
 	DependsOn []*ContainerDependency `locationName:"dependsOn" type:"list"`
 
 	// When this parameter is true, networking is disabled within the container.
@@ -6150,15 +6149,14 @@ type ContainerDefinition struct {
 	// AMI (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
-	// This parameter is available for tasks using the Fargate launch type in the
-	// Ohio (us-east-2) region only and the task or service requires platform version
-	// 1.3.0 or later.
+	// For tasks using the Fargate launch type, the task or service requires platform
+	// version 1.3.0 or later.
 	StartTimeout *int64 `locationName:"startTimeout" type:"integer"`
 
 	// Time duration (in seconds) to wait before the container is forcefully killed
-	// if it doesn't exit normally on its own. For tasks using the Fargate launch
-	// type, the max stopTimeout value is 2 minutes. This parameter is available
-	// for tasks using the Fargate launch type in the Ohio (us-east-2) region only
+	// if it doesn't exit normally on its own.
+	//
+	// For tasks using the Fargate launch type, the max stopTimeout value is 2 minutes
 	// and the task or service requires platform version 1.3.0 or later.
 	//
 	// For tasks using the EC2 launch type, the stop timeout value for the container
@@ -9412,6 +9410,9 @@ type Failure struct {
 	// The Amazon Resource Name (ARN) of the failed resource.
 	Arn *string `locationName:"arn" type:"string"`
 
+	// The details of the failure.
+	Detail *string `locationName:"detail" type:"string"`
+
 	// The reason for the failure.
 	Reason *string `locationName:"reason" type:"string"`
 }
@@ -9429,6 +9430,12 @@ func (s Failure) GoString() string {
 // SetArn sets the Arn field's value.
 func (s *Failure) SetArn(v string) *Failure {
 	s.Arn = &v
+	return s
+}
+
+// SetDetail sets the Detail field's value.
+func (s *Failure) SetDetail(v string) *Failure {
+	s.Detail = &v
 	return s
 }
 
@@ -10062,10 +10069,10 @@ type ListAccountSettingsInput struct {
 	// The resource name you want to list the account settings for.
 	Name *string `locationName:"name" type:"string" enum:"SettingName"`
 
-	// The nextToken value returned from a previous paginated ListAccountSettings
-	// request where maxResults was used and the results exceeded the value of that
-	// parameter. Pagination continues from the end of the previous results that
-	// returned the nextToken value.
+	// The nextToken value returned from a ListAccountSettings request indicating
+	// that more results are available to fulfill the request and further calls
+	// will be needed. If maxResults was provided, it is possible the number of
+	// results to be fewer than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -10185,10 +10192,10 @@ type ListAttributesInput struct {
 	// results and a nextToken value if applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The nextToken value returned from a previous paginated ListAttributes request
-	// where maxResults was used and the results exceeded the value of that parameter.
-	// Pagination continues from the end of the previous results that returned the
-	// nextToken value.
+	// The nextToken value returned from a ListAttributes request indicating that
+	// more results are available to fulfill the request and further calls will
+	// be needed. If maxResults was provided, it is possible the number of results
+	// to be fewer than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -10306,10 +10313,10 @@ type ListClustersInput struct {
 	// and a nextToken value if applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The nextToken value returned from a previous paginated ListClusters request
-	// where maxResults was used and the results exceeded the value of that parameter.
-	// Pagination continues from the end of the previous results that returned the
-	// nextToken value.
+	// The nextToken value returned from a ListClusters request indicating that
+	// more results are available to fulfill the request and further calls will
+	// be needed. If maxResults was provided, it is possible the number of results
+	// to be fewer than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -10398,10 +10405,10 @@ type ListContainerInstancesInput struct {
 	// applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The nextToken value returned from a previous paginated ListContainerInstances
-	// request where maxResults was used and the results exceeded the value of that
-	// parameter. Pagination continues from the end of the previous results that
-	// returned the nextToken value.
+	// The nextToken value returned from a ListContainerInstances request indicating
+	// that more results are available to fulfill the request and further calls
+	// will be needed. If maxResults was provided, it is possible the number of
+	// results to be fewer than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -10511,10 +10518,10 @@ type ListServicesInput struct {
 	// and a nextToken value if applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The nextToken value returned from a previous paginated ListServices request
-	// where maxResults was used and the results exceeded the value of that parameter.
-	// Pagination continues from the end of the previous results that returned the
-	// nextToken value.
+	// The nextToken value returned from a ListServices request indicating that
+	// more results are available to fulfill the request and further calls will
+	// be needed. If maxResults was provided, it is possible the number of results
+	// to be fewer than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -10681,10 +10688,10 @@ type ListTaskDefinitionFamiliesInput struct {
 	// if applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The nextToken value returned from a previous paginated ListTaskDefinitionFamilies
-	// request where maxResults was used and the results exceeded the value of that
-	// parameter. Pagination continues from the end of the previous results that
-	// returned the nextToken value.
+	// The nextToken value returned from a ListTaskDefinitionFamilies request indicating
+	// that more results are available to fulfill the request and further calls
+	// will be needed. If maxResults was provided, it is possible the number of
+	// results to be fewer than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -10787,10 +10794,10 @@ type ListTaskDefinitionsInput struct {
 	// returns up to 100 results and a nextToken value if applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The nextToken value returned from a previous paginated ListTaskDefinitions
-	// request where maxResults was used and the results exceeded the value of that
-	// parameter. Pagination continues from the end of the previous results that
-	// returned the nextToken value.
+	// The nextToken value returned from a ListTaskDefinitions request indicating
+	// that more results are available to fulfill the request and further calls
+	// will be needed. If maxResults was provided, it is possible the number of
+	// results to be fewer than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -10929,10 +10936,10 @@ type ListTasksInput struct {
 	// value if applicable.
 	MaxResults *int64 `locationName:"maxResults" type:"integer"`
 
-	// The nextToken value returned from a previous paginated ListTasks request
-	// where maxResults was used and the results exceeded the value of that parameter.
-	// Pagination continues from the end of the previous results that returned the
-	// nextToken value.
+	// The nextToken value returned from a ListTasks request indicating that more
+	// results are available to fulfill the request and further calls will be needed.
+	// If maxResults was provided, it is possible the number of results to be fewer
+	// than maxResults.
 	//
 	// This token should be treated as an opaque identifier that is only used to
 	// retrieve the next items in a list and not for other programmatic purposes.
@@ -11137,18 +11144,14 @@ type LogConfiguration struct {
 	// parameter are log drivers that the Amazon ECS container agent can communicate
 	// with by default.
 	//
-	// For tasks using the Fargate launch type, the supported log drivers are awslogs,
-	// splunk, and awsfirelens.
+	// For tasks using the Fargate launch type, the supported log drivers are awslogs
+	// and splunk.
 	//
 	// For tasks using the EC2 launch type, the supported log drivers are awslogs,
-	// fluentd, gelf, json-file, journald, logentries, syslog, splunk, and awsfirelens.
+	// fluentd, gelf, json-file, journald, logentries, syslog, and splunk.
 	//
 	// For more information about using the awslogs log driver, see Using the awslogs
 	// Log Driver (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_awslogs.html)
-	// in the Amazon Elastic Container Service Developer Guide.
-	//
-	// For more information about using the awsfirelens log driver, see Custom Log
-	// Routing (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_firelens.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// If you have a custom driver that is not listed above that you would like
@@ -12873,6 +12876,9 @@ type RunTaskInput struct {
 	// a task.
 	PropagateTags *string `locationName:"propagateTags" type:"string" enum:"PropagateTags"`
 
+	// The reference ID to use for the task.
+	ReferenceId *string `locationName:"referenceId" type:"string"`
+
 	// An optional tag specified when a task is started. For example, if you automatically
 	// trigger a task to run a batch process job, you could apply a unique identifier
 	// for that job to your task with the startedBy parameter. You can then identify
@@ -13025,6 +13031,12 @@ func (s *RunTaskInput) SetPlatformVersion(v string) *RunTaskInput {
 // SetPropagateTags sets the PropagateTags field's value.
 func (s *RunTaskInput) SetPropagateTags(v string) *RunTaskInput {
 	s.PropagateTags = &v
+	return s
+}
+
+// SetReferenceId sets the ReferenceId field's value.
+func (s *RunTaskInput) SetReferenceId(v string) *RunTaskInput {
+	s.ReferenceId = &v
 	return s
 }
 
@@ -13719,6 +13731,9 @@ type StartTaskInput struct {
 	// to the task. If no value is specified, the tags are not propagated.
 	PropagateTags *string `locationName:"propagateTags" type:"string" enum:"PropagateTags"`
 
+	// The reference ID to use for the task.
+	ReferenceId *string `locationName:"referenceId" type:"string"`
+
 	// An optional tag specified when a task is started. For example, if you automatically
 	// trigger a task to run a batch process job, you could apply a unique identifier
 	// for that job to your task with the startedBy parameter. You can then identify
@@ -13850,6 +13865,12 @@ func (s *StartTaskInput) SetOverrides(v *TaskOverride) *StartTaskInput {
 // SetPropagateTags sets the PropagateTags field's value.
 func (s *StartTaskInput) SetPropagateTags(v string) *StartTaskInput {
 	s.PropagateTags = &v
+	return s
+}
+
+// SetReferenceId sets the ReferenceId field's value.
+func (s *StartTaskInput) SetReferenceId(v string) *StartTaskInput {
+	s.ReferenceId = &v
 	return s
 }
 
@@ -14549,6 +14570,12 @@ type Task struct {
 	// awsvpc network mode.
 	Attachments []*Attachment `locationName:"attachments" type:"list"`
 
+	// The attributes of the task
+	Attributes []*Attribute `locationName:"attributes" type:"list"`
+
+	// The availability zone of the task.
+	AvailabilityZone *string `locationName:"availabilityZone" type:"string"`
+
 	// The ARN of the cluster that hosts the task.
 	ClusterArn *string `locationName:"clusterArn" type:"string"`
 
@@ -14756,6 +14783,18 @@ func (s Task) GoString() string {
 // SetAttachments sets the Attachments field's value.
 func (s *Task) SetAttachments(v []*Attachment) *Task {
 	s.Attachments = v
+	return s
+}
+
+// SetAttributes sets the Attributes field's value.
+func (s *Task) SetAttributes(v []*Attribute) *Task {
+	s.Attributes = v
+	return s
+}
+
+// SetAvailabilityZone sets the AvailabilityZone field's value.
+func (s *Task) SetAvailabilityZone(v string) *Task {
+	s.AvailabilityZone = &v
 	return s
 }
 
@@ -14985,6 +15024,9 @@ type TaskDefinition struct {
 	// ECS gives sequential revision numbers to each task definition that you add.
 	Family *string `locationName:"family" type:"string"`
 
+	// The Elastic Inference accelerator associated with the task.
+	InferenceAccelerators []*InferenceAccelerator `locationName:"inferenceAccelerators" type:"list"`
+
 	// The IPC resource namespace to use for the containers in the task. The valid
 	// values are host, task, or none. If host is specified, then all containers
 	// within the tasks that specified the host IPC mode on the same container instance
@@ -15197,6 +15239,12 @@ func (s *TaskDefinition) SetFamily(v string) *TaskDefinition {
 	return s
 }
 
+// SetInferenceAccelerators sets the InferenceAccelerators field's value.
+func (s *TaskDefinition) SetInferenceAccelerators(v []*InferenceAccelerator) *TaskDefinition {
+	s.InferenceAccelerators = v
+	return s
+}
+
 // SetIpcMode sets the IpcMode field's value.
 func (s *TaskDefinition) SetIpcMode(v string) *TaskDefinition {
 	s.IpcMode = &v
@@ -15323,12 +15371,18 @@ type TaskOverride struct {
 	// One or more container overrides sent to a task.
 	ContainerOverrides []*ContainerOverride `locationName:"containerOverrides" type:"list"`
 
+	// The cpu override for the task.
+	Cpu *string `locationName:"cpu" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the task execution role that the Amazon
 	// ECS container agent and the Docker daemon can assume.
 	ExecutionRoleArn *string `locationName:"executionRoleArn" type:"string"`
 
 	// The Elastic Inference accelerator override for the task.
 	InferenceAcceleratorOverrides []*InferenceAcceleratorOverride `locationName:"inferenceAcceleratorOverrides" type:"list"`
+
+	// The memory override for the task.
+	Memory *string `locationName:"memory" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the IAM role that containers in this task
 	// can assume. All containers in this task are granted the permissions that
@@ -15372,6 +15426,12 @@ func (s *TaskOverride) SetContainerOverrides(v []*ContainerOverride) *TaskOverri
 	return s
 }
 
+// SetCpu sets the Cpu field's value.
+func (s *TaskOverride) SetCpu(v string) *TaskOverride {
+	s.Cpu = &v
+	return s
+}
+
 // SetExecutionRoleArn sets the ExecutionRoleArn field's value.
 func (s *TaskOverride) SetExecutionRoleArn(v string) *TaskOverride {
 	s.ExecutionRoleArn = &v
@@ -15381,6 +15441,12 @@ func (s *TaskOverride) SetExecutionRoleArn(v string) *TaskOverride {
 // SetInferenceAcceleratorOverrides sets the InferenceAcceleratorOverrides field's value.
 func (s *TaskOverride) SetInferenceAcceleratorOverrides(v []*InferenceAcceleratorOverride) *TaskOverride {
 	s.InferenceAcceleratorOverrides = v
+	return s
+}
+
+// SetMemory sets the Memory field's value.
+func (s *TaskOverride) SetMemory(v string) *TaskOverride {
+	s.Memory = &v
 	return s
 }
 

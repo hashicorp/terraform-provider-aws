@@ -2439,6 +2439,9 @@ func (c *RDS) CreateEventSubscriptionRequest(input *CreateEventSubscriptionInput
 // the SourceIdentifier, you are notified of events generated from all RDS sources
 // belonging to your customer account.
 //
+// RDS event notification is only available for unencrypted SNS topics. If you
+// specify an encrypted SNS topic, event notifications aren't sent for the topic.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -8858,6 +8861,12 @@ func (c *RDS) ModifyDBClusterParameterGroupRequest(input *ModifyDBClusterParamet
 // or the DescribeDBClusterParameters action to verify that your DB cluster
 // parameter group has been created or modified.
 //
+// If the modified DB cluster parameter group is used by an Aurora Serverless
+// cluster, Aurora applies the update immediately. The cluster restart might
+// interrupt your workload. In that case, your application must reopen any connections
+// and retry any transactions that were active when the parameter changes took
+// effect.
+//
 // This action only applies to Aurora DB clusters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -9286,7 +9295,7 @@ func (c *RDS) ModifyDBSnapshotRequest(input *ModifyDBSnapshotInput) (req *reques
 // Updates a manual DB snapshot, which can be encrypted or not encrypted, with
 // a new engine version.
 //
-// Amazon RDS supports upgrading DB snapshots for MySQL and Oracle.
+// Amazon RDS supports upgrading DB snapshots for MySQL, Oracle, and PostgreSQL.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12815,7 +12824,7 @@ type ApplyPendingMaintenanceActionInput struct {
 
 	// The pending maintenance action to apply to this resource.
 	//
-	// Valid values: system-update, db-upgrade, hardware-maintenance
+	// Valid values: system-update, db-upgrade, hardware-maintenance, ca-certificate-rotation
 	//
 	// ApplyAction is a required field
 	ApplyAction *string `type:"string" required:"true"`
@@ -14379,6 +14388,9 @@ type CreateDBClusterEndpointInput struct {
 
 	// List of DB instance identifiers that are part of the custom endpoint group.
 	StaticMembers []*string `type:"list"`
+
+	// The tags to be assigned to the Amazon RDS resource.
+	Tags []*Tag `locationNameList:"Tag" type:"list"`
 }
 
 // String returns the string representation
@@ -14437,6 +14449,12 @@ func (s *CreateDBClusterEndpointInput) SetExcludedMembers(v []*string) *CreateDB
 // SetStaticMembers sets the StaticMembers field's value.
 func (s *CreateDBClusterEndpointInput) SetStaticMembers(v []*string) *CreateDBClusterEndpointInput {
 	s.StaticMembers = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateDBClusterEndpointInput) SetTags(v []*Tag) *CreateDBClusterEndpointInput {
+	s.Tags = v
 	return s
 }
 
@@ -15582,6 +15600,13 @@ type CreateDBInstanceInput struct {
 	// The database can't be deleted when deletion protection is enabled. By default,
 	// deletion protection is disabled. For more information, see Deleting a DB
 	// Instance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html).
+	//
+	// Amazon Aurora
+	//
+	// Not applicable. You can enable or disable deletion protection for the DB
+	// cluster. For more information, see CreateDBCluster. DB instances in a DB
+	// cluster can be deleted even when deletion protection is enabled for the DB
+	// cluster.
 	DeletionProtection *bool `type:"boolean"`
 
 	// The Active Directory directory ID to create the DB instance in. Currently,
@@ -15729,8 +15754,10 @@ type CreateDBInstanceInput struct {
 	// values, see Amazon RDS Provisioned IOPS Storage to Improve Performance (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#USER_PIOPS)
 	// in the Amazon RDS User Guide.
 	//
-	// Constraints: Must be a multiple between 1 and 50 of the storage amount for
-	// the DB instance.
+	// Constraints: For MariaDB, MySQL, Oracle, and PostgreSQL DB instances, must
+	// be a multiple between .5 and 50 of the storage amount for the DB instance.
+	// For SQL Server DB instances, must be a multiple between 1 and 50 of the storage
+	// amount for the DB instance.
 	Iops *int64 `type:"integer"`
 
 	// The AWS KMS key identifier for an encrypted DB instance.
@@ -28010,7 +28037,11 @@ type ModifyCurrentDBClusterCapacityInput struct {
 	//
 	// Constraints:
 	//
-	//    * Value must be 1, 2, 4, 8, 16, 32, 64, 128, or 256.
+	//    * For Aurora MySQL, valid capacity values are 1, 2, 4, 8, 16, 32, 64,
+	//    128, and 256.
+	//
+	//    * For Aurora PostgreSQL, valid capacity values are 2, 4, 8, 16, 32, 64,
+	//    192, and 384.
 	Capacity *int64 `type:"integer"`
 
 	// The DB cluster identifier for the cluster being modified. This parameter
@@ -29910,6 +29941,11 @@ type ModifyDBSnapshotInput struct {
 	//    * 11.2.0.4.v12 (supported for 11.2.0.2 DB snapshots)
 	//
 	//    * 11.2.0.4.v11 (supported for 11.2.0.3 DB snapshots)
+	//
+	// PostgreSQL
+	//
+	// For the list of engine versions that are available for upgrading a DB snapshot,
+	// see Upgrading the PostgreSQL DB Engine for Amazon RDS (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.PostgreSQL.html#USER_UpgradeDBInstance.PostgreSQL.MajorVersion).
 	EngineVersion *string `type:"string"`
 
 	// The option group to identify with the upgraded DB snapshot.
@@ -31476,7 +31512,7 @@ type PendingMaintenanceAction struct {
 	_ struct{} `type:"structure"`
 
 	// The type of pending maintenance action that is available for the resource.
-	// Valid actions are system-update, db-upgrade, and hardware-maintenance.
+	// Valid actions are system-update, db-upgrade, hardware-maintenance, and ca-certificate-rotation.
 	Action *string `type:"string"`
 
 	// The date of the maintenance window when the action is applied. The maintenance
@@ -35940,14 +35976,22 @@ type ScalingConfiguration struct {
 
 	// The maximum capacity for an Aurora DB cluster in serverless DB engine mode.
 	//
-	// Valid capacity values are 1, 2, 4, 8, 16, 32, 64, 128, and 256.
+	// For Aurora MySQL, valid capacity values are 1, 2, 4, 8, 16, 32, 64, 128,
+	// and 256.
+	//
+	// For Aurora PostgreSQL, valid capacity values are 2, 4, 8, 16, 32, 64, 192,
+	// and 384.
 	//
 	// The maximum capacity must be greater than or equal to the minimum capacity.
 	MaxCapacity *int64 `type:"integer"`
 
 	// The minimum capacity for an Aurora DB cluster in serverless DB engine mode.
 	//
-	// Valid capacity values are 1, 2, 4, 8, 16, 32, 64, 128, and 256.
+	// For Aurora MySQL, valid capacity values are 1, 2, 4, 8, 16, 32, 64, 128,
+	// and 256.
+	//
+	// For Aurora PostgreSQL, valid capacity values are 2, 4, 8, 16, 32, 64, 192,
+	// and 384.
 	//
 	// The minimum capacity must be less than or equal to the maximum capacity.
 	MinCapacity *int64 `type:"integer"`

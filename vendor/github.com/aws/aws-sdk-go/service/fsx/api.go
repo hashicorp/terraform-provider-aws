@@ -1826,18 +1826,23 @@ type CreateFileSystemInput struct {
 
 	// The storage capacity of the file system being created.
 	//
-	// For Windows file systems, the storage capacity has a minimum of 300 GiB,
-	// and a maximum of 65,536 GiB.
+	// For Windows file systems, valid values are 32 GiB - 65,536 GiB.
 	//
-	// For Lustre file systems, the storage capacity has a minimum of 3,600 GiB.
-	// Storage capacity is provisioned in increments of 3,600 GiB.
+	// For Lustre file systems, valid values are 1,200, 2,400, 3,600, then continuing
+	// in increments of 3600 GiB.
 	//
 	// StorageCapacity is a required field
 	StorageCapacity *int64 `min:"1" type:"integer" required:"true"`
 
-	// The IDs of the subnets that the file system will be accessible from. File
-	// systems support only one subnet. The file server is also launched in that
-	// subnet's Availability Zone.
+	// Specifies the IDs of the subnets that the file system will be accessible
+	// from. For Windows MULTI_AZ_1 file system deployment types, provide exactly
+	// two subnet IDs, one for the preferred file server and one for the standy
+	// file server. You specify one of these subnets as the preferred subnet using
+	// the WindowsConfiguration > PreferredSubnetID property.
+	//
+	// For Windows SINGLE_AZ_1 file system deployment types and Lustre file systems,
+	// provide exactly one subnet ID. The file server is launched in that subnet's
+	// Availability Zone.
 	//
 	// SubnetIds is a required field
 	SubnetIds []*string `type:"list" required:"true"`
@@ -2114,6 +2119,27 @@ type CreateFileSystemWindowsConfiguration struct {
 	// UTC time zone.
 	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
 
+	// Specifies the file system deployment type, valid values are the following:
+	//
+	//    * MULTI_AZ_1 - Deploys a high availability file system that is configured
+	//    for Multi-AZ redundancy to tolerate temporary Availability Zone (AZ) unavailability.
+	//    You can only deploy a Multi-AZ file system in AWS Regions that have a
+	//    minimum of three Availability Zones.
+	//
+	//    * SINGLE_AZ_1 - (Default) Choose to deploy a file system that is configured
+	//    for single AZ redundancy.
+	//
+	// To learn more about high availability Multi-AZ file systems, see High Availability
+	// for Amazon FSx for Windows File Server (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/high-availability-multiAZ.html).
+	DeploymentType *string `type:"string" enum:"WindowsDeploymentType"`
+
+	// Required when DeploymentType is set to MULTI_AZ_1. This specifies the subnet
+	// in which you want the preferred file server to be located. For in-AWS applications,
+	// we recommend that you launch your clients in the same Availability Zone (AZ)
+	// as your preferred file server to reduce cross-AZ data transfer costs and
+	// minimize latency.
+	PreferredSubnetId *string `min:"15" type:"string"`
+
 	// The configuration that Amazon FSx uses to join the Windows File Server instance
 	// to your self-managed (including on-premises) Microsoft Active Directory (AD)
 	// directory.
@@ -2148,6 +2174,9 @@ func (s *CreateFileSystemWindowsConfiguration) Validate() error {
 	}
 	if s.DailyAutomaticBackupStartTime != nil && len(*s.DailyAutomaticBackupStartTime) < 5 {
 		invalidParams.Add(request.NewErrParamMinLen("DailyAutomaticBackupStartTime", 5))
+	}
+	if s.PreferredSubnetId != nil && len(*s.PreferredSubnetId) < 15 {
+		invalidParams.Add(request.NewErrParamMinLen("PreferredSubnetId", 15))
 	}
 	if s.ThroughputCapacity == nil {
 		invalidParams.Add(request.NewErrParamRequired("ThroughputCapacity"))
@@ -2191,6 +2220,18 @@ func (s *CreateFileSystemWindowsConfiguration) SetCopyTagsToBackups(v bool) *Cre
 // SetDailyAutomaticBackupStartTime sets the DailyAutomaticBackupStartTime field's value.
 func (s *CreateFileSystemWindowsConfiguration) SetDailyAutomaticBackupStartTime(v string) *CreateFileSystemWindowsConfiguration {
 	s.DailyAutomaticBackupStartTime = &v
+	return s
+}
+
+// SetDeploymentType sets the DeploymentType field's value.
+func (s *CreateFileSystemWindowsConfiguration) SetDeploymentType(v string) *CreateFileSystemWindowsConfiguration {
+	s.DeploymentType = &v
+	return s
+}
+
+// SetPreferredSubnetId sets the PreferredSubnetId field's value.
+func (s *CreateFileSystemWindowsConfiguration) SetPreferredSubnetId(v string) *CreateFileSystemWindowsConfiguration {
+	s.PreferredSubnetId = &v
 	return s
 }
 
@@ -2793,18 +2834,19 @@ type FileSystem struct {
 	// file system's data for an Amazon FSx for Windows File Server file system.
 	KmsKeyId *string `min:"1" type:"string"`
 
-	// The lifecycle status of the file system:
+	// The lifecycle status of the file system, following are the possible values
+	// and what they mean:
 	//
-	//    * AVAILABLE indicates that the file system is reachable and available
-	//    for use.
+	//    * AVAILABLE - The file system is in a healthy state, and is reachable
+	//    and available for use.
 	//
-	//    * CREATING indicates that Amazon FSx is in the process of creating the
-	//    new file system.
+	//    * CREATING - Amazon FSx is creating the new file system.
 	//
-	//    * DELETING indicates that Amazon FSx is in the process of deleting the
-	//    file system.
+	//    * DELETING - Amazon FSx is deleting an existing file system.
 	//
-	//    * FAILED indicates that Amazon FSx was not able to create the file system.
+	//    * FAILED - An existing file system has experienced an unrecoverable failure.
+	//    When creating a new file system, Amazon FSx was unable to create the file
+	//    system.
 	//
 	//    * MISCONFIGURED indicates that the file system is in a failed but recoverable
 	//    state.
@@ -3255,8 +3297,9 @@ type SelfManagedActiveDirectoryConfiguration struct {
 
 	// (Optional) The name of the domain group whose members are granted administrative
 	// privileges for the file system. Administrative privileges include taking
-	// ownership of files and folders, and setting audit controls (audit ACLs) on
-	// files and folders. The group that you specify must already exist in your
+	// ownership of files and folders, setting audit controls (audit ACLs) on files
+	// and folders, and administering the file system remotely by using the FSx
+	// Remote PowerShell. The group that you specify must already exist in your
 	// domain. If you don't provide one, your AD domain's Domain Admins group is
 	// used.
 	FileSystemAdministratorsGroup *string `min:"1" type:"string"`
@@ -3897,8 +3940,47 @@ type WindowsFileSystemConfiguration struct {
 	// The preferred time to take daily automatic backups, in the UTC time zone.
 	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
 
+	// Specifies the file system deployment type, valid values are the following:
+	//
+	//    * MULTI_AZ_1 - Specifies a high availability file system that is configured
+	//    for Multi-AZ redundancy to tolerate temporary Availability Zone (AZ) unavailability.
+	//
+	//    * SINGLE_AZ_1 - (Default) Specifies a file system that is configured for
+	//    single AZ redundancy.
+	DeploymentType *string `type:"string" enum:"WindowsDeploymentType"`
+
 	// The list of maintenance operations in progress for this file system.
 	MaintenanceOperationsInProgress []*string `type:"list"`
+
+	// For MULTI_AZ_1 deployment types, the IP address of the primary, or preferred,
+	// file server.
+	//
+	// Use this IP address when mounting the file system on Linux SMB clients or
+	// Windows SMB clients that are not joined to a Microsoft Active Directory.
+	// Applicable for both SINGLE_AZ_1 and MULTI_AZ_1 deployment types. This IP
+	// address is temporarily unavailable when the file system is undergoing maintenance.
+	// For Linux and Windows SMB clients that are joined to an Active Directory,
+	// use the file system's DNSName instead. For more information and instruction
+	// on mapping and mounting file shares, see https://docs.aws.amazon.com/fsx/latest/WindowsGuide/accessing-file-shares.html
+	// (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/accessing-file-shares.html).
+	PreferredFileServerIp *string `type:"string"`
+
+	// For MULTI_AZ_1 deployment types, it specifies the ID of the subnet where
+	// the preferred file server is located. Must be one of the two subnet IDs specified
+	// in SubnetIds property. Amazon FSx serves traffic from this subnet except
+	// in the event of a failover to the secondary file server.
+	//
+	// For SINGLE_AZ_1 deployment types, this value is the same as that for SubnetIDs.
+	PreferredSubnetId *string `min:"15" type:"string"`
+
+	// For MULTI_AZ_1 deployment types, use this endpoint when performing administrative
+	// tasks on the file system using Amazon FSx Remote PowerShell.
+	//
+	// For SINGLE_AZ_1 deployment types, this is the DNS name of the file system.
+	//
+	// This endpoint is temporarily unavailable when the file system is undergoing
+	// maintenance.
+	RemoteAdministrationEndpoint *string `min:"16" type:"string"`
 
 	// The configuration of the self-managed Microsoft Active Directory (AD) directory
 	// to which the Windows File Server instance is joined.
@@ -3945,9 +4027,33 @@ func (s *WindowsFileSystemConfiguration) SetDailyAutomaticBackupStartTime(v stri
 	return s
 }
 
+// SetDeploymentType sets the DeploymentType field's value.
+func (s *WindowsFileSystemConfiguration) SetDeploymentType(v string) *WindowsFileSystemConfiguration {
+	s.DeploymentType = &v
+	return s
+}
+
 // SetMaintenanceOperationsInProgress sets the MaintenanceOperationsInProgress field's value.
 func (s *WindowsFileSystemConfiguration) SetMaintenanceOperationsInProgress(v []*string) *WindowsFileSystemConfiguration {
 	s.MaintenanceOperationsInProgress = v
+	return s
+}
+
+// SetPreferredFileServerIp sets the PreferredFileServerIp field's value.
+func (s *WindowsFileSystemConfiguration) SetPreferredFileServerIp(v string) *WindowsFileSystemConfiguration {
+	s.PreferredFileServerIp = &v
+	return s
+}
+
+// SetPreferredSubnetId sets the PreferredSubnetId field's value.
+func (s *WindowsFileSystemConfiguration) SetPreferredSubnetId(v string) *WindowsFileSystemConfiguration {
+	s.PreferredSubnetId = &v
+	return s
+}
+
+// SetRemoteAdministrationEndpoint sets the RemoteAdministrationEndpoint field's value.
+func (s *WindowsFileSystemConfiguration) SetRemoteAdministrationEndpoint(v string) *WindowsFileSystemConfiguration {
+	s.RemoteAdministrationEndpoint = &v
 	return s
 }
 
@@ -4077,4 +4183,12 @@ const (
 
 	// ServiceLimitTotalUserInitiatedBackups is a ServiceLimit enum value
 	ServiceLimitTotalUserInitiatedBackups = "TOTAL_USER_INITIATED_BACKUPS"
+)
+
+const (
+	// WindowsDeploymentTypeMultiAz1 is a WindowsDeploymentType enum value
+	WindowsDeploymentTypeMultiAz1 = "MULTI_AZ_1"
+
+	// WindowsDeploymentTypeSingleAz1 is a WindowsDeploymentType enum value
+	WindowsDeploymentTypeSingleAz1 = "SINGLE_AZ_1"
 )

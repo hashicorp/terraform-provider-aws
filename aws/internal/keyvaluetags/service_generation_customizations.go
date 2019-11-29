@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -50,6 +51,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -124,6 +126,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(cloudfront.New)
 	case "cloudhsmv2":
 		funcType = reflect.TypeOf(cloudhsmv2.New)
+	case "cloudtrail":
+		funcType = reflect.TypeOf(cloudtrail.New)
 	case "cloudwatch":
 		funcType = reflect.TypeOf(cloudwatch.New)
 	case "cloudwatchevents":
@@ -190,6 +194,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(glue.New)
 	case "guardduty":
 		funcType = reflect.TypeOf(guardduty.New)
+	case "greengrass":
+		funcType = reflect.TypeOf(greengrass.New)
 	case "inspector":
 		funcType = reflect.TypeOf(inspector.New)
 	case "iot":

@@ -128,7 +128,7 @@ func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
-// testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region and no account id
+// testAccMatchResourceAttrRegionalARNNoAccount ensures the Terraform state regexp matches a formatted ARN with region but without account ID
 func testAccMatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arnRegexp := arn.ARN{
@@ -153,6 +153,18 @@ func testAccCheckResourceAttrGlobalARN(resourceName, attributeName, arnService, 
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
 			AccountID: testAccGetAccountID(),
+			Partition: testAccGetPartition(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
+// testAccCheckResourceAttrGlobalARNNoAccount ensures the Terraform state exactly matches a formatted ARN without region or account ID
+func testAccCheckResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
 			Partition: testAccGetPartition(),
 			Resource:  arnResource,
 			Service:   arnService,
@@ -210,6 +222,13 @@ func testAccGetPartition() string {
 	return "aws"
 }
 
+func testAccGetAlternateRegionPartition() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetAlternateRegion()); ok {
+		return partition.ID()
+	}
+	return "aws"
+}
+
 func testAccAlternateAccountPreCheck(t *testing.T) {
 	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
 		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
@@ -223,6 +242,10 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 func testAccAlternateRegionPreCheck(t *testing.T) {
 	if testAccGetRegion() == testAccGetAlternateRegion() {
 		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
+	}
+
+	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
+		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
 	}
 }
 

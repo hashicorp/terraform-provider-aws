@@ -28,6 +28,7 @@ var serviceNames = []string{
 	"athena",
 	"backup",
 	"cloudhsmv2",
+	"cloudtrail",
 	"cloudwatch",
 	"cloudwatchevents",
 	"cloudwatchlogs",
@@ -60,6 +61,7 @@ var serviceNames = []string{
 	"fsx",
 	"glue",
 	"guardduty",
+	"greengrass",
 	"iot",
 	"iotanalytics",
 	"iotevents",
@@ -237,6 +239,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToCertificate"
 	case "acmpca":
 		return "TagCertificateAuthority"
+	case "cloudtrail":
+		return "AddTags"
 	case "cloudwatchlogs":
 		return "TagLogGroup"
 	case "databasemigrationservice":
@@ -298,6 +302,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "athena":
 		return "ResourceARN"
 	case "cloudhsmv2":
+		return "ResourceId"
+	case "cloudtrail":
 		return "ResourceId"
 	case "cloudwatch":
 		return "ResourceARN"
@@ -395,6 +401,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 	switch serviceName {
 	case "cloudhsmv2":
 		return "TagList"
+	case "cloudtrail":
+		return "TagsList"
 	case "elasticsearchservice":
 		return "TagList"
 	case "glue":
@@ -421,6 +429,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromCertificate"
 	case "acmpca":
 		return "UntagCertificateAuthority"
+	case "cloudtrail":
+		return "RemoveTags"
 	case "cloudwatchlogs":
 		return "UntagLogGroup"
 	case "databasemigrationservice":
@@ -479,6 +489,8 @@ func ServiceUntagInputRequiresTagType(serviceName string) string {
 		return "yes"
 	case "acmpca":
 		return "yes"
+	case "cloudtrail":
+		return "yes"
 	case "ec2":
 		return "yes"
 	default:
@@ -497,6 +509,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "TagKeyList"
 	case "cloudhsmv2":
 		return "TagKeyList"
+	case "cloudtrail":
+		return "TagsList"
 	case "cloudwatchlogs":
 		return "Tags"
 	case "datasync":
