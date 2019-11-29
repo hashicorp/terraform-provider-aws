@@ -1497,6 +1497,90 @@ func (c *DynamoDB) DescribeContinuousBackupsWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
+const opDescribeContributorInsights = "DescribeContributorInsights"
+
+// DescribeContributorInsightsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeContributorInsights operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeContributorInsights for more information on using the DescribeContributorInsights
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeContributorInsightsRequest method.
+//    req, resp := client.DescribeContributorInsightsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContributorInsights
+func (c *DynamoDB) DescribeContributorInsightsRequest(input *DescribeContributorInsightsInput) (req *request.Request, output *DescribeContributorInsightsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeContributorInsights,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeContributorInsightsInput{}
+	}
+
+	output = &DescribeContributorInsightsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeContributorInsights API operation for Amazon DynamoDB.
+//
+// Returns information about contributor insights, for a given table or global
+// secondary index.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation DescribeContributorInsights for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContributorInsights
+func (c *DynamoDB) DescribeContributorInsights(input *DescribeContributorInsightsInput) (*DescribeContributorInsightsOutput, error) {
+	req, out := c.DescribeContributorInsightsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeContributorInsightsWithContext is the same as DescribeContributorInsights with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeContributorInsights for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) DescribeContributorInsightsWithContext(ctx aws.Context, input *DescribeContributorInsightsInput, opts ...request.Option) (*DescribeContributorInsightsOutput, error) {
+	req, out := c.DescribeContributorInsightsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeEndpoints = "DescribeEndpoints"
 
 // DescribeEndpointsRequest generates a "aws/request.Request" representing the
@@ -2531,6 +2615,148 @@ func (c *DynamoDB) ListBackupsWithContext(ctx aws.Context, input *ListBackupsInp
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opListContributorInsights = "ListContributorInsights"
+
+// ListContributorInsightsRequest generates a "aws/request.Request" representing the
+// client's request for the ListContributorInsights operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListContributorInsights for more information on using the ListContributorInsights
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListContributorInsightsRequest method.
+//    req, resp := client.ListContributorInsightsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListContributorInsights
+func (c *DynamoDB) ListContributorInsightsRequest(input *ListContributorInsightsInput) (req *request.Request, output *ListContributorInsightsOutput) {
+	op := &request.Operation{
+		Name:       opListContributorInsights,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListContributorInsightsInput{}
+	}
+
+	output = &ListContributorInsightsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListContributorInsights API operation for Amazon DynamoDB.
+//
+// Returns a list of ContributorInsightsSummary for a table and all its global
+// secondary indexes.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation ListContributorInsights for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListContributorInsights
+func (c *DynamoDB) ListContributorInsights(input *ListContributorInsightsInput) (*ListContributorInsightsOutput, error) {
+	req, out := c.ListContributorInsightsRequest(input)
+	return out, req.Send()
+}
+
+// ListContributorInsightsWithContext is the same as ListContributorInsights with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListContributorInsights for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) ListContributorInsightsWithContext(ctx aws.Context, input *ListContributorInsightsInput, opts ...request.Option) (*ListContributorInsightsOutput, error) {
+	req, out := c.ListContributorInsightsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListContributorInsightsPages iterates over the pages of a ListContributorInsights operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListContributorInsights method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListContributorInsights operation.
+//    pageNum := 0
+//    err := client.ListContributorInsightsPages(params,
+//        func(page *dynamodb.ListContributorInsightsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *DynamoDB) ListContributorInsightsPages(input *ListContributorInsightsInput, fn func(*ListContributorInsightsOutput, bool) bool) error {
+	return c.ListContributorInsightsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListContributorInsightsPagesWithContext same as ListContributorInsightsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) ListContributorInsightsPagesWithContext(ctx aws.Context, input *ListContributorInsightsInput, fn func(*ListContributorInsightsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListContributorInsightsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListContributorInsightsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListContributorInsightsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListGlobalTables = "ListGlobalTables"
@@ -4670,6 +4896,89 @@ func (c *DynamoDB) UpdateContinuousBackupsWithContext(ctx aws.Context, input *Up
 	return out, req.Send()
 }
 
+const opUpdateContributorInsights = "UpdateContributorInsights"
+
+// UpdateContributorInsightsRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateContributorInsights operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateContributorInsights for more information on using the UpdateContributorInsights
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateContributorInsightsRequest method.
+//    req, resp := client.UpdateContributorInsightsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContributorInsights
+func (c *DynamoDB) UpdateContributorInsightsRequest(input *UpdateContributorInsightsInput) (req *request.Request, output *UpdateContributorInsightsOutput) {
+	op := &request.Operation{
+		Name:       opUpdateContributorInsights,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateContributorInsightsInput{}
+	}
+
+	output = &UpdateContributorInsightsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateContributorInsights API operation for Amazon DynamoDB.
+//
+// Updates the status for contributor insights for a specific table or index.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DynamoDB's
+// API operation UpdateContributorInsights for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The operation tried to access a nonexistent table or index. The resource
+//   might not be specified correctly, or its status might not be ACTIVE.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContributorInsights
+func (c *DynamoDB) UpdateContributorInsights(input *UpdateContributorInsightsInput) (*UpdateContributorInsightsOutput, error) {
+	req, out := c.UpdateContributorInsightsRequest(input)
+	return out, req.Send()
+}
+
+// UpdateContributorInsightsWithContext is the same as UpdateContributorInsights with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateContributorInsights for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DynamoDB) UpdateContributorInsightsWithContext(ctx aws.Context, input *UpdateContributorInsightsInput, opts ...request.Option) (*UpdateContributorInsightsOutput, error) {
+	req, out := c.UpdateContributorInsightsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateGlobalTable = "UpdateGlobalTable"
 
 // UpdateGlobalTableRequest generates a "aws/request.Request" representing the
@@ -5457,6 +5766,56 @@ func (c *DynamoDB) UpdateTimeToLiveWithContext(ctx aws.Context, input *UpdateTim
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Contains details of a table archival operation.
+type ArchivalSummary struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the backup the table was archived to, when
+	// applicable in the archival reason. If you wish to restore this backup to
+	// the same table name, you will need to delete the original table.
+	ArchivalBackupArn *string `min:"37" type:"string"`
+
+	// The date and time when table archival was initiated by DynamoDB, in UNIX
+	// epoch time format.
+	ArchivalDateTime *time.Time `type:"timestamp"`
+
+	// The reason DynamoDB archived the table. Currently, the only possible value
+	// is:
+	//
+	//    * INACCESSIBLE_ENCRYPTION_CREDENTIALS - The table was archived due to
+	//    the table's AWS KMS key being inaccessible for more than seven days. An
+	//    On-Demand backup was created at the archival time.
+	ArchivalReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ArchivalSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ArchivalSummary) GoString() string {
+	return s.String()
+}
+
+// SetArchivalBackupArn sets the ArchivalBackupArn field's value.
+func (s *ArchivalSummary) SetArchivalBackupArn(v string) *ArchivalSummary {
+	s.ArchivalBackupArn = &v
+	return s
+}
+
+// SetArchivalDateTime sets the ArchivalDateTime field's value.
+func (s *ArchivalSummary) SetArchivalDateTime(v time.Time) *ArchivalSummary {
+	s.ArchivalDateTime = &v
+	return s
+}
+
+// SetArchivalReason sets the ArchivalReason field's value.
+func (s *ArchivalSummary) SetArchivalReason(v string) *ArchivalSummary {
+	s.ArchivalReason = &v
+	return s
 }
 
 // Represents an attribute for describing the key schema for the table and indexes.
@@ -7309,6 +7668,49 @@ func (s *ContinuousBackupsDescription) SetPointInTimeRecoveryDescription(v *Poin
 	return s
 }
 
+// Represents a Contributor Insights summary entry..
+type ContributorInsightsSummary struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the current status for contributor insights for the given table
+	// and index, if applicable.
+	ContributorInsightsStatus *string `type:"string" enum:"ContributorInsightsStatus"`
+
+	// Name of the index associated with the summary, if any.
+	IndexName *string `min:"3" type:"string"`
+
+	// Name of the table associated with the summary.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s ContributorInsightsSummary) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ContributorInsightsSummary) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsStatus sets the ContributorInsightsStatus field's value.
+func (s *ContributorInsightsSummary) SetContributorInsightsStatus(v string) *ContributorInsightsSummary {
+	s.ContributorInsightsStatus = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *ContributorInsightsSummary) SetIndexName(v string) *ContributorInsightsSummary {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *ContributorInsightsSummary) SetTableName(v string) *ContributorInsightsSummary {
+	s.TableName = &v
+	return s
+}
+
 type CreateBackupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8827,6 +9229,142 @@ func (s *DescribeContinuousBackupsOutput) SetContinuousBackupsDescription(v *Con
 	return s
 }
 
+type DescribeContributorInsightsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the global secondary index to describe, if applicable.
+	IndexName *string `min:"3" type:"string"`
+
+	// The name of the table to describe.
+	//
+	// TableName is a required field
+	TableName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeContributorInsightsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeContributorInsightsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeContributorInsightsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeContributorInsightsInput"}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *DescribeContributorInsightsInput) SetIndexName(v string) *DescribeContributorInsightsInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DescribeContributorInsightsInput) SetTableName(v string) *DescribeContributorInsightsInput {
+	s.TableName = &v
+	return s
+}
+
+type DescribeContributorInsightsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of names of the associated Alpine rules.
+	ContributorInsightsRuleList []*string `type:"list"`
+
+	// Current Status contributor insights.
+	ContributorInsightsStatus *string `type:"string" enum:"ContributorInsightsStatus"`
+
+	// Returns information about the last failure that encountered.
+	//
+	// The most common exceptions for a FAILED status are:
+	//
+	//    * LimitExceededException - Per-account Amazon CloudWatch Contributor Insights
+	//    rule limit reached. Please disable Contributor Insights for other tables/indexes
+	//    OR disable Contributor Insights rules before retrying.
+	//
+	//    * AccessDeniedException - Amazon CloudWatch Contributor Insights rules
+	//    cannot be modified due to insufficient permissions.
+	//
+	//    * AccessDeniedException - Failed to create service-linked role for Contributor
+	//    Insights due to insufficient permissions.
+	//
+	//    * InternalServerError - Failed to create Amazon CloudWatch Contributor
+	//    Insights rules. Please retry request.
+	FailureException *FailureException `type:"structure"`
+
+	// The name of the global secondary index being described.
+	IndexName *string `min:"3" type:"string"`
+
+	// Timestamp of the last time the status was changed.
+	LastUpdateDateTime *time.Time `type:"timestamp"`
+
+	// The name of the table being described.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeContributorInsightsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeContributorInsightsOutput) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsRuleList sets the ContributorInsightsRuleList field's value.
+func (s *DescribeContributorInsightsOutput) SetContributorInsightsRuleList(v []*string) *DescribeContributorInsightsOutput {
+	s.ContributorInsightsRuleList = v
+	return s
+}
+
+// SetContributorInsightsStatus sets the ContributorInsightsStatus field's value.
+func (s *DescribeContributorInsightsOutput) SetContributorInsightsStatus(v string) *DescribeContributorInsightsOutput {
+	s.ContributorInsightsStatus = &v
+	return s
+}
+
+// SetFailureException sets the FailureException field's value.
+func (s *DescribeContributorInsightsOutput) SetFailureException(v *FailureException) *DescribeContributorInsightsOutput {
+	s.FailureException = v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *DescribeContributorInsightsOutput) SetIndexName(v string) *DescribeContributorInsightsOutput {
+	s.IndexName = &v
+	return s
+}
+
+// SetLastUpdateDateTime sets the LastUpdateDateTime field's value.
+func (s *DescribeContributorInsightsOutput) SetLastUpdateDateTime(v time.Time) *DescribeContributorInsightsOutput {
+	s.LastUpdateDateTime = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DescribeContributorInsightsOutput) SetTableName(v string) *DescribeContributorInsightsOutput {
+	s.TableName = &v
+	return s
+}
+
 type DescribeEndpointsInput struct {
 	_ struct{} `type:"structure"`
 }
@@ -9523,6 +10061,39 @@ func (s *ExpectedAttributeValue) SetExists(v bool) *ExpectedAttributeValue {
 // SetValue sets the Value field's value.
 func (s *ExpectedAttributeValue) SetValue(v *AttributeValue) *ExpectedAttributeValue {
 	s.Value = v
+	return s
+}
+
+// Represents a failure a contributor insights operation.
+type FailureException struct {
+	_ struct{} `type:"structure"`
+
+	// Description of the failure.
+	ExceptionDescription *string `type:"string"`
+
+	// Exception name.
+	ExceptionName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s FailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailureException) GoString() string {
+	return s.String()
+}
+
+// SetExceptionDescription sets the ExceptionDescription field's value.
+func (s *FailureException) SetExceptionDescription(v string) *FailureException {
+	s.ExceptionDescription = &v
+	return s
+}
+
+// SetExceptionName sets the ExceptionName field's value.
+func (s *FailureException) SetExceptionName(v string) *FailureException {
+	s.ExceptionName = &v
 	return s
 }
 
@@ -10880,6 +11451,92 @@ func (s *ListBackupsOutput) SetBackupSummaries(v []*BackupSummary) *ListBackupsO
 // SetLastEvaluatedBackupArn sets the LastEvaluatedBackupArn field's value.
 func (s *ListBackupsOutput) SetLastEvaluatedBackupArn(v string) *ListBackupsOutput {
 	s.LastEvaluatedBackupArn = &v
+	return s
+}
+
+type ListContributorInsightsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum number of results to return per page.
+	MaxResults *int64 `type:"integer"`
+
+	// A token to for the desired page, if there is one.
+	NextToken *string `type:"string"`
+
+	// The name of the table.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s ListContributorInsightsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListContributorInsightsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListContributorInsightsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListContributorInsightsInput"}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListContributorInsightsInput) SetMaxResults(v int64) *ListContributorInsightsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListContributorInsightsInput) SetNextToken(v string) *ListContributorInsightsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *ListContributorInsightsInput) SetTableName(v string) *ListContributorInsightsInput {
+	s.TableName = &v
+	return s
+}
+
+type ListContributorInsightsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of ContributorInsightsSummary.
+	ContributorInsightsSummaries []*ContributorInsightsSummary `type:"list"`
+
+	// A token to go to the next page if there is one.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListContributorInsightsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListContributorInsightsOutput) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsSummaries sets the ContributorInsightsSummaries field's value.
+func (s *ListContributorInsightsOutput) SetContributorInsightsSummaries(v []*ContributorInsightsSummary) *ListContributorInsightsOutput {
+	s.ContributorInsightsSummaries = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListContributorInsightsOutput) SetNextToken(v string) *ListContributorInsightsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -14027,6 +14684,13 @@ func (s *RestoreTableToPointInTimeOutput) SetTableDescription(v *TableDescriptio
 type SSEDescription struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates the time, in UNIX epoch date format, when DynamoDB detected that
+	// the table's AWS KMS key was inaccessible. This attribute will automatically
+	// be cleared when DynamoDB detects that the table's AWS KMS key is accessible
+	// again. DynamoDB will initiate the table archival process when table's AWS
+	// KMS key remains inaccessible for more than seven days from this date.
+	InaccessibleEncryptionDateTime *time.Time `type:"timestamp"`
+
 	// The AWS KMS customer master key (CMK) ARN used for the AWS KMS encryption.
 	KMSMasterKeyArn *string `type:"string"`
 
@@ -14054,6 +14718,12 @@ func (s SSEDescription) String() string {
 // GoString returns the string representation
 func (s SSEDescription) GoString() string {
 	return s.String()
+}
+
+// SetInaccessibleEncryptionDateTime sets the InaccessibleEncryptionDateTime field's value.
+func (s *SSEDescription) SetInaccessibleEncryptionDateTime(v time.Time) *SSEDescription {
+	s.InaccessibleEncryptionDateTime = &v
+	return s
 }
 
 // SetKMSMasterKeyArn sets the KMSMasterKeyArn field's value.
@@ -14894,6 +15564,9 @@ func (s *TableAutoScalingDescription) SetTableStatus(v string) *TableAutoScaling
 type TableDescription struct {
 	_ struct{} `type:"structure"`
 
+	// Contains information about the table archive.
+	ArchivalSummary *ArchivalSummary `type:"structure"`
+
 	// An array of AttributeDefinition objects. Each of these objects describes
 	// one attribute in the table and index key schema.
 	//
@@ -15085,6 +15758,17 @@ type TableDescription struct {
 	//    * DELETING - The table is being deleted.
 	//
 	//    * ACTIVE - The table is ready for use.
+	//
+	//    * INACCESSIBLE_ENCRYPTION_CREDENTIALS - The AWS KMS key used to encrypt
+	//    the table in inaccessible. Table operations may fail due to failure to
+	//    use the AWS KMS key. DynamoDB will initiate the table archival process
+	//    when a table's AWS KMS key remains inaccessible for more than seven days.
+	//
+	//    * ARCHIVING - The table is being archived. Operations are not allowed
+	//    until archival is complete.
+	//
+	//    * ARCHIVED - The table has been archived. See the ArchivalReason for more
+	//    information.
 	TableStatus *string `type:"string" enum:"TableStatus"`
 }
 
@@ -15096,6 +15780,12 @@ func (s TableDescription) String() string {
 // GoString returns the string representation
 func (s TableDescription) GoString() string {
 	return s.String()
+}
+
+// SetArchivalSummary sets the ArchivalSummary field's value.
+func (s *TableDescription) SetArchivalSummary(v *ArchivalSummary) *TableDescription {
+	s.ArchivalSummary = v
+	return s
 }
 
 // SetAttributeDefinitions sets the AttributeDefinitions field's value.
@@ -16107,6 +16797,114 @@ func (s UpdateContinuousBackupsOutput) GoString() string {
 // SetContinuousBackupsDescription sets the ContinuousBackupsDescription field's value.
 func (s *UpdateContinuousBackupsOutput) SetContinuousBackupsDescription(v *ContinuousBackupsDescription) *UpdateContinuousBackupsOutput {
 	s.ContinuousBackupsDescription = v
+	return s
+}
+
+type UpdateContributorInsightsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Represents the contributor insights action.
+	//
+	// ContributorInsightsAction is a required field
+	ContributorInsightsAction *string `type:"string" required:"true" enum:"ContributorInsightsAction"`
+
+	// The global secondary index name, if applicable.
+	IndexName *string `min:"3" type:"string"`
+
+	// The name of the table.
+	//
+	// TableName is a required field
+	TableName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateContributorInsightsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateContributorInsightsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateContributorInsightsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateContributorInsightsInput"}
+	if s.ContributorInsightsAction == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContributorInsightsAction"))
+	}
+	if s.IndexName != nil && len(*s.IndexName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("IndexName", 3))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContributorInsightsAction sets the ContributorInsightsAction field's value.
+func (s *UpdateContributorInsightsInput) SetContributorInsightsAction(v string) *UpdateContributorInsightsInput {
+	s.ContributorInsightsAction = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *UpdateContributorInsightsInput) SetIndexName(v string) *UpdateContributorInsightsInput {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateContributorInsightsInput) SetTableName(v string) *UpdateContributorInsightsInput {
+	s.TableName = &v
+	return s
+}
+
+type UpdateContributorInsightsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The status of contributor insights
+	ContributorInsightsStatus *string `type:"string" enum:"ContributorInsightsStatus"`
+
+	// The name of the global secondary index, if applicable.
+	IndexName *string `min:"3" type:"string"`
+
+	// The name of the table.
+	TableName *string `min:"3" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateContributorInsightsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateContributorInsightsOutput) GoString() string {
+	return s.String()
+}
+
+// SetContributorInsightsStatus sets the ContributorInsightsStatus field's value.
+func (s *UpdateContributorInsightsOutput) SetContributorInsightsStatus(v string) *UpdateContributorInsightsOutput {
+	s.ContributorInsightsStatus = &v
+	return s
+}
+
+// SetIndexName sets the IndexName field's value.
+func (s *UpdateContributorInsightsOutput) SetIndexName(v string) *UpdateContributorInsightsOutput {
+	s.IndexName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateContributorInsightsOutput) SetTableName(v string) *UpdateContributorInsightsOutput {
+	s.TableName = &v
 	return s
 }
 
@@ -17465,6 +18263,31 @@ const (
 )
 
 const (
+	// ContributorInsightsActionEnable is a ContributorInsightsAction enum value
+	ContributorInsightsActionEnable = "ENABLE"
+
+	// ContributorInsightsActionDisable is a ContributorInsightsAction enum value
+	ContributorInsightsActionDisable = "DISABLE"
+)
+
+const (
+	// ContributorInsightsStatusEnabling is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusEnabling = "ENABLING"
+
+	// ContributorInsightsStatusEnabled is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusEnabled = "ENABLED"
+
+	// ContributorInsightsStatusDisabling is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusDisabling = "DISABLING"
+
+	// ContributorInsightsStatusDisabled is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusDisabled = "DISABLED"
+
+	// ContributorInsightsStatusFailed is a ContributorInsightsStatus enum value
+	ContributorInsightsStatusFailed = "FAILED"
+)
+
+const (
 	// GlobalTableStatusCreating is a GlobalTableStatus enum value
 	GlobalTableStatusCreating = "CREATING"
 
@@ -17669,6 +18492,15 @@ const (
 
 	// TableStatusActive is a TableStatus enum value
 	TableStatusActive = "ACTIVE"
+
+	// TableStatusInaccessibleEncryptionCredentials is a TableStatus enum value
+	TableStatusInaccessibleEncryptionCredentials = "INACCESSIBLE_ENCRYPTION_CREDENTIALS"
+
+	// TableStatusArchiving is a TableStatus enum value
+	TableStatusArchiving = "ARCHIVING"
+
+	// TableStatusArchived is a TableStatus enum value
+	TableStatusArchived = "ARCHIVED"
 )
 
 const (

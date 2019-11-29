@@ -49,6 +49,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -1626,6 +1627,42 @@ func GlueUpdateTags(conn *glue.Glue, identifier string, oldTagsMap interface{}, 
 		input := &glue.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagsToAdd:   updatedTags.IgnoreAws().GlueTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// GreengrassUpdateTags updates greengrass service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GreengrassUpdateTags(conn *greengrass.Greengrass, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &greengrass.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &greengrass.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().GreengrassTags(),
 		}
 
 		_, err := conn.TagResource(input)
