@@ -1525,6 +1525,39 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 	return []interface{}{envs}
 }
 
+func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
+	dest := &lambda.DestinationConfig{}
+	if config, ok := vDest[0].(map[string]interface{}); ok {
+		if vOnFailure, ok := config["on_failure"].([]interface{}); ok && len(vOnFailure) > 0 && vOnFailure[0] != nil {
+			onFailure := vOnFailure[0].(map[string]interface{})
+			f := &lambda.OnFailure{
+				Destination: aws.String(onFailure["destination_arn"].(string)),
+			}
+			dest.SetOnFailure(f)
+		}
+	}
+
+	return dest
+}
+
+func flattenLambdaEventSourceMappingDestinationConfig(dest *lambda.DestinationConfig) []interface{} {
+	if dest == nil {
+		return []interface{}{}
+	}
+
+	mDest := map[string]interface{}{}
+
+	if dest.OnFailure != nil {
+		mOnFailure := map[string]interface{}{}
+		if dest.OnFailure.Destination != nil {
+			mOnFailure["destination_arn"] = dest.OnFailure.Destination
+		}
+		mDest["on_failure"] = []interface{}{mOnFailure}
+	}
+
+	return []interface{}{mDest}
+}
+
 func flattenLambdaLayers(layers []*lambda.Layer) []interface{} {
 	arns := make([]*string, len(layers))
 	for i, layer := range layers {
