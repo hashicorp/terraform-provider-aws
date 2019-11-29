@@ -177,18 +177,6 @@ func (diags Diagnostics) NonFatalErr() error {
 	return NonFatalError{diags}
 }
 
-// Sort applies an ordering to the diagnostics in the receiver in-place.
-//
-// The ordering is: warnings before errors, sourceless before sourced,
-// short source paths before long source paths, and then ordering by
-// position within each file.
-//
-// Diagnostics that do not differ by any of these sortable characteristics
-// will remain in the same relative order after this method returns.
-func (diags Diagnostics) Sort() {
-	sort.Stable(sortDiagnostics(diags))
-}
-
 type diagnosticsAsError struct {
 	Diagnostics
 }
