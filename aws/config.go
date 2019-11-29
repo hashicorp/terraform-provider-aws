@@ -265,6 +265,7 @@ type AWSClient struct {
 	managedblockchainconn               *managedblockchain.ManagedBlockchain
 	mediaconnectconn                    *mediaconnect.MediaConnect
 	mediaconvertconn                    *mediaconvert.MediaConvert
+	mediaconvertaccountconn             *mediaconvert.MediaConvert
 	medialiveconn                       *medialive.MediaLive
 	mediapackageconn                    *mediapackage.MediaPackage
 	mediastoreconn                      *mediastore.MediaStore
