@@ -720,7 +720,6 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %q
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -737,10 +736,8 @@ resource "aws_iam_role" "test" {
 }
 EOF
 }
-
 resource "aws_iam_role_policy" "test" {
   role = "${aws_iam_role.test.name}"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -772,12 +769,10 @@ resource "aws_iam_role_policy" "test" {
 }
 EOF
 }
-
 resource "aws_kinesis_stream" "test" {
   name        = %q
   shard_count = 1
 }
-
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %q
@@ -871,14 +866,12 @@ func testAccAWSLambdaEventSourceMappingConfigKinesisDestinationConfigOnFailure(r
 resource "aws_sqs_queue" "sqs_queue_test" {
   name = "%s"
 }
-
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size                    = 100
   enabled                       = true
   event_source_arn              = "${aws_kinesis_stream.test.arn}"
   function_name                 = "${aws_lambda_function.test.arn}"
   starting_position             = "TRIM_HORIZON"
-
   destination_config {
     on_failure {
       destination_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
@@ -914,7 +907,6 @@ func testAccAWSLambdaEventSourceMappingConfig_kinesis(roleName, policyName, attN
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -931,12 +923,10 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
   description = "IAM policy for Lambda event mapping testing"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -961,18 +951,15 @@ resource "aws_iam_policy" "policy_for_role" {
 }
 EOF
 }
-
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
-
 resource "aws_kinesis_stream" "kinesis_stream_test" {
   name        = "%s"
   shard_count = 1
 }
-
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -980,7 +967,6 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -988,7 +974,6 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size        = 100
   event_source_arn  = "${aws_kinesis_stream.kinesis_stream_test.arn}"
@@ -1005,7 +990,6 @@ func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis_removeBatchSize(role
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
-
   assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
@@ -1022,12 +1006,10 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
   description = "IAM policy for Lambda event mapping testing"
-
   policy = <<EOF
 {
 	"Version": "2012-10-17",
@@ -1052,18 +1034,15 @@ resource "aws_iam_policy" "policy_for_role" {
 }
 EOF
 }
-
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
-
 resource "aws_kinesis_stream" "kinesis_stream_test" {
   name        = "%s"
   shard_count = 1
 }
-
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1071,7 +1050,6 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1079,7 +1057,6 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   event_source_arn  = "${aws_kinesis_stream.kinesis_stream_test.arn}"
   enabled           = true
@@ -1096,7 +1073,6 @@ func testAccAWSLambdaEventSourceMappingConfigUpdate_kinesis(roleName, policyName
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1113,12 +1089,10 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
   description = "IAM policy for Lambda event mapping testing"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1143,18 +1117,15 @@ resource "aws_iam_policy" "policy_for_role" {
 }
 EOF
 }
-
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
-
 resource "aws_kinesis_stream" "kinesis_stream_test" {
   name        = "%s"
   shard_count = 1
 }
-
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1162,7 +1133,6 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1170,7 +1140,6 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size        = 200
   event_source_arn  = "${aws_kinesis_stream.kinesis_stream_test.arn}"
@@ -1187,7 +1156,6 @@ func testAccAWSLambdaEventSourceMappingConfig_sqs(roleName, policyName, attName,
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1204,12 +1172,10 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
   description = "IAM policy for Lambda event mapping testing"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1225,17 +1191,14 @@ resource "aws_iam_policy" "policy_for_role" {
 }
 EOF
 }
-
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
-
 resource "aws_sqs_queue" "sqs_queue_test" {
   name = "%s"
 }
-
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1243,7 +1206,6 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1251,7 +1213,6 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 10
   event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
@@ -1268,7 +1229,6 @@ func testAccAWSLambdaEventSourceMappingConfigUpdate_sqs(roleName, policyName, at
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1285,12 +1245,10 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%s"
   path        = "/"
   description = "IAM policy for Lambda event mapping testing"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1306,17 +1264,14 @@ resource "aws_iam_policy" "policy_for_role" {
 }
 EOF
 }
-
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%s"
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
-
 resource "aws_sqs_queue" "sqs_queue_test" {
   name = "%s"
 }
-
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1324,7 +1279,6 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_function" "lambda_function_test_update" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%s"
@@ -1332,7 +1286,6 @@ resource "aws_lambda_function" "lambda_function_test_update" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 5
   event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"
@@ -1347,7 +1300,6 @@ func testAccAWSLambdaEventSourceMappingConfig_sqs_testWithFunctionName(roleName,
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%[1]s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1364,12 +1316,10 @@ resource "aws_iam_role" "iam_for_lambda" {
 }
 EOF
 }
-
 resource "aws_iam_policy" "policy_for_role" {
   name        = "%[2]s"
   path        = "/"
   description = "IAM policy for Lambda event mapping testing"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1385,17 +1335,14 @@ resource "aws_iam_policy" "policy_for_role" {
 }
 EOF
 }
-
 resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   name       = "%[3]s"
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
-
 resource "aws_sqs_queue" "sqs_queue_test" {
   name = "%[4]s"
 }
-
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = "%[5]s"
@@ -1403,7 +1350,6 @@ resource "aws_lambda_function" "lambda_function_test_create" {
   handler       = "exports.example"
   runtime       = "nodejs8.10"
 }
-
 resource "aws_lambda_event_source_mapping" "lambda_event_source_mapping_test" {
   batch_size       = 5
   event_source_arn = "${aws_sqs_queue.sqs_queue_test.arn}"

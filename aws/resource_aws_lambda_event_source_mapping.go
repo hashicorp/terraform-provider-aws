@@ -129,6 +129,18 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"on_success": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"on_failure": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -221,9 +233,12 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
 	}
 
-	if v, ok := d.GetOk("destination_config"); ok {
-		destinationConfig := expandLambdaEventSourceMappingDestinationConfig(v.([]interface{}))
-		params.SetDestinationConfig(destinationConfig)
+	if vDest, ok := d.GetOk("destination_config"); ok {
+		dest := expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}), eventSourceArn)
+		params.SetDestinationConfig(dest)
+	} else {
+		dest := expandLambdaEventSourceMappingDestinationConfig([]interface{}{}, eventSourceArn)
+		params.SetDestinationConfig(dest)
 	}
 
 	// IAM profiles and roles can take some time to propagate in AWS:
@@ -383,9 +398,12 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 		params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
 	}
 
-	if v, ok := d.GetOk("destination_config"); ok {
-		destinationConfig := expandLambdaEventSourceMappingDestinationConfig(v.([]interface{}))
-		params.SetDestinationConfig(destinationConfig)
+	if vDest, ok := d.GetOk("destination_config"); ok {
+		dest := expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}), d.Get("event_source_arn").(string))
+		params.SetDestinationConfig(dest)
+	} else {
+		dest := expandLambdaEventSourceMappingDestinationConfig([]interface{}{}, d.Get("event_source_arn").(string))
+		params.SetDestinationConfig(dest)
 	}
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
