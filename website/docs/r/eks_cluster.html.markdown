@@ -1,4 +1,5 @@
 ---
+subcategory: "EKS"
 layout: "aws"
 page_title: "AWS: aws_eks_cluster"
 description: |-
@@ -138,6 +139,7 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`. 
 * `version` - The Kubernetes server version for the cluster.
 * `vpc_config` - Additional nested attributes:
+  * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.
   * `vpc_id` - The VPC associated with your cluster.
 
 ## Timeouts

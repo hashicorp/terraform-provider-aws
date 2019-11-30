@@ -1823,10 +1823,12 @@ func (c *CognitoIdentityProvider) AdminListGroupsForUserPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*AdminListGroupsForUserOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*AdminListGroupsForUserOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1980,10 +1982,12 @@ func (c *CognitoIdentityProvider) AdminListUserAuthEventsPagesWithContext(ctx aw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*AdminListUserAuthEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*AdminListUserAuthEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3087,7 +3091,10 @@ func (c *CognitoIdentityProvider) AdminUserGlobalSignOutRequest(input *AdminUser
 
 // AdminUserGlobalSignOut API operation for Amazon Cognito Identity Provider.
 //
-// Signs out users from all devices, as an administrator.
+// Signs out users from all devices, as an administrator. It also invalidates
+// all refresh tokens issued to a user. The user's current access and Id tokens
+// remain valid until their expiry. Access and Id tokens expire one hour after
+// they are issued.
 //
 // Calling this action requires developer credentials.
 //
@@ -7099,7 +7106,9 @@ func (c *CognitoIdentityProvider) GlobalSignOutRequest(input *GlobalSignOutInput
 
 // GlobalSignOut API operation for Amazon Cognito Identity Provider.
 //
-// Signs out users from all devices.
+// Signs out users from all devices. It also invalidates all refresh tokens
+// issued to a user. The user's current access and Id tokens remain valid until
+// their expiry. Access and Id tokens expire one hour after they are issued.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7534,10 +7543,12 @@ func (c *CognitoIdentityProvider) ListGroupsPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7684,10 +7695,12 @@ func (c *CognitoIdentityProvider) ListIdentityProvidersPagesWithContext(ctx aws.
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListIdentityProvidersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListIdentityProvidersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7834,10 +7847,12 @@ func (c *CognitoIdentityProvider) ListResourceServersPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListResourceServersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListResourceServersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8178,10 +8193,12 @@ func (c *CognitoIdentityProvider) ListUserPoolClientsPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListUserPoolClientsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListUserPoolClientsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8324,10 +8341,12 @@ func (c *CognitoIdentityProvider) ListUserPoolsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListUserPoolsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListUserPoolsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8474,10 +8493,12 @@ func (c *CognitoIdentityProvider) ListUsersPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListUsersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListUsersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8626,10 +8647,12 @@ func (c *CognitoIdentityProvider) ListUsersInGroupPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListUsersInGroupOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListUsersInGroupOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -10238,6 +10261,9 @@ func (c *CognitoIdentityProvider) UpdateGroupRequest(input *UpdateGroupInput) (r
 //
 // Calling this action requires developer credentials.
 //
+// If you don't provide a value for an attribute, it will be set to the default
+// value.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -10428,6 +10454,9 @@ func (c *CognitoIdentityProvider) UpdateResourceServerRequest(input *UpdateResou
 // UpdateResourceServer API operation for Amazon Cognito Identity Provider.
 //
 // Updates the name and scopes of resource server. All other fields are read-only.
+//
+// If you don't provide a value for an attribute, it will be set to the default
+// value.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10668,9 +10697,11 @@ func (c *CognitoIdentityProvider) UpdateUserPoolRequest(input *UpdateUserPoolInp
 
 // UpdateUserPool API operation for Amazon Cognito Identity Provider.
 //
-// Updates the specified user pool with the specified attributes. If you don't
-// provide a value for an attribute, it will be set to the default value. You
-// can get a list of the current user pool settings with .
+// Updates the specified user pool with the specified attributes. You can get
+// a list of the current user pool settings with .
+//
+// If you don't provide a value for an attribute, it will be set to the default
+// value.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10789,8 +10820,10 @@ func (c *CognitoIdentityProvider) UpdateUserPoolClientRequest(input *UpdateUserP
 // UpdateUserPoolClient API operation for Amazon Cognito Identity Provider.
 //
 // Updates the specified user pool app client with the specified attributes.
+// You can get a list of the current user pool app client settings with .
+//
 // If you don't provide a value for an attribute, it will be set to the default
-// value. You can get a list of the current user pool app client settings with .
+// value.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11208,6 +11241,53 @@ func (c *CognitoIdentityProvider) VerifyUserAttributeWithContext(ctx aws.Context
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// The data type for AccountRecoverySetting.
+type AccountRecoverySettingType struct {
+	_ struct{} `type:"structure"`
+
+	// The list of RecoveryOptionTypes.
+	RecoveryMechanisms []*RecoveryOptionType `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s AccountRecoverySettingType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountRecoverySettingType) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AccountRecoverySettingType) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AccountRecoverySettingType"}
+	if s.RecoveryMechanisms != nil && len(s.RecoveryMechanisms) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RecoveryMechanisms", 1))
+	}
+	if s.RecoveryMechanisms != nil {
+		for i, v := range s.RecoveryMechanisms {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RecoveryMechanisms", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetRecoveryMechanisms sets the RecoveryMechanisms field's value.
+func (s *AccountRecoverySettingType) SetRecoveryMechanisms(v []*RecoveryOptionType) *AccountRecoverySettingType {
+	s.RecoveryMechanisms = v
+	return s
 }
 
 // Account takeover action type.
@@ -12808,6 +12888,11 @@ type AdminInitiateAuthInput struct {
 	//    are passed directly. If a user migration Lambda trigger is set, this flow
 	//    will invoke the user migration Lambda if the USERNAME is not found in
 	//    the user pool.
+	//
+	//    * ADMIN_USER_PASSWORD_AUTH: Admin-based user password authentication.
+	//    This replaces the ADMIN_NO_SRP_AUTH authentication flow. In this flow,
+	//    Cognito receives the password in the request instead of using the SRP
+	//    process to verify passwords.
 	//
 	// AuthFlow is a required field
 	AuthFlow *string `type:"string" required:"true" enum:"AuthFlowType"`
@@ -15458,13 +15543,13 @@ type ConfirmForgotPasswordInput struct {
 	//
 	// You create custom workflows by assigning AWS Lambda functions to user pool
 	// triggers. When you use the ConfirmForgotPassword API action, Amazon Cognito
-	// invokes the functions that are assigned to the post confirmation and pre
-	// mutation triggers. When Amazon Cognito invokes either of these functions,
-	// it passes a JSON payload, which the function receives as input. This payload
-	// contains a clientMetadata attribute, which provides the data that you assigned
-	// to the ClientMetadata parameter in your ConfirmForgotPassword request. In
-	// your function code in AWS Lambda, you can process the clientMetadata value
-	// to enhance your workflow for your specific needs.
+	// invokes the function that is assigned to the post confirmation trigger. When
+	// Amazon Cognito invokes this function, it passes a JSON payload, which the
+	// function receives as input. This payload contains a clientMetadata attribute,
+	// which provides the data that you assigned to the ClientMetadata parameter
+	// in your ConfirmForgotPassword request. In your function code in AWS Lambda,
+	// you can process the clientMetadata value to enhance your workflow for your
+	// specific needs.
 	//
 	// For more information, see Customizing User Pool Workflows with Lambda Triggers
 	// (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html)
@@ -16431,7 +16516,28 @@ type CreateUserPoolClientInput struct {
 	// App callback URLs such as myapp://example are also supported.
 	DefaultRedirectURI *string `min:"1" type:"string"`
 
-	// The explicit authentication flows.
+	// The authentication flows that are supported by the user pool clients. Flow
+	// names without the ALLOW_ prefix are deprecated in favor of new names with
+	// the ALLOW_ prefix. Note that values with ALLOW_ prefix cannot be used along
+	// with values without ALLOW_ prefix.
+	//
+	// Valid values include:
+	//
+	//    * ALLOW_ADMIN_USER_PASSWORD_AUTH: Enable admin based user password authentication
+	//    flow ADMIN_USER_PASSWORD_AUTH. This setting replaces the ADMIN_NO_SRP_AUTH
+	//    setting. With this authentication flow, Cognito receives the password
+	//    in the request instead of using the SRP (Secure Remote Password protocol)
+	//    protocol to verify passwords.
+	//
+	//    * ALLOW_CUSTOM_AUTH: Enable Lambda trigger based authentication.
+	//
+	//    * ALLOW_USER_PASSWORD_AUTH: Enable user password-based authentication.
+	//    In this flow, Cognito receives the password in the request instead of
+	//    using the SRP protocol to verify passwords.
+	//
+	//    * ALLOW_USER_SRP_AUTH: Enable SRP based authentication.
+	//
+	//    * ALLOW_REFRESH_TOKEN_AUTH: Enable authflow to refresh tokens.
 	ExplicitAuthFlows []*string `type:"list"`
 
 	// Boolean to specify whether you want to generate a secret for the user pool
@@ -16440,6 +16546,44 @@ type CreateUserPoolClientInput struct {
 
 	// A list of allowed logout URLs for the identity providers.
 	LogoutURLs []*string `type:"list"`
+
+	// Use this setting to choose which errors and responses are returned by Cognito
+	// APIs during authentication, account confirmation, and password recovery when
+	// the user does not exist in the user pool. When set to ENABLED and the user
+	// does not exist, authentication returns an error indicating either the username
+	// or password was incorrect, and account confirmation and password recovery
+	// return a response indicating a code was sent to a simulated destination.
+	// When set to LEGACY, those APIs will return a UserNotFoundException exception
+	// if the user does not exist in the user pool.
+	//
+	// Valid values include:
+	//
+	//    * ENABLED - This prevents user existence-related errors.
+	//
+	//    * LEGACY - This represents the old behavior of Cognito where user existence
+	//    related errors are not prevented.
+	//
+	// This setting affects the behavior of following APIs:
+	//
+	//    * AdminInitiateAuth
+	//
+	//    * AdminRespondToAuthChallenge
+	//
+	//    * InitiateAuth
+	//
+	//    * RespondToAuthChallenge
+	//
+	//    * ForgotPassword
+	//
+	//    * ConfirmForgotPassword
+	//
+	//    * ConfirmSignUp
+	//
+	//    * ResendConfirmationCode
+	//
+	// After January 1st 2020, the value of PreventUserExistenceErrors will default
+	// to ENABLED for newly created user pool clients if no value is provided.
+	PreventUserExistenceErrors *string `type:"string" enum:"PreventUserExistenceErrorTypes"`
 
 	// The read attributes.
 	ReadAttributes []*string `type:"list"`
@@ -16566,6 +16710,12 @@ func (s *CreateUserPoolClientInput) SetGenerateSecret(v bool) *CreateUserPoolCli
 // SetLogoutURLs sets the LogoutURLs field's value.
 func (s *CreateUserPoolClientInput) SetLogoutURLs(v []*string) *CreateUserPoolClientInput {
 	s.LogoutURLs = v
+	return s
+}
+
+// SetPreventUserExistenceErrors sets the PreventUserExistenceErrors field's value.
+func (s *CreateUserPoolClientInput) SetPreventUserExistenceErrors(v string) *CreateUserPoolClientInput {
+	s.PreventUserExistenceErrors = &v
 	return s
 }
 
@@ -16731,6 +16881,19 @@ func (s *CreateUserPoolDomainOutput) SetCloudFrontDomain(v string) *CreateUserPo
 type CreateUserPoolInput struct {
 	_ struct{} `type:"structure"`
 
+	// Use this setting to define which verified available method a user can use
+	// to recover their password when they call ForgotPassword. It allows you to
+	// define a preferred method when a user has more than one method available.
+	// With this setting, SMS does not qualify for a valid password recovery mechanism
+	// if the user also has SMS MFA enabled. In the absence of this setting, Cognito
+	// uses the legacy behavior to determine the recovery method where SMS is preferred
+	// over email.
+	//
+	// Starting February 1, 2020, the value of AccountRecoverySetting will default
+	// to verified_email first and verified_phone_number as the second option for
+	// newly created user pools if no value is provided.
+	AccountRecoverySetting *AccountRecoverySettingType `type:"structure"`
+
 	// The configuration for AdminCreateUser requests.
 	AdminCreateUserConfig *AdminCreateUserConfigType `type:"structure"`
 
@@ -16841,6 +17004,11 @@ func (s *CreateUserPoolInput) Validate() error {
 	if s.SmsVerificationMessage != nil && len(*s.SmsVerificationMessage) < 6 {
 		invalidParams.Add(request.NewErrParamMinLen("SmsVerificationMessage", 6))
 	}
+	if s.AccountRecoverySetting != nil {
+		if err := s.AccountRecoverySetting.Validate(); err != nil {
+			invalidParams.AddNested("AccountRecoverySetting", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.AdminCreateUserConfig != nil {
 		if err := s.AdminCreateUserConfig.Validate(); err != nil {
 			invalidParams.AddNested("AdminCreateUserConfig", err.(request.ErrInvalidParams))
@@ -16891,6 +17059,12 @@ func (s *CreateUserPoolInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAccountRecoverySetting sets the AccountRecoverySetting field's value.
+func (s *CreateUserPoolInput) SetAccountRecoverySetting(v *AccountRecoverySettingType) *CreateUserPoolInput {
+	s.AccountRecoverySetting = v
+	return s
 }
 
 // SetAdminCreateUserConfig sets the AdminCreateUserConfig field's value.
@@ -18378,6 +18552,22 @@ func (s *DomainDescriptionType) SetVersion(v string) *DomainDescriptionType {
 type EmailConfigurationType struct {
 	_ struct{} `type:"structure"`
 
+	// The set of configuration rules that can be applied to emails sent using Amazon
+	// SES. A configuration set is applied to an email by including a reference
+	// to the configuration set in the headers of the email. Once applied, all of
+	// the rules in that configuration set are applied to the email. Configuration
+	// sets can be used to apply the following types of rules to emails:
+	//
+	//    * Event publishing – Amazon SES can track the number of send, delivery,
+	//    open, click, bounce, and complaint events for each email sent. Use event
+	//    publishing to send information about these events to other AWS services
+	//    such as SNS and CloudWatch.
+	//
+	//    * IP pool management – When leasing dedicated IP addresses with Amazon
+	//    SES, you can create groups of IP addresses, called dedicated IP pools.
+	//    You can then associate the dedicated IP pools with configuration sets.
+	ConfigurationSet *string `min:"1" type:"string"`
+
 	// Specifies whether Amazon Cognito emails your users by using its built-in
 	// email functionality or your Amazon SES email configuration. Specify one of
 	// the following values:
@@ -18420,6 +18610,11 @@ type EmailConfigurationType struct {
 	// in the Amazon Cognito Developer Guide.
 	EmailSendingAccount *string `type:"string" enum:"EmailSendingAccountType"`
 
+	// Identifies either the sender’s email address or the sender’s name with
+	// their email address. For example, testuser@example.com or Test User <testuser@example.com>.
+	// This address will appear before the body of the email.
+	From *string `type:"string"`
+
 	// The destination to which the receiver of the email should reply to.
 	ReplyToEmailAddress *string `type:"string"`
 
@@ -18449,6 +18644,9 @@ func (s EmailConfigurationType) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *EmailConfigurationType) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "EmailConfigurationType"}
+	if s.ConfigurationSet != nil && len(*s.ConfigurationSet) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ConfigurationSet", 1))
+	}
 	if s.SourceArn != nil && len(*s.SourceArn) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("SourceArn", 20))
 	}
@@ -18459,9 +18657,21 @@ func (s *EmailConfigurationType) Validate() error {
 	return nil
 }
 
+// SetConfigurationSet sets the ConfigurationSet field's value.
+func (s *EmailConfigurationType) SetConfigurationSet(v string) *EmailConfigurationType {
+	s.ConfigurationSet = &v
+	return s
+}
+
 // SetEmailSendingAccount sets the EmailSendingAccount field's value.
 func (s *EmailConfigurationType) SetEmailSendingAccount(v string) *EmailConfigurationType {
 	s.EmailSendingAccount = &v
+	return s
+}
+
+// SetFrom sets the From field's value.
+func (s *EmailConfigurationType) SetFrom(v string) *EmailConfigurationType {
+	s.From = &v
 	return s
 }
 
@@ -19923,6 +20133,11 @@ type InitiateAuthInput struct {
 	//    are passed directly. If a user migration Lambda trigger is set, this flow
 	//    will invoke the user migration Lambda if the USERNAME is not found in
 	//    the user pool.
+	//
+	//    * ADMIN_USER_PASSWORD_AUTH: Admin-based user password authentication.
+	//    This replaces the ADMIN_NO_SRP_AUTH authentication flow. In this flow,
+	//    Cognito receives the password in the request instead of using the SRP
+	//    process to verify passwords.
 	//
 	// ADMIN_NO_SRP_AUTH is not a valid value.
 	//
@@ -21877,6 +22092,63 @@ func (s *ProviderUserIdentifierType) SetProviderAttributeValue(v string) *Provid
 // SetProviderName sets the ProviderName field's value.
 func (s *ProviderUserIdentifierType) SetProviderName(v string) *ProviderUserIdentifierType {
 	s.ProviderName = &v
+	return s
+}
+
+// A map containing a priority as a key, and recovery method name as a value.
+type RecoveryOptionType struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the recovery method for a user.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true" enum:"RecoveryOptionNameType"`
+
+	// A positive integer specifying priority of a method with 1 being the highest
+	// priority.
+	//
+	// Priority is a required field
+	Priority *int64 `min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s RecoveryOptionType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RecoveryOptionType) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RecoveryOptionType) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RecoveryOptionType"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Priority == nil {
+		invalidParams.Add(request.NewErrParamRequired("Priority"))
+	}
+	if s.Priority != nil && *s.Priority < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *RecoveryOptionType) SetName(v string) *RecoveryOptionType {
+	s.Name = &v
+	return s
+}
+
+// SetPriority sets the Priority field's value.
+func (s *RecoveryOptionType) SetPriority(v int64) *RecoveryOptionType {
+	s.Priority = &v
 	return s
 }
 
@@ -24480,13 +24752,13 @@ type UpdateUserAttributesInput struct {
 	//
 	// You create custom workflows by assigning AWS Lambda functions to user pool
 	// triggers. When you use the UpdateUserAttributes API action, Amazon Cognito
-	// invokes the functions that are assigned to the custom message and pre mutation
-	// triggers. When Amazon Cognito invokes either of these functions, it passes
-	// a JSON payload, which the function receives as input. This payload contains
-	// a clientMetadata attribute, which provides the data that you assigned to
-	// the ClientMetadata parameter in your UpdateUserAttributes request. In your
-	// function code in AWS Lambda, you can process the clientMetadata value to
-	// enhance your workflow for your specific needs.
+	// invokes the function that is assigned to the custom message trigger. When
+	// Amazon Cognito invokes this function, it passes a JSON payload, which the
+	// function receives as input. This payload contains a clientMetadata attribute,
+	// which provides the data that you assigned to the ClientMetadata parameter
+	// in your UpdateUserAttributes request. In your function code in AWS Lambda,
+	// you can process the clientMetadata value to enhance your workflow for your
+	// specific needs.
 	//
 	// For more information, see Customizing User Pool Workflows with Lambda Triggers
 	// (https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools-working-with-aws-lambda-triggers.html)
@@ -24660,11 +24932,70 @@ type UpdateUserPoolClientInput struct {
 	// App callback URLs such as myapp://example are also supported.
 	DefaultRedirectURI *string `min:"1" type:"string"`
 
-	// Explicit authentication flows.
+	// The authentication flows that are supported by the user pool clients. Flow
+	// names without the ALLOW_ prefix are deprecated in favor of new names with
+	// the ALLOW_ prefix. Note that values with ALLOW_ prefix cannot be used along
+	// with values without ALLOW_ prefix.
+	//
+	// Valid values include:
+	//
+	//    * ALLOW_ADMIN_USER_PASSWORD_AUTH: Enable admin based user password authentication
+	//    flow ADMIN_USER_PASSWORD_AUTH. This setting replaces the ADMIN_NO_SRP_AUTH
+	//    setting. With this authentication flow, Cognito receives the password
+	//    in the request instead of using the SRP (Secure Remote Password protocol)
+	//    protocol to verify passwords.
+	//
+	//    * ALLOW_CUSTOM_AUTH: Enable Lambda trigger based authentication.
+	//
+	//    * ALLOW_USER_PASSWORD_AUTH: Enable user password-based authentication.
+	//    In this flow, Cognito receives the password in the request instead of
+	//    using the SRP protocol to verify passwords.
+	//
+	//    * ALLOW_USER_SRP_AUTH: Enable SRP based authentication.
+	//
+	//    * ALLOW_REFRESH_TOKEN_AUTH: Enable authflow to refresh tokens.
 	ExplicitAuthFlows []*string `type:"list"`
 
 	// A list of allowed logout URLs for the identity providers.
 	LogoutURLs []*string `type:"list"`
+
+	// Use this setting to choose which errors and responses are returned by Cognito
+	// APIs during authentication, account confirmation, and password recovery when
+	// the user does not exist in the user pool. When set to ENABLED and the user
+	// does not exist, authentication returns an error indicating either the username
+	// or password was incorrect, and account confirmation and password recovery
+	// return a response indicating a code was sent to a simulated destination.
+	// When set to LEGACY, those APIs will return a UserNotFoundException exception
+	// if the user does not exist in the user pool.
+	//
+	// Valid values include:
+	//
+	//    * ENABLED - This prevents user existence-related errors.
+	//
+	//    * LEGACY - This represents the old behavior of Cognito where user existence
+	//    related errors are not prevented.
+	//
+	// This setting affects the behavior of following APIs:
+	//
+	//    * AdminInitiateAuth
+	//
+	//    * AdminRespondToAuthChallenge
+	//
+	//    * InitiateAuth
+	//
+	//    * RespondToAuthChallenge
+	//
+	//    * ForgotPassword
+	//
+	//    * ConfirmForgotPassword
+	//
+	//    * ConfirmSignUp
+	//
+	//    * ResendConfirmationCode
+	//
+	// After January 1st 2020, the value of PreventUserExistenceErrors will default
+	// to ENABLED for newly created user pool clients if no value is provided.
+	PreventUserExistenceErrors *string `type:"string" enum:"PreventUserExistenceErrorTypes"`
 
 	// The read-only attributes of the user pool.
 	ReadAttributes []*string `type:"list"`
@@ -24787,6 +25118,12 @@ func (s *UpdateUserPoolClientInput) SetExplicitAuthFlows(v []*string) *UpdateUse
 // SetLogoutURLs sets the LogoutURLs field's value.
 func (s *UpdateUserPoolClientInput) SetLogoutURLs(v []*string) *UpdateUserPoolClientInput {
 	s.LogoutURLs = v
+	return s
+}
+
+// SetPreventUserExistenceErrors sets the PreventUserExistenceErrors field's value.
+func (s *UpdateUserPoolClientInput) SetPreventUserExistenceErrors(v string) *UpdateUserPoolClientInput {
+	s.PreventUserExistenceErrors = &v
 	return s
 }
 
@@ -24961,6 +25298,15 @@ func (s *UpdateUserPoolDomainOutput) SetCloudFrontDomain(v string) *UpdateUserPo
 type UpdateUserPoolInput struct {
 	_ struct{} `type:"structure"`
 
+	// Use this setting to define which verified available method a user can use
+	// to recover their password when they call ForgotPassword. It allows you to
+	// define a preferred method when a user has more than one method available.
+	// With this setting, SMS does not qualify for a valid password recovery mechanism
+	// if the user also has SMS MFA enabled. In the absence of this setting, Cognito
+	// uses the legacy behavior to determine the recovery method where SMS is preferred
+	// over email.
+	AccountRecoverySetting *AccountRecoverySettingType `type:"structure"`
+
 	// The configuration for AdminCreateUser requests.
 	AdminCreateUserConfig *AdminCreateUserConfigType `type:"structure"`
 
@@ -25056,6 +25402,11 @@ func (s *UpdateUserPoolInput) Validate() error {
 	if s.UserPoolId != nil && len(*s.UserPoolId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("UserPoolId", 1))
 	}
+	if s.AccountRecoverySetting != nil {
+		if err := s.AccountRecoverySetting.Validate(); err != nil {
+			invalidParams.AddNested("AccountRecoverySetting", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.AdminCreateUserConfig != nil {
 		if err := s.AdminCreateUserConfig.Validate(); err != nil {
 			invalidParams.AddNested("AdminCreateUserConfig", err.(request.ErrInvalidParams))
@@ -25096,6 +25447,12 @@ func (s *UpdateUserPoolInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAccountRecoverySetting sets the AccountRecoverySetting field's value.
+func (s *UpdateUserPoolInput) SetAccountRecoverySetting(v *AccountRecoverySettingType) *UpdateUserPoolInput {
+	s.AccountRecoverySetting = v
+	return s
 }
 
 // SetAdminCreateUserConfig sets the AdminCreateUserConfig field's value.
@@ -25547,7 +25904,28 @@ type UserPoolClientType struct {
 	// App callback URLs such as myapp://example are also supported.
 	DefaultRedirectURI *string `min:"1" type:"string"`
 
-	// The explicit authentication flows.
+	// The authentication flows that are supported by the user pool clients. Flow
+	// names without the ALLOW_ prefix are deprecated in favor of new names with
+	// the ALLOW_ prefix. Note that values with ALLOW_ prefix cannot be used along
+	// with values without ALLOW_ prefix.
+	//
+	// Valid values include:
+	//
+	//    * ALLOW_ADMIN_USER_PASSWORD_AUTH: Enable admin based user password authentication
+	//    flow ADMIN_USER_PASSWORD_AUTH. This setting replaces the ADMIN_NO_SRP_AUTH
+	//    setting. With this authentication flow, Cognito receives the password
+	//    in the request instead of using the SRP (Secure Remote Password protocol)
+	//    protocol to verify passwords.
+	//
+	//    * ALLOW_CUSTOM_AUTH: Enable Lambda trigger based authentication.
+	//
+	//    * ALLOW_USER_PASSWORD_AUTH: Enable user password-based authentication.
+	//    In this flow, Cognito receives the password in the request instead of
+	//    using the SRP protocol to verify passwords.
+	//
+	//    * ALLOW_USER_SRP_AUTH: Enable SRP based authentication.
+	//
+	//    * ALLOW_REFRESH_TOKEN_AUTH: Enable authflow to refresh tokens.
 	ExplicitAuthFlows []*string `type:"list"`
 
 	// The date the user pool client was last modified.
@@ -25555,6 +25933,44 @@ type UserPoolClientType struct {
 
 	// A list of allowed logout URLs for the identity providers.
 	LogoutURLs []*string `type:"list"`
+
+	// Use this setting to choose which errors and responses are returned by Cognito
+	// APIs during authentication, account confirmation, and password recovery when
+	// the user does not exist in the user pool. When set to ENABLED and the user
+	// does not exist, authentication returns an error indicating either the username
+	// or password was incorrect, and account confirmation and password recovery
+	// return a response indicating a code was sent to a simulated destination.
+	// When set to LEGACY, those APIs will return a UserNotFoundException exception
+	// if the user does not exist in the user pool.
+	//
+	// Valid values include:
+	//
+	//    * ENABLED - This prevents user existence-related errors.
+	//
+	//    * LEGACY - This represents the old behavior of Cognito where user existence
+	//    related errors are not prevented.
+	//
+	// This setting affects the behavior of following APIs:
+	//
+	//    * AdminInitiateAuth
+	//
+	//    * AdminRespondToAuthChallenge
+	//
+	//    * InitiateAuth
+	//
+	//    * RespondToAuthChallenge
+	//
+	//    * ForgotPassword
+	//
+	//    * ConfirmForgotPassword
+	//
+	//    * ConfirmSignUp
+	//
+	//    * ResendConfirmationCode
+	//
+	// After January 1st 2020, the value of PreventUserExistenceErrors will default
+	// to ENABLED for newly created user pool clients if no value is provided.
+	PreventUserExistenceErrors *string `type:"string" enum:"PreventUserExistenceErrorTypes"`
 
 	// The Read-only attributes.
 	ReadAttributes []*string `type:"list"`
@@ -25659,6 +26075,12 @@ func (s *UserPoolClientType) SetLastModifiedDate(v time.Time) *UserPoolClientTyp
 // SetLogoutURLs sets the LogoutURLs field's value.
 func (s *UserPoolClientType) SetLogoutURLs(v []*string) *UserPoolClientType {
 	s.LogoutURLs = v
+	return s
+}
+
+// SetPreventUserExistenceErrors sets the PreventUserExistenceErrors field's value.
+func (s *UserPoolClientType) SetPreventUserExistenceErrors(v string) *UserPoolClientType {
+	s.PreventUserExistenceErrors = &v
 	return s
 }
 
@@ -25804,6 +26226,15 @@ func (s *UserPoolPolicyType) SetPasswordPolicy(v *PasswordPolicyType) *UserPoolP
 type UserPoolType struct {
 	_ struct{} `type:"structure"`
 
+	// Use this setting to define which verified available method a user can use
+	// to recover their password when they call ForgotPassword. It allows you to
+	// define a preferred method when a user has more than one method available.
+	// With this setting, SMS does not qualify for a valid password recovery mechanism
+	// if the user also has SMS MFA enabled. In the absence of this setting, Cognito
+	// uses the legacy behavior to determine the recovery method where SMS is preferred
+	// over email.
+	AccountRecoverySetting *AccountRecoverySettingType `type:"structure"`
+
 	// The configuration for AdminCreateUser requests.
 	AdminCreateUserConfig *AdminCreateUserConfigType `type:"structure"`
 
@@ -25916,6 +26347,12 @@ func (s UserPoolType) String() string {
 // GoString returns the string representation
 func (s UserPoolType) GoString() string {
 	return s.String()
+}
+
+// SetAccountRecoverySetting sets the AccountRecoverySetting field's value.
+func (s *UserPoolType) SetAccountRecoverySetting(v *AccountRecoverySettingType) *UserPoolType {
+	s.AccountRecoverySetting = v
+	return s
 }
 
 // SetAdminCreateUserConfig sets the AdminCreateUserConfig field's value.
@@ -26544,6 +26981,9 @@ const (
 
 	// AuthFlowTypeUserPasswordAuth is a AuthFlowType enum value
 	AuthFlowTypeUserPasswordAuth = "USER_PASSWORD_AUTH"
+
+	// AuthFlowTypeAdminUserPasswordAuth is a AuthFlowType enum value
+	AuthFlowTypeAdminUserPasswordAuth = "ADMIN_USER_PASSWORD_AUTH"
 )
 
 const (
@@ -26690,6 +27130,21 @@ const (
 
 	// ExplicitAuthFlowsTypeUserPasswordAuth is a ExplicitAuthFlowsType enum value
 	ExplicitAuthFlowsTypeUserPasswordAuth = "USER_PASSWORD_AUTH"
+
+	// ExplicitAuthFlowsTypeAllowAdminUserPasswordAuth is a ExplicitAuthFlowsType enum value
+	ExplicitAuthFlowsTypeAllowAdminUserPasswordAuth = "ALLOW_ADMIN_USER_PASSWORD_AUTH"
+
+	// ExplicitAuthFlowsTypeAllowCustomAuth is a ExplicitAuthFlowsType enum value
+	ExplicitAuthFlowsTypeAllowCustomAuth = "ALLOW_CUSTOM_AUTH"
+
+	// ExplicitAuthFlowsTypeAllowUserPasswordAuth is a ExplicitAuthFlowsType enum value
+	ExplicitAuthFlowsTypeAllowUserPasswordAuth = "ALLOW_USER_PASSWORD_AUTH"
+
+	// ExplicitAuthFlowsTypeAllowUserSrpAuth is a ExplicitAuthFlowsType enum value
+	ExplicitAuthFlowsTypeAllowUserSrpAuth = "ALLOW_USER_SRP_AUTH"
+
+	// ExplicitAuthFlowsTypeAllowRefreshTokenAuth is a ExplicitAuthFlowsType enum value
+	ExplicitAuthFlowsTypeAllowRefreshTokenAuth = "ALLOW_REFRESH_TOKEN_AUTH"
 )
 
 const (
@@ -26713,6 +27168,9 @@ const (
 	// IdentityProviderTypeTypeLoginWithAmazon is a IdentityProviderTypeType enum value
 	IdentityProviderTypeTypeLoginWithAmazon = "LoginWithAmazon"
 
+	// IdentityProviderTypeTypeSignInWithApple is a IdentityProviderTypeType enum value
+	IdentityProviderTypeTypeSignInWithApple = "SignInWithApple"
+
 	// IdentityProviderTypeTypeOidc is a IdentityProviderTypeType enum value
 	IdentityProviderTypeTypeOidc = "OIDC"
 )
@@ -26734,6 +27192,25 @@ const (
 
 	// OAuthFlowTypeClientCredentials is a OAuthFlowType enum value
 	OAuthFlowTypeClientCredentials = "client_credentials"
+)
+
+const (
+	// PreventUserExistenceErrorTypesLegacy is a PreventUserExistenceErrorTypes enum value
+	PreventUserExistenceErrorTypesLegacy = "LEGACY"
+
+	// PreventUserExistenceErrorTypesEnabled is a PreventUserExistenceErrorTypes enum value
+	PreventUserExistenceErrorTypesEnabled = "ENABLED"
+)
+
+const (
+	// RecoveryOptionNameTypeVerifiedEmail is a RecoveryOptionNameType enum value
+	RecoveryOptionNameTypeVerifiedEmail = "verified_email"
+
+	// RecoveryOptionNameTypeVerifiedPhoneNumber is a RecoveryOptionNameType enum value
+	RecoveryOptionNameTypeVerifiedPhoneNumber = "verified_phone_number"
+
+	// RecoveryOptionNameTypeAdminOnly is a RecoveryOptionNameType enum value
+	RecoveryOptionNameTypeAdminOnly = "admin_only"
 )
 
 const (

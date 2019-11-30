@@ -11,6 +11,21 @@ poll "closed_issue_locker" "locker" {
   EOF
 }
 
+poll "stale_issue_closer" "closer" {
+    schedule = "0 22 23 * * *"
+    no_reply_in_last = "2160h" # 90 days
+    max_issues = 500
+    sleep_between_issues = "5s"
+    created_after = "2019-06-01"
+    exclude_labels = ["needs-triage", "technical-debt"]
+    extra_search_params = "reactions:<20 no:milestone no:assignee"
+    message = <<-EOF
+    I'm going to close this issue due to inactivity (_90 days_ without response ⏳ ). This helps our maintainers find and focus on the active issues.
+
+    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
+    EOF
+}
+
 behavior "deprecated_import_commenter" "hashicorp_terraform" {
   import_regexp = "github.com/hashicorp/terraform/"
   marker_label  = "terraform-plugin-sdk-migration"
@@ -33,6 +48,10 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 
     We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
   EOF
+}
+
+behavior "opened_pull_request_labeler" "triage" {
+  labels = ["needs-triage"]
 }
 
 queued_behavior "release_commenter" "releases" {
@@ -134,7 +153,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_cloudsearch_",
     ],
     "service/cloudtrail" = [
-      "aws_cloudtrail_",
+      "aws_cloudtrail",
     ],
     "service/cloudwatch" = [
       "aws_cloudwatch_([^e]|e[^v]|ev[^e]|eve[^n]|even[^t]|event[^_]|[^l]|l[^o]|lo[^g]|log[^_])",
@@ -294,6 +313,12 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/iot" = [
       "aws_iot_",
+    ],
+    "service/iotanalytics" = [
+      "aws_iotanalytics_",
+    ],
+    "service/iotevents" = [
+      "aws_iotevents_",
     ],
     "service/kafka" = [
       "aws_msk_",
@@ -530,7 +555,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigateway" = [
       "**/*_api_gateway_[^v][^2][^_]*",
-      "**/api_gateway_[^v][^2][^_]*"
+      "**/*_api_gateway_vpc_link*",
+      "**/api_gateway_[^v][^2][^_]*",
+      "**/api_gateway_vpc_link*"
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
@@ -561,7 +588,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/appsync_*"
     ]
     "service/athena" = [
-      "service/athena",
+      "**/*_athena_*",
       "**/athena_*"
     ]
     "service/autoscaling" = [
@@ -611,8 +638,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/cloudsearch_*"
     ]
     "service/cloudtrail" = [
-      "**/*_cloudtrail_*",
-      "**/cloudtrail_*"
+      "**/*_cloudtrail*",
+      "**/cloudtrail*"
     ]
     "service/cloudwatch" = [
       "**/*_cloudwatch_dashboard*",
@@ -867,6 +894,14 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iot_*",
       "**/iot_*"
     ]
+    "service/iotanalytics" = [
+      "**/*_iotanalytics_*",
+      "**/iotanalytics_*"
+    ]
+    "service/iotevents" = [
+      "**/*_iotevents_*",
+      "**/iotevents_*"
+    ]
     "service/kafka" = [
       "**/*_msk_*",
       "**/msk_*",
@@ -963,6 +998,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/qldb" = [
+      "**/*_qldb_*",
+      "**/qldb_*"
+    ]
     "service/quicksight" = [
       "**/*_quicksight_*",
       "**/quicksight_*"
@@ -1006,8 +1045,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_domains_*"
     ]
     "service/route53resolver" = [
-      "**/*_route53resolver_*",
-      "**/route53resolver_*"
+      "**/*_route53_resolver_*",
+      "**/route53_resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",

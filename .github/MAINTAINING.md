@@ -285,6 +285,6 @@ Changes that should _not_ have a CHANGELOG entry:
 - Create a milestone for the next release after this release (generally, the next milestone will be a minor version increase unless previously decided for a major or patch version)
 - Check the existing release milestone for open items and either work through them or move them to the next milestone
 - Run the HashiCorp (non-OSS) TeamCity release job with the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
-- Wait for the TeamCity release job and TeamCity website deployment jobs to complete either by watching the build logs or Slack notifications
+- Wait for the TeamCity release job and CircleCI website deployment jobs to complete either by watching the build logs or Slack notifications
 - Close the release milestone
-- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`). This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.
+- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`) and copy the notes from the CHANGELOG to the release notes. This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.
