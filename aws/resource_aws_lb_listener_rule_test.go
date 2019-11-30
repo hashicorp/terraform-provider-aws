@@ -1149,7 +1149,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -1261,7 +1262,8 @@ resource "aws_alb_listener_rule" "static" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -1378,7 +1380,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -1482,7 +1485,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -1581,7 +1585,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -1693,7 +1698,8 @@ resource "aws_lb_listener_rule" "static" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -1913,7 +1919,8 @@ resource "aws_lb_listener_rule" "first" {
   }
 
   condition {
-    path_pattern = ["/first/*"]
+    field = "path-pattern"
+    values = ["/first/*"]
   }
 }
 
@@ -1927,7 +1934,8 @@ resource "aws_lb_listener_rule" "third" {
   }
 
   condition {
-    path_pattern = ["/third/*"]
+    field = "path-pattern"
+    values = ["/third/*"]
   }
 
   depends_on = ["aws_lb_listener_rule.first"]
@@ -1946,7 +1954,8 @@ resource "aws_lb_listener_rule" "last" {
   }
 
   condition {
-    path_pattern = ["/last/*"]
+    field = "path-pattern"
+    values = ["/last/*"]
   }
 }
 `)
@@ -1964,7 +1973,8 @@ resource "aws_lb_listener_rule" "last" {
   }
 
   condition {
-    path_pattern = ["/last/*"]
+    field = "path-pattern"
+    values = ["/last/*"]
   }
 }
 `)
@@ -1983,7 +1993,8 @@ resource "aws_lb_listener_rule" "parallelism" {
   }
 
   condition {
-    path_pattern = ["/${count.index}/*"]
+    field = "path-pattern"
+    values = ["/${count.index}/*"]
   }
 }
 `)
@@ -2001,7 +2012,8 @@ resource "aws_lb_listener_rule" "priority50000" {
   }
 
   condition {
-    path_pattern = ["/50000/*"]
+    field = "path-pattern"
+    values = ["/50000/*"]
   }
 }
 `)
@@ -2019,7 +2031,8 @@ resource "aws_lb_listener_rule" "priority50001" {
   }
 
   condition {
-    path_pattern = ["/50001/*"]
+    field = "path-pattern"
+    values = ["/50001/*"]
   }
 }
 `)
@@ -2037,7 +2050,8 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
   }
 
   condition {
-    path_pattern = ["/50000_in_use/*"]
+    field = "path-pattern"
+    values = ["/50000_in_use/*"]
   }
 }
 `)
@@ -2069,7 +2083,8 @@ resource "aws_lb_listener_rule" "cognito" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -2227,7 +2242,8 @@ resource "aws_lb_listener_rule" "oidc" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
@@ -2371,7 +2387,8 @@ resource "aws_lb_listener_rule" "test" {
   }
 
   condition {
-    path_pattern = ["/static/*"]
+    field  = "path-pattern"
+    values = ["/static/*"]
   }
 }
 
