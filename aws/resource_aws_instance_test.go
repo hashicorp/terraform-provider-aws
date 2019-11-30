@@ -148,28 +148,6 @@ func TestFetchRootDevice(t *testing.T) {
 
 func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 	resourceName := "aws_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigVPC,
-			},
-
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "user_data", "use_spot_market"},
-			},
-		},
-	})
-}
-
-func TestAccAWSInstance_importInDefaultVpcBySgName(t *testing.T) {
-	resourceName := "aws_instance.foo"
 	rInt := acctest.RandInt()
 	var v ec2.Instance
 
