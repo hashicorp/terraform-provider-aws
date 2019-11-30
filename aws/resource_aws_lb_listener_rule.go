@@ -298,14 +298,25 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Deprecated: "use 'host_header' or 'path_pattern' attribute instead",
 						},
 						"host_header": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Optional: true,
 							Computed: true, // Deprecated: remove Computed
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 128),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"values": {
+										Type: schema.TypeSet,
+										// Deprecated: Change Optional & Computed to Required in next major version of the provider
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										Set: schema.HashString,
+									},
+								},
 							},
-							Set: schema.HashString,
 						},
 						"http_header": {
 							Type:     schema.TypeList,
@@ -331,23 +342,43 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							},
 						},
 						"http_request_method": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"values": {
+										Type: schema.TypeSet,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
+										},
+										Required: true,
+										Set:      schema.HashString,
+									},
+								},
 							},
-							Set: schema.HashString,
 						},
 						"path_pattern": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Optional: true,
 							Computed: true, // Deprecated: remove Computed
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 128),
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"values": {
+										Type: schema.TypeSet,
+										// Deprecated: Change Optional & Computed to Required in next major version of the provider
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringLenBetween(1, 128),
+										},
+										Set: schema.HashString,
+									},
+								},
 							},
-							Set: schema.HashString,
 						},
 						"query_string": {
 							Type:     schema.TypeSet,
@@ -367,13 +398,22 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Set: lbListenerRuleConditionQueryStringHash,
 						},
 						"source_ip": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validateCIDRNetworkAddress,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"values": {
+										Type: schema.TypeSet,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+											ValidateFunc: validateCIDRNetworkAddress,
+										},
+										Required: true,
+										Set:      schema.HashString,
+									},
+								},
 							},
-							Set: schema.HashString,
 						},
 						"values": {
 							Type:     schema.TypeList,
@@ -406,10 +446,13 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 
 	m := v.(map[string]interface{})
 
-	if hostHeader, ok := m["host_header"].(*schema.Set); ok && hostHeader.Len() > 0 {
-		field = "host-header"
-		for _, l := range hostHeader.List() {
-			fmt.Fprint(&buf, l, "-")
+	if hostHeader, ok := m["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
+		if hostHeader[0] != nil {
+			field = "host-header"
+			values := hostHeader[0].(map[string]interface{})["values"].(*schema.Set)
+			for _, l := range values.List() {
+				fmt.Fprint(&buf, l, "-")
+			}
 		}
 	} else if m["field"].(string) == "host-header" {
 		// Backwards compatibility
@@ -429,17 +472,21 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 		}
 	}
 
-	if httpRequestMethod, ok := m["http_request_method"].(*schema.Set); ok && httpRequestMethod.Len() > 0 {
+	if httpRequestMethod, ok := m["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 && httpRequestMethod[0] != nil {
 		field = "http-request-method"
-		for _, l := range httpRequestMethod.List() {
+		values := httpRequestMethod[0].(map[string]interface{})["values"].(*schema.Set)
+		for _, l := range values.List() {
 			fmt.Fprint(&buf, l, "-")
 		}
 	}
 
-	if pathPattern, ok := m["path_pattern"].(*schema.Set); ok && pathPattern.Len() > 0 {
-		field = "path-pattern"
-		for _, l := range pathPattern.List() {
-			fmt.Fprint(&buf, l, "-")
+	if pathPattern, ok := m["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
+		if pathPattern[0] != nil {
+			field = "path-pattern"
+			values := pathPattern[0].(map[string]interface{})["values"].(*schema.Set)
+			for _, l := range values.List() {
+				fmt.Fprint(&buf, l, "-")
+			}
 		}
 	} else if m["field"].(string) == "path-pattern" {
 		// Backwards compatibility
@@ -456,9 +503,10 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 		}
 	}
 
-	if sourceIp, ok := m["source_ip"].(*schema.Set); ok && sourceIp.Len() > 0 {
+	if sourceIp, ok := m["source_ip"].([]interface{}); ok && len(sourceIp) > 0 && sourceIp[0] != nil {
 		field = "source-ip"
-		for _, l := range sourceIp.List() {
+		values := sourceIp[0].(map[string]interface{})["values"].(*schema.Set)
+		for _, l := range values.List() {
 			fmt.Fprint(&buf, l, "-")
 		}
 	}
@@ -822,7 +870,11 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 
 		switch conditionMap["field"] {
 		case "host-header":
-			conditionMap["host_header"] = flattenStringSet(condition.HostHeaderConfig.Values)
+			conditionMap["host_header"] = []interface{}{
+				map[string]interface{}{
+					"values": flattenStringSet(condition.HostHeaderConfig.Values),
+				},
+			}
 
 		case "http-header":
 			conditionMap["http_header"] = []interface{}{
@@ -833,10 +885,18 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			}
 
 		case "http-request-method":
-			conditionMap["http_request_method"] = flattenStringSet(condition.HttpRequestMethodConfig.Values)
+			conditionMap["http_request_method"] = []interface{}{
+				map[string]interface{}{
+					"values": flattenStringSet(condition.HttpRequestMethodConfig.Values),
+				},
+			}
 
 		case "path-pattern":
-			conditionMap["path_pattern"] = flattenStringSet(condition.PathPatternConfig.Values)
+			conditionMap["path_pattern"] = []interface{}{
+				map[string]interface{}{
+					"values": flattenStringSet(condition.PathPatternConfig.Values),
+				},
+			}
 
 		case "query-string":
 			values := make([]interface{}, len(condition.QueryStringConfig.Values))
@@ -849,7 +909,11 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 			conditionMap["query_string"] = schema.NewSet(lbListenerRuleConditionQueryStringHash, values)
 
 		case "source-ip":
-			conditionMap["source_ip"] = flattenStringSet(condition.SourceIpConfig.Values)
+			conditionMap["source_ip"] = []interface{}{
+				map[string]interface{}{
+					"values": flattenStringSet(condition.SourceIpConfig.Values),
+				},
+			}
 		}
 
 		conditions[i] = conditionMap
@@ -1127,12 +1191,13 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 		var field string
 		var attrs int
 
-		if hostHeader, ok := conditionMap["host_header"].(*schema.Set); ok && hostHeader.Len() > 0 {
+		if hostHeader, ok := conditionMap["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
 			field = "host-header"
 			attrs += 1
+			values := hostHeader[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].HostHeaderConfig = &elbv2.HostHeaderConditionConfig{
-				Values: expandStringSet(hostHeader),
+				Values: expandStringSet(values),
 			}
 		}
 
@@ -1148,21 +1213,23 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			}
 		}
 
-		if httpRequestMethod, ok := conditionMap["http_request_method"].(*schema.Set); ok && httpRequestMethod.Len() > 0 {
+		if httpRequestMethod, ok := conditionMap["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 {
 			field = "http-request-method"
 			attrs += 1
+			values := httpRequestMethod[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].HttpRequestMethodConfig = &elbv2.HttpRequestMethodConditionConfig{
-				Values: expandStringSet(httpRequestMethod),
+				Values: expandStringSet(values),
 			}
 		}
 
-		if pathPattern, ok := conditionMap["path_pattern"].(*schema.Set); ok && pathPattern.Len() > 0 {
+		if pathPattern, ok := conditionMap["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
 			field = "path-pattern"
 			attrs += 1
+			values := pathPattern[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].PathPatternConfig = &elbv2.PathPatternConditionConfig{
-				Values: expandStringSet(pathPattern),
+				Values: expandStringSet(values),
 			}
 		}
 
@@ -1186,12 +1253,13 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			}
 		}
 
-		if sourceIp, ok := conditionMap["source_ip"].(*schema.Set); ok && sourceIp.Len() > 0 {
+		if sourceIp, ok := conditionMap["source_ip"].([]interface{}); ok && len(sourceIp) > 0 {
 			field = "source-ip"
 			attrs += 1
+			values := sourceIp[0].(map[string]interface{})["values"].(*schema.Set)
 
 			elbConditions[i].SourceIpConfig = &elbv2.SourceIpConditionConfig{
-				Values: expandStringSet(sourceIp),
+				Values: expandStringSet(values),
 			}
 		}
 
