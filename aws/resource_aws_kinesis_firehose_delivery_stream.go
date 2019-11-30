@@ -2312,7 +2312,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.FirehoseUpdateTags(conn, sn, o, n); err != nil {
-			return fmt.Errorf("error updating Firehose (%s) tags: %s", sn, err)
+			return fmt.Errorf("error updating Kinesis Firehose Delivery Stream (%s) tags: %s", sn, err)
 		}
 	}
 
@@ -2372,7 +2372,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	tags, err := keyvaluetags.FirehoseListTags(conn, sn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Firehose (%s): %s", sn, err)
+		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
