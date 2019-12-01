@@ -120,7 +120,7 @@ func resourceAwsEc2TransitGatewayCreate(d *schema.ResourceData, meta interface{}
 			DnsSupport:                   aws.String(d.Get("dns_support").(string)),
 			VpnEcmpSupport:               aws.String(d.Get("vpn_ecmp_support").(string)),
 		},
-		TagSpecifications: expandEc2TransitGatewayTagSpecifications(d.Get("tags").(map[string]interface{})),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeTransitGateway),
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
