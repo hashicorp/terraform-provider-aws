@@ -383,6 +383,7 @@ Attributes for Hadoop job step configuration
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn`- The ARN of the cluster.
 * `id` - The ID of the EMR Cluster
 * `name` - The name of the cluster.
 * `release_label` - The release label for the Amazon EMR release.
