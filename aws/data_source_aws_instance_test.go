@@ -23,6 +23,8 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
 					resource.TestMatchResourceAttr(datasourceName, "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
 				),
@@ -450,6 +452,10 @@ resource "aws_instance" "test" {
   # us-west-2
   ami = "ami-4fccb37f"
   instance_type = "m1.small"
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens = "optional"
+  }
   tags = {
     Name = "HelloWorld"
   }
