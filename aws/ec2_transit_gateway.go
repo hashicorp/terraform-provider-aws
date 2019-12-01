@@ -394,19 +394,6 @@ func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtta
 	}
 }
 
-func expandEc2TransitGatewayAttachmentTagSpecifications(m map[string]interface{}) []*ec2.TagSpecification {
-	if len(m) == 0 {
-		return nil
-	}
-
-	return []*ec2.TagSpecification{
-		{
-			ResourceType: aws.String("transit-gateway-attachment"),
-			Tags:         tagsFromMap(m),
-		},
-	}
-}
-
 func expandEc2TransitGatewayRouteTableTagSpecifications(m map[string]interface{}) []*ec2.TagSpecification {
 	if len(m) == 0 {
 		return nil
