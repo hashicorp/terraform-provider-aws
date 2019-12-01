@@ -290,6 +290,8 @@ func TestAccAWSInstance_basic(t *testing.T) {
 						resourceName,
 						"arn",
 						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
 				),
 			},
 			{
@@ -2788,6 +2790,11 @@ resource "aws_instance" "test" {
   instance_type   = "m1.small"
   security_groups = ["${aws_security_group.tf_test_test.name}"]
   user_data       = "foo:-with-character's"
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens = "optional"
+  }
 }
 `, rInt)
 }
