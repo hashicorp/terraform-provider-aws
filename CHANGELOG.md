@@ -6,6 +6,7 @@ ENHANCEMENTS:
 * resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter [GH-11041]
 * resource/aws_iam_access_key: Remove deprecation from `secret` and mark `secret` and `ses_smtp_password` to sensitive [GH-10908]
 * resource/aws_iam_user: Delete a user's virtual MFA devices when `force_destroy` is enabled [GH-11040]
+* resource/aws_emr_cluster: Outputs EMR cluster ARN [GH-11078]
 
 BUG FIXES:
 
