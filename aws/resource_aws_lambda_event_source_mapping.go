@@ -129,18 +129,6 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"on_success": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"destination_arn": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
 						"on_failure": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -239,12 +227,15 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	}
 
 	if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
-		params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
+		if esArn.Service != "sqs" {
+			params.SetBisectBatchOnFunctionError(bisectBatchOnFunctionError.(bool))
+		}
 	}
 
 	if vDest, ok := d.GetOk("destination_config"); ok {
-		dest := expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}), eventSourceArn)
-		params.SetDestinationConfig(dest)
+		if esArn.Service != "sqs" {
+			params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
+		}
 	}
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
@@ -397,13 +388,8 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if vDest, ok := d.GetOk("destination_config"); ok {
-		dest := expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}), d.Get("event_source_arn").(string))
-		params.SetDestinationConfig(dest)
+		params.SetDestinationConfig(expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{})))
 	}
-	// else {
-	// 	dest := expandLambdaEventSourceMappingDestinationConfig([]interface{}{}, d.Get("event_source_arn").(string))
-	// 	params.SetDestinationConfig(dest)
-	// }
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(params)

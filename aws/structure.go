@@ -1526,48 +1526,25 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 	return []interface{}{envs}
 }
 
-func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}, eventSourceArn string) *lambda.DestinationConfig {
+func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
 	dest := &lambda.DestinationConfig{}
-	onSuccess := &lambda.OnSuccess{}
 	onFailure := &lambda.OnFailure{}
 
 	if len(vDest) > 0 {
 		if config, ok := vDest[0].(map[string]interface{}); ok {
-			if vOnSuccess, ok := config["on_success"].([]interface{}); ok && len(vOnSuccess) > 0 && vOnSuccess[0] != nil {
-				mOnSuccess := vOnSuccess[0].(map[string]interface{})
-				onSuccess.SetDestination(mOnSuccess["destination_arn"].(string))
-			}
 			if vOnFailure, ok := config["on_failure"].([]interface{}); ok && len(vOnFailure) > 0 && vOnFailure[0] != nil {
 				mOnFailure := vOnFailure[0].(map[string]interface{})
 				onFailure.SetDestination(mOnFailure["destination_arn"].(string))
 			}
 		}
 	}
-
-	esArn, err := arn.Parse(eventSourceArn)
-	if err != nil {
-		return dest
-	}
-
-	if esArn.Service == "sqs" {
-		dest.SetOnSuccess(onSuccess)
-	}
 	dest.SetOnFailure(onFailure)
-
 	return dest
 }
 
 func flattenLambdaEventSourceMappingDestinationConfig(dest *lambda.DestinationConfig) []interface{} {
 	mDest := map[string]interface{}{}
-	mOnSuccess := map[string]interface{}{}
 	mOnFailure := map[string]interface{}{}
-
-	if dest.OnSuccess != nil {
-		if dest.OnSuccess.Destination != nil {
-			mOnSuccess["destination_arn"] = *dest.OnSuccess.Destination
-			mDest["on_success"] = []interface{}{mOnSuccess}
-		}
-	}
 
 	if dest.OnFailure != nil {
 		if dest.OnFailure.Destination != nil {

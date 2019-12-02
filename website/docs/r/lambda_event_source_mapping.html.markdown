@@ -61,10 +61,9 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 ### destination_config
 
-* `on_success` - (Optional) The destination configuration for successful invocations. Can only be used by an SQS event source. Detailed below.
 * `on_failure` - (Optional) The destination configuration for failed invocations. Detailed below.
 
-### on_success / on_failure
+### on_failure
 
 * `destination_arn` - (Required) The Amazon Resource Name (ARN) of the destination resource.
 
