@@ -552,7 +552,7 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		d.Set("type", dataSourceType)
 	}
 
-	if v := d.Get("permissions"); v != nil {
+	if v := d.Get("permission"); v != nil {
 		params.Permissions = make([]*quicksight.ResourcePermission, 0)
 
 		for _, v := range v.(*schema.Set).List() {
@@ -601,13 +601,13 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 		DataSourceId: aws.String(dataSourceId),
 	}
 
-	var resp *quicksight.DescribeDataSourceOutput
+	var dataSourceResp *quicksight.DescribeDataSourceOutput
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
-		resp, err := conn.DescribeDataSource(descOpts)
+		dataSourceResp, err := conn.DescribeDataSource(descOpts)
 
-		if resp != nil && resp.DataSource != nil {
-			status := aws.StringValue(resp.DataSource.Status)
+		if dataSourceResp != nil && dataSourceResp.DataSource != nil {
+			status := aws.StringValue(dataSourceResp.DataSource.Status)
 
 			if status == quicksight.ResourceStatusCreationInProgress || status == quicksight.ResourceStatusUpdateInProgress {
 				return resource.RetryableError(fmt.Errorf("Data Source operation still in progress (%s): %s", d.Id(), status))
@@ -633,176 +633,191 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("Error describing QuickSight Data Source (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.DataSource.Arn)
-	d.Set("id", resp.DataSource.DataSourceId)
+	permsResp, err := conn.DescribeDataSourcePermissions(&quicksight.DescribeDataSourcePermissionsInput{
+		AwsAccountId: aws.String(awsAccountId),
+		DataSourceId: aws.String(dataSourceId),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error describing QuickSight Data Source permissions (%s): %s", d.Id(), err)
+	}
+
+	dataSource := dataSourceResp.DataSource
+
+	d.Set("arn", dataSource.Arn)
+	d.Set("id", dataSource.DataSourceId)
 	d.Set("aws_account_id", awsAccountId)
 
-	if resp.DataSource.DataSourceParameters.AmazonElasticsearchParameters != nil {
+	if err := d.Set("permission", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
+		return fmt.Errorf("Error setting permission error: %#v", err)
+	}
+
+	if dataSource.DataSourceParameters.AmazonElasticsearchParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"amazon_elasticsearch": {
-				"domain": resp.DataSource.DataSourceParameters.AmazonElasticsearchParameters.Domain,
+				"domain": dataSource.DataSourceParameters.AmazonElasticsearchParameters.Domain,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.AthenaParameters != nil {
+	if dataSource.DataSourceParameters.AthenaParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"athena": {
-				"work_group": resp.DataSource.DataSourceParameters.AthenaParameters.WorkGroup,
+				"work_group": dataSource.DataSourceParameters.AthenaParameters.WorkGroup,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.AuroraParameters != nil {
+	if dataSource.DataSourceParameters.AuroraParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"aurora": {
-				"database": resp.DataSource.DataSourceParameters.AuroraParameters.Database,
-				"host":     resp.DataSource.DataSourceParameters.AuroraParameters.Host,
-				"port":     resp.DataSource.DataSourceParameters.AuroraParameters.Port,
+				"database": dataSource.DataSourceParameters.AuroraParameters.Database,
+				"host":     dataSource.DataSourceParameters.AuroraParameters.Host,
+				"port":     dataSource.DataSourceParameters.AuroraParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters != nil {
+	if dataSource.DataSourceParameters.AuroraPostgreSqlParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"aurora_postgre_sql": {
-				"database": resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters.Database,
-				"host":     resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters.Host,
-				"port":     resp.DataSource.DataSourceParameters.AuroraPostgreSqlParameters.Port,
+				"database": dataSource.DataSourceParameters.AuroraPostgreSqlParameters.Database,
+				"host":     dataSource.DataSourceParameters.AuroraPostgreSqlParameters.Host,
+				"port":     dataSource.DataSourceParameters.AuroraPostgreSqlParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.AwsIotAnalyticsParameters != nil {
+	if dataSource.DataSourceParameters.AwsIotAnalyticsParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"aws_iot_analytics": {
-				"data_set_name": resp.DataSource.DataSourceParameters.AwsIotAnalyticsParameters.DataSetName,
+				"data_set_name": dataSource.DataSourceParameters.AwsIotAnalyticsParameters.DataSetName,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.JiraParameters != nil {
+	if dataSource.DataSourceParameters.JiraParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"jira": {
-				"site_base_url": resp.DataSource.DataSourceParameters.JiraParameters.SiteBaseUrl,
+				"site_base_url": dataSource.DataSourceParameters.JiraParameters.SiteBaseUrl,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.MariaDbParameters != nil {
+	if dataSource.DataSourceParameters.MariaDbParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"maria_db": {
-				"database": resp.DataSource.DataSourceParameters.MariaDbParameters.Database,
-				"host":     resp.DataSource.DataSourceParameters.MariaDbParameters.Host,
-				"port":     resp.DataSource.DataSourceParameters.MariaDbParameters.Port,
+				"database": dataSource.DataSourceParameters.MariaDbParameters.Database,
+				"host":     dataSource.DataSourceParameters.MariaDbParameters.Host,
+				"port":     dataSource.DataSourceParameters.MariaDbParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.MySqlParameters != nil {
+	if dataSource.DataSourceParameters.MySqlParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"mysql": {
-				"database": resp.DataSource.DataSourceParameters.MySqlParameters.Database,
-				"host":     resp.DataSource.DataSourceParameters.MySqlParameters.Host,
-				"port":     resp.DataSource.DataSourceParameters.MySqlParameters.Port,
+				"database": dataSource.DataSourceParameters.MySqlParameters.Database,
+				"host":     dataSource.DataSourceParameters.MySqlParameters.Host,
+				"port":     dataSource.DataSourceParameters.MySqlParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.PostgreSqlParameters != nil {
+	if dataSource.DataSourceParameters.PostgreSqlParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"postgresql": {
-				"database": resp.DataSource.DataSourceParameters.PostgreSqlParameters.Database,
-				"host":     resp.DataSource.DataSourceParameters.PostgreSqlParameters.Host,
-				"port":     resp.DataSource.DataSourceParameters.PostgreSqlParameters.Port,
+				"database": dataSource.DataSourceParameters.PostgreSqlParameters.Database,
+				"host":     dataSource.DataSourceParameters.PostgreSqlParameters.Host,
+				"port":     dataSource.DataSourceParameters.PostgreSqlParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.PrestoParameters != nil {
+	if dataSource.DataSourceParameters.PrestoParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"presto": {
-				"catalog": resp.DataSource.DataSourceParameters.PrestoParameters.Catalog,
-				"host":    resp.DataSource.DataSourceParameters.PrestoParameters.Host,
-				"port":    resp.DataSource.DataSourceParameters.PrestoParameters.Port,
+				"catalog": dataSource.DataSourceParameters.PrestoParameters.Catalog,
+				"host":    dataSource.DataSourceParameters.PrestoParameters.Host,
+				"port":    dataSource.DataSourceParameters.PrestoParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.RedshiftParameters != nil {
+	if dataSource.DataSourceParameters.RedshiftParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"redshift": {
-				"cluster_id": resp.DataSource.DataSourceParameters.RedshiftParameters.ClusterId,
-				"database":   resp.DataSource.DataSourceParameters.RedshiftParameters.Database,
-				"host":       resp.DataSource.DataSourceParameters.RedshiftParameters.Host,
-				"port":       resp.DataSource.DataSourceParameters.RedshiftParameters.Port,
+				"cluster_id": dataSource.DataSourceParameters.RedshiftParameters.ClusterId,
+				"database":   dataSource.DataSourceParameters.RedshiftParameters.Database,
+				"host":       dataSource.DataSourceParameters.RedshiftParameters.Host,
+				"port":       dataSource.DataSourceParameters.RedshiftParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.S3Parameters != nil {
+	if dataSource.DataSourceParameters.S3Parameters != nil {
 		d.Set("parameters", map[string]map[string]map[string]interface{}{
 			"s3": {
 				"manifest_file_location": {
-					"bucket": resp.DataSource.DataSourceParameters.S3Parameters.ManifestFileLocation.Bucket,
-					"key":    resp.DataSource.DataSourceParameters.S3Parameters.ManifestFileLocation.Key,
+					"bucket": dataSource.DataSourceParameters.S3Parameters.ManifestFileLocation.Bucket,
+					"key":    dataSource.DataSourceParameters.S3Parameters.ManifestFileLocation.Key,
 				},
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.ServiceNowParameters != nil {
+	if dataSource.DataSourceParameters.ServiceNowParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"service_now": {
-				"site_base_url": resp.DataSource.DataSourceParameters.ServiceNowParameters.SiteBaseUrl,
+				"site_base_url": dataSource.DataSourceParameters.ServiceNowParameters.SiteBaseUrl,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.SnowflakeParameters != nil {
+	if dataSource.DataSourceParameters.SnowflakeParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"snowflake": {
-				"database":  resp.DataSource.DataSourceParameters.SnowflakeParameters.Database,
-				"host":      resp.DataSource.DataSourceParameters.SnowflakeParameters.Host,
-				"warehouse": resp.DataSource.DataSourceParameters.SnowflakeParameters.Warehouse,
+				"database":  dataSource.DataSourceParameters.SnowflakeParameters.Database,
+				"host":      dataSource.DataSourceParameters.SnowflakeParameters.Host,
+				"warehouse": dataSource.DataSourceParameters.SnowflakeParameters.Warehouse,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.SparkParameters != nil {
+	if dataSource.DataSourceParameters.SparkParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"spark": {
-				"host": resp.DataSource.DataSourceParameters.SparkParameters.Host,
-				"port": resp.DataSource.DataSourceParameters.SparkParameters.Port,
+				"host": dataSource.DataSourceParameters.SparkParameters.Host,
+				"port": dataSource.DataSourceParameters.SparkParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.SqlServerParameters != nil {
+	if dataSource.DataSourceParameters.SqlServerParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"sql_server": {
-				"database": resp.DataSource.DataSourceParameters.SqlServerParameters.Database,
-				"host":     resp.DataSource.DataSourceParameters.SqlServerParameters.Host,
-				"port":     resp.DataSource.DataSourceParameters.SqlServerParameters.Port,
+				"database": dataSource.DataSourceParameters.SqlServerParameters.Database,
+				"host":     dataSource.DataSourceParameters.SqlServerParameters.Host,
+				"port":     dataSource.DataSourceParameters.SqlServerParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.TeradataParameters != nil {
+	if dataSource.DataSourceParameters.TeradataParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"teradata": {
-				"database": resp.DataSource.DataSourceParameters.TeradataParameters.Database,
-				"host":     resp.DataSource.DataSourceParameters.TeradataParameters.Host,
-				"port":     resp.DataSource.DataSourceParameters.TeradataParameters.Port,
+				"database": dataSource.DataSourceParameters.TeradataParameters.Database,
+				"host":     dataSource.DataSourceParameters.TeradataParameters.Host,
+				"port":     dataSource.DataSourceParameters.TeradataParameters.Port,
 			},
 		})
 	}
 
-	if resp.DataSource.DataSourceParameters.TwitterParameters != nil {
+	if dataSource.DataSourceParameters.TwitterParameters != nil {
 		d.Set("parameters", map[string]map[string]interface{}{
 			"twitter": {
-				"max_rows": resp.DataSource.DataSourceParameters.TwitterParameters.MaxRows,
-				"query":    resp.DataSource.DataSourceParameters.TwitterParameters.Query,
+				"max_rows": dataSource.DataSourceParameters.TwitterParameters.MaxRows,
+				"query":    dataSource.DataSourceParameters.TwitterParameters.Query,
 			},
 		})
 	}
@@ -832,7 +847,26 @@ func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interfac
 		d.Set("type", dataSourceType)
 	}
 
-	// TODO: Handle permissions
+	if d.HasChange("permission") {
+		oraw, nraw := d.GetChange("permission")
+		o := oraw.(*schema.Set).List()
+		n := nraw.(*schema.Set).List()
+		toGrant, toRevoke := diffQuickSightPermissionsToGrantAndRevoke(o, n)
+
+		if len(toGrant) > 0 || len(toRevoke) > 0 {
+			params := &quicksight.UpdateDataSourcePermissionsInput{
+				AwsAccountId:      aws.String(awsAccountId),
+				DataSourceId:      aws.String(dataSourceId),
+				GrantPermissions:  make([]*quicksight.ResourcePermission, 0),
+				RevokePermissions: make([]*quicksight.ResourcePermission, 0),
+			}
+
+			_, err := conn.UpdateDataSourcePermissions(params)
+			if err != nil {
+				return fmt.Errorf("Error updating QuickSight Data Source permissions: %s", err)
+			}
+		}
+	}
 
 	if sslProperties := resourceAwsQuickSightDataSourceSslProperties(d); sslProperties != nil {
 		params.SslProperties = sslProperties

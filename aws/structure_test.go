@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	//"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -1334,6 +1335,43 @@ func TestCognitoUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 		if output != tc.Expected {
 			t.Fatalf("Expected %t match with standard attribute on input: \n\n%#v\n\n", tc.Expected, tc.Input)
 		}
+	}
+}
+
+func TestDiffQuickSightNoPermissionsMeansNoChanges(t *testing.T) {
+	empty := make([]interface{}, 0)
+
+	toGrant, toRevoke := diffQuickSightPermissionsToGrantAndRevoke(empty, empty)
+
+	if len(toGrant) > 0 {
+		t.Fatal("Expected no granted permissions, got", len(toGrant))
+	}
+
+	if len(toRevoke) > 0 {
+		t.Fatal("Expected no revoked permissions, got", len(toRevoke))
+	}
+}
+
+func TestDiffQuickSightNoOldMeansOnlyGrant(t *testing.T) {
+	empty := make([]interface{}, 0)
+	newPerms := []interface{}{
+		map[string]interface{}{
+			"principal": "principal1",
+			"actions": schema.NewSet(schema.HashString, []interface{}{
+				"action1",
+				"action2",
+			}),
+		},
+	}
+
+	toGrant, toRevoke := diffQuickSightPermissionsToGrantAndRevoke(empty, newPerms)
+
+	if len(toGrant) != 1 {
+		t.Fatal("Expected 1 granted permission, got", len(toGrant))
+	}
+
+	if len(toRevoke) > 0 {
+		t.Fatal("Expected no revoked permissions, got", len(toRevoke))
 	}
 }
 
