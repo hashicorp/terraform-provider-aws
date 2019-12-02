@@ -129,6 +129,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `lightsail`
 - `macie`
 - `managedblockchain`
+- `marketplacecatalog`
 - `mediaconnect`
 - `mediaconvert`
 - `medialive`

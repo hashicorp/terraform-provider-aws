@@ -1018,6 +1018,7 @@ func init() {
 		"lightsail",
 		"macie",
 		"managedblockchain",
+		"marketplacecatalog",
 		"mediaconnect",
 		"mediaconvert",
 		"medialive",

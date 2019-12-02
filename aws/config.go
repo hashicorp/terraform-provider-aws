@@ -93,6 +93,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/managedblockchain"
+	"github.com/aws/aws-sdk-go/service/marketplacecatalog"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
@@ -265,6 +266,7 @@ type AWSClient struct {
 	lightsailconn                       *lightsail.Lightsail
 	macieconn                           *macie.Macie
 	managedblockchainconn               *managedblockchain.ManagedBlockchain
+	marketplacecatalogconn              *marketplacecatalog.MarketplaceCatalog
 	mediaconnectconn                    *mediaconnect.MediaConnect
 	mediaconvertconn                    *mediaconvert.MediaConvert
 	medialiveconn                       *medialive.MediaLive
@@ -462,6 +464,7 @@ func (c *Config) Client() (interface{}, error) {
 		lightsailconn:                       lightsail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["lightsail"])})),
 		macieconn:                           macie.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["macie"])})),
 		managedblockchainconn:               managedblockchain.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["managedblockchain"])})),
+		marketplacecatalogconn:              marketplacecatalog.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["marketplacecatalog"])})),
 		mediaconnectconn:                    mediaconnect.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconnect"])})),
 		mediaconvertconn:                    mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["mediaconvert"])})),
 		medialiveconn:                       medialive.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["medialive"])})),
