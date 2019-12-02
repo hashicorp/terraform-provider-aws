@@ -189,8 +189,13 @@ func resourceAwsLambdaEventSourceMapping() *schema.Resource {
 func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
+	esArn, err := arn.Parse(d.Get("event_source_arn").(string))
+	if err != nil {
+		return fmt.Errorf("Error create event source mapping: %s", err)
+	}
+
 	functionName := d.Get("function_name").(string)
-	eventSourceArn := d.Get("event_source_arn").(string)
+	eventSourceArn := esArn.String()
 
 	log.Printf("[DEBUG] Creating Lambda event source mapping: source %s to function %s", eventSourceArn, functionName)
 
@@ -222,11 +227,15 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	}
 
 	if maximumRetryAttempts, ok := d.GetOk("maximum_retry_attempts"); ok {
-		params.SetMaximumRetryAttempts(int64(maximumRetryAttempts.(int)))
+		if esArn.Service != "sqs" {
+			params.SetMaximumRetryAttempts(int64(maximumRetryAttempts.(int)))
+		}
 	}
 
 	if maximumRecordAgeInSeconds, ok := d.GetOk("maximum_record_age_in_seconds"); ok {
-		params.SetMaximumRecordAgeInSeconds(int64(maximumRecordAgeInSeconds.(int)))
+		if esArn.Service != "sqs" {
+			params.SetMaximumRecordAgeInSeconds(int64(maximumRecordAgeInSeconds.(int)))
+		}
 	}
 
 	if bisectBatchOnFunctionError, ok := d.GetOk("bisect_batch_on_function_error"); ok {
@@ -236,20 +245,8 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 	if vDest, ok := d.GetOk("destination_config"); ok {
 		dest := expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}), eventSourceArn)
 		params.SetDestinationConfig(dest)
-	} else {
-		dest := expandLambdaEventSourceMappingDestinationConfig([]interface{}{}, eventSourceArn)
-		params.SetDestinationConfig(dest)
 	}
-
-	// IAM profiles and roles can take some time to propagate in AWS:
-	//  http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	// Error creating Lambda function: InvalidParameterValueException: The
-	// function defined for the task cannot be assumed by Lambda.
-	//
-	// The role may exist, but the permissions may not have propagated, so we
-	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
-	var err error
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
 		if err != nil {
@@ -311,9 +308,10 @@ func resourceAwsLambdaEventSourceMappingRead(d *schema.ResourceData, meta interf
 	d.Set("maximum_retry_attempts", e.MaximumRetryAttempts)
 	d.Set("maximum_record_age_in_seconds", e.MaximumRecordAgeInSeconds)
 	d.Set("bisect_batch_on_function_error", e.BisectBatchOnFunctionError)
-	err = d.Set("destination_config", flattenLambdaEventSourceMappingDestinationConfig(e.DestinationConfig))
-	if err != nil {
-		return fmt.Errorf("error setting destination_config: %v", err)
+
+	dest := flattenLambdaEventSourceMappingDestinationConfig(e.DestinationConfig)
+	if dest != nil {
+		d.Set("destination_config", dest)
 	}
 
 	state := aws.StringValue(e.State)
@@ -401,10 +399,11 @@ func resourceAwsLambdaEventSourceMappingUpdate(d *schema.ResourceData, meta inte
 	if vDest, ok := d.GetOk("destination_config"); ok {
 		dest := expandLambdaEventSourceMappingDestinationConfig(vDest.([]interface{}), d.Get("event_source_arn").(string))
 		params.SetDestinationConfig(dest)
-	} else {
-		dest := expandLambdaEventSourceMappingDestinationConfig([]interface{}{}, d.Get("event_source_arn").(string))
-		params.SetDestinationConfig(dest)
 	}
+	// else {
+	// 	dest := expandLambdaEventSourceMappingDestinationConfig([]interface{}{}, d.Get("event_source_arn").(string))
+	// 	params.SetDestinationConfig(dest)
+	// }
 
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateEventSourceMapping(params)
