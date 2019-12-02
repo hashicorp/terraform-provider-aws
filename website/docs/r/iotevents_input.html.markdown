@@ -1,4 +1,5 @@
 ---
+subcategory: "IoTEvents"
 layout: "aws"
 page_title: "AWS: aws_iotevents_input"
 sidebar_current: "docs-aws-resource-iotevents-input"
