@@ -857,8 +857,8 @@ func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interfac
 			params := &quicksight.UpdateDataSourcePermissionsInput{
 				AwsAccountId:      aws.String(awsAccountId),
 				DataSourceId:      aws.String(dataSourceId),
-				GrantPermissions:  make([]*quicksight.ResourcePermission, 0),
-				RevokePermissions: make([]*quicksight.ResourcePermission, 0),
+				GrantPermissions:  toGrant,
+				RevokePermissions: toRevoke,
 			}
 
 			_, err := conn.UpdateDataSourcePermissions(params)

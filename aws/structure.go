@@ -3854,6 +3854,42 @@ func flattenCognitoIdentityPoolRolesAttachmentMappingRules(d []*cognitoidentity.
 }
 
 func diffQuickSightPermissionsToGrantAndRevoke(oldPerms []interface{}, newPerms []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
+	grants := diffQuickSightPermissionsLookup(oldPerms, newPerms)
+
+	toGrant := make([]*quicksight.ResourcePermission, 0)
+	toRevoke := make([]*quicksight.ResourcePermission, 0)
+
+	for principal, actions := range grants {
+		grant := &quicksight.ResourcePermission{
+			Principal: aws.String(principal),
+			Actions:   make([]*string, 0),
+		}
+		revoke := &quicksight.ResourcePermission{
+			Principal: aws.String(principal),
+			Actions:   make([]*string, 0),
+		}
+
+		for action, shouldGrant := range actions {
+			if shouldGrant {
+				grant.Actions = append(grant.Actions, aws.String(action))
+			} else {
+				revoke.Actions = append(revoke.Actions, aws.String(action))
+			}
+		}
+
+		if len(grant.Actions) > 0 {
+			toGrant = append(toGrant, grant)
+		}
+
+		if len(revoke.Actions) > 0 {
+			toRevoke = append(toRevoke, revoke)
+		}
+	}
+
+	return toGrant, toRevoke
+}
+
+func diffQuickSightPermissionsLookup(oldPerms []interface{}, newPerms []interface{}) map[string]map[string]bool {
 	// Map principal to permissions. `true` means grant, `false` means
 	// revoke and absence means leave alone (i.e. unchanged)
 	grants := make(map[string]map[string]bool, 0)
@@ -3904,37 +3940,7 @@ func diffQuickSightPermissionsToGrantAndRevoke(oldPerms []interface{}, newPerms 
 		}
 	}
 
-	toGrant := make([]*quicksight.ResourcePermission, 0)
-	toRevoke := make([]*quicksight.ResourcePermission, 0)
-
-	for principal, actions := range grants {
-		grant := &quicksight.ResourcePermission{
-			Principal: aws.String(principal),
-			Actions:   make([]*string, 0),
-		}
-		revoke := &quicksight.ResourcePermission{
-			Principal: aws.String(principal),
-			Actions:   make([]*string, 0),
-		}
-
-		for action, shouldGrant := range actions {
-			if shouldGrant {
-				grant.Actions = append(grant.Actions, aws.String(action))
-			} else {
-				revoke.Actions = append(revoke.Actions, aws.String(action))
-			}
-		}
-
-		if len(grant.Actions) > 0 {
-			toGrant = append(toGrant, grant)
-		}
-
-		if len(revoke.Actions) > 0 {
-			toRevoke = append(toRevoke, revoke)
-		}
-	}
-
-	return toGrant, toRevoke
+	return grants
 }
 
 func flattenQuickSightPermissions(perms []*quicksight.ResourcePermission) []map[string]interface{} {
