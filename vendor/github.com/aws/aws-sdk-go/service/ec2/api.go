@@ -54807,14 +54807,14 @@ type DescribeInstancesInput struct {
 	//
 	//    * launch-time - The time when the instance was launched.
 	//
-	//    * metadata-http-tokens - The metadata request authorization state (optional
-	//    | required)
+	//    * metadata-options.http-tokens - The metadata request authorization state
+	//    (optional | required)
 	//
-	//    * metadata-http-put-response-hop-limit - The http metadata request put
-	//    response hop limit (integer, possible values 1 to 64)
+	//    * metadata-options.http-put-response-hop-limit - The http metadata request
+	//    put response hop limit (integer, possible values 1 to 64)
 	//
-	//    * metadata-http-endpoint - Enable or disable metadata access on http endpoint
-	//    (enabled | disabled)
+	//    * metadata-options.http-endpoint - Enable or disable metadata access on
+	//    http endpoint (enabled | disabled)
 	//
 	//    * monitoring-state - Indicates whether detailed monitoring is enabled
 	//    (disabled | enabled).
@@ -69519,6 +69519,10 @@ type Host struct {
 	// The IDs and instance type that are currently running on the Dedicated Host.
 	Instances []*HostInstance `locationName:"instances" locationNameList:"item" type:"list"`
 
+	// Indicates whether the Dedicated Host is in a host resource group. If memberOfServiceLinkedResourceGroup
+	// is true, the host is in a host resource group; otherwise, it is not.
+	MemberOfServiceLinkedResourceGroup *bool `locationName:"memberOfServiceLinkedResourceGroup" type:"boolean"`
+
 	// The ID of the AWS account that owns the Dedicated Host.
 	OwnerId *string `locationName:"ownerId" type:"string"`
 
@@ -69611,6 +69615,12 @@ func (s *Host) SetHostReservationId(v string) *Host {
 // SetInstances sets the Instances field's value.
 func (s *Host) SetInstances(v []*HostInstance) *Host {
 	s.Instances = v
+	return s
+}
+
+// SetMemberOfServiceLinkedResourceGroup sets the MemberOfServiceLinkedResourceGroup field's value.
+func (s *Host) SetMemberOfServiceLinkedResourceGroup(v bool) *Host {
+	s.MemberOfServiceLinkedResourceGroup = &v
 	return s
 }
 
@@ -75925,6 +75935,9 @@ type LaunchTemplatePlacement struct {
 	// The ID of the Dedicated Host for the instance.
 	HostId *string `locationName:"hostId" type:"string"`
 
+	// The ARN of the host resource group in which to launch the instances.
+	HostResourceGroupArn *string `locationName:"hostResourceGroupArn" type:"string"`
+
 	// Reserved for future use.
 	SpreadDomain *string `locationName:"spreadDomain" type:"string"`
 
@@ -75967,6 +75980,12 @@ func (s *LaunchTemplatePlacement) SetHostId(v string) *LaunchTemplatePlacement {
 	return s
 }
 
+// SetHostResourceGroupArn sets the HostResourceGroupArn field's value.
+func (s *LaunchTemplatePlacement) SetHostResourceGroupArn(v string) *LaunchTemplatePlacement {
+	s.HostResourceGroupArn = &v
+	return s
+}
+
 // SetSpreadDomain sets the SpreadDomain field's value.
 func (s *LaunchTemplatePlacement) SetSpreadDomain(v string) *LaunchTemplatePlacement {
 	s.SpreadDomain = &v
@@ -75994,6 +76013,11 @@ type LaunchTemplatePlacementRequest struct {
 
 	// The ID of the Dedicated Host for the instance.
 	HostId *string `type:"string"`
+
+	// The ARN of the host resource group in which to launch the instances. If you
+	// specify a host resource group ARN, omit the Tenancy parameter or set it to
+	// host.
+	HostResourceGroupArn *string `type:"string"`
 
 	// Reserved for future use.
 	SpreadDomain *string `type:"string"`
@@ -76034,6 +76058,12 @@ func (s *LaunchTemplatePlacementRequest) SetGroupName(v string) *LaunchTemplateP
 // SetHostId sets the HostId field's value.
 func (s *LaunchTemplatePlacementRequest) SetHostId(v string) *LaunchTemplatePlacementRequest {
 	s.HostId = &v
+	return s
+}
+
+// SetHostResourceGroupArn sets the HostResourceGroupArn field's value.
+func (s *LaunchTemplatePlacementRequest) SetHostResourceGroupArn(v string) *LaunchTemplatePlacementRequest {
+	s.HostResourceGroupArn = &v
 	return s
 }
 
@@ -78425,6 +78455,9 @@ type ModifyInstancePlacementInput struct {
 	// The ID of the Dedicated Host with which to associate the instance.
 	HostId *string `locationName:"hostId" type:"string"`
 
+	// The ARN of the host resource group in which to place the instance.
+	HostResourceGroupArn *string `type:"string"`
+
 	// The ID of the instance that you are modifying.
 	//
 	// InstanceId is a required field
@@ -78475,6 +78508,12 @@ func (s *ModifyInstancePlacementInput) SetGroupName(v string) *ModifyInstancePla
 // SetHostId sets the HostId field's value.
 func (s *ModifyInstancePlacementInput) SetHostId(v string) *ModifyInstancePlacementInput {
 	s.HostId = &v
+	return s
+}
+
+// SetHostResourceGroupArn sets the HostResourceGroupArn field's value.
+func (s *ModifyInstancePlacementInput) SetHostResourceGroupArn(v string) *ModifyInstancePlacementInput {
+	s.HostResourceGroupArn = &v
 	return s
 }
 
@@ -82916,6 +82955,11 @@ type Placement struct {
 	// is not supported for the ImportInstance command.
 	HostId *string `locationName:"hostId" type:"string"`
 
+	// The ARN of the host resource group in which to launch the instances. If you
+	// specify a host resource group ARN, omit the Tenancy parameter or set it to
+	// host.
+	HostResourceGroupArn *string `locationName:"hostResourceGroupArn" type:"string"`
+
 	// The number of the partition the instance is in. Valid only if the placement
 	// group strategy is set to partition.
 	PartitionNumber *int64 `locationName:"partitionNumber" type:"integer"`
@@ -82960,6 +83004,12 @@ func (s *Placement) SetGroupName(v string) *Placement {
 // SetHostId sets the HostId field's value.
 func (s *Placement) SetHostId(v string) *Placement {
 	s.HostId = &v
+	return s
+}
+
+// SetHostResourceGroupArn sets the HostResourceGroupArn field's value.
+func (s *Placement) SetHostResourceGroupArn(v string) *Placement {
+	s.HostResourceGroupArn = &v
 	return s
 }
 
@@ -101422,6 +101472,9 @@ const (
 
 	// ResourceTypeSnapshot is a ResourceType enum value
 	ResourceTypeSnapshot = "snapshot"
+
+	// ResourceTypeSpotFleetRequest is a ResourceType enum value
+	ResourceTypeSpotFleetRequest = "spot-fleet-request"
 
 	// ResourceTypeSpotInstancesRequest is a ResourceType enum value
 	ResourceTypeSpotInstancesRequest = "spot-instances-request"
