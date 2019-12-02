@@ -308,6 +308,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iam" = [
       "aws_iam_",
     ],
+    "service/imagebuilder" = [
+      "aws_imagebuilder_",
+    ],
     "service/inspector" = [
       "aws_inspector_",
     ],
@@ -885,6 +888,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/iam" = [
       "**/*_iam_*",
       "**/iam_*"
+    ]
+    "service/imagebuilder" = [
+      "**/*_imagebuilder_*",
+      "**/imagebuilder_*"
     ]
     "service/inspector" = [
       "**/*_inspector_*",

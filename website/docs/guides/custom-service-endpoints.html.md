@@ -111,6 +111,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `guardduty`
 - `greengrass`
 - `iam`
+- `imagebuilder`
 - `inspector`
 - `iot`
 - `iotanalytics`
