@@ -1,4 +1,5 @@
 ---
+subcategory: "IoTAnalytics"
 layout: "aws"
 page_title: "AWS: aws_iotevents_detector_model"
 sidebar_current: "docs-aws-resource-iotevents-detector-model"
