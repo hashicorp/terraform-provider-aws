@@ -42,6 +42,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -723,6 +724,23 @@ func GlueListTags(conn *glue.Glue, identifier string) (KeyValueTags, error) {
 	}
 
 	return GlueKeyValueTags(output.Tags), nil
+}
+
+// GreengrassListTags lists greengrass service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GreengrassListTags(conn *greengrass.Greengrass, identifier string) (KeyValueTags, error) {
+	input := &greengrass.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GreengrassKeyValueTags(output.Tags), nil
 }
 
 // GuarddutyListTags lists guardduty service tags.
