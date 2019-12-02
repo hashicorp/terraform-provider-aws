@@ -66,7 +66,7 @@ func resourceAwsQuickSightDataSource() *schema.Resource {
 				},
 			},
 
-			"id": {
+			"data_source_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -531,7 +531,7 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).quicksightconn
 
 	awsAccountId := meta.(*AWSClient).accountid
-	id := d.Get("id").(string)
+	id := d.Get("data_source_id").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountId = v.(string)
@@ -540,6 +540,7 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 	params := &quicksight.CreateDataSourceInput{
 		AwsAccountId: aws.String(awsAccountId),
 		DataSourceId: aws.String(id),
+		Name:         aws.String(d.Get("name").(string)),
 	}
 
 	if credentials := resourceAwsQuickSightDataSourceCredentials(d); credentials != nil {
@@ -552,10 +553,10 @@ func resourceAwsQuickSightDataSourceCreate(d *schema.ResourceData, meta interfac
 		d.Set("type", dataSourceType)
 	}
 
-	if v := d.Get("permission"); v != nil {
+	if v := d.Get("permission"); v != nil && len(v.([]interface{})) != 0 {
 		params.Permissions = make([]*quicksight.ResourcePermission, 0)
 
-		for _, v := range v.(*schema.Set).List() {
+		for _, v := range v.([]interface{}) {
 			permissionResource := v.(map[string]interface{})
 			permission := &quicksight.ResourcePermission{
 				Actions:   expandStringSet(permissionResource["actions"].(*schema.Set)),
@@ -604,7 +605,7 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 	var dataSourceResp *quicksight.DescribeDataSourceOutput
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
-		dataSourceResp, err := conn.DescribeDataSource(descOpts)
+		dataSourceResp, err = conn.DescribeDataSource(descOpts)
 
 		if dataSourceResp != nil && dataSourceResp.DataSource != nil {
 			status := aws.StringValue(dataSourceResp.DataSource.Status)
@@ -645,7 +646,8 @@ func resourceAwsQuickSightDataSourceRead(d *schema.ResourceData, meta interface{
 	dataSource := dataSourceResp.DataSource
 
 	d.Set("arn", dataSource.Arn)
-	d.Set("id", dataSource.DataSourceId)
+	d.Set("name", dataSource.Name)
+	d.Set("data_source_id", dataSource.DataSourceId)
 	d.Set("aws_account_id", awsAccountId)
 
 	if err := d.Set("permission", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
@@ -849,8 +851,8 @@ func resourceAwsQuickSightDataSourceUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("permission") {
 		oraw, nraw := d.GetChange("permission")
-		o := oraw.(*schema.Set).List()
-		n := nraw.(*schema.Set).List()
+		o := oraw.([]interface{})
+		n := nraw.([]interface{})
 		toGrant, toRevoke := diffQuickSightPermissionsToGrantAndRevoke(o, n)
 
 		if len(toGrant) > 0 || len(toRevoke) > 0 {
@@ -941,11 +943,11 @@ func resourceAwsQuickSightDataSourceDelete(d *schema.ResourceData, meta interfac
 
 func resourceAwsQuickSightDataSourceCredentials(d *schema.ResourceData) *quicksight.DataSourceCredentials {
 	if v := d.Get("credentials"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
+		for _, v := range v.([]interface{}) {
 			credentials := v.(map[string]interface{})
 
-			if v := credentials["credential_pair"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := credentials["credential_pair"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					credentialPairResource := v.(map[string]interface{})
 					credentialPair := &quicksight.CredentialPair{}
 
@@ -970,13 +972,13 @@ func resourceAwsQuickSightDataSourceCredentials(d *schema.ResourceData) *quicksi
 
 func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string, *quicksight.DataSourceParameters) {
 	if v := d.Get("parameters"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
+		for _, v := range v.([]interface{}) {
 			dataSourceParams := v.(map[string]interface{})
 			dataSourceParamsResource := &quicksight.DataSourceParameters{}
 			dataSourceType := ""
 
-			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeAmazonElasticsearch
 					dataSourceParamsResource.AmazonElasticsearchParameters = &quicksight.AmazonElasticsearchParameters{
@@ -985,8 +987,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["athena"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["athena"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					ps := &quicksight.AthenaParameters{}
 
@@ -999,8 +1001,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["aurora"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["aurora"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeAurora
 					dataSourceParamsResource.AuroraParameters = &quicksight.AuroraParameters{
@@ -1011,8 +1013,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["aurora_postgre_sql"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["aurora_postgre_sql"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeAuroraPostgresql
 					dataSourceParamsResource.AuroraPostgreSqlParameters = &quicksight.AuroraPostgreSqlParameters{
@@ -1023,8 +1025,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["aws_iot_analytics"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["aws_iot_analytics"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeAwsIotAnalytics
 					dataSourceParamsResource.AwsIotAnalyticsParameters = &quicksight.AwsIotAnalyticsParameters{
@@ -1033,8 +1035,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["jira"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["jira"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 
 					dataSourceType = quicksight.DataSourceTypeJira
@@ -1044,8 +1046,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["maria_db"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["maria_db"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 
 					dataSourceType = quicksight.DataSourceTypeMariadb
@@ -1057,8 +1059,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["mysql"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["mysql"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 
 					dataSourceType = quicksight.DataSourceTypeMysql
@@ -1070,8 +1072,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["postgresql"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["postgresql"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypePostgresql
 					dataSourceParamsResource.PostgreSqlParameters = &quicksight.PostgreSqlParameters{
@@ -1082,8 +1084,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["presto"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["presto"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypePresto
 					dataSourceParamsResource.PrestoParameters = &quicksight.PrestoParameters{
@@ -1094,8 +1096,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["redshift"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["redshift"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					ps := &quicksight.RedshiftParameters{
 						Database: aws.String(psResource["database"].(string)),
@@ -1118,25 +1120,26 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["s3"]; v != nil && v.(*schema.Set) != nil {
-				s3 := v.(map[string]interface{})
-
-				if v := s3["manifest_file_location"]; v != nil && v.(*schema.Set) != nil {
-					for _, v := range (v.(*schema.Set)).List() {
-						psResource := v.(map[string]interface{})
-						dataSourceType = quicksight.DataSourceTypeS3
-						dataSourceParamsResource.S3Parameters = &quicksight.S3Parameters{
-							ManifestFileLocation: &quicksight.ManifestFileLocation{
-								Bucket: aws.String(psResource["bucket"].(string)),
-								Key:    aws.String(psResource["key"].(string)),
-							},
+			if v := dataSourceParams["s3"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
+					s3 := v.(map[string]interface{})
+					if v := s3["manifest_file_location"]; v != nil && v.([]interface{}) != nil {
+						for _, v := range v.([]interface{}) {
+							psResource := v.(map[string]interface{})
+							dataSourceType = quicksight.DataSourceTypeS3
+							dataSourceParamsResource.S3Parameters = &quicksight.S3Parameters{
+								ManifestFileLocation: &quicksight.ManifestFileLocation{
+									Bucket: aws.String(psResource["bucket"].(string)),
+									Key:    aws.String(psResource["key"].(string)),
+								},
+							}
 						}
 					}
 				}
 			}
 
-			if v := dataSourceParams["service_now"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["service_now"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeServicenow
 					dataSourceParamsResource.ServiceNowParameters = &quicksight.ServiceNowParameters{
@@ -1145,8 +1148,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["snowflake"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["snowflake"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeSnowflake
 					dataSourceParamsResource.SnowflakeParameters = &quicksight.SnowflakeParameters{
@@ -1157,8 +1160,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["spark"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["spark"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeSpark
 					dataSourceParamsResource.SparkParameters = &quicksight.SparkParameters{
@@ -1168,8 +1171,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["sql_server"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["sql_server"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeSqlserver
 					dataSourceParamsResource.SqlServerParameters = &quicksight.SqlServerParameters{
@@ -1180,8 +1183,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["teradata"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["teradata"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeTeradata
 					dataSourceParamsResource.TeradataParameters = &quicksight.TeradataParameters{
@@ -1192,8 +1195,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			if v := dataSourceParams["twitter"]; v != nil && v.(*schema.Set) != nil {
-				for _, v := range (v.(*schema.Set)).List() {
+			if v := dataSourceParams["twitter"]; v != nil && v.([]interface{}) != nil {
+				for _, v := range v.([]interface{}) {
 					psResource := v.(map[string]interface{})
 					dataSourceType = quicksight.DataSourceTypeTwitter
 					dataSourceParamsResource.TwitterParameters = &quicksight.TwitterParameters{
@@ -1212,7 +1215,7 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 
 func resourceAwsQuickSightDataSourceSslProperties(d *schema.ResourceData) *quicksight.SslProperties {
 	if v := d.Get("ssl_properties"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
+		for _, v := range v.([]interface{}) {
 			sslProperties := v.(map[string]interface{})
 
 			if v, present := sslProperties["disable_ssl"]; present {
@@ -1228,7 +1231,7 @@ func resourceAwsQuickSightDataSourceSslProperties(d *schema.ResourceData) *quick
 
 func resourceAwsQuickSightDataSourceVpcConnectionProperties(d *schema.ResourceData) *quicksight.VpcConnectionProperties {
 	if v := d.Get("vpc_connection_properties"); v != nil {
-		for _, v := range v.(*schema.Set).List() {
+		for _, v := range v.([]interface{}) {
 			vpcConnectionProperties := v.(map[string]interface{})
 
 			if v := vpcConnectionProperties["vpc_connection_arn"]; v != nil && v.(string) != "" {
