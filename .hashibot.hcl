@@ -188,6 +188,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/databasemigrationservice" = [
       "aws_dms_",
     ],
+    "service/dataexchange" = [
+      "aws_dataexchange_",
+    ],
     "service/datapipeline" = [
       "aws_datapipeline_",
     ],
@@ -690,6 +693,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/databasemigrationservice" = [
       "**/*_dms_*",
       "**/dms_*"
+    ]
+    "service/dataexchange" = [
+      "**/*_dataexchange_*",
+      "**/dataexchange_*",
     ]
     "service/datapipeline" = [
       "**/*_datapipeline_*",

@@ -968,6 +968,7 @@ func init() {
 		"cognitoidp",
 		"configservice",
 		"cur",
+		"dataexchange",
 		"datapipeline",
 		"datasync",
 		"dax",

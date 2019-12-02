@@ -79,6 +79,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `cognitoidp`
 - `configservice`
 - `cur`
+- `dataexchange`
 - `datapipeline`
 - `datasync`
 - `dax`
