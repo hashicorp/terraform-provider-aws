@@ -106,6 +106,12 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"db_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -215,6 +221,22 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
+	// Some API calls (e.g. CreateDBInstanceReadReplica and
+	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
+	// correctly apply all settings in one pass. For missing parameters or
+	// unsupported configurations, we may need to call ModifyDBInstance
+	// afterwards to prevent Terraform operators from API errors or needing
+	// to double apply.
+	var requiresModifyDbInstance bool
+	modifyDbInstanceInput := &rds.ModifyDBInstanceInput{
+		ApplyImmediately: aws.Bool(true),
+	}
+
+	// Some ModifyDBInstance parameters (e.g. DBParameterGroupName) require
+	// a database instance reboot to take affect. During resource creation,
+	// we expect everything to be in sync before returning completion.
+	var requiresRebootDbInstance bool
+
 	createOpts := &rds.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -224,6 +246,7 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		Tags:                    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags(),
+
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -287,6 +310,13 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 			}
 			return resource.NonRetryableError(err)
 		}
+
+
+		if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(resp.DBInstance.CACertificateIdentifier) {
+			modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+			requiresModifyDbInstance = true
+		}
+
 		return nil
 	})
 	if isResourceTimeoutError(err) {
@@ -306,6 +336,40 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
+	}
+
+	if requiresModifyDbInstance {
+		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
+
+		log.Printf("[INFO] DB Instance (%s) configuration requires ModifyDBInstance: %s", d.Id(), modifyDbInstanceInput)
+		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
+		if err != nil {
+			return fmt.Errorf("error modifying DB Instance (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+		}
+	}
+
+	if requiresRebootDbInstance {
+		rebootDbInstanceInput := &rds.RebootDBInstanceInput{
+			DBInstanceIdentifier: aws.String(d.Id()),
+		}
+
+		log.Printf("[INFO] DB Instance (%s) configuration requires RebootDBInstance: %s", d.Id(), rebootDbInstanceInput)
+		_, err := conn.RebootDBInstance(rebootDbInstanceInput)
+		if err != nil {
+			return fmt.Errorf("error rebooting DB Instance (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+		}
 	}
 
 	// Wait, catching any errors
@@ -483,6 +547,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("publicly_accessible") {
 		d.SetPartial("publicly_accessible")
 		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
 

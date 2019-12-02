@@ -31,6 +31,7 @@ func TestAccAWSRDSClusterInstance_basic(t *testing.T) {
 					testAccCheckAWSDBClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr("aws_rds_cluster_instance.cluster_instances", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:[^:]+:db:.+`)),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "ca_cert_identifier", "true"),
 					resource.TestCheckResourceAttr("aws_rds_cluster_instance.cluster_instances", "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_maintenance_window"),
 					resource.TestCheckResourceAttrSet("aws_rds_cluster_instance.cluster_instances", "preferred_backup_window"),
@@ -805,6 +806,36 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql_D
 	})
 }
 
+func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	resourceName := "aws_rds_cluster_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterInstanceConfigWithCACertificateIdentifier(rName, "rds-ca-2015"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2015"),
+				),
+			},
+			// Ensure we are able to modify the CACertIdentifier
+			{
+				Config: testAccAWSRDSClusterInstanceConfigWithCACertificateIdentifier(rName, "rds-ca-2019"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
+				),
+			},
+		},
+	})
+}
+
 // Add some random to the name, to avoid collision
 func testAccAWSClusterInstanceConfig(n int) string {
 	return fmt.Sprintf(`
@@ -1377,4 +1408,25 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   copy_tags_to_snapshot = %t
 }
 `, n, n, f)
+}
+
+func testAccAWSRDSClusterInstanceConfigWithCACertificateIdentifier(rName string, caCertIdentifier string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "default" {
+	cluster_identifier  = %q
+	availability_zones  = ["us-west-2a", "us-west-2b", "us-west-2c"]
+	database_name       = "mydb"
+	master_username     = "foo"
+	master_password     = "mustbeeightcharacters"
+	skip_final_snapshot = true
+	}
+
+	resource "aws_rds_cluster_instance" "cluster_instances" {
+	identifier            = %q
+	cluster_identifier    = "${aws_rds_cluster.default.id}"
+	instance_class        = "db.t2.small"
+	promotion_tier        = "3"
+	ca_cert_identifier = %q
+	}
+`, rName, rName, caCertIdentifier)
 }
