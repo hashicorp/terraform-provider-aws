@@ -40,9 +40,9 @@ data "aws_route53_zone" "example" {
 }
 
 resource "aws_route53_record" "auth-cognito-A" {
-  name    = "${aws_cognito_user_pool_domain.domain}"
+  name    = "${aws_cognito_user_pool_domain.main.domain}"
   type    = "A"
-  zone_id = "${data.aws_route53_zone.example.id}"
+  zone_id = "${aws_route53_zone.example.zone_id}"
   alias {
     evaluate_target_health = false
     name                   = "${aws_cognito_user_pool_domain.main.cloudfront_distribution_arn}"
