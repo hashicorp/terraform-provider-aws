@@ -1,4 +1,5 @@
 ---
+subcategory: "IoTAnalytics"
 layout: "aws"
 page_title: "AWS: aws_iotanalytics_channel"
 sidebar_current: "docs-aws-resource-iotanalytics-channel"
