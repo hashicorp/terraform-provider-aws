@@ -37,6 +37,7 @@ var serviceNames = []string{
 	"cognitoidentityprovider",
 	"configservice",
 	"databasemigrationservice",
+	"dataexchange",
 	"datasync",
 	"dax",
 	"devicefarm",
