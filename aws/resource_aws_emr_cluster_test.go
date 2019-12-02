@@ -91,6 +91,7 @@ func TestAccAWSEMRCluster_basic(t *testing.T) {
 					testAccCheckAWSEmrClusterExists("aws_emr_cluster.tf-test-cluster", &cluster),
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
 					resource.TestCheckResourceAttr("aws_emr_cluster.tf-test-cluster", "step.#", "0"),
+					resource.TestCheckResourceAttrSet("aws_emr_cluster.tf-test-cluster", "arn"),
 				),
 			},
 			{
