@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_autoscaling_group: Add `max_instance_lifetime` argument [GH-10951]
+* resource/aws_autoscaling_group: Add `mixed_instances_policy` `launch_template` `override` configuration block `weighted_capacity` argument [GH-11004]
 * resource/aws_codebuild_project: Add Linux GPU worker [GH-11035]
 * resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter [GH-11041]
 * resource/aws_iam_access_key: Remove deprecation from `secret` and mark `secret` and `ses_smtp_password` to sensitive [GH-10908]
