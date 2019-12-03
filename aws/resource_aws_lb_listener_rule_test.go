@@ -498,7 +498,7 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
-		Steps: append([]resource.TestStep{
+		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_empty(),
 				ExpectError: err_zero,
@@ -535,7 +535,7 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_classic(),
 				ExpectError: err_many,
 			},
-		}),
+		},
 	})
 }
 
