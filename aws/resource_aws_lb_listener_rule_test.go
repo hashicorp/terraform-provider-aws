@@ -494,35 +494,48 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 	err_many := regexp.MustCompile("Only one of field, host_header, http_header, http_request_method, path_pattern, query_string or source_ip can be set in a condition block")
 	err_deprecated := regexp.MustCompile("Both field and values must be set in a condition block")
 
-	name := "conditionAttributesCount"
-	lbName := fmt.Sprintf("testrule-attrCount-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-
-	var pairs []resource.TestStep
-	for _, p := range testAccAWSLBListenerRuleConfig_conditionAttributesCount_pairs() {
-		pairs = append(pairs, resource.TestStep{
-			Config:      testAccAWSLBListenerRuleConfig_condition_base(p, name, lbName),
-			ExpectError: err_many,
-		})
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: append([]resource.TestStep{
 			{
-				Config:      testAccAWSLBListenerRuleConfig_condition_base("condition {}", name, lbName),
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_empty(),
 				ExpectError: err_zero,
 			},
 			{
-				Config:      testAccAWSLBListenerRuleConfig_condition_base(`condition { field = "host-header" }`, name, lbName),
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_field(),
 				ExpectError: err_deprecated,
 			},
 			{
-				Config:      testAccAWSLBListenerRuleConfig_condition_base(`condition { values = ["example.com"] }`, name, lbName),
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_values(),
 				ExpectError: err_zero,
 			},
-		}, pairs...),
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_http_header(),
+				ExpectError: err_many,
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_http_request_method(),
+				ExpectError: err_many,
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_path_pattern(),
+				ExpectError: err_many,
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_query_string(),
+				ExpectError: err_many,
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_source_ip(),
+				ExpectError: err_many,
+			},
+			{
+				Config:      testAccAWSLBListenerRuleConfig_conditionAttributesCount_classic(),
+				ExpectError: err_many,
+			},
+		}),
 	})
 }
 
@@ -2492,49 +2505,110 @@ resource "aws_security_group" "test" {
 `, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccAWSLBListenerRuleConfig_conditionAttributesCount_pairs() []string {
-	inputs := map[string]string{
-		"host_header": `{
-		  values = ["example.com"]
-		}`,
-		"http_header": `{
-		  http_header_name = "X-Clacks-Overhead"
-		  values = ["GNU Terry Pratchett"]
-		}`,
-		"http_request_method": `{
-		  values = ["POST"]
-		}`,
-		"path_pattern": `{
-		  values = ["/"]
-		}`,
-		"query_string": `{
-		  key = "foo"
-		  value = "bar"
-		}`,
-		"source_ip": `{
-		  values = ["192.168.0.0/16"]
-		}`,
-		"field": `= "host-header"
-		  values = ["example.com"]`,
-	}
+func testAccAWSLBListenerRuleConfig_condition_error(condition string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "error" {
+  listener_arn = "arn:aws:elasticloadbalancing:us-west-2:111111111111:listener/app/example/1234567890abcdef/1234567890abcdef"
+  priority     = 100
 
-	// Extract keys
-	i := 0
-	keys := make([]string, len(inputs))
-	for k := range inputs {
-		keys[i] = k
-		i++
-	}
+  action {
+    type = "fixed-response"
 
-	// Combine in every pair combination
-	var output []string
-	for i := 0; i < len(keys); i++ {
-		for j := i + 1; j < len(keys); j++ {
-			output = append(output, fmt.Sprintf("condition {\n  %s %s\n  %s %s\n}", keys[i], inputs[keys[i]], keys[j], inputs[keys[j]]))
-		}
-	}
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Static"
+      status_code  = 200
+    }
+  }
 
-	return output
+  %s
+}
+`, condition)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_empty() string {
+	return testAccAWSLBListenerRuleConfig_condition_error("condition {}")
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_field() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`condition { field = "host-header" }`)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_values() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`condition { values = ["example.com"] }`)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_http_header() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`
+condition {
+  host_header {
+    values = ["example.com"]
+  }
+  http_header {
+    http_header_name = "X-Clacks-Overhead"
+    values           = ["GNU Terry Pratchett"]
+  }
+}`)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_http_request_method() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`
+condition {
+  host_header {
+    values = ["example.com"]
+  }
+  http_request_method {
+    values = ["POST"]
+  }
+}`)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_path_pattern() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`
+condition {
+  host_header {
+    values = ["example.com"]
+  }
+  path_pattern {
+    values = ["/"]
+  }
+}`)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_query_string() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`
+condition {
+  host_header {
+    values = ["example.com"]
+  }
+  query_string {
+    key   = "foo"
+    value = "bar"
+  }
+}`)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_source_ip() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`
+condition {
+  host_header {
+    values = ["example.com"]
+  }
+  source_ip {
+    values = ["192.168.0.0/16"]
+  }
+}`)
+}
+
+func testAccAWSLBListenerRuleConfig_conditionAttributesCount_classic() string {
+	return testAccAWSLBListenerRuleConfig_condition_error(`
+condition {
+  host_header {
+    values = ["example.com"]
+  }
+  field  = "host-header"
+  values = ["example.com"]
+}`)
 }
 
 func testAccAWSLBListenerRuleConfig_condition_base(condition, name, lbName string) string {
