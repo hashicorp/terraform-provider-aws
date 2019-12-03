@@ -98,6 +98,12 @@ func (c *ACM) AddTagsToCertificateRequest(input *AddTagsToCertificateInput) (req
 //   * ErrCodeTooManyTagsException "TooManyTagsException"
 //   The request contains too many tags. Try the request again with fewer tags.
 //
+//   * ErrCodeTagPolicyException "TagPolicyException"
+//   A specified tag did not comply with an existing tag policy and was rejected.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   An input parameter was invalid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08/AddTagsToCertificate
 func (c *ACM) AddTagsToCertificate(input *AddTagsToCertificateInput) (*AddTagsToCertificateOutput, error) {
 	req, out := c.AddTagsToCertificateRequest(input)
@@ -344,14 +350,13 @@ func (c *ACM) ExportCertificateRequest(input *ExportCertificateInput) (req *requ
 // ExportCertificate API operation for AWS Certificate Manager.
 //
 // Exports a private certificate issued by a private certificate authority (CA)
-// for use anywhere. You can export the certificate, the certificate chain,
-// and the encrypted private key associated with the public key embedded in
-// the certificate. You must store the private key securely. The private key
-// is a 2048 bit RSA key. You must provide a passphrase for the private key
-// when exporting it. You can use the following OpenSSL command to decrypt it
-// later. Provide the passphrase when prompted.
+// for use anywhere. The exported file contains the certificate, the certificate
+// chain, and the encrypted private 2048-bit RSA key associated with the public
+// key that is embedded in the certificate. For security, you must assign a
+// passphrase for the private key when exporting it.
 //
-// openssl rsa -in encrypted_key.pem -out decrypted_key.pem
+// For information about exporting and formatting a certificate using the ACM
+// console or CLI, see Export a Private Certificate (https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-export-private.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -566,7 +571,7 @@ func (c *ACM) ImportCertificateRequest(input *ImportCertificateInput) (req *requ
 //    * The OCSP authority URL, if present, must not exceed 1000 characters.
 //
 //    * To import a new certificate, omit the CertificateArn argument. Include
-//    this argument only when you want to replace a previously imported certificate.
+//    this argument only when you want to replace a previously imported certifica
 //
 //    * When you import a certificate by using the CLI, you must specify the
 //    certificate, the certificate chain, and the private key by their file
@@ -578,6 +583,10 @@ func (c *ACM) ImportCertificateRequest(input *ImportCertificateInput) (req *requ
 //    * When you import a certificate by using an SDK, you must specify the
 //    certificate, the certificate chain, and the private key files in the manner
 //    required by the programming language you're using.
+//
+//    * The cryptographic algorithm of an imported certificate must match the
+//    algorithm of the signing CA. For example, if the signing CA key type is
+//    RSA, then the certificate key type must also be RSA.
 //
 // This operation returns the Amazon Resource Name (ARN) (https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html)
 // of the imported certificate.
@@ -596,6 +605,19 @@ func (c *ACM) ImportCertificateRequest(input *ImportCertificateInput) (req *requ
 //
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   An ACM limit has been exceeded.
+//
+//   * ErrCodeInvalidTagException "InvalidTagException"
+//   One or both of the values that make up the key-value pair is not valid. For
+//   example, you cannot specify a tag value that begins with aws:.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   The request contains too many tags. Try the request again with fewer tags.
+//
+//   * ErrCodeTagPolicyException "TagPolicyException"
+//   A specified tag did not comply with an existing tag policy and was rejected.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   An input parameter was invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08/ImportCertificate
 func (c *ACM) ImportCertificate(input *ImportCertificateInput) (*ImportCertificateOutput, error) {
@@ -671,7 +693,8 @@ func (c *ACM) ListCertificatesRequest(input *ListCertificatesInput) (req *reques
 //
 // Retrieves a list of certificate ARNs and domain names. You can request that
 // only certificates that match a specific status be listed. You can also filter
-// by specific attributes of the certificate.
+// by specific attributes of the certificate. Default filtering returns only
+// RSA_2048 certificates. For more information, see Filters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -749,10 +772,12 @@ func (c *ACM) ListCertificatesPagesWithContext(ctx aws.Context, input *ListCerti
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCertificatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -914,6 +939,12 @@ func (c *ACM) RemoveTagsFromCertificateRequest(input *RemoveTagsFromCertificateI
 //   * ErrCodeInvalidTagException "InvalidTagException"
 //   One or both of the values that make up the key-value pair is not valid. For
 //   example, you cannot specify a tag value that begins with aws:.
+//
+//   * ErrCodeTagPolicyException "TagPolicyException"
+//   A specified tag did not comply with an existing tag policy and was rejected.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   An input parameter was invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08/RemoveTagsFromCertificate
 func (c *ACM) RemoveTagsFromCertificate(input *RemoveTagsFromCertificateInput) (*RemoveTagsFromCertificateOutput, error) {
@@ -1099,6 +1130,19 @@ func (c *ACM) RequestCertificateRequest(input *RequestCertificateInput) (req *re
 //
 //   * ErrCodeInvalidArnException "InvalidArnException"
 //   The requested Amazon Resource Name (ARN) does not refer to an existing resource.
+//
+//   * ErrCodeInvalidTagException "InvalidTagException"
+//   One or both of the values that make up the key-value pair is not valid. For
+//   example, you cannot specify a tag value that begins with aws:.
+//
+//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   The request contains too many tags. Try the request again with fewer tags.
+//
+//   * ErrCodeTagPolicyException "TagPolicyException"
+//   A specified tag did not comply with an existing tag policy and was rejected.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   An input parameter was invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/acm-2015-12-08/RequestCertificate
 func (c *ACM) RequestCertificate(input *RequestCertificateInput) (*RequestCertificateOutput, error) {
@@ -2224,6 +2268,11 @@ type Filters struct {
 	ExtendedKeyUsage []*string `locationName:"extendedKeyUsage" type:"list"`
 
 	// Specify one or more algorithms that can be used to generate key pairs.
+	//
+	// Default filtering returns only RSA_2048 certificates. To return other certificate
+	// types, provide the desired type signatures in a comma-separated list. For
+	// example, "keyTypes": ["RSA_2048,RSA_4096"] returns both RSA_2048 and RSA_4096
+	// certificates.
 	KeyTypes []*string `locationName:"keyTypes" type:"list"`
 
 	// Specify one or more KeyUsage extension values.
@@ -2364,6 +2413,11 @@ type ImportCertificateInput struct {
 	//
 	// PrivateKey is a required field
 	PrivateKey []byte `min:"1" type:"blob" required:"true" sensitive:"true"`
+
+	// One or more resource tags to associate with the imported certificate.
+	//
+	// Note: You cannot apply tags when reimporting a certificate.
+	Tags []*Tag `min:"1" type:"list"`
 }
 
 // String returns the string representation
@@ -2397,6 +2451,19 @@ func (s *ImportCertificateInput) Validate() error {
 	if s.PrivateKey != nil && len(s.PrivateKey) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PrivateKey", 1))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2425,6 +2492,12 @@ func (s *ImportCertificateInput) SetCertificateChain(v []byte) *ImportCertificat
 // SetPrivateKey sets the PrivateKey field's value.
 func (s *ImportCertificateInput) SetPrivateKey(v []byte) *ImportCertificateInput {
 	s.PrivateKey = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ImportCertificateInput) SetTags(v []*Tag) *ImportCertificateInput {
+	s.Tags = v
 	return s
 }
 
@@ -2882,7 +2955,7 @@ type RequestCertificateInput struct {
 	// certificate that protects several sites in the same domain. For example,
 	// *.example.com protects www.example.com, site.example.com, and images.example.com.
 	//
-	// The first domain name you enter cannot exceed 63 octets, including periods.
+	// The first domain name you enter cannot exceed 64 octets, including periods.
 	// Each subsequent Subject Alternative Name (SAN), however, can be up to 253
 	// octets in length.
 	//
@@ -2933,6 +3006,9 @@ type RequestCertificateInput struct {
 	//    the total length of the DNS name (63+1+63+1+63+1+62) exceeds 253 octets.
 	SubjectAlternativeNames []*string `min:"1" type:"list"`
 
+	// One or more resource tags to associate with the certificate.
+	Tags []*Tag `min:"1" type:"list"`
+
 	// The method you want to use if you are requesting a public certificate to
 	// validate that you own or control domain. You can validate with DNS (https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-dns.html)
 	// or validate with email (https://docs.aws.amazon.com/acm/latest/userguide/gs-acm-validate-email.html).
@@ -2971,6 +3047,9 @@ func (s *RequestCertificateInput) Validate() error {
 	if s.SubjectAlternativeNames != nil && len(s.SubjectAlternativeNames) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SubjectAlternativeNames", 1))
 	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
 	if s.DomainValidationOptions != nil {
 		for i, v := range s.DomainValidationOptions {
 			if v == nil {
@@ -2978,6 +3057,16 @@ func (s *RequestCertificateInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "DomainValidationOptions", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -3021,6 +3110,12 @@ func (s *RequestCertificateInput) SetOptions(v *CertificateOptions) *RequestCert
 // SetSubjectAlternativeNames sets the SubjectAlternativeNames field's value.
 func (s *RequestCertificateInput) SetSubjectAlternativeNames(v []*string) *RequestCertificateInput {
 	s.SubjectAlternativeNames = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *RequestCertificateInput) SetTags(v []*Tag) *RequestCertificateInput {
+	s.Tags = v
 	return s
 }
 
@@ -3465,6 +3560,9 @@ const (
 
 	// FailureReasonPcaRequestFailed is a FailureReason enum value
 	FailureReasonPcaRequestFailed = "PCA_REQUEST_FAILED"
+
+	// FailureReasonPcaNameConstraintsValidation is a FailureReason enum value
+	FailureReasonPcaNameConstraintsValidation = "PCA_NAME_CONSTRAINTS_VALIDATION"
 
 	// FailureReasonPcaResourceNotFound is a FailureReason enum value
 	FailureReasonPcaResourceNotFound = "PCA_RESOURCE_NOT_FOUND"
