@@ -789,61 +789,6 @@ resource "aws_lambda_function" "test" {
 `, rName, rName, rName)
 }
 
-func testAccAWSLambdaEventSourceMappingConfig_sqsBase(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "iam_for_lambda" {
-	name = %q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "policy_for_role" {
-  role = "${aws_iam_role.iam_for_lambda.name}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": [
-          "sqs:*"
-        ],
-        "Resource": "*"
-      }
-  ]
-}
-EOF
-}
-
-resource "aws_sqs_queue" "sqs_queue_test" {
-  name = %q
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %q
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       = "exports.example"
-  runtime       = "nodejs8.10"
-}
-`, rName, rName, rName)
-}
-
 func testAccAWSLambdaEventSourceMappingConfigKinesisStartingPositionTimestamp(rName, startingPositionTimestamp string) string {
 	return testAccAWSLambdaEventSourceMappingConfigKinesisBase(rName) + fmt.Sprintf(`
 resource "aws_lambda_event_source_mapping" "test" {
