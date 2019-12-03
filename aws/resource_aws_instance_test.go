@@ -990,32 +990,6 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_multipleRegions(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-
-	// record the initialized providers so that we can use them to
-	// check for the instances in each region
-	var providers []*schema.Provider
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckWithProviders(testAccCheckInstanceDestroyWithProvider, &providers),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigMultipleRegions,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExistsWithProvider(resourceName, &v,
-						testAccAwsRegionProviderFunc("us-west-2", &providers)),
-					testAccCheckInstanceExistsWithProvider("aws_instance.test2", &v,
-						testAccAwsRegionProviderFunc("us-east-1", &providers)),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -3105,31 +3079,6 @@ resource "aws_instance" "test" {
 }
 `, rName)
 }
-
-const testAccInstanceConfigMultipleRegions = `
-provider "aws" {
-	alias = "west"
-	region = "us-west-2"
-}
-
-provider "aws" {
-	alias = "east"
-	region = "us-east-1"
-}
-resource "aws_instance" "test" {
-	# us-west-2
-	provider = "aws.west"
-	ami = "ami-4fccb37f"
-	instance_type = "m1.small"
-}
-
-resource "aws_instance" "test2" {
-	# us-east-1
-	provider = "aws.east"
-	ami = "ami-8c6ea9e4"
-	instance_type = "m1.small"
-}
-`
 
 const testAccCheckInstanceConfigTags = `
 resource "aws_instance" "test" {
