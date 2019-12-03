@@ -91,6 +91,7 @@ var sliceServiceNames = []string{
 }
 
 var mapServiceNames = []string{
+	"accessanalyzer",
 	"amplify",
 	"apigateway",
 	"apigatewayv2",

@@ -17,6 +17,7 @@ import (
 const filename = `list_tags_gen.go`
 
 var serviceNames = []string{
+	"accessanalyzer",
 	"acm",
 	"acmpca",
 	"amplify",
