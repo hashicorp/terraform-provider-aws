@@ -124,6 +124,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.0", "OldestInstance"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.1", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "max_instance_lifetime", "0"),
 				),
 			},
 			{
@@ -739,6 +740,48 @@ func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 					"wait_for_capacity_timeout",
 					"wait_for_elb_capacity",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoScalingGroup_MaxInstanceLifetime(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "max_instance_lifetime", "864000"),
+				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "max_instance_lifetime", "604800"),
+				),
 			},
 		},
 	})
@@ -2566,6 +2609,58 @@ resource "aws_autoscaling_group" "bar" {
   min_size = 0
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   service_linked_role_arn = "${data.aws_iam_role.autoscaling_service_linked_role.arn}"
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  max_instance_lifetime = "864000"
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime_update = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  max_instance_lifetime = "604800"
 }
 `
 
