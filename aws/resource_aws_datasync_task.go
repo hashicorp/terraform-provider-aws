@@ -99,7 +99,6 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							Optional: true,
 							Default:  datasync.PosixPermissionsPreserve,
 							ValidateFunc: validation.StringInSlice([]string{
-								datasync.PosixPermissionsBestEffort,
 								datasync.PosixPermissionsNone,
 								datasync.PosixPermissionsPreserve,
 							}, false),

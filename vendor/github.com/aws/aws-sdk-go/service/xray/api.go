@@ -146,10 +146,12 @@ func (c *XRay) BatchGetTracesPagesWithContext(ctx aws.Context, input *BatchGetTr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*BatchGetTracesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*BatchGetTracesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -786,10 +788,12 @@ func (c *XRay) GetGroupsPagesWithContext(ctx aws.Context, input *GetGroupsInput,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -924,10 +928,12 @@ func (c *XRay) GetSamplingRulesPagesWithContext(ctx aws.Context, input *GetSampl
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetSamplingRulesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetSamplingRulesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1062,10 +1068,12 @@ func (c *XRay) GetSamplingStatisticSummariesPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetSamplingStatisticSummariesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetSamplingStatisticSummariesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1286,10 +1294,12 @@ func (c *XRay) GetServiceGraphPagesWithContext(ctx aws.Context, input *GetServic
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetServiceGraphOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetServiceGraphOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1424,10 +1434,12 @@ func (c *XRay) GetTimeSeriesServiceStatisticsPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTimeSeriesServiceStatisticsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTimeSeriesServiceStatisticsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1562,10 +1574,12 @@ func (c *XRay) GetTraceGraphPagesWithContext(ctx aws.Context, input *GetTraceGra
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTraceGraphOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTraceGraphOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1716,10 +1730,12 @@ func (c *XRay) GetTraceSummariesPagesWithContext(ctx aws.Context, input *GetTrac
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTraceSummariesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTraceSummariesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

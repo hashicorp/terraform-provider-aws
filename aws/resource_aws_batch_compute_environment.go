@@ -114,7 +114,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"tags": tagsSchema(),
+						"tags": tagsSchemaForceNew(),
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
