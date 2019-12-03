@@ -383,7 +383,13 @@ func (c *LexModelBuildingService) DeleteBotRequest(input *DeleteBotInput) (req *
 // DeleteBot API operation for Amazon Lex Model Building Service.
 //
 // Deletes all versions of the bot, including the $LATEST version. To delete
-// a specific version of the bot, use the DeleteBotVersion operation.
+// a specific version of the bot, use the DeleteBotVersion operation. The DeleteBot
+// operation doesn't immediately remove the bot schema. Instead, it is marked
+// for deletion and removed later.
+//
+// Amazon Lex stores utterances indefinitely for improving the ability of your
+// bot to respond to user inputs. These utterances are not removed when the
+// bot is deleted. To remove the utterances, use the DeleteUtterances operation.
 //
 // If a bot has an alias, you can't delete it. Instead, the DeleteBot operation
 // returns a ResourceInUseException exception that includes a reference to the
@@ -1289,8 +1295,11 @@ func (c *LexModelBuildingService) DeleteUtterancesRequest(input *DeleteUtterance
 // then stored indefinitely for use in improving the ability of your bot to
 // respond to user input.
 //
-// Use the DeleteStoredUtterances operation to manually delete stored utterances
-// for a specific user.
+// Use the DeleteUtterances operation to manually delete stored utterances for
+// a specific user. When you use the DeleteUtterances operation, utterances
+// stored for improving your bot's ability to respond to user input are deleted
+// immediately. Utterances stored for use with the GetUtterancesView operation
+// are deleted after 15 days.
 //
 // This operation requires permissions for the lex:DeleteUtterances action.
 //
@@ -1661,10 +1670,12 @@ func (c *LexModelBuildingService) GetBotAliasesPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBotAliasesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBotAliasesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1900,10 +1911,12 @@ func (c *LexModelBuildingService) GetBotChannelAssociationsPagesWithContext(ctx 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBotChannelAssociationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBotChannelAssociationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2056,10 +2069,12 @@ func (c *LexModelBuildingService) GetBotVersionsPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBotVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBotVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2211,10 +2226,12 @@ func (c *LexModelBuildingService) GetBotsPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBotsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBotsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2447,10 +2464,12 @@ func (c *LexModelBuildingService) GetBuiltinIntentsPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBuiltinIntentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBuiltinIntentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2594,10 +2613,12 @@ func (c *LexModelBuildingService) GetBuiltinSlotTypesPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetBuiltinSlotTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetBuiltinSlotTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3023,10 +3044,12 @@ func (c *LexModelBuildingService) GetIntentVersionsPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetIntentVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetIntentVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3177,10 +3200,12 @@ func (c *LexModelBuildingService) GetIntentsPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetIntentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetIntentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3426,10 +3451,12 @@ func (c *LexModelBuildingService) GetSlotTypeVersionsPagesWithContext(ctx aws.Co
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetSlotTypeVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetSlotTypeVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3580,10 +3607,12 @@ func (c *LexModelBuildingService) GetSlotTypesPagesWithContext(ctx aws.Context, 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetSlotTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetSlotTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3647,9 +3676,13 @@ func (c *LexModelBuildingService) GetUtterancesViewRequest(input *GetUtterancesV
 // two versions.
 //
 // Utterance statistics are generated once a day. Data is available for the
-// last 15 days. You can request information for up to 5 versions in each request.
-// The response contains information about a maximum of 100 utterances for each
-// version.
+// last 15 days. You can request information for up to 5 versions of your bot
+// in each request. Amazon Lex returns the most frequent utterances received
+// by the bot in the last 15 days. The response contains information about a
+// maximum of 100 utterances for each version.
+//
+// If you set childDirected field to true when you created your bot, or if you
+// opted out of participating in improving Amazon Lex, utterances are not available.
 //
 // This operation requires permissions for the lex:GetUtterancesView action.
 //
@@ -3754,7 +3787,7 @@ func (c *LexModelBuildingService) PutBotRequest(input *PutBotInput) (req *reques
 // an exception.
 //
 // This operation requires permissions for the lex:PutBot action. For more information,
-// see auth-and-access-control.
+// see security-iam.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4744,6 +4777,10 @@ type CreateBotVersionOutput struct {
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
 
+	// Indicates whether utterances entered by the user should be sent to Amazon
+	// Comprehend for sentiment analysis.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
+
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
 	// the bot.
 	FailureReason *string `locationName:"failureReason" type:"string"`
@@ -4821,6 +4858,12 @@ func (s *CreateBotVersionOutput) SetCreatedDate(v time.Time) *CreateBotVersionOu
 // SetDescription sets the Description field's value.
 func (s *CreateBotVersionOutput) SetDescription(v string) *CreateBotVersionOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *CreateBotVersionOutput) SetDetectSentiment(v bool) *CreateBotVersionOutput {
+	s.DetectSentiment = &v
 	return s
 }
 
@@ -6722,6 +6765,10 @@ type GetBotOutput struct {
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
 
+	// Indicates whether user utterances should be sent to Amazon Comprehend for
+	// sentiment analysis.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
+
 	// If status is FAILED, Amazon Lex explains why it failed to build the bot.
 	FailureReason *string `locationName:"failureReason" type:"string"`
 
@@ -6742,10 +6789,19 @@ type GetBotOutput struct {
 	// The name of the bot.
 	Name *string `locationName:"name" min:"2" type:"string"`
 
-	// The status of the bot. If the bot is ready to run, the status is READY. If
-	// there was a problem with building the bot, the status is FAILED and the failureReason
-	// explains why the bot did not build. If the bot was saved but not built, the
-	// status is NOT BUILT.
+	// The status of the bot.
+	//
+	// When the status is BUILDING Amazon Lex is building the bot for testing and
+	// use.
+	//
+	// If the status of the bot is READY_BASIC_TESTING, you can test the bot using
+	// the exact utterances specified in the bot's intents. When the bot is ready
+	// for full testing or to run, the status is READY.
+	//
+	// If there was a problem with building the bot, the status is FAILED and the
+	// failureReason field explains why the bot did not build.
+	//
+	// If the bot was saved but not built, the status is NOT_BUILT.
 	Status *string `locationName:"status" type:"string" enum:"Status"`
 
 	// The version of the bot. For a new bot, the version is always $LATEST.
@@ -6799,6 +6855,12 @@ func (s *GetBotOutput) SetCreatedDate(v time.Time) *GetBotOutput {
 // SetDescription sets the Description field's value.
 func (s *GetBotOutput) SetDescription(v string) *GetBotOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *GetBotOutput) SetDetectSentiment(v bool) *GetBotOutput {
+	s.DetectSentiment = &v
 	return s
 }
 
@@ -8409,7 +8471,7 @@ type GetUtterancesViewInput struct {
 	// BotVersions is a required field
 	BotVersions []*string `location:"querystring" locationName:"bot_versions" min:"1" type:"list" required:"true"`
 
-	// To return utterances that were recognized and handled, useDetected. To return
+	// To return utterances that were recognized and handled, use Detected. To return
 	// utterances that were not recognized, use Missed.
 	//
 	// StatusType is a required field
@@ -8477,7 +8539,9 @@ type GetUtterancesViewOutput struct {
 
 	// An array of UtteranceList objects, each containing a list of UtteranceData
 	// objects describing the utterances that were processed by your bot. The response
-	// contains a maximum of 100 UtteranceData objects for each version.
+	// contains a maximum of 100 UtteranceData objects for each version. Amazon
+	// Lex returns the most frequent utterances received by the bot in the last
+	// 15 days.
 	Utterances []*UtteranceList `locationName:"utterances" type:"list"`
 }
 
@@ -8977,6 +9041,10 @@ type PutBotInput struct {
 	// For example, in a pizza ordering application, OrderPizza might be one of
 	// the intents. This intent might require the CrustType slot. You specify the
 	// valueElicitationPrompt field when you create the CrustType slot.
+	//
+	// If you have defined a fallback intent the abort statement will not be sent
+	// to the user, the fallback intent is used instead. For more information, see
+	// AMAZON.FallbackIntent (https://docs.aws.amazon.com/lex/latest/dg/built-in-intent-fallback.html).
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
 
 	// Identifies a specific revision of the $LATEST version.
@@ -9018,7 +9086,7 @@ type PutBotInput struct {
 	ChildDirected *bool `locationName:"childDirected" type:"boolean" required:"true"`
 
 	// When Amazon Lex doesn't understand the user's intent, it uses this message
-	// to get clarification. To specify how many times Amazon Lex should repeate
+	// to get clarification. To specify how many times Amazon Lex should repeat
 	// the clarification prompt, use the maxAttempts field. If Amazon Lex still
 	// doesn't understand, it sends the message in the abortStatement field.
 	//
@@ -9026,12 +9094,40 @@ type PutBotInput struct {
 	// response from the user. for example, for a bot that orders pizza and drinks,
 	// you might create this clarification prompt: "What would you like to do? You
 	// can say 'Order a pizza' or 'Order a drink.'"
+	//
+	// If you have defined a fallback intent, it will be invoked if the clarification
+	// prompt is repeated the number of times defined in the maxAttempts field.
+	// For more information, see AMAZON.FallbackIntent (https://docs.aws.amazon.com/lex/latest/dg/built-in-intent-fallback.html).
+	//
+	// If you don't define a clarification prompt, at runtime Amazon Lex will return
+	// a 400 Bad Request exception in three cases:
+	//
+	//    * Follow-up prompt - When the user responds to a follow-up prompt but
+	//    does not provide an intent. For example, in response to a follow-up prompt
+	//    that says "Would you like anything else today?" the user says "Yes." Amazon
+	//    Lex will return a 400 Bad Request exception because it does not have a
+	//    clarification prompt to send to the user to get an intent.
+	//
+	//    * Lambda function - When using a Lambda function, you return an ElicitIntent
+	//    dialog type. Since Amazon Lex does not have a clarification prompt to
+	//    get an intent from the user, it returns a 400 Bad Request exception.
+	//
+	//    * PutSession operation - When using the PutSession operation, you send
+	//    an ElicitIntent dialog type. Since Amazon Lex does not have a clarification
+	//    prompt to get an intent from the user, it returns a 400 Bad Request exception.
 	ClarificationPrompt *Prompt `locationName:"clarificationPrompt" type:"structure"`
 
+	// When set to true a new numbered version of the bot is created. This is the
+	// same as calling the CreateBotVersion operation. If you don't specify createVersion,
+	// the default is false.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
+
+	// When set to true user utterances are sent to Amazon Comprehend for sentiment
+	// analysis. If you don't specify detectSentiment, the default is false.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
 	// The maximum time in seconds that Amazon Lex retains the data gathered in
 	// a conversation.
@@ -9079,7 +9175,7 @@ type PutBotInput struct {
 
 	// The Amazon Polly voice ID that you want Amazon Lex to use for voice interactions
 	// with the user. The locale configured for the voice must match the locale
-	// of the bot. For more information, see Available Voices (http://docs.aws.amazon.com/polly/latest/dg/voicelist.html)
+	// of the bot. For more information, see Voices in Amazon Polly (https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)
 	// in the Amazon Polly Developer Guide.
 	VoiceId *string `locationName:"voiceId" type:"string"`
 }
@@ -9175,6 +9271,12 @@ func (s *PutBotInput) SetDescription(v string) *PutBotInput {
 	return s
 }
 
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *PutBotInput) SetDetectSentiment(v bool) *PutBotInput {
+	s.DetectSentiment = &v
+	return s
+}
+
 // SetIdleSessionTTLInSeconds sets the IdleSessionTTLInSeconds field's value.
 func (s *PutBotInput) SetIdleSessionTTLInSeconds(v int64) *PutBotInput {
 	s.IdleSessionTTLInSeconds = &v
@@ -9250,6 +9352,9 @@ type PutBotOutput struct {
 	// For more information, see PutBot.
 	ClarificationPrompt *Prompt `locationName:"clarificationPrompt" type:"structure"`
 
+	// True if a new version of the bot was created. If the createVersion field
+	// was not specified in the request, the createVersion field is set to false
+	// in the response.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the bot was created.
@@ -9257,6 +9362,11 @@ type PutBotOutput struct {
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
+
+	// true if the bot is configured to send user utterances to Amazon Comprehend
+	// for sentiment analysis. If the detectSentiment field was not specified in
+	// the request, the detectSentiment field is false in the response.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
 	// the bot.
@@ -9280,13 +9390,19 @@ type PutBotOutput struct {
 	Name *string `locationName:"name" min:"2" type:"string"`
 
 	// When you send a request to create a bot with processBehavior set to BUILD,
-	// Amazon Lex sets the status response element to BUILDING. After Amazon Lex
-	// builds the bot, it sets status to READY. If Amazon Lex can't build the bot,
-	// Amazon Lex sets status to FAILED. Amazon Lex returns the reason for the failure
-	// in the failureReason response element.
+	// Amazon Lex sets the status response element to BUILDING.
 	//
-	// When you set processBehaviorto SAVE, Amazon Lex sets the status code to NOT
-	// BUILT.
+	// In the READY_BASIC_TESTING state you can test the bot with user inputs that
+	// exactly match the utterances configured for the bot's intents and values
+	// in the slot types.
+	//
+	// If Amazon Lex can't build the bot, Amazon Lex sets status to FAILED. Amazon
+	// Lex returns the reason for the failure in the failureReason response element.
+	//
+	// When you set processBehavior to SAVE, Amazon Lex sets the status code to
+	// NOT BUILT.
+	//
+	// When the bot is in the READY state you can test and publish the bot.
 	Status *string `locationName:"status" type:"string" enum:"Status"`
 
 	// The version of the bot. For a new bot, the version is always $LATEST.
@@ -9346,6 +9462,12 @@ func (s *PutBotOutput) SetCreatedDate(v time.Time) *PutBotOutput {
 // SetDescription sets the Description field's value.
 func (s *PutBotOutput) SetDescription(v string) *PutBotOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *PutBotOutput) SetDetectSentiment(v bool) *PutBotOutput {
+	s.DetectSentiment = &v
 	return s
 }
 
@@ -9441,6 +9563,9 @@ type PutIntentInput struct {
 	// or neither.
 	ConfirmationPrompt *Prompt `locationName:"confirmationPrompt" type:"structure"`
 
+	// When set to true a new numbered version of the intent is created. This is
+	// the same as calling the CreateIntentVersion operation. If you do not specify
+	// createVersion, the default is false.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// A description of the intent.
@@ -9682,6 +9807,9 @@ type PutIntentOutput struct {
 	// before fulfilling it.
 	ConfirmationPrompt *Prompt `locationName:"confirmationPrompt" type:"structure"`
 
+	// True if a new version of the intent was created. If the createVersion field
+	// was not specified in the request, the createVersion field is set to false
+	// in the response.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the intent was created.
@@ -9847,6 +9975,9 @@ type PutSlotTypeInput struct {
 	// you get a PreconditionFailedException exception.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// When set to true a new numbered version of the slot type is created. This
+	// is the same as calling the CreateSlotTypeVersion operation. If you do not
+	// specify createVersion, the default is false.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// A description of the slot type.
@@ -9972,6 +10103,9 @@ type PutSlotTypeOutput struct {
 	// Checksum of the $LATEST version of the slot type.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// True if a new version of the slot type was created. If the createVersion
+	// field was not specified in the request, the createVersion field is set to
+	// false in the response.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the slot type was created.

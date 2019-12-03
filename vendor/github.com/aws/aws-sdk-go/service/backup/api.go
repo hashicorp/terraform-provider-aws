@@ -2271,10 +2271,12 @@ func (c *Backup) ListBackupJobsPagesWithContext(ctx aws.Context, input *ListBack
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListBackupJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListBackupJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2417,10 +2419,12 @@ func (c *Backup) ListBackupPlanTemplatesPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListBackupPlanTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListBackupPlanTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2564,10 +2568,12 @@ func (c *Backup) ListBackupPlanVersionsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListBackupPlanVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListBackupPlanVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2711,10 +2717,12 @@ func (c *Backup) ListBackupPlansPagesWithContext(ctx aws.Context, input *ListBac
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListBackupPlansOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListBackupPlansOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2857,10 +2865,12 @@ func (c *Backup) ListBackupSelectionsPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListBackupSelectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListBackupSelectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3003,10 +3013,12 @@ func (c *Backup) ListBackupVaultsPagesWithContext(ctx aws.Context, input *ListBa
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListBackupVaultsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListBackupVaultsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3144,10 +3156,12 @@ func (c *Backup) ListProtectedResourcesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListProtectedResourcesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListProtectedResourcesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3290,10 +3304,12 @@ func (c *Backup) ListRecoveryPointsByBackupVaultPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRecoveryPointsByBackupVaultOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRecoveryPointsByBackupVaultOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3436,10 +3452,12 @@ func (c *Backup) ListRecoveryPointsByResourcePagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRecoveryPointsByResourceOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRecoveryPointsByResourceOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3582,10 +3600,12 @@ func (c *Backup) ListRestoreJobsPagesWithContext(ctx aws.Context, input *ListRes
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRestoreJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRestoreJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3728,10 +3748,12 @@ func (c *Backup) ListTagsPagesWithContext(ctx aws.Context, input *ListTagsInput,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

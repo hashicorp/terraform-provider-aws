@@ -984,10 +984,12 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsPag
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedElasticsearchInstanceOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedElasticsearchInstanceOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1130,10 +1132,12 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesPagesWithCo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedElasticsearchInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedElasticsearchInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1375,10 +1379,12 @@ func (c *ElasticsearchService) GetUpgradeHistoryPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUpgradeHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUpgradeHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1695,10 +1701,12 @@ func (c *ElasticsearchService) ListElasticsearchInstanceTypesPagesWithContext(ct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListElasticsearchInstanceTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListElasticsearchInstanceTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1840,10 +1848,12 @@ func (c *ElasticsearchService) ListElasticsearchVersionsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListElasticsearchVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListElasticsearchVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

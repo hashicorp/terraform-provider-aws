@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // tagsSchema returns the schema to use for tags.
@@ -397,7 +398,7 @@ func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagS
 	return []*ec2.TagSpecification{
 		{
 			ResourceType: aws.String(t),
-			Tags:         tagsFromMap(m),
+			Tags:         keyvaluetags.New(m).IgnoreAws().Ec2Tags(),
 		},
 	}
 }

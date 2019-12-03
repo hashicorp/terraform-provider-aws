@@ -36,6 +36,7 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"filter": ec2CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -125,6 +126,12 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 			"service-name":       d.Get("service_name").(string),
 		},
 	)
+	req.Filters = append(req.Filters, buildEC2TagFilterList(
+		tagsFromMap(d.Get("tags").(map[string]interface{})),
+	)...)
+	req.Filters = append(req.Filters, buildEC2CustomFilterList(
+		d.Get("filter").(*schema.Set),
+	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		req.Filters = nil
