@@ -1,5 +1,9 @@
 ## 2.41.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_eks_fargate_profile` [GH-11111]
+
 ENHANCEMENTS:
 
 * resource/aws_autoscaling_group: Add `max_instance_lifetime` argument [GH-10951]
