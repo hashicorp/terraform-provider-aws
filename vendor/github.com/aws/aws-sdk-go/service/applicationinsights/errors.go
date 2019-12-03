@@ -28,6 +28,19 @@ const (
 	// The resource does not exist in the customer account.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 
+	// ErrCodeTagsAlreadyExistException for service response error code
+	// "TagsAlreadyExistException".
+	//
+	// Tags are already registered for the specified application ARN.
+	ErrCodeTagsAlreadyExistException = "TagsAlreadyExistException"
+
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// The number of the provided tags is beyond the limit, or the number of total
+	// tags you are trying to attach to the specified resource exceeds the limit.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
+
 	// ErrCodeValidationException for service response error code
 	// "ValidationException".
 	//

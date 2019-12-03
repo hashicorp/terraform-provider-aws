@@ -1,4 +1,4 @@
-Terraform Provider
+Terraform Provider for AWS
 ==================
 
 - Website: https://www.terraform.io

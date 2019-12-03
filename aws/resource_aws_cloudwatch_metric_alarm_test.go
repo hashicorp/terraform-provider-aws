@@ -271,6 +271,13 @@ func TestAccAWSCloudWatchMetricAlarm_expression(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSCloudWatchMetricAlarmConfigWithAnomalyDetectionExpression(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
+					resource.TestCheckResourceAttr("aws_cloudwatch_metric_alarm.foobar", "metric_query.#", "2"),
+				),
+			},
+			{
 				Config: testAccAWSCloudWatchMetricAlarmConfigWithExpressionWithQueryUpdated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchMetricAlarmExists("aws_cloudwatch_metric_alarm.foobar", &alarm),
@@ -609,6 +616,42 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
   metric_query {
     id = "m1"
 
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+`, rInt)
+}
+
+func testAccAWSCloudWatchMetricAlarmConfigWithAnomalyDetectionExpression(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "foobar" {
+  alarm_name                = "terraform-test-foobar%d"
+  comparison_operator       = "GreaterThanUpperThreshold"
+  evaluation_periods        = "2"
+  threshold_metric_id       = "e1"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  metric_query {
+    id          = "e1"
+    expression  = "ANOMALY_DETECTION_BAND(m1)"
+    label       = "CPUUtilization (Expected)"
+    return_data = "true"
+  }
+
+  metric_query {
+    id          = "m1"
+    return_data = "true"
     metric {
       metric_name = "CPUUtilization"
       namespace   = "AWS/EC2"

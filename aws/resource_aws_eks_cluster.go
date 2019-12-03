@@ -118,6 +118,10 @@ func resourceAwsEksCluster() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"cluster_security_group_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"endpoint_private_access": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -503,11 +507,12 @@ func flattenEksVpcConfigResponse(vpcConfig *eks.VpcConfigResponse) []map[string]
 	}
 
 	m := map[string]interface{}{
-		"endpoint_private_access": aws.BoolValue(vpcConfig.EndpointPrivateAccess),
-		"endpoint_public_access":  aws.BoolValue(vpcConfig.EndpointPublicAccess),
-		"security_group_ids":      schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
-		"subnet_ids":              schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SubnetIds)),
-		"vpc_id":                  aws.StringValue(vpcConfig.VpcId),
+		"cluster_security_group_id": aws.StringValue(vpcConfig.ClusterSecurityGroupId),
+		"endpoint_private_access":   aws.BoolValue(vpcConfig.EndpointPrivateAccess),
+		"endpoint_public_access":    aws.BoolValue(vpcConfig.EndpointPublicAccess),
+		"security_group_ids":        schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds)),
+		"subnet_ids":                schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SubnetIds)),
+		"vpc_id":                    aws.StringValue(vpcConfig.VpcId),
 	}
 
 	return []map[string]interface{}{m}

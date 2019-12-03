@@ -1,4 +1,5 @@
 ---
+subcategory: "Gamelift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_game_session_queue"
 description: |-

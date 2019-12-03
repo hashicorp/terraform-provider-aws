@@ -250,9 +250,13 @@ func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v 
 		if v.Revision != nil {
 			m["revision"] = *v.Revision
 		}
-		// v.Password will, on read, contain the placeholder string
+
+		// v.Password and v.SshKey will, on read, contain the placeholder string
 		// "*****FILTERED*****", so we ignore it on read and let persist
 		// the value already in the state.
+		m["password"] = d.Get("custom_cookbooks_source.0.password").(string)
+		m["ssh_key"] = d.Get("custom_cookbooks_source.0.ssh_key").(string)
+
 		nv = append(nv, m)
 	}
 
