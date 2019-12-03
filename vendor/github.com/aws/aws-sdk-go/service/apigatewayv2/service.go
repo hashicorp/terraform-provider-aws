@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a ApiGatewayV2 client from just a session.
 //     svc := apigatewayv2.New(mySession)
 //

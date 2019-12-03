@@ -1,4 +1,5 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_java_app_layer"
 description: |-

@@ -286,6 +286,15 @@ More details about this code generation, including fixes for potential error mes
   }
   ```
 
+- Some EC2 resources (for example [`aws_ec2_fleet`](https://www.terraform.io/docs/providers/aws/r/ec2_fleet.html)) have a `TagsSpecification` field in the `InputStruct` instead of a `Tags` field. In these cases the `ec2TagSpecificationsFromMap()` helper function should be used, e.g.:
+
+  ```go
+  input := &ec2.CreateFleetInput{
+    /* ... other configuration ... */
+    TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeFleet),
+  }
+  ```
+
 - In the resource `Read` function, implement the logic to convert the service tags to save them into the Terraform state for drift detection, e.g. with EKS Clusters (which had the tags available in the DescribeCluster API call):
 
   ```go

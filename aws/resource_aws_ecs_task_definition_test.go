@@ -161,8 +161,6 @@ func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.scope", "task"),
-					resource.TestCheckResourceAttr(
-						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver", "local"),
 				),
 			},
 		},
