@@ -953,7 +953,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		if _, ok := d.GetOk("iam_instance_profile"); ok {
 			// Does not have an Iam Instance Profile associated with it, need to associate
 			if len(resp.IamInstanceProfileAssociations) == 0 {
-				associateInstanceProfile(d, conn)
+				if err := associateInstanceProfile(d, conn); err != nil {
+					return err
+				}
 			} else {
 				// Has an Iam Instance Profile associated with it, need to replace the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
@@ -1003,8 +1005,12 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						}
 						if len(resp2.IamInstanceProfileAssociations) > 0 {
 							associationId := resp2.IamInstanceProfileAssociations[0].AssociationId
-							disassociateInstanceProfile(associationId, conn)
-							associateInstanceProfile(d, conn)
+							if err := disassociateInstanceProfile(associationId, conn); err != nil {
+								return err
+							}
+							if err := associateInstanceProfile(d, conn); err != nil {
+								return err
+							}
 						}
 					}
 				}
@@ -1014,8 +1020,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			if len(resp.IamInstanceProfileAssociations) > 0 {
 				// Has an Iam Instance Profile associated with it, need to remove the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
-
-				disassociateInstanceProfile(associationId, conn)
+				if err := disassociateInstanceProfile(associationId, conn); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -1109,7 +1116,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error stopping instance (%s): %s", d.Id(), err)
 		}
 
-		waitForInstanceStopping(conn, d.Id(), 10*time.Minute)
+		if err := waitForInstanceStopping(conn, d.Id(), 10*time.Minute); err != nil {
+			return err
+		}
 
 		log.Printf("[INFO] Modifying instance type %s", d.Id())
 		_, err = conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
@@ -2002,7 +2011,7 @@ func waitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) er
 	_, err := stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf(
-			"Error waiting for instance (%s) to stop: %s", id, err)
+			"error waiting for instance (%s) to stop: %s", id, err)
 	}
 
 	return nil
