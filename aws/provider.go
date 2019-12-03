@@ -936,6 +936,7 @@ func init() {
 	}
 
 	endpointServiceNames = []string{
+		"accessanalyzer",
 		"acm",
 		"acmpca",
 		"amplify",
