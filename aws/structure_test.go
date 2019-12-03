@@ -1547,7 +1547,7 @@ func TestDiffQuickSightFatTest(t *testing.T) {
 		"principal3": {
 			"action5": false,
 		},
-		"principal1": make(map[string]bool, 0),
+		"principal1": make(map[string]bool),
 	}
 
 	lookup := diffQuickSightPermissionsLookup(oldPerms, newPerms)

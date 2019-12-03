@@ -1054,10 +1054,11 @@ func inferQuickSightDataSourceTypeFromKey(params map[string]interface{}) string 
 
 func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string, *quicksight.DataSourceParameters) {
 	if v := d.Get("parameters"); v != nil {
+		dataSourceParamsResource := &quicksight.DataSourceParameters{}
+		var dataSourceType string
 		for _, v := range v.([]interface{}) {
 			dataSourceParams := v.(map[string]interface{})
-			dataSourceParamsResource := &quicksight.DataSourceParameters{}
-			dataSourceType := inferQuickSightDataSourceTypeFromKey(dataSourceParams)
+			dataSourceType = inferQuickSightDataSourceTypeFromKey(dataSourceParams)
 
 			if v := dataSourceParams["amazon_elasticsearch"]; v != nil && v.([]interface{}) != nil {
 				for _, v := range v.([]interface{}) {
@@ -1267,8 +1268,8 @@ func resourceAwsQuickSightDataSourceParameters(d *schema.ResourceData) (*string,
 				}
 			}
 
-			return aws.String(dataSourceType), dataSourceParamsResource
 		}
+		return aws.String(dataSourceType), dataSourceParamsResource
 	}
 
 	return aws.String(""), nil

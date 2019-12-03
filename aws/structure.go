@@ -3892,7 +3892,7 @@ func diffQuickSightPermissionsToGrantAndRevoke(oldPerms []interface{}, newPerms 
 func diffQuickSightPermissionsLookup(oldPerms []interface{}, newPerms []interface{}) map[string]map[string]bool {
 	// Map principal to permissions. `true` means grant, `false` means
 	// revoke and absence means leave alone (i.e. unchanged)
-	grants := make(map[string]map[string]bool, 0)
+	grants := make(map[string]map[string]bool)
 
 	// All new params should be granted until further notice...
 	for _, v := range newPerms {
@@ -3900,7 +3900,7 @@ func diffQuickSightPermissionsLookup(oldPerms []interface{}, newPerms []interfac
 
 		if p, ok := s["principal"].(string); ok {
 			if _, present := grants[p]; !present {
-				grants[p] = make(map[string]bool, 0)
+				grants[p] = make(map[string]bool)
 			}
 
 			for _, v := range s["actions"].(*schema.Set).List() {
@@ -3928,7 +3928,7 @@ func diffQuickSightPermissionsLookup(oldPerms []interface{}, newPerms []interfac
 					}
 				}
 			} else {
-				grants[p] = make(map[string]bool, 0)
+				grants[p] = make(map[string]bool)
 
 				// The principal is not desired in new
 				// permissions so revoke all

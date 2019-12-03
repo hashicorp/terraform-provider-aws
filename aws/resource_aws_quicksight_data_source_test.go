@@ -28,7 +28,7 @@ func TestAccAWSQuickSightDataSource_basic(t *testing.T) {
 				Config: testAccAWSQuickSightDataSourceConfig(rId1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickSightDataSourceExists(resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "data_source_id", fmt.Sprintf(rId1)),
+					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId1),
 					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("datasource/%s", rId1)),
 				),
 			},
