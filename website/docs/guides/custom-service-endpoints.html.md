@@ -1,4 +1,5 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Custom Service Endpoint Configuration"
 description: |-
@@ -108,6 +109,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `globalaccelerator`
 - `glue`
 - `guardduty`
+- `greengrass`
 - `iam`
 - `inspector`
 - `iot`

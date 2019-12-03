@@ -1,4 +1,5 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_apns_sandbox_channel"
 description: |-
