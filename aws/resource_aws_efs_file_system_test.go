@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 	"testing"
 
@@ -86,13 +85,9 @@ func TestAccAWSEFSFileSystem_basic(t *testing.T) {
 						"aws_efs_file_system.test",
 						"generalPurpose",
 					),
-					testAccCheckEfsFileSystemTags(
-						"aws_efs_file_system.test",
-						map[string]string{
-							"Name":    fmt.Sprintf("test-efs-%d", rInt),
-							"Another": "tag",
-						},
-					),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test", "tags.Name", fmt.Sprintf("test-efs-%d", rInt)),
+					resource.TestCheckResourceAttr("aws_efs_file_system.test", "tags.Another", "tag"),
 				),
 			},
 			{
@@ -446,35 +441,6 @@ func testAccCheckEfsCreationToken(resourceID string, expectedToken string) resou
 		}
 
 		return err
-	}
-}
-
-func testAccCheckEfsFileSystemTags(resourceID string, expectedTags map[string]string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceID]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceID)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
-		resp, err := conn.DescribeTags(&efs.DescribeTagsInput{
-			FileSystemId: aws.String(rs.Primary.ID),
-		})
-
-		if !reflect.DeepEqual(expectedTags, tagsToMapEFS(resp.Tags)) {
-			return fmt.Errorf("Tags mismatch.\nExpected: %#v\nGiven: %#v",
-				expectedTags, resp.Tags)
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return nil
 	}
 }
 
