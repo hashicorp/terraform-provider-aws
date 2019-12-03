@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -185,6 +186,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 												"instance_type": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"weighted_capacity": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
 												},
 											},
 										},
@@ -1525,6 +1531,10 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 		launchTemplateOverrides.InstanceType = aws.String(v.(string))
 	}
 
+	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
+		launchTemplateOverrides.WeightedCapacity = aws.String(v.(string))
+	}
+
 	return launchTemplateOverrides
 }
 
@@ -1612,7 +1622,8 @@ func flattenAutoScalingLaunchTemplateOverrides(launchTemplateOverrides []*autosc
 			continue
 		}
 		m := map[string]interface{}{
-			"instance_type": aws.StringValue(launchTemplateOverride.InstanceType),
+			"instance_type":     aws.StringValue(launchTemplateOverride.InstanceType),
+			"weighted_capacity": aws.StringValue(launchTemplateOverride.WeightedCapacity),
 		}
 		l[i] = m
 	}
