@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"regexp"
 	"testing"
@@ -199,29 +198,36 @@ func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 }
 
 func TestAccAWSInstance_inEc2Classic(t *testing.T) {
-	resourceName := "aws_instance.test"
-	rInt := acctest.RandInt()
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
-	// EC2 Classic enabled
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+	var providers []*schema.Provider
+	skipIfNotEc2Classic := func() (bool, error) {
+		provider := testAccAwsRegionProviderFunc("us-east-1", &providers)()
+		if provider == nil {
+			return true, fmt.Errorf("No suitable provider found")
+		}
+
+		return !hasEc2Classic(provider.Meta().(*AWSClient).supportedplatforms), nil
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckWithProviders(testAccCheckInstanceDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInEc2Classic(rInt),
+				SkipFunc: skipIfNotEc2Classic,
+				Config:   testAccInstanceConfigInEc2Classic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(
-						resourceName, &v),
+					testAccCheckInstanceExistsWithProvider(resourceName, &v,
+						testAccAwsRegionProviderFunc("us-east-1", &providers)),
 				),
 			},
 			{
-				Config:                  testAccInstanceConfigInEc2Classic(rInt),
+				SkipFunc:                skipIfNotEc2Classic,
+				Config:                  testAccInstanceConfigInEc2Classic(rName),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -2758,13 +2764,11 @@ resource "aws_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceConfigInEc2Classic(rInt int) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
+func testAccInstanceConfigInEc2Classic(rName string) string {
+	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
 data "aws_ami" "ubuntu" {
+	provider = "aws.us-east-1"
+
   most_recent = true
 
   filter {
@@ -2780,17 +2784,21 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_security_group" "sg" {
-  name        = "tf_acc_test_%d"
-  description = "Test security group"
+resource "aws_security_group" "test" {
+	provider = "aws.us-east-1"
+
+  name        = %[1]q
+  description = %[1]q
 }
 
 resource "aws_instance" "test" {
+	provider = "aws.us-east-1"
+
   ami             = "${data.aws_ami.ubuntu.id}"
   instance_type   = "m3.medium"
-  security_groups = ["${aws_security_group.sg.name}"]
+  security_groups = ["${aws_security_group.test.name}"]
 }
-`, rInt)
+`, rName)
 }
 
 func testAccInstanceConfig_pre(rInt int) string {
