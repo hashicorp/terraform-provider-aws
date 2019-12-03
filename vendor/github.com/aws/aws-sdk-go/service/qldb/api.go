@@ -846,10 +846,12 @@ func (c *QLDB) ListJournalS3ExportsPagesWithContext(ctx aws.Context, input *List
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJournalS3ExportsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJournalS3ExportsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -980,10 +982,12 @@ func (c *QLDB) ListJournalS3ExportsForLedgerPagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJournalS3ExportsForLedgerOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJournalS3ExportsForLedgerOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1114,10 +1118,12 @@ func (c *QLDB) ListLedgersPagesWithContext(ctx aws.Context, input *ListLedgersIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLedgersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLedgersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

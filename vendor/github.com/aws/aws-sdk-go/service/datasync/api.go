@@ -505,7 +505,7 @@ func (c *DataSync) CreateLocationSmbRequest(input *CreateLocationSmbInput) (req 
 // CreateLocationSmb API operation for AWS DataSync.
 //
 // Defines a file system on an Server Message Block (SMB) server that can be
-// read from or written to
+// read from or written to.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1611,10 +1611,12 @@ func (c *DataSync) ListAgentsPagesWithContext(ctx aws.Context, input *ListAgents
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAgentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAgentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1754,10 +1756,12 @@ func (c *DataSync) ListLocationsPagesWithContext(ctx aws.Context, input *ListLoc
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLocationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListLocationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1892,10 +1896,12 @@ func (c *DataSync) ListTagsForResourcePagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2030,10 +2036,12 @@ func (c *DataSync) ListTaskExecutionsPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTaskExecutionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTaskExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2168,10 +2176,12 @@ func (c *DataSync) ListTasksPagesWithContext(ctx aws.Context, input *ListTasksIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTasksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTasksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2885,6 +2895,8 @@ type CreateLocationEfsInput struct {
 	// A subdirectory in the location’s path. This subdirectory in the EFS file
 	// system is used to read data from the EFS source location or write data to
 	// the EFS destination. By default, AWS DataSync uses the root directory.
+	//
+	// Subdirectory must be specified with forward slashes. For example /path/to/folder.
 	Subdirectory *string `type:"string"`
 
 	// The key-value pair that represents a tag that you want to add to the resource.
@@ -3286,7 +3298,7 @@ type CreateLocationSmbInput struct {
 	// access files and folders in the SMB share.
 	//
 	// Password is a required field
-	Password *string `type:"string" required:"true"`
+	Password *string `type:"string" required:"true" sensitive:"true"`
 
 	// The name of the SMB server. This value is the IP address or Domain Name Service
 	// (DNS) name of the SMB server. An agent that is installed on-premises uses
@@ -3303,6 +3315,8 @@ type CreateLocationSmbInput struct {
 	// be a path that's exported by the SMB server, or a subdirectory of that path.
 	// The path should be such that it can be mounted by other SMB clients in your
 	// network.
+	//
+	// Subdirectory must be specified with forward slashes. For example /path/to/folder.
 	//
 	// To transfer all the data in the folder you specified, DataSync needs to have
 	// permissions to mount the SMB share, as well as to access all the data in
@@ -3487,6 +3501,11 @@ type CreateTaskInput struct {
 	// see the operation.
 	Options *Options `type:"structure"`
 
+	// Specifies a schedule used to periodically transfer files from a source to
+	// a destination location. The schedule should be specified in UTC time. For
+	// more information, see task-scheduling.
+	Schedule *TaskSchedule `type:"structure"`
+
 	// The Amazon Resource Name (ARN) of the source location for the task.
 	//
 	// SourceLocationArn is a required field
@@ -3522,6 +3541,11 @@ func (s *CreateTaskInput) Validate() error {
 	if s.Options != nil {
 		if err := s.Options.Validate(); err != nil {
 			invalidParams.AddNested("Options", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Schedule != nil {
+		if err := s.Schedule.Validate(); err != nil {
+			invalidParams.AddNested("Schedule", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.Tags != nil {
@@ -3568,6 +3592,12 @@ func (s *CreateTaskInput) SetName(v string) *CreateTaskInput {
 // SetOptions sets the Options field's value.
 func (s *CreateTaskInput) SetOptions(v *Options) *CreateTaskInput {
 	s.Options = v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *CreateTaskInput) SetSchedule(v *TaskSchedule) *CreateTaskInput {
+	s.Schedule = v
 	return s
 }
 
@@ -4597,6 +4627,10 @@ type DescribeTaskOutput struct {
 	// the overriding OverrideOptions value to operation.
 	Options *Options `type:"structure"`
 
+	// The schedule used to periodically transfer files from a source to a destination
+	// location.
+	Schedule *TaskSchedule `type:"structure"`
+
 	// The Amazon Resource Name (ARN) of the source file system's location.
 	SourceLocationArn *string `type:"string"`
 
@@ -4681,6 +4715,12 @@ func (s *DescribeTaskOutput) SetName(v string) *DescribeTaskOutput {
 // SetOptions sets the Options field's value.
 func (s *DescribeTaskOutput) SetOptions(v *Options) *DescribeTaskOutput {
 	s.Options = v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *DescribeTaskOutput) SetSchedule(v *TaskSchedule) *DescribeTaskOutput {
+	s.Schedule = v
 	return s
 }
 
@@ -5423,10 +5463,10 @@ type Options struct {
 	PreserveDevices *string `type:"string" enum:"PreserveDevices"`
 
 	// A value that determines whether tasks should be queued before executing the
-	// tasks. If set to Enabled, the tasks will queued. The default is Enabled.
+	// tasks. If set to ENABLED, the tasks will be queued. The default is ENABLED.
 	//
 	// If you use the same agent to run multiple tasks you can enable the tasks
-	// to run in series. For more information see task-queue.
+	// to run in series. For more information see queue-task-execution.
 	TaskQueueing *string `type:"string" enum:"TaskQueueing"`
 
 	// The user ID (UID) of the file's owner.
@@ -5957,6 +5997,10 @@ type TaskExecutionResultDetail struct {
 	// The status of the PREPARING phase.
 	PrepareStatus *string `type:"string" enum:"PhaseStatus"`
 
+	// The total time in milliseconds that AWS DataSync took to transfer the file
+	// from the source to the destination location.
+	TotalDuration *int64 `type:"long"`
+
 	// The total time in milliseconds that AWS DataSync spent in the TRANSFERRING
 	// phase.
 	TransferDuration *int64 `type:"long"`
@@ -6002,6 +6046,12 @@ func (s *TaskExecutionResultDetail) SetPrepareDuration(v int64) *TaskExecutionRe
 // SetPrepareStatus sets the PrepareStatus field's value.
 func (s *TaskExecutionResultDetail) SetPrepareStatus(v string) *TaskExecutionResultDetail {
 	s.PrepareStatus = &v
+	return s
+}
+
+// SetTotalDuration sets the TotalDuration field's value.
+func (s *TaskExecutionResultDetail) SetTotalDuration(v int64) *TaskExecutionResultDetail {
+	s.TotalDuration = &v
 	return s
 }
 
@@ -6071,6 +6121,47 @@ func (s *TaskListEntry) SetStatus(v string) *TaskListEntry {
 // SetTaskArn sets the TaskArn field's value.
 func (s *TaskListEntry) SetTaskArn(v string) *TaskListEntry {
 	s.TaskArn = &v
+	return s
+}
+
+// Specifies the schedule you want your task to use for repeated executions.
+// For more information, see Schedule Expressions for Rules (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
+type TaskSchedule struct {
+	_ struct{} `type:"structure"`
+
+	// A cron expression that specifies when AWS DataSync initiates a scheduled
+	// transfer from a source to a destination location.
+	//
+	// ScheduleExpression is a required field
+	ScheduleExpression *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TaskSchedule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TaskSchedule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TaskSchedule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TaskSchedule"}
+	if s.ScheduleExpression == nil {
+		invalidParams.Add(request.NewErrParamRequired("ScheduleExpression"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScheduleExpression sets the ScheduleExpression field's value.
+func (s *TaskSchedule) SetScheduleExpression(v string) *TaskSchedule {
+	s.ScheduleExpression = &v
 	return s
 }
 
@@ -6236,6 +6327,13 @@ type UpdateTaskInput struct {
 	// value to StartTaskExecution.
 	Options *Options `type:"structure"`
 
+	// Specifies a schedule used to periodically transfer files from a source to
+	// a destination location. You can configure your task to execute hourly, daily,
+	// weekly or on specific days of the week. You control when in the day or hour
+	// you want the task to execute. The time you specify is UTC time. For more
+	// information, see task-scheduling.
+	Schedule *TaskSchedule `type:"structure"`
+
 	// The Amazon Resource Name (ARN) of the resource name of the task to update.
 	//
 	// TaskArn is a required field
@@ -6266,6 +6364,11 @@ func (s *UpdateTaskInput) Validate() error {
 			invalidParams.AddNested("Options", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Schedule != nil {
+		if err := s.Schedule.Validate(); err != nil {
+			invalidParams.AddNested("Schedule", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6294,6 +6397,12 @@ func (s *UpdateTaskInput) SetName(v string) *UpdateTaskInput {
 // SetOptions sets the Options field's value.
 func (s *UpdateTaskInput) SetOptions(v *Options) *UpdateTaskInput {
 	s.Options = v
+	return s
+}
+
+// SetSchedule sets the Schedule field's value.
+func (s *UpdateTaskInput) SetSchedule(v *TaskSchedule) *UpdateTaskInput {
+	s.Schedule = v
 	return s
 }
 
@@ -6339,6 +6448,9 @@ const (
 
 	// EndpointTypePrivateLink is a EndpointType enum value
 	EndpointTypePrivateLink = "PRIVATE_LINK"
+
+	// EndpointTypeFips is a EndpointType enum value
+	EndpointTypeFips = "FIPS"
 )
 
 const (
@@ -6404,9 +6516,6 @@ const (
 const (
 	// PosixPermissionsNone is a PosixPermissions enum value
 	PosixPermissionsNone = "NONE"
-
-	// PosixPermissionsBestEffort is a PosixPermissions enum value
-	PosixPermissionsBestEffort = "BEST_EFFORT"
 
 	// PosixPermissionsPreserve is a PosixPermissions enum value
 	PosixPermissionsPreserve = "PRESERVE"
