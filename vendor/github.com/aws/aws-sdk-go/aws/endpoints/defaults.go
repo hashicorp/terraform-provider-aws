@@ -3157,8 +3157,7 @@ var awsPartition = partition{
 					SignatureVersions: []string{"s3", "s3v4"},
 				},
 				"aws-global": endpoint{
-					Hostname:          "s3.amazonaws.com",
-					SignatureVersions: []string{"s3", "s3v4"},
+					Hostname: "s3.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "us-east-1",
 					},
@@ -3184,10 +3183,7 @@ var awsPartition = partition{
 					Hostname:          "s3.sa-east-1.amazonaws.com",
 					SignatureVersions: []string{"s3", "s3v4"},
 				},
-				"us-east-1": endpoint{
-					Hostname:          "s3.us-east-1.amazonaws.com",
-					SignatureVersions: []string{"s3", "s3v4"},
-				},
+				"us-east-1": endpoint{},
 				"us-east-2": endpoint{},
 				"us-west-1": endpoint{
 					Hostname:          "s3.us-west-1.amazonaws.com",
