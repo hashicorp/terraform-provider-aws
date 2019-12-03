@@ -199,13 +199,19 @@ func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 }
 
 func TestAccAWSInstance_inEc2Classic(t *testing.T) {
+	key := "EC2_CLASSIC_REGION"
+	ec2ClassicRegion := os.Getenv(key)
+	if ec2ClassicRegion == "" {
+		t.Skipf("%s must be set to run EC2-Classic acceptance tests", key)
+	}
+
 	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
 	var v ec2.Instance
 
 	// EC2 Classic enabled
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	os.Setenv("AWS_DEFAULT_REGION", ec2ClassicRegion)
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resource.ParallelTest(t, resource.TestCase{
