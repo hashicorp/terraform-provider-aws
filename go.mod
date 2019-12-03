@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0
 	github.com/hashicorp/terraform-plugin-sdk v1.4.0
 	github.com/hashicorp/vault v0.10.4
-	github.com/jen20/awspolicyequivalence v1.0.0
+	github.com/jen20/awspolicyequivalence v1.1.0
 	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
 	github.com/mitchellh/copystructure v1.0.0
