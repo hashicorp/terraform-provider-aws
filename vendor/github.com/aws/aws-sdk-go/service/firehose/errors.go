@@ -17,6 +17,15 @@ const (
 	// The specified input parameter has a value that is not valid.
 	ErrCodeInvalidArgumentException = "InvalidArgumentException"
 
+	// ErrCodeInvalidKMSResourceException for service response error code
+	// "InvalidKMSResourceException".
+	//
+	// Kinesis Data Firehose throws this exception when an attempt to put records
+	// or to start or stop delivery stream encryption fails. This happens when the
+	// KMS service throws one of the following exception types: AccessDeniedException,
+	// InvalidStateException, DisabledException, or NotFoundException.
+	ErrCodeInvalidKMSResourceException = "InvalidKMSResourceException"
+
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//

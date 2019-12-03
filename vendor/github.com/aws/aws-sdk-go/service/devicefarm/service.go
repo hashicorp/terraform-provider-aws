@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a DeviceFarm client from just a session.
 //     svc := devicefarm.New(mySession)
 //
