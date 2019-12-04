@@ -75,7 +75,7 @@ The following arguments are supported:
   in the `encrypted_secret` output attribute.
 * `status` - (Optional) The access key status to apply. Defaults to `Active`.
 Valid values are `Active` and `Inactive`.
-* `ses_smtp_regions` - The availablity regions for the key should be converted into an SES SMTP
+* `ses_smtp_regions` - The availability regions for the key should be converted into an SES SMTP
   passwords by applying [AWS's documented Sigv4 conversion
   algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert).
   Valid values are `ap-south-1`, `ap-southeast-2`, `eu-central-1`, `eu-west-1`, `us-east-1` and `us-west-2`. See current [AWS SES regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region)
