@@ -152,7 +152,7 @@ func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpc(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -178,7 +178,7 @@ func TestAccAWSInstance_inDefaultVpcBySgId(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpc(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -2727,6 +2727,10 @@ resource "aws_security_group" "test" {
   name        = %[1]q
   description = %[1]q
   vpc_id      = "${data.aws_vpc.default.id}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -2734,6 +2738,10 @@ resource "aws_instance" "test" {
   instance_type     = "t2.micro"
   security_groups   = ["${aws_security_group.test.name}"]
   availability_zone = "${data.aws_availability_zones.current.names[0]}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
 }
@@ -2753,6 +2761,10 @@ resource "aws_security_group" "test" {
   name        = %[1]q
   description = %[1]q
   vpc_id      = "${data.aws_vpc.default.id}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -2760,6 +2772,10 @@ resource "aws_instance" "test" {
   instance_type          = "t2.micro"
   vpc_security_group_ids = ["${aws_security_group.test.id}"]
   availability_zone      = "${data.aws_availability_zones.current.names[0]}"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName)
 }
@@ -4195,7 +4211,7 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
     name   = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
-  
+
   filter {
     name   = "root-device-type"
     values = ["ebs"]
@@ -4232,4 +4248,22 @@ resource "aws_instance" "test" {
   }
 }
 `, hibernation)
+}
+
+// testAccPreCheckHasDefaultVpc checks that the test region has a default VPC.
+func testAccPreCheckHasDefaultVpc(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	})
+	if testAccPreCheckSkipError(err) ||
+		len(resp.AccountAttributes) == 0 ||
+		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
+		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
+		t.Skip("skipping tests; this region does not have a default VPC")
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 account attributes: %s", err)
+	}
 }
