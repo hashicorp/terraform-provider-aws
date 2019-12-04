@@ -231,6 +231,13 @@ func resourceAwsLambdaEventSourceMappingCreate(d *schema.ResourceData, meta inte
 		}
 	}
 
+	// IAM profiles and roles can take some time to propagate in AWS:
+	//  http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+	// Error creating Lambda function: InvalidParameterValueException: The
+	// function defined for the task cannot be assumed by Lambda.
+	//
+	// The role may exist, but the permissions may not have propagated, so we
+	// retry
 	var eventSourceMappingConfiguration *lambda.EventSourceMappingConfiguration
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
 		eventSourceMappingConfiguration, err = conn.CreateEventSourceMapping(params)
