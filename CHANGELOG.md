@@ -1,3 +1,4 @@
+## 2.42.0 (Unreleased)
 ## 2.41.0 (December 04, 2019)
 
 FEATURES:
