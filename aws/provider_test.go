@@ -193,6 +193,67 @@ func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService s
 	}
 }
 
+// testAccCheckListHasSomeElementAttrPair is a TestCheckFunc which validates that the collection on the left has an element with an attribute value
+// matching the value on the left
+// Based on TestCheckResourceAttrPair from the Terraform SDK testing framework
+func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr string, elementAttr string, nameSecond string, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		isFirst, err := primaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		isSecond, err := primaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vSecond, ok := isSecond.Attributes[keySecond]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", nameSecond, keySecond)
+		} else if vSecond == "" {
+			return fmt.Errorf("%s: No value was set on attribute %q", nameSecond, keySecond)
+		}
+
+		attrsFirst := make([]string, 0, len(isFirst.Attributes))
+		attrMatcher := regexp.MustCompile(fmt.Sprintf("%s\\.\\d+\\.%s", resourceAttr, elementAttr))
+		for k := range isFirst.Attributes {
+			if attrMatcher.MatchString(k) {
+				attrsFirst = append(attrsFirst, k)
+			}
+		}
+
+		found := false
+		for _, attrName := range attrsFirst {
+			vFirst := isFirst.Attributes[attrName]
+			if vFirst == vSecond {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("%s: No element of %q found with attribute %q matching value %q set on %q of %s", nameFirst, resourceAttr, elementAttr, vSecond, keySecond, nameSecond)
+		}
+
+		return nil
+	}
+}
+
+// Copied and inlined from the SDK testing code
+func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+	rs, ok := s.RootModule().Resources[name]
+	if !ok {
+		return nil, fmt.Errorf("Not found: %s", name)
+	}
+
+	is := rs.Primary
+	if is == nil {
+		return nil, fmt.Errorf("No primary instance: %s", name)
+	}
+
+	return is, nil
+}
+
 // testAccGetAccountID returns the account ID of testAccProvider
 // Must be used returned within a resource.TestCheckFunc
 func testAccGetAccountID() string {
