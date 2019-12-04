@@ -81,7 +81,7 @@ resource "aws_instance" "test" {
 data "aws_instances" "test" {
   filter {
     name   = "instance-id"
-    values = ["${aws_instance.test.*.id}"]
+    values = "${aws_instance.test.*.id}"
   }
 }
 `, rName)
