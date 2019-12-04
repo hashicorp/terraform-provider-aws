@@ -598,6 +598,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_event_source_mapping":                         resourceAwsLambdaEventSourceMapping(),
 			"aws_lambda_alias":                                        resourceAwsLambdaAlias(),
 			"aws_lambda_permission":                                   resourceAwsLambdaPermission(),
+			"aws_lambda_provisioned_concurrency_config":               resourceAwsLambdaProvisionedConcurrencyConfig(),
 			"aws_lambda_layer_version":                                resourceAwsLambdaLayerVersion(),
 			"aws_launch_configuration":                                resourceAwsLaunchConfiguration(),
 			"aws_launch_template":                                     resourceAwsLaunchTemplate(),

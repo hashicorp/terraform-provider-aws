@@ -96,6 +96,29 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_disappears(t *testing.T) {
+	var function lambda.GetFunctionOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLambdaConfigBasic(rName, rName, rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, rName, &function),
+					testAccCheckAwsLambdaFunctionDisappears(&function),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_concurrency(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -1679,6 +1702,20 @@ func testAccCheckLambdaFunctionDestroy(s *terraform.State) error {
 
 	return nil
 
+}
+
+func testAccCheckAwsLambdaFunctionDisappears(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).lambdaconn
+
+		input := &lambda.DeleteFunctionInput{
+			FunctionName: function.Configuration.FunctionName,
+		}
+
+		_, err := conn.DeleteFunction(input)
+
+		return err
+	}
 }
 
 func testAccCheckAwsLambdaFunctionExists(res, funcName string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
