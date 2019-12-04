@@ -234,7 +234,7 @@ resource "aws_iam_access_key" "a_key" {
 `, rName)
 }
 
-func TestSesSmtpPasswordFromSecretKeyV4(t *testing.T) {
+func TestSesSmtpPasswordFromSecretKeySigV4(t *testing.T) {
 	cases := []struct {
 		Region   string
 		Input    string
@@ -247,7 +247,7 @@ func TestSesSmtpPasswordFromSecretKeyV4(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual, err := sesSmtpPasswordFromSecretKeyV4(&tc.Input, tc.Region)
+		actual, err := sesSmtpPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
@@ -257,7 +257,7 @@ func TestSesSmtpPasswordFromSecretKeyV4(t *testing.T) {
 	}
 }
 
-func TestSesSmtpPasswordFromSecretKeyV2(t *testing.T) {
+func TestSesSmtpPasswordFromSecretKeySigV2(t *testing.T) {
 	cases := []struct {
 		Input    string
 		Expected string
@@ -267,7 +267,7 @@ func TestSesSmtpPasswordFromSecretKeyV2(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual, err := sesSmtpPasswordFromSecretKeyV2(&tc.Input)
+		actual, err := sesSmtpPasswordFromSecretKeySigV2(&tc.Input)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}

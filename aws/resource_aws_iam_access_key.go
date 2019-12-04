@@ -142,7 +142,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	// AWS SigV2
-	sesSMTPPassword, err := sesSmtpPasswordFromSecretKeyV2(createResp.AccessKey.SecretAccessKey)
+	sesSMTPPassword, err := sesSmtpPasswordFromSecretKeySigV2(createResp.AccessKey.SecretAccessKey)
 	if err != nil {
 		return fmt.Errorf("error getting SES SMTP Password from Secret Access Key: %s", err)
 	}
@@ -153,7 +153,7 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 		var sesSmtpPasswords []map[string]string
 
 		for _, region := range v.([]interface{}) {
-			password, err := sesSmtpPasswordFromSecretKeyV4(createResp.AccessKey.SecretAccessKey, region.(string))
+			password, err := sesSmtpPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, region.(string))
 			if err != nil {
 				return fmt.Errorf("error getting SES SMTP Password from Secret Access Key: %s", err)
 			}
@@ -263,7 +263,7 @@ func hmacSignature(key []byte, value []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func sesSmtpPasswordFromSecretKeyV4(key *string, region string) (string, error) {
+func sesSmtpPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
 	if key == nil {
 		return "", nil
 	}
@@ -297,7 +297,7 @@ func sesSmtpPasswordFromSecretKeyV4(key *string, region string) (string, error) 
 	return base64.StdEncoding.EncodeToString(versionedSig), nil
 }
 
-func sesSmtpPasswordFromSecretKeyV2(key *string) (string, error) {
+func sesSmtpPasswordFromSecretKeySigV2(key *string) (string, error) {
 	if key == nil {
 		return "", nil
 	}
