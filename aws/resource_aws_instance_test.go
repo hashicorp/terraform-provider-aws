@@ -297,9 +297,10 @@ func TestAccAWSInstance_basic(t *testing.T) {
 }
 
 func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
-	var instance ec2.Instance
-	kmsKeyResourceName := "aws_kms_key.test"
+	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -307,9 +308,9 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn,
+				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &instance),
+					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.encrypted", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2634515331.kms_key_id", kmsKeyResourceName, "arn"),
@@ -3063,14 +3064,18 @@ resource "aws_instance" "test" {
 }
 `
 
-const testAccInstanceConfigEbsBlockDeviceKmsKeyArn = `
+func testAccInstanceConfigEbsBlockDeviceKmsKeyArn(rName string) string {
+	return testAccLatestAmazonLinuxPvEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
-  # us-west-2
-  ami = "ami-55a7ea65"
+  ami = "${data.aws_ami.amzn-ami-minimal-pv-ebs.id}"
 
   # In order to attach an encrypted volume to an instance you need to have an
   # m3.medium or larger. See "Supported Instance Types" in:
@@ -3089,8 +3094,13 @@ resource "aws_instance" "test" {
     kms_key_id  = "${aws_kms_key.test.arn}"
     volume_size = 12
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 const testAccInstanceConfigRootBlockDeviceKmsKeyArn = `
 resource "aws_vpc" "test" {
