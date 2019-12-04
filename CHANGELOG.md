@@ -6,13 +6,15 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_route_table: adds attributes `gateway_id` and `associations.gateway_id` [GH-11122]
 * resource/aws_autoscaling_group: Add `max_instance_lifetime` argument [GH-10951]
 * resource/aws_autoscaling_group: Add `mixed_instances_policy` `launch_template` `override` configuration block `weighted_capacity` argument [GH-11004]
 * resource/aws_codebuild_project: Add Linux GPU worker [GH-11035]
 * resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter [GH-11041]
+* resource/aws_emr_cluster: Outputs EMR cluster ARN [GH-11078]
 * resource/aws_iam_access_key: Remove deprecation from `secret` and mark `secret` and `ses_smtp_password` to sensitive [GH-10908]
 * resource/aws_iam_user: Delete a user's virtual MFA devices when `force_destroy` is enabled [GH-11040]
-* resource/aws_emr_cluster: Outputs EMR cluster ARN [GH-11078]
+* resource/aws_route_table_association: adds attribute `gateway_id` [GH-11122]
 
 BUG FIXES:
 
