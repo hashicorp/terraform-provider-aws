@@ -4,6 +4,7 @@
 FEATURES:
 
 * **New Resource:** `aws_eks_fargate_profile` ([#11111](https://github.com/terraform-providers/terraform-provider-aws/issues/11111))
+* **New Resource:** `aws_lambda_provisioned_concurrency_config` ([#11129](https://github.com/terraform-providers/terraform-provider-aws/issues/11129))
 
 ENHANCEMENTS:
 
