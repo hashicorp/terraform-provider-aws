@@ -273,7 +273,7 @@ func sesSmtpPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	terminal := []byte("aws4_request")
 	message := []byte("SendRawEmail")
 
-	rawSig, err := hmacSignature([]byte("AWS4"+*key), []byte(date))
+	rawSig, err := hmacSignature([]byte("AWS4"+*key), date)
 	if err != nil {
 		return "", err
 	}
