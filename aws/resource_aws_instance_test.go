@@ -4217,6 +4217,23 @@ resource "aws_instance" "test" {
 
 // testAccPreCheckHasDefaultVpc checks that the test region has a default VPC.
 func testAccPreCheckHasDefaultVpc(t *testing.T) {
+	if !testAccHasDefaultVpc(t) {
+		region := testAccProvider.Meta().(*AWSClient).region
+		t.Skipf("skipping tests; %s does not have a default VPC", region)
+	}
+}
+
+// testAccPreCheckHasDefaultVpcOrEc2Classic checks that the test region has a default VPC or has the EC2-Classic platform.
+// This check is useful to ensure that an instance can be launched without specifying a subnet.
+func testAccPreCheckHasDefaultVpcOrEc2Classic(t *testing.T) {
+	client := testAccProvider.Meta().(*AWSClient)
+
+	if !testAccHasDefaultVpc(t) && !hasEc2Classic(client.supportedplatforms) {
+		t.Skipf("skipping tests; %s does not have a default VPC or EC2-Classic", client.region)
+	}
+}
+
+func testAccHasDefaultVpc(t *testing.T) bool {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
@@ -4226,9 +4243,11 @@ func testAccPreCheckHasDefaultVpc(t *testing.T) {
 		len(resp.AccountAttributes) == 0 ||
 		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
 		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
-		t.Skip("skipping tests; this region does not have a default VPC")
+		return false
 	}
 	if err != nil {
 		t.Fatalf("error describing EC2 account attributes: %s", err)
 	}
+
+	return true
 }

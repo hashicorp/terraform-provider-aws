@@ -13,7 +13,7 @@ func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpcOrEc2Classic(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -34,7 +34,7 @@ func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpcOrEc2Classic(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +52,7 @@ func TestAccAWSInstancesDataSource_instance_state_names(t *testing.T) {
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpcOrEc2Classic(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ resource "aws_instance" "test" {
   count = 3
 
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "t2.micro"
+  instance_type = "t1.micro"
 
   tags = {
     Name = %[1]q
@@ -93,7 +93,7 @@ resource "aws_instance" "test" {
   count = 2
 
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "t2.micro"
+  instance_type = "t1.micro"
 
   tags = {
     Name      = %[1]q
@@ -116,7 +116,7 @@ resource "aws_instance" "test" {
   count = 2
 
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "t2.micro"
+  instance_type = "t1.micro"
 
   tags = {
     Name = %[1]q
