@@ -636,6 +636,9 @@ func (c *Lambda) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Reque
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One of the parameters in the request is invalid.
 //
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
+//
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
 //   The request throughput limit was exceeded.
 //
@@ -1125,6 +1128,98 @@ func (c *Lambda) DeleteLayerVersionWithContext(ctx aws.Context, input *DeleteLay
 	return out, req.Send()
 }
 
+const opDeleteProvisionedConcurrencyConfig = "DeleteProvisionedConcurrencyConfig"
+
+// DeleteProvisionedConcurrencyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteProvisionedConcurrencyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteProvisionedConcurrencyConfig for more information on using the DeleteProvisionedConcurrencyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteProvisionedConcurrencyConfigRequest method.
+//    req, resp := client.DeleteProvisionedConcurrencyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteProvisionedConcurrencyConfig
+func (c *Lambda) DeleteProvisionedConcurrencyConfigRequest(input *DeleteProvisionedConcurrencyConfigInput) (req *request.Request, output *DeleteProvisionedConcurrencyConfigOutput) {
+	op := &request.Operation{
+		Name:       opDeleteProvisionedConcurrencyConfig,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency",
+	}
+
+	if input == nil {
+		input = &DeleteProvisionedConcurrencyConfigInput{}
+	}
+
+	output = &DeleteProvisionedConcurrencyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteProvisionedConcurrencyConfig API operation for AWS Lambda.
+//
+// Deletes the provisioned concurrency configuration for a function.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation DeleteProvisionedConcurrencyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteProvisionedConcurrencyConfig
+func (c *Lambda) DeleteProvisionedConcurrencyConfig(input *DeleteProvisionedConcurrencyConfigInput) (*DeleteProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.DeleteProvisionedConcurrencyConfigRequest(input)
+	return out, req.Send()
+}
+
+// DeleteProvisionedConcurrencyConfigWithContext is the same as DeleteProvisionedConcurrencyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteProvisionedConcurrencyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) DeleteProvisionedConcurrencyConfigWithContext(ctx aws.Context, input *DeleteProvisionedConcurrencyConfigInput, opts ...request.Option) (*DeleteProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.DeleteProvisionedConcurrencyConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetAccountSettings = "GetAccountSettings"
 
 // GetAccountSettingsRequest generates a "aws/request.Request" representing the
@@ -1470,6 +1565,95 @@ func (c *Lambda) GetFunction(input *GetFunctionInput) (*GetFunctionOutput, error
 // for more information on using Contexts.
 func (c *Lambda) GetFunctionWithContext(ctx aws.Context, input *GetFunctionInput, opts ...request.Option) (*GetFunctionOutput, error) {
 	req, out := c.GetFunctionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetFunctionConcurrency = "GetFunctionConcurrency"
+
+// GetFunctionConcurrencyRequest generates a "aws/request.Request" representing the
+// client's request for the GetFunctionConcurrency operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetFunctionConcurrency for more information on using the GetFunctionConcurrency
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetFunctionConcurrencyRequest method.
+//    req, resp := client.GetFunctionConcurrencyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConcurrency
+func (c *Lambda) GetFunctionConcurrencyRequest(input *GetFunctionConcurrencyInput) (req *request.Request, output *GetFunctionConcurrencyOutput) {
+	op := &request.Operation{
+		Name:       opGetFunctionConcurrency,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/concurrency",
+	}
+
+	if input == nil {
+		input = &GetFunctionConcurrencyInput{}
+	}
+
+	output = &GetFunctionConcurrencyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetFunctionConcurrency API operation for AWS Lambda.
+//
+// Returns details about the concurrency configuration for a function. To set
+// a concurrency limit for a function, use PutFunctionConcurrency.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetFunctionConcurrency for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConcurrency
+func (c *Lambda) GetFunctionConcurrency(input *GetFunctionConcurrencyInput) (*GetFunctionConcurrencyOutput, error) {
+	req, out := c.GetFunctionConcurrencyRequest(input)
+	return out, req.Send()
+}
+
+// GetFunctionConcurrencyWithContext is the same as GetFunctionConcurrency with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetFunctionConcurrency for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetFunctionConcurrencyWithContext(ctx aws.Context, input *GetFunctionConcurrencyInput, opts ...request.Option) (*GetFunctionConcurrencyOutput, error) {
+	req, out := c.GetFunctionConcurrencyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2010,6 +2194,98 @@ func (c *Lambda) GetPolicy(input *GetPolicyInput) (*GetPolicyOutput, error) {
 // for more information on using Contexts.
 func (c *Lambda) GetPolicyWithContext(ctx aws.Context, input *GetPolicyInput, opts ...request.Option) (*GetPolicyOutput, error) {
 	req, out := c.GetPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetProvisionedConcurrencyConfig = "GetProvisionedConcurrencyConfig"
+
+// GetProvisionedConcurrencyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the GetProvisionedConcurrencyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetProvisionedConcurrencyConfig for more information on using the GetProvisionedConcurrencyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetProvisionedConcurrencyConfigRequest method.
+//    req, resp := client.GetProvisionedConcurrencyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetProvisionedConcurrencyConfig
+func (c *Lambda) GetProvisionedConcurrencyConfigRequest(input *GetProvisionedConcurrencyConfigInput) (req *request.Request, output *GetProvisionedConcurrencyConfigOutput) {
+	op := &request.Operation{
+		Name:       opGetProvisionedConcurrencyConfig,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency",
+	}
+
+	if input == nil {
+		input = &GetProvisionedConcurrencyConfigInput{}
+	}
+
+	output = &GetProvisionedConcurrencyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetProvisionedConcurrencyConfig API operation for AWS Lambda.
+//
+// Retrieves the provisioned concurrency configuration for a function's alias
+// or version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetProvisionedConcurrencyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeProvisionedConcurrencyConfigNotFoundException "ProvisionedConcurrencyConfigNotFoundException"
+//   The specified configuration does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetProvisionedConcurrencyConfig
+func (c *Lambda) GetProvisionedConcurrencyConfig(input *GetProvisionedConcurrencyConfigInput) (*GetProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.GetProvisionedConcurrencyConfigRequest(input)
+	return out, req.Send()
+}
+
+// GetProvisionedConcurrencyConfigWithContext is the same as GetProvisionedConcurrencyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetProvisionedConcurrencyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetProvisionedConcurrencyConfigWithContext(ctx aws.Context, input *GetProvisionedConcurrencyConfigInput, opts ...request.Option) (*GetProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.GetProvisionedConcurrencyConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3193,6 +3469,152 @@ func (c *Lambda) ListLayersPagesWithContext(ctx aws.Context, input *ListLayersIn
 	return p.Err()
 }
 
+const opListProvisionedConcurrencyConfigs = "ListProvisionedConcurrencyConfigs"
+
+// ListProvisionedConcurrencyConfigsRequest generates a "aws/request.Request" representing the
+// client's request for the ListProvisionedConcurrencyConfigs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListProvisionedConcurrencyConfigs for more information on using the ListProvisionedConcurrencyConfigs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListProvisionedConcurrencyConfigsRequest method.
+//    req, resp := client.ListProvisionedConcurrencyConfigsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListProvisionedConcurrencyConfigs
+func (c *Lambda) ListProvisionedConcurrencyConfigsRequest(input *ListProvisionedConcurrencyConfigsInput) (req *request.Request, output *ListProvisionedConcurrencyConfigsOutput) {
+	op := &request.Operation{
+		Name:       opListProvisionedConcurrencyConfigs,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency?List=ALL",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListProvisionedConcurrencyConfigsInput{}
+	}
+
+	output = &ListProvisionedConcurrencyConfigsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListProvisionedConcurrencyConfigs API operation for AWS Lambda.
+//
+// Retrieves a list of provisioned concurrency configurations for a function.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation ListProvisionedConcurrencyConfigs for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListProvisionedConcurrencyConfigs
+func (c *Lambda) ListProvisionedConcurrencyConfigs(input *ListProvisionedConcurrencyConfigsInput) (*ListProvisionedConcurrencyConfigsOutput, error) {
+	req, out := c.ListProvisionedConcurrencyConfigsRequest(input)
+	return out, req.Send()
+}
+
+// ListProvisionedConcurrencyConfigsWithContext is the same as ListProvisionedConcurrencyConfigs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListProvisionedConcurrencyConfigs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListProvisionedConcurrencyConfigsWithContext(ctx aws.Context, input *ListProvisionedConcurrencyConfigsInput, opts ...request.Option) (*ListProvisionedConcurrencyConfigsOutput, error) {
+	req, out := c.ListProvisionedConcurrencyConfigsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListProvisionedConcurrencyConfigsPages iterates over the pages of a ListProvisionedConcurrencyConfigs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListProvisionedConcurrencyConfigs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListProvisionedConcurrencyConfigs operation.
+//    pageNum := 0
+//    err := client.ListProvisionedConcurrencyConfigsPages(params,
+//        func(page *lambda.ListProvisionedConcurrencyConfigsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Lambda) ListProvisionedConcurrencyConfigsPages(input *ListProvisionedConcurrencyConfigsInput, fn func(*ListProvisionedConcurrencyConfigsOutput, bool) bool) error {
+	return c.ListProvisionedConcurrencyConfigsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListProvisionedConcurrencyConfigsPagesWithContext same as ListProvisionedConcurrencyConfigsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListProvisionedConcurrencyConfigsPagesWithContext(ctx aws.Context, input *ListProvisionedConcurrencyConfigsInput, fn func(*ListProvisionedConcurrencyConfigsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListProvisionedConcurrencyConfigsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListProvisionedConcurrencyConfigsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListProvisionedConcurrencyConfigsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListTags = "ListTags"
 
 // ListTagsRequest generates a "aws/request.Request" representing the
@@ -3685,7 +4107,7 @@ func (c *Lambda) PutFunctionConcurrencyRequest(input *PutFunctionConcurrencyInpu
 // simultaneously, and prevents it from scaling beyond that level. Use GetFunction
 // to see the current setting for a function.
 //
-// Use GetAccountSettings to see your regional concurrency limit. You can reserve
+// Use GetAccountSettings to see your Regional concurrency limit. You can reserve
 // concurrency for as many functions as you like, as long as you leave at least
 // 100 simultaneous executions unreserved for functions that aren't configured
 // with a per-function limit. For more information, see Managing Concurrency
@@ -3826,6 +4248,97 @@ func (c *Lambda) PutFunctionEventInvokeConfig(input *PutFunctionEventInvokeConfi
 // for more information on using Contexts.
 func (c *Lambda) PutFunctionEventInvokeConfigWithContext(ctx aws.Context, input *PutFunctionEventInvokeConfigInput, opts ...request.Option) (*PutFunctionEventInvokeConfigOutput, error) {
 	req, out := c.PutFunctionEventInvokeConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutProvisionedConcurrencyConfig = "PutProvisionedConcurrencyConfig"
+
+// PutProvisionedConcurrencyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the PutProvisionedConcurrencyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutProvisionedConcurrencyConfig for more information on using the PutProvisionedConcurrencyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutProvisionedConcurrencyConfigRequest method.
+//    req, resp := client.PutProvisionedConcurrencyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutProvisionedConcurrencyConfig
+func (c *Lambda) PutProvisionedConcurrencyConfigRequest(input *PutProvisionedConcurrencyConfigInput) (req *request.Request, output *PutProvisionedConcurrencyConfigOutput) {
+	op := &request.Operation{
+		Name:       opPutProvisionedConcurrencyConfig,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency",
+	}
+
+	if input == nil {
+		input = &PutProvisionedConcurrencyConfigInput{}
+	}
+
+	output = &PutProvisionedConcurrencyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutProvisionedConcurrencyConfig API operation for AWS Lambda.
+//
+// Adds a provisioned concurrency configuration to a function's alias or version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation PutProvisionedConcurrencyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutProvisionedConcurrencyConfig
+func (c *Lambda) PutProvisionedConcurrencyConfig(input *PutProvisionedConcurrencyConfigInput) (*PutProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.PutProvisionedConcurrencyConfigRequest(input)
+	return out, req.Send()
+}
+
+// PutProvisionedConcurrencyConfigWithContext is the same as PutProvisionedConcurrencyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutProvisionedConcurrencyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) PutProvisionedConcurrencyConfigWithContext(ctx aws.Context, input *PutProvisionedConcurrencyConfigInput, opts ...request.Option) (*PutProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.PutProvisionedConcurrencyConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6212,6 +6725,89 @@ func (s DeleteLayerVersionOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteProvisionedConcurrencyConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The version number or alias name.
+	//
+	// Qualifier is a required field
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteProvisionedConcurrencyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisionedConcurrencyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteProvisionedConcurrencyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteProvisionedConcurrencyConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.Qualifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("Qualifier"))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *DeleteProvisionedConcurrencyConfigInput) SetFunctionName(v string) *DeleteProvisionedConcurrencyConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *DeleteProvisionedConcurrencyConfigInput) SetQualifier(v string) *DeleteProvisionedConcurrencyConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type DeleteProvisionedConcurrencyConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteProvisionedConcurrencyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisionedConcurrencyConfigOutput) GoString() string {
+	return s.String()
+}
+
 // A configuration object that specifies the destination of an event after Lambda
 // processes it.
 type DestinationConfig struct {
@@ -7072,6 +7668,81 @@ func (s *GetEventSourceMappingInput) SetUUID(v string) *GetEventSourceMappingInp
 	return s
 }
 
+type GetFunctionConcurrencyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetFunctionConcurrencyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFunctionConcurrencyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetFunctionConcurrencyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetFunctionConcurrencyInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *GetFunctionConcurrencyInput) SetFunctionName(v string) *GetFunctionConcurrencyInput {
+	s.FunctionName = &v
+	return s
+}
+
+type GetFunctionConcurrencyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The number of simultaneous executions that are reserved for the function.
+	ReservedConcurrentExecutions *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s GetFunctionConcurrencyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFunctionConcurrencyOutput) GoString() string {
+	return s.String()
+}
+
+// SetReservedConcurrentExecutions sets the ReservedConcurrentExecutions field's value.
+func (s *GetFunctionConcurrencyOutput) SetReservedConcurrentExecutions(v int64) *GetFunctionConcurrencyOutput {
+	s.ReservedConcurrentExecutions = &v
+	return s
+}
+
 type GetFunctionConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7839,6 +8510,145 @@ func (s *GetPolicyOutput) SetPolicy(v string) *GetPolicyOutput {
 // SetRevisionId sets the RevisionId field's value.
 func (s *GetPolicyOutput) SetRevisionId(v string) *GetPolicyOutput {
 	s.RevisionId = &v
+	return s
+}
+
+type GetProvisionedConcurrencyConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The version number or alias name.
+	//
+	// Qualifier is a required field
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetProvisionedConcurrencyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetProvisionedConcurrencyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetProvisionedConcurrencyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetProvisionedConcurrencyConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.Qualifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("Qualifier"))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *GetProvisionedConcurrencyConfigInput) SetFunctionName(v string) *GetProvisionedConcurrencyConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *GetProvisionedConcurrencyConfigInput) SetQualifier(v string) *GetProvisionedConcurrencyConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type GetProvisionedConcurrencyConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of provisioned concurrency allocated.
+	AllocatedProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The amount of provisioned concurrency available.
+	AvailableProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The date and time that a user last updated the configuration, in ISO 8601
+	// format (https://www.iso.org/iso-8601-date-and-time-format.html).
+	LastModified *string `type:"string"`
+
+	// The amount of provisioned concurrency requested.
+	RequestedProvisionedConcurrentExecutions *int64 `min:"1" type:"integer"`
+
+	// The status of the allocation process.
+	Status *string `type:"string" enum:"ProvisionedConcurrencyStatusEnum"`
+
+	// For failed allocations, the reason that provisioned concurrency could not
+	// be allocated.
+	StatusReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetProvisionedConcurrencyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetProvisionedConcurrencyConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedProvisionedConcurrentExecutions sets the AllocatedProvisionedConcurrentExecutions field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetAllocatedProvisionedConcurrentExecutions(v int64) *GetProvisionedConcurrencyConfigOutput {
+	s.AllocatedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetAvailableProvisionedConcurrentExecutions sets the AvailableProvisionedConcurrentExecutions field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetAvailableProvisionedConcurrentExecutions(v int64) *GetProvisionedConcurrencyConfigOutput {
+	s.AvailableProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetLastModified(v string) *GetProvisionedConcurrencyConfigOutput {
+	s.LastModified = &v
+	return s
+}
+
+// SetRequestedProvisionedConcurrentExecutions sets the RequestedProvisionedConcurrentExecutions field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetRequestedProvisionedConcurrentExecutions(v int64) *GetProvisionedConcurrencyConfigOutput {
+	s.RequestedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetStatus(v string) *GetProvisionedConcurrencyConfigOutput {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetStatusReason(v string) *GetProvisionedConcurrencyConfigOutput {
+	s.StatusReason = &v
 	return s
 }
 
@@ -9009,6 +9819,112 @@ func (s *ListLayersOutput) SetNextMarker(v string) *ListLayersOutput {
 	return s
 }
 
+type ListProvisionedConcurrencyConfigsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// Specify the pagination token that's returned by a previous request to retrieve
+	// the next page of results.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// Specify a number to limit the number of configurations returned.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListProvisionedConcurrencyConfigsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisionedConcurrencyConfigsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListProvisionedConcurrencyConfigsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListProvisionedConcurrencyConfigsInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.MaxItems != nil && *s.MaxItems < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *ListProvisionedConcurrencyConfigsInput) SetFunctionName(v string) *ListProvisionedConcurrencyConfigsInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListProvisionedConcurrencyConfigsInput) SetMarker(v string) *ListProvisionedConcurrencyConfigsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListProvisionedConcurrencyConfigsInput) SetMaxItems(v int64) *ListProvisionedConcurrencyConfigsInput {
+	s.MaxItems = &v
+	return s
+}
+
+type ListProvisionedConcurrencyConfigsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The pagination token that's included if more results are available.
+	NextMarker *string `type:"string"`
+
+	// A list of provisioned concurrency configurations.
+	ProvisionedConcurrencyConfigs []*ProvisionedConcurrencyConfigListItem `type:"list"`
+}
+
+// String returns the string representation
+func (s ListProvisionedConcurrencyConfigsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisionedConcurrencyConfigsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListProvisionedConcurrencyConfigsOutput) SetNextMarker(v string) *ListProvisionedConcurrencyConfigsOutput {
+	s.NextMarker = &v
+	return s
+}
+
+// SetProvisionedConcurrencyConfigs sets the ProvisionedConcurrencyConfigs field's value.
+func (s *ListProvisionedConcurrencyConfigsOutput) SetProvisionedConcurrencyConfigs(v []*ProvisionedConcurrencyConfigListItem) *ListProvisionedConcurrencyConfigsOutput {
+	s.ProvisionedConcurrencyConfigs = v
+	return s
+}
+
 type ListTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9224,6 +10140,87 @@ func (s OnSuccess) GoString() string {
 // SetDestination sets the Destination field's value.
 func (s *OnSuccess) SetDestination(v string) *OnSuccess {
 	s.Destination = &v
+	return s
+}
+
+// Details about the provisioned concurrency configuration for a function alias
+// or version.
+type ProvisionedConcurrencyConfigListItem struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of provisioned concurrency allocated.
+	AllocatedProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The amount of provisioned concurrency available.
+	AvailableProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the alias or version.
+	FunctionArn *string `type:"string"`
+
+	// The date and time that a user last updated the configuration, in ISO 8601
+	// format (https://www.iso.org/iso-8601-date-and-time-format.html).
+	LastModified *string `type:"string"`
+
+	// The amount of provisioned concurrency requested.
+	RequestedProvisionedConcurrentExecutions *int64 `min:"1" type:"integer"`
+
+	// The status of the allocation process.
+	Status *string `type:"string" enum:"ProvisionedConcurrencyStatusEnum"`
+
+	// For failed allocations, the reason that provisioned concurrency could not
+	// be allocated.
+	StatusReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedConcurrencyConfigListItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedConcurrencyConfigListItem) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedProvisionedConcurrentExecutions sets the AllocatedProvisionedConcurrentExecutions field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetAllocatedProvisionedConcurrentExecutions(v int64) *ProvisionedConcurrencyConfigListItem {
+	s.AllocatedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetAvailableProvisionedConcurrentExecutions sets the AvailableProvisionedConcurrentExecutions field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetAvailableProvisionedConcurrentExecutions(v int64) *ProvisionedConcurrencyConfigListItem {
+	s.AvailableProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetFunctionArn sets the FunctionArn field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetFunctionArn(v string) *ProvisionedConcurrencyConfigListItem {
+	s.FunctionArn = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetLastModified(v string) *ProvisionedConcurrencyConfigListItem {
+	s.LastModified = &v
+	return s
+}
+
+// SetRequestedProvisionedConcurrentExecutions sets the RequestedProvisionedConcurrentExecutions field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetRequestedProvisionedConcurrentExecutions(v int64) *ProvisionedConcurrencyConfigListItem {
+	s.RequestedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetStatus(v string) *ProvisionedConcurrencyConfigListItem {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetStatusReason(v string) *ProvisionedConcurrencyConfigListItem {
+	s.StatusReason = &v
 	return s
 }
 
@@ -9755,6 +10752,162 @@ func (s *PutFunctionEventInvokeConfigOutput) SetMaximumEventAgeInSeconds(v int64
 // SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
 func (s *PutFunctionEventInvokeConfigOutput) SetMaximumRetryAttempts(v int64) *PutFunctionEventInvokeConfigOutput {
 	s.MaximumRetryAttempts = &v
+	return s
+}
+
+type PutProvisionedConcurrencyConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The amount of provisioned concurrency to allocate for the version or alias.
+	//
+	// ProvisionedConcurrentExecutions is a required field
+	ProvisionedConcurrentExecutions *int64 `min:"1" type:"integer" required:"true"`
+
+	// The version number or alias name.
+	//
+	// Qualifier is a required field
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutProvisionedConcurrencyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutProvisionedConcurrencyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutProvisionedConcurrencyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutProvisionedConcurrencyConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.ProvisionedConcurrentExecutions == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedConcurrentExecutions"))
+	}
+	if s.ProvisionedConcurrentExecutions != nil && *s.ProvisionedConcurrentExecutions < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ProvisionedConcurrentExecutions", 1))
+	}
+	if s.Qualifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("Qualifier"))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *PutProvisionedConcurrencyConfigInput) SetFunctionName(v string) *PutProvisionedConcurrencyConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetProvisionedConcurrentExecutions sets the ProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigInput) SetProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigInput {
+	s.ProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *PutProvisionedConcurrencyConfigInput) SetQualifier(v string) *PutProvisionedConcurrencyConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type PutProvisionedConcurrencyConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of provisioned concurrency allocated.
+	AllocatedProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The amount of provisioned concurrency available.
+	AvailableProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The date and time that a user last updated the configuration, in ISO 8601
+	// format (https://www.iso.org/iso-8601-date-and-time-format.html).
+	LastModified *string `type:"string"`
+
+	// The amount of provisioned concurrency requested.
+	RequestedProvisionedConcurrentExecutions *int64 `min:"1" type:"integer"`
+
+	// The status of the allocation process.
+	Status *string `type:"string" enum:"ProvisionedConcurrencyStatusEnum"`
+
+	// For failed allocations, the reason that provisioned concurrency could not
+	// be allocated.
+	StatusReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PutProvisionedConcurrencyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutProvisionedConcurrencyConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedProvisionedConcurrentExecutions sets the AllocatedProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetAllocatedProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigOutput {
+	s.AllocatedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetAvailableProvisionedConcurrentExecutions sets the AvailableProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetAvailableProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigOutput {
+	s.AvailableProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetLastModified(v string) *PutProvisionedConcurrencyConfigOutput {
+	s.LastModified = &v
+	return s
+}
+
+// SetRequestedProvisionedConcurrentExecutions sets the RequestedProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetRequestedProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigOutput {
+	s.RequestedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetStatus(v string) *PutProvisionedConcurrencyConfigOutput {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetStatusReason(v string) *PutProvisionedConcurrencyConfigOutput {
+	s.StatusReason = &v
 	return s
 }
 
@@ -11049,6 +12202,17 @@ const (
 
 	// LogTypeTail is a LogType enum value
 	LogTypeTail = "Tail"
+)
+
+const (
+	// ProvisionedConcurrencyStatusEnumInProgress is a ProvisionedConcurrencyStatusEnum enum value
+	ProvisionedConcurrencyStatusEnumInProgress = "IN_PROGRESS"
+
+	// ProvisionedConcurrencyStatusEnumReady is a ProvisionedConcurrencyStatusEnum enum value
+	ProvisionedConcurrencyStatusEnumReady = "READY"
+
+	// ProvisionedConcurrencyStatusEnumFailed is a ProvisionedConcurrencyStatusEnum enum value
+	ProvisionedConcurrencyStatusEnumFailed = "FAILED"
 )
 
 const (
