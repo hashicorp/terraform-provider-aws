@@ -48,6 +48,23 @@ output "secret" {
 }
 ```
 
+```hcl
+resource "aws_iam_user" "test" {
+  name = "test"
+  path = "/test/"
+}
+
+resource "aws_iam_access_key" "test" {
+  user             = aws_iam_user.test.name
+  ses_smtp_regions = ["eu-central-1", "us-east-1"]
+}
+
+output "aws_iam_smtp_password_eu_central_1" {
+  value = [for ses_smtp_password in aws_iam_access_key.test.ses_smtp_passwords :
+  ses_smtp_password.secret if ses_smtp_password.region == "eu-central-1"][0]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -58,6 +75,10 @@ The following arguments are supported:
   in the `encrypted_secret` output attribute.
 * `status` - (Optional) The access key status to apply. Defaults to `Active`.
 Valid values are `Active` and `Inactive`.
+* `ses_smtp_regions` - The availablity regions for the key should be converted into an SES SMTP
+  passwords by applying [AWS's documented Sigv4 conversion
+  algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert).
+  Valid values are `ap-south-1`, `ap-southeast-2`, `eu-central-1`, `eu-west-1`, `us-east-1` and `us-west-2`. See current [AWS SES regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region)
 
 ## Attributes Reference
 
@@ -75,6 +96,8 @@ the use of the secret key in automation.
 * `encrypted_secret` - The encrypted secret, base64 encoded, if `pgp_key` was specified.
 ~> **NOTE:** The encrypted secret may be decrypted using the command line,
    for example: `terraform output encrypted_secret | base64 --decode | keybase pgp decrypt`.
-* `ses_smtp_password` - The secret access key converted into an SES SMTP
-  password by applying [AWS's documented conversion
+* `ses_smtp_password` - **DEPRECATED** The secret access key converted into an SES SMTP
+  password by applying AWS's SigV2 conversion algorithm
+* `ses_smtp_passwords` - The secret access key converted into an SES SMTP
+  passwords for given `ses_smtp_regions` by applying [AWS's documented Sigv4 conversion
   algorithm](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/smtp-credentials.html#smtp-credentials-convert).

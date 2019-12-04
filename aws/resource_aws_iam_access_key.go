@@ -22,6 +22,8 @@ func resourceAwsIamAccessKey() *schema.Resource {
 		Update: resourceAwsIamAccessKeyUpdate,
 		Delete: resourceAwsIamAccessKeyDelete,
 
+		DeprecationMessage: "AWS SigV2 for SES SMTP passwords is deprecated and 'ses_smtp_password' will be removed.\nUse 'ses_smtp_regions' and 'ses_smtp_passwords' for region-specific AWS SigV4 signed SES SMTP passwords instead.",
+
 		Schema: map[string]*schema.Schema{
 			"user": {
 				Type:     schema.TypeString,
@@ -46,6 +48,40 @@ func resourceAwsIamAccessKey() *schema.Resource {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
+			},
+			"ses_smtp_passwords": {
+				Type:      schema.TypeList,
+				Computed:  true,
+				Sensitive: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"secret": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"ses_smtp_regions": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					// https://docs.aws.amazon.com/general/latest/gr/rande.html#ses_region
+					ValidateFunc: validation.StringInSlice([]string{
+						"ap-south-1",
+						"ap-southeast-2",
+						"eu-central-1",
+						"eu-west-1",
+						"us-east-1",
+						"us-west-2",
+					}, true),
+				},
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,
@@ -105,11 +141,33 @@ func resourceAwsIamAccessKeyCreate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	sesSMTPPassword, err := sesSmtpPasswordFromSecretKey(createResp.AccessKey.SecretAccessKey)
+	// AWS SigV2
+	sesSMTPPassword, err := sesSmtpPasswordFromSecretKeyV2(createResp.AccessKey.SecretAccessKey)
 	if err != nil {
 		return fmt.Errorf("error getting SES SMTP Password from Secret Access Key: %s", err)
 	}
 	d.Set("ses_smtp_password", sesSMTPPassword)
+
+	// AWS SigV4
+	if v, ok := d.GetOk("ses_smtp_regions"); ok && len(v.([]interface{})) > 0 {
+		var sesSmtpPasswords []map[string]string
+
+		for _, region := range v.([]interface{}) {
+			password, err := sesSmtpPasswordFromSecretKeyV4(createResp.AccessKey.SecretAccessKey, region.(string))
+			if err != nil {
+				return fmt.Errorf("error getting SES SMTP Password from Secret Access Key: %s", err)
+			}
+			sesSmtpPasswords = append(
+				sesSmtpPasswords,
+				map[string]string{
+					"region": region.(string),
+					"secret": password,
+				})
+		}
+		d.Set("ses_smtp_passwords", sesSmtpPasswords)
+	} else {
+		d.Set("ses_smtp_passwords", nil)
+	}
 
 	return resourceAwsIamAccessKeyReadResult(d, &iam.AccessKeyMetadata{
 		AccessKeyId: createResp.AccessKey.AccessKeyId,
@@ -197,7 +255,49 @@ func resourceAwsIamAccessKeyStatusUpdate(iamconn *iam.IAM, d *schema.ResourceDat
 	return nil
 }
 
-func sesSmtpPasswordFromSecretKey(key *string) (string, error) {
+func hmacSignature(key []byte, value []byte) ([]byte, error) {
+	h := hmac.New(sha256.New, key)
+	if _, err := h.Write(value); err != nil {
+		return []byte(""), err
+	}
+	return h.Sum(nil), nil
+}
+
+func sesSmtpPasswordFromSecretKeyV4(key *string, region string) (string, error) {
+	if key == nil {
+		return "", nil
+	}
+	version := byte(0x04)
+	date := []byte("11111111")
+	service := []byte("ses")
+	terminal := []byte("aws4_request")
+	message := []byte("SendRawEmail")
+
+	rawSig, err := hmacSignature([]byte("AWS4"+*key), []byte(date))
+	if err != nil {
+		return "", err
+	}
+
+	if rawSig, err = hmacSignature(rawSig, []byte(region)); err != nil {
+		return "", err
+	}
+	if rawSig, err = hmacSignature(rawSig, service); err != nil {
+		return "", err
+	}
+	if rawSig, err = hmacSignature(rawSig, terminal); err != nil {
+		return "", err
+	}
+	if rawSig, err = hmacSignature(rawSig, message); err != nil {
+		return "", err
+	}
+
+	versionedSig := make([]byte, 0, len(rawSig)+1)
+	versionedSig = append(versionedSig, version)
+	versionedSig = append(versionedSig, rawSig...)
+	return base64.StdEncoding.EncodeToString(versionedSig), nil
+}
+
+func sesSmtpPasswordFromSecretKeyV2(key *string) (string, error) {
 	if key == nil {
 		return "", nil
 	}
