@@ -205,9 +205,9 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 		t.Skipf("%s must be set to run EC2-Classic acceptance tests", key)
 	}
 
+	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
-	var v ec2.Instance
 
 	// EC2 Classic enabled
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
@@ -2766,10 +2766,6 @@ resource "aws_instance" "test" {
 
 func testAccInstanceConfigInEc2Classic(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 data "aws_ami" "ubuntu" {
   most_recent = true
 
@@ -4029,13 +4025,34 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 `)
 }
 
+// testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
+func testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`)
+}
+
 // testAccLatestAmazonLinuxPvEbsAmiConfig returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
 // The data source is named 'amzn-ami-minimal-pv-ebs'.
-/*
 func testAccLatestAmazonLinuxPvEbsAmiConfig() string {
 	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+data "aws_ami" "amzn-ami-minimal-pv-ebs" {
   most_recent = true
   owners      = ["amazon"]
 
@@ -4051,7 +4068,6 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 }
 `)
 }
-*/
 
 // testAccLatestWindowsServer2016CoreAmiConfig returns the configuration for a data source that
 // describes the latest Microsoft Windows Server 2016 Core AMI.
