@@ -1,26 +1,26 @@
-## 2.41.0 (Unreleased)
+## 2.41.0 (December 04, 2019)
 
 FEATURES:
 
-* **New Resource:** `aws_eks_fargate_profile` [GH-11111]
+* **New Resource:** `aws_eks_fargate_profile` ([#11111](https://github.com/terraform-providers/terraform-provider-aws/issues/11111))
 
 ENHANCEMENTS:
 
-* data-source/aws_route_table: adds attributes `gateway_id` and `associations.gateway_id` [GH-11122]
-* resource/aws_autoscaling_group: Add `max_instance_lifetime` argument [GH-10951]
-* resource/aws_autoscaling_group: Add `mixed_instances_policy` `launch_template` `override` configuration block `weighted_capacity` argument [GH-11004]
-* resource/aws_codebuild_project: Add Linux GPU worker [GH-11035]
-* resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter [GH-11041]
-* resource/aws_emr_cluster: Outputs EMR cluster ARN [GH-11078]
-* resource/aws_iam_access_key: Remove deprecation from `secret` and mark `secret` and `ses_smtp_password` to sensitive [GH-10908]
-* resource/aws_iam_user: Delete a user's virtual MFA devices when `force_destroy` is enabled [GH-11040]
-* resource/aws_route_table_association: adds attribute `gateway_id` [GH-11122]
+* data-source/aws_route_table: adds attributes `gateway_id` and `associations.gateway_id` ([#11122](https://github.com/terraform-providers/terraform-provider-aws/issues/11122))
+* resource/aws_autoscaling_group: Add `max_instance_lifetime` argument ([#10951](https://github.com/terraform-providers/terraform-provider-aws/issues/10951))
+* resource/aws_autoscaling_group: Add `mixed_instances_policy` `launch_template` `override` configuration block `weighted_capacity` argument ([#11004](https://github.com/terraform-providers/terraform-provider-aws/issues/11004))
+* resource/aws_codebuild_project: Add Linux GPU worker ([#11035](https://github.com/terraform-providers/terraform-provider-aws/issues/11035))
+* resource/aws_docdb_cluster_instance: Add support for `ca_cert_identifier` parameter ([#11041](https://github.com/terraform-providers/terraform-provider-aws/issues/11041))
+* resource/aws_emr_cluster: Outputs EMR cluster ARN ([#11078](https://github.com/terraform-providers/terraform-provider-aws/issues/11078))
+* resource/aws_iam_access_key: Remove deprecation from `secret` and mark `secret` and `ses_smtp_password` to sensitive ([#10908](https://github.com/terraform-providers/terraform-provider-aws/issues/10908))
+* resource/aws_iam_user: Delete a user's virtual MFA devices when `force_destroy` is enabled ([#11040](https://github.com/terraform-providers/terraform-provider-aws/issues/11040))
+* resource/aws_route_table_association: adds attribute `gateway_id` ([#11122](https://github.com/terraform-providers/terraform-provider-aws/issues/11122))
 
 BUG FIXES:
 
-* resource/aws_batch_compute_environment: Forces new resource when `launch_template` contents are changed [GH-11057]
-* resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency [GH-10984]
-* resource/aws_launch_template: Only set associate_public_ip_address on network interfaces if it's explicitly set to avoid problems with multiple network interfaces [GH-10157]
+* resource/aws_batch_compute_environment: Forces new resource when `launch_template` contents are changed ([#11057](https://github.com/terraform-providers/terraform-provider-aws/issues/11057))
+* resource/aws_datasync_location_s3: Automatically retry creation for IAM errors due to eventual consistency ([#10984](https://github.com/terraform-providers/terraform-provider-aws/issues/10984))
+* resource/aws_launch_template: Only set associate_public_ip_address on network interfaces if it's explicitly set to avoid problems with multiple network interfaces ([#10157](https://github.com/terraform-providers/terraform-provider-aws/issues/10157))
 
 ## 2.40.0 (November 26, 2019)
 
