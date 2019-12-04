@@ -207,7 +207,7 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	// EC2 Classic enabled
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
@@ -220,14 +220,13 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigInEc2Classic(rInt),
+				Config: testAccInstanceConfigInEc2Classic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						resourceName, &v),
 				),
 			},
 			{
-				Config:                  testAccInstanceConfigInEc2Classic(rInt),
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -239,21 +238,16 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 
 func TestAccAWSInstance_basic(t *testing.T) {
 	var v ec2.Instance
-	var vol *ec2.Volume
 	resourceName := "aws_instance.test"
-	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
-	testCheck := func(rInt int) func(*terraform.State) error {
+	testCheck := func() func(*terraform.State) error {
 		return func(*terraform.State) error {
-			if *v.Placement.AvailabilityZone != "us-west-2a" {
-				return fmt.Errorf("bad availability zone: %#v", *v.Placement.AvailabilityZone)
-			}
-
 			if len(v.SecurityGroups) == 0 {
 				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
 			}
-			if *v.SecurityGroups[0].GroupName != fmt.Sprintf("tf_test_%d", rInt) {
-				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
+			if *v.SecurityGroups[0].GroupName != rName {
+				return fmt.Errorf("incorrect security group name: %#v", v.SecurityGroups)
 			}
 
 			return nil
@@ -261,31 +255,19 @@ func TestAccAWSInstance_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		// TODO Does the instance run in default VPC even if in us-east-1 and have EC2-Classic?
+		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpc(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
-			// Create a volume to cover #1249
 			{
-				// Need a resource in this config so the provisioner will be available
-				Config: testAccInstanceConfig_pre(rInt),
-				Check: func(*terraform.State) error {
-					conn := testAccProvider.Meta().(*AWSClient).ec2conn
-					var err error
-					vol, err = conn.CreateVolume(&ec2.CreateVolumeInput{
-						AvailabilityZone: aws.String("us-west-2a"),
-						Size:             aws.Int64(int64(5)),
-					})
-					return err
-				},
-			},
-			{
-				Config: testAccInstanceConfig(rInt),
+				Config: testAccInstanceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(
 						resourceName, &v),
-					testCheck(rInt),
+					testCheck(),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"user_data",
@@ -307,27 +289,8 @@ func TestAccAWSInstance_basic(t *testing.T) {
 			// that the user data hash stuff is working without generating
 			// an incorrect diff.
 			{
-				Config: testAccInstanceConfig(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(
-						resourceName, &v),
-					testCheck(rInt),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"user_data",
-						"3dc39dda39be1205215e776bad998da361a5955d"),
-					resource.TestCheckResourceAttr(
-						resourceName, "ebs_block_device.#", "0"),
-				),
-			},
-			// Clean up volume created above
-			{
-				Config: testAccInstanceConfig(rInt),
-				Check: func(*terraform.State) error {
-					conn := testAccProvider.Meta().(*AWSClient).ec2conn
-					_, err := conn.DeleteVolume(&ec2.DeleteVolumeInput{VolumeId: vol.VolumeId})
-					return err
-				},
+				Config:   testAccInstanceConfigBasic(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -2393,9 +2356,9 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 }
 
 func TestAccAWSInstance_disappears(t *testing.T) {
-	var conf ec2.Instance
-	rInt := acctest.RandInt()
+	var v ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2403,10 +2366,10 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig(rInt),
+				Config: testAccInstanceConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &conf),
-					testAccCheckInstanceDisappears(&conf),
+					testAccCheckInstanceExists(resourceName, &v),
+					testAccCheckInstanceDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -2780,42 +2743,47 @@ resource "aws_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceConfigInEc2Classic(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_ami" "ubuntu" {
-  most_recent = true
+func testAccInstanceConfigInEc2Classic(rName string) string {
+	return testAccLatestAmazonLinuxPvEbsAmiConfig() + fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/ubuntu-trusty-14.04-amd64-server-*"]
+  tags = {
+    Name = %[1]q
   }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["paravirtual"]
-  }
-
-  owners = ["099720109477"] # Canonical
-}
-
-resource "aws_security_group" "sg" {
-  name        = "tf_acc_test_%d"
-  description = "Test security group"
 }
 
 resource "aws_instance" "test" {
-  ami             = "${data.aws_ami.ubuntu.id}"
+  ami             = "${data.aws_ami.amzn-ami-minimal-pv-ebs.id}"
   instance_type   = "m3.medium"
-  security_groups = ["${aws_security_group.sg.name}"]
+  security_groups = ["${aws_security_group.test.name}"]
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`, rInt)
+`, rName)
 }
 
-func testAccInstanceConfig_pre(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_test" {
-  name        = "tf_test_%d"
-  description = "test"
+func testAccInstanceConfigBasic(rName string) string {
+	return testAccLatestAmazonLinuxPvEbsAmiConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "current" {}
+
+# Ensure that there is at least 1 EBS volume in the current region.
+# See https://github.com/hashicorp/terraform/issues/1249.
+resource "aws_ebs_volume" "test" {
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  size              = 5
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
 
   ingress {
     protocol    = "icmp"
@@ -2823,34 +2791,21 @@ resource "aws_security_group" "tf_test_test" {
     to_port     = -1
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-`, rInt)
-}
 
-func testAccInstanceConfig(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_test" {
-  name        = "tf_test_%d"
-  description = "test"
-
-  ingress {
-    protocol    = "icmp"
-    from_port   = -1
-    to_port     = -1
-    cidr_blocks = ["0.0.0.0/0"]
+  tags = {
+    Name = %[1]q
   }
 }
 
 resource "aws_instance" "test" {
-  # us-west-2
-  ami               = "ami-4fccb37f"
-  availability_zone = "us-west-2a"
-
-  instance_type   = "m1.small"
-  security_groups = ["${aws_security_group.tf_test_test.name}"]
-  user_data       = "foo:-with-character's"
+  ami               = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+  instance_type     = "m1.small"
+  security_groups   = ["${aws_security_group.test.name}"]
+  user_data         = "foo:-with-character's"
+  # Explictly no tags to test creation without.
 }
-`, rInt)
+`, rName)
 }
 
 func testAccInstanceConfigWithUserDataBase64(rInt int) string {
