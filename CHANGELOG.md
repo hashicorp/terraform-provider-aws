@@ -1,4 +1,9 @@
 ## 2.42.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_eks_cluster: Handle additional `InvalidParameterException: Error in role params` error during creation for IAM eventual consistency [GH-11127]
+
 ## 2.41.0 (December 04, 2019)
 
 FEATURES:
