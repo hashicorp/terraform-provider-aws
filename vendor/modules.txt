@@ -482,7 +482,7 @@ github.com/hashicorp/vault/helper/pgpkeys
 github.com/hashicorp/yamux
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/jen20/awspolicyequivalence v1.0.0
+# github.com/jen20/awspolicyequivalence v1.1.0
 github.com/jen20/awspolicyequivalence
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
