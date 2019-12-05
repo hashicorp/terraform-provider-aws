@@ -11,13 +11,21 @@ import (
 func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_instances.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	instanceType := "t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpcOrEc2Classic(t) },
+		// No subnet_id specified requires default VPC or EC2-Classic.
+		// t2.micro can't be launched in EC2-Classic.
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEC2VPCOnlyPreCheck(t)
+			testAccPreCheckHasDefaultVpc(t)
+			testAccPreCheckOffersEc2InstanceType(t, instanceType)
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstancesDataSourceConfig_ids(rName),
+				Config: testAccInstancesDataSourceConfig_ids(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "ids.#", "3"),
 					resource.TestCheckResourceAttr(datasourceName, "private_ips.#", "3"),
@@ -32,13 +40,19 @@ func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 	datasourceName := "data.aws_instances.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	instanceType := "t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpcOrEc2Classic(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEC2VPCOnlyPreCheck(t)
+			testAccPreCheckHasDefaultVpc(t)
+			testAccPreCheckOffersEc2InstanceType(t, instanceType)
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstancesDataSourceConfig_tags(rName),
+				Config: testAccInstancesDataSourceConfig_tags(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
 				),
@@ -50,13 +64,19 @@ func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 func TestAccAWSInstancesDataSource_instance_state_names(t *testing.T) {
 	datasourceName := "data.aws_instances.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	instanceType := "t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckHasDefaultVpcOrEc2Classic(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccEC2VPCOnlyPreCheck(t)
+			testAccPreCheckHasDefaultVpc(t)
+			testAccPreCheckOffersEc2InstanceType(t, instanceType)
+		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstancesDataSourceConfig_instance_state_names(rName),
+				Config: testAccInstancesDataSourceConfig_instance_state_names(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
 				),
@@ -65,13 +85,13 @@ func TestAccAWSInstancesDataSource_instance_state_names(t *testing.T) {
 	})
 }
 
-func testAccInstancesDataSourceConfig_ids(rName string) string {
+func testAccInstancesDataSourceConfig_ids(rName, instanceType string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   count = 3
 
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "t1.micro"
+  instance_type = %[2]q
 
   tags = {
     Name = %[1]q
@@ -84,16 +104,16 @@ data "aws_instances" "test" {
     values = "${aws_instance.test.*.id}"
   }
 }
-`, rName)
+`, rName, instanceType)
 }
 
-func testAccInstancesDataSourceConfig_tags(rName string) string {
+func testAccInstancesDataSourceConfig_tags(rName, instanceType string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   count = 2
 
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "t1.micro"
+  instance_type = %[2]q
 
   tags = {
     Name      = %[1]q
@@ -107,16 +127,16 @@ data "aws_instances" "test" {
     SecondTag = "${aws_instance.test.1.tags["Name"]}"
   }
 }
-`, rName)
+`, rName, instanceType)
 }
 
-func testAccInstancesDataSourceConfig_instance_state_names(rName string) string {
+func testAccInstancesDataSourceConfig_instance_state_names(rName, instanceType string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_instance" "test" {
   count = 2
 
   ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "t1.micro"
+  instance_type = %[2]q
 
   tags = {
     Name = %[1]q
@@ -130,5 +150,5 @@ data "aws_instances" "test" {
 
   instance_state_names = ["pending", "running"]
 }
-`, rName)
+`, rName, instanceType)
 }
