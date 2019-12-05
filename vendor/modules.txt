@@ -62,6 +62,7 @@ github.com/aws/aws-sdk-go/private/protocol/restjson
 github.com/aws/aws-sdk-go/private/protocol/restxml
 github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/private/signer/v2
+github.com/aws/aws-sdk-go/service/accessanalyzer
 github.com/aws/aws-sdk-go/service/acm
 github.com/aws/aws-sdk-go/service/acmpca
 github.com/aws/aws-sdk-go/service/amplify
@@ -96,6 +97,7 @@ github.com/aws/aws-sdk-go/service/cognitoidentityprovider
 github.com/aws/aws-sdk-go/service/configservice
 github.com/aws/aws-sdk-go/service/costandusagereportservice
 github.com/aws/aws-sdk-go/service/databasemigrationservice
+github.com/aws/aws-sdk-go/service/dataexchange
 github.com/aws/aws-sdk-go/service/datapipeline
 github.com/aws/aws-sdk-go/service/datasync
 github.com/aws/aws-sdk-go/service/dax
@@ -128,6 +130,7 @@ github.com/aws/aws-sdk-go/service/glue
 github.com/aws/aws-sdk-go/service/greengrass
 github.com/aws/aws-sdk-go/service/guardduty
 github.com/aws/aws-sdk-go/service/iam
+github.com/aws/aws-sdk-go/service/imagebuilder
 github.com/aws/aws-sdk-go/service/inspector
 github.com/aws/aws-sdk-go/service/iot
 github.com/aws/aws-sdk-go/service/iotanalytics
@@ -145,6 +148,7 @@ github.com/aws/aws-sdk-go/service/licensemanager
 github.com/aws/aws-sdk-go/service/lightsail
 github.com/aws/aws-sdk-go/service/macie
 github.com/aws/aws-sdk-go/service/managedblockchain
+github.com/aws/aws-sdk-go/service/marketplacecatalog
 github.com/aws/aws-sdk-go/service/mediaconnect
 github.com/aws/aws-sdk-go/service/mediaconvert
 github.com/aws/aws-sdk-go/service/medialive

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -29,6 +30,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
@@ -53,6 +55,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -102,6 +105,8 @@ func ServiceClientType(serviceName string) string {
 	var funcType reflect.Type
 
 	switch serviceName {
+	case "accessanalyzer":
+		funcType = reflect.TypeOf(accessanalyzer.New)
 	case "acm":
 		funcType = reflect.TypeOf(acm.New)
 	case "acmpca":
@@ -148,6 +153,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(configservice.New)
 	case "databasemigrationservice":
 		funcType = reflect.TypeOf(databasemigrationservice.New)
+	case "dataexchange":
+		funcType = reflect.TypeOf(dataexchange.New)
 	case "datapipeline":
 		funcType = reflect.TypeOf(datapipeline.New)
 	case "datasync":
@@ -196,6 +203,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(guardduty.New)
 	case "greengrass":
 		funcType = reflect.TypeOf(greengrass.New)
+	case "imagebuilder":
+		funcType = reflect.TypeOf(imagebuilder.New)
 	case "inspector":
 		funcType = reflect.TypeOf(inspector.New)
 	case "iot":

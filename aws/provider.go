@@ -936,6 +936,7 @@ func init() {
 	}
 
 	endpointServiceNames = []string{
+		"accessanalyzer",
 		"acm",
 		"acmpca",
 		"amplify",
@@ -968,6 +969,7 @@ func init() {
 		"cognitoidp",
 		"configservice",
 		"cur",
+		"dataexchange",
 		"datapipeline",
 		"datasync",
 		"dax",
@@ -1000,6 +1002,7 @@ func init() {
 		"greengrass",
 		"guardduty",
 		"iam",
+		"imagebuilder",
 		"inspector",
 		"iot",
 		"iotanalytics",
@@ -1017,6 +1020,7 @@ func init() {
 		"lightsail",
 		"macie",
 		"managedblockchain",
+		"marketplacecatalog",
 		"mediaconnect",
 		"mediaconvert",
 		"medialive",

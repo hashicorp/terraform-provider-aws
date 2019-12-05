@@ -76,6 +76,16 @@ import (
 
 // map[string]*string handling
 
+// AccessanalyzerTags returns accessanalyzer service tags.
+func (tags KeyValueTags) AccessanalyzerTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AccessanalyzerKeyValueTags creates KeyValueTags from accessanalyzer service tags.
+func AccessanalyzerKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // AmplifyTags returns amplify service tags.
 func (tags KeyValueTags) AmplifyTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -186,6 +196,16 @@ func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// DataexchangeTags returns dataexchange service tags.
+func (tags KeyValueTags) DataexchangeTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DataexchangeKeyValueTags creates KeyValueTags from dataexchange service tags.
+func DataexchangeKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // DlmTags returns dlm service tags.
 func (tags KeyValueTags) DlmTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -243,6 +263,16 @@ func (tags KeyValueTags) GuarddutyTags() map[string]*string {
 
 // GuarddutyKeyValueTags creates KeyValueTags from guardduty service tags.
 func GuarddutyKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// ImagebuilderTags returns imagebuilder service tags.
+func (tags KeyValueTags) ImagebuilderTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// ImagebuilderKeyValueTags creates KeyValueTags from imagebuilder service tags.
+func ImagebuilderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
