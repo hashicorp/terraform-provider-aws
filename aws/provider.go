@@ -484,6 +484,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
 			"aws_ec2_fleet":                                           resourceAwsEc2Fleet(),
 			"aws_ec2_transit_gateway":                                 resourceAwsEc2TransitGateway(),
+			"aws_ec2_transit_gateway_peering_attachment":              resourceAwsEc2TransitGatewayPeeringAttachment(),
 			"aws_ec2_transit_gateway_route":                           resourceAwsEc2TransitGatewayRoute(),
 			"aws_ec2_transit_gateway_route_table":                     resourceAwsEc2TransitGatewayRouteTable(),
 			"aws_ec2_transit_gateway_route_table_association":         resourceAwsEc2TransitGatewayRouteTableAssociation(),
