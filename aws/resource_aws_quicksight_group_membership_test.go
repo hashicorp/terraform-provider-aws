@@ -18,8 +18,11 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck: func() { testAccPreCheck(t) },
+		// There's no way to actual retrieve a group membership after
+		// the user and group have been destroyed.
+		CheckDestroy: testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay,
+		Providers:    testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
@@ -44,6 +47,9 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
+		// There's no way to actual retrieve a group membership after
+		// the user and group have been destroyed.
+		CheckDestroy: testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
@@ -55,6 +61,10 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckQuickSightGroupMembershipWaveHandsEverythingsOkay(s *terraform.State) error {
+	return nil
 }
 
 func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.TestCheckFunc {
