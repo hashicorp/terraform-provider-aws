@@ -89,7 +89,7 @@ func TestAccAWSElasticSearchDomain_basic(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_ClusterConfig_ZoneAwarenessConfig(t *testing.T) {
 	var domain1, domain2, domain3, domain4 elasticsearch.ElasticsearchDomainStatus
-	rName := acctest.RandomWithPrefix("tf-acc-test")[:28]
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum)) // len = 28
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1630,7 +1630,7 @@ resource "aws_cognito_identity_pool" "example" {
 }
 
 resource "aws_iam_role" "example" {
-	name = "tf-test-%d" 
+	name = "tf-test-%d"
 	path = "/service-role/"
 	assume_role_policy = "${data.aws_iam_policy_document.assume-role-policy.json}"
 }
@@ -1640,14 +1640,14 @@ data "aws_iam_policy_document" "assume-role-policy" {
     sid     = ""
 		actions = ["sts:AssumeRole"]
 		effect  = "Allow"
-		
+
     principals {
       type        = "Service"
       identifiers = ["es.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
-	
+
 resource "aws_iam_role_policy_attachment" "example" {
 	role       = "${aws_iam_role.example.name}"
 	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonESCognitoAccess"
@@ -1659,7 +1659,7 @@ resource "aws_elasticsearch_domain" "test" {
 	elasticsearch_version = "6.0"
 
 	%s
-	
+
   ebs_options {
     ebs_enabled = true
     volume_size = 10
