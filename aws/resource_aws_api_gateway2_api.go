@@ -83,6 +83,7 @@ func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) e
 		Name:                     aws.String(d.Get("name").(string)),
 		ProtocolType:             aws.String(d.Get("protocol_type").(string)),
 		RouteSelectionExpression: aws.String(d.Get("route_selection_expression").(string)),
+		Tags:                     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().Apigatewayv2Tags(),
 	}
 	if v, ok := d.GetOk("api_key_selection_expression"); ok {
 		req.ApiKeySelectionExpression = aws.String(v.(string))
@@ -101,18 +102,6 @@ func resourceAwsApiGateway2ApiCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	d.SetId(aws.StringValue(resp.ApiId))
-
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		arn := arn.ARN{
-			Partition: meta.(*AWSClient).partition,
-			Service:   "apigateway",
-			Region:    meta.(*AWSClient).region,
-			Resource:  fmt.Sprintf("/apis/%s", d.Id()),
-		}.String()
-		if err := keyvaluetags.Apigatewayv2UpdateTags(conn, arn, nil, v); err != nil {
-			return fmt.Errorf("error adding API Gateway v2 API (%s) tags: %s", d.Id(), err)
-		}
-	}
 
 	return resourceAwsApiGateway2ApiRead(d, meta)
 }
