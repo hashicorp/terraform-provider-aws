@@ -10,7 +10,7 @@ import (
 
 func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_instances.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
 	instanceType := "t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,7 +39,7 @@ func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 
 func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 	datasourceName := "data.aws_instances.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
 	instanceType := "t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,7 +63,7 @@ func TestAccAWSInstancesDataSource_tags(t *testing.T) {
 
 func TestAccAWSInstancesDataSource_instance_state_names(t *testing.T) {
 	datasourceName := "data.aws_instances.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
 	instanceType := "t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
