@@ -17,6 +17,7 @@ import (
 const filename = `update_tags_gen.go`
 
 var serviceNames = []string{
+	"accessanalyzer",
 	"acm",
 	"acmpca",
 	"amplify",
@@ -39,6 +40,7 @@ var serviceNames = []string{
 	"cognitoidentityprovider",
 	"configservice",
 	"databasemigrationservice",
+	"dataexchange",
 	"datapipeline",
 	"datasync",
 	"dax",
@@ -62,6 +64,7 @@ var serviceNames = []string{
 	"glue",
 	"guardduty",
 	"greengrass",
+	"imagebuilder",
 	"iot",
 	"iotanalytics",
 	"iotevents",
