@@ -1000,6 +1000,7 @@ func init() {
 		"greengrass",
 		"guardduty",
 		"iam",
+		"imagebuilder",
 		"inspector",
 		"iot",
 		"iotanalytics",

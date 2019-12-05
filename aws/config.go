@@ -75,6 +75,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -246,6 +247,7 @@ type AWSClient struct {
 	iamconn                             *iam.IAM
 	ignoreTagPrefixes                   keyvaluetags.KeyValueTags
 	ignoreTags                          keyvaluetags.KeyValueTags
+	imagebuilderconn                    *imagebuilder.Imagebuilder
 	inspectorconn                       *inspector.Inspector
 	iotconn                             *iot.IoT
 	iotanalyticsconn                    *iotanalytics.IoTAnalytics
@@ -442,6 +444,7 @@ func (c *Config) Client() (interface{}, error) {
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
 		ignoreTagPrefixes:                   keyvaluetags.New(c.IgnoreTagPrefixes),
 		ignoreTags:                          keyvaluetags.New(c.IgnoreTags),
+		imagebuilderconn:                    imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["imagebuilder"])})),
 		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
 		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
 		iotanalyticsconn:                    iotanalytics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iotanalytics"])})),

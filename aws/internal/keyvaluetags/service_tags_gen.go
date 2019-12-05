@@ -246,6 +246,16 @@ func GuarddutyKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// ImagebuilderTags returns imagebuilder service tags.
+func (tags KeyValueTags) ImagebuilderTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// ImagebuilderKeyValueTags creates KeyValueTags from imagebuilder service tags.
+func ImagebuilderKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // KafkaTags returns kafka service tags.
 func (tags KeyValueTags) KafkaTags() map[string]*string {
 	return aws.StringMap(tags.Map())

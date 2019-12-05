@@ -44,6 +44,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -758,6 +759,23 @@ func GuarddutyListTags(conn *guardduty.GuardDuty, identifier string) (KeyValueTa
 	}
 
 	return GuarddutyKeyValueTags(output.Tags), nil
+}
+
+// ImagebuilderListTags lists imagebuilder service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ImagebuilderListTags(conn *imagebuilder.Imagebuilder, identifier string) (KeyValueTags, error) {
+	input := &imagebuilder.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ImagebuilderKeyValueTags(output.Tags), nil
 }
 
 // InspectorListTags lists inspector service tags.
