@@ -18,9 +18,8 @@ func TestAccAWSQuickSightGroupMembership_basic(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
@@ -43,9 +42,8 @@ func TestAccAWSQuickSightGroupMembership_disappears(t *testing.T) {
 	resourceName := "aws_quicksight_group_membership.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckQuickSightGroupMembershipDestroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSQuickSightGroupMembershipConfig(groupName, memberName),
@@ -97,45 +95,6 @@ func testAccCheckQuickSightGroupMembershipExists(resourceName string) resource.T
 
 		return fmt.Errorf("QuickSight Group (%s) not found in user's group list", rs.Primary.ID)
 	}
-}
-
-func testAccCheckQuickSightGroupMembershipDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).quicksightconn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_quicksight_group_membership" {
-			continue
-		}
-
-		awsAccountID, namespace, groupName, userName, err := resourceAwsQuickSightGroupMembershipParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &quicksight.ListUserGroupsInput{
-			AwsAccountId: aws.String(awsAccountID),
-			Namespace:    aws.String(namespace),
-			UserName:     aws.String(userName),
-		}
-
-		output, err := conn.ListUserGroups(input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.GroupList == nil {
-			return fmt.Errorf("QuickSight Group (%s) not found", rs.Primary.ID)
-		}
-
-		for _, group := range output.GroupList {
-			if *group.GroupName == groupName {
-				return fmt.Errorf("QuickSight Group membership (%s) was not deleted properly", rs.Primary.ID)
-			}
-		}
-
-	}
-
-	return nil
 }
 
 func testAccCheckQuickSightGroupMembershipDisappears(groupName string, memberName string) resource.TestCheckFunc {
