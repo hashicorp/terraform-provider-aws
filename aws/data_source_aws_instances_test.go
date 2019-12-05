@@ -14,8 +14,8 @@ func TestAccAWSInstancesDataSource_basic(t *testing.T) {
 	instanceType := "t2.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC or EC2-Classic.
-		// t2.micro can't be launched in EC2-Classic.
+		// No subnet_id specified requires default VPC or EC2-Classic,
+		// but t2.micro can't be launched in EC2-Classic.
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccEC2VPCOnlyPreCheck(t)

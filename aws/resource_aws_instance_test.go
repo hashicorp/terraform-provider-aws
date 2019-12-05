@@ -2804,7 +2804,7 @@ resource "aws_instance" "test" {
   instance_type     = "m1.small"
   security_groups   = ["${aws_security_group.test.name}"]
   user_data         = "foo:-with-character's"
-  # Explictly no tags to test creation without.
+  # Explicitly no tags to test creation without tags.
 }
 `, rName)
 }
