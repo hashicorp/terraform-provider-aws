@@ -4,6 +4,7 @@ package keyvaluetags
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -81,6 +82,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
+
+// AccessanalyzerListTags lists accessanalyzer service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AccessanalyzerListTags(conn *accessanalyzer.AccessAnalyzer, identifier string) (KeyValueTags, error) {
+	input := &accessanalyzer.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AccessanalyzerKeyValueTags(output.Tags), nil
+}
 
 // AcmListTags lists acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although

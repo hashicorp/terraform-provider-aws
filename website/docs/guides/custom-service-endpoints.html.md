@@ -47,6 +47,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 
 <div style="column-width: 14em;">
 
+- `accessanalyzer`
 - `acm`
 - `acmpca`
 - `amplify`

@@ -76,6 +76,16 @@ import (
 
 // map[string]*string handling
 
+// AccessanalyzerTags returns accessanalyzer service tags.
+func (tags KeyValueTags) AccessanalyzerTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AccessanalyzerKeyValueTags creates KeyValueTags from accessanalyzer service tags.
+func AccessanalyzerKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // AmplifyTags returns amplify service tags.
 func (tags KeyValueTags) AmplifyTags() map[string]*string {
 	return aws.StringMap(tags.Map())

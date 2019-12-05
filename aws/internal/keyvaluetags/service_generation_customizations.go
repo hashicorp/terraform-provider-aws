@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -104,6 +105,8 @@ func ServiceClientType(serviceName string) string {
 	var funcType reflect.Type
 
 	switch serviceName {
+	case "accessanalyzer":
+		funcType = reflect.TypeOf(accessanalyzer.New)
 	case "acm":
 		funcType = reflect.TypeOf(acm.New)
 	case "acmpca":

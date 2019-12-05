@@ -78,6 +78,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
   regexp = "(\\* ?`?|- ?`?|data \"|resource \")aws_(\\w+)"
 
   label_map = {
+    "service/accessanalyzer" = [
+      "aws_accessanalyzer_",
+    ],
     "service/acm" = [
       "aws_acm_",
     ],
@@ -546,6 +549,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       ".travis.yml"
     ]
     # label services
+    "service/accessanalyzer" = [
+      "**/*_accessanalyzer_*",
+      "**/accessanalyzer_*"
+    ]
     "service/acm" = [
       "**/*_acm_*",
       "**/acm_*"
