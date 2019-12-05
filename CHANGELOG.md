@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_eks_cluster: Handle additional `InvalidParameterException: Error in role params` error during creation for IAM eventual consistency [GH-11127]
+* resource/aws_iam_role: Ignore additional `NoSuchEntity` errors on deletion [GH-11125]
 
 ## 2.41.0 (December 04, 2019)
 
