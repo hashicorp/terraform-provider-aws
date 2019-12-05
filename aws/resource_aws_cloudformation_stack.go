@@ -411,7 +411,7 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 		// values.
 		for _, el := range usePreviousValues.List() {
 			input.Parameters = append(input.Parameters, &cloudformation.Parameter{
-				ParameterKey: aws.String(el.(string)),
+				ParameterKey:     aws.String(el.(string)),
 				UsePreviousValue: aws.Bool(true),
 			})
 		}
