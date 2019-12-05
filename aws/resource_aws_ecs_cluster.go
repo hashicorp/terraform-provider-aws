@@ -30,10 +30,41 @@ func resourceAwsEcsCluster() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"capacity_providers": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"default_capacity_provider_strategy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"base": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100000),
+						},
+
+						"capacity_provider": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+
+						"weight": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 1000),
+						},
+					},
+				},
 			},
 			"setting": {
 				Type:     schema.TypeSet,
@@ -55,6 +86,7 @@ func resourceAwsEcsCluster() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -85,6 +117,16 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("setting"); ok {
 		input.Settings = expandEcsSettings(v.(*schema.Set).List())
 	}
+
+	if v, ok := d.GetOk("capacity_providers"); ok {
+		ps := make([]*string, 0)
+		for _, p := range v.([]interface{}) {
+			ps = append(ps, aws.String(p.(string)))
+		}
+		input.CapacityProviders = ps
+	}
+
+	input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").([]interface{}))
 
 	out, err := conn.CreateCluster(&input)
 	if err != nil {
@@ -193,6 +235,23 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating ECS Cluster (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("capacity_providers") || d.HasChange("default_capacity_provider_strategy") {
+		input := ecs.PutClusterCapacityProvidersInput{
+			Cluster: aws.String(d.Id()),
+		}
+		if d.HasChange("capacity_providers") {
+			input.CapacityProviders = d.Get("capacity_providers").([]*string)
+		}
+		if d.HasChange("default_capacity_provider_strategy") {
+			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set).List())
+		}
+
+		_, err := conn.PutClusterCapacityProviders(&input)
+		if err != nil {
+			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %s", d.Id(), err)
 		}
 	}
 

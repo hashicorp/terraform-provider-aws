@@ -157,6 +157,33 @@ func TestAccAWSEcsCluster_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
+	var cluster1 ecs.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	providerName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsClusterCapacityProviders(rName, providerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -289,6 +316,23 @@ resource "aws_ecs_cluster" "test" {
   }
 }
 `, rName, tag1Key, tag1Value)
+}
+
+// TODO declare the provider strategy resource once it exists
+func testAccAWSEcsClusterCapacityProviders(rName, providerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %q
+
+	capacity_providers = [%q]
+
+	default_capacity_provider_strategy {
+		base = 1
+		capacity_provider = %q
+		weight = 1
+	}
+}
+`, rName, providerName, providerName)
 }
 
 func testAccAWSEcsClusterConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {

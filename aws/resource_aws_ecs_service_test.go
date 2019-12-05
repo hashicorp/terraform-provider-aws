@@ -227,6 +227,29 @@ func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1234,6 +1257,44 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 `, clusterName, tdName, svcName)
+}
+
+// TODO declare the capacity provider in here once it is written
+func testAccAWSEcsServiceWithCapacityProviderStrategy(clusterName, tdName, svcName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count   = 1
+
+  capacity_provider_strategy {
+    capacity_provider = "%s-capacity-provider"
+    weight =  1
+    base =  0
+  }
+}
+`, clusterName, tdName, svcName, svcName)
 }
 
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {
