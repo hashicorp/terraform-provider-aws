@@ -186,6 +186,16 @@ func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// DataexchangeTags returns dataexchange service tags.
+func (tags KeyValueTags) DataexchangeTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DataexchangeKeyValueTags creates KeyValueTags from dataexchange service tags.
+func DataexchangeKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // DlmTags returns dlm service tags.
 func (tags KeyValueTags) DlmTags() map[string]*string {
 	return aws.StringMap(tags.Map())

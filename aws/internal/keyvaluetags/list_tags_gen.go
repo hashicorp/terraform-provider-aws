@@ -24,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
@@ -419,6 +420,23 @@ func DatabasemigrationserviceListTags(conn *databasemigrationservice.DatabaseMig
 	}
 
 	return DatabasemigrationserviceKeyValueTags(output.TagList), nil
+}
+
+// DataexchangeListTags lists dataexchange service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DataexchangeListTags(conn *dataexchange.DataExchange, identifier string) (KeyValueTags, error) {
+	input := &dataexchange.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DataexchangeKeyValueTags(output.Tags), nil
 }
 
 // DatasyncListTags lists datasync service tags.

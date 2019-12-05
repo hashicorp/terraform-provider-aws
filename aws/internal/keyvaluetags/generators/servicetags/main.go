@@ -102,6 +102,7 @@ var mapServiceNames = []string{
 	"codecommit",
 	"cognitoidentity",
 	"cognitoidentityprovider",
+	"dataexchange",
 	"dlm",
 	"eks",
 	"glacier",

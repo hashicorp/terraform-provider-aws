@@ -96,6 +96,7 @@ github.com/aws/aws-sdk-go/service/cognitoidentityprovider
 github.com/aws/aws-sdk-go/service/configservice
 github.com/aws/aws-sdk-go/service/costandusagereportservice
 github.com/aws/aws-sdk-go/service/databasemigrationservice
+github.com/aws/aws-sdk-go/service/dataexchange
 github.com/aws/aws-sdk-go/service/datapipeline
 github.com/aws/aws-sdk-go/service/datasync
 github.com/aws/aws-sdk-go/service/dax
@@ -146,6 +147,7 @@ github.com/aws/aws-sdk-go/service/licensemanager
 github.com/aws/aws-sdk-go/service/lightsail
 github.com/aws/aws-sdk-go/service/macie
 github.com/aws/aws-sdk-go/service/managedblockchain
+github.com/aws/aws-sdk-go/service/marketplacecatalog
 github.com/aws/aws-sdk-go/service/mediaconnect
 github.com/aws/aws-sdk-go/service/mediaconvert
 github.com/aws/aws-sdk-go/service/medialive

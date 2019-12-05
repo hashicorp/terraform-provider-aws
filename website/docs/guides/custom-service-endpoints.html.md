@@ -79,6 +79,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `cognitoidp`
 - `configservice`
 - `cur`
+- `dataexchange`
 - `datapipeline`
 - `datasync`
 - `dax`
@@ -129,6 +130,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
 - `lightsail`
 - `macie`
 - `managedblockchain`
+- `marketplacecatalog`
 - `mediaconnect`
 - `mediaconvert`
 - `medialive`

@@ -188,6 +188,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/databasemigrationservice" = [
       "aws_dms_",
     ],
+    "service/dataexchange" = [
+      "aws_dataexchange_",
+    ],
     "service/datapipeline" = [
       "aws_datapipeline_",
     ],
@@ -353,6 +356,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/macie" = [
       "aws_macie_",
+    ],
+    "service/marketplacecatalog" = [
+      "aws_marketplace_catalog_",
     ],
     "service/mediaconnect" = [
       "aws_media_connect_",
@@ -694,6 +700,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_dms_*",
       "**/dms_*"
     ]
+    "service/dataexchange" = [
+      "**/*_dataexchange_*",
+      "**/dataexchange_*",
+    ]
     "service/datapipeline" = [
       "**/*_datapipeline_*",
       "**/datapipeline_*",
@@ -948,6 +958,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/macie" = [
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/marketplacecatalog" = [
+      "**/*_marketplace_catalog_*",
+      "**/marketplace_catalog_*"
     ]
     "service/mediaconnect" = [
       "**/*_media_connect_*",
