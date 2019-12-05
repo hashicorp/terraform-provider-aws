@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -161,6 +160,7 @@ func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 // Test to verify that ebs_block_device kms_key_id does not elicit a panic
 func TestAccAWSInstanceDataSource_EbsBlockDevice_KmsKeyId(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
+	// See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances.
 	instanceType := "m3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -182,6 +182,7 @@ func TestAccAWSInstanceDataSource_EbsBlockDevice_KmsKeyId(t *testing.T) {
 // Test to verify that root_block_device kms_key_id does not elicit a panic
 func TestAccAWSInstanceDataSource_RootBlockDevice_KmsKeyId(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
+	// See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html#EBSEncryption_supported_instances.
 	instanceType := "m3.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -324,21 +325,10 @@ func TestAccAWSInstanceDataSource_PlacementGroup(t *testing.T) {
 }
 
 func TestAccAWSInstanceDataSource_Ec2ClassicSecurityGroups(t *testing.T) {
-	key := "EC2_CLASSIC_REGION"
-	ec2ClassicRegion := os.Getenv(key)
-	if ec2ClassicRegion == "" {
-		t.Skipf("%s must be set to run EC2-Classic acceptance tests", key)
-	}
-
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlphaNum))
 	instanceType := "m1.small"
-
-	// EC2 Classic enabled
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", ec2ClassicRegion)
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -688,6 +678,10 @@ func testAccInstanceDataSourceConfig_EbsBlockDevice_KmsKeyId(rName, instanceType
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
@@ -720,6 +714,10 @@ func testAccInstanceDataSourceConfig_RootBlockDevice_KmsKeyId(rName, instanceTyp
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_instance" "test" {
