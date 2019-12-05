@@ -60,7 +60,7 @@ resource "aws_budgets_budget" "s3" {
 
 Create a Savings Plan Utilization Budget
 ```hcl
-resource "aws_budgets_budget" "ri_utilization" {
+resource "aws_budgets_budget" "savings_plan_utilization" {
   # ...
   budget_type  = "SAVINGS_PLANS_UTILIZATION"
   limit_amount = "100"
@@ -71,7 +71,7 @@ resource "aws_budgets_budget" "ri_utilization" {
 Create a RI Utilization Budget
 
 ```hcl
-resource "aws_budgets_budget" "savings_plan_utilization" {
+resource "aws_budgets_budget" "ri_utilization" {
   # ...
   budget_type  = "RI_UTILIZATION"
   limit_amount = "100" #RI utilization must be 100
