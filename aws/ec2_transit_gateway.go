@@ -211,6 +211,43 @@ func ec2DescribeTransitGatewayRouteTablePropagation(conn *ec2.EC2, transitGatewa
 	return output.TransitGatewayRouteTablePropagations[0], nil
 }
 
+func ec2DescribeTransitGatewayPeeringAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayPeeringAttachment, error) {
+	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{
+		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
+	}
+
+	log.Printf("[DEBUG] Reading EC2 Transit Gateway Peering Attachment (%s): %s", transitGatewayAttachmentID, input)
+	for {
+		output, err := conn.DescribeTransitGatewayPeeringAttachments(input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if output == nil || len(output.TransitGatewayPeeringAttachments) == 0 {
+			return nil, nil
+		}
+
+		for _, transitGatewayPeeringAttachment := range output.TransitGatewayPeeringAttachments {
+			if transitGatewayPeeringAttachment == nil {
+				continue
+			}
+
+			if aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId) == transitGatewayAttachmentID {
+				return transitGatewayPeeringAttachment, nil
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil, nil
+}
+
 func ec2DescribeTransitGatewayVpcAttachment(conn *ec2.EC2, transitGatewayAttachmentID string) (*ec2.TransitGatewayVpcAttachment, error) {
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{
 		TransitGatewayAttachmentIds: []*string{aws.String(transitGatewayAttachmentID)},
@@ -537,6 +574,43 @@ func waitForEc2TransitGatewayRouteTableAssociationDeletion(conn *ec2.EC2, transi
 	if isResourceNotFoundError(err) {
 		return nil
 	}
+
+	return err
+}
+
+func waitForEc2TransitGatewayPeeringAttachmentAcceptance(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStatePending,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+		},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Refresh: ec2TransitGatewayVpcAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Timeout: 10 * time.Minute,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Peering Attachment (%s) availability", transitGatewayAttachmentID)
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForEc2TransitGatewayPeeringAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStatePending,
+			"initiatingRequest",
+		},
+		Target: []string{
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+			ec2.TransitGatewayAttachmentStateAvailable,
+		},
+		Refresh: ec2TransitGatewayPeeringAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Timeout: 10 * time.Minute,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Peering Attachment (%s) availability", transitGatewayAttachmentID)
+	_, err := stateConf.WaitForState()
 
 	return err
 }
