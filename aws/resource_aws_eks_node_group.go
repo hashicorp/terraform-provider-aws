@@ -143,17 +143,17 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"desired_size": {
 							Type:         schema.TypeInt,
-							Required:     false,
+							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"max_size": {
 							Type:         schema.TypeInt,
-							Required:     false,
+							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 						"min_size": {
 							Type:         schema.TypeInt,
-							Required:     false,
+							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
 					},
