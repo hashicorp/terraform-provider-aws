@@ -150,6 +150,7 @@ In addition to all arguments above, the following attributes are exported:
 * `configuration_endpoint_address` - The address of the replication group configuration endpoint when cluster mode is enabled.
 * `primary_endpoint_address` - (Redis only) The address of the endpoint for the primary node in the replication group, if the cluster mode is disabled.
 * `member_clusters` - The identifiers of all the nodes that are part of this replication group.
+* `reader_endpoint_address` - The address of the replica nodes in this node group (shard).
 
 ## Timeouts
 
