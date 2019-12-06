@@ -1066,6 +1066,7 @@ func init() {
 		"transfer",
 		"waf",
 		"wafregional",
+		"wafv2",
 		"worklink",
 		"workspaces",
 		"xray",

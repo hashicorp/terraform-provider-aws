@@ -93,6 +93,7 @@ var serviceNames = []string{
 	"transfer",
 	"waf",
 	"wafregional",
+	"wafv2",
 	"workspaces",
 }
 
@@ -316,6 +317,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "wafregional":
 		return "ResourceARN"
+	case "wafv2":
+		return "ResourceARN"
 	default:
 		return "ResourceArn"
 	}
@@ -371,6 +374,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 	case "waf":
 		return "TagInfoForResource.TagList"
 	case "wafregional":
+		return "TagInfoForResource.TagList"
+	case "wafv2":
 		return "TagInfoForResource.TagList"
 	case "workspaces":
 		return "TagList"

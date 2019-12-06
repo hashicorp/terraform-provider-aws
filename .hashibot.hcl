@@ -505,6 +505,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_waf_",
       "aws_wafregional_",
     ],
+    "service/wafv2" = [
+      "aws_wafv2_",
+    ],
     "service/workdocs" = [
       "aws_workdocs_",
     ],
@@ -1163,6 +1166,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/waf_*",
       "**/*_wafregional_*",
       "**/wafregional_*"
+    ]
+    "service/wafv2" = [
+      "**/*_wafv2_*",
+      "**/wafv2_*",
     ]
     "service/workdocs" = [
       "**/*_workdocs_*",

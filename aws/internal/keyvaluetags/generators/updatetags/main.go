@@ -102,6 +102,7 @@ var serviceNames = []string{
 	"transfer",
 	"waf",
 	"wafregional",
+	"wafv2",
 	"workspaces",
 }
 
@@ -379,6 +380,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "waf":
 		return "ResourceARN"
 	case "wafregional":
+		return "ResourceARN"
+	case "wafv2":
 		return "ResourceARN"
 	case "workspaces":
 		return "ResourceId"
