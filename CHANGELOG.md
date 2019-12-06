@@ -1,7 +1,8 @@
 ## 2.42.0 (Unreleased)
+
 FEATURES:
 
-* **New Resource:** `aws_eks_fargate_profile` [GH-10904]
+* **New Resource:** `aws_workspaces_ip_group` [GH-10904]
 
 BUG FIXES:
 
