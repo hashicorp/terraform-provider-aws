@@ -91,7 +91,7 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 	input := ecs.CreateCapacityProviderInput{
 		Name:                     aws.String(d.Get("name").(string)),
 		AutoScalingGroupProvider: expandAutoScalingGroupProvider(d.Get("auto_scaling_group_provider")),
-		Tags:                     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(),
+		Tags:                     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(), // TODO looks like this should be optional, but the API complains if it's missing
 	}
 	out, err := conn.CreateCapacityProvider(&input)
 	// TODO figure out which errors are retryable vs not, add a resource.Retry block if necessary
