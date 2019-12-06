@@ -100,11 +100,10 @@ func TestAccAWSElasticSearchDomain_RequireHTTPS(t *testing.T) {
 				Config: testAccESDomainConfig_RequireHTTPS(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckESDomainEndpointOptions(true, "Policy-Min-TLS-1-2-2019-07", &domain),
 					resource.TestCheckResourceAttr(
 						"aws_elasticsearch_domain.example", "elasticsearch_version", "1.5"),
 					resource.TestMatchResourceAttr("aws_elasticsearch_domain.example", "kibana_endpoint", regexp.MustCompile(".*es.amazonaws.com/_plugin/kibana/")),
-					resource.TestCheckResourceAttr(
-						"aws_elasticsearch_domain.example", "require_https", "true"),
 				),
 			},
 		},
@@ -783,6 +782,19 @@ func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 		}})
 }
 
+func testAccCheckESDomainEndpointOptions(enforceHTTPS bool, tls string, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		options := status.DomainEndpointOptions
+		if *options.EnforceHTTPS != enforceHTTPS {
+			return fmt.Errorf("EnforceHTTPS differ. Given: %t, Expected: %t", *options.EnforceHTTPS, enforceHTTPS)
+		}
+		if *options.TLSSecurityPolicy != tls {
+			return fmt.Errorf("TLSSecurityPolicy differ. Given: %s, Expected: %s", *options.TLSSecurityPolicy, tls)
+		}
+		return nil
+	}
+}
+
 func testAccCheckESNumberOfSecurityGroups(numberOfSecurityGroups int, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := len(status.VPCOptions.SecurityGroupIds)
@@ -1005,7 +1017,9 @@ func testAccESDomainConfig_RequireHTTPS(randInt int) string {
 resource "aws_elasticsearch_domain" "example" {
   domain_name = "tf-test-%d"
 	
-	require_https = true
+	domain_endpoint_options {
+		require_https = true
+	}	
 
   ebs_options {
     ebs_enabled = true
