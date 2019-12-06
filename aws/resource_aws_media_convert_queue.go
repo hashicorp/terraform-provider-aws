@@ -110,8 +110,7 @@ func resourceAwsMediaConvertQueueCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.Get("reservation_plan_settings").([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		reservationPlanSettings := v.([]interface{})[0].(map[string]interface{})
-		createOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(reservationPlanSettings)
+		createOpts.ReservationPlanSettings = expandMediaConvertReservationPlanSettings(v[0].(map[string]interface{}))
 	}
 
 	resp, err := conn.CreateQueue(createOpts)
@@ -211,8 +210,6 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsMediaConvertQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	originalConn := meta.(*AWSClient).mediaconvertconn
-
 	conn, err := getAwsMediaConvertAccountClient(meta.(*AWSClient))
 	if err != nil {
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
@@ -239,14 +236,14 @@ func getAwsMediaConvertAccountClient(awsClient *AWSClient) (*mediaconvert.MediaC
 	defer awsMutexKV.Unlock(mutexKey)
 
 	if awsClient.mediaconvertaccountconn != nil {
-		return awsClient.mediaconvertaccountconn
+		return awsClient.mediaconvertaccountconn, nil
 	}
 
 	input := &mediaconvert.DescribeEndpointsInput{
 		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
 	}
 
-	output, err := conn.DescribeEndpoints(input)
+	output, err := awsClient.mediaconvertconn.DescribeEndpoints(input)
 
 	if err != nil {
 		return nil, fmt.Errorf("error describing MediaConvert Endpoints: %w", err)

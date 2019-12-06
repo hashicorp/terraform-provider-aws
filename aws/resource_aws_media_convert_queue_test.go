@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -220,17 +219,10 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 		if rs.Type != "aws_media_convert_queue" {
 			continue
 		}
-		originalConn := testAccProvider.Meta().(*AWSClient).mediaconvertconn
-		endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+		conn, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
 		if err != nil {
-			return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
-
-		sess, err := session.NewSession(&originalConn.Config)
-		if err != nil {
-			return fmt.Errorf("Error creating AWS session: %s", err)
-		}
-		conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 		_, err = conn.GetQueue(&mediaconvert.GetQueueInput{
 			Name: aws.String(rs.Primary.ID),
@@ -248,17 +240,10 @@ func testAccCheckAwsMediaConvertQueueDestroy(s *terraform.State) error {
 
 func testAccCheckAwsMediaConvertQueueDisappears(queue *mediaconvert.Queue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		originalConn := testAccProvider.Meta().(*AWSClient).mediaconvertconn
-		endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+		conn, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
 		if err != nil {
-			return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
-
-		sess, err := session.NewSession(&originalConn.Config)
-		if err != nil {
-			return fmt.Errorf("Error creating AWS session: %s", err)
-		}
-		conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 		_, err = conn.DeleteQueue(&mediaconvert.DeleteQueueInput{
 			Name: queue.Name,
@@ -281,17 +266,10 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 			return fmt.Errorf("No Queue id is set")
 		}
 
-		originalConn := testAccProvider.Meta().(*AWSClient).mediaconvertconn
-		endpointURL, err := getAwsMediaConvertEndpoint(originalConn)
+		conn, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
 		if err != nil {
-			return fmt.Errorf("Error getting Media Convert Endpoint: %s", err)
+			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 		}
-
-		sess, err := session.NewSession(&originalConn.Config)
-		if err != nil {
-			return fmt.Errorf("Error creating AWS session: %s", err)
-		}
-		conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
 		resp, err := conn.GetQueue(&mediaconvert.GetQueueInput{
 			Name: aws.String(rs.Primary.ID),
