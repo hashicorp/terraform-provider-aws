@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_workspaces_ip_group` [GH-10904]
 
+ENHANCEMENTS:
+
+* resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute [GH-10566]
+
 BUG FIXES:
 
 * provider: Prevent crash in planning IAM Policy equivalency checking with invalid `Resource` declarations (e.g. a list of list of strings) [GH-11107]
@@ -136,7 +140,6 @@ ENHANCEMENTS:
 
 * data-source/aws_iam_group: Add `users` attribute ([#7132](https://github.com/terraform-providers/terraform-provider-aws/issues/7132))
 * resource/aws_apigateway_stage: Add `arn` attribute ([#10570](https://github.com/terraform-providers/terraform-provider-aws/issues/10570))
-* resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute ([#10566](https://github.com/terraform-providers/terraform-provider-aws/issues/10566))
 * resource/aws_s3_bucket: Retry reading tags on `NoSuchBucket` errors due to eventual inconsistency ([#10863](https://github.com/terraform-providers/terraform-provider-aws/issues/10863))
 * resource/aws_waf_rule: Add `arn` attribute ([#10798](https://github.com/terraform-providers/terraform-provider-aws/issues/10798))
 * resource/aws_waf_rule_group: Add `arn` attribute ([#10799](https://github.com/terraform-providers/terraform-provider-aws/issues/10799))
