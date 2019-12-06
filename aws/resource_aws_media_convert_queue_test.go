@@ -43,6 +43,8 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 }
 
 func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
+	t.Skip("MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
+
 	var queue mediaconvert.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -58,7 +60,6 @@ func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanReserved),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", mediaconvert.CommitmentOneYear),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", mediaconvert.RenewalTypeAutoRenew),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
@@ -70,7 +71,6 @@ func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
 					testAccCheckAwsMediaConvertQueueExists(resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanReserved),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", "1"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", mediaconvert.CommitmentOneYear),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", mediaconvert.RenewalTypeExpire),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
@@ -332,7 +332,7 @@ resource "aws_media_convert_queue" "test" {
   name         = %[1]q
   pricing_plan = %[2]q
 
-  reservation_plan_settings = {
+  reservation_plan_settings {
 	commitment     = %[3]q
 	renewal_type   = %[4]q
 	reserved_slots = %[5]d
