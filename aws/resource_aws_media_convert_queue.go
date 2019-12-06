@@ -263,7 +263,7 @@ func getAwsMediaConvertAccountClient(awsClient *AWSClient) (*mediaconvert.MediaC
 
 	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
 
-	*awsClient.mediaconvertaccountconn = *conn
+	awsClient.mediaconvertaccountconn = conn
 
 	return conn, nil
 }
