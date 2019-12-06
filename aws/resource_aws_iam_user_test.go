@@ -139,7 +139,11 @@ func testSweepIamUsers(region string) error {
 			return fmt.Errorf("error removing IAM User (%s) SSH keys: %s", username, err)
 		}
 
-		if err := deleteAwsIamUserMFADevices(conn, username); err != nil {
+		if err := deleteAwsIamUserVirtualMFADevices(conn, username); err != nil {
+			return fmt.Errorf("error removing IAM User (%s) virtual MFA devices: %s", username, err)
+		}
+
+		if err := deactivateAwsIamUserMFADevices(conn, username); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) MFA devices: %s", username, err)
 		}
 

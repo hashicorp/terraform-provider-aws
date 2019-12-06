@@ -175,14 +175,34 @@ func filterSweepers(f string, source map[string]*Sweeper) map[string]*Sweeper {
 	}
 
 	sweepers := make(map[string]*Sweeper)
-	for name, sweeper := range source {
+	for name := range source {
 		for _, s := range filterSlice {
 			if strings.Contains(strings.ToLower(name), s) {
-				sweepers[name] = sweeper
+				for foundName, foundSweeper := range filterSweeperWithDependencies(name, source) {
+					sweepers[foundName] = foundSweeper
+				}
 			}
 		}
 	}
 	return sweepers
+}
+
+// filterSweeperWithDependencies recursively returns sweeper and all dependencies.
+// Since filterSweepers performs fuzzy matching, this function is used
+// to perform exact sweeper and dependency lookup.
+func filterSweeperWithDependencies(name string, source map[string]*Sweeper) map[string]*Sweeper {
+	currentSweeper := source[name]
+	result := make(map[string]*Sweeper)
+
+	result[name] = currentSweeper
+
+	for _, dependency := range currentSweeper.Dependencies {
+		for foundName, foundSweeper := range filterSweeperWithDependencies(dependency, source) {
+			result[foundName] = foundSweeper
+		}
+	}
+
+	return result
 }
 
 // runSweeperWithRegion recieves a sweeper and a region, and recursively calls

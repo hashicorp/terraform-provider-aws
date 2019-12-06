@@ -13,6 +13,19 @@ const (
 	// the correct permissions, and that you are using the correct access keys.
 	ErrCodeAccessDeniedException = "AccessDeniedException"
 
+	// ErrCodeConcurrentUpdatingException for service response error code
+	// "ConcurrentUpdatingException".
+	//
+	// A resource is already in an "actionable" state that must complete before
+	// a new update can be applied.
+	ErrCodeConcurrentUpdatingException = "ConcurrentUpdatingException"
+
+	// ErrCodeConflictException for service response error code
+	// "ConflictException".
+	//
+	// Updating or deleting a resource can cause an inconsistent state.
+	ErrCodeConflictException = "ConflictException"
+
 	// ErrCodeDomainNotWhitelistedException for service response error code
 	// "DomainNotWhitelistedException".
 	//
@@ -60,7 +73,7 @@ const (
 	// ErrCodeResourceExistsException for service response error code
 	// "ResourceExistsException".
 	//
-	// The resource specified doesn't exist.
+	// The resource specified already exists.
 	ErrCodeResourceExistsException = "ResourceExistsException"
 
 	// ErrCodeResourceNotFoundException for service response error code

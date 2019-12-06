@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix = "terraform-testacc-"
@@ -328,14 +329,12 @@ func testAccCheckAWSSagemakerNotebookInstanceTags(notebook *sagemaker.DescribeNo
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
 
-		ts, err := conn.ListTags(&sagemaker.ListTagsInput{
-			ResourceArn: notebook.NotebookInstanceArn,
-		})
+		tags, err := keyvaluetags.SagemakerListTags(conn, aws.StringValue(notebook.NotebookInstanceArn))
 		if err != nil {
-			return fmt.Errorf("Error listing tags: %s", err)
+			return err
 		}
 
-		m := tagsToMapSagemaker(ts.Tags)
+		m := tags.IgnoreAws().Map()
 		v, ok := m[key]
 		if value != "" && !ok {
 			return fmt.Errorf("Missing tag: %s", key)

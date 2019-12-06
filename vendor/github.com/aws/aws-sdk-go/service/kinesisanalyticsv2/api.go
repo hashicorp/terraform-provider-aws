@@ -520,6 +520,105 @@ func (c *KinesisAnalyticsV2) AddApplicationReferenceDataSourceWithContext(ctx aw
 	return out, req.Send()
 }
 
+const opAddApplicationVpcConfiguration = "AddApplicationVpcConfiguration"
+
+// AddApplicationVpcConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the AddApplicationVpcConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AddApplicationVpcConfiguration for more information on using the AddApplicationVpcConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AddApplicationVpcConfigurationRequest method.
+//    req, resp := client.AddApplicationVpcConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) AddApplicationVpcConfigurationRequest(input *AddApplicationVpcConfigurationInput) (req *request.Request, output *AddApplicationVpcConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opAddApplicationVpcConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AddApplicationVpcConfigurationInput{}
+	}
+
+	output = &AddApplicationVpcConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AddApplicationVpcConfiguration API operation for Amazon Kinesis Analytics.
+//
+// Adds a Virtual Private Cloud (VPC) configuration to the application. Applications
+// can use VPCs to store and access resources securely.
+//
+// Note the following about VPC configurations for Kinesis Data Analytics applications:
+//
+//    * VPC configurations are not supported for SQL applications.
+//
+//    * When a VPC is added to a Kinesis Data Analytics application, the application
+//    can no longer be accessed from the Internet directly. To enable Internet
+//    access to the application, add an Internet gateway to your VPC.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Analytics's
+// API operation AddApplicationVpcConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Specified application can't be found.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The application is not available for this operation.
+//
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The specified input parameter value is not valid.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/AddApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) AddApplicationVpcConfiguration(input *AddApplicationVpcConfigurationInput) (*AddApplicationVpcConfigurationOutput, error) {
+	req, out := c.AddApplicationVpcConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// AddApplicationVpcConfigurationWithContext is the same as AddApplicationVpcConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AddApplicationVpcConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisAnalyticsV2) AddApplicationVpcConfigurationWithContext(ctx aws.Context, input *AddApplicationVpcConfigurationInput, opts ...request.Option) (*AddApplicationVpcConfigurationOutput, error) {
+	req, out := c.AddApplicationVpcConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateApplication = "CreateApplication"
 
 // CreateApplicationRequest generates a "aws/request.Request" representing the
@@ -1295,6 +1394,96 @@ func (c *KinesisAnalyticsV2) DeleteApplicationSnapshotWithContext(ctx aws.Contex
 	return out, req.Send()
 }
 
+const opDeleteApplicationVpcConfiguration = "DeleteApplicationVpcConfiguration"
+
+// DeleteApplicationVpcConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteApplicationVpcConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteApplicationVpcConfiguration for more information on using the DeleteApplicationVpcConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteApplicationVpcConfigurationRequest method.
+//    req, resp := client.DeleteApplicationVpcConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfigurationRequest(input *DeleteApplicationVpcConfigurationInput) (req *request.Request, output *DeleteApplicationVpcConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opDeleteApplicationVpcConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteApplicationVpcConfigurationInput{}
+	}
+
+	output = &DeleteApplicationVpcConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteApplicationVpcConfiguration API operation for Amazon Kinesis Analytics.
+//
+// Removes a VPC configuration from a Kinesis Data Analytics application.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Analytics's
+// API operation DeleteApplicationVpcConfiguration for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Specified application can't be found.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The application is not available for this operation.
+//
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The specified input parameter value is not valid.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   Exception thrown as a result of concurrent modifications to an application.
+//   This error can be the result of attempting to modify an application without
+//   using the current application ID.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalyticsv2-2018-05-23/DeleteApplicationVpcConfiguration
+func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfiguration(input *DeleteApplicationVpcConfigurationInput) (*DeleteApplicationVpcConfigurationOutput, error) {
+	req, out := c.DeleteApplicationVpcConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// DeleteApplicationVpcConfigurationWithContext is the same as DeleteApplicationVpcConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteApplicationVpcConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisAnalyticsV2) DeleteApplicationVpcConfigurationWithContext(ctx aws.Context, input *DeleteApplicationVpcConfigurationInput, opts ...request.Option) (*DeleteApplicationVpcConfigurationOutput, error) {
+	req, out := c.DeleteApplicationVpcConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeApplication = "DescribeApplication"
 
 // DescribeApplicationRequest generates a "aws/request.Request" representing the
@@ -1783,7 +1972,8 @@ func (c *KinesisAnalyticsV2) ListTagsForResourceRequest(input *ListTagsForResour
 
 // ListTagsForResource API operation for Amazon Kinesis Analytics.
 //
-// Retrieves the list of key-value tags assigned to the application.
+// Retrieves the list of key-value tags assigned to the application. For more
+// information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2060,7 +2250,8 @@ func (c *KinesisAnalyticsV2) TagResourceRequest(input *TagResourceInput) (req *r
 //
 // Adds one or more key-value tags to a Kinesis Analytics application. Note
 // that the maximum number of application tags includes system tags. The maximum
-// number of user-defined application tags is 50.
+// number of user-defined application tags is 50. For more information, see
+// Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2156,7 +2347,8 @@ func (c *KinesisAnalyticsV2) UntagResourceRequest(input *UntagResourceInput) (re
 
 // UntagResource API operation for Amazon Kinesis Analytics.
 //
-// Removes one or more tags from a Kinesis Analytics application.
+// Removes one or more tags from a Kinesis Analytics application. For more information,
+// see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2959,6 +3151,128 @@ func (s *AddApplicationReferenceDataSourceOutput) SetReferenceDataSourceDescript
 	return s
 }
 
+type AddApplicationVpcConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an existing application.
+	//
+	// ApplicationName is a required field
+	ApplicationName *string `min:"1" type:"string" required:"true"`
+
+	// The version of the application to which you want to add the input processing
+	// configuration. You can use the DescribeApplication operation to get the current
+	// application version. If the version specified is not the current version,
+	// the ConcurrentModificationException is returned.
+	//
+	// CurrentApplicationVersionId is a required field
+	CurrentApplicationVersionId *int64 `min:"1" type:"long" required:"true"`
+
+	// Description of the VPC to add to the application.
+	//
+	// VpcConfiguration is a required field
+	VpcConfiguration *VpcConfiguration `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AddApplicationVpcConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddApplicationVpcConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AddApplicationVpcConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AddApplicationVpcConfigurationInput"}
+	if s.ApplicationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationName"))
+	}
+	if s.ApplicationName != nil && len(*s.ApplicationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationName", 1))
+	}
+	if s.CurrentApplicationVersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentApplicationVersionId"))
+	}
+	if s.CurrentApplicationVersionId != nil && *s.CurrentApplicationVersionId < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CurrentApplicationVersionId", 1))
+	}
+	if s.VpcConfiguration == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcConfiguration"))
+	}
+	if s.VpcConfiguration != nil {
+		if err := s.VpcConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("VpcConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationName sets the ApplicationName field's value.
+func (s *AddApplicationVpcConfigurationInput) SetApplicationName(v string) *AddApplicationVpcConfigurationInput {
+	s.ApplicationName = &v
+	return s
+}
+
+// SetCurrentApplicationVersionId sets the CurrentApplicationVersionId field's value.
+func (s *AddApplicationVpcConfigurationInput) SetCurrentApplicationVersionId(v int64) *AddApplicationVpcConfigurationInput {
+	s.CurrentApplicationVersionId = &v
+	return s
+}
+
+// SetVpcConfiguration sets the VpcConfiguration field's value.
+func (s *AddApplicationVpcConfigurationInput) SetVpcConfiguration(v *VpcConfiguration) *AddApplicationVpcConfigurationInput {
+	s.VpcConfiguration = v
+	return s
+}
+
+type AddApplicationVpcConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the application.
+	ApplicationARN *string `min:"1" type:"string"`
+
+	// Provides the current application version. Kinesis Data Analytics updates
+	// the ApplicationVersionId each time you update the application.
+	ApplicationVersionId *int64 `min:"1" type:"long"`
+
+	// The parameters of the new VPC configuration.
+	VpcConfigurationDescription *VpcConfigurationDescription `type:"structure"`
+}
+
+// String returns the string representation
+func (s AddApplicationVpcConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AddApplicationVpcConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetApplicationARN sets the ApplicationARN field's value.
+func (s *AddApplicationVpcConfigurationOutput) SetApplicationARN(v string) *AddApplicationVpcConfigurationOutput {
+	s.ApplicationARN = &v
+	return s
+}
+
+// SetApplicationVersionId sets the ApplicationVersionId field's value.
+func (s *AddApplicationVpcConfigurationOutput) SetApplicationVersionId(v int64) *AddApplicationVpcConfigurationOutput {
+	s.ApplicationVersionId = &v
+	return s
+}
+
+// SetVpcConfigurationDescription sets the VpcConfigurationDescription field's value.
+func (s *AddApplicationVpcConfigurationOutput) SetVpcConfigurationDescription(v *VpcConfigurationDescription) *AddApplicationVpcConfigurationOutput {
+	s.VpcConfigurationDescription = v
+	return s
+}
+
 // Describes code configuration for a Java-based Kinesis Data Analytics application.
 type ApplicationCodeConfiguration struct {
 	_ struct{} `type:"structure"`
@@ -3119,6 +3433,9 @@ type ApplicationConfiguration struct {
 	// The creation and update parameters for an SQL-based Kinesis Data Analytics
 	// application.
 	SqlApplicationConfiguration *SqlApplicationConfiguration `type:"structure"`
+
+	// The array of descriptions of VPC configurations available to the application.
+	VpcConfigurations []*VpcConfiguration `type:"list"`
 }
 
 // String returns the string representation
@@ -3162,6 +3479,16 @@ func (s *ApplicationConfiguration) Validate() error {
 			invalidParams.AddNested("SqlApplicationConfiguration", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.VpcConfigurations != nil {
+		for i, v := range s.VpcConfigurations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "VpcConfigurations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3199,6 +3526,12 @@ func (s *ApplicationConfiguration) SetSqlApplicationConfiguration(v *SqlApplicat
 	return s
 }
 
+// SetVpcConfigurations sets the VpcConfigurations field's value.
+func (s *ApplicationConfiguration) SetVpcConfigurations(v []*VpcConfiguration) *ApplicationConfiguration {
+	s.VpcConfigurations = v
+	return s
+}
+
 // Describes details about the application code and starting parameters for
 // an Amazon Kinesis Data Analytics application.
 type ApplicationConfigurationDescription struct {
@@ -3224,6 +3557,9 @@ type ApplicationConfigurationDescription struct {
 	// The details about inputs, outputs, and reference data sources for an SQL-based
 	// Kinesis Data Analytics application.
 	SqlApplicationConfigurationDescription *SqlApplicationConfigurationDescription `type:"structure"`
+
+	// The array of descriptions of VPC configurations available to the application.
+	VpcConfigurationDescriptions []*VpcConfigurationDescription `type:"list"`
 }
 
 // String returns the string representation
@@ -3272,6 +3608,12 @@ func (s *ApplicationConfigurationDescription) SetSqlApplicationConfigurationDesc
 	return s
 }
 
+// SetVpcConfigurationDescriptions sets the VpcConfigurationDescriptions field's value.
+func (s *ApplicationConfigurationDescription) SetVpcConfigurationDescriptions(v []*VpcConfigurationDescription) *ApplicationConfigurationDescription {
+	s.VpcConfigurationDescriptions = v
+	return s
+}
+
 // Describes updates to an application's configuration.
 type ApplicationConfigurationUpdate struct {
 	_ struct{} `type:"structure"`
@@ -3293,6 +3635,10 @@ type ApplicationConfigurationUpdate struct {
 
 	// Describes updates to an SQL-based Kinesis Data Analytics application's configuration.
 	SqlApplicationConfigurationUpdate *SqlApplicationConfigurationUpdate `type:"structure"`
+
+	// Updates to the array of descriptions of VPC configurations available to the
+	// application.
+	VpcConfigurationUpdates []*VpcConfigurationUpdate `type:"list"`
 }
 
 // String returns the string representation
@@ -3333,6 +3679,16 @@ func (s *ApplicationConfigurationUpdate) Validate() error {
 			invalidParams.AddNested("SqlApplicationConfigurationUpdate", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.VpcConfigurationUpdates != nil {
+		for i, v := range s.VpcConfigurationUpdates {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "VpcConfigurationUpdates", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3367,6 +3723,12 @@ func (s *ApplicationConfigurationUpdate) SetFlinkApplicationConfigurationUpdate(
 // SetSqlApplicationConfigurationUpdate sets the SqlApplicationConfigurationUpdate field's value.
 func (s *ApplicationConfigurationUpdate) SetSqlApplicationConfigurationUpdate(v *SqlApplicationConfigurationUpdate) *ApplicationConfigurationUpdate {
 	s.SqlApplicationConfigurationUpdate = v
+	return s
+}
+
+// SetVpcConfigurationUpdates sets the VpcConfigurationUpdates field's value.
+func (s *ApplicationConfigurationUpdate) SetVpcConfigurationUpdates(v []*VpcConfigurationUpdate) *ApplicationConfigurationUpdate {
+	s.VpcConfigurationUpdates = v
 	return s
 }
 
@@ -3807,14 +4169,33 @@ type CheckpointConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Describes the interval in milliseconds between checkpoint operations.
-	CheckpointInterval *int64 `type:"long"`
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointInterval vaue of 60000, even if this value is set to
+	// another value using this API or in application code.
+	CheckpointInterval *int64 `min:"1" type:"long"`
 
 	// Describes whether checkpointing is enabled for a Java-based Kinesis Data
 	// Analytics application.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointingEnabled value of true, even if this value is set
+	// to another value using this API or in application code.
 	CheckpointingEnabled *bool `type:"boolean"`
 
 	// Describes whether the application uses Amazon Kinesis Data Analytics' default
-	// checkpointing behavior.
+	// checkpointing behavior. You must set this property to CUSTOM in order to
+	// set the CheckpointingEnabled, CheckpointInterval, or MinPauseBetweenCheckpoints
+	// parameters.
+	//
+	// If this value is set to DEFAULT, the application will use the following values,
+	// even if they are set to other values using APIs or application code:
+	//
+	//    * CheckpointingEnabled: true
+	//
+	//    * CheckpointInterval: 60000
+	//
+	//    * MinPauseBetweenCheckpoints: 5000
 	//
 	// ConfigurationType is a required field
 	ConfigurationType *string `type:"string" required:"true" enum:"ConfigurationType"`
@@ -3824,6 +4205,10 @@ type CheckpointConfiguration struct {
 	// longer than the CheckpointInterval, the application otherwise performs continual
 	// checkpoint operations. For more information, see Tuning Checkpointing (https://ci.apache.org/projects/flink/flink-docs-stable/ops/state/large_state_tuning.html#tuning-checkpointing)
 	// in the Apache Flink Documentation (https://ci.apache.org/projects/flink/flink-docs-release-1.6/).
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a MinPauseBetweenCheckpoints value of 5000, even if this value is
+	// set using this API or in application code.
 	MinPauseBetweenCheckpoints *int64 `type:"long"`
 }
 
@@ -3840,6 +4225,9 @@ func (s CheckpointConfiguration) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CheckpointConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CheckpointConfiguration"}
+	if s.CheckpointInterval != nil && *s.CheckpointInterval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CheckpointInterval", 1))
+	}
 	if s.ConfigurationType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ConfigurationType"))
 	}
@@ -3880,18 +4268,39 @@ type CheckpointConfigurationDescription struct {
 	_ struct{} `type:"structure"`
 
 	// Describes the interval in milliseconds between checkpoint operations.
-	CheckpointInterval *int64 `type:"long"`
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointInterval vaue of 60000, even if this value is set to
+	// another value using this API or in application code.
+	CheckpointInterval *int64 `min:"1" type:"long"`
 
 	// Describes whether checkpointing is enabled for a Java-based Kinesis Data
 	// Analytics application.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointingEnabled value of true, even if this value is set
+	// to another value using this API or in application code.
 	CheckpointingEnabled *bool `type:"boolean"`
 
 	// Describes whether the application uses the default checkpointing behavior
 	// in Kinesis Data Analytics.
+	//
+	// If this value is set to DEFAULT, the application will use the following values,
+	// even if they are set to other values using APIs or application code:
+	//
+	//    * CheckpointingEnabled: true
+	//
+	//    * CheckpointInterval: 60000
+	//
+	//    * MinPauseBetweenCheckpoints: 5000
 	ConfigurationType *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes the minimum time in milliseconds after a checkpoint operation completes
 	// that a new checkpoint operation can start.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a MinPauseBetweenCheckpoints value of 5000, even if this value is
+	// set using this API or in application code.
 	MinPauseBetweenCheckpoints *int64 `type:"long"`
 }
 
@@ -3935,17 +4344,40 @@ type CheckpointConfigurationUpdate struct {
 	_ struct{} `type:"structure"`
 
 	// Describes updates to the interval in milliseconds between checkpoint operations.
-	CheckpointIntervalUpdate *int64 `type:"long"`
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointInterval vaue of 60000, even if this value is set to
+	// another value using this API or in application code.
+	CheckpointIntervalUpdate *int64 `min:"1" type:"long"`
 
 	// Describes updates to whether checkpointing is enabled for an application.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a CheckpointingEnabled value of true, even if this value is set
+	// to another value using this API or in application code.
 	CheckpointingEnabledUpdate *bool `type:"boolean"`
 
 	// Describes updates to whether the application uses the default checkpointing
-	// behavior of Kinesis Data Analytics.
+	// behavior of Kinesis Data Analytics. You must set this property to CUSTOM
+	// in order to set the CheckpointingEnabled, CheckpointInterval, or MinPauseBetweenCheckpoints
+	// parameters.
+	//
+	// If this value is set to DEFAULT, the application will use the following values,
+	// even if they are set to other values using APIs or application code:
+	//
+	//    * CheckpointingEnabled: true
+	//
+	//    * CheckpointInterval: 60000
+	//
+	//    * MinPauseBetweenCheckpoints: 5000
 	ConfigurationTypeUpdate *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes updates to the minimum time in milliseconds after a checkpoint
 	// operation completes that a new checkpoint operation can start.
+	//
+	// If CheckpointConfiguration.ConfigurationType is DEFAULT, the application
+	// will use a MinPauseBetweenCheckpoints value of 5000, even if this value is
+	// set using this API or in application code.
 	MinPauseBetweenCheckpointsUpdate *int64 `type:"long"`
 }
 
@@ -3957,6 +4389,19 @@ func (s CheckpointConfigurationUpdate) String() string {
 // GoString returns the string representation
 func (s CheckpointConfigurationUpdate) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CheckpointConfigurationUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CheckpointConfigurationUpdate"}
+	if s.CheckpointIntervalUpdate != nil && *s.CheckpointIntervalUpdate < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CheckpointIntervalUpdate", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCheckpointIntervalUpdate sets the CheckpointIntervalUpdate field's value.
@@ -4335,8 +4780,7 @@ type CreateApplicationInput struct {
 	// A list of one or more tags to assign to the application. A tag is a key-value
 	// pair that identifies an application. Note that the maximum number of application
 	// tags includes system tags. The maximum number of user-defined application
-	// tags is 50. For more information, see Using Cost Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
-	// in the AWS Billing and Cost Management Guide.
+	// tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
 	Tags []*Tag `min:"1" type:"list"`
 }
 
@@ -5156,6 +5600,114 @@ func (s DeleteApplicationSnapshotOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteApplicationVpcConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an existing application.
+	//
+	// ApplicationName is a required field
+	ApplicationName *string `min:"1" type:"string" required:"true"`
+
+	// The current application version ID. You can retrieve the application version
+	// ID using DescribeApplication.
+	//
+	// CurrentApplicationVersionId is a required field
+	CurrentApplicationVersionId *int64 `min:"1" type:"long" required:"true"`
+
+	// The ID of the VPC configuration to delete.
+	//
+	// VpcConfigurationId is a required field
+	VpcConfigurationId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteApplicationVpcConfigurationInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApplicationVpcConfigurationInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteApplicationVpcConfigurationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteApplicationVpcConfigurationInput"}
+	if s.ApplicationName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApplicationName"))
+	}
+	if s.ApplicationName != nil && len(*s.ApplicationName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApplicationName", 1))
+	}
+	if s.CurrentApplicationVersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentApplicationVersionId"))
+	}
+	if s.CurrentApplicationVersionId != nil && *s.CurrentApplicationVersionId < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("CurrentApplicationVersionId", 1))
+	}
+	if s.VpcConfigurationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcConfigurationId"))
+	}
+	if s.VpcConfigurationId != nil && len(*s.VpcConfigurationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcConfigurationId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApplicationName sets the ApplicationName field's value.
+func (s *DeleteApplicationVpcConfigurationInput) SetApplicationName(v string) *DeleteApplicationVpcConfigurationInput {
+	s.ApplicationName = &v
+	return s
+}
+
+// SetCurrentApplicationVersionId sets the CurrentApplicationVersionId field's value.
+func (s *DeleteApplicationVpcConfigurationInput) SetCurrentApplicationVersionId(v int64) *DeleteApplicationVpcConfigurationInput {
+	s.CurrentApplicationVersionId = &v
+	return s
+}
+
+// SetVpcConfigurationId sets the VpcConfigurationId field's value.
+func (s *DeleteApplicationVpcConfigurationInput) SetVpcConfigurationId(v string) *DeleteApplicationVpcConfigurationInput {
+	s.VpcConfigurationId = &v
+	return s
+}
+
+type DeleteApplicationVpcConfigurationOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the Kinesis Data Analytics application.
+	ApplicationARN *string `min:"1" type:"string"`
+
+	// The updated version ID of the application.
+	ApplicationVersionId *int64 `min:"1" type:"long"`
+}
+
+// String returns the string representation
+func (s DeleteApplicationVpcConfigurationOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApplicationVpcConfigurationOutput) GoString() string {
+	return s.String()
+}
+
+// SetApplicationARN sets the ApplicationARN field's value.
+func (s *DeleteApplicationVpcConfigurationOutput) SetApplicationARN(v string) *DeleteApplicationVpcConfigurationOutput {
+	s.ApplicationARN = &v
+	return s
+}
+
+// SetApplicationVersionId sets the ApplicationVersionId field's value.
+func (s *DeleteApplicationVpcConfigurationOutput) SetApplicationVersionId(v int64) *DeleteApplicationVpcConfigurationOutput {
+	s.ApplicationVersionId = &v
+	return s
+}
+
 type DescribeApplicationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5785,6 +6337,11 @@ func (s FlinkApplicationConfigurationUpdate) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *FlinkApplicationConfigurationUpdate) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "FlinkApplicationConfigurationUpdate"}
+	if s.CheckpointConfigurationUpdate != nil {
+		if err := s.CheckpointConfigurationUpdate.Validate(); err != nil {
+			invalidParams.AddNested("CheckpointConfigurationUpdate", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ParallelismConfigurationUpdate != nil {
 		if err := s.ParallelismConfigurationUpdate.Validate(); err != nil {
 			invalidParams.AddNested("ParallelismConfigurationUpdate", err.(request.ErrInvalidParams))
@@ -5812,6 +6369,36 @@ func (s *FlinkApplicationConfigurationUpdate) SetMonitoringConfigurationUpdate(v
 // SetParallelismConfigurationUpdate sets the ParallelismConfigurationUpdate field's value.
 func (s *FlinkApplicationConfigurationUpdate) SetParallelismConfigurationUpdate(v *ParallelismConfigurationUpdate) *FlinkApplicationConfigurationUpdate {
 	s.ParallelismConfigurationUpdate = v
+	return s
+}
+
+// Describes the starting parameters for an Apache Flink-based Kinesis Data
+// Analytics application.
+type FlinkRunConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// When restoring from a savepoint, specifies whether the runtime is allowed
+	// to skip a state that cannot be mapped to the new program. This will happen
+	// if the program is updated between savepoints to remove stateful parameters,
+	// and state data in the savepoint no longer corresponds to valid application
+	// data. For more information, see Allowing Non-Restored State (https://ci.apache.org/projects/flink/flink-docs-release-1.8/ops/state/savepoints.html#allowing-non-restored-state)
+	// in the Apache Flink documentation (https://ci.apache.org/projects/flink/flink-docs-release-1.8/).
+	AllowNonRestoredState *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s FlinkRunConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FlinkRunConfiguration) GoString() string {
+	return s.String()
+}
+
+// SetAllowNonRestoredState sets the AllowNonRestoredState field's value.
+func (s *FlinkRunConfiguration) SetAllowNonRestoredState(v bool) *FlinkRunConfiguration {
+	s.AllowNonRestoredState = &v
 	return s
 }
 
@@ -7651,7 +8238,8 @@ type MonitoringConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// Describes whether to use the default CloudWatch logging configuration for
-	// an application.
+	// an application. You must set this property to CUSTOM in order to set the
+	// LogLevel or MetricsLevel parameters.
 	//
 	// ConfigurationType is a required field
 	ConfigurationType *string `type:"string" required:"true" enum:"ConfigurationType"`
@@ -7754,7 +8342,8 @@ type MonitoringConfigurationUpdate struct {
 	_ struct{} `type:"structure"`
 
 	// Describes updates to whether to use the default CloudWatch logging configuration
-	// for an application.
+	// for an application. You must set this property to CUSTOM in order to set
+	// the LogLevel or MetricsLevel parameters.
 	ConfigurationTypeUpdate *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes updates to the verbosity of the CloudWatch Logs for an application.
@@ -8098,15 +8687,22 @@ type ParallelismConfiguration struct {
 	AutoScalingEnabled *bool `type:"boolean"`
 
 	// Describes whether the application uses the default parallelism for the Kinesis
-	// Data Analytics service.
+	// Data Analytics service. You must set this property to CUSTOM in order to
+	// change your application's AutoScalingEnabled, Parallelism, or ParallelismPerKPU
+	// properties.
 	//
 	// ConfigurationType is a required field
 	ConfigurationType *string `type:"string" required:"true" enum:"ConfigurationType"`
 
 	// Describes the initial number of parallel tasks that a Java-based Kinesis
-	// Data Analytics application can perform. The Kinesis Data Analytics service
-	// can increase this number automatically if ParallelismConfiguration$AutoScalingEnabled
-	// is set to true.
+	// Data Analytics application can perform. If AutoScalingEnabled is set to True,
+	// Kinesis Data Analytics increases the CurrentParallelism value in response
+	// to application load. The service can increase the CurrentParallelism value
+	// up to the maximum parallelism, which is ParalellismPerKPU times the maximum
+	// KPUs for the application. The maximum KPUs for an application is 32 by default,
+	// and can be increased by requesting a limit increase. If application load
+	// is reduced, the service can reduce the CurrentParallelism value down to the
+	// Parallelism setting.
 	Parallelism *int64 `min:"1" type:"integer"`
 
 	// Describes the number of parallel tasks that a Java-based Kinesis Data Analytics
@@ -8183,11 +8779,24 @@ type ParallelismConfigurationDescription struct {
 	ConfigurationType *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes the current number of parallel tasks that a Java-based Kinesis
-	// Data Analytics application can perform.
+	// Data Analytics application can perform. If AutoScalingEnabled is set to True,
+	// Kinesis Data Analytics can increase this value in response to application
+	// load. The service can increase this value up to the maximum parallelism,
+	// which is ParalellismPerKPU times the maximum KPUs for the application. The
+	// maximum KPUs for an application is 32 by default, and can be increased by
+	// requesting a limit increase. If application load is reduced, the service
+	// can reduce the CurrentParallelism value down to the Parallelism setting.
 	CurrentParallelism *int64 `min:"1" type:"integer"`
 
 	// Describes the initial number of parallel tasks that a Java-based Kinesis
-	// Data Analytics application can perform.
+	// Data Analytics application can perform. If AutoScalingEnabled is set to True,
+	// then Kinesis Data Analytics can increase the CurrentParallelism value in
+	// response to application load. The service can increase CurrentParallelism
+	// up to the maximum parallelism, which is ParalellismPerKPU times the maximum
+	// KPUs for the application. The maximum KPUs for an application is 32 by default,
+	// and can be increased by requesting a limit increase. If application load
+	// is reduced, the service can reduce the CurrentParallelism value down to the
+	// Parallelism setting.
 	Parallelism *int64 `min:"1" type:"integer"`
 
 	// Describes the number of parallel tasks that a Java-based Kinesis Data Analytics
@@ -8246,6 +8855,8 @@ type ParallelismConfigurationUpdate struct {
 
 	// Describes updates to whether the application uses the default parallelism
 	// for the Kinesis Data Analytics service, or if a custom parallelism is used.
+	// You must set this property to CUSTOM in order to change your application's
+	// AutoScalingEnabled, Parallelism, or ParallelismPerKPU properties.
 	ConfigurationTypeUpdate *string `type:"string" enum:"ConfigurationType"`
 
 	// Describes updates to the number of parallel tasks an application can perform
@@ -8253,7 +8864,13 @@ type ParallelismConfigurationUpdate struct {
 	ParallelismPerKPUUpdate *int64 `min:"1" type:"integer"`
 
 	// Describes updates to the initial number of parallel tasks an application
-	// can perform.
+	// can perform. If AutoScalingEnabled is set to True, then Kinesis Data Analytics
+	// can increase the CurrentParallelism value in response to application load.
+	// The service can increase CurrentParallelism up to the maximum parallelism,
+	// which is ParalellismPerKPU times the maximum KPUs for the application. The
+	// maximum KPUs for an application is 32 by default, and can be increased by
+	// requesting a limit increase. If application load is reduced, the service
+	// will reduce CurrentParallelism down to the Parallelism setting.
 	ParallelismUpdate *int64 `min:"1" type:"integer"`
 }
 
@@ -8741,6 +9358,10 @@ type RunConfiguration struct {
 	// Describes the restore behavior of a restarting application.
 	ApplicationRestoreConfiguration *ApplicationRestoreConfiguration `type:"structure"`
 
+	// Describes the starting parameters for an Apache Flink-based Kinesis Data
+	// Analytics application.
+	FlinkRunConfiguration *FlinkRunConfiguration `type:"structure"`
+
 	// Describes the starting parameters for an SQL-based Kinesis Data Analytics
 	// application.
 	SqlRunConfigurations []*SqlRunConfiguration `type:"list"`
@@ -8787,6 +9408,12 @@ func (s *RunConfiguration) SetApplicationRestoreConfiguration(v *ApplicationRest
 	return s
 }
 
+// SetFlinkRunConfiguration sets the FlinkRunConfiguration field's value.
+func (s *RunConfiguration) SetFlinkRunConfiguration(v *FlinkRunConfiguration) *RunConfiguration {
+	s.FlinkRunConfiguration = v
+	return s
+}
+
 // SetSqlRunConfigurations sets the SqlRunConfigurations field's value.
 func (s *RunConfiguration) SetSqlRunConfigurations(v []*SqlRunConfiguration) *RunConfiguration {
 	s.SqlRunConfigurations = v
@@ -8824,6 +9451,10 @@ type RunConfigurationUpdate struct {
 
 	// Describes updates to the restore behavior of a restarting application.
 	ApplicationRestoreConfiguration *ApplicationRestoreConfiguration `type:"structure"`
+
+	// Describes the starting parameters for an Apache Flink-based Kinesis Data
+	// Analytics application.
+	FlinkRunConfiguration *FlinkRunConfiguration `type:"structure"`
 }
 
 // String returns the string representation
@@ -8854,6 +9485,12 @@ func (s *RunConfigurationUpdate) Validate() error {
 // SetApplicationRestoreConfiguration sets the ApplicationRestoreConfiguration field's value.
 func (s *RunConfigurationUpdate) SetApplicationRestoreConfiguration(v *ApplicationRestoreConfiguration) *RunConfigurationUpdate {
 	s.ApplicationRestoreConfiguration = v
+	return s
+}
+
+// SetFlinkRunConfiguration sets the FlinkRunConfiguration field's value.
+func (s *RunConfigurationUpdate) SetFlinkRunConfiguration(v *FlinkRunConfiguration) *RunConfigurationUpdate {
+	s.FlinkRunConfiguration = v
 	return s
 }
 
@@ -9806,9 +10443,7 @@ func (s StopApplicationOutput) GoString() string {
 // AWS resources. If you specify a tag that already exists, the tag value is
 // replaced with the value that you specify in the request. Note that the maximum
 // number of application tags includes system tags. The maximum number of user-defined
-// application tags is 50. For more information, see Using Cost Allocation Tags
-// (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
-// in the AWS Billing and Cost Management Guide.
+// application tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/java/how-tagging.html).
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -10155,6 +10790,196 @@ func (s UpdateApplicationOutput) GoString() string {
 // SetApplicationDetail sets the ApplicationDetail field's value.
 func (s *UpdateApplicationOutput) SetApplicationDetail(v *ApplicationDetail) *UpdateApplicationOutput {
 	s.ApplicationDetail = v
+	return s
+}
+
+// Describes the parameters of a VPC used by the application.
+type VpcConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The array of SecurityGroup (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecurityGroup.html)
+	// IDs used by the VPC configuration.
+	//
+	// SecurityGroupIds is a required field
+	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
+
+	// The array of Subnet (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Subnet.html)
+	// IDs used by the VPC configuration.
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VpcConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VpcConfiguration"}
+	if s.SecurityGroupIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecurityGroupIds"))
+	}
+	if s.SecurityGroupIds != nil && len(s.SecurityGroupIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupIds", 1))
+	}
+	if s.SubnetIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("SubnetIds"))
+	}
+	if s.SubnetIds != nil && len(s.SubnetIds) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SubnetIds", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcConfiguration) SetSecurityGroupIds(v []*string) *VpcConfiguration {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *VpcConfiguration) SetSubnetIds(v []*string) *VpcConfiguration {
+	s.SubnetIds = v
+	return s
+}
+
+// Describes the parameters of a VPC used by the application.
+type VpcConfigurationDescription struct {
+	_ struct{} `type:"structure"`
+
+	// The array of SecurityGroup (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecurityGroup.html)
+	// IDs used by the VPC configuration.
+	//
+	// SecurityGroupIds is a required field
+	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
+
+	// The array of Subnet (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Subnet.html)
+	// IDs used by the VPC configuration.
+	//
+	// SubnetIds is a required field
+	SubnetIds []*string `min:"1" type:"list" required:"true"`
+
+	// The ID of the VPC configuration.
+	//
+	// VpcConfigurationId is a required field
+	VpcConfigurationId *string `min:"1" type:"string" required:"true"`
+
+	// The ID of the associated VPC.
+	//
+	// VpcId is a required field
+	VpcId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfigurationDescription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfigurationDescription) GoString() string {
+	return s.String()
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *VpcConfigurationDescription) SetSecurityGroupIds(v []*string) *VpcConfigurationDescription {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *VpcConfigurationDescription) SetSubnetIds(v []*string) *VpcConfigurationDescription {
+	s.SubnetIds = v
+	return s
+}
+
+// SetVpcConfigurationId sets the VpcConfigurationId field's value.
+func (s *VpcConfigurationDescription) SetVpcConfigurationId(v string) *VpcConfigurationDescription {
+	s.VpcConfigurationId = &v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *VpcConfigurationDescription) SetVpcId(v string) *VpcConfigurationDescription {
+	s.VpcId = &v
+	return s
+}
+
+// Describes updates to the VPC configuration used by the application.
+type VpcConfigurationUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// Describes updates to the array of SecurityGroup (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecurityGroup.html)
+	// IDs used by the VPC configuration.
+	SecurityGroupIdUpdates []*string `min:"1" type:"list"`
+
+	// Describes updates to the array of Subnet (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Subnet.html)
+	// IDs used by the VPC configuration.
+	SubnetIdUpdates []*string `min:"1" type:"list"`
+
+	// Describes an update to the ID of the VPC configuration.
+	//
+	// VpcConfigurationId is a required field
+	VpcConfigurationId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s VpcConfigurationUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcConfigurationUpdate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VpcConfigurationUpdate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VpcConfigurationUpdate"}
+	if s.SecurityGroupIdUpdates != nil && len(s.SecurityGroupIdUpdates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SecurityGroupIdUpdates", 1))
+	}
+	if s.SubnetIdUpdates != nil && len(s.SubnetIdUpdates) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SubnetIdUpdates", 1))
+	}
+	if s.VpcConfigurationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("VpcConfigurationId"))
+	}
+	if s.VpcConfigurationId != nil && len(*s.VpcConfigurationId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("VpcConfigurationId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSecurityGroupIdUpdates sets the SecurityGroupIdUpdates field's value.
+func (s *VpcConfigurationUpdate) SetSecurityGroupIdUpdates(v []*string) *VpcConfigurationUpdate {
+	s.SecurityGroupIdUpdates = v
+	return s
+}
+
+// SetSubnetIdUpdates sets the SubnetIdUpdates field's value.
+func (s *VpcConfigurationUpdate) SetSubnetIdUpdates(v []*string) *VpcConfigurationUpdate {
+	s.SubnetIdUpdates = v
+	return s
+}
+
+// SetVpcConfigurationId sets the VpcConfigurationId field's value.
+func (s *VpcConfigurationUpdate) SetVpcConfigurationId(v string) *VpcConfigurationUpdate {
+	s.VpcConfigurationId = &v
 	return s
 }
 

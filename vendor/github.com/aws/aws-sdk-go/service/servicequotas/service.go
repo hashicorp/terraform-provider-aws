@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a ServiceQuotas client from just a session.
 //     svc := servicequotas.New(mySession)
 //

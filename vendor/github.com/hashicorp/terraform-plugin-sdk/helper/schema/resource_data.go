@@ -133,6 +133,16 @@ func (d *ResourceData) getRaw(key string, level getSource) getResult {
 	return d.get(parts, level)
 }
 
+// HasChanges returns whether or not any of the given keys has been changed.
+func (d *ResourceData) HasChanges(keys ...string) bool {
+	for _, key := range keys {
+		if d.HasChange(key) {
+			return true
+		}
+	}
+	return false
+}
+
 // HasChange returns whether or not the given key has been changed.
 func (d *ResourceData) HasChange(key string) bool {
 	o, n := d.GetChange(key)

@@ -1720,10 +1720,12 @@ func (c *Inspector) GetExclusionsPreviewPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetExclusionsPreviewOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetExclusionsPreviewOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1958,10 +1960,12 @@ func (c *Inspector) ListAssessmentRunAgentsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentRunAgentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentRunAgentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2105,10 +2109,12 @@ func (c *Inspector) ListAssessmentRunsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2249,10 +2255,12 @@ func (c *Inspector) ListAssessmentTargetsPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentTargetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentTargetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2396,10 +2404,12 @@ func (c *Inspector) ListAssessmentTemplatesPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAssessmentTemplatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListAssessmentTemplatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2544,10 +2554,12 @@ func (c *Inspector) ListEventSubscriptionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEventSubscriptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEventSubscriptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2690,10 +2702,12 @@ func (c *Inspector) ListExclusionsPagesWithContext(ctx aws.Context, input *ListE
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListExclusionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListExclusionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2837,10 +2851,12 @@ func (c *Inspector) ListFindingsPagesWithContext(ctx aws.Context, input *ListFin
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFindingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFindingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2979,10 +2995,12 @@ func (c *Inspector) ListRulesPackagesPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRulesPackagesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRulesPackagesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3220,10 +3238,12 @@ func (c *Inspector) PreviewAgentsPagesWithContext(ctx aws.Context, input *Previe
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*PreviewAgentsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*PreviewAgentsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

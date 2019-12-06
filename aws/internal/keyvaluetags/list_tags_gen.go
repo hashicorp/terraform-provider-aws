@@ -4,6 +4,7 @@ package keyvaluetags
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -23,10 +25,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -40,7 +44,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -73,8 +79,26 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
+
+// AccessanalyzerListTags lists accessanalyzer service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AccessanalyzerListTags(conn *accessanalyzer.AccessAnalyzer, identifier string) (KeyValueTags, error) {
+	input := &accessanalyzer.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AccessanalyzerKeyValueTags(output.Tags), nil
+}
 
 // AcmListTags lists acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
@@ -227,6 +251,23 @@ func Cloudhsmv2ListTags(conn *cloudhsmv2.CloudHSMV2, identifier string) (KeyValu
 	}
 
 	return Cloudhsmv2KeyValueTags(output.TagList), nil
+}
+
+// CloudtrailListTags lists cloudtrail service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudtrailListTags(conn *cloudtrail.CloudTrail, identifier string) (KeyValueTags, error) {
+	input := &cloudtrail.ListTagsInput{
+		ResourceIdList: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.ListTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudtrailKeyValueTags(output.ResourceTagList[0].TagsList), nil
 }
 
 // CloudwatchListTags lists cloudwatch service tags.
@@ -399,6 +440,23 @@ func DatabasemigrationserviceListTags(conn *databasemigrationservice.DatabaseMig
 	return DatabasemigrationserviceKeyValueTags(output.TagList), nil
 }
 
+// DataexchangeListTags lists dataexchange service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DataexchangeListTags(conn *dataexchange.DataExchange, identifier string) (KeyValueTags, error) {
+	input := &dataexchange.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DataexchangeKeyValueTags(output.Tags), nil
+}
+
 // DatasyncListTags lists datasync service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -465,6 +523,23 @@ func DirectoryserviceListTags(conn *directoryservice.DirectoryService, identifie
 	}
 
 	return DirectoryserviceKeyValueTags(output.Tags), nil
+}
+
+// DlmListTags lists dlm service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DlmListTags(conn *dlm.DLM, identifier string) (KeyValueTags, error) {
+	input := &dlm.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DlmKeyValueTags(output.Tags), nil
 }
 
 // DocdbListTags lists docdb service tags.
@@ -688,6 +763,23 @@ func GlueListTags(conn *glue.Glue, identifier string) (KeyValueTags, error) {
 	return GlueKeyValueTags(output.Tags), nil
 }
 
+// GreengrassListTags lists greengrass service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GreengrassListTags(conn *greengrass.Greengrass, identifier string) (KeyValueTags, error) {
+	input := &greengrass.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GreengrassKeyValueTags(output.Tags), nil
+}
+
 // GuarddutyListTags lists guardduty service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -703,6 +795,23 @@ func GuarddutyListTags(conn *guardduty.GuardDuty, identifier string) (KeyValueTa
 	}
 
 	return GuarddutyKeyValueTags(output.Tags), nil
+}
+
+// ImagebuilderListTags lists imagebuilder service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ImagebuilderListTags(conn *imagebuilder.Imagebuilder, identifier string) (KeyValueTags, error) {
+	input := &imagebuilder.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ImagebuilderKeyValueTags(output.Tags), nil
 }
 
 // InspectorListTags lists inspector service tags.
@@ -1248,6 +1357,23 @@ func WafListTags(conn *waf.WAF, identifier string) (KeyValueTags, error) {
 	}
 
 	return WafKeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// WafregionalListTags lists wafregional service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WafregionalListTags(conn *wafregional.WAFRegional, identifier string) (KeyValueTags, error) {
+	input := &waf.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return WafregionalKeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

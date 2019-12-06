@@ -22,6 +22,13 @@ resource "aws_eks_cluster" "example" {
   vpc_config {
     subnet_ids = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
   }
+
+  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
+  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
+  depends_on = [
+    "aws_iam_role_policy_attachment.example-AmazonEKSClusterPolicy",
+    "aws_iam_role_policy_attachment.example-AmazonEKSServicePolicy",
+  ]
 }
 
 output "endpoint" {
@@ -30,6 +37,39 @@ output "endpoint" {
 
 output "kubeconfig-certificate-authority-data" {
   value = "${aws_eks_cluster.example.certificate_authority.0.data}"
+}
+```
+
+### Example IAM Role for EKS Cluster
+
+```hcl
+resource "aws_iam_role" "example" {
+  name = "eks-cluster-example"
+  
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "example-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = "${aws_iam_role.example.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "example-AmazonEKSServicePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+  role       = "${aws_iam_role.example.name}"
 }
 ```
 
@@ -110,7 +150,7 @@ After adding inline IAM Policies (e.g. [`aws_iam_role_policy` resource](/docs/pr
 The following arguments are supported:
 
 * `name` – (Required) Name of the cluster.
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf. Ensure the resource configuration includes explicit dependencies on the IAM Role permissions by adding [`depends_on`](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies) if using the [`aws_iam_role_policy` resource](/docs/providers/aws/r/iam_role_policy.html) or [`aws_iam_role_policy_attachment` resource](/docs/providers/aws/r/iam_role_policy_attachment.html), otherwise EKS cannot delete EKS managed EC2 infrastructure such as Security Groups on EKS Cluster deletion.
 * `vpc_config` - (Required) Nested argument for the VPC associated with your cluster. Amazon EKS VPC resources have specific requirements to work properly with Kubernetes. For more information, see [Cluster VPC Considerations](https://docs.aws.amazon.com/eks/latest/userguide/network_reqs.html) and [Cluster Security Group Considerations](https://docs.aws.amazon.com/eks/latest/userguide/sec-group-reqs.html) in the Amazon EKS User Guide. Configuration detailed below.
 * `enabled_cluster_log_types` - (Optional) A list of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html)
 * `tags` - (Optional) Key-value mapping of resource tags.
@@ -139,6 +179,7 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - The status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`. 
 * `version` - The Kubernetes server version for the cluster.
 * `vpc_config` - Additional nested attributes:
+  * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.
   * `vpc_id` - The VPC associated with your cluster.
 
 ## Timeouts

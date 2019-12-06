@@ -2583,6 +2583,35 @@ func TestAccAWSDBInstance_SnapshotIdentifier_PerformanceInsightsEnabled(t *testi
 	})
 }
 
+func TestAccAWSDBInstance_CACertificateIdentifier(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	resourceName := "aws_db_instance.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccAWSDBInstanceConfigWithCACertificateIdentifier, "rds-ca-2015"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2015"),
+				),
+			},
+			// Ensure we are able to modify the CACertIdentifier
+			{
+				Config: fmt.Sprintf(testAccAWSDBInstanceConfigWithCACertificateIdentifier, "rds-ca-2019"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
+				),
+			},
+		},
+	})
+}
+
 // Database names cannot collide, and deletion takes so long, that making the
 // name a bit random helps so able we can kill a test that's just waiting for a
 // delete and not be blocked on kicking off another one.
@@ -2689,6 +2718,22 @@ resource "aws_db_instance" "bar" {
 	parameter_group_name = "default.mysql5.6"
 }
 `
+
+const testAccAWSDBInstanceConfigWithCACertificateIdentifier = `
+resource "aws_db_instance" "bar" {
+	allocated_storage = 10
+	engine = "MySQL"
+	instance_class = "db.t2.micro"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
+	ca_cert_identifier = "%s"
+	apply_immediately = true
+	skip_final_snapshot = true
+	timeouts {
+		create = "30m"
+	}
+}`
 
 func testAccAWSDBInstanceConfigWithOptionGroup(rName string) string {
 	return fmt.Sprintf(`

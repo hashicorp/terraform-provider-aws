@@ -55,7 +55,8 @@ func testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	nsResourceName := "aws_service_discovery_http_namespace.test"
 	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
 	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
-	rName := fmt.Sprintf("tf-testacc-appmeshvn-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+	// Avoid 'config is invalid: last character of "name" must be a letter' for aws_service_discovery_http_namespace.
+	rName := fmt.Sprintf("tf-testacc-appmeshvn-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

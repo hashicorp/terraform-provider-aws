@@ -172,6 +172,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.ComputeTypeBuildGeneral1Small,
 								codebuild.ComputeTypeBuildGeneral1Medium,
 								codebuild.ComputeTypeBuildGeneral1Large,
+								codebuild.ComputeTypeBuildGeneral12xlarge,
 							}, false),
 						},
 						"environment_variable": {
@@ -209,6 +210,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								codebuild.EnvironmentTypeLinuxContainer,
+								codebuild.EnvironmentTypeLinuxGpuContainer,
 								codebuild.EnvironmentTypeWindowsContainer,
 							}, false),
 						},

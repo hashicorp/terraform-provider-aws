@@ -41,6 +41,31 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
+	var deployment apigateway.Deployment
+	var restApi apigateway.RestApi
+	resourceName := "aws_api_gateway_deployment.test"
+	restApiResourceName := "aws_api_gateway_rest_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test-deployment")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDeploymentConfigStageName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
+					testAccCheckAWSAPIGatewayRestAPIExists(restApiResourceName, &restApi),
+					testAccCheckAWSAPIGatewayRestAPIDisappears(&restApi),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
 	var deployment apigateway.Deployment
 	var stage apigateway.Stage

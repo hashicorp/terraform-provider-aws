@@ -235,12 +235,13 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 												"namespace_name": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateServiceDiscoveryHttpNamespaceName,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
 
 												"service_name": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
 											},
 										},

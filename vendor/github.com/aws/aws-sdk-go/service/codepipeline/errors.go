@@ -133,6 +133,12 @@ const (
 	// associated with the request is out of date.
 	ErrCodeNotLatestPipelineExecutionException = "NotLatestPipelineExecutionException"
 
+	// ErrCodeOutputVariablesSizeExceededException for service response error code
+	// "OutputVariablesSizeExceededException".
+	//
+	// Exceeded the total size limit for all variables in the pipeline.
+	ErrCodeOutputVariablesSizeExceededException = "OutputVariablesSizeExceededException"
+
 	// ErrCodePipelineExecutionNotFoundException for service response error code
 	// "PipelineExecutionNotFoundException".
 	//

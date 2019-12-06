@@ -79,87 +79,6 @@ func setElbV2Tags(conn *elbv2.ELBV2, d *schema.ResourceData) error {
 	return nil
 }
 
-func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
-	if d.HasChange("volume_tags") {
-		oraw, nraw := d.GetChange("volume_tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		create, remove := diffTags(tagsFromMap(o), tagsFromMap(n))
-
-		volumeIds, err := getAwsInstanceVolumeIds(conn, d)
-		if err != nil {
-			return err
-		}
-
-		if len(remove) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				log.Printf("[DEBUG] Removing volume tags: %#v from %s", remove, d.Id())
-				_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
-					Resources: volumeIds,
-					Tags:      remove,
-				})
-				if err != nil {
-					ec2err, ok := err.(awserr.Error)
-					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err) // retry
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				// Retry without time bounds for EC2 throttling
-				if isResourceTimeoutError(err) {
-					log.Printf("[DEBUG] Removing volume tags: %#v from %s", remove, d.Id())
-					_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
-						Resources: volumeIds,
-						Tags:      remove,
-					})
-					if err != nil {
-						return err
-					}
-				} else {
-					return err
-				}
-			}
-		}
-		if len(create) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				log.Printf("[DEBUG] Creating vol tags: %s for %s", create, d.Id())
-				_, err := conn.CreateTags(&ec2.CreateTagsInput{
-					Resources: volumeIds,
-					Tags:      create,
-				})
-				if err != nil {
-					ec2err, ok := err.(awserr.Error)
-					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err) // retry
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				// Retry without time bounds for EC2 throttling
-				if isResourceTimeoutError(err) {
-					log.Printf("[DEBUG] Creating vol tags: %s for %s", create, d.Id())
-					_, err := conn.CreateTags(&ec2.CreateTagsInput{
-						Resources: volumeIds,
-						Tags:      create,
-					})
-					if err != nil {
-						return err
-					}
-				} else {
-					return err
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
 func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
@@ -389,7 +308,25 @@ func tagsMapToRaw(m map[string]string) map[string]interface{} {
 	return raw
 }
 
-// ec2TagSpecificationsFromMap returns the tag specifications for the given map of data m and resource type t.
+// ec2TagsFromTagDescriptions returns the tags from the given tag descriptions.
+// No attempt is made to remove duplicates.
+func ec2TagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
+	if len(tds) == 0 {
+		return nil
+	}
+
+	tags := []*ec2.Tag{}
+	for _, td := range tds {
+		tags = append(tags, &ec2.Tag{
+			Key:   td.Key,
+			Value: td.Value,
+		})
+	}
+
+	return tags
+}
+
+// ec2TagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
 func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
 	if len(m) == 0 {
 		return nil
