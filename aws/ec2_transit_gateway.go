@@ -411,6 +411,26 @@ func ec2TransitGatewayRouteTableAssociationRefreshFunc(conn *ec2.EC2, transitGat
 	}
 }
 
+func ec2TransitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		transitGatewayPeeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, transitGatewayAttachmentID)
+
+		if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway Peering Attachment (%s): %s", transitGatewayAttachmentID, err)
+		}
+
+		if transitGatewayPeeringAttachment == nil {
+			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
+		}
+
+		return transitGatewayPeeringAttachment, aws.StringValue(transitGatewayPeeringAttachment.State), nil
+	}
+}
+
 func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAttachmentID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		transitGatewayVpcAttachment, err := ec2DescribeTransitGatewayVpcAttachment(conn, transitGatewayAttachmentID)
@@ -429,6 +449,23 @@ func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtta
 
 		return transitGatewayVpcAttachment, aws.StringValue(transitGatewayVpcAttachment.State), nil
 	}
+}
+
+func waitForEc2TransitGatewayPeeringAttachmentAcceptance(conn *ec2.EC2, transitGatewayAttachmentID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayAttachmentStatePending,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
+		},
+		Target:  []string{ec2.TransitGatewayAttachmentStateAvailable},
+		Refresh: ec2TransitGatewayPeeringAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
+		Timeout: 10 * time.Minute,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Peering Attachment (%s) availability", transitGatewayAttachmentID)
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func expandEc2TransitGatewayTagSpecifications(m map[string]interface{}) []*ec2.TagSpecification {
