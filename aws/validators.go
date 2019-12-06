@@ -689,7 +689,7 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 		return
 	}
 
-	if _, err := arn.Parse(value); err != nil {
+	if !arn.IsARN(value) {
 		errors = append(errors, fmt.Errorf("%q doesn't look like a valid ARN: %q", k, value))
 	}
 
