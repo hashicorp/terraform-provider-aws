@@ -95,10 +95,6 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
-
 func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
