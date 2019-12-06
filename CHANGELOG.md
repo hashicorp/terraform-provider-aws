@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute [GH-10566]
+* resource/aws_lb_listener_rule: Support ALB advanced routing rules [GH-8268]
 
 BUG FIXES:
 
