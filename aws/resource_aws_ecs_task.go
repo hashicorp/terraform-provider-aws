@@ -60,26 +60,26 @@ func resourceAwsEcsTask() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						//"network_interfaces": {
-						//	Type:     schema.TypeList,
-						//	Computed: true,
-						//	Elem: &schema.Resource{
-						//		Schema: map[string]*schema.Schema{
-						//			"attachment_id": {
-						//				Type:     schema.TypeString,
-						//				Computed: true,
-						//			},
-						//			"private_ipv4_address": {
-						//				Type:     schema.TypeString,
-						//				Computed: true,
-						//			},
-						//		},
-						//	},
-						//},
+						"network_interfaces": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"attachment_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"private_ipv4_address": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-			/*"attachments": {
+			"attachments": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -110,7 +110,7 @@ func resourceAwsEcsTask() *schema.Resource {
 						},
 					},
 				},
-			},*/
+			},
 		},
 	}
 }
@@ -138,15 +138,14 @@ func resourceAwsEcsTaskRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("group", task.Group)
 	d.Set("launch_type", task.LaunchType)
 
-	containers, err := flattenEcsTaskContainers(task.Containers)
-	if err != nil {
-		return err
-	}
-	err = d.Set("containers", containers)
-	if err != nil {
+	if err := d.Set("containers", flattenEcsTaskContainers(task.Containers)); err != nil {
 		return err
 	}
 	
+	if err := d.Set("attachments", flattenEcsTaskAttachments(task.Attachments)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -158,16 +157,60 @@ func resourceAwsEcsTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func flattenEcsTaskContainers(config []*ecs.Containers) []map[string]interface{} {
+func flattenEcsTaskContainers(config []*ecs.Container) []map[string]interface{} {
 	containers := make([]map[string]interface{}, 0, len(config))
 
 	for _, raw := range config {
 		item := make(map[string]interface{})
 		item["container_arn"] = *raw.ContainerArn
 		item["task_arn"] = *raw.TaskArn
+		item["network_interfaces"] = flattenEcsTaskContainerNetworkInterfaces(raw.NetworkInterfaces)
 
 		containers = append(containers, item)
 	}
 
 	return containers
+}
+
+func flattenEcsTaskContainerNetworkInterfaces(config []*ecs.NetworkInterface) []map[string]interface{} {
+	networkInterfaces := make([]map[string]interface{}, 0, len(config))
+
+	for _, raw := range config {
+		item := make(map[string]interface{})
+		item["attachment_id"] = *raw.AttachmentId
+		item["private_ipv4_address"] = *raw.PrivateIpv4Address
+
+		networkInterfaces = append(networkInterfaces, item)
+	}
+
+	return networkInterfaces
+}
+
+func flattenEcsTaskAttachments(config []*ecs.Attachment) []map[string]interface{} {
+	attachments := make([]map[string]interface{}, 0, len(config))
+
+	for _, raw := range config {
+		item := make(map[string]interface{})
+		item["id"] = *raw.Id
+		item["type"] = *raw.Type
+		item["details"] = flattenEcsTaskAttachmentDetails(raw.Details)
+
+		attachments = append(attachments, item)
+	}
+
+	return attachments
+}
+
+func flattenEcsTaskAttachmentDetails(config []*ecs.KeyValuePair) []map[string]interface{} {
+	details := make([]map[string]interface{}, 0, len(config))
+
+	for _, raw := range config {
+		item := make(map[string]interface{})
+		item["name"] = *raw.Name
+		item["value"] = *raw.Value
+
+		details = append(details, item)
+	}
+
+	return details
 }
