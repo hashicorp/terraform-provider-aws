@@ -19,7 +19,7 @@ func TestAccAWSMediaConvertQueue_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
@@ -50,7 +50,7 @@ func TestAccAWSMediaConvertQueue_ReservationPlanSettings(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccAWSMediaConvertQueue_withStatus(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func TestAccAWSMediaConvertQueue_withTags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
@@ -168,7 +168,7 @@ func TestAccAWSMediaConvertQueue_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
@@ -192,7 +192,7 @@ func TestAccAWSMediaConvertQueue_withDescription(t *testing.T) {
 	description2 := acctest.RandomWithPrefix("Description: ")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaConvert(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaConvertQueueDestroy,
 		Steps: []resource.TestStep{
@@ -280,6 +280,18 @@ func testAccCheckAwsMediaConvertQueueExists(n string, queue *mediaconvert.Queue)
 
 		*queue = *resp.Queue
 		return nil
+	}
+}
+
+func testAccPreCheckAWSMediaConvert(t *testing.T) {
+	_, err := getAwsMediaConvertAccountClient(testAccProvider.Meta().(*AWSClient))
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
