@@ -52,6 +52,12 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				ValidateFunc: validateRdsIdentifierPrefix,
 			},
 
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"db_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -215,6 +221,11 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
+	var requiresModifyDbInstance bool
+	modifyDbInstanceInput := &rds.ModifyDBInstanceInput{
+		ApplyImmediately: aws.Bool(true),
+	}
+
 	createOpts := &rds.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -289,11 +300,18 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		resp, err = conn.CreateDBInstance(createOpts)
 	}
 	if err != nil {
 		return fmt.Errorf("error creating RDS DB Instance: %s", err)
+	}
+
+	// This is added here to avoid unnecessary modification when ca_cert_identifier is the default one
+	if attr, ok := d.GetOk("ca_cert_identifier"); ok && attr.(string) != aws.StringValue(resp.DBInstance.CACertificateIdentifier) {
+		modifyDbInstanceInput.CACertificateIdentifier = aws.String(attr.(string))
+		requiresModifyDbInstance = true
 	}
 
 	d.SetId(*resp.DBInstance.DBInstanceIdentifier)
@@ -312,6 +330,22 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 	_, err = stateConf.WaitForState()
 	if err != nil {
 		return err
+	}
+
+	if requiresModifyDbInstance {
+		modifyDbInstanceInput.DBInstanceIdentifier = aws.String(d.Id())
+
+		log.Printf("[INFO] DB Instance (%s) configuration requires ModifyDBInstance: %s", d.Id(), modifyDbInstanceInput)
+		_, err := conn.ModifyDBInstance(modifyDbInstanceInput)
+		if err != nil {
+			return fmt.Errorf("error modifying DB Instance (%s): %s", d.Id(), err)
+		}
+
+		log.Printf("[INFO] Waiting for DB Instance (%s) to be available", d.Id())
+		err = waitUntilAwsDbInstanceIsAvailableAfterUpdate(d.Id(), conn, d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return fmt.Errorf("error waiting for DB Instance (%s) to be available: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRDSClusterInstanceRead(d, meta)
@@ -374,6 +408,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("arn", db.DBInstanceArn)
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	d.Set("dbi_resource_id", db.DbiResourceId)
@@ -465,6 +500,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("auto_minor_version_upgrade") {
 		d.SetPartial("auto_minor_version_upgrade")
 		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
 
