@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
@@ -50,7 +51,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentCreate(d *schema.ResourceData,
 		PeerAccountId:        aws.String(d.Get("peer_account_id").(string)),
 		PeerRegion:           aws.String(d.Get("peer_region").(string)),
 		PeerTransitGatewayId: aws.String(d.Get("peer_transit_gateway_id").(string)),
-		TagSpecifications:    expandEc2TransitGatewayAttachmentTagSpecifications(d.Get("tags").(map[string]interface{})),
+		TagSpecifications:    ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeTransitGatewayAttachment),
 		TransitGatewayId:     aws.String(transitGatewayID),
 	}
 
@@ -115,7 +116,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData, m
 		return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
 	}
 
-	if err := d.Set("tags", tagsToMap(transitGatewayPeeringAttachment.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -150,7 +151,9 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentUpdate(d *schema.ResourceData,
 	}
 
 	if d.HasChange("tags") {
-		if err := setTags(conn, d); err != nil {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
