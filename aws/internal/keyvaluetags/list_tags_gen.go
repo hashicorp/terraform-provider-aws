@@ -58,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
+	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -999,6 +1000,23 @@ func MediaconnectListTags(conn *mediaconnect.MediaConnect, identifier string) (K
 	}
 
 	return MediaconnectKeyValueTags(output.Tags), nil
+}
+
+// MediaconvertListTags lists mediaconvert service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func MediaconvertListTags(conn *mediaconvert.MediaConvert, identifier string) (KeyValueTags, error) {
+	input := &mediaconvert.ListTagsForResourceInput{
+		Arn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return MediaconvertKeyValueTags(output.ResourceTags.Tags), nil
 }
 
 // MedialiveListTags lists medialive service tags.
