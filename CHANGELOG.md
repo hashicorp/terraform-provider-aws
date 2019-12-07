@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_media_convert_queue` [GH-10041]
 * **New Resource:** `aws_workspaces_ip_group` [GH-10904]
 
 ENHANCEMENTS:
