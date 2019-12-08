@@ -630,6 +630,11 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateAwsEmrCustomAmiId,
 			},
+			"step_concurrency_level": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 256),
+			},
 		},
 	}
 }
@@ -842,6 +847,10 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 		params.CustomAmiId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("step_concurrency_level"); ok {
+		params.StepConcurrencyLevel = aws.Int64(int64(v.(int)))
+	}
+
 	if instanceProfile != "" {
 		params.JobFlowRole = aws.String(instanceProfile)
 	}
@@ -1040,6 +1049,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
 	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 	d.Set("termination_protection", cluster.TerminationProtected)
+	d.Set("step_concurrency_level", cluster.StepConcurrencyLevel)
 
 	if cluster.CustomAmiId != nil {
 		d.Set("custom_ami_id", cluster.CustomAmiId)
@@ -1336,6 +1346,18 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if err := keyvaluetags.EmrUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EMR Cluster (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("step_concurrency_level") {
+		d.SetPartial("step_concurrency_level")
+		_, errModify := conn.ModifyCluster(&emr.ModifyClusterInput{
+			ClusterId:            aws.String(d.Id()),
+			StepConcurrencyLevel: aws.Int64(int64(d.Get("step_concurrency_level").(int))),
+		})
+		if errModify != nil {
+			log.Printf("[ERROR] %s", errModify)
+			return errModify
 		}
 	}
 
