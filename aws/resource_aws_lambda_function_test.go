@@ -467,6 +467,25 @@ func TestAccAWSLambdaFunction_versionedUpdate(t *testing.T) {
 				),
 			},
 			{
+				PreConfig: func() {
+					timeBeforeUpdate = time.Now()
+				},
+				Config: testAccAWSLambdaConfigVersionedNodeJs10xRuntime(path, funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					resource.TestMatchResourceAttr(resourceName, "version",
+						regexp.MustCompile("^3$")),
+					resource.TestMatchResourceAttr(resourceName, "qualified_arn",
+						regexp.MustCompile(":"+funcName+":[0-9]+$")),
+					resource.TestCheckResourceAttr(resourceName, "runtime", lambda.RuntimeNodejs10X),
+					func(s *terraform.State) error {
+						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
+					},
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -2184,6 +2203,19 @@ resource "aws_lambda_function" "test" {
     role = "${aws_iam_role.iam_for_lambda.arn}"
     handler = "exports.example"
     runtime = "nodejs8.10"
+}
+`, fileName, funcName)
+}
+
+func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_lambda_function" "test" {
+    filename = "%s"
+    function_name = "%s"
+    publish = true
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs10.x"
 }
 `, fileName, funcName)
 }
