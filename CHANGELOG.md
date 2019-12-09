@@ -15,6 +15,7 @@ BUG FIXES:
 * provider: Prevent crash in planning IAM Policy equivalency checking with invalid `Resource` declarations (e.g. a list of list of strings) [GH-11107]
 * resource/aws_eks_cluster: Handle additional `InvalidParameterException: Error in role params` error during creation for IAM eventual consistency [GH-11127]
 * resource/aws_iam_role: Ignore additional `NoSuchEntity` errors on deletion [GH-11125]
+* resource/aws_lambda_function: Publish new version on non-code config updates [GH-11211]
 
 ## 2.41.0 (December 04, 2019)
 
