@@ -834,10 +834,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		d.SetPartial("timeout")
 	}
 
-	if needsFunctionCodeUpdate(d) {
+	codeUpdate := needsFunctionCodeUpdate(d)
+	if codeUpdate {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
-			Publish:      aws.Bool(d.Get("publish").(bool)),
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
@@ -902,6 +902,18 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			if err != nil {
 				return fmt.Errorf("Error setting concurrency for Lambda %s: %s", d.Id(), err)
 			}
+		}
+	}
+
+	publish := d.Get("publish").(bool)
+	if publish && (codeUpdate || configUpdate) {
+		versionReq := &lambda.PublishVersionInput{
+			FunctionName: aws.String(d.Id()),
+		}
+
+		_, err := conn.PublishVersion(versionReq)
+		if err != nil {
+			return fmt.Errorf("Error publishing Lambda Function Version %s: %s", d.Id(), err)
 		}
 	}
 
