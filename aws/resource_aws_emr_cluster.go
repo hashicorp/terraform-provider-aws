@@ -633,6 +633,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 			"step_concurrency_level": {
 				Type:         schema.TypeInt,
 				Optional:     true,
+				Default:      1,
 				ValidateFunc: validation.IntBetween(1, 256),
 			},
 		},
