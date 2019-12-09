@@ -2939,7 +2939,7 @@ resource "aws_codebuild_project" "test" {
   }
 
   environment {
-    compute_type = "BUILD_GENERAL1_MEDIUM"
+    compute_type = "BUILD_GENERAL1_LARGE"
     image        = "2"
     type         = "ARM_CONTAINER"
   }
