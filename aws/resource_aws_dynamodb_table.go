@@ -796,7 +796,11 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (keyvaluetags.Ke
 		return nil, fmt.Errorf("Error reading tags from dynamodb resource: %s", err)
 	}
 
-	return keyvaluetags.DynamodbKeyValueTags(output.Tags), nil
+	result := keyvaluetags.DynamodbKeyValueTags(output.Tags)
+
+	// TODO Read NextToken if available
+
+	return result, nil
 }
 
 // Waiters
