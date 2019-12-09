@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -8,11 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // tagsSchema returns the schema to use for tags.
@@ -29,6 +31,14 @@ func tagsSchemaComputed() *schema.Schema {
 		Type:     schema.TypeMap,
 		Optional: true,
 		Computed: true,
+	}
+}
+
+func tagsSchemaForceNew() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeMap,
+		Optional: true,
+		ForceNew: true,
 	}
 }
 
@@ -69,63 +79,6 @@ func setElbV2Tags(conn *elbv2.ELBV2, d *schema.ResourceData) error {
 	return nil
 }
 
-func setVolumeTags(conn *ec2.EC2, d *schema.ResourceData) error {
-	if d.HasChange("volume_tags") {
-		oraw, nraw := d.GetChange("volume_tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		create, remove := diffTags(tagsFromMap(o), tagsFromMap(n))
-
-		volumeIds, err := getAwsInstanceVolumeIds(conn, d)
-		if err != nil {
-			return err
-		}
-
-		if len(remove) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				log.Printf("[DEBUG] Removing volume tags: %#v from %s", remove, d.Id())
-				_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
-					Resources: volumeIds,
-					Tags:      remove,
-				})
-				if err != nil {
-					ec2err, ok := err.(awserr.Error)
-					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err) // retry
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-		}
-		if len(create) > 0 {
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				log.Printf("[DEBUG] Creating vol tags: %s for %s", create, d.Id())
-				_, err := conn.CreateTags(&ec2.CreateTagsInput{
-					Resources: volumeIds,
-					Tags:      create,
-				})
-				if err != nil {
-					ec2err, ok := err.(awserr.Error)
-					if ok && strings.Contains(ec2err.Code(), ".NotFound") {
-						return resource.RetryableError(err) // retry
-					}
-					return resource.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 // setTags is a helper to set the tags for a resource. It expects the
 // tags field to be named "tags"
 func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
@@ -153,7 +106,19 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				return nil
 			})
 			if err != nil {
-				return err
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
+					log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
+					_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
+						Resources: []*string{aws.String(d.Id())},
+						Tags:      remove,
+					})
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 		}
 		if len(create) > 0 {
@@ -173,7 +138,19 @@ func setTags(conn *ec2.EC2, d *schema.ResourceData) error {
 				return nil
 			})
 			if err != nil {
-				return err
+				// Retry without time bounds for EC2 throttling
+				if isResourceTimeoutError(err) {
+					log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
+					_, err := conn.CreateTags(&ec2.CreateTagsInput{
+						Resources: []*string{aws.String(d.Id())},
+						Tags:      create,
+					})
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
 			}
 		}
 	}
@@ -188,15 +165,18 @@ func diffTags(oldTags, newTags []*ec2.Tag) ([]*ec2.Tag, []*ec2.Tag) {
 	// First, we're creating everything we have
 	create := make(map[string]interface{})
 	for _, t := range newTags {
-		create[*t.Key] = *t.Value
+		create[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
 	}
 
 	// Build the list of what to remove
 	var remove []*ec2.Tag
 	for _, t := range oldTags {
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
+		old, ok := create[aws.StringValue(t.Key)]
+		if !ok || old != aws.StringValue(t.Value) {
 			remove = append(remove, t)
+		} else if ok {
+			// already present so remove from new
+			delete(create, aws.StringValue(t.Key))
 		}
 	}
 
@@ -285,7 +265,8 @@ func tagIgnored(t *ec2.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		r, _ := regexp.MatchString(v, *t.Key)
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}
@@ -298,7 +279,8 @@ func tagIgnoredELBv2(t *elbv2.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		r, _ := regexp.MatchString(v, *t.Key)
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}
@@ -306,98 +288,54 @@ func tagIgnoredELBv2(t *elbv2.Tag) bool {
 	return false
 }
 
-// tagsToMapDynamoDb turns the list of tags into a map for dynamoDB
-func tagsToMapDynamoDb(ts []*dynamodb.Tag) map[string]string {
-	result := make(map[string]string)
-	for _, t := range ts {
-		result[*t.Key] = *t.Value
+// tagsMapToHash returns a stable hash value for a raw tags map.
+// The returned value map be negative (i.e. not suitable for a 'Set' function).
+func tagsMapToHash(tags map[string]interface{}) int {
+	total := 0
+	for k, v := range tags {
+		total = total ^ hashcode.String(fmt.Sprintf("%s-%s", k, v))
 	}
-	return result
+	return total
 }
 
-// tagsFromMapDynamoDb returns the tags for a given map
-func tagsFromMapDynamoDb(m map[string]interface{}) []*dynamodb.Tag {
-	result := make([]*dynamodb.Tag, 0, len(m))
+// tagsMapToRaw converts a tags map to its "raw" type.
+func tagsMapToRaw(m map[string]string) map[string]interface{} {
+	raw := make(map[string]interface{})
 	for k, v := range m {
-		t := &dynamodb.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v.(string)),
-		}
-		result = append(result, t)
+		raw[k] = v
 	}
-	return result
+
+	return raw
 }
 
-// setTagsDynamoDb is a helper to set the tags for a dynamoDB resource
-// This is needed because dynamodb requires a completely different set and delete
-// method from the ec2 tag resource handling. Also the `UntagResource` method
-// for dynamoDB only requires a list of tag keys, instead of the full map of keys.
-func setTagsDynamoDb(conn *dynamodb.DynamoDB, d *schema.ResourceData) error {
-	arn := d.Get("arn").(string)
-	oraw, nraw := d.GetChange("tags")
-	o := oraw.(map[string]interface{})
-	n := nraw.(map[string]interface{})
-	create, remove := diffTagsDynamoDb(tagsFromMapDynamoDb(o), tagsFromMapDynamoDb(n))
-
-	// Set tags
-	if len(remove) > 0 {
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-			log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
-			_, err := conn.UntagResource(&dynamodb.UntagResourceInput{
-				ResourceArn: aws.String(arn),
-				TagKeys:     remove,
-			})
-			if err != nil {
-				if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-	}
-	if len(create) > 0 {
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-			log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
-			_, err := conn.TagResource(&dynamodb.TagResourceInput{
-				ResourceArn: aws.String(arn),
-				Tags:        create,
-			})
-			if err != nil {
-				if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "") {
-					return resource.RetryableError(err)
-				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
+// ec2TagsFromTagDescriptions returns the tags from the given tag descriptions.
+// No attempt is made to remove duplicates.
+func ec2TagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
+	if len(tds) == 0 {
+		return nil
 	}
 
-	return nil
+	tags := []*ec2.Tag{}
+	for _, td := range tds {
+		tags = append(tags, &ec2.Tag{
+			Key:   td.Key,
+			Value: td.Value,
+		})
+	}
+
+	return tags
 }
 
-// diffTagsDynamoDb takes a local set of dynamodb tags and the ones found remotely
-// and returns the set of tags that must be created as a map, and returns a list of tag keys
-// that must be destroyed.
-func diffTagsDynamoDb(oldTags, newTags []*dynamodb.Tag) ([]*dynamodb.Tag, []*string) {
-	create := make(map[string]interface{})
-	for _, t := range newTags {
-		create[*t.Key] = *t.Value
+// ec2TagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
+func ec2TagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
+	if len(m) == 0 {
+		return nil
 	}
 
-	var remove []*string
-	for _, t := range oldTags {
-		// Verify the old tag is not a tag we're currently attempting to create
-		old, ok := create[*t.Key]
-		if !ok || old != *t.Value {
-			remove = append(remove, t.Key)
-		}
+	return []*ec2.TagSpecification{
+		{
+			ResourceType: aws.String(t),
+			Tags:         keyvaluetags.New(m).IgnoreAws().Ec2Tags(),
+		},
 	}
-	return tagsFromMapDynamoDb(create), remove
 }

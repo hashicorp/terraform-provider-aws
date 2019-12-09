@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDefaultVpcDhcpOptions_basic(t *testing.T) {
 	var d ec2.DhcpOptions
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDefaultVpcDhcpOptionsDestroy,
@@ -28,6 +28,7 @@ func TestAccAWSDefaultVpcDhcpOptions_basic(t *testing.T) {
 						"aws_default_vpc_dhcp_options.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_default_vpc_dhcp_options.foo", "tags.Name", "Default DHCP Option Set"),
+					testAccCheckResourceAttrAccountID("aws_default_vpc_dhcp_options.foo", "owner_id"),
 				),
 			},
 		},
@@ -40,12 +41,8 @@ func testAccCheckAWSDefaultVpcDhcpOptionsDestroy(s *terraform.State) error {
 }
 
 const testAccAWSDefaultVpcDhcpOptionsConfigBasic = `
-provider "aws" {
-    region = "us-west-2"
-}
-
 resource "aws_default_vpc_dhcp_options" "foo" {
-	tags {
+	tags = {
 		Name = "Default DHCP Option Set"
 	}
 }

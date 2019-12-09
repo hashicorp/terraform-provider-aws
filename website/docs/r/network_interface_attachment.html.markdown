@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_interface_attachment"
-sidebar_current: "docs-aws-resource-network-interface-attachment"
 description: |-
   Attach an Elastic network interface (ENI) resource with EC2 instance.
 ---
 
-# aws_network_interface_attachment
+# Resource: aws_network_interface_attachment
 
 Attach an Elastic network interface (ENI) resource with EC2 instance.
 
@@ -14,9 +14,9 @@ Attach an Elastic network interface (ENI) resource with EC2 instance.
 
 ```hcl
 resource "aws_network_interface_attachment" "test" {
-    instance_id = "${aws_instance.test.id}"
-	network_interface_id = "${aws_network_interface.test.id}"
-	device_index = 0
+  instance_id          = "${aws_instance.test.id}"
+  network_interface_id = "${aws_network_interface.test.id}"
+  device_index         = 0
 }
 ```
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_gateway"
-sidebar_current: "docs-aws-datasource-dx-gateway"
 description: |-
   Retrieve information about a Direct Connect Gateway
 ---
@@ -26,3 +26,4 @@ data "aws_dx_gateway" "example" {
 
 * `amazon_side_asn` - The ASN on the Amazon side of the connection.
 * `id` - The ID of the gateway.
+* `owner_account_id` - AWS Account ID of the gateway.

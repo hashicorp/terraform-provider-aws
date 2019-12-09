@@ -8,21 +8,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -41,6 +41,11 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 						regexp.MustCompile(`^arn:[\w-]+:waf-regional:[^:]+:\d{12}:ipset/.+$`)),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -48,7 +53,7 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -70,7 +75,7 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	ipsetNewName := fmt.Sprintf("ip-set-new-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -99,6 +104,11 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -107,7 +117,7 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 	var before, after waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -140,6 +150,11 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.115741513.value", "192.0.8.0/24"),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -168,7 +183,7 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 		ipSetDescriptors = append(ipSetDescriptors, fmt.Sprintf("ip_set_descriptor {\ntype=\"IPV4\"\nvalue=\"%s/32\"\n}", ip))
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -180,6 +195,11 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "2048"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -188,7 +208,7 @@ func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 	var ipset waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -202,6 +222,11 @@ func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -419,42 +444,53 @@ func testAccAWSWafRegionalIPSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfigChangeName(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfigChangeIPSetDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.8.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfig_IpSetDescriptors(name, ipSetDescriptors string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
 %s
-}`, name, ipSetDescriptors)
+}
+`, name, ipSetDescriptors)
 }
 
 func testAccAWSWafRegionalIPSetConfig_noDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
    name = "%s"
  }`, name)
 }

@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
@@ -17,11 +17,11 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 	firstName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_%d", rInt)
 	secondName := fmt.Sprintf("tf_acc_api_gateway_cloudwatch_modified_%d", rInt)
-
+	resourceName := "aws_api_gateway_account.test"
 	expectedRoleArn_first := regexp.MustCompile(":role/" + firstName + "$")
 	expectedRoleArn_second := regexp.MustCompile(":role/" + secondName + "$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayAccountDestroy,
@@ -29,23 +29,29 @@ func TestAccAWSAPIGatewayAccount_basic(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayAccountConfig_updated(firstName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),
+					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_first),
-					resource.TestMatchResourceAttr("aws_api_gateway_account.test", "cloudwatch_role_arn", expectedRoleArn_first),
+					resource.TestMatchResourceAttr(resourceName, "cloudwatch_role_arn", expectedRoleArn_first),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cloudwatch_role_arn"},
 			},
 			{
 				Config: testAccAWSAPIGatewayAccountConfig_updated2(secondName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),
+					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_second),
-					resource.TestMatchResourceAttr("aws_api_gateway_account.test", "cloudwatch_role_arn", expectedRoleArn_second),
+					resource.TestMatchResourceAttr(resourceName, "cloudwatch_role_arn", expectedRoleArn_second),
 				),
 			},
 			{
 				Config: testAccAWSAPIGatewayAccountConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayAccountExists("aws_api_gateway_account.test", &conf),
+					testAccCheckAWSAPIGatewayAccountExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayAccountCloudwatchRoleArn(&conf, expectedRoleArn_second),
 				),
 			},
@@ -117,8 +123,9 @@ resource "aws_api_gateway_account" "test" {
 }
 
 resource "aws_iam_role" "cloudwatch" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -136,9 +143,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
-    name = "default"
-    role = "${aws_iam_role.cloudwatch.id}"
-    policy = <<EOF
+  name = "default"
+  role = "${aws_iam_role.cloudwatch.id}"
+
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -169,8 +177,9 @@ resource "aws_api_gateway_account" "test" {
 }
 
 resource "aws_iam_role" "second" {
-    name = "%s"
-    assume_role_policy = <<EOF
+  name = "%s"
+
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -188,9 +197,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
-    name = "default"
-    role = "${aws_iam_role.second.id}"
-    policy = <<EOF
+  name = "default"
+  role = "${aws_iam_role.second.id}"
+
+  policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [

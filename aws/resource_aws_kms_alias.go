@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -182,10 +182,15 @@ func retryFindKmsAliasByName(conn *kms.KMS, name string) (*kms.AliasListEntry, e
 			return resource.NonRetryableError(err)
 		}
 		if resp == nil {
-			return resource.RetryableError(err)
+			return resource.RetryableError(&resource.NotFoundError{})
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		resp, err = findKmsAliasByName(conn, name, nil)
+	}
+
 	return resp, err
 }
 

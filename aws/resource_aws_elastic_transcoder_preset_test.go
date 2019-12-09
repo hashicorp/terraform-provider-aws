@@ -7,13 +7,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 	preset := &elastictranscoder.Preset{}
-	name := "aws_elastictranscoder_preset.bar"
+	name := "aws_elastictranscoder_preset.test"
 
 	// make sure the old preset was destroyed on each intermediate step
 	// these are very easy to leak
@@ -53,8 +53,8 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 		}
 	}
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
@@ -65,16 +65,31 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: awsElasticTranscoderPresetConfig2,
 				Check: resource.ComposeTestCheckFunc(
 					checkExists(true),
 				),
 			},
 			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: awsElasticTranscoderPresetConfig3,
 				Check: resource.ComposeTestCheckFunc(
 					checkExists(true),
 				),
+			},
+			{
+				ResourceName:      name,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -112,7 +127,7 @@ func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
 }
 
 const awsElasticTranscoderPresetConfig = `
-resource "aws_elastictranscoder_preset" "bar" {
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 1"
   name        = "aws_elastictranscoder_preset_tf_test_"
@@ -128,7 +143,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 `
 
 const awsElasticTranscoderPresetConfig2 = `
-resource "aws_elastictranscoder_preset" "bar" {
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 2"
   name        = "aws_elastictranscoder_preset_tf_test_"
@@ -158,10 +173,12 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy        = "Fit"
   }
 
-  video_codec_options {
-    Profile            = "main"
-    Level              = "4.1"
-    MaxReferenceFrames = 4
+  video_codec_options = {
+    Profile                  = "main"
+    Level                    = "4.1"
+    MaxReferenceFrames       = 4
+    InterlacedMode           = "Auto"
+    ColorSpaceConversionMode = "None"
   }
 
   thumbnails {
@@ -176,7 +193,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 `
 
 const awsElasticTranscoderPresetConfig3 = `
-resource "aws_elastictranscoder_preset" "bar" {
+resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
   description = "elastic transcoder preset test 3"
   name        = "aws_elastictranscoder_preset_tf_test_"
@@ -207,11 +224,11 @@ resource "aws_elastictranscoder_preset" "bar" {
     sizing_policy        = "Fit"
   }
 
-  video_codec_options {
+  video_codec_options = {
     Profile                  = "main"
     Level                    = "2.2"
     MaxReferenceFrames       = 3
-    InterlaceMode            = "Progressive"
+    InterlacedMode           = "Progressive"
     ColorSpaceConversionMode = "None"
   }
 

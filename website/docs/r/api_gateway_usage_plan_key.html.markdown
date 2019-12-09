@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_usage_plan_key"
-sidebar_current: "docs-aws-resource-api-gateway-usage-plan-key"
 description: |-
   Provides an API Gateway Usage Plan Key.
 ---
 
-# aws_api_gateway_usage_plan_key
+# Resource: aws_api_gateway_usage_plan_key
 
 Provides an API Gateway Usage Plan Key.
 
@@ -17,19 +17,19 @@ resource "aws_api_gateway_rest_api" "test" {
   name = "MyDemoAPI"
 }
 
-...
+# ...
 
 resource "aws_api_gateway_usage_plan" "myusageplan" {
   name = "my_usage_plan"
+
+  api_stages {
+    api_id = "${aws_api_gateway_rest_api.test.id}"
+    stage  = "${aws_api_gateway_deployment.foo.stage_name}"
+  }
 }
 
 resource "aws_api_gateway_api_key" "mykey" {
   name = "my_key"
-
-  stage_key {
-    rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-    stage_name  = "${aws_api_gateway_deployment.foo.stage_name}"
-  }
 }
 
 resource "aws_api_gateway_usage_plan_key" "main" {

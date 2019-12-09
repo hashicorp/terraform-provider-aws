@@ -63,6 +63,10 @@ const (
 	// The provided JSON input data is invalid.
 	ErrCodeInvalidExecutionInput = "InvalidExecutionInput"
 
+	// ErrCodeInvalidLoggingConfiguration for service response error code
+	// "InvalidLoggingConfiguration".
+	ErrCodeInvalidLoggingConfiguration = "InvalidLoggingConfiguration"
+
 	// ErrCodeInvalidName for service response error code
 	// "InvalidName".
 	//
@@ -87,6 +91,13 @@ const (
 	// Request is missing a required parameter. This error occurs if both definition
 	// and roleArn are not specified.
 	ErrCodeMissingRequiredParameter = "MissingRequiredParameter"
+
+	// ErrCodeResourceNotFound for service response error code
+	// "ResourceNotFound".
+	//
+	// Could not find the referenced resource. Only state machine and activity ARNs
+	// are supported.
+	ErrCodeResourceNotFound = "ResourceNotFound"
 
 	// ErrCodeStateMachineAlreadyExists for service response error code
 	// "StateMachineAlreadyExists".
@@ -114,6 +125,10 @@ const (
 	// must be deleted before a new state machine can be created.
 	ErrCodeStateMachineLimitExceeded = "StateMachineLimitExceeded"
 
+	// ErrCodeStateMachineTypeNotSupported for service response error code
+	// "StateMachineTypeNotSupported".
+	ErrCodeStateMachineTypeNotSupported = "StateMachineTypeNotSupported"
+
 	// ErrCodeTaskDoesNotExist for service response error code
 	// "TaskDoesNotExist".
 	ErrCodeTaskDoesNotExist = "TaskDoesNotExist"
@@ -121,4 +136,12 @@ const (
 	// ErrCodeTaskTimedOut for service response error code
 	// "TaskTimedOut".
 	ErrCodeTaskTimedOut = "TaskTimedOut"
+
+	// ErrCodeTooManyTags for service response error code
+	// "TooManyTags".
+	//
+	// You've exceeded the number of tags allowed for a resource. See the Limits
+	// Topic (https://docs.aws.amazon.com/step-functions/latest/dg/limits.html)
+	// in the AWS Step Functions Developer Guide.
+	ErrCodeTooManyTags = "TooManyTags"
 )

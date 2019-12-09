@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDefaultRouteTable() *schema.Resource {
@@ -36,9 +36,10 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 			},
 
 			"route": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
+				Type:       schema.TypeSet,
+				ConfigMode: schema.SchemaConfigModeAttr,
+				Computed:   true,
+				Optional:   true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cidr_block": {
@@ -71,6 +72,11 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 							Optional: true,
 						},
 
+						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+
 						"vpc_peering_connection_id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -86,6 +92,11 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -96,12 +107,10 @@ func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).ec2conn
 	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading EC2 Default Route Table (%s): %s", d.Id(), err)
 	}
 	if rtRaw == nil {
-		log.Printf("[WARN] Default Route Table not found")
-		d.SetId("")
-		return nil
+		return fmt.Errorf("error reading EC2 Default Route Table (%s): not found", d.Id())
 	}
 
 	rt := rtRaw.(*ec2.RouteTable)
@@ -140,7 +149,9 @@ func resourceAwsDefaultRouteTableRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
-		return fmt.Errorf("Default Route table not found")
+		log.Printf("[WARN] EC2 Default Route Table (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	rt := resp.RouteTables[0]

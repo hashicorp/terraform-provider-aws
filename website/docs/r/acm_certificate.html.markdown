@@ -1,12 +1,12 @@
 ---
+subcategory: "ACM"
 layout: "aws"
 page_title: "AWS: aws_acm_certificate"
-sidebar_current: "docs-aws-resource-acm-certificate"
 description: |-
   Requests and manages a certificate from Amazon Certificate Manager (ACM).
 ---
 
-# aws_acm_certificate
+# Resource: aws_acm_certificate
 
 The ACM certificate resource allows requesting and management of certificates
 from the Amazon Certificate Manager.
@@ -20,7 +20,7 @@ Most commonly, this resource is used to together with [`aws_route53_record`](rou
 [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
-Domain validation through E-Mail is also supported but should be avoided as it requires a manual step outside
+Domain validation through email is also supported but should be avoided as it requires a manual step outside
 of Terraform.
 
 It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
@@ -28,12 +28,14 @@ which is currently in use (eg, by [`aws_lb_listener`](lb_listener.html)).
 
 ## Example Usage
 
+### Certificate creation
+
 ```hcl
 resource "aws_acm_certificate" "cert" {
   domain_name       = "example.com"
   validation_method = "DNS"
 
-  tags {
+  tags = {
     Environment = "test"
   }
 
@@ -43,14 +45,61 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
+### Importing an existing certificate
+
+```hcl
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key      = "${tls_private_key.example.private_key_pem}"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
-* `domain_name` - (Required) A domain name for which the certificate should be issued
-* `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-* `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
+* Creating an amazon issued certificate
+  * `domain_name` - (Required) A domain name for which the certificate should be issued
+  * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
+  * `validation_method` - (Required) Which method to use for validation. `DNS` or `EMAIL` are valid, `NONE` can be used for certificates that were imported into ACM and then into Terraform.
+  * `options` - (Optional) Configuration block used to set certificate options. Detailed below.
+* Importing an existing certificate
+  * `private_key` - (Required) The certificate's PEM-formatted private key
+  * `certificate_body` - (Required) The certificate's PEM-formatted public key
+  * `certificate_chain` - (Optional) The certificate's PEM-formatted chain
+* Creating a private CA issued certificate
+  * `domain_name` - (Required) A domain name for which the certificate should be issued
+  * `certificate_authority_arn` - (Required) ARN of an ACMPCA
+  * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
 * `tags` - (Optional) A mapping of tags to assign to the resource.
+
+## options Configuration Block
+
+Supported nested arguments for the `options` configuration block:
+
+* `certificate_transparency_logging_preference` - (Optional) Specifies whether certificate details should be added to a certificate transparency log. Valid values are `ENABLED` or `DISABLED`. See https://docs.aws.amazon.com/acm/latest/userguide/acm-concepts.html#concept-transparency for more details.
 
 ## Attributes Reference
 
@@ -58,6 +107,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ARN of the certificate
 * `arn` - The ARN of the certificate
+* `domain_name` - The domain name for which the certificate is issued
 * `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
 * `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
 
@@ -77,5 +127,3 @@ Certificates can be imported using their ARN, e.g.
 ```
 $ terraform import aws_acm_certificate.cert arn:aws:acm:eu-central-1:123456789012:certificate/7e7a28d2-163f-4b8f-b9cd-822f96c08d6a
 ```
-
-~> **WARNING:** Importing certificates that are not `AMAZON_ISSUED` is supported but may lead to fragile terraform projects: Once such a resource is destroyed, it can't be recreated.

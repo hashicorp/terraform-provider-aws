@@ -1,16 +1,24 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_replication_group"
-sidebar_current: "docs-aws-resource-elasticache-replication-group"
 description: |-
   Provides an ElastiCache Replication Group resource.
 ---
 
-# aws_elasticache_replication_group
+# Resource: aws_elasticache_replication_group
 
 Provides an ElastiCache Replication Group resource.
 For working with Memcached or single primary Redis instances (Cluster Mode Disabled), see the
 [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html).
+
+~> **Note:** When you change an attribute, such as `engine_version`, by
+default the ElastiCache API applies it in the next maintenance window. Because
+of this, Terraform may report a difference in its planning phase because the
+actual modification has not yet taken place. You can use the
+`apply_immediately` flag to instruct the service to apply the change
+immediately. Using `apply_immediately` can result in a brief downtime as
+servers reboots.
 
 ## Example Usage
 
@@ -24,7 +32,7 @@ resource "aws_elasticache_replication_group" "example" {
   availability_zones            = ["us-west-2a", "us-west-2b"]
   replication_group_id          = "tf-rep-group-1"
   replication_group_description = "test description"
-  node_type                     = "cache.m3.medium"
+  node_type                     = "cache.m4.large"
   number_cache_clusters         = 2
   parameter_group_name          = "default.redis3.2"
   port                          = 6379
@@ -42,7 +50,7 @@ resource "aws_elasticache_replication_group" "example" {
   availability_zones            = ["us-west-2a", "us-west-2b"]
   replication_group_id          = "tf-rep-group-1"
   replication_group_description = "test description"
-  node_type                     = "cache.m3.medium"
+  node_type                     = "cache.m4.large"
   number_cache_clusters         = 2
   parameter_group_name          = "default.redis3.2"
   port                          = 6379
@@ -68,13 +76,14 @@ To create two shards with a primary and a single read replica each:
 resource "aws_elasticache_replication_group" "baz" {
   replication_group_id          = "tf-redis-cluster"
   replication_group_description = "test description"
-  node_type                     = "cache.m1.small"
+  node_type                     = "cache.t2.small"
   port                          = 6379
   parameter_group_name          = "default.redis3.2.cluster.on"
   automatic_failover_enabled    = true
+
   cluster_mode {
-    replicas_per_node_group     = 1
-    num_node_groups             = 2
+    replicas_per_node_group = 1
+    num_node_groups         = 2
   }
 }
 ```
@@ -82,8 +91,7 @@ resource "aws_elasticache_replication_group" "baz" {
 ~> **Note:** We currently do not support passing a `primary_cluster_id` in order to create the Replication Group.
 
 ~> **Note:** Automatic Failover is unavailable for Redis versions earlier than 2.8.6,
-and unavailable on T1 and T2 node types. See the [Amazon Replication with
-Redis](http://docs.aws.amazon.com/en_en/AmazonElastiCache/latest/UserGuide/Replication.html) guide
+and unavailable on T1 node types. For T2 node types, it is only available on Redis version 3.2.4 or later with cluster mode enabled. See the [High Availability Using Replication Groups](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Replication.html) guide
 for full details on using Replication Groups.
 
 ## Argument Reference
@@ -101,6 +109,7 @@ The following arguments are supported:
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
 * `auth_token` - (Optional) The password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
+* `kms_key_id` - (Optional) The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if `at_rest_encryption_enabled = true`.
 * `engine_version` - (Optional) The version number of the cache engine to be used for the cache clusters in this replication group.
 * `parameter_group_name` - (Optional) The name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used.
 * `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.

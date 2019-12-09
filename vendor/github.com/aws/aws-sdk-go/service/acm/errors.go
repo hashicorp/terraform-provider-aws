@@ -4,6 +4,12 @@ package acm
 
 const (
 
+	// ErrCodeInvalidArgsException for service response error code
+	// "InvalidArgsException".
+	//
+	// One or more of of request parameters specified is not valid.
+	ErrCodeInvalidArgsException = "InvalidArgsException"
+
 	// ErrCodeInvalidArnException for service response error code
 	// "InvalidArnException".
 	//
@@ -15,6 +21,12 @@ const (
 	//
 	// One or more values in the DomainValidationOption structure is incorrect.
 	ErrCodeInvalidDomainValidationOptionsException = "InvalidDomainValidationOptionsException"
+
+	// ErrCodeInvalidParameterException for service response error code
+	// "InvalidParameterException".
+	//
+	// An input parameter was invalid.
+	ErrCodeInvalidParameterException = "InvalidParameterException"
 
 	// ErrCodeInvalidStateException for service response error code
 	// "InvalidStateException".
@@ -55,6 +67,12 @@ const (
 	// The specified certificate cannot be found in the caller's account or the
 	// caller's account cannot be found.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
+
+	// ErrCodeTagPolicyException for service response error code
+	// "TagPolicyException".
+	//
+	// A specified tag did not comply with an existing tag policy and was rejected.
+	ErrCodeTagPolicyException = "TagPolicyException"
 
 	// ErrCodeTooManyTagsException for service response error code
 	// "TooManyTagsException".

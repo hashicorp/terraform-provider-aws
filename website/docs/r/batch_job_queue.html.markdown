@@ -1,12 +1,12 @@
 ---
+subcategory: "Batch"
 layout: "aws"
-page_title: "AWS: batch"
-sidebar_current: "docs-aws-resource-batch-job-queue"
+page_title: "AWS: aws_batch_job_queue"
 description: |-
   Provides a Batch Job Queue resource.
 ---
 
-# aws_batch_job_queue
+# Resource: aws_batch_job_queue
 
 Provides a Batch Job Queue resource.
 
@@ -14,9 +14,9 @@ Provides a Batch Job Queue resource.
 
 ```hcl
 resource "aws_batch_job_queue" "test_queue" {
-  name = "tf-test-batch-job-queue"
-  state = "ENABLED"
-  priority = 1
+  name                 = "tf-test-batch-job-queue"
+  state                = "ENABLED"
+  priority             = 1
   compute_environments = ["${aws_batch_compute_environment.test_environment_1.arn}", "${aws_batch_compute_environment.test_environment_2.arn}"]
 }
 ```

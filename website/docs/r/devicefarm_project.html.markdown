@@ -1,12 +1,12 @@
 ---
+subcategory: "Device Farm"
 layout: "aws"
 page_title: "AWS: aws_devicefarm_project"
-sidebar_current: "docs-aws-resource-devicefarm-project"
 description: |-
   Provides a Devicefarm project
 ---
 
-# aws_devicefarm_project
+# Resource: aws_devicefarm_project
 
 Provides a resource to manage AWS Device Farm Projects. 
 Please keep in mind that this feature is only supported on the "us-west-2" region.
@@ -20,7 +20,7 @@ For more information about Device Farm Projects, see the AWS Documentation on
 
 ```hcl
 resource "aws_devicefarm_project" "awesome_devices" {
-    name = "my-device-farm"
+  name = "my-device-farm"
 }
 ```
 

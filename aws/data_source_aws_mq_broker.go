@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsMqBroker() *schema.Resource {
@@ -55,6 +55,22 @@ func dataSourceAwsMqBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"encryption_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"use_aws_owned_key": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"engine_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -76,10 +92,38 @@ func dataSourceAwsMqBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"ip_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"endpoints": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"logs": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				// Ignore missing configuration block
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"general": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"audit": {
+							Type:     schema.TypeBool,
+							Computed: true,
 						},
 					},
 				},
@@ -119,6 +163,7 @@ func dataSourceAwsMqBroker() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,

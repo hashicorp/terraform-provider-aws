@@ -78,7 +78,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_basic(t *testing.T) {
     }
 ]`
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,57 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
     }
 ]`
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+}
+
+func TestAwsEcsContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing.T) {
+	cfgRepresention := `
+[
+    {
+      "name": "wordpress",
+      "image": "wordpress",
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        }
+      ]
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+      "name": "wordpress",
+      "image": "wordpress",
+      "portMappings": [
+        {
+          "containerPort": 80
+        }
+      ]
+    }
+]`
+
+	var (
+		equal bool
+		err   error
+	)
+
+	equal, err = EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if equal {
+		t.Fatal("Expected definitions to differ.")
+	}
+
+	equal, err = EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -378,7 +428,7 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 ]
 `
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -416,11 +466,98 @@ func TestAwsEcsContainerDefinitionsAreEquivalent_negative(t *testing.T) {
     }
 ]`
 
-	equal, err := ecsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation)
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if equal {
 		t.Fatal("Expected definitions to differ.")
+	}
+}
+
+func TestAwsEcsContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) {
+	cfgRepresention := `
+[
+    {
+      "name": "wordpress",
+      "links": [
+        "mysql"
+      ],
+      "image": "wordpress",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 80
+        }
+      ],
+      "memory": 500,
+      "cpu": 10
+    },
+    {
+      "environment": [
+        {
+          "value": "password"
+        },
+        {
+          "value": "password2"
+        }
+      ],
+      "name": "mysql",
+      "image": "mysql",
+      "cpu": 10,
+      "memory": 500,
+      "essential": true
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "name": "wordpress",
+        "image": "wordpress",
+        "cpu": 10,
+        "memory": 500,
+        "links": [
+            "mysql"
+        ],
+        "portMappings": [
+            {
+                "containerPort": 80,
+                "hostPort": 80,
+                "protocol": "tcp"
+            }
+        ],
+        "essential": true,
+        "environment": [],
+        "mountPoints": [],
+        "volumesFrom": []
+    },
+    {
+        "name": "mysql",
+        "image": "mysql",
+        "cpu": 10,
+        "memory": 500,
+        "portMappings": [],
+        "essential": true,
+        "environment": [
+          {
+            "value": "password"
+          },
+          {
+            "value": "password2"
+          }
+        ],
+        "mountPoints": [],
+        "volumesFrom": []
+    }
+]`
+
+	equal, err := EcsContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
 	}
 }

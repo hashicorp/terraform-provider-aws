@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsAcmpcaCertificateAuthority() *schema.Resource {
@@ -161,12 +162,13 @@ func dataSourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta in
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := listAcmpcaTags(conn, certificateAuthorityArn)
+	tags, err := keyvaluetags.AcmpcaListTags(conn, certificateAuthorityArn)
+
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority %q tags: %s", certificateAuthorityArn, err)
+		return fmt.Errorf("error listing tags for ACMPCA Certificate Authority (%s): %s", certificateAuthorityArn, err)
 	}
 
-	if err := d.Set("tags", tagsToMapACMPCA(tags)); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

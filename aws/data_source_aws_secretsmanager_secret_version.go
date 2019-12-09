@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
@@ -24,6 +24,11 @@ func dataSourceAwsSecretsManagerSecretVersion() *schema.Resource {
 				ForceNew: true,
 			},
 			"secret_string": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"secret_binary": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -82,6 +87,7 @@ func dataSourceAwsSecretsManagerSecretVersionRead(d *schema.ResourceData, meta i
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
+	d.Set("secret_binary", fmt.Sprintf("%s", output.SecretBinary))
 	d.Set("arn", output.ARN)
 
 	if err := d.Set("version_stages", flattenStringList(output.VersionStages)); err != nil {

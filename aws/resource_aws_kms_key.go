@@ -8,11 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsKmsKey() *schema.Resource {
@@ -60,7 +60,7 @@ func resourceAwsKmsKey() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validateJsonString,
+				ValidateFunc:     validation.ValidateJsonString,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"is_enabled": {
@@ -98,7 +98,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Policy = aws.String(v.(string))
 	}
 	if v, exists := d.GetOk("tags"); exists {
-		req.Tags = tagsFromMapKMS(v.(map[string]interface{}))
+		req.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().KmsTags()
 	}
 
 	var resp *kms.CreateKeyOutput
@@ -114,6 +114,9 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateKey(&req)
+	}
 	if err != nil {
 		return err
 	}
@@ -174,7 +177,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	p := pOut.(*kms.GetKeyPolicyOutput)
 	policy, err := structure.NormalizeJsonString(*p.Policy)
 	if err != nil {
-		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+		return fmt.Errorf("policy contains an invalid JSON: %s", err)
 	}
 	d.Set("policy", policy)
 
@@ -196,16 +199,14 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 	}
 
-	tOut, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.ListResourceTags(&kms.ListResourceTagsInput{
-			KeyId: metadata.KeyId,
-		})
-	})
+	tags, err := keyvaluetags.KmsListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("Failed to get KMS key tags (key: %s): %s", d.Get("key_id").(string), err)
+		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
 	}
-	tagList := tOut.(*kms.ListResourceTagsOutput)
-	d.Set("tags", tagsToMapKMS(tagList.Tags))
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -246,8 +247,12 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := setTagsKMS(conn, d, d.Id()); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating KMS Key (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsKmsKeyRead(d, meta)
@@ -272,7 +277,7 @@ func resourceAwsKmsKeyDescriptionUpdate(conn *kms.KMS, d *schema.ResourceData) e
 func resourceAwsKmsKeyPolicyUpdate(conn *kms.KMS, d *schema.ResourceData) error {
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return errwrap.Wrapf("policy contains an invalid JSON: {{err}}", err)
+		return fmt.Errorf("policy contains an invalid JSON: %s", err)
 	}
 	keyId := d.Get("key_id").(string)
 
@@ -348,18 +353,7 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 	shouldEnableRotation := d.Get("enable_key_rotation").(bool)
 
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		var err error
-		if shouldEnableRotation {
-			log.Printf("[DEBUG] Enabling key rotation for KMS key %q", d.Id())
-			_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
-				KeyId: aws.String(d.Id()),
-			})
-		} else {
-			log.Printf("[DEBUG] Disabling key rotation for KMS key %q", d.Id())
-			_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
-				KeyId: aws.String(d.Id()),
-			})
-		}
+		err := handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
 
 		if err != nil {
 			awsErr, ok := err.(awserr.Error)
@@ -375,6 +369,9 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		err = handleKeyRotation(conn, shouldEnableRotation, aws.String(d.Id()))
+	}
 
 	if err != nil {
 		return fmt.Errorf("Failed to set key rotation for %q to %t: %q",
@@ -426,6 +423,22 @@ func updateKmsKeyRotationStatus(conn *kms.KMS, d *schema.ResourceData) error {
 	}
 
 	return nil
+}
+
+func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) error {
+	var err error
+	if shouldEnableRotation {
+		log.Printf("[DEBUG] Enabling key rotation for KMS key %q", *keyId)
+		_, err = conn.EnableKeyRotation(&kms.EnableKeyRotationInput{
+			KeyId: keyId,
+		})
+	} else {
+		log.Printf("[DEBUG] Disabling key rotation for KMS key %q", *keyId)
+		_, err = conn.DisableKeyRotation(&kms.DisableKeyRotationInput{
+			KeyId: keyId,
+		})
+	}
+	return err
 }
 
 func resourceAwsKmsKeyExists(d *schema.ResourceData, meta interface{}) (bool, error) {

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDmsCertificate() *schema.Resource {
@@ -114,11 +114,7 @@ func resourceAwsDmsCertificateDelete(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] DMS delete certificate: %#v", request)
 
 	_, err := conn.DeleteCertificate(request)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsDmsCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) error {

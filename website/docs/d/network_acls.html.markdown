@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acls"
-sidebar_current: "docs-aws-datasource-network-acls"
 description: |-
     Provides a list of network ACL ids for a VPC
 ---
@@ -28,7 +28,8 @@ tag of `Tier` set to a value of "Private".
 ```hcl
 data "aws_network_acls" "example" {
   vpc_id = "${var.vpc_id}"
-  tags {
+
+  tags = {
     Tier = "Private"
   }
 }
@@ -40,8 +41,9 @@ with specific subnet.
 ```hcl
 data "aws_network_acls" "example" {
   vpc_id = "${var.vpc_id}"
+
   filter {
-    name = "association.subnet-id"
+    name   = "association.subnet-id"
     values = ["${aws_subnet.test.id}"]
   }
 }

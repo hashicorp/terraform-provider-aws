@@ -55,6 +55,12 @@ const (
 	// An unexpected error has occurred.
 	ErrCodeInternalFailureException = "InternalFailureException"
 
+	// ErrCodeInvalidAggregationException for service response error code
+	// "InvalidAggregationException".
+	//
+	// The aggregation is invalid.
+	ErrCodeInvalidAggregationException = "InvalidAggregationException"
+
 	// ErrCodeInvalidQueryException for service response error code
 	// "InvalidQueryException".
 	//
@@ -134,6 +140,13 @@ const (
 	//
 	// The Rule-SQL expression can't be parsed correctly.
 	ErrCodeSqlParseException = "SqlParseException"
+
+	// ErrCodeTaskAlreadyExistsException for service response error code
+	// "TaskAlreadyExistsException".
+	//
+	// This exception occurs if you attempt to start a task with the same task-id
+	// as an existing task but with a different clientRequestToken.
+	ErrCodeTaskAlreadyExistsException = "TaskAlreadyExistsException"
 
 	// ErrCodeThrottlingException for service response error code
 	// "ThrottlingException".

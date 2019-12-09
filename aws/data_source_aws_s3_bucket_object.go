@@ -10,7 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsS3BucketObject() *schema.Resource {
@@ -74,6 +74,18 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 				Type:     schema.TypeMap,
 				Computed: true,
 			},
+			"object_lock_legal_hold_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"object_lock_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"object_lock_retain_until_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"range": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -134,7 +146,7 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("Failed getting S3 object: %s Bucket: %q Object: %q", err, bucket, key)
 	}
-	if out.DeleteMarker != nil && *out.DeleteMarker == true {
+	if out.DeleteMarker != nil && *out.DeleteMarker {
 		return fmt.Errorf("Requested S3 object %q%s has been deleted",
 			bucket+key, versionText)
 	}
@@ -155,6 +167,9 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("expires", out.Expires)
 	d.Set("last_modified", out.LastModified.Format(time.RFC1123))
 	d.Set("metadata", pointersMapToStringList(out.Metadata))
+	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
+	d.Set("object_lock_mode", out.ObjectLockMode)
+	d.Set("object_lock_retain_until_date", flattenS3ObjectLockRetainUntilDate(out.ObjectLockRetainUntilDate))
 	d.Set("server_side_encryption", out.ServerSideEncryption)
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	d.Set("version_id", out.VersionId)

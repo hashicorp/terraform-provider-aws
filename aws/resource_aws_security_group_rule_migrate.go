@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func resourceAwsSecurityGroupRuleMigrateState(
@@ -37,7 +37,7 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	perm, err := migrateExpandIPPerm(is.Attributes)
 
 	if err != nil {
-		return nil, fmt.Errorf("[WARN] Error making new IP Permission in Security Group migration")
+		return nil, fmt.Errorf("Error making new IP Permission in Security Group migration")
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)

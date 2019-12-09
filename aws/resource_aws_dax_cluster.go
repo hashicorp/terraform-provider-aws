@@ -3,14 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDaxCluster() *schema.Resource {
@@ -41,8 +43,13 @@ func resourceAwsDaxCluster() *schema.Resource {
 				StateFunc: func(val interface{}) string {
 					return strings.ToLower(val.(string))
 				},
-				// DAX follows the same naming convention as ElastiCache clusters
-				ValidateFunc: validateElastiCacheClusterId,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 20),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+					validateStringNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validateStringNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
@@ -111,6 +118,7 @@ func resourceAwsDaxCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
+							ForceNew: true,
 						},
 					},
 				},
@@ -228,6 +236,9 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateCluster(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating DAX cluster: %s", err)
 	}
@@ -289,9 +300,9 @@ func resourceAwsDaxClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("replication_factor", c.TotalNodes)
 
 	if c.ClusterDiscoveryEndpoint != nil {
-		d.Set("port", c.ClusterDiscoveryEndpoint.Port)
-		d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", *c.ClusterDiscoveryEndpoint.Address, *c.ClusterDiscoveryEndpoint.Port)))
-		d.Set("cluster_address", aws.String(fmt.Sprintf("%s", *c.ClusterDiscoveryEndpoint.Address)))
+		d.Set("port", aws.Int64Value(c.ClusterDiscoveryEndpoint.Port))
+		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", aws.StringValue(c.ClusterDiscoveryEndpoint.Address), aws.Int64Value(c.ClusterDiscoveryEndpoint.Port)))
+		d.Set("cluster_address", aws.StringValue(c.ClusterDiscoveryEndpoint.Address))
 	}
 
 	d.Set("subnet_group_name", c.SubnetGroup)
@@ -384,7 +395,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		log.Printf("[DEBUG] Modifying DAX Cluster (%s), opts:\n%s", d.Id(), req)
 		_, err := conn.UpdateCluster(req)
 		if err != nil {
-			return fmt.Errorf("[WARN] Error updating DAX cluster (%s), error: %s", d.Id(), err)
+			return fmt.Errorf("Error updating DAX cluster (%s), error: %s", d.Id(), err)
 		}
 		awaitUpdate = true
 	}
@@ -400,7 +411,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				NewReplicationFactor: aws.Int64(int64(nraw.(int))),
 			})
 			if err != nil {
-				return fmt.Errorf("[WARN] Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
+				return fmt.Errorf("Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
 			awaitUpdate = true
 		}
@@ -411,7 +422,7 @@ func resourceAwsDaxClusterUpdate(d *schema.ResourceData, meta interface{}) error
 				NewReplicationFactor: aws.Int64(int64(nraw.(int))),
 			})
 			if err != nil {
-				return fmt.Errorf("[WARN] Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
+				return fmt.Errorf("Error increasing nodes in DAX cluster %s, error: %s", d.Id(), err)
 			}
 			awaitUpdate = true
 		}
@@ -485,8 +496,11 @@ func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCluster(req)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting DAX cluster: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())
@@ -523,7 +537,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		}
 
 		if len(resp.Clusters) == 0 {
-			return nil, "", fmt.Errorf("[WARN] Error: no DAX clusters found for id (%s)", clusterID)
+			return nil, "", fmt.Errorf("Error: no DAX clusters found for id (%s)", clusterID)
 		}
 
 		var c *dax.Cluster
@@ -535,7 +549,7 @@ func daxClusterStateRefreshFunc(conn *dax.DAX, clusterID, givenState string, pen
 		}
 
 		if c == nil {
-			return nil, "", fmt.Errorf("[WARN] Error: no matching DAX cluster for id (%s)", clusterID)
+			return nil, "", fmt.Errorf("Error: no matching DAX cluster for id (%s)", clusterID)
 		}
 
 		// DescribeCluster returns a response without status late on in the

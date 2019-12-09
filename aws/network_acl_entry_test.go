@@ -82,60 +82,6 @@ func Test_expandNetworkACLEntry(t *testing.T) {
 
 }
 
-func Test_flattenNetworkACLEntry(t *testing.T) {
-
-	apiInput := []*ec2.NetworkAclEntry{
-		{
-			Protocol: aws.String("tcp"),
-			PortRange: &ec2.PortRange{
-				From: aws.Int64(22),
-				To:   aws.Int64(22),
-			},
-			RuleAction: aws.String("deny"),
-			RuleNumber: aws.Int64(1),
-			CidrBlock:  aws.String("0.0.0.0/0"),
-		},
-		{
-			Protocol: aws.String("tcp"),
-			PortRange: &ec2.PortRange{
-				From: aws.Int64(443),
-				To:   aws.Int64(443),
-			},
-			RuleAction: aws.String("deny"),
-			RuleNumber: aws.Int64(2),
-			CidrBlock:  aws.String("0.0.0.0/0"),
-		},
-	}
-	flattened := flattenNetworkAclEntries(apiInput)
-
-	expected := []map[string]interface{}{
-		{
-			"protocol":   "tcp",
-			"from_port":  int64(22),
-			"to_port":    int64(22),
-			"cidr_block": "0.0.0.0/0",
-			"action":     "deny",
-			"rule_no":    int64(1),
-		},
-		{
-			"protocol":   "tcp",
-			"from_port":  int64(443),
-			"to_port":    int64(443),
-			"cidr_block": "0.0.0.0/0",
-			"action":     "deny",
-			"rule_no":    int64(2),
-		},
-	}
-
-	if !reflect.DeepEqual(flattened, expected) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			flattened,
-			expected)
-	}
-
-}
-
 func Test_validatePorts(t *testing.T) {
 	for _, ts := range []struct {
 		to       int64

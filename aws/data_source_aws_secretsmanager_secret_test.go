@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsSecretsManagerSecret_Basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -36,8 +36,8 @@ func TestAccDataSourceAwsSecretsManagerSecret_ARN(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -55,12 +55,31 @@ func TestAccDataSourceAwsSecretsManagerSecret_Name(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret.test"
 	datasourceName := "data.aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAwsSecretsManagerSecretConfig_Name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsSecretsManagerSecret_Policy(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret.test"
+	datasourceName := "data.aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName),
 				),
@@ -86,6 +105,7 @@ func testAccDataSourceAwsSecretsManagerSecretCheck(datasourceName, resourceName 
 			"description",
 			"kms_key_id",
 			"name",
+			"policy",
 			"rotation_enabled",
 			"rotation_lambda_arn",
 			"rotation_rules.#",
@@ -112,6 +132,7 @@ func testAccDataSourceAwsSecretsManagerSecretConfig_ARN(rName string) string {
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
 }
+
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
 }
@@ -138,8 +159,38 @@ func testAccDataSourceAwsSecretsManagerSecretConfig_Name(rName string) string {
 resource "aws_secretsmanager_secret" "wrong" {
   name = "%[1]s-wrong"
 }
+
 resource "aws_secretsmanager_secret" "test" {
   name = "%[1]s"
+}
+
+data "aws_secretsmanager_secret" "test" {
+  name = "${aws_secretsmanager_secret.test.name}"
+}
+`, rName)
+}
+
+func testAccDataSourceAwsSecretsManagerSecretConfig_Policy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = "%[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+	{
+	  "Sid": "EnableAllPermissions",
+	  "Effect": "Allow",
+	  "Principal": {
+		"AWS": "*"
+	  },
+	  "Action": "secretsmanager:GetSecretValue",
+	  "Resource": "*"
+	}
+  ]
+}
+POLICY
 }
 
 data "aws_secretsmanager_secret" "test" {

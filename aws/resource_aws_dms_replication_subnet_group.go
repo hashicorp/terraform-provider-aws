@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDmsReplicationSubnetGroup() *schema.Resource {
@@ -163,11 +163,7 @@ func resourceAwsDmsReplicationSubnetGroupDelete(d *schema.ResourceData, meta int
 	log.Printf("[DEBUG] DMS delete replication subnet group: %#v", request)
 
 	_, err := conn.DeleteReplicationSubnetGroup(request)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func resourceAwsDmsReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {

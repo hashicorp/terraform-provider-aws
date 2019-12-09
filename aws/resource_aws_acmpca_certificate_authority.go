@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
@@ -19,11 +20,17 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 		Update: resourceAwsAcmpcaCertificateAuthorityUpdate,
 		Delete: resourceAwsAcmpcaCertificateAuthorityDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("permanent_deletion_time_in_days", 30)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(1 * time.Minute),
 		},
+		MigrateState:  resourceAwsAcmpcaCertificateAuthorityMigrateState,
+		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -239,12 +246,20 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"permanent_deletion_time_in_days": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      30,
+				ValidateFunc: validation.IntBetween(7, 30),
+			},
 			"tags": tagsSchema(),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Default:  acmpca.CertificateAuthorityTypeSubordinate,
 				ValidateFunc: validation.StringInSlice([]string{
+					acmpca.CertificateAuthorityTypeRoot,
 					acmpca.CertificateAuthorityTypeSubordinate,
 				}, false),
 			},
@@ -254,11 +269,17 @@ func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
 
 func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmpcaconn
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().AcmpcaTags()
 
 	input := &acmpca.CreateCertificateAuthorityInput{
 		CertificateAuthorityConfiguration: expandAcmpcaCertificateAuthorityConfiguration(d.Get("certificate_authority_configuration").([]interface{})),
 		CertificateAuthorityType:          aws.String(d.Get("type").(string)),
+		IdempotencyToken:                  aws.String(resource.UniqueId()),
 		RevocationConfiguration:           expandAcmpcaRevocationConfiguration(d.Get("revocation_configuration").([]interface{})),
+	}
+
+	if len(tags) > 0 {
+		input.Tags = tags
 	}
 
 	log.Printf("[DEBUG] Creating ACMPCA Certificate Authority: %s", input)
@@ -275,6 +296,9 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateCertificateAuthority(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating ACMPCA Certificate Authority: %s", err)
 	}
@@ -399,7 +423,9 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate Signing Request: %s", err)
+		if !isAWSErr(err, acmpca.ErrCodeInvalidStateException, "") {
+			return fmt.Errorf("error reading ACMPCA Certificate Authority Certificate Signing Request: %s", err)
+		}
 	}
 
 	d.Set("certificate_signing_request", "")
@@ -407,12 +433,13 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
 	}
 
-	tags, err := listAcmpcaTags(conn, d.Id())
+	tags, err := keyvaluetags.AcmpcaListTags(conn, d.Id())
+
 	if err != nil {
-		return fmt.Errorf("error reading ACMPCA Certificate Authority %q tags: %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for ACMPCA Certificate Authority (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tagsToMapACMPCA(tags)); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -484,6 +511,10 @@ func resourceAwsAcmpcaCertificateAuthorityDelete(d *schema.ResourceData, meta in
 
 	input := &acmpca.DeleteCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
+	}
+
+	if v, exists := d.GetOk("permanent_deletion_time_in_days"); exists {
+		input.PermanentDeletionTimeInDays = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] Deleting ACMPCA Certificate Authority: %s", input)
@@ -689,48 +720,4 @@ func flattenAcmpcaRevocationConfiguration(config *acmpca.RevocationConfiguration
 	}
 
 	return []interface{}{m}
-}
-
-func listAcmpcaCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.CertificateAuthority, error) {
-	certificateAuthorities := []*acmpca.CertificateAuthority{}
-	input := &acmpca.ListCertificateAuthoritiesInput{}
-
-	for {
-		output, err := conn.ListCertificateAuthorities(input)
-		if err != nil {
-			return certificateAuthorities, err
-		}
-		for _, certificateAuthority := range output.CertificateAuthorities {
-			certificateAuthorities = append(certificateAuthorities, certificateAuthority)
-		}
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return certificateAuthorities, nil
-}
-
-func listAcmpcaTags(conn *acmpca.ACMPCA, certificateAuthorityArn string) ([]*acmpca.Tag, error) {
-	tags := []*acmpca.Tag{}
-	input := &acmpca.ListTagsInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityArn),
-	}
-
-	for {
-		output, err := conn.ListTags(input)
-		if err != nil {
-			return tags, err
-		}
-		for _, tag := range output.Tags {
-			tags = append(tags, tag)
-		}
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	return tags, nil
 }

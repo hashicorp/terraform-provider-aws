@@ -7,9 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoUserPoolClient() *schema.Resource {
@@ -214,7 +213,7 @@ func resourceAwsCognitoUserPoolClientCreate(d *schema.ResourceData, meta interfa
 	resp, err := conn.CreateUserPoolClient(params)
 
 	if err != nil {
-		return errwrap.Wrapf("Error creating Cognito User Pool Client: {{err}}", err)
+		return fmt.Errorf("Error creating Cognito User Pool Client: %s", err)
 	}
 
 	d.SetId(*resp.UserPoolClient.ClientId)
@@ -270,6 +269,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
+	if v, ok := d.GetOk("name"); ok {
+		params.ClientName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("explicit_auth_flows"); ok {
 		params.ExplicitAuthFlows = expandStringList(v.(*schema.Set).List())
 	}
@@ -318,7 +321,7 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 
 	_, err := conn.UpdateUserPoolClient(params)
 	if err != nil {
-		return errwrap.Wrapf("Error updating Cognito User Pool Client: {{err}}", err)
+		return fmt.Errorf("Error updating Cognito User Pool Client: %s", err)
 	}
 
 	return resourceAwsCognitoUserPoolClientRead(d, meta)
@@ -337,7 +340,7 @@ func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interfa
 	_, err := conn.DeleteUserPoolClient(params)
 
 	if err != nil {
-		return errwrap.Wrapf("Error deleting Cognito User Pool Client: {{err}}", err)
+		return fmt.Errorf("Error deleting Cognito User Pool Client: %s", err)
 	}
 
 	return nil
@@ -345,7 +348,7 @@ func resourceAwsCognitoUserPoolClientDelete(d *schema.ResourceData, meta interfa
 
 func resourceAwsCognitoUserPoolClientImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
-		return []*schema.ResourceData{}, fmt.Errorf("[ERR] Wrong format of resource: %s. Please follow 'user-pool-id/client-id'", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'user-pool-id/client-id'", d.Id())
 	}
 	userPoolId := strings.Split(d.Id(), "/")[0]
 	clientId := strings.Split(d.Id(), "/")[1]

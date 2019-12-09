@@ -14,10 +14,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsElb() *schema.Resource {
@@ -307,16 +307,18 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 				// Check for IAM SSL Cert error, eventual consistancy issue
 				if awsErr.Code() == "CertificateNotFound" {
 					return resource.RetryableError(
-						fmt.Errorf("[WARN] Error creating ELB Listener with SSL Cert, retrying: %s", err))
+						fmt.Errorf("Error creating ELB Listener with SSL Cert, retrying: %s", err))
 				}
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = elbconn.CreateLoadBalancer(elbOpts)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating ELB: %s", err)
 	}
 
 	// Assign the elb's unique identifier for use later
@@ -410,7 +412,7 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 			elbVpc = *lb.VPCId
 			sgId, err := sourceSGIdByName(ec2conn, *lb.SourceSecurityGroup.GroupName, elbVpc)
 			if err != nil {
-				return fmt.Errorf("[WARN] Error looking up ELB Security Group ID: %s", err)
+				return fmt.Errorf("Error looking up ELB Security Group ID: %s", err)
 			} else {
 				d.Set("source_security_group_id", sgId)
 			}
@@ -451,6 +453,9 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 	resp, err := elbconn.DescribeTags(&elb.DescribeTagsInput{
 		LoadBalancerNames: []*string{lb.LoadBalancerName},
 	})
+	if err != nil {
+		return fmt.Errorf("error describing tags for ELB (%s): %s", d.Id(), err)
+	}
 
 	var et []*elb.Tag
 	if len(resp.TagDescriptions) > 0 {
@@ -511,16 +516,15 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			// other listeners on the ELB. Retry here to eliminate that.
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				log.Printf("[DEBUG] ELB Create Listeners opts: %s", createListenersOpts)
-				if _, err := elbconn.CreateLoadBalancerListeners(createListenersOpts); err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
-						if awsErr.Code() == "DuplicateListener" {
-							log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
-							return resource.RetryableError(awsErr)
-						}
-						if awsErr.Code() == "CertificateNotFound" && strings.Contains(awsErr.Message(), "Server Certificate not found for the key: arn") {
-							log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
-							return resource.RetryableError(awsErr)
-						}
+				_, err := elbconn.CreateLoadBalancerListeners(createListenersOpts)
+				if err != nil {
+					if isAWSErr(err, "DuplicateListener", "") {
+						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
+						return resource.RetryableError(err)
+					}
+					if isAWSErr(err, "CertificateNotFound", "Server Certificate not found for the key: arn") {
+						log.Printf("[DEBUG] SSL Cert not found for given ARN, retrying")
+						return resource.RetryableError(err)
 					}
 
 					// Didn't recognize the error, so shouldn't retry.
@@ -529,6 +533,9 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 				// Successful creation
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = elbconn.CreateLoadBalancerListeners(createListenersOpts)
+			}
 			if err != nil {
 				return fmt.Errorf("Failure adding new or updated ELB listeners: %s", err)
 			}
@@ -765,18 +772,19 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				_, err := elbconn.AttachLoadBalancerToSubnets(attachOpts)
 				if err != nil {
-					if awsErr, ok := err.(awserr.Error); ok {
+					if isAWSErr(err, "InvalidConfigurationRequest", "cannot be attached to multiple subnets in the same AZ") {
 						// eventually consistent issue with removing a subnet in AZ1 and
 						// immediately adding a new one in the same AZ
-						if awsErr.Code() == "InvalidConfigurationRequest" && strings.Contains(awsErr.Message(), "cannot be attached to multiple subnets in the same AZ") {
-							log.Printf("[DEBUG] retrying az association")
-							return resource.RetryableError(awsErr)
-						}
+						log.Printf("[DEBUG] retrying az association")
+						return resource.RetryableError(err)
 					}
 					return resource.NonRetryableError(err)
 				}
 				return nil
 			})
+			if isResourceTimeoutError(err) {
+				_, err = elbconn.AttachLoadBalancerToSubnets(attachOpts)
+			}
 			if err != nil {
 				return fmt.Errorf("Failure adding ELB subnets: %s", err)
 			}
@@ -944,7 +952,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 				"%q cannot contain a path in the Health Check target: %s",
 				k, value))
 		}
-		break
+
 	case "http", "https":
 		// Check if value is in the form <PROTOCOL>:<PORT>/<PATH> for HTTP and/or HTTPS.
 		if matches[3] == "" {
@@ -959,7 +967,7 @@ func validateHeathCheckTarget(v interface{}, k string) (ws []string, errors []er
 				"than 1024 characters in the Health Check target: %s",
 				k, value))
 		}
-		break
+
 	}
 
 	return
@@ -1029,11 +1037,7 @@ func cleanupELBNetworkInterfaces(conn *ec2.EC2, name string) error {
 	}
 
 	err = deleteNetworkInterfaces(conn, out.NetworkInterfaces)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func detachNetworkInterfaces(conn *ec2.EC2, nis []*ec2.NetworkInterface) error {

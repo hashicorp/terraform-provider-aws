@@ -1,12 +1,12 @@
 ---
+subcategory: "Gamelift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_fleet"
-sidebar_current: "docs-aws-resource-gamelift-fleet"
 description: |-
   Provides a Gamelift Fleet resource.
 ---
 
-# aws_gamelift_fleet
+# Resource: aws_gamelift_fleet
 
 Provides a Gamelift Fleet resource.
 
@@ -14,13 +14,14 @@ Provides a Gamelift Fleet resource.
 
 ```hcl
 resource "aws_gamelift_fleet" "example" {
-  build_id = "${aws_gamelift_build.example.id}"
+  build_id          = "${aws_gamelift_build.example.id}"
   ec2_instance_type = "t2.micro"
-  name = "example-fleet-name"
+  name              = "example-fleet-name"
+
   runtime_configuration {
     server_process {
       concurrent_executions = 1
-      launch_path = "C:\\game\\GomokuServer.exe"
+      launch_path           = "C:\\game\\GomokuServer.exe"
     }
   }
 }
@@ -73,6 +74,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Fleet ID.
 * `arn` - Fleet ARN.
 * `operating_system` - Operating system of the fleet's computing resources.
+
+## Timeouts
+
+`aws_gamelift_fleet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+* `create` - (Default `70m`) How long to wait for a fleet to be created.
+* `delete` - (Default `20m`) How long to wait for a fleet to be deleted.
 
 ## Import
 

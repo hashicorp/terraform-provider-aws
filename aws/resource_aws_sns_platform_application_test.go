@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
@@ -158,7 +158,7 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 		}
 
 		t.Run(platform.Name, func(*testing.T) {
-			resource.Test(t, resource.TestCase{
+			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { testAccPreCheck(t) },
 				Providers:    testAccProviders,
 				CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -224,7 +224,7 @@ func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 
-					resource.Test(t, resource.TestCase{
+					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -274,7 +274,7 @@ func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 					iamRoleName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 
-					resource.Test(t, resource.TestCase{
+					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -326,7 +326,7 @@ func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 					snsTopicName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 
-					resource.Test(t, resource.TestCase{
+					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -378,11 +378,8 @@ func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheck
 
 		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
 		_, err := conn.GetPlatformApplicationAttributes(input)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -475,6 +472,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 %s
+
 `, iamRoleName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
@@ -485,5 +483,6 @@ resource "aws_sns_topic" "test" {
 }
 
 %s
+
 `, snsTopicName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
 }

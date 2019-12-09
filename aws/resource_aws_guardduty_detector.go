@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsGuardDutyDetector() *schema.Resource {
@@ -30,6 +30,13 @@ func resourceAwsGuardDutyDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			// finding_publishing_frequency is marked as Computed:true since
+			// GuardDuty member accounts inherit setting from master account
+			"finding_publishing_frequency": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -39,6 +46,10 @@ func resourceAwsGuardDutyDetectorCreate(d *schema.ResourceData, meta interface{}
 
 	input := guardduty.CreateDetectorInput{
 		Enable: aws.Bool(d.Get("enable").(bool)),
+	}
+
+	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
+		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
@@ -70,6 +81,7 @@ func resourceAwsGuardDutyDetectorRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("account_id", meta.(*AWSClient).accountid)
 	d.Set("enable", *gdo.Status == guardduty.DetectorStatusEnabled)
+	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 
 	return nil
 }
@@ -78,8 +90,9 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).guarddutyconn
 
 	input := guardduty.UpdateDetectorInput{
-		DetectorId: aws.String(d.Id()),
-		Enable:     aws.Bool(d.Get("enable").(bool)),
+		DetectorId:                 aws.String(d.Id()),
+		Enable:                     aws.Bool(d.Get("enable").(bool)),
+		FindingPublishingFrequency: aws.String(d.Get("finding_publishing_frequency").(string)),
 	}
 
 	log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)

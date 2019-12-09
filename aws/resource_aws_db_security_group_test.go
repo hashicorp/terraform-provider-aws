@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
@@ -20,10 +20,10 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
+	resourceName := "aws_db_security_group.test"
 	rName := fmt.Sprintf("tf-acc-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDBSecurityGroupDestroy,
@@ -31,20 +31,25 @@ func TestAccAWSDBSecurityGroup_basic(t *testing.T) {
 			{
 				Config: testAccAWSDBSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBSecurityGroupExists("aws_db_security_group.bar", &v),
+					testAccCheckAWSDBSecurityGroupExists(resourceName, &v),
 					testAccCheckAWSDBSecurityGroupAttributes(&v),
-					resource.TestMatchResourceAttr("aws_db_security_group.bar", "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:secgrp:.+`)),
+					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:secgrp:.+`)),
 					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "name", rName),
+						resourceName, "name", rName),
 					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "description", "Managed by Terraform"),
+						resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "ingress.3363517775.cidr", "10.0.0.1/24"),
+						resourceName, "ingress.3363517775.cidr", "10.0.0.1/24"),
 					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "ingress.#", "1"),
+						resourceName, "ingress.#", "1"),
 					resource.TestCheckResourceAttr(
-						"aws_db_security_group.bar", "tags.%", "1"),
+						resourceName, "tags.%", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -143,16 +148,16 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 
 func testAccAWSDBSecurityGroupConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_db_security_group" "bar" {
-    name = "%s"
+resource "aws_db_security_group" "test" {
+  name = "%s"
 
-    ingress {
-        cidr = "10.0.0.1/24"
-    }
+  ingress {
+    cidr = "10.0.0.1/24"
+  }
 
-    tags {
-		foo = "bar"
-    }
+  tags = {
+    foo = "test"
+  }
 }
 `, name)
 }

@@ -5,15 +5,16 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 	var queueAttributes map[string]*string
-
+	resourceName := "aws_sqs_queue_policy.test"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -27,23 +28,6 @@ func TestAccAWSSQSQueuePolicy_basic(t *testing.T) {
 						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSSQSQueuePolicy_import(t *testing.T) {
-	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(5))
-	resourceName := "aws_sqs_queue_policy.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSPolicyConfig_basic(queueName),
-			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,

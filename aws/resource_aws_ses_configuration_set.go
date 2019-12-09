@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsSesConfigurationSet() *schema.Resource {
@@ -75,11 +75,7 @@ func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface
 		ConfigurationSetName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func findConfigurationSet(name string, token *string, meta interface{}) (bool, error) {

@@ -2,35 +2,32 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsMediaStoreContainer() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsMediaStoreContainerCreate,
 		Read:   resourceAwsMediaStoreContainerRead,
+		Update: resourceAwsMediaStoreContainerUpdate,
 		Delete: resourceAwsMediaStoreContainerDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if !regexp.MustCompile("^\\w+$").MatchString(value) {
-						errors = append(errors, fmt.Errorf("%q must contain alphanumeric characters or underscores", k))
-					}
-					return
-				},
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\w+$`), "must contain alphanumeric characters or underscores"),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -40,6 +37,7 @@ func resourceAwsMediaStoreContainer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -49,6 +47,7 @@ func resourceAwsMediaStoreContainerCreate(d *schema.ResourceData, meta interface
 
 	input := &mediastore.CreateContainerInput{
 		ContainerName: aws.String(d.Get("name").(string)),
+		Tags:          tagsFromMapMediaStore(d.Get("tags").(map[string]interface{})),
 	}
 
 	_, err := conn.CreateContainer(input)
@@ -80,13 +79,43 @@ func resourceAwsMediaStoreContainerRead(d *schema.ResourceData, meta interface{}
 		ContainerName: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeContainer(input)
+	if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+		log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error describing media store container %s: %s", d.Id(), err)
 	}
 	d.Set("arn", resp.Container.ARN)
 	d.Set("name", resp.Container.Name)
 	d.Set("endpoint", resp.Container.Endpoint)
+
+	if err := saveTagsMediaStore(conn, d, aws.StringValue(resp.Container.ARN)); err != nil {
+		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error setting tags for %s: %s", d.Id(), err)
+	}
+
 	return nil
+}
+
+func resourceAwsMediaStoreContainerUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).mediastoreconn
+
+	if err := setTagsMediaStore(conn, d, d.Get("arn").(string)); err != nil {
+		if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
+			log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("Error updating tags for %s: %s", d.Id(), err)
+	}
+
+	return resourceAwsMediaStoreContainerRead(d, meta)
 }
 
 func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface{}) error {
@@ -103,10 +132,10 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 		return err
 	}
 
+	dcinput := &mediastore.DescribeContainerInput{
+		ContainerName: aws.String(d.Id()),
+	}
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		dcinput := &mediastore.DescribeContainerInput{
-			ContainerName: aws.String(d.Id()),
-		}
 		_, err := conn.DescribeContainer(dcinput)
 		if err != nil {
 			if isAWSErr(err, mediastore.ErrCodeContainerNotFoundException, "") {
@@ -114,10 +143,13 @@ func resourceAwsMediaStoreContainerDelete(d *schema.ResourceData, meta interface
 			}
 			return resource.NonRetryableError(err)
 		}
-		return resource.RetryableError(nil)
+		return resource.RetryableError(fmt.Errorf("Media Store Container (%s) still exists", d.Id()))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeContainer(dcinput)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for Media Store Container (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil

@@ -1,11 +1,11 @@
 ---
+subcategory: "GuardDuty"
 layout: aws
 page_title: 'AWS: aws_guardduty_threatintelset'
-sidebar_current: docs-aws-resource-guardduty-threatintelset
 description: Provides a resource to manage a GuardDuty ThreatIntelSet
 ---
 
-# aws_guardduty_threatintelset
+# Resource: aws_guardduty_threatintelset
 
 Provides a resource to manage a GuardDuty ThreatIntelSet.
 

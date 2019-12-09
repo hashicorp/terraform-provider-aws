@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpcs"
-sidebar_current: "docs-aws-datasource-vpcs"
 description: |-
     Provides a list of VPC Ids in a region
 ---
@@ -18,7 +18,7 @@ The following shows outputing all VPC Ids.
 
 ```hcl
 data "aws_vpcs" "foo" {
-  tags {
+  tags = {
     service = "production"
   }
 }
@@ -35,9 +35,11 @@ data "aws_vpcs" "foo" {}
 
 resource "aws_flow_log" "test_flow_log" {
   count = "${length(data.aws_vpcs.foo.ids)}"
-  ...
+
+  # ...
   vpc_id = "${element(data.aws_vpcs.foo.ids, count.index)}"
-  ...
+
+  # ...
 }
 
 output "foo" {

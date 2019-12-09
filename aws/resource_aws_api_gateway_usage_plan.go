@@ -1,18 +1,18 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
-	"errors"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsApiGatewayUsagePlan() *schema.Resource {
@@ -109,6 +109,11 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -199,6 +204,10 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 		params.Throttle = ts
 	}
 
+	if v, ok := d.GetOk("tags"); ok {
+		params.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ApigatewayTags()
+	}
+
 	up, err := conn.CreateUsagePlan(params)
 	if err != nil {
 		return fmt.Errorf("Error creating API Gateway Usage Plan: %s", err)
@@ -220,7 +229,7 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 			},
 		}
 
-		up, err = conn.UpdateUsagePlan(updateParameters)
+		_, err = conn.UpdateUsagePlan(updateParameters)
 		if err != nil {
 			return fmt.Errorf("Error creating the API Gateway Usage Plan product code: %s", err)
 		}
@@ -237,7 +246,7 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 		UsagePlanId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == apigateway.ErrCodeNotFoundException {
 			log.Printf("[WARN] API Gateway Usage Plan (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -245,25 +254,37 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(up.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("/usageplans/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	d.Set("name", up.Name)
 	d.Set("description", up.Description)
 	d.Set("product_code", up.ProductCode)
 
 	if up.ApiStages != nil {
 		if err := d.Set("api_stages", flattenApiGatewayUsageApiStages(up.ApiStages)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting api_stages error: %#v", err)
+			return fmt.Errorf("Error setting api_stages error: %#v", err)
 		}
 	}
 
 	if up.Throttle != nil {
 		if err := d.Set("throttle_settings", flattenApiGatewayUsagePlanThrottling(up.Throttle)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting throttle_settings error: %#v", err)
+			return fmt.Errorf("Error setting throttle_settings error: %#v", err)
 		}
 	}
 
 	if up.Quota != nil {
 		if err := d.Set("quota_settings", flattenApiGatewayUsagePlanQuota(up.Quota)); err != nil {
-			return fmt.Errorf("[DEBUG] Error setting quota_settings error: %#v", err)
+			return fmt.Errorf("Error setting quota_settings error: %#v", err)
 		}
 	}
 
@@ -448,6 +469,13 @@ func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
 	params := &apigateway.UpdateUsagePlanInput{
 		UsagePlanId:     aws.String(d.Id()),
 		PatchOperations: operations,
@@ -491,15 +519,14 @@ func resourceAwsApiGatewayUsagePlanDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteUsagePlan(&apigateway.DeleteUsagePlanInput{
-			UsagePlanId: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteUsagePlan(&apigateway.DeleteUsagePlanInput{
+		UsagePlanId: aws.String(d.Id()),
 	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting API gateway usage plan: %s", err)
+	}
+
+	return nil
+
 }

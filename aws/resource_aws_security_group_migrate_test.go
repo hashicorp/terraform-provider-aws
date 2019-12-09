@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAWSSecurityGroupMigrateState(t *testing.T) {
@@ -63,7 +63,7 @@ func TestAWSSecurityGroupMigrateState_empty(t *testing.T) {
 
 	// should handle non-nil but empty
 	is = &terraform.InstanceState{}
-	is, err = resourceAwsSecurityGroupMigrateState(0, is, meta)
+	_, err = resourceAwsSecurityGroupMigrateState(0, is, meta)
 
 	if err != nil {
 		t.Fatalf("err: %#v", err)

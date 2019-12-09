@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsSqsQueue(t *testing.T) {
@@ -14,7 +14,7 @@ func TestAccDataSourceAwsSqsQueue(t *testing.T) {
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -65,6 +65,7 @@ func testAccDataSourceAwsSqsQueueConfig(rName string) string {
 resource "aws_sqs_queue" "wrong" {
   name = "%[1]s_wrong"
 }
+
 resource "aws_sqs_queue" "test" {
   name = "%[1]s"
 }

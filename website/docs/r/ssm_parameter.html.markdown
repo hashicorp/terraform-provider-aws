@@ -1,12 +1,12 @@
 ---
+subcategory: "SSM"
 layout: "aws"
 page_title: "AWS: aws_ssm_parameter"
-sidebar_current: "docs-aws-resource-ssm-parameter"
 description: |-
   Provides a SSM Parameter resource
 ---
 
-# aws_ssm_parameter
+# Resource: aws_ssm_parameter
 
 Provides an SSM Parameter resource.
 
@@ -39,12 +39,12 @@ resource "aws_db_instance" "default" {
 }
 
 resource "aws_ssm_parameter" "secret" {
-  name  = "${var.environment}/database/password/master"
-  description  = "The parameter description"
-  type  = "SecureString"
-  value = "${var.database_master_password}"
+  name        = "/${var.environment}/database/password/master"
+  description = "The parameter description"
+  type        = "SecureString"
+  value       = "${var.database_master_password}"
 
-  tags {
+  tags = {
     environment = "${var.environment}"
   }
 }
@@ -57,10 +57,11 @@ resource "aws_ssm_parameter" "secret" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the parameter.
+* `name` - (Required) The name of the parameter. If the name contains a path (e.g. any forward slashes (`/`)), it must be fully qualified with a leading forward slash (`/`). For additional requirements and constraints, see the [AWS SSM User Guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html).
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
 * `description` - (Optional) The description of the parameter.
+* `tier` - (Optional) The tier of the parameter. If not specified, will default to `Standard`. Valid tiers are `Standard` and `Advanced`. For more information on parameter tiers, see the [AWS SSM Parameter tier comparison and guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html).
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.
 * `overwrite` - (Optional) Overwrite an existing parameter. If not specified, will default to `false` if the resource has not been created by terraform to avoid overwrite of existing resource and will default to `true` otherwise (terraform lifecycle rules should then be used to manage the update behavior).
 * `allowed_pattern` - (Optional) A regular expression used to validate the parameter value.
@@ -75,6 +76,7 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - (Required) The description of the parameter.
 * `type` - (Required) The type of the parameter. Valid types are `String`, `StringList` and `SecureString`.
 * `value` - (Required) The value of the parameter.
+* `version` - The version of the parameter.
 
 ## Import
 

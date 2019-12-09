@@ -9,15 +9,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
+	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
@@ -25,9 +27,14 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
-					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -35,8 +42,10 @@ func TestAccAWSCloudWatchDashboard_basic(t *testing.T) {
 
 func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
+	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCloudWatchDashboardDestroy,
@@ -44,17 +53,22 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected("aws_cloudwatch_dashboard.foobar", basicWidget),
-					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
+					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSCloudWatchDashboardConfig_updateBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected("aws_cloudwatch_dashboard.foobar", updatedWidget),
-					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
+					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, updatedWidget),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
 				),
 			},
 		},
@@ -142,22 +156,26 @@ func testAccAWSCloudWatchDashboardName(rInt int) string {
 
 func testAccAWSCloudWatchDashboardConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_dashboard" "foobar" {
+resource "aws_cloudwatch_dashboard" "test" {
   dashboard_name = "terraform-test-dashboard-%d"
+
   dashboard_body = <<EOF
   %s
   EOF
-}`, rInt, basicWidget)
+}
+`, rInt, basicWidget)
 }
 
 func testAccAWSCloudWatchDashboardConfig_updateBody(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_cloudwatch_dashboard" "foobar" {
+resource "aws_cloudwatch_dashboard" "test" {
   dashboard_name = "terraform-test-dashboard-%d"
+
   dashboard_body = <<EOF
   %s
   EOF
-}`, rInt, updatedWidget)
+}
+`, rInt, updatedWidget)
 }
 
 func testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, expected string) resource.TestCheckFunc {

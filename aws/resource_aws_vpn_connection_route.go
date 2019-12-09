@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsVpnConnectionRoute() *schema.Resource {
@@ -128,11 +128,7 @@ func resourceAwsVpnConnectionRouteDelete(d *schema.ResourceData, meta interface{
 		},
 	}
 	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func findConnectionRoute(conn *ec2.EC2, cidrBlock, vpnConnectionId string) (*ec2.VpnStaticRoute, error) {

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsElastiCacheCluster() *schema.Resource {
@@ -206,7 +206,7 @@ func dataSourceAwsElastiCacheClusterRead(d *schema.ResourceData, meta interface{
 	if cluster.ConfigurationEndpoint != nil {
 		d.Set("port", cluster.ConfigurationEndpoint.Port)
 		d.Set("configuration_endpoint", aws.String(fmt.Sprintf("%s:%d", *cluster.ConfigurationEndpoint.Address, *cluster.ConfigurationEndpoint.Port)))
-		d.Set("cluster_address", aws.String(fmt.Sprintf("%s", *cluster.ConfigurationEndpoint.Address)))
+		d.Set("cluster_address", aws.String(*cluster.ConfigurationEndpoint.Address))
 	}
 
 	if err := setCacheNodeData(d, cluster); err != nil {

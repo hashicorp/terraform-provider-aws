@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsLbTargetGroup() *schema.Resource {
@@ -45,14 +45,14 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validateMaxLength(32),
+				ValidateFunc:  validateLbTargetGroupName,
 			},
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validateMaxLength(32 - resource.UniqueIDSuffixLength),
+				ValidateFunc:  validateLbTargetGroupNamePrefix,
 			},
 
 			"port": {
@@ -70,17 +70,9 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 					elbv2.ProtocolEnumHttp,
 					elbv2.ProtocolEnumHttps,
 					elbv2.ProtocolEnumTcp,
-					// TODO(grim): Use the appropriate
-					// ProtocolEnum* values when we update
-					// aws-sdk-go to a version that defines
-					// them. This shortcut is safe because
-					// any changes to this field are
-					// destructive, so we're gauranteed to
-					// never perform any operation that
-					// would change the protocol.
-					"TLS",     // elbv2.ProtocolEnumTls,
-					"UDP",     // elbv2.ProtocolEnumUdp,
-					"TCP_UDP", // elbv2.ProtocolEnumTcpUdp,
+					elbv2.ProtocolEnumTls,
+					elbv2.ProtocolEnumUdp,
+					elbv2.ProtocolEnumTcpUdp,
 				}, true),
 			},
 
@@ -110,11 +102,22 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				Default:  false,
 			},
 
+			"lambda_multi_value_headers_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"target_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "instance",
+				Default:  elbv2.TargetTypeEnumInstance,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					elbv2.TargetTypeEnumInstance,
+					elbv2.TargetTypeEnumIp,
+					elbv2.TargetTypeEnumLambda,
+				}, false),
 			},
 
 			"stickiness": {
@@ -153,6 +156,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+
 						"interval": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -167,10 +176,11 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 						},
 
 						"port": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "traffic-port",
-							ValidateFunc: validateAwsLbTargetGroupHealthCheckPort,
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "traffic-port",
+							ValidateFunc:     validateAwsLbTargetGroupHealthCheckPort,
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 
 						"protocol": {
@@ -185,6 +195,7 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 								elbv2.ProtocolEnumHttps,
 								elbv2.ProtocolEnumTcp,
 							}, true),
+							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
 
 						"timeout": {
@@ -222,6 +233,12 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 	}
 }
 
+func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
+	return func(k string, old string, new string, d *schema.ResourceData) bool {
+		return d.Get("target_type").(string) == t
+	}
+}
+
 func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbv2conn
 
@@ -236,26 +253,42 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 	params := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(groupName),
-		Port:       aws.Int64(int64(d.Get("port").(int))),
-		Protocol:   aws.String(d.Get("protocol").(string)),
-		VpcId:      aws.String(d.Get("vpc_id").(string)),
 		TargetType: aws.String(d.Get("target_type").(string)),
+	}
+
+	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+		if _, ok := d.GetOk("port"); !ok {
+			return fmt.Errorf("port should be set when target type is %s", d.Get("target_type").(string))
+		}
+
+		if _, ok := d.GetOk("protocol"); !ok {
+			return fmt.Errorf("protocol should be set when target type is %s", d.Get("target_type").(string))
+		}
+
+		if _, ok := d.GetOk("vpc_id"); !ok {
+			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
+		}
+		params.Port = aws.Int64(int64(d.Get("port").(int)))
+		params.Protocol = aws.String(d.Get("protocol").(string))
+		params.VpcId = aws.String(d.Get("vpc_id").(string))
 	}
 
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})
 
+		params.HealthCheckEnabled = aws.Bool(healthCheck["enabled"].(bool))
+
 		params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
-		params.HealthCheckPort = aws.String(healthCheck["port"].(string))
-		params.HealthCheckProtocol = aws.String(healthCheck["protocol"].(string))
+
 		params.HealthyThresholdCount = aws.Int64(int64(healthCheck["healthy_threshold"].(int)))
 		params.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
 		t := healthCheck["timeout"].(int)
 		if t != 0 {
 			params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
 		}
+		healthCheckProtocol := healthCheck["protocol"].(string)
 
-		if *params.HealthCheckProtocol != "TCP" {
+		if healthCheckProtocol != "TCP" {
 			p := healthCheck["path"].(string)
 			if p != "" {
 				params.HealthCheckPath = aws.String(p)
@@ -268,6 +301,10 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 				}
 			}
 		}
+		if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+			params.HealthCheckPort = aws.String(healthCheck["port"].(string))
+			params.HealthCheckProtocol = aws.String(healthCheckProtocol)
+		}
 	}
 
 	resp, err := elbconn.CreateTargetGroup(params)
@@ -278,9 +315,7 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 	if len(resp.TargetGroups) == 0 {
 		return errors.New("Error creating LB Target Group: no groups returned in response")
 	}
-
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
-
 	return resourceAwsLbTargetGroupUpdate(d, meta)
 }
 
@@ -324,8 +359,7 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 			params = &elbv2.ModifyTargetGroupInput{
 				TargetGroupArn:          aws.String(d.Id()),
-				HealthCheckPort:         aws.String(healthCheck["port"].(string)),
-				HealthCheckProtocol:     aws.String(healthCheck["protocol"].(string)),
+				HealthCheckEnabled:      aws.Bool(healthCheck["enabled"].(bool)),
 				HealthyThresholdCount:   aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
 				UnhealthyThresholdCount: aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
 			}
@@ -335,14 +369,18 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
 			}
 
-			healthCheckProtocol := strings.ToLower(healthCheck["protocol"].(string))
+			healthCheckProtocol := healthCheck["protocol"].(string)
 
-			if healthCheckProtocol != "tcp" && !d.IsNewResource() {
+			if healthCheckProtocol != "TCP" && !d.IsNewResource() {
 				params.Matcher = &elbv2.Matcher{
 					HttpCode: aws.String(healthCheck["matcher"].(string)),
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
 				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
+			}
+			if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
+				params.HealthCheckPort = aws.String(healthCheck["port"].(string))
+				params.HealthCheckProtocol = aws.String(healthCheckProtocol)
 			}
 		}
 
@@ -356,53 +394,63 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 	var attrs []*elbv2.TargetGroupAttribute
 
-	if d.HasChange("deregistration_delay") {
-		attrs = append(attrs, &elbv2.TargetGroupAttribute{
-			Key:   aws.String("deregistration_delay.timeout_seconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("deregistration_delay").(int))),
-		})
-	}
-
-	if d.HasChange("slow_start") {
-		attrs = append(attrs, &elbv2.TargetGroupAttribute{
-			Key:   aws.String("slow_start.duration_seconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
-		})
-	}
-
-	if d.HasChange("proxy_protocol_v2") {
-		attrs = append(attrs, &elbv2.TargetGroupAttribute{
-			Key:   aws.String("proxy_protocol_v2.enabled"),
-			Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
-		})
-	}
-
-	// In CustomizeDiff we allow LB stickiness to be declared for TCP target
-	// groups, so long as it's not enabled. This allows for better support for
-	// modules, but also means we need to completely skip sending the data to the
-	// API if it's defined on a TCP target group.
-	if d.HasChange("stickiness") && d.Get("protocol") != "TCP" {
-		stickinessBlocks := d.Get("stickiness").([]interface{})
-		if len(stickinessBlocks) == 1 {
-			stickiness := stickinessBlocks[0].(map[string]interface{})
-
-			attrs = append(attrs,
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.enabled"),
-					Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-				},
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.type"),
-					Value: aws.String(stickiness["type"].(string)),
-				},
-				&elbv2.TargetGroupAttribute{
-					Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-					Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-				})
-		} else if len(stickinessBlocks) == 0 {
+	switch d.Get("target_type").(string) {
+	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
+		if d.HasChange("deregistration_delay") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
-				Key:   aws.String("stickiness.enabled"),
-				Value: aws.String("false"),
+				Key:   aws.String("deregistration_delay.timeout_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", d.Get("deregistration_delay").(int))),
+			})
+		}
+
+		if d.HasChange("slow_start") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("slow_start.duration_seconds"),
+				Value: aws.String(fmt.Sprintf("%d", d.Get("slow_start").(int))),
+			})
+		}
+
+		if d.HasChange("proxy_protocol_v2") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("proxy_protocol_v2.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
+			})
+		}
+
+		// In CustomizeDiff we allow LB stickiness to be declared for TCP target
+		// groups, so long as it's not enabled. This allows for better support for
+		// modules, but also means we need to completely skip sending the data to the
+		// API if it's defined on a TCP target group.
+		if d.HasChange("stickiness") && d.Get("protocol") != "TCP" {
+			stickinessBlocks := d.Get("stickiness").([]interface{})
+			if len(stickinessBlocks) == 1 {
+				stickiness := stickinessBlocks[0].(map[string]interface{})
+
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.enabled"),
+						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.type"),
+						Value: aws.String(stickiness["type"].(string)),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+						Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+					})
+			} else if len(stickinessBlocks) == 0 {
+				attrs = append(attrs, &elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.enabled"),
+					Value: aws.String("false"),
+				})
+			}
+		}
+	case elbv2.TargetTypeEnumLambda:
+		if d.HasChange("lambda_multi_value_headers_enabled") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("lambda.multi_value_headers.enabled"),
+				Value: aws.String(strconv.FormatBool(d.Get("lambda_multi_value_headers_enabled").(bool))),
 			})
 		}
 	}
@@ -501,12 +549,10 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", lbTargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
-	d.Set("port", targetGroup.Port)
-	d.Set("protocol", targetGroup.Protocol)
-	d.Set("vpc_id", targetGroup.VpcId)
 	d.Set("target_type", targetGroup.TargetType)
 
 	healthCheck := make(map[string]interface{})
+	healthCheck["enabled"] = aws.BoolValue(targetGroup.HealthCheckEnabled)
 	healthCheck["interval"] = int(aws.Int64Value(targetGroup.HealthCheckIntervalSeconds))
 	healthCheck["port"] = aws.StringValue(targetGroup.HealthCheckPort)
 	healthCheck["protocol"] = aws.StringValue(targetGroup.HealthCheckProtocol)
@@ -519,6 +565,11 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 	}
 	if targetGroup.Matcher != nil && targetGroup.Matcher.HttpCode != nil {
 		healthCheck["matcher"] = aws.StringValue(targetGroup.Matcher.HttpCode)
+	}
+	if v, _ := d.Get("target_type").(string); v != elbv2.TargetTypeEnumLambda {
+		d.Set("vpc_id", targetGroup.VpcId)
+		d.Set("port", targetGroup.Port)
+		d.Set("protocol", targetGroup.Protocol)
 	}
 
 	if err := d.Set("health_check", []interface{}{healthCheck}); err != nil {
@@ -534,6 +585,12 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 
 	for _, attr := range attrResp.Attributes {
 		switch aws.StringValue(attr.Key) {
+		case "lambda.multi_value_headers.enabled":
+			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
+			if err != nil {
+				return fmt.Errorf("Error converting lambda.multi_value_headers.enabled to bool: %s", aws.StringValue(attr.Value))
+			}
+			d.Set("lambda_multi_value_headers_enabled", enabled)
 		case "proxy_protocol_v2.enabled":
 			enabled, err := strconv.ParseBool(aws.StringValue(attr.Value))
 			if err != nil {
@@ -643,20 +700,20 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		if protocol == "TCP" {
 			// Cannot set custom matcher on TCP health checks
 			if m := healthCheck["matcher"].(string); m != "" {
-				return fmt.Errorf("%s: custom matcher is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("%s: health_check.matcher is not supported for target_groups with TCP protocol", diff.Id())
 			}
 			// Cannot set custom path on TCP health checks
 			if m := healthCheck["path"].(string); m != "" {
-				return fmt.Errorf("%s: custom path is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("%s: health_check.path is not supported for target_groups with TCP protocol", diff.Id())
 			}
 			// Cannot set custom timeout on TCP health checks
 			if t := healthCheck["timeout"].(int); t != 0 && diff.Id() == "" {
 				// timeout has a default value, so only check this if this is a network
 				// LB and is a first run
-				return fmt.Errorf("%s: custom timeout is not supported for target_groups with TCP protocol", diff.Id())
+				return fmt.Errorf("%s: health_check.timeout is not supported for target_groups with TCP protocol", diff.Id())
 			}
 			if healthCheck["healthy_threshold"].(int) != healthCheck["unhealthy_threshold"].(int) {
-				return fmt.Errorf("%s: healthy_threshold %d and unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
+				return fmt.Errorf("%s: health_check.healthy_threshold %d and health_check.unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
 			}
 		}
 	}

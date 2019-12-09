@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection_accepter"
-sidebar_current: "docs-aws-resource-vpc-peering-accepter"
 description: |-
   Manage the accepter's side of a VPC Peering Connection.
 ---
 
-# aws_vpc_peering_connection_accepter
+# Resource: aws_vpc_peering_connection_accepter
 
 Provides a resource to manage the accepter's side of a VPC Peering Connection.
 
@@ -27,7 +27,7 @@ provider "aws" {
 }
 
 provider "aws" {
-  alias = "peer"
+  alias  = "peer"
   region = "us-west-2"
 
   # Accepter's credentials.
@@ -54,7 +54,7 @@ resource "aws_vpc_peering_connection" "peer" {
   peer_region   = "us-west-2"
   auto_accept   = false
 
-  tags {
+  tags = {
     Side = "Requester"
   }
 }
@@ -65,7 +65,7 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
   vpc_peering_connection_id = "${aws_vpc_peering_connection.peer.id}"
   auto_accept               = true
 
-  tags {
+  tags = {
     Side = "Accepter"
   }
 }

@@ -5,14 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAWSKmsGrant_Basic(t *testing.T) {
+func TestAccAWSKmsGrant_Basic(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -33,10 +34,10 @@ func TestAWSKmsGrant_Basic(t *testing.T) {
 	})
 }
 
-func TestAWSKmsGrant_withConstraints(t *testing.T) {
+func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -69,10 +70,10 @@ func TestAWSKmsGrant_withConstraints(t *testing.T) {
 	})
 }
 
-func TestAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
+func TestAccAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -88,10 +89,10 @@ func TestAWSKmsGrant_withRetiringPrincipal(t *testing.T) {
 	})
 }
 
-func TestAWSKmsGrant_bare(t *testing.T) {
+func TestAccAWSKmsGrant_bare(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -109,10 +110,10 @@ func TestAWSKmsGrant_bare(t *testing.T) {
 	})
 }
 
-func TestAWSKmsGrant_ARN(t *testing.T) {
+func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	timestamp := time.Now().Format(time.RFC1123)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
@@ -142,11 +143,7 @@ func testAccCheckAWSKmsGrantDestroy(s *terraform.State) error {
 		}
 
 		err := waitForKmsGrantToBeRevoked(conn, rs.Primary.Attributes["key_id"], rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 
 	return nil
@@ -173,18 +170,18 @@ resource "aws_kms_key" "tf-acc-test-key" {
 %s
 
 resource "aws_iam_role" "tf-acc-test-role" {
-  name               = "tf-acc-test-kms-grant-role-%s"
+  name               = "%s"
   path               = "/service-role/"
   assume_role_policy = "${data.aws_iam_policy_document.assumerole-policy-template.json}"
 }
 
-resource "aws_kms_grant" "%s" {
-	name = "%s"
+resource "aws_kms_grant" "%[4]s" {
+	name = "%[4]s"
 	key_id = "${aws_kms_key.tf-acc-test-key.key_id}"
 	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
-	operations = [ %s ]
+	operations = [ %[5]s ]
 }
-`, timestamp, staticAssumeRolePolicyString, rName, rName, rName, operations)
+`, timestamp, staticAssumeRolePolicyString, acctest.RandomWithPrefix("tf-acc-test-kms-grant-role"), rName, operations)
 }
 
 func testAccAWSKmsGrant_withConstraints(rName string, timestamp string, constraintName string, encryptionContext string) string {
@@ -197,71 +194,71 @@ resource "aws_kms_key" "tf-acc-test-key" {
 %s
 
 resource "aws_iam_role" "tf-acc-test-role" {
-  name               = "tf-acc-test-kms-grant-role-%s"
+  name               = "%s"
   path               = "/service-role/"
   assume_role_policy = "${data.aws_iam_policy_document.assumerole-policy-template.json}"
 }
 
-resource "aws_kms_grant" "%s" {
-	name = "%s"
+resource "aws_kms_grant" "%[4]s" {
+	name = "%[4]s"
 	key_id = "${aws_kms_key.tf-acc-test-key.key_id}"
 	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
 	operations = [ "RetireGrant", "DescribeKey" ]
 	constraints {
-		%s {
-			%s
+		%[5]s = {
+			%[6]s
 		}
 	}
 }
-`, timestamp, staticAssumeRolePolicyString, rName, rName, rName, constraintName, encryptionContext)
+`, timestamp, staticAssumeRolePolicyString, acctest.RandomWithPrefix("tf-acc-test-kms-grant-role"), rName, constraintName, encryptionContext)
 }
 
 func testAccAWSKmsGrant_withRetiringPrincipal(rName string, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "tf-acc-test-key" {
-    description = "Terraform acc test key %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test key %s"
+  deletion_window_in_days = 7
 }
 
 %s
 
 resource "aws_iam_role" "tf-acc-test-role" {
-  name               = "tf-acc-test-kms-grant-role-%s"
+  name               = "%s"
   path               = "/service-role/"
   assume_role_policy = "${data.aws_iam_policy_document.assumerole-policy-template.json}"
 }
 
-resource "aws_kms_grant" "%s" {
-	name = "%s"
-	key_id = "${aws_kms_key.tf-acc-test-key.key_id}"
-	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
-	operations = [ "ReEncryptTo", "CreateGrant" ]
-	retiring_principal = "${aws_iam_role.tf-acc-test-role.arn}"
+resource "aws_kms_grant" "%[4]s" {
+  name               = "%[4]s"
+  key_id             = "${aws_kms_key.tf-acc-test-key.key_id}"
+  grantee_principal  = "${aws_iam_role.tf-acc-test-role.arn}"
+  operations         = ["ReEncryptTo", "CreateGrant"]
+  retiring_principal = "${aws_iam_role.tf-acc-test-role.arn}"
 }
-`, timestamp, staticAssumeRolePolicyString, rName, rName, rName)
+`, timestamp, staticAssumeRolePolicyString, acctest.RandomWithPrefix("tf-acc-test-kms-grant-role"), rName)
 }
 
 func testAccAWSKmsGrant_bare(rName string, timestamp string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "tf-acc-test-key" {
-    description = "Terraform acc test key %s"
-    deletion_window_in_days = 7
+  description             = "Terraform acc test key %s"
+  deletion_window_in_days = 7
 }
 
 %s
 
 resource "aws_iam_role" "tf-acc-test-role" {
-  name               = "tf-acc-test-kms-grant-role-%s"
+  name               = "%s"
   path               = "/service-role/"
   assume_role_policy = "${data.aws_iam_policy_document.assumerole-policy-template.json}"
 }
 
 resource "aws_kms_grant" "%s" {
-	key_id = "${aws_kms_key.tf-acc-test-key.key_id}"
-	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
-	operations = [ "ReEncryptTo", "CreateGrant" ]
+  key_id            = "${aws_kms_key.tf-acc-test-key.key_id}"
+  grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
+  operations        = ["ReEncryptTo", "CreateGrant"]
 }
-`, timestamp, staticAssumeRolePolicyString, rName, rName)
+`, timestamp, staticAssumeRolePolicyString, acctest.RandomWithPrefix("tf-acc-test-kms-grant-role"), rName)
 }
 
 const staticAssumeRolePolicyString = `
@@ -287,16 +284,16 @@ resource "aws_kms_key" "tf-acc-test-key" {
 %s
 
 resource "aws_iam_role" "tf-acc-test-role" {
-  name               = "tf-acc-test-kms-grant-role-%s"
+  name               = "%s"
   path               = "/service-role/"
   assume_role_policy = "${data.aws_iam_policy_document.assumerole-policy-template.json}"
 }
 
-resource "aws_kms_grant" "%s" {
-	name = "%s"
+resource "aws_kms_grant" "%[4]s" {
+	name = "%[4]s"
 	key_id = "${aws_kms_key.tf-acc-test-key.arn}"
 	grantee_principal = "${aws_iam_role.tf-acc-test-role.arn}"
-	operations = [ %s ]
+	operations = [ %[5]s ]
 }
-`, timestamp, staticAssumeRolePolicyString, rName, rName, rName, operations)
+`, timestamp, staticAssumeRolePolicyString, acctest.RandomWithPrefix("tf-acc-test-kms-grant-role"), rName, operations)
 }

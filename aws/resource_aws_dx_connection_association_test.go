@@ -6,13 +6,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
@@ -28,7 +28,7 @@ func TestAccAWSDxConnectionAssociation_basic(t *testing.T) {
 }
 
 func TestAccAWSDxConnectionAssociation_multiConns(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDxConnectionAssociationDestroy,
@@ -83,21 +83,21 @@ func testAccCheckAwsDxConnectionAssociationExists(name string) resource.TestChec
 func testAccDxConnectionAssociationConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test" {
-  name = "tf-dx-%s"
+  name      = "tf-dx-%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 
 resource "aws_dx_lag" "test" {
-  name = "tf-dx-%s"
+  name                  = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 }
 
 resource "aws_dx_connection_association" "test" {
   connection_id = "${aws_dx_connection.test.id}"
-  lag_id = "${aws_dx_lag.test.id}"
+  lag_id        = "${aws_dx_lag.test.id}"
 }
 `, rName, rName)
 }
@@ -105,32 +105,32 @@ resource "aws_dx_connection_association" "test" {
 func testAccDxConnectionAssociationConfig_multiConns(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "test1" {
-  name = "tf-dxconn1-%s"
+  name      = "tf-dxconn1-%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 
 resource "aws_dx_connection" "test2" {
-  name = "tf-dxconn2-%s"
+  name      = "tf-dxconn2-%s"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 
 resource "aws_dx_lag" "test" {
-  name = "tf-dx-%s"
+  name                  = "tf-dx-%s"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  force_destroy = true
+  location              = "EqSe2"
+  force_destroy         = true
 }
 
 resource "aws_dx_connection_association" "test1" {
   connection_id = "${aws_dx_connection.test1.id}"
-  lag_id = "${aws_dx_lag.test.id}"
+  lag_id        = "${aws_dx_lag.test.id}"
 }
 
 resource "aws_dx_connection_association" "test2" {
   connection_id = "${aws_dx_connection.test2.id}"
-  lag_id = "${aws_dx_lag.test.id}"
+  lag_id        = "${aws_dx_lag.test.id}"
 }
 `, rName, rName, rName)
 }

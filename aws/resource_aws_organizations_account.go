@@ -8,15 +8,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsOrganizationsAccount() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOrganizationsAccountCreate,
 		Read:   resourceAwsOrganizationsAccountRead,
+		Update: resourceAwsOrganizationsAccountUpdate,
 		Delete: resourceAwsOrganizationsAccountDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -34,6 +35,12 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 			"joined_timestamp": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"parent_id": {
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -63,6 +70,7 @@ func resourceAwsOrganizationsAccount() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateAwsOrganizationsAccountRoleName,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -83,29 +91,32 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 		createOpts.IamUserAccessToBilling = aws.String(iam_user.(string))
 	}
 
-	log.Printf("[DEBUG] Account create config: %#v", createOpts)
+	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", createOpts)
 
-	var err error
 	var resp *organizations.CreateAccountOutput
-	err = resource.Retry(4*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(4*time.Minute, func() *resource.RetryError {
+		var err error
+
 		resp, err = conn.CreateAccount(createOpts)
 
-		if err != nil {
-			if isAWSErr(err, organizations.ErrCodeFinalizingOrganizationException, "") {
-				log.Printf("[DEBUG] Trying to create account again: %q", err.Error())
-				return resource.RetryableError(err)
-			}
+		if isAWSErr(err, organizations.ErrCodeFinalizingOrganizationException, "") {
+			return resource.RetryableError(err)
+		}
 
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateAccount(createOpts)
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error creating account: %s", err)
 	}
-	log.Printf("[DEBUG] Account create response: %#v", resp)
 
 	requestId := *resp.CreateAccountStatus.Id
 
@@ -130,6 +141,41 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 	accountId := stateResp.(*organizations.CreateAccountStatus).AccountId
 	d.SetId(*accountId)
 
+	if v, ok := d.GetOk("parent_id"); ok {
+		newParentID := v.(string)
+
+		existingParentID, err := resourceAwsOrganizationsAccountGetParentId(conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
+		}
+
+		if newParentID != existingParentID {
+			input := &organizations.MoveAccountInput{
+				AccountId:           accountId,
+				SourceParentId:      aws.String(existingParentID),
+				DestinationParentId: aws.String(newParentID),
+			}
+
+			if _, err := conn.MoveAccount(input); err != nil {
+				return fmt.Errorf("error moving AWS Organizations Account (%s): %s", d.Id(), err)
+			}
+		}
+	}
+
+	if tags := tagsFromMapOrganizations(d.Get("tags").(map[string]interface{})); len(tags) > 0 {
+		input := &organizations.TagResourceInput{
+			ResourceId: aws.String(d.Id()),
+			Tags:       tags,
+		}
+
+		log.Printf("[DEBUG] Adding Organizations Account (%s) tags: %s", d.Id(), input)
+
+		if _, err := conn.TagResource(input); err != nil {
+			return fmt.Errorf("error updating Organizations Account (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return resourceAwsOrganizationsAccountRead(d, meta)
 }
 
@@ -139,13 +185,15 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 		AccountId: aws.String(d.Id()),
 	}
 	resp, err := conn.DescribeAccount(describeOpts)
+
+	if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
+		log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, organizations.ErrCodeAccountNotFoundException, "") {
-			log.Printf("[WARN] Account does not exist, removing from state: %s", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return fmt.Errorf("error describing AWS Organizations Account (%s): %s", d.Id(), err)
 	}
 
 	account := resp.Account
@@ -155,13 +203,91 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 		return nil
 	}
 
+	parentId, err := resourceAwsOrganizationsAccountGetParentId(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error getting AWS Organizations Account (%s) parent: %s", d.Id(), err)
+	}
+
+	tagsInput := &organizations.ListTagsForResourceInput{
+		ResourceId: aws.String(d.Id()),
+	}
+
+	tagsOutput, err := conn.ListTagsForResource(tagsInput)
+
+	if err != nil {
+		return fmt.Errorf("error reading Organizations Account (%s) tags: %s", d.Id(), err)
+	}
+
+	if tagsOutput == nil {
+		return fmt.Errorf("error reading Organizations Account (%s) tags: empty result", d.Id())
+	}
+
 	d.Set("arn", account.Arn)
 	d.Set("email", account.Email)
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", account.JoinedTimestamp)
 	d.Set("name", account.Name)
+	d.Set("parent_id", parentId)
 	d.Set("status", account.Status)
+
+	if err := d.Set("tags", tagsToMapOrganizations(tagsOutput.Tags)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
+}
+
+func resourceAwsOrganizationsAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).organizationsconn
+
+	if d.HasChange("parent_id") {
+		o, n := d.GetChange("parent_id")
+
+		input := &organizations.MoveAccountInput{
+			AccountId:           aws.String(d.Id()),
+			SourceParentId:      aws.String(o.(string)),
+			DestinationParentId: aws.String(n.(string)),
+		}
+
+		if _, err := conn.MoveAccount(input); err != nil {
+			return fmt.Errorf("error moving AWS Organizations Account (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		oraw, nraw := d.GetChange("tags")
+		o := oraw.(map[string]interface{})
+		n := nraw.(map[string]interface{})
+		create, remove := diffTagsOrganizations(tagsFromMapOrganizations(o), tagsFromMapOrganizations(n))
+
+		// Set tags
+		if len(remove) > 0 {
+			input := &organizations.UntagResourceInput{
+				ResourceId: aws.String(d.Id()),
+				TagKeys:    remove,
+			}
+
+			log.Printf("[DEBUG] Removing Organizations Account (%s) tags: %s", d.Id(), input)
+
+			if _, err := conn.UntagResource(input); err != nil {
+				return fmt.Errorf("error removing Organizations Account (%s) tags: %s", d.Id(), err)
+			}
+		}
+		if len(create) > 0 {
+			input := &organizations.TagResourceInput{
+				ResourceId: aws.String(d.Id()),
+				Tags:       create,
+			}
+
+			log.Printf("[DEBUG] Adding Organizations Account (%s) tags: %s", d.Id(), input)
+
+			if _, err := conn.TagResource(input); err != nil {
+				return fmt.Errorf("error updating Organizations Account (%s) tags: %s", d.Id(), err)
+			}
+		}
+	}
+
+	return resourceAwsOrganizationsAccountRead(d, meta)
 }
 
 func resourceAwsOrganizationsAccountDelete(d *schema.ResourceData, meta interface{}) error {
@@ -240,4 +366,30 @@ func validateAwsOrganizationsAccountRoleName(v interface{}, k string) (ws []stri
 	}
 
 	return
+}
+
+func resourceAwsOrganizationsAccountGetParentId(conn *organizations.Organizations, childId string) (string, error) {
+	input := &organizations.ListParentsInput{
+		ChildId: aws.String(childId),
+	}
+	var parents []*organizations.Parent
+
+	err := conn.ListParentsPages(input, func(page *organizations.ListParentsOutput, lastPage bool) bool {
+		parents = append(parents, page.Parents...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if len(parents) == 0 {
+		return "", nil
+	}
+
+	// assume there is only a single parent
+	// https://docs.aws.amazon.com/organizations/latest/APIReference/API_ListParents.html
+	parent := parents[0]
+	return aws.StringValue(parent.Id), nil
 }

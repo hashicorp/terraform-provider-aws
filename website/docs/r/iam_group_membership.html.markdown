@@ -1,12 +1,12 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_group_membership"
-sidebar_current: "docs-aws-resource-iam-group-membership"
 description: |-
   Provides a top level resource to manage IAM Group membership for IAM Users.
 ---
 
-# aws_iam_group_membership
+# Resource: aws_iam_group_membership
 
 ~> **WARNING:** Multiple aws_iam_group_membership resources with the same group name will produce inconsistent behavior!
 

@@ -18,7 +18,7 @@ const opAddTags = "AddTags"
 // AddTagsRequest generates a "aws/request.Request" representing the
 // client's request for the AddTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -50,15 +50,14 @@ func (c *ElasticsearchService) AddTagsRequest(input *AddTagsInput) (req *request
 
 	output = &AddTagsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
 // AddTags API operation for Amazon Elasticsearch Service.
 //
 // Attaches tags to an existing Elasticsearch domain. Tags are a set of case-sensitive
-// key value pairs. An Elasticsearch domain may have up to 10 tags. See  Tagging
+// key value pairs. An Elasticsearch domain may have up to 10 tags. See Tagging
 // Amazon Elasticsearch Service Domains for more information. (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-managedomains.html#es-managedomains-awsresorcetagging)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -106,12 +105,103 @@ func (c *ElasticsearchService) AddTagsWithContext(ctx aws.Context, input *AddTag
 	return out, req.Send()
 }
 
+const opCancelElasticsearchServiceSoftwareUpdate = "CancelElasticsearchServiceSoftwareUpdate"
+
+// CancelElasticsearchServiceSoftwareUpdateRequest generates a "aws/request.Request" representing the
+// client's request for the CancelElasticsearchServiceSoftwareUpdate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelElasticsearchServiceSoftwareUpdate for more information on using the CancelElasticsearchServiceSoftwareUpdate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelElasticsearchServiceSoftwareUpdateRequest method.
+//    req, resp := client.CancelElasticsearchServiceSoftwareUpdateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) CancelElasticsearchServiceSoftwareUpdateRequest(input *CancelElasticsearchServiceSoftwareUpdateInput) (req *request.Request, output *CancelElasticsearchServiceSoftwareUpdateOutput) {
+	op := &request.Operation{
+		Name:       opCancelElasticsearchServiceSoftwareUpdate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/es/serviceSoftwareUpdate/cancel",
+	}
+
+	if input == nil {
+		input = &CancelElasticsearchServiceSoftwareUpdateInput{}
+	}
+
+	output = &CancelElasticsearchServiceSoftwareUpdateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CancelElasticsearchServiceSoftwareUpdate API operation for Amazon Elasticsearch Service.
+//
+// Cancels a scheduled service software update for an Amazon ES domain. You
+// can only perform this operation before the AutomatedUpdateDate and when the
+// UpdateStatus is in the PENDING_UPDATE state.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation CancelElasticsearchServiceSoftwareUpdate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBaseException "BaseException"
+//   An error occurred while processing the request.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+func (c *ElasticsearchService) CancelElasticsearchServiceSoftwareUpdate(input *CancelElasticsearchServiceSoftwareUpdateInput) (*CancelElasticsearchServiceSoftwareUpdateOutput, error) {
+	req, out := c.CancelElasticsearchServiceSoftwareUpdateRequest(input)
+	return out, req.Send()
+}
+
+// CancelElasticsearchServiceSoftwareUpdateWithContext is the same as CancelElasticsearchServiceSoftwareUpdate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelElasticsearchServiceSoftwareUpdate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) CancelElasticsearchServiceSoftwareUpdateWithContext(ctx aws.Context, input *CancelElasticsearchServiceSoftwareUpdateInput, opts ...request.Option) (*CancelElasticsearchServiceSoftwareUpdateOutput, error) {
+	req, out := c.CancelElasticsearchServiceSoftwareUpdateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateElasticsearchDomain = "CreateElasticsearchDomain"
 
 // CreateElasticsearchDomainRequest generates a "aws/request.Request" representing the
 // client's request for the CreateElasticsearchDomain operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -214,7 +304,7 @@ const opDeleteElasticsearchDomain = "DeleteElasticsearchDomain"
 // DeleteElasticsearchDomainRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteElasticsearchDomain operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -304,7 +394,7 @@ const opDeleteElasticsearchServiceRole = "DeleteElasticsearchServiceRole"
 // DeleteElasticsearchServiceRoleRequest generates a "aws/request.Request" representing the
 // client's request for the DeleteElasticsearchServiceRole operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -336,8 +426,7 @@ func (c *ElasticsearchService) DeleteElasticsearchServiceRoleRequest(input *Dele
 
 	output = &DeleteElasticsearchServiceRoleOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -395,7 +484,7 @@ const opDescribeElasticsearchDomain = "DescribeElasticsearchDomain"
 // DescribeElasticsearchDomainRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeElasticsearchDomain operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -485,7 +574,7 @@ const opDescribeElasticsearchDomainConfig = "DescribeElasticsearchDomainConfig"
 // DescribeElasticsearchDomainConfigRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeElasticsearchDomainConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -576,7 +665,7 @@ const opDescribeElasticsearchDomains = "DescribeElasticsearchDomains"
 // DescribeElasticsearchDomainsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeElasticsearchDomains operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -662,7 +751,7 @@ const opDescribeElasticsearchInstanceTypeLimits = "DescribeElasticsearchInstance
 // DescribeElasticsearchInstanceTypeLimitsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeElasticsearchInstanceTypeLimits operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -761,7 +850,7 @@ const opDescribeReservedElasticsearchInstanceOfferings = "DescribeReservedElasti
 // DescribeReservedElasticsearchInstanceOfferingsRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeReservedElasticsearchInstanceOfferings operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -863,7 +952,7 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsWit
 //    // Example iterating over at most 3 pages of a DescribeReservedElasticsearchInstanceOfferings operation.
 //    pageNum := 0
 //    err := client.DescribeReservedElasticsearchInstanceOfferingsPages(params,
-//        func(page *DescribeReservedElasticsearchInstanceOfferingsOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.DescribeReservedElasticsearchInstanceOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -895,10 +984,12 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsPag
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedElasticsearchInstanceOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedElasticsearchInstanceOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -907,7 +998,7 @@ const opDescribeReservedElasticsearchInstances = "DescribeReservedElasticsearchI
 // DescribeReservedElasticsearchInstancesRequest generates a "aws/request.Request" representing the
 // client's request for the DescribeReservedElasticsearchInstances operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1009,7 +1100,7 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesWithContext
 //    // Example iterating over at most 3 pages of a DescribeReservedElasticsearchInstances operation.
 //    pageNum := 0
 //    err := client.DescribeReservedElasticsearchInstancesPages(params,
-//        func(page *DescribeReservedElasticsearchInstancesOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.DescribeReservedElasticsearchInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1041,10 +1132,12 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesPagesWithCo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedElasticsearchInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedElasticsearchInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1053,7 +1146,7 @@ const opGetCompatibleElasticsearchVersions = "GetCompatibleElasticsearchVersions
 // GetCompatibleElasticsearchVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the GetCompatibleElasticsearchVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1148,7 +1241,7 @@ const opGetUpgradeHistory = "GetUpgradeHistory"
 // GetUpgradeHistoryRequest generates a "aws/request.Request" representing the
 // client's request for the GetUpgradeHistory operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1254,7 +1347,7 @@ func (c *ElasticsearchService) GetUpgradeHistoryWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a GetUpgradeHistory operation.
 //    pageNum := 0
 //    err := client.GetUpgradeHistoryPages(params,
-//        func(page *GetUpgradeHistoryOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.GetUpgradeHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1286,10 +1379,12 @@ func (c *ElasticsearchService) GetUpgradeHistoryPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUpgradeHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUpgradeHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1298,7 +1393,7 @@ const opGetUpgradeStatus = "GetUpgradeStatus"
 // GetUpgradeStatusRequest generates a "aws/request.Request" representing the
 // client's request for the GetUpgradeStatus operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1392,7 +1487,7 @@ const opListDomainNames = "ListDomainNames"
 // ListDomainNamesRequest generates a "aws/request.Request" representing the
 // client's request for the ListDomainNames operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1473,7 +1568,7 @@ const opListElasticsearchInstanceTypes = "ListElasticsearchInstanceTypes"
 // ListElasticsearchInstanceTypesRequest generates a "aws/request.Request" representing the
 // client's request for the ListElasticsearchInstanceTypes operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1574,7 +1669,7 @@ func (c *ElasticsearchService) ListElasticsearchInstanceTypesWithContext(ctx aws
 //    // Example iterating over at most 3 pages of a ListElasticsearchInstanceTypes operation.
 //    pageNum := 0
 //    err := client.ListElasticsearchInstanceTypesPages(params,
-//        func(page *ListElasticsearchInstanceTypesOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.ListElasticsearchInstanceTypesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1606,10 +1701,12 @@ func (c *ElasticsearchService) ListElasticsearchInstanceTypesPagesWithContext(ct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListElasticsearchInstanceTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListElasticsearchInstanceTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1618,7 +1715,7 @@ const opListElasticsearchVersions = "ListElasticsearchVersions"
 // ListElasticsearchVersionsRequest generates a "aws/request.Request" representing the
 // client's request for the ListElasticsearchVersions operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1719,7 +1816,7 @@ func (c *ElasticsearchService) ListElasticsearchVersionsWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a ListElasticsearchVersions operation.
 //    pageNum := 0
 //    err := client.ListElasticsearchVersionsPages(params,
-//        func(page *ListElasticsearchVersionsOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.ListElasticsearchVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1751,10 +1848,12 @@ func (c *ElasticsearchService) ListElasticsearchVersionsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListElasticsearchVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListElasticsearchVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1763,7 +1862,7 @@ const opListTags = "ListTags"
 // ListTagsRequest generates a "aws/request.Request" representing the
 // client's request for the ListTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1852,7 +1951,7 @@ const opPurchaseReservedElasticsearchInstanceOffering = "PurchaseReservedElastic
 // PurchaseReservedElasticsearchInstanceOfferingRequest generates a "aws/request.Request" representing the
 // client's request for the PurchaseReservedElasticsearchInstanceOffering operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1950,7 +2049,7 @@ const opRemoveTags = "RemoveTags"
 // RemoveTagsRequest generates a "aws/request.Request" representing the
 // client's request for the RemoveTags operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -1982,8 +2081,7 @@ func (c *ElasticsearchService) RemoveTagsRequest(input *RemoveTagsInput) (req *r
 
 	output = &RemoveTagsOutput{}
 	req = c.newRequest(op, input, output)
-	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
 	return
 }
 
@@ -2032,12 +2130,101 @@ func (c *ElasticsearchService) RemoveTagsWithContext(ctx aws.Context, input *Rem
 	return out, req.Send()
 }
 
+const opStartElasticsearchServiceSoftwareUpdate = "StartElasticsearchServiceSoftwareUpdate"
+
+// StartElasticsearchServiceSoftwareUpdateRequest generates a "aws/request.Request" representing the
+// client's request for the StartElasticsearchServiceSoftwareUpdate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartElasticsearchServiceSoftwareUpdate for more information on using the StartElasticsearchServiceSoftwareUpdate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartElasticsearchServiceSoftwareUpdateRequest method.
+//    req, resp := client.StartElasticsearchServiceSoftwareUpdateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) StartElasticsearchServiceSoftwareUpdateRequest(input *StartElasticsearchServiceSoftwareUpdateInput) (req *request.Request, output *StartElasticsearchServiceSoftwareUpdateOutput) {
+	op := &request.Operation{
+		Name:       opStartElasticsearchServiceSoftwareUpdate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/es/serviceSoftwareUpdate/start",
+	}
+
+	if input == nil {
+		input = &StartElasticsearchServiceSoftwareUpdateInput{}
+	}
+
+	output = &StartElasticsearchServiceSoftwareUpdateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartElasticsearchServiceSoftwareUpdate API operation for Amazon Elasticsearch Service.
+//
+// Schedules a service software update for an Amazon ES domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation StartElasticsearchServiceSoftwareUpdate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBaseException "BaseException"
+//   An error occurred while processing the request.
+//
+//   * ErrCodeInternalException "InternalException"
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * ErrCodeValidationException "ValidationException"
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+func (c *ElasticsearchService) StartElasticsearchServiceSoftwareUpdate(input *StartElasticsearchServiceSoftwareUpdateInput) (*StartElasticsearchServiceSoftwareUpdateOutput, error) {
+	req, out := c.StartElasticsearchServiceSoftwareUpdateRequest(input)
+	return out, req.Send()
+}
+
+// StartElasticsearchServiceSoftwareUpdateWithContext is the same as StartElasticsearchServiceSoftwareUpdate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartElasticsearchServiceSoftwareUpdate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) StartElasticsearchServiceSoftwareUpdateWithContext(ctx aws.Context, input *StartElasticsearchServiceSoftwareUpdateInput, opts ...request.Option) (*StartElasticsearchServiceSoftwareUpdateOutput, error) {
+	req, out := c.StartElasticsearchServiceSoftwareUpdateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateElasticsearchDomainConfig = "UpdateElasticsearchDomainConfig"
 
 // UpdateElasticsearchDomainConfigRequest generates a "aws/request.Request" representing the
 // client's request for the UpdateElasticsearchDomainConfig operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2135,7 +2322,7 @@ const opUpgradeElasticsearchDomain = "UpgradeElasticsearchDomain"
 // UpgradeElasticsearchDomainRequest generates a "aws/request.Request" representing the
 // client's request for the UpgradeElasticsearchDomain operation. The "output" return
 // value will be populated with the request's response once the request completes
-// successfuly.
+// successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
@@ -2234,7 +2421,7 @@ type AccessPoliciesStatus struct {
 	_ struct{} `type:"structure"`
 
 	// The access policy configured for the Elasticsearch domain. Access policies
-	// may be resource-based, IP-based, or IAM-based. See  Configuring Access Policies
+	// may be resource-based, IP-based, or IAM-based. See Configuring Access Policies
 	// (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-access-policies)for
 	// more information.
 	//
@@ -2354,11 +2541,10 @@ type AdditionalLimit struct {
 	_ struct{} `type:"structure"`
 
 	// Name of Additional Limit is specific to a given InstanceType and for each
-	// of it's InstanceRole etc. Attributes and their details: MaximumNumberOfDataNodesSupported
-	// This attribute will be present in Master node only to specify how much data
-	// nodes upto which given ESPartitionInstanceTypecan support as master node. MaximumNumberOfDataNodesWithoutMasterNode
-	// This attribute will be present in Data node only to specify how much data
-	// nodes of given ESPartitionInstanceType
+	// of it's InstanceRole etc. Attributes and their details:
+	//    * MaximumNumberOfDataNodesSupported
+	//
+	//    * MaximumNumberOfDataNodesWithoutMasterNode
 	LimitName *string `type:"string"`
 
 	// Value for given AdditionalLimit$LimitName .
@@ -2392,10 +2578,11 @@ func (s *AdditionalLimit) SetLimitValues(v []*string) *AdditionalLimit {
 //
 //    * Option to allow references to indices in an HTTP request body. Must
 //    be false when configuring access to individual sub-resources. By default,
-//    the value is true. See Configuration Advanced Options (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-advanced-options)
-//    for more information.
+//    the value is true. See Configuration Advanced Options for more information.
+//
 //    * Option to specify the percentage of heap space that is allocated to
 //    field data. By default, this setting is unbounded.
+//
 // For more information, see Configuring Advanced Options (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-advanced-options).
 type AdvancedOptionsStatus struct {
 	_ struct{} `type:"structure"`
@@ -2432,6 +2619,76 @@ func (s *AdvancedOptionsStatus) SetOptions(v map[string]*string) *AdvancedOption
 // SetStatus sets the Status field's value.
 func (s *AdvancedOptionsStatus) SetStatus(v *OptionStatus) *AdvancedOptionsStatus {
 	s.Status = v
+	return s
+}
+
+// Container for the parameters to the CancelElasticsearchServiceSoftwareUpdate
+// operation. Specifies the name of the Elasticsearch domain that you wish to
+// cancel a service software update on.
+type CancelElasticsearchServiceSoftwareUpdateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain that you want to stop the latest service software
+	// update on.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelElasticsearchServiceSoftwareUpdateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelElasticsearchServiceSoftwareUpdateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelElasticsearchServiceSoftwareUpdateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelElasticsearchServiceSoftwareUpdateInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *CancelElasticsearchServiceSoftwareUpdateInput) SetDomainName(v string) *CancelElasticsearchServiceSoftwareUpdateInput {
+	s.DomainName = &v
+	return s
+}
+
+// The result of a CancelElasticsearchServiceSoftwareUpdate operation. Contains
+// the status of the update.
+type CancelElasticsearchServiceSoftwareUpdateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current status of the Elasticsearch service software update.
+	ServiceSoftwareOptions *ServiceSoftwareOptions `type:"structure"`
+}
+
+// String returns the string representation
+func (s CancelElasticsearchServiceSoftwareUpdateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelElasticsearchServiceSoftwareUpdateOutput) GoString() string {
+	return s.String()
+}
+
+// SetServiceSoftwareOptions sets the ServiceSoftwareOptions field's value.
+func (s *CancelElasticsearchServiceSoftwareUpdateOutput) SetServiceSoftwareOptions(v *ServiceSoftwareOptions) *CancelElasticsearchServiceSoftwareUpdateOutput {
+	s.ServiceSoftwareOptions = v
 	return s
 }
 
@@ -2595,9 +2852,12 @@ type CreateElasticsearchDomainInput struct {
 	// For more information, see Amazon Cognito Authentication for Kibana (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html).
 	CognitoOptions *CognitoOptions `type:"structure"`
 
+	// Options to specify configuration that will be applied to the domain endpoint.
+	DomainEndpointOptions *DomainEndpointOptions `type:"structure"`
+
 	// The name of the Elasticsearch domain that you are creating. Domain names
 	// are unique across the domains owned by an account within an AWS region. Domain
-	// names must start with a letter or number and can contain the following characters:
+	// names must start with a lowercase letter and can contain the following characters:
 	// a-z (lowercase), 0-9, and - (hyphen).
 	//
 	// DomainName is a required field
@@ -2622,6 +2882,9 @@ type CreateElasticsearchDomainInput struct {
 	// Map of LogType and LogPublishingOption, each containing options to publish
 	// a given type of Elasticsearch log.
 	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
+
+	// Specifies the NodeToNodeEncryptionOptions.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptions `type:"structure"`
 
 	// Option to set time, in UTC format, of the daily automated snapshot. Default
 	// value is 0 hours.
@@ -2687,6 +2950,12 @@ func (s *CreateElasticsearchDomainInput) SetCognitoOptions(v *CognitoOptions) *C
 	return s
 }
 
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetDomainEndpointOptions(v *DomainEndpointOptions) *CreateElasticsearchDomainInput {
+	s.DomainEndpointOptions = v
+	return s
+}
+
 // SetDomainName sets the DomainName field's value.
 func (s *CreateElasticsearchDomainInput) SetDomainName(v string) *CreateElasticsearchDomainInput {
 	s.DomainName = &v
@@ -2720,6 +2989,12 @@ func (s *CreateElasticsearchDomainInput) SetEncryptionAtRestOptions(v *Encryptio
 // SetLogPublishingOptions sets the LogPublishingOptions field's value.
 func (s *CreateElasticsearchDomainInput) SetLogPublishingOptions(v map[string]*LogPublishingOption) *CreateElasticsearchDomainInput {
 	s.LogPublishingOptions = v
+	return s
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptions) *CreateElasticsearchDomainInput {
+	s.NodeToNodeEncryptionOptions = v
 	return s
 }
 
@@ -3104,8 +3379,14 @@ func (s *DescribeElasticsearchInstanceTypeLimitsInput) Validate() error {
 	if s.ElasticsearchVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("ElasticsearchVersion"))
 	}
+	if s.ElasticsearchVersion != nil && len(*s.ElasticsearchVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ElasticsearchVersion", 1))
+	}
 	if s.InstanceType == nil {
 		invalidParams.Add(request.NewErrParamRequired("InstanceType"))
+	}
+	if s.InstanceType != nil && len(*s.InstanceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("InstanceType", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -3138,9 +3419,12 @@ type DescribeElasticsearchInstanceTypeLimitsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Map of Role of the Instance and Limits that are applicable. Role performed
-	// by given Instance in Elasticsearch can be one of the following: Data: If
-	// the given InstanceType is used as Data node
-	// Master: If the given InstanceType is used as Master node
+	// by given Instance in Elasticsearch can be one of the following:
+	//    * data: If the given InstanceType is used as data node
+	//
+	//    * master: If the given InstanceType is used as master node
+	//
+	//    * ultra_warm: If the given InstanceType is used as warm node
 	LimitsByRole map[string]*Limits `type:"map"`
 }
 
@@ -3317,6 +3601,83 @@ func (s *DescribeReservedElasticsearchInstancesOutput) SetReservedElasticsearchI
 	return s
 }
 
+// Options to configure endpoint for the Elasticsearch domain.
+type DomainEndpointOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Specify if only HTTPS endpoint should be enabled for the Elasticsearch domain.
+	EnforceHTTPS *bool `type:"boolean"`
+
+	// Specify the TLS security policy that needs to be applied to the HTTPS endpoint
+	// of Elasticsearch domain. It can be one of the following values:
+	//    * Policy-Min-TLS-1-0-2019-07: TLS security policy which supports TLSv1.0
+	//    and higher.
+	//
+	//    * Policy-Min-TLS-1-2-2019-07: TLS security policy which supports only
+	//    TLSv1.2
+	TLSSecurityPolicy *string `type:"string" enum:"TLSSecurityPolicy"`
+}
+
+// String returns the string representation
+func (s DomainEndpointOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainEndpointOptions) GoString() string {
+	return s.String()
+}
+
+// SetEnforceHTTPS sets the EnforceHTTPS field's value.
+func (s *DomainEndpointOptions) SetEnforceHTTPS(v bool) *DomainEndpointOptions {
+	s.EnforceHTTPS = &v
+	return s
+}
+
+// SetTLSSecurityPolicy sets the TLSSecurityPolicy field's value.
+func (s *DomainEndpointOptions) SetTLSSecurityPolicy(v string) *DomainEndpointOptions {
+	s.TLSSecurityPolicy = &v
+	return s
+}
+
+// The configured endpoint options for the domain and their current status.
+type DomainEndpointOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Options to configure endpoint for the Elasticsearch domain.
+	//
+	// Options is a required field
+	Options *DomainEndpointOptions `type:"structure" required:"true"`
+
+	// The status of the endpoint options for the Elasticsearch domain. See OptionStatus
+	// for the status information that's included.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DomainEndpointOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainEndpointOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *DomainEndpointOptionsStatus) SetOptions(v *DomainEndpointOptions) *DomainEndpointOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DomainEndpointOptionsStatus) SetStatus(v *OptionStatus) *DomainEndpointOptionsStatus {
+	s.Status = v
+	return s
+}
+
 type DomainInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -3341,7 +3702,7 @@ func (s *DomainInfo) SetDomainName(v string) *DomainInfo {
 }
 
 // Options to enable, disable, and specify the properties of EBS storage volumes.
-// For more information, see  Configuring EBS-based Storage (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-ebs).
+// For more information, see Configuring EBS-based Storage (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-ebs).
 type EBSOptions struct {
 	_ struct{} `type:"structure"`
 
@@ -3448,8 +3809,22 @@ type ElasticsearchClusterConfig struct {
 	// The number of instances in the specified domain cluster.
 	InstanceCount *int64 `type:"integer"`
 
-	// The instance type for an Elasticsearch cluster.
+	// The instance type for an Elasticsearch cluster. UltraWarm instance types
+	// are not supported for data instances.
 	InstanceType *string `type:"string" enum:"ESPartitionInstanceType"`
+
+	// The number of warm nodes in the cluster.
+	WarmCount *int64 `type:"integer"`
+
+	// True to enable warm storage.
+	WarmEnabled *bool `type:"boolean"`
+
+	// The instance type for the Elasticsearch cluster's warm nodes.
+	WarmType *string `type:"string" enum:"ESWarmPartitionInstanceType"`
+
+	// Specifies the zone awareness configuration for a domain when zone awareness
+	// is enabled.
+	ZoneAwarenessConfig *ZoneAwarenessConfig `type:"structure"`
 
 	// A boolean value to indicate whether zone awareness is enabled. See About
 	// Zone Awareness (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-managedomains.html#es-managedomains-zoneawareness)
@@ -3494,6 +3869,30 @@ func (s *ElasticsearchClusterConfig) SetInstanceCount(v int64) *ElasticsearchClu
 // SetInstanceType sets the InstanceType field's value.
 func (s *ElasticsearchClusterConfig) SetInstanceType(v string) *ElasticsearchClusterConfig {
 	s.InstanceType = &v
+	return s
+}
+
+// SetWarmCount sets the WarmCount field's value.
+func (s *ElasticsearchClusterConfig) SetWarmCount(v int64) *ElasticsearchClusterConfig {
+	s.WarmCount = &v
+	return s
+}
+
+// SetWarmEnabled sets the WarmEnabled field's value.
+func (s *ElasticsearchClusterConfig) SetWarmEnabled(v bool) *ElasticsearchClusterConfig {
+	s.WarmEnabled = &v
+	return s
+}
+
+// SetWarmType sets the WarmType field's value.
+func (s *ElasticsearchClusterConfig) SetWarmType(v string) *ElasticsearchClusterConfig {
+	s.WarmType = &v
+	return s
+}
+
+// SetZoneAwarenessConfig sets the ZoneAwarenessConfig field's value.
+func (s *ElasticsearchClusterConfig) SetZoneAwarenessConfig(v *ZoneAwarenessConfig) *ElasticsearchClusterConfig {
+	s.ZoneAwarenessConfig = v
 	return s
 }
 
@@ -3557,6 +3956,9 @@ type ElasticsearchDomainConfig struct {
 	// Cognito Authentication for Kibana (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html).
 	CognitoOptions *CognitoOptionsStatus `type:"structure"`
 
+	// Specifies the DomainEndpointOptions for the Elasticsearch domain.
+	DomainEndpointOptions *DomainEndpointOptionsStatus `type:"structure"`
+
 	// Specifies the EBSOptions for the Elasticsearch domain.
 	EBSOptions *EBSOptionsStatus `type:"structure"`
 
@@ -3571,6 +3973,9 @@ type ElasticsearchDomainConfig struct {
 
 	// Log publishing options for the given domain.
 	LogPublishingOptions *LogPublishingOptionsStatus `type:"structure"`
+
+	// Specifies the NodeToNodeEncryptionOptions for the Elasticsearch domain.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptionsStatus `type:"structure"`
 
 	// Specifies the SnapshotOptions for the Elasticsearch domain.
 	SnapshotOptions *SnapshotOptionsStatus `type:"structure"`
@@ -3608,6 +4013,12 @@ func (s *ElasticsearchDomainConfig) SetCognitoOptions(v *CognitoOptionsStatus) *
 	return s
 }
 
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *ElasticsearchDomainConfig) SetDomainEndpointOptions(v *DomainEndpointOptionsStatus) *ElasticsearchDomainConfig {
+	s.DomainEndpointOptions = v
+	return s
+}
+
 // SetEBSOptions sets the EBSOptions field's value.
 func (s *ElasticsearchDomainConfig) SetEBSOptions(v *EBSOptionsStatus) *ElasticsearchDomainConfig {
 	s.EBSOptions = v
@@ -3635,6 +4046,12 @@ func (s *ElasticsearchDomainConfig) SetEncryptionAtRestOptions(v *EncryptionAtRe
 // SetLogPublishingOptions sets the LogPublishingOptions field's value.
 func (s *ElasticsearchDomainConfig) SetLogPublishingOptions(v *LogPublishingOptionsStatus) *ElasticsearchDomainConfig {
 	s.LogPublishingOptions = v
+	return s
+}
+
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *ElasticsearchDomainConfig) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptionsStatus) *ElasticsearchDomainConfig {
+	s.NodeToNodeEncryptionOptions = v
 	return s
 }
 
@@ -3681,6 +4098,9 @@ type ElasticsearchDomainStatus struct {
 	// domain is no longer returned.
 	Deleted *bool `type:"boolean"`
 
+	// The current status of the Elasticsearch domain's endpoint options.
+	DomainEndpointOptions *DomainEndpointOptions `type:"structure"`
+
 	// The unique identifier for the specified Elasticsearch domain.
 	//
 	// DomainId is a required field
@@ -3720,10 +4140,16 @@ type ElasticsearchDomainStatus struct {
 	// Log publishing options for the given domain.
 	LogPublishingOptions map[string]*LogPublishingOption `type:"map"`
 
+	// Specifies the status of the NodeToNodeEncryptionOptions.
+	NodeToNodeEncryptionOptions *NodeToNodeEncryptionOptions `type:"structure"`
+
 	// The status of the Elasticsearch domain configuration. True if Amazon Elasticsearch
 	// Service is processing configuration changes. False if the configuration is
 	// active.
 	Processing *bool `type:"boolean"`
+
+	// The current status of the Elasticsearch domain's service software.
+	ServiceSoftwareOptions *ServiceSoftwareOptions `type:"structure"`
 
 	// Specifies the status of the SnapshotOptions
 	SnapshotOptions *SnapshotOptions `type:"structure"`
@@ -3783,6 +4209,12 @@ func (s *ElasticsearchDomainStatus) SetDeleted(v bool) *ElasticsearchDomainStatu
 	return s
 }
 
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *ElasticsearchDomainStatus) SetDomainEndpointOptions(v *DomainEndpointOptions) *ElasticsearchDomainStatus {
+	s.DomainEndpointOptions = v
+	return s
+}
+
 // SetDomainId sets the DomainId field's value.
 func (s *ElasticsearchDomainStatus) SetDomainId(v string) *ElasticsearchDomainStatus {
 	s.DomainId = &v
@@ -3837,9 +4269,21 @@ func (s *ElasticsearchDomainStatus) SetLogPublishingOptions(v map[string]*LogPub
 	return s
 }
 
+// SetNodeToNodeEncryptionOptions sets the NodeToNodeEncryptionOptions field's value.
+func (s *ElasticsearchDomainStatus) SetNodeToNodeEncryptionOptions(v *NodeToNodeEncryptionOptions) *ElasticsearchDomainStatus {
+	s.NodeToNodeEncryptionOptions = v
+	return s
+}
+
 // SetProcessing sets the Processing field's value.
 func (s *ElasticsearchDomainStatus) SetProcessing(v bool) *ElasticsearchDomainStatus {
 	s.Processing = &v
+	return s
+}
+
+// SetServiceSoftwareOptions sets the ServiceSoftwareOptions field's value.
+func (s *ElasticsearchDomainStatus) SetServiceSoftwareOptions(v *ServiceSoftwareOptions) *ElasticsearchDomainStatus {
+	s.ServiceSoftwareOptions = v
 	return s
 }
 
@@ -4202,19 +4646,26 @@ type GetUpgradeStatusOutput struct {
 	_ struct{} `type:"structure"`
 
 	// One of 4 statuses that a step can go through returned as part of the GetUpgradeStatusResponse
-	// object. The status can take one of the following values: In Progress
-	// Succeeded
-	// Succeeded with Issues
-	// Failed
+	// object. The status can take one of the following values:
+	//    * In Progress
+	//
+	//    * Succeeded
+	//
+	//    * Succeeded with Issues
+	//
+	//    * Failed
 	StepStatus *string `type:"string" enum:"UpgradeStatus"`
 
 	// A string that describes the update briefly
 	UpgradeName *string `type:"string"`
 
 	// Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does
-	// through: PreUpgradeCheck
-	// Snapshot
-	// Upgrade
+	// through:
+	//    * PreUpgradeCheck
+	//
+	//    * Snapshot
+	//
+	//    * Upgrade
 	UpgradeStep *string `type:"string" enum:"UpgradeStep"`
 }
 
@@ -4306,7 +4757,8 @@ func (s *InstanceLimits) SetInstanceCountLimits(v *InstanceCountLimits) *Instanc
 	return s
 }
 
-// Limits for given InstanceType and for each of it's role. Limits contains following StorageTypes,   InstanceLimitsand AdditionalLimits
+// Limits for given InstanceType and for each of it's role. Limits contains
+// following StorageTypes, InstanceLimits and AdditionalLimits
 type Limits struct {
 	_ struct{} `type:"structure"`
 
@@ -4433,6 +4885,9 @@ func (s *ListElasticsearchInstanceTypesInput) Validate() error {
 	if s.ElasticsearchVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("ElasticsearchVersion"))
 	}
+	if s.ElasticsearchVersion != nil && len(*s.ElasticsearchVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ElasticsearchVersion", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4501,10 +4956,10 @@ func (s *ListElasticsearchInstanceTypesOutput) SetNextToken(v string) *ListElast
 }
 
 // Container for the parameters to the ListElasticsearchVersions operation.
-//  Use MaxResults to control the maximum number of results to retrieve in a
+// Use MaxResults to control the maximum number of results to retrieve in a
 // single call.
 //
-//  Use NextToken in response to retrieve more results. If the received response
+// Use NextToken in response to retrieve more results. If the received response
 // does not contain a NextToken, then there are no more results to retrieve.
 type ListElasticsearchVersionsInput struct {
 	_ struct{} `type:"structure"`
@@ -4644,9 +5099,13 @@ func (s *ListTagsOutput) SetTagList(v []*Tag) *ListTagsOutput {
 	return s
 }
 
-// Log Publishing option that is set for given domain. Attributes and their details: CloudWatchLogsLogGroupArn: ARN of the Cloudwatch
-// log group to which log needs to be published.
-// Enabled: Whether the log publishing for given log type is enabled or not
+// Log Publishing option that is set for given domain. Attributes and their
+// details:
+//    * CloudWatchLogsLogGroupArn: ARN of the Cloudwatch log group to which
+//    log needs to be published.
+//
+//    * Enabled: Whether the log publishing for given log type is enabled or
+//    not
 type LogPublishingOption struct {
 	_ struct{} `type:"structure"`
 
@@ -4709,6 +5168,70 @@ func (s *LogPublishingOptionsStatus) SetOptions(v map[string]*LogPublishingOptio
 
 // SetStatus sets the Status field's value.
 func (s *LogPublishingOptionsStatus) SetStatus(v *OptionStatus) *LogPublishingOptionsStatus {
+	s.Status = v
+	return s
+}
+
+// Specifies the node-to-node encryption options.
+type NodeToNodeEncryptionOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Specify true to enable node-to-node encryption.
+	Enabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s NodeToNodeEncryptionOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeToNodeEncryptionOptions) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *NodeToNodeEncryptionOptions) SetEnabled(v bool) *NodeToNodeEncryptionOptions {
+	s.Enabled = &v
+	return s
+}
+
+// Status of the node-to-node encryption options for the specified Elasticsearch
+// domain.
+type NodeToNodeEncryptionOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the node-to-node encryption options for the specified Elasticsearch
+	// domain.
+	//
+	// Options is a required field
+	Options *NodeToNodeEncryptionOptions `type:"structure" required:"true"`
+
+	// Specifies the status of the node-to-node encryption options for the specified
+	// Elasticsearch domain.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s NodeToNodeEncryptionOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeToNodeEncryptionOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *NodeToNodeEncryptionOptionsStatus) SetOptions(v *NodeToNodeEncryptionOptions) *NodeToNodeEncryptionOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *NodeToNodeEncryptionOptionsStatus) SetStatus(v *OptionStatus) *NodeToNodeEncryptionOptionsStatus {
 	s.Status = v
 	return s
 }
@@ -5212,6 +5735,88 @@ func (s *ReservedElasticsearchInstanceOffering) SetUsagePrice(v float64) *Reserv
 	return s
 }
 
+// The current options of an Elasticsearch domain service software options.
+type ServiceSoftwareOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Timestamp, in Epoch time, until which you can manually request a service
+	// software update. After this date, we automatically update your service software.
+	AutomatedUpdateDate *time.Time `type:"timestamp"`
+
+	// True if you are able to cancel your service software version update. False
+	// if you are not able to cancel your service software version.
+	Cancellable *bool `type:"boolean"`
+
+	// The current service software version that is present on the domain.
+	CurrentVersion *string `type:"string"`
+
+	// The description of the UpdateStatus.
+	Description *string `type:"string"`
+
+	// The new service software version if one is available.
+	NewVersion *string `type:"string"`
+
+	// True if you are able to update you service software version. False if you
+	// are not able to update your service software version.
+	UpdateAvailable *bool `type:"boolean"`
+
+	// The status of your service software update. This field can take the following
+	// values: ELIGIBLE, PENDING_UPDATE, IN_PROGRESS, COMPLETED, and NOT_ELIGIBLE.
+	UpdateStatus *string `type:"string" enum:"DeploymentStatus"`
+}
+
+// String returns the string representation
+func (s ServiceSoftwareOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceSoftwareOptions) GoString() string {
+	return s.String()
+}
+
+// SetAutomatedUpdateDate sets the AutomatedUpdateDate field's value.
+func (s *ServiceSoftwareOptions) SetAutomatedUpdateDate(v time.Time) *ServiceSoftwareOptions {
+	s.AutomatedUpdateDate = &v
+	return s
+}
+
+// SetCancellable sets the Cancellable field's value.
+func (s *ServiceSoftwareOptions) SetCancellable(v bool) *ServiceSoftwareOptions {
+	s.Cancellable = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *ServiceSoftwareOptions) SetCurrentVersion(v string) *ServiceSoftwareOptions {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetDescription sets the Description field's value.
+func (s *ServiceSoftwareOptions) SetDescription(v string) *ServiceSoftwareOptions {
+	s.Description = &v
+	return s
+}
+
+// SetNewVersion sets the NewVersion field's value.
+func (s *ServiceSoftwareOptions) SetNewVersion(v string) *ServiceSoftwareOptions {
+	s.NewVersion = &v
+	return s
+}
+
+// SetUpdateAvailable sets the UpdateAvailable field's value.
+func (s *ServiceSoftwareOptions) SetUpdateAvailable(v bool) *ServiceSoftwareOptions {
+	s.UpdateAvailable = &v
+	return s
+}
+
+// SetUpdateStatus sets the UpdateStatus field's value.
+func (s *ServiceSoftwareOptions) SetUpdateStatus(v string) *ServiceSoftwareOptions {
+	s.UpdateStatus = &v
+	return s
+}
+
 // Specifies the time, in UTC format, when the service takes a daily automated
 // snapshot of the specified Elasticsearch domain. Default value is 0 hours.
 type SnapshotOptions struct {
@@ -5275,6 +5880,75 @@ func (s *SnapshotOptionsStatus) SetStatus(v *OptionStatus) *SnapshotOptionsStatu
 	return s
 }
 
+// Container for the parameters to the StartElasticsearchServiceSoftwareUpdate
+// operation. Specifies the name of the Elasticsearch domain that you wish to
+// schedule a service software update on.
+type StartElasticsearchServiceSoftwareUpdateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain that you want to update to the latest service software.
+	//
+	// DomainName is a required field
+	DomainName *string `min:"3" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartElasticsearchServiceSoftwareUpdateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartElasticsearchServiceSoftwareUpdateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartElasticsearchServiceSoftwareUpdateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartElasticsearchServiceSoftwareUpdateInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *StartElasticsearchServiceSoftwareUpdateInput) SetDomainName(v string) *StartElasticsearchServiceSoftwareUpdateInput {
+	s.DomainName = &v
+	return s
+}
+
+// The result of a StartElasticsearchServiceSoftwareUpdate operation. Contains
+// the status of the update.
+type StartElasticsearchServiceSoftwareUpdateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The current status of the Elasticsearch service software update.
+	ServiceSoftwareOptions *ServiceSoftwareOptions `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartElasticsearchServiceSoftwareUpdateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartElasticsearchServiceSoftwareUpdateOutput) GoString() string {
+	return s.String()
+}
+
+// SetServiceSoftwareOptions sets the ServiceSoftwareOptions field's value.
+func (s *StartElasticsearchServiceSoftwareUpdateOutput) SetServiceSoftwareOptions(v *ServiceSoftwareOptions) *StartElasticsearchServiceSoftwareUpdateOutput {
+	s.ServiceSoftwareOptions = v
+	return s
+}
+
 // StorageTypes represents the list of storage related types and their attributes
 // that are available for given InstanceType.
 type StorageType struct {
@@ -5282,18 +5956,16 @@ type StorageType struct {
 
 	// SubType of the given storage type. List of available sub-storage options:
 	// For "instance" storageType we wont have any storageSubType, in case of "ebs"
-	// storageType we will have following valid storageSubTypes standard
-	// gp2
-	// io1
-	//  Refer VolumeType for more information regarding above EBS storage options.
+	// storageType we will have following valid storageSubTypes standard gp2 io1
+	// Refer VolumeType for more information regarding above EBS storage options.
 	StorageSubTypeName *string `type:"string"`
 
 	// List of limits that are applicable for given storage type.
 	StorageTypeLimits []*StorageTypeLimit `type:"list"`
 
-	// Type of the storage. List of available storage options: instance
-	//  Inbuilt storage available for the given Instance ebs
-	//  Elastic block storage that would be attached to the given Instance
+	// Type of the storage. List of available storage options: instance Inbuilt
+	// storage available for the given Instance ebs Elastic block storage that would
+	// be attached to the given Instance
 	StorageTypeName *string `type:"string"`
 }
 
@@ -5330,15 +6002,14 @@ type StorageTypeLimit struct {
 	_ struct{} `type:"structure"`
 
 	// Name of storage limits that are applicable for given storage type. If StorageType
-	// is ebs, following storage options are applicable MinimumVolumeSize
-	//  Minimum amount of volume size that is applicable for given storage type.It
-	// can be empty if it is not applicable. MaximumVolumeSize
-	//  Maximum amount of volume size that is applicable for given storage type.It
-	// can be empty if it is not applicable. MaximumIops
-	//  Maximum amount of Iops that is applicable for given storage type.It can
-	// be empty if it is not applicable. MinimumIops
-	//  Minimum amount of Iops that is applicable for given storage type.It can
-	// be empty if it is not applicable.
+	// is ebs, following storage options are applicable MinimumVolumeSize Minimum
+	// amount of volume size that is applicable for given storage type.It can be
+	// empty if it is not applicable. MaximumVolumeSize Maximum amount of volume
+	// size that is applicable for given storage type.It can be empty if it is not
+	// applicable. MaximumIops Maximum amount of Iops that is applicable for given
+	// storage type.It can be empty if it is not applicable. MinimumIops Minimum
+	// amount of Iops that is applicable for given storage type.It can be empty
+	// if it is not applicable.
 	LimitName *string `type:"string"`
 
 	// Values for the StorageTypeLimit$LimitName .
@@ -5445,6 +6116,9 @@ type UpdateElasticsearchDomainConfigInput struct {
 	// For more information, see Amazon Cognito Authentication for Kibana (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html).
 	CognitoOptions *CognitoOptions `type:"structure"`
 
+	// Options to specify configuration that will be applied to the domain endpoint.
+	DomainEndpointOptions *DomainEndpointOptions `type:"structure"`
+
 	// The name of the Elasticsearch domain that you are updating.
 	//
 	// DomainName is a required field
@@ -5516,6 +6190,12 @@ func (s *UpdateElasticsearchDomainConfigInput) SetAdvancedOptions(v map[string]*
 // SetCognitoOptions sets the CognitoOptions field's value.
 func (s *UpdateElasticsearchDomainConfigInput) SetCognitoOptions(v *CognitoOptions) *UpdateElasticsearchDomainConfigInput {
 	s.CognitoOptions = v
+	return s
+}
+
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *UpdateElasticsearchDomainConfigInput) SetDomainEndpointOptions(v *DomainEndpointOptions) *UpdateElasticsearchDomainConfigInput {
+	s.DomainEndpointOptions = v
 	return s
 }
 
@@ -5713,10 +6393,14 @@ type UpgradeHistory struct {
 	UpgradeName *string `type:"string"`
 
 	// The overall status of the update. The status can take one of the following
-	// values: In Progress
-	// Succeeded
-	// Succeeded with Issues
-	// Failed
+	// values:
+	//    * In Progress
+	//
+	//    * Succeeded
+	//
+	//    * Succeeded with Issues
+	//
+	//    * Failed
 	UpgradeStatus *string `type:"string" enum:"UpgradeStatus"`
 }
 
@@ -5767,16 +6451,23 @@ type UpgradeStepItem struct {
 	ProgressPercent *float64 `type:"double"`
 
 	// Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does
-	// through: PreUpgradeCheck
-	// Snapshot
-	// Upgrade
+	// through:
+	//    * PreUpgradeCheck
+	//
+	//    * Snapshot
+	//
+	//    * Upgrade
 	UpgradeStep *string `type:"string" enum:"UpgradeStep"`
 
 	// The status of a particular step during an upgrade. The status can take one
-	// of the following values: In Progress
-	// Succeeded
-	// Succeeded with Issues
-	// Failed
+	// of the following values:
+	//    * In Progress
+	//
+	//    * Succeeded
+	//
+	//    * Succeeded with Issues
+	//
+	//    * Failed
 	UpgradeStepStatus *string `type:"string" enum:"UpgradeStatus"`
 }
 
@@ -5815,7 +6506,7 @@ func (s *UpgradeStepItem) SetUpgradeStepStatus(v string) *UpgradeStepItem {
 }
 
 // Options to specify the subnets and security groups for VPC endpoint. For
-// more information, see  VPC Endpoints for Amazon Elasticsearch Service Domains
+// more information, see VPC Endpoints for Amazon Elasticsearch Service Domains
 // (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
 type VPCDerivedInfo struct {
 	_ struct{} `type:"structure"`
@@ -5907,7 +6598,7 @@ func (s *VPCDerivedInfoStatus) SetStatus(v *OptionStatus) *VPCDerivedInfoStatus 
 }
 
 // Options to specify the subnets and security groups for VPC endpoint. For
-// more information, see  VPC Endpoints for Amazon Elasticsearch Service Domains
+// more information, see VPC Endpoints for Amazon Elasticsearch Service Domains
 // (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
 type VPCOptions struct {
 	_ struct{} `type:"structure"`
@@ -5941,6 +6632,50 @@ func (s *VPCOptions) SetSubnetIds(v []*string) *VPCOptions {
 	return s
 }
 
+// Specifies the zone awareness configuration for the domain cluster, such as
+// the number of availability zones.
+type ZoneAwarenessConfig struct {
+	_ struct{} `type:"structure"`
+
+	// An integer value to indicate the number of availability zones for a domain
+	// when zone awareness is enabled. This should be equal to number of subnets
+	// if VPC endpoints is enabled
+	AvailabilityZoneCount *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ZoneAwarenessConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ZoneAwarenessConfig) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZoneCount sets the AvailabilityZoneCount field's value.
+func (s *ZoneAwarenessConfig) SetAvailabilityZoneCount(v int64) *ZoneAwarenessConfig {
+	s.AvailabilityZoneCount = &v
+	return s
+}
+
+const (
+	// DeploymentStatusPendingUpdate is a DeploymentStatus enum value
+	DeploymentStatusPendingUpdate = "PENDING_UPDATE"
+
+	// DeploymentStatusInProgress is a DeploymentStatus enum value
+	DeploymentStatusInProgress = "IN_PROGRESS"
+
+	// DeploymentStatusCompleted is a DeploymentStatus enum value
+	DeploymentStatusCompleted = "COMPLETED"
+
+	// DeploymentStatusNotEligible is a DeploymentStatus enum value
+	DeploymentStatusNotEligible = "NOT_ELIGIBLE"
+
+	// DeploymentStatusEligible is a DeploymentStatus enum value
+	DeploymentStatusEligible = "ELIGIBLE"
+)
+
 const (
 	// ESPartitionInstanceTypeM3MediumElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeM3MediumElasticsearch = "m3.medium.elasticsearch"
@@ -5968,6 +6703,60 @@ const (
 
 	// ESPartitionInstanceTypeM410xlargeElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeM410xlargeElasticsearch = "m4.10xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM5LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM5LargeElasticsearch = "m5.large.elasticsearch"
+
+	// ESPartitionInstanceTypeM5XlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM5XlargeElasticsearch = "m5.xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM52xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM52xlargeElasticsearch = "m5.2xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM54xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM54xlargeElasticsearch = "m5.4xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM512xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM512xlargeElasticsearch = "m5.12xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR5LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR5LargeElasticsearch = "r5.large.elasticsearch"
+
+	// ESPartitionInstanceTypeR5XlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR5XlargeElasticsearch = "r5.xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR52xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR52xlargeElasticsearch = "r5.2xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR54xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR54xlargeElasticsearch = "r5.4xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR512xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR512xlargeElasticsearch = "r5.12xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC5LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC5LargeElasticsearch = "c5.large.elasticsearch"
+
+	// ESPartitionInstanceTypeC5XlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC5XlargeElasticsearch = "c5.xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC52xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC52xlargeElasticsearch = "c5.2xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC54xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC54xlargeElasticsearch = "c5.4xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC59xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC59xlargeElasticsearch = "c5.9xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC518xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC518xlargeElasticsearch = "c5.18xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeUltrawarm1MediumElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeUltrawarm1MediumElasticsearch = "ultrawarm1.medium.elasticsearch"
+
+	// ESPartitionInstanceTypeUltrawarm1LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeUltrawarm1LargeElasticsearch = "ultrawarm1.large.elasticsearch"
 
 	// ESPartitionInstanceTypeT2MicroElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeT2MicroElasticsearch = "t2.micro.elasticsearch"
@@ -6063,14 +6852,24 @@ const (
 	ESPartitionInstanceTypeI316xlargeElasticsearch = "i3.16xlarge.elasticsearch"
 )
 
-// Type of Log File, it can be one of the following: INDEX_SLOW_LOGS: Index
-// slow logs contain insert requests that took more time than configured index
-// query log threshold to execute.
-// SEARCH_SLOW_LOGS: Search slow logs contain search queries that took more
-// time than configured search query log threshold to execute.
-// ES_APPLICATION_LOGS: Elasticsearch application logs contain information about
-// errors and warnings raised during the operation of the service and can be
-// useful for troubleshooting.
+const (
+	// ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch is a ESWarmPartitionInstanceType enum value
+	ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch = "ultrawarm1.medium.elasticsearch"
+
+	// ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch is a ESWarmPartitionInstanceType enum value
+	ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch = "ultrawarm1.large.elasticsearch"
+)
+
+// Type of Log File, it can be one of the following:
+//    * INDEX_SLOW_LOGS: Index slow logs contain insert requests that took more
+//    time than configured index query log threshold to execute.
+//
+//    * SEARCH_SLOW_LOGS: Search slow logs contain search queries that took
+//    more time than configured search query log threshold to execute.
+//
+//    * ES_APPLICATION_LOGS: Elasticsearch application logs contain information
+//    about errors and warnings raised during the operation of the service and
+//    can be useful for troubleshooting.
 const (
 	// LogTypeIndexSlowLogs is a LogType enum value
 	LogTypeIndexSlowLogs = "INDEX_SLOW_LOGS"
@@ -6085,6 +6884,7 @@ const (
 // The state of a requested change. One of the following:
 //
 //    * Processing: The request change is still in-process.
+//
 //    * Active: The request change is processed and deployed to the Elasticsearch
 //    domain.
 const (
@@ -6107,6 +6907,14 @@ const (
 
 	// ReservedElasticsearchInstancePaymentOptionNoUpfront is a ReservedElasticsearchInstancePaymentOption enum value
 	ReservedElasticsearchInstancePaymentOptionNoUpfront = "NO_UPFRONT"
+)
+
+const (
+	// TLSSecurityPolicyPolicyMinTls10201907 is a TLSSecurityPolicy enum value
+	TLSSecurityPolicyPolicyMinTls10201907 = "Policy-Min-TLS-1-0-2019-07"
+
+	// TLSSecurityPolicyPolicyMinTls12201907 is a TLSSecurityPolicy enum value
+	TLSSecurityPolicyPolicyMinTls12201907 = "Policy-Min-TLS-1-2-2019-07"
 )
 
 const (

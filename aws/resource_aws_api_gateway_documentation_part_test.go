@@ -7,22 +7,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
 	rString := acctest.RandString(8)
-	apiName := fmt.Sprintf("tf_acc_api_doc_part_basic_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
@@ -36,6 +36,11 @@ func TestAccAWSAPIGatewayDocumentationPart_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "properties", properties),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(uProperties)),
@@ -55,13 +60,13 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
 	rString := acctest.RandString(8)
-	apiName := fmt.Sprintf("tf_acc_api_doc_part_method_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_method_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
@@ -77,6 +82,11 @@ func TestAccAWSAPIGatewayDocumentationPart_method(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "properties", properties),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayDocumentationPartMethodConfig(apiName, strconv.Quote(uProperties)),
@@ -98,13 +108,13 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	var conf apigateway.DocumentationPart
 
 	rString := acctest.RandString(8)
-	apiName := fmt.Sprintf("tf_acc_api_doc_part_resp_header_%s", rString)
+	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_resp_header_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
 
 	resourceName := "aws_api_gateway_documentation_part.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
@@ -124,6 +134,11 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAPIGatewayDocumentationPartResponseHeaderConfig(apiName, strconv.Quote(uProperties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
@@ -136,39 +151,6 @@ func TestAccAWSAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "properties", uProperties),
 					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayDocumentationPart_importBasic(t *testing.T) {
-	var conf apigateway.DocumentationPart
-
-	rString := acctest.RandString(8)
-	apiName := fmt.Sprintf("tf_acc_api_doc_part_import_%s", rString)
-	properties := `{"description":"Terraform Acceptance Test"}`
-
-	resourceName := "aws_api_gateway_documentation_part.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayDocumentationPartDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayDocumentationPartConfig(apiName, strconv.Quote(properties)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDocumentationPartExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
-					resource.TestCheckResourceAttr(resourceName, "properties", properties),
-					resource.TestCheckResourceAttrSet(resourceName, "rest_api_id"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

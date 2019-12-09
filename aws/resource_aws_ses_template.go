@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSesTemplate() *schema.Resource {
@@ -31,7 +31,7 @@ func resourceAwsSesTemplate() *schema.Resource {
 			"html": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(512000),
+				ValidateFunc: validation.StringLenBetween(0, 512000),
 			},
 			"subject": {
 				Type:     schema.TypeString,
@@ -40,7 +40,7 @@ func resourceAwsSesTemplate() *schema.Resource {
 			"text": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validateMaxLength(512000),
+				ValidateFunc: validation.StringLenBetween(0, 512000),
 			},
 		},
 	}

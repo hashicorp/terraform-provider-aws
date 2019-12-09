@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Map Reduce (EMR)"
 layout: "aws"
-page_title: "AWS: aws_emr_security_configuraiton"
-sidebar_current: "docs-aws-resource-emr-security-configuration"
+page_title: "AWS: aws_emr_security_configuration"
 description: |-
   Provides a resource to manage AWS EMR Security Configurations
 ---
 
-# aws_emr_security_configuration
+# Resource: aws_emr_security_configuration
 
 Provides a resource to manage AWS EMR Security Configurations
 
@@ -59,5 +59,5 @@ In addition to all arguments above, the following attributes are exported:
 EMR Security Configurations can be imported using the `name`, e.g.
 
 ```
-$ terraform import aws_emr_security_configuraiton.sc example-sc-name
+$ terraform import aws_emr_security_configuration.sc example-sc-name
 ```

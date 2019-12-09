@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsDbClusterSnapshot() *schema.Resource {
@@ -104,6 +104,7 @@ func dataSourceAwsDbClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -176,6 +177,11 @@ func dataSourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}
 	d.Set("status", snapshot.Status)
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
+
+	// Fetch and save tags
+	if err := saveTagsRDS(conn, d, aws.StringValue(snapshot.DBClusterSnapshotArn)); err != nil {
+		log.Printf("[WARN] Failed to save tags for RDS DB Cluster Snapshot (%s): %s", aws.StringValue(snapshot.DBClusterSnapshotArn), err)
+	}
 
 	return nil
 }

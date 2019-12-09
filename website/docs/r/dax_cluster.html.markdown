@@ -1,12 +1,12 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_cluster"
-sidebar_current: "docs-aws-resource-dax-cluster"
 description: |-
   Provides an DAX Cluster resource.
 ---
 
-# aws_dax_cluster
+# Resource: aws_dax_cluster
 
 Provides a DAX Cluster resource.
 
@@ -16,7 +16,7 @@ Provides a DAX Cluster resource.
 resource "aws_dax_cluster" "bar" {
   cluster_name       = "cluster-example"
   iam_role_arn       = "${data.aws_iam_role.example.arn}"
-  node_type          = "dax.r3.large"
+  node_type          = "dax.r4.large"
   replication_factor = 1
 }
 ```

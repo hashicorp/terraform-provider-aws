@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsNetworkInterface() *schema.Resource {
@@ -175,7 +175,7 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("owner_id", eni.OwnerId)
 	d.Set("private_dns_name", eni.PrivateDnsName)
-	d.Set("private_id", eni.PrivateIpAddress)
+	d.Set("private_ip", eni.PrivateIpAddress)
 	d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses))
 	d.Set("requester_id", eni.RequesterId)
 	d.Set("subnet_id", eni.SubnetId)

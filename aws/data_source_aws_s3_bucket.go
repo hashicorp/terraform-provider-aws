@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsS3Bucket() *schema.Resource {
@@ -24,6 +24,10 @@ func dataSourceAwsS3Bucket() *schema.Resource {
 				Computed: true,
 			},
 			"bucket_domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bucket_regional_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,9 +76,16 @@ func dataSourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("bucket_domain_name", bucketDomainName(bucket))
 
-	if err := bucketLocation(d, bucket, conn); err != nil {
+	err = bucketLocation(d, bucket, conn)
+	if err != nil {
+		return fmt.Errorf("error getting S3 Bucket location: %s", err)
+	}
+
+	regionalDomainName, err := BucketRegionalDomainName(bucket, d.Get("region").(string))
+	if err != nil {
 		return err
 	}
+	d.Set("bucket_regional_domain_name", regionalDomainName)
 
 	return nil
 }

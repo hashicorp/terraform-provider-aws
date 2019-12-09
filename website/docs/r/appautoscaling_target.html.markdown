@@ -1,12 +1,12 @@
 ---
+subcategory: "Application Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_appautoscaling_target"
-sidebar_current: "docs-aws-resource-appautoscaling-target"
 description: |-
   Provides an Application AutoScaling ScalableTarget resource.
 ---
 
-# aws_appautoscaling_target
+# Resource: aws_appautoscaling_target
 
 Provides an Application AutoScaling ScalableTarget resource. To manage policies which get attached to the target, see the [`aws_appautoscaling_policy` resource](/docs/providers/aws/r/appautoscaling_policy.html).
 
@@ -74,3 +74,11 @@ The following arguments are supported:
 AutoScaling to modify your scalable target on your behalf.
 * `scalable_dimension` - (Required) The scalable dimension of the scalable target. Documentation can be found in the `ScalableDimension` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `service_namespace` - (Required) The AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
+
+## Import
+
+Application AutoScaling Target can be imported using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`.
+
+```
+$ terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
+```

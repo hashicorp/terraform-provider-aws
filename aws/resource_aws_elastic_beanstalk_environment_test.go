@@ -6,16 +6,15 @@ import (
 	"reflect"
 	"regexp"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // initialize sweeper
@@ -51,23 +50,6 @@ func testSweepBeanstalkEnvironments(region string) error {
 	}
 
 	for _, bse := range resp.Environments {
-		var testOptGroup bool
-		for _, testName := range []string{
-			"terraform-",
-			"tf-test-",
-			"tf_acc_",
-			"tf-acc-",
-		} {
-			if strings.HasPrefix(*bse.EnvironmentName, testName) {
-				testOptGroup = true
-			}
-		}
-
-		if !testOptGroup {
-			log.Printf("Skipping (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
-			continue
-		}
-
 		log.Printf("Trying to terminate (%s) (%s)", *bse.EnvironmentName, *bse.EnvironmentId)
 
 		_, err := beanstalkconn.TerminateEnvironment(
@@ -113,6 +95,44 @@ func testSweepBeanstalkEnvironments(region string) error {
 	return nil
 }
 
+func TestAWSElasticBeanstalkEnvironment_importBasic(t *testing.T) {
+	resourceName := "aws_elastic_beanstalk_application.tftest"
+
+	applicationName := fmt.Sprintf("tf-test-name-%d", acctest.RandInt())
+	environmentName := fmt.Sprintf("tf-test-env-name-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkAppDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBeanstalkEnvImportConfig(applicationName, environmentName),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccBeanstalkEnvImportConfig(appName, envName string) string {
+	return fmt.Sprintf(`
+resource "aws_elastic_beanstalk_application" "tftest" {
+	  name = "%s"
+	  description = "tf-test-desc"
+	}
+
+	resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+	  name = "%s"
+	  application = "${aws_elastic_beanstalk_application.tftest.name}"
+	  solution_stack_name = "64bit Amazon Linux running Python"
+	}`, appName, envName)
+}
+
 func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
@@ -120,7 +140,7 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 	appName := fmt.Sprintf("tf_acc_app_env_basic_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-basic-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -136,7 +156,6 @@ func TestAccAWSBeanstalkEnv_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccAWSBeanstalkEnv_tier(t *testing.T) {
@@ -150,7 +169,7 @@ func TestAccAWSBeanstalkEnv_tier(t *testing.T) {
 	appName := fmt.Sprintf("tf_acc_app_env_tier_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-tier-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -174,12 +193,13 @@ func TestAccAWSBeanstalkEnv_outputs(t *testing.T) {
 	beanstalkElbNameRegexp := regexp.MustCompile("awseb.+?EBLoa[^,]+")
 	beanstalkInstancesNameRegexp := regexp.MustCompile("i-([0-9a-fA-F]{8}|[0-9a-fA-F]{17})")
 	beanstalkLcNameRegexp := regexp.MustCompile("awseb.+?AutoScalingLaunch[^,]+")
+	beanstalkEndpointUrl := regexp.MustCompile("awseb.+?EBLoa[^,].+?elb.amazonaws.com")
 
 	rString := acctest.RandString(8)
 	appName := fmt.Sprintf("tf_acc_app_env_outputs_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-outputs-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -196,6 +216,8 @@ func TestAccAWSBeanstalkEnv_outputs(t *testing.T) {
 						"aws_elastic_beanstalk_environment.tfenvtest", "instances.0", beanstalkInstancesNameRegexp),
 					resource.TestMatchResourceAttr(
 						"aws_elastic_beanstalk_environment.tfenvtest", "launch_configurations.0", beanstalkLcNameRegexp),
+					resource.TestMatchResourceAttr(
+						"aws_elastic_beanstalk_environment.tfenvtest", "endpoint_url", beanstalkEndpointUrl),
 				),
 			},
 		},
@@ -212,7 +234,7 @@ func TestAccAWSBeanstalkEnv_cname_prefix(t *testing.T) {
 
 	beanstalkCnameRegexp := regexp.MustCompile("^" + cnamePrefix + ".+?elasticbeanstalk.com$")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -237,7 +259,7 @@ func TestAccAWSBeanstalkEnv_config(t *testing.T) {
 	envName := fmt.Sprintf("tf-acc-env-config-%s", rString)
 	cfgTplName := fmt.Sprintf("tf_acc_cfg_tpl_config_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -276,7 +298,7 @@ func TestAccAWSBeanstalkEnv_resource(t *testing.T) {
 	appName := fmt.Sprintf("tf_acc_app_env_resource_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-resource-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -298,7 +320,7 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 	appName := fmt.Sprintf("tf_acc_app_env_resource_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-resource-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -346,7 +368,7 @@ func TestAccAWSBeanstalkEnv_vpc(t *testing.T) {
 	appName := fmt.Sprintf("tf_acc_app_env_vpc_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-vpc-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -371,7 +393,7 @@ func TestAccAWSBeanstalkEnv_template_change(t *testing.T) {
 	envName := fmt.Sprintf("tf-acc-env-tpl-change-%s", rString)
 	cfgTplName := fmt.Sprintf("tf_acc_tpl_env_tpl_change_%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -407,7 +429,7 @@ func TestAccAWSBeanstalkEnv_basic_settings_update(t *testing.T) {
 	appName := fmt.Sprintf("tf_acc_app_env_basic_settings_upd_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-basic-settings-upd-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -454,7 +476,7 @@ func TestAccAWSBeanstalkEnv_version_label(t *testing.T) {
 	uAppVersionName := fmt.Sprintf("tf_acc_version_env_version_label_v2_%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-version-label-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -487,7 +509,7 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 	policyName := fmt.Sprintf("tf-acc-policy-beanstalk-env-setting-w-json-value-%s", rString)
 	envName := fmt.Sprintf("tf-acc-env-setting-w-json-value-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
@@ -496,6 +518,30 @@ func TestAccAWSBeanstalkEnv_settingWithJsonValue(t *testing.T) {
 				Config: testAccBeanstalkEnvSettingJsonValue(appName, queueName, keyPairName, instanceProfileName, roleName, policyName, envName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.default", &app),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSBeanstalkEnv_platformArn(t *testing.T) {
+	var app elasticbeanstalk.EnvironmentDescription
+
+	rString := acctest.RandString(8)
+	appName := fmt.Sprintf("tf_acc_app_env_platform_arn_%s", rString)
+	envName := fmt.Sprintf("tf-acc-env-platform-arn-%s", rString)
+	platformArn := "arn:aws:elasticbeanstalk:us-east-1::platform/Go 1 running on 64bit Amazon Linux/2.9.0"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBeanstalkEnvConfig_platform_arn(appName, envName, platformArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
+					resource.TestCheckResourceAttr("aws_elastic_beanstalk_environment.tfenvtest", "platform_arn", platformArn),
 				),
 			},
 		},
@@ -770,29 +816,49 @@ func testAccBeanstalkEnvConfig(appName, envName string) string {
 	 solution_stack_name = "64bit Amazon Linux running Python"
 	 depends_on = ["aws_elastic_beanstalk_application.tftest"]
  }
- `, appName, envName)
+`, appName, envName)
+}
+
+func testAccBeanstalkEnvConfig_platform_arn(appName, envName, platformArn string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_elastic_beanstalk_application" "tftest" {
+  name        = "%s"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+  name         = "%s"
+  application  = "${aws_elastic_beanstalk_application.tftest.name}"
+  platform_arn = "%s"
+}
+`, appName, envName, platformArn)
 }
 
 func testAccBeanstalkEnvConfig_empty_settings(appName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 
   wait_for_ready_timeout = "15m"
-}`, appName, envName)
+}
+`, appName, envName)
 }
 
 func testAccBeanstalkEnvConfig_settings(appName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
@@ -841,62 +907,8 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
     name      = "StartTime"
     value     = "2016-07-28T04:07:02Z"
   }
-}`, appName, envName)
 }
-
-func testAccBeanstalkEnvConfig_settings_update(appName, envName string) string {
-	return fmt.Sprintf(`
-resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
-  description = "tf-test-desc"
-}
-
-resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name                = "%s"
-  application         = "${aws_elastic_beanstalk_application.tftest.name}"
-  solution_stack_name = "64bit Amazon Linux running Python"
-
-  wait_for_ready_timeout = "15m"
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_STATIC"
-    value     = "true"
-  }
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_UPDATE"
-    value     = "false"
-  }
-
-  setting {
-    namespace = "aws:elasticbeanstalk:application:environment"
-    name      = "ENV_ADD"
-    value     = "true"
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "MinSize"
-    value     = 2
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "MaxSize"
-    value     = 3
-  }
-
-  setting {
-    namespace = "aws:autoscaling:scheduledaction"
-    resource  = "ScheduledAction01"
-    name      = "StartTime"
-    value     = "2016-07-28T04:07:02Z"
-  }
-}`, appName, envName)
+`, appName, envName)
 }
 
 func testAccBeanstalkWorkerEnvConfig(instanceProfileName, roleName, policyName, appName, envName string) string {
@@ -956,19 +968,19 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 func testAccBeanstalkConfigTemplate(appName, envName, cfgTplName string, cfgTplValue int) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_environment" "tftest" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name          = "%s"
+  application   = "${aws_elastic_beanstalk_application.tftest.name}"
   template_name = "${aws_elastic_beanstalk_configuration_template.tftest.name}"
 }
 
 resource "aws_elastic_beanstalk_configuration_template" "tftest" {
-  name        = "%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 
   setting {
@@ -976,72 +988,76 @@ resource "aws_elastic_beanstalk_configuration_template" "tftest" {
     name      = "TEMPLATE"
     value     = "%d"
   }
-}`, appName, envName, cfgTplName, cfgTplValue)
+}
+`, appName, envName, cfgTplName, cfgTplValue)
 }
 
 func testAccBeanstalkResourceOptionSetting(appName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 
   setting {
     namespace = "aws:autoscaling:scheduledaction"
-    resource = "ScheduledAction01"
-    name = "MinSize"
-    value = "2"
+    resource  = "ScheduledAction01"
+    name      = "MinSize"
+    value     = "2"
   }
 
   setting {
     namespace = "aws:autoscaling:scheduledaction"
-    resource = "ScheduledAction01"
-    name = "MaxSize"
-    value = "6"
+    resource  = "ScheduledAction01"
+    name      = "MaxSize"
+    value     = "6"
   }
 
   setting {
     namespace = "aws:autoscaling:scheduledaction"
-    resource = "ScheduledAction01"
-    name = "Recurrence"
-    value = "0 8 * * *"
+    resource  = "ScheduledAction01"
+    name      = "Recurrence"
+    value     = "0 8 * * *"
   }
-}`, appName, envName)
+}
+`, appName, envName)
 }
 
 func testAccBeanstalkTagsTemplate(appName, envName, firstTag, secondTag string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "tftest" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_environment" "tfenvtest" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.tftest.name}"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 
   wait_for_ready_timeout = "15m"
 
-  tags {
-    firstTag = "%s"
+  tags = {
+    firstTag  = "%s"
     secondTag = "%s"
   }
-}`, appName, envName, firstTag, secondTag)
+}
+`, appName, envName, firstTag, secondTag)
 }
 
 func testAccBeanstalkEnv_VPC(sgName, appName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "tf_b_test" {
   cidr_block = "10.0.0.0/16"
-	tags {
-		Name = "terraform-testacc-elastic-beanstalk-env-vpc"
-	}
+
+  tags = {
+    Name = "terraform-testacc-elastic-beanstalk-env-vpc"
+  }
 }
 
 resource "aws_internet_gateway" "tf_b_test" {
@@ -1049,32 +1065,33 @@ resource "aws_internet_gateway" "tf_b_test" {
 }
 
 resource "aws_route" "r" {
-  route_table_id = "${aws_vpc.tf_b_test.main_route_table_id}"
+  route_table_id         = "${aws_vpc.tf_b_test.main_route_table_id}"
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id = "${aws_internet_gateway.tf_b_test.id}"
+  gateway_id             = "${aws_internet_gateway.tf_b_test.id}"
 }
 
 resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.tf_b_test.id}"
   cidr_block = "10.0.0.0/24"
-  tags {
+
+  tags = {
     Name = "tf-acc-elastic-beanstalk-env-vpc"
   }
 }
 
 resource "aws_security_group" "default" {
-  name = "%s"
+  name   = "%s"
   vpc_id = "${aws_vpc.tf_b_test.id}"
 }
 
 resource "aws_elastic_beanstalk_application" "default" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.default.name}"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.default.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 
   setting {
@@ -1170,26 +1187,26 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_object" "default" {
   bucket = "${aws_s3_bucket.default.id}"
-  key = "python-v1.zip"
+  key    = "python-v1.zip"
   source = "test-fixtures/python-v1.zip"
 }
 
 resource "aws_elastic_beanstalk_application" "default" {
-  name = "%s"
+  name        = "%s"
   description = "tf-test-desc"
 }
 
 resource "aws_elastic_beanstalk_application_version" "default" {
   application = "${aws_elastic_beanstalk_application.default.name}"
-  name = "%s"
-  bucket = "${aws_s3_bucket.default.id}"
-  key = "${aws_s3_bucket_object.default.id}"
+  name        = "%s"
+  bucket      = "${aws_s3_bucket.default.id}"
+  key         = "${aws_s3_bucket_object.default.id}"
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.default.name}"
-  version_label = "${aws_elastic_beanstalk_application_version.default.name}"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.default.name}"
+  version_label       = "${aws_elastic_beanstalk_application_version.default.name}"
   solution_stack_name = "64bit Amazon Linux running Python"
 }
 `, bucketName, appName, appVersionName, envName)
@@ -1198,7 +1215,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
 func testAccBeanstalkEnvSettingJsonValue(appName, queueName, keyPairName, instanceProfileName, roleName, policyName, envName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "app" {
-  name = "%s"
+  name        = "%s"
   description = "This is a description"
 }
 
@@ -1212,7 +1229,7 @@ resource "aws_key_pair" "test" {
 }
 
 resource "aws_iam_instance_profile" "app" {
-  name  = "%s"
+  name = "%s"
   role = "${aws_iam_role.test.name}"
 }
 
@@ -1258,134 +1275,135 @@ EOF
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
-  name = "%s"
-  application = "${aws_elastic_beanstalk_application.app.name}"
-  tier = "Worker"
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.app.name}"
+  tier                = "Worker"
   solution_stack_name = "64bit Amazon Linux 2016.03 v2.1.0 running Docker 1.9.1"
 
   setting = {
     namespace = "aws:elasticbeanstalk:command"
-    name = "BatchSize"
-    value = "30"
+    name      = "BatchSize"
+    value     = "30"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:command"
-    name = "BatchSizeType"
-    value = "Percentage"
+    name      = "BatchSizeType"
+    value     = "Percentage"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:command"
-    name = "DeploymentPolicy"
-    value = "Rolling"
+    name      = "DeploymentPolicy"
+    value     = "Rolling"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sns:topics"
-    name = "Notification Endpoint"
-    value = "example@example.com"
+    name      = "Notification Endpoint"
+    value     = "example@example.com"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "ErrorVisibilityTimeout"
-    value = "2"
+    name      = "ErrorVisibilityTimeout"
+    value     = "2"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "HttpPath"
-    value = "/event-message"
+    name      = "HttpPath"
+    value     = "/event-message"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "WorkerQueueURL"
-    value = "${aws_sqs_queue.test.id}"
+    name      = "WorkerQueueURL"
+    value     = "${aws_sqs_queue.test.id}"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "VisibilityTimeout"
-    value = "300"
+    name      = "VisibilityTimeout"
+    value     = "300"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "HttpConnections"
-    value = "10"
+    name      = "HttpConnections"
+    value     = "10"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "InactivityTimeout"
-    value = "299"
+    name      = "InactivityTimeout"
+    value     = "299"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:sqsd"
-    name = "MimeType"
-    value = "application/json"
+    name      = "MimeType"
+    value     = "application/json"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:environment"
-    name = "ServiceRole"
-    value = "aws-elasticbeanstalk-service-role"
+    name      = "ServiceRole"
+    value     = "aws-elasticbeanstalk-service-role"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:environment"
-    name = "EnvironmentType"
-    value = "LoadBalanced"
+    name      = "EnvironmentType"
+    value     = "LoadBalanced"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:application"
-    name = "Application Healthcheck URL"
-    value = "/health"
+    name      = "Application Healthcheck URL"
+    value     = "/health"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:healthreporting:system"
-    name = "SystemType"
-    value = "enhanced"
+    name      = "SystemType"
+    value     = "enhanced"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:healthreporting:system"
-    name = "HealthCheckSuccessThreshold"
-    value = "Ok"
+    name      = "HealthCheckSuccessThreshold"
+    value     = "Ok"
   }
 
   setting = {
     namespace = "aws:autoscaling:launchconfiguration"
-    name = "IamInstanceProfile"
-    value = "${aws_iam_instance_profile.app.name}"
+    name      = "IamInstanceProfile"
+    value     = "${aws_iam_instance_profile.app.name}"
   }
 
   setting = {
     namespace = "aws:autoscaling:launchconfiguration"
-    name = "InstanceType"
-    value = "t2.micro"
+    name      = "InstanceType"
+    value     = "t2.micro"
   }
 
   setting = {
     namespace = "aws:autoscaling:launchconfiguration"
-    name = "EC2KeyName"
-    value = "${aws_key_pair.test.key_name}"
+    name      = "EC2KeyName"
+    value     = "${aws_key_pair.test.key_name}"
   }
 
   setting = {
     namespace = "aws:autoscaling:updatepolicy:rollingupdate"
-    name = "RollingUpdateEnabled"
-    value = "false"
+    name      = "RollingUpdateEnabled"
+    value     = "false"
   }
 
   setting = {
     namespace = "aws:elasticbeanstalk:healthreporting:system"
-    name = "ConfigDocument"
+    name      = "ConfigDocument"
+
     value = <<EOF
 {
 	"Version": 1,

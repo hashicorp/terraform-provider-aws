@@ -1,12 +1,12 @@
 ---
+subcategory: "GuardDuty"
 layout: "aws"
 page_title: "AWS: aws_guardduty_detector"
-sidebar_current: "docs-aws-resource-guardduty-detector"
 description: |-
   Provides a resource to manage a GuardDuty detector
 ---
 
-# aws_guardduty_detector
+# Resource: aws_guardduty_detector
 
 Provides a resource to manage a GuardDuty detector.
 
@@ -25,6 +25,7 @@ resource "aws_guardduty_detector" "MyDetector" {
 The following arguments are supported:
 
 * `enable` - (Optional) Enable monitoring and feedback reporting. Setting to `false` is equivalent to "suspending" GuardDuty. Defaults to `true`.
+* `finding_publishing_frequency` - (Optional) Specifies the frequency of notifications sent for subsequent finding occurrences. If the detector is a GuardDuty member account, the value is determined by the GuardDuty master account and cannot be modified, otherwise defaults to `SIX_HOURS`. For standalone and GuardDuty master accounts, it must be configured in Terraform to enable drift detection. Valid values for standalone and master accounts: `FIFTEEN_MINUTES`, `ONE_HOUR`, `SIX_HOURS`. See [AWS Documentation](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html#guardduty_findings_cloudwatch_notification_frequency) for more information.
 
 ## Attributes Reference
 

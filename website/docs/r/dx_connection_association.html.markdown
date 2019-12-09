@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_connection_association"
-sidebar_current: "docs-aws-resource-dx-connection-association"
 description: |-
   Associates a Direct Connect Connection with a LAG.
 ---
 
-# aws_dx_connection_association
+# Resource: aws_dx_connection_association
 
 Associates a Direct Connect Connection with a LAG.
 
@@ -14,21 +14,20 @@ Associates a Direct Connect Connection with a LAG.
 
 ```hcl
 resource "aws_dx_connection" "example" {
-  name = "example"
+  name      = "example"
   bandwidth = "1Gbps"
-  location = "EqSe2"
+  location  = "EqSe2"
 }
 
 resource "aws_dx_lag" "example" {
-  name = "example"
+  name                  = "example"
   connections_bandwidth = "1Gbps"
-  location = "EqSe2"
-  number_of_connections = 1
+  location              = "EqSe2"
 }
 
 resource "aws_dx_connection_association" "example" {
   connection_id = "${aws_dx_connection.example.id}"
-  lag_id = "${aws_dx_lag.example.id}"
+  lag_id        = "${aws_dx_lag.example.id}"
 }
 ```
 

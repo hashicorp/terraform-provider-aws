@@ -1,12 +1,12 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_subnet_group"
-sidebar_current: "docs-aws-resource-db-subnet-group"
 description: |-
   Provides an RDS DB subnet group resource.
 ---
 
-# aws_db_subnet_group
+# Resource: aws_db_subnet_group
 
 Provides an RDS DB subnet group resource.
 
@@ -17,7 +17,7 @@ resource "aws_db_subnet_group" "default" {
   name       = "main"
   subnet_ids = ["${aws_subnet.frontend.id}", "${aws_subnet.backend.id}"]
 
-  tags {
+  tags = {
     Name = "My DB subnet group"
   }
 }

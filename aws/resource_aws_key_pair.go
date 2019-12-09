@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -32,23 +33,23 @@ func resourceAwsKeyPair() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"key_name_prefix"},
-				ValidateFunc:  validateMaxLength(255),
+				ValidateFunc:  validation.StringLenBetween(0, 255),
 			},
 			"key_name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"key_name"},
-				ValidateFunc:  validateMaxLength(255 - resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 255-resource.UniqueIDSuffixLength),
 			},
 			"public_key": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
-					switch v.(type) {
+					switch v := v.(type) {
 					case string:
-						return strings.TrimSpace(v.(string))
+						return strings.TrimSpace(v)
 					default:
 						return ""
 					}
@@ -87,7 +88,7 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(*resp.KeyName)
-	return nil
+	return resourceAwsKeyPairRead(d, meta)
 }
 
 func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {

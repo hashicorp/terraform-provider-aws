@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRDSClusterInstance() *schema.Resource {
@@ -200,6 +201,12 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 				ValidateFunc: validateArn,
 			},
 
+			"copy_tags_to_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -207,16 +214,16 @@ func resourceAwsRDSClusterInstance() *schema.Resource {
 
 func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
 
 	createOpts := &rds.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    tags,
+		Tags:                    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags(),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -249,14 +256,12 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		createOpts.MonitoringRoleArn = aws.String(attr.(string))
 	}
 
-	if attr, _ := d.GetOk("engine"); attr == "aurora-postgresql" || attr == "aurora" {
-		if attr, ok := d.GetOk("performance_insights_enabled"); ok {
-			createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
-		}
+	if attr, ok := d.GetOk("performance_insights_enabled"); ok {
+		createOpts.EnablePerformanceInsights = aws.Bool(attr.(bool))
+	}
 
-		if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
-			createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
-		}
+	if attr, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+		createOpts.PerformanceInsightsKMSKeyId = aws.String(attr.(string))
 	}
 
 	if attr, ok := d.GetOk("preferred_backup_window"); ok {
@@ -284,6 +289,9 @@ func resourceAwsRDSClusterInstanceCreate(d *schema.ResourceData, meta interface{
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateDBInstance(createOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating RDS DB Instance: %s", err)
 	}
@@ -313,7 +321,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	db, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
 	// Errors from this helper are always reportable
 	if err != nil {
-		return fmt.Errorf("[WARN] Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error on retrieving RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 	// A nil response means "not found"
 	if db == nil {
@@ -340,13 +348,13 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if dbc == nil {
-		return fmt.Errorf("[WARN] Error finding RDS Cluster (%s) for Cluster Instance (%s): %s",
+		return fmt.Errorf("Error finding RDS Cluster (%s) for Cluster Instance (%s): %s",
 			*db.DBClusterIdentifier, *db.DBInstanceIdentifier, err)
 	}
 
 	for _, m := range dbc.DBClusterMembers {
 		if *db.DBInstanceIdentifier == *m.DBInstanceIdentifier {
-			if *m.IsClusterWriter == true {
+			if *m.IsClusterWriter {
 				d.Set("writer", true)
 			} else {
 				d.Set("writer", false)
@@ -367,12 +375,15 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
 	d.Set("availability_zone", db.AvailabilityZone)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	d.Set("engine_version", db.EngineVersion)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set("monitoring_interval", db.MonitoringInterval)
+	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
 	d.Set("performance_insights_enabled", db.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
@@ -381,20 +392,16 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 
-	if db.MonitoringInterval != nil {
-		d.Set("monitoring_interval", db.MonitoringInterval)
-	}
-
-	if db.MonitoringRoleArn != nil {
-		d.Set("monitoring_role_arn", db.MonitoringRoleArn)
-	}
-
 	if len(db.DBParameterGroups) > 0 {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	if err := saveTagsRDS(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for RDS Cluster Instance (%s): %s", *db.DBClusterIdentifier, err)
+	tags, err := keyvaluetags.RdsListTags(conn, aws.StringValue(db.DBInstanceArn))
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -425,15 +432,15 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
-	if d.HasChange("performance_insights_enabled") {
+	if d.HasChange("performance_insights_enabled") || d.HasChange("performance_insights_kms_key_id") {
 		d.SetPartial("performance_insights_enabled")
 		req.EnablePerformanceInsights = aws.Bool(d.Get("performance_insights_enabled").(bool))
-		requestUpdate = true
-	}
 
-	if d.HasChange("performance_insights_kms_key_id") {
-		d.SetPartial("performance_insights_kms_key_id")
-		req.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
+		if v, ok := d.GetOk("performance_insights_kms_key_id"); ok {
+			d.SetPartial("performance_insights_kms_key_id")
+			req.PerformanceInsightsKMSKeyId = aws.String(v.(string))
+		}
+
 		requestUpdate = true
 	}
 
@@ -461,9 +468,21 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 		requestUpdate = true
 	}
 
+	if d.HasChange("copy_tags_to_snapshot") {
+		d.SetPartial("copy_tags_to_snapshot")
+		req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		requestUpdate = true
+	}
+
 	if d.HasChange("promotion_tier") {
 		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("publicly_accessible") {
+		d.SetPartial("publicly_accessible")
+		req.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
 		requestUpdate = true
 	}
 
@@ -480,6 +499,9 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 			}
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.ModifyDBInstance(req)
+		}
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}
@@ -502,8 +524,12 @@ func resourceAwsRDSClusterInstanceUpdate(d *schema.ResourceData, meta interface{
 
 	}
 
-	if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsRDSClusterInstanceRead(d, meta)
@@ -532,11 +558,8 @@ func resourceAwsRDSClusterInstanceDelete(d *schema.ResourceData, meta interface{
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return err
-	}
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 
 }
 

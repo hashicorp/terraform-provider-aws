@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
@@ -24,7 +24,7 @@ func TestAccAWSDynamoDbTableItem_basic(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -58,7 +58,7 @@ func TestAccAWSDynamoDbTableItem_rangeKey(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -101,7 +101,7 @@ func TestAccAWSDynamoDbTableItem_withMultipleItems(t *testing.T) {
 	"four": {"S": "four"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -148,7 +148,7 @@ func TestAccAWSDynamoDbTableItem_update(t *testing.T) {
 	"new": {"S": "shiny new one"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -195,7 +195,7 @@ func TestAccAWSDynamoDbTableItem_updateWithRangeKey(t *testing.T) {
 	"value": {"S": "valueAfter"}
 }`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSDynamoDbItemDestroy,
@@ -290,7 +290,7 @@ func testAccCheckAWSDynamoDbTableItemExists(n string, item *dynamodb.GetItemOutp
 			ExpressionAttributeNames: buildDynamoDbExpressionAttributeNames(attributes),
 		})
 		if err != nil {
-			return fmt.Errorf("[ERROR] Problem getting table item '%s': %s", rs.Primary.ID, err)
+			return fmt.Errorf("Problem getting table item '%s': %s", rs.Primary.ID, err)
 		}
 
 		*item = *result
@@ -321,10 +321,10 @@ func testAccCheckAWSDynamoDbTableItemCount(tableName string, count int64) resour
 func testAccAWSDynamoDbItemConfigBasic(tableName, hashKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "%s"
+  hash_key       = "%s"
 
   attribute {
     name = "%s"
@@ -334,7 +334,8 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_table_item" "test" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+
   item = <<ITEM
 %s
 ITEM
@@ -345,16 +346,17 @@ ITEM
 func testAccAWSDynamoDbItemConfigWithRangeKey(tableName, hashKey, rangeKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "%s"
-  range_key = "%s"
+  hash_key       = "%s"
+  range_key      = "%s"
 
   attribute {
     name = "%s"
     type = "S"
   }
+
   attribute {
     name = "%s"
     type = "S"
@@ -363,8 +365,9 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_table_item" "test" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
-  range_key = "${aws_dynamodb_table.test.range_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+  range_key  = "${aws_dynamodb_table.test.range_key}"
+
   item = <<ITEM
 %s
 ITEM
@@ -375,16 +378,17 @@ ITEM
 func testAccAWSDynamoDbItemConfigWithMultipleItems(tableName, hashKey, rangeKey, firstItem, secondItem string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
-  name = "%s"
-  read_capacity = 10
+  name           = "%s"
+  read_capacity  = 10
   write_capacity = 10
-  hash_key = "%s"
-  range_key = "%s"
+  hash_key       = "%s"
+  range_key      = "%s"
 
   attribute {
     name = "%s"
     type = "S"
   }
+
   attribute {
     name = "%s"
     type = "S"
@@ -393,8 +397,9 @@ resource "aws_dynamodb_table" "test" {
 
 resource "aws_dynamodb_table_item" "test1" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
-  range_key = "${aws_dynamodb_table.test.range_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+  range_key  = "${aws_dynamodb_table.test.range_key}"
+
   item = <<ITEM
 %s
 ITEM
@@ -402,8 +407,9 @@ ITEM
 
 resource "aws_dynamodb_table_item" "test2" {
   table_name = "${aws_dynamodb_table.test.name}"
-  hash_key = "${aws_dynamodb_table.test.hash_key}"
-  range_key = "${aws_dynamodb_table.test.range_key}"
+  hash_key   = "${aws_dynamodb_table.test.hash_key}"
+  range_key  = "${aws_dynamodb_table.test.range_key}"
+
   item = <<ITEM
 %s
 ITEM

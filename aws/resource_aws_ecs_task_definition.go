@@ -4,20 +4,43 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEcsTaskDefinition() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEcsTaskDefinitionCreate,
 		Read:   resourceAwsEcsTaskDefinitionRead,
+		Update: resourceAwsEcsTaskDefinitionUpdate,
 		Delete: resourceAwsEcsTaskDefinitionDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("arn", d.Id())
+
+				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
+				resARN, err := arn.Parse(d.Id())
+				if err != nil {
+					return nil, idErr
+				}
+				familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
+				familyRevisionParts := strings.Split(familyRevision, ":")
+				if len(familyRevisionParts) != 2 {
+					return nil, idErr
+				}
+				d.SetId(familyRevisionParts[0])
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		SchemaVersion: 1,
 		MigrateState:  resourceAwsEcsTaskDefinitionMigrateState,
@@ -54,7 +77,9 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := ecsContainerDefinitionsAreEquivalent(old, new)
+					networkMode, ok := d.GetOk("network_mode")
+					isAWSVPC := ok && networkMode.(string) == ecs.NetworkModeAwsvpc
+					equal, _ := EcsContainerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
 				ValidateFunc: validateAwsEcsTaskDefinitionContainerDefinitions,
@@ -108,6 +133,50 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+
+						"docker_volume_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scope": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											ecs.ScopeShared,
+											ecs.ScopeTask,
+										}, false),
+									},
+									"autoprovision": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+										Default:  false,
+									},
+									"driver": {
+										Type:     schema.TypeString,
+										ForceNew: true,
+										Optional: true,
+									},
+									"driver_opts": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+									"labels": {
+										Type:     schema.TypeMap,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										ForceNew: true,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 				Set: resourceAwsEcsTaskDefinitionVolumeHash,
@@ -140,6 +209,60 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+
+			"ipc_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.IpcModeHost,
+					ecs.IpcModeNone,
+					ecs.IpcModeTask,
+				}, false),
+			},
+
+			"pid_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.PidModeHost,
+					ecs.PidModeTask,
+				}, false),
+			},
+
+			"proxy_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"properties": {
+							Type:     schema.TypeMap,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Optional: true,
+							ForceNew: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Default:  ecs.ProxyConfigurationTypeAppmesh,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.ProxyConfigurationTypeAppmesh,
+							}, false),
+						},
+					},
+				},
+			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -167,6 +290,11 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		Family:               aws.String(d.Get("family").(string)),
 	}
 
+	// ClientException: Tags can not be empty.
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().EcsTags()
+	}
+
 	if v, ok := d.GetOk("task_role_arn"); ok {
 		input.TaskRoleArn = aws.String(v.(string))
 	}
@@ -185,6 +313,14 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("network_mode"); ok {
 		input.NetworkMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ipc_mode"); ok {
+		input.IpcMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("pid_mode"); ok {
+		input.PidMode = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("volume"); ok {
@@ -217,6 +353,34 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 		input.RequiresCompatibilities = expandStringList(v.(*schema.Set).List())
 	}
 
+	proxyConfigs := d.Get("proxy_configuration").([]interface{})
+	if len(proxyConfigs) > 0 {
+		proxyConfig := proxyConfigs[0]
+		configMap := proxyConfig.(map[string]interface{})
+
+		containerName := configMap["container_name"].(string)
+		proxyType := configMap["type"].(string)
+
+		rawProperties := configMap["properties"].(map[string]interface{})
+
+		properties := make([]*ecs.KeyValuePair, len(rawProperties))
+		i := 0
+		for name, value := range rawProperties {
+			properties[i] = &ecs.KeyValuePair{
+				Name:  aws.String(name),
+				Value: aws.String(value.(string)),
+			}
+			i++
+		}
+
+		var ecsProxyConfig ecs.ProxyConfiguration
+		ecsProxyConfig.ContainerName = aws.String(containerName)
+		ecsProxyConfig.Type = aws.String(proxyType)
+		ecsProxyConfig.Properties = properties
+
+		input.ProxyConfiguration = &ecsProxyConfig
+	}
+
 	log.Printf("[DEBUG] Registering ECS task definition: %s", input)
 	out, err := conn.RegisterTaskDefinition(&input)
 	if err != nil {
@@ -226,9 +390,9 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 	taskDefinition := *out.TaskDefinition
 
 	log.Printf("[DEBUG] ECS task definition registered: %q (rev. %d)",
-		*taskDefinition.TaskDefinitionArn, *taskDefinition.Revision)
+		aws.StringValue(taskDefinition.TaskDefinitionArn), aws.Int64Value(taskDefinition.Revision))
 
-	d.SetId(*taskDefinition.Family)
+	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 
 	return resourceAwsEcsTaskDefinitionRead(d, meta)
@@ -240,6 +404,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Reading task definition %s", d.Id())
 	out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
+		Include:        []*string{aws.String(ecs.TaskDefinitionFieldTags)},
 	})
 	if err != nil {
 		return err
@@ -255,7 +420,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		return nil
 	}
 
-	d.SetId(*taskDefinition.Family)
+	d.SetId(aws.StringValue(taskDefinition.Family))
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
@@ -275,6 +440,10 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(out.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	if err := d.Set("volume", flattenEcsVolumes(taskDefinition.Volumes)); err != nil {
 		return fmt.Errorf("error setting volume: %s", err)
 	}
@@ -284,7 +453,11 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err := d.Set("requires_compatibilities", flattenStringList(taskDefinition.RequiresCompatibilities)); err != nil {
-		return err
+		return fmt.Errorf("error setting requires_compatibilities: %s", err)
+	}
+
+	if err := d.Set("proxy_configuration", flattenProxyConfiguration(taskDefinition.ProxyConfiguration)); err != nil {
+		return fmt.Errorf("error setting proxy_configuration: %s", err)
 	}
 
 	return nil
@@ -302,6 +475,42 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 		results = append(results, c)
 	}
 	return results
+}
+
+func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interface{} {
+	if pc == nil {
+		return nil
+	}
+
+	meshProperties := make(map[string]string)
+	if pc.Properties != nil {
+		for _, prop := range pc.Properties {
+			meshProperties[aws.StringValue(prop.Name)] = aws.StringValue(prop.Value)
+		}
+	}
+
+	config := make(map[string]interface{})
+	config["container_name"] = aws.StringValue(pc.ContainerName)
+	config["type"] = aws.StringValue(pc.Type)
+	config["properties"] = meshProperties
+
+	return []map[string]interface{}{
+		config,
+	}
+}
+
+func resourceAwsEcsTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ecsconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.EcsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating ECS Task Definition (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return nil
 }
 
 func resourceAwsEcsTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
@@ -324,6 +533,5 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
-
 	return hashcode.String(buf.String())
 }

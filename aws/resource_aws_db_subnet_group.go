@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDbSubnetGroup() *schema.Resource {
@@ -128,7 +128,7 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 		// AWS is down casing the name provided, so we compare lower case versions
 		// of the names. We lower case both our name and their name in the check,
 		// incase they change that someday.
-		if strings.ToLower(d.Id()) == strings.ToLower(*s.DBSubnetGroupName) {
+		if strings.EqualFold(d.Id(), *s.DBSubnetGroupName) {
 			subnetGroup = describeResp.DBSubnetGroups[0]
 		}
 	}

@@ -1,12 +1,12 @@
 ---
+subcategory: "ACM PCA"
 layout: "aws"
 page_title: "AWS: aws_acmpca_certificate_authority"
-sidebar_current: "docs-aws-resource-acmpca-certificate-authority"
 description: |-
   Provides a resource to manage AWS Certificate Manager Private Certificate Authorities
 ---
 
-# aws_acmpca_certificate_authority
+# Resource: aws_acmpca_certificate_authority
 
 Provides a resource to manage AWS Certificate Manager Private Certificate Authorities (ACM PCA Certificate Authorities).
 
@@ -26,6 +26,8 @@ resource "aws_acmpca_certificate_authority" "example" {
       common_name = "example.com"
     }
   }
+
+  permanent_deletion_time_in_days = 7
 }
 ```
 
@@ -77,7 +79,7 @@ resource "aws_acmpca_certificate_authority" "example" {
       custom_cname       = "crl.example.com"
       enabled            = true
       expiration_in_days = 7
-      s3_bucket_name     = "${aws_s3_bucket.example.name}"
+      s3_bucket_name     = "${aws_s3_bucket.example.id}"
     }
   }
 
@@ -93,7 +95,8 @@ The following arguments are supported:
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
 * `tags` - (Optional) Specifies a key-value map of user-defined tags that are attached to the certificate authority.
-* `type` - (Optional) The type of the certificate authority. Currently, this must be `SUBORDINATE`.
+* `type` - (Optional) The type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
+* `permanent_deletion_time_in_days` - (Optional) The number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
 
 ### certificate_authority_configuration
 

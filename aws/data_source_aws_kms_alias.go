@@ -7,8 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsKmsAlias() *schema.Resource {
@@ -54,7 +53,7 @@ func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 		return true
 	})
 	if err != nil {
-		return errwrap.Wrapf("Error fetch KMS alias list: {{err}}", err)
+		return fmt.Errorf("Error fetch KMS alias list: %s", err)
 	}
 
 	if alias == nil {
@@ -80,7 +79,7 @@ func dataSourceAwsKmsAliasRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	resp, err := conn.DescribeKey(req)
 	if err != nil {
-		return errwrap.Wrapf("Error calling KMS DescribeKey: {{err}}", err)
+		return fmt.Errorf("Error calling KMS DescribeKey: %s", err)
 	}
 
 	d.Set("target_key_arn", resp.KeyMetadata.Arn)

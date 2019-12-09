@@ -4,16 +4,15 @@ import (
 	"log"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // testing rulesForGroupPermissions
 func TestRulesMixedMatching(t *testing.T) {
 	cases := []struct {
-		groupId string
-		local   []interface{}
-		remote  []map[string]interface{}
-		saves   []map[string]interface{}
+		local  []interface{}
+		remote []map[string]interface{}
+		saves  []map[string]interface{}
 	}{
 		{
 			local: []interface{}{
@@ -636,11 +635,11 @@ func TestRulesMixedMatching(t *testing.T) {
 
 				// skip early
 				if numExpectedSGs != numRemoteSGs {
-					log.Printf("\n\ncontinuning on numRemoteSGs \n\n")
+					log.Printf("\n\ncontinuing on numRemoteSGs \n\n")
 					continue
 				}
 				if numExpectedCidrs != numRemoteCidrs {
-					log.Printf("\n\ncontinuning numRemoteCidrs\n\n")
+					log.Printf("\n\ncontinuing numRemoteCidrs\n\n")
 					continue
 				}
 
@@ -660,9 +659,7 @@ func TestRulesMixedMatching(t *testing.T) {
 							lcs = append(lcs, c)
 						}
 					default:
-						for _, c := range s["cidr_blocks"].([]interface{}) {
-							lcs = append(lcs, c)
-						}
+						lcs = append(lcs, s["cidr_blocks"].([]interface{})...)
 					}
 				}
 				savesCidrs := schema.NewSet(schema.HashString, lcs)

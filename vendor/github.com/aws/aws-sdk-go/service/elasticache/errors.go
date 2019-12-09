@@ -121,7 +121,8 @@ const (
 	// "InsufficientCacheClusterCapacity".
 	//
 	// The requested cache node type is not available in the specified Availability
-	// Zone.
+	// Zone. For more information, see InsufficientCacheClusterCapacity (http://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/ErrorMessages.html#ErrorMessages.INSUFFICIENT_CACHE_CLUSTER_CAPACITY)
+	// in the ElastiCache User Guide.
 	ErrCodeInsufficientCacheClusterCapacityFault = "InsufficientCacheClusterCapacity"
 
 	// ErrCodeInvalidARNFault for service response error code
@@ -148,6 +149,12 @@ const (
 	//
 	// The current state of the cache security group does not allow deletion.
 	ErrCodeInvalidCacheSecurityGroupStateFault = "InvalidCacheSecurityGroupState"
+
+	// ErrCodeInvalidKMSKeyFault for service response error code
+	// "InvalidKMSKeyFault".
+	//
+	// The KMS key supplied is not valid.
+	ErrCodeInvalidKMSKeyFault = "InvalidKMSKeyFault"
 
 	// ErrCodeInvalidParameterCombinationException for service response error code
 	// "InvalidParameterCombination".
@@ -186,6 +193,12 @@ const (
 	// The VPC network is in an invalid state.
 	ErrCodeInvalidVPCNetworkStateFault = "InvalidVPCNetworkStateFault"
 
+	// ErrCodeNoOperationFault for service response error code
+	// "NoOperationFault".
+	//
+	// The operation was not performed because no changes were required.
+	ErrCodeNoOperationFault = "NoOperationFault"
+
 	// ErrCodeNodeGroupNotFoundFault for service response error code
 	// "NodeGroupNotFoundFault".
 	//
@@ -199,7 +212,7 @@ const (
 	//
 	// The request cannot be processed because it would exceed the maximum allowed
 	// number of node groups (shards) in a single replication group. The default
-	// maximum is 15
+	// maximum is 90
 	ErrCodeNodeGroupsPerReplicationGroupQuotaExceededFault = "NodeGroupsPerReplicationGroupQuotaExceeded"
 
 	// ErrCodeNodeQuotaForClusterExceededFault for service response error code
@@ -222,11 +235,23 @@ const (
 	// The specified replication group already exists.
 	ErrCodeReplicationGroupAlreadyExistsFault = "ReplicationGroupAlreadyExists"
 
+	// ErrCodeReplicationGroupAlreadyUnderMigrationFault for service response error code
+	// "ReplicationGroupAlreadyUnderMigrationFault".
+	//
+	// The targeted replication group is not available.
+	ErrCodeReplicationGroupAlreadyUnderMigrationFault = "ReplicationGroupAlreadyUnderMigrationFault"
+
 	// ErrCodeReplicationGroupNotFoundFault for service response error code
 	// "ReplicationGroupNotFoundFault".
 	//
 	// The specified replication group does not exist.
 	ErrCodeReplicationGroupNotFoundFault = "ReplicationGroupNotFoundFault"
+
+	// ErrCodeReplicationGroupNotUnderMigrationFault for service response error code
+	// "ReplicationGroupNotUnderMigrationFault".
+	//
+	// The designated replication group is not available for data migration.
+	ErrCodeReplicationGroupNotUnderMigrationFault = "ReplicationGroupNotUnderMigrationFault"
 
 	// ErrCodeReservedCacheNodeAlreadyExistsFault for service response error code
 	// "ReservedCacheNodeAlreadyExists".
@@ -252,6 +277,18 @@ const (
 	//
 	// The requested cache node offering does not exist.
 	ErrCodeReservedCacheNodesOfferingNotFoundFault = "ReservedCacheNodesOfferingNotFound"
+
+	// ErrCodeServiceLinkedRoleNotFoundFault for service response error code
+	// "ServiceLinkedRoleNotFoundFault".
+	//
+	// The specified service linked role (SLR) was not found.
+	ErrCodeServiceLinkedRoleNotFoundFault = "ServiceLinkedRoleNotFoundFault"
+
+	// ErrCodeServiceUpdateNotFoundFault for service response error code
+	// "ServiceUpdateNotFoundFault".
+	//
+	// The service update doesn't exist
+	ErrCodeServiceUpdateNotFoundFault = "ServiceUpdateNotFoundFault"
 
 	// ErrCodeSnapshotAlreadyExistsFault for service response error code
 	// "SnapshotAlreadyExistsFault".
@@ -308,5 +345,7 @@ const (
 
 	// ErrCodeTestFailoverNotAvailableFault for service response error code
 	// "TestFailoverNotAvailableFault".
+	//
+	// The TestFailover action is not available.
 	ErrCodeTestFailoverNotAvailableFault = "TestFailoverNotAvailableFault"
 )

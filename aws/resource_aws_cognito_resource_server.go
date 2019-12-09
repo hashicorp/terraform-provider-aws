@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoResourceServer() *schema.Resource {
@@ -146,7 +146,9 @@ func resourceAwsCognitoResourceServerRead(d *schema.ResourceData, meta interface
 		scopeIdentifier := fmt.Sprintf("%s/%s", aws.StringValue(resp.ResourceServer.Identifier), elem["scope_name"].(string))
 		scopeIdentifiers = append(scopeIdentifiers, scopeIdentifier)
 	}
-	d.Set("scope_identifiers", scopeIdentifiers)
+	if err := d.Set("scope_identifiers", scopeIdentifiers); err != nil {
+		return fmt.Errorf("error setting scope_identifiers: %s", err)
+	}
 	return nil
 }
 

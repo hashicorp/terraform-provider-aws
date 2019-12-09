@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_route_tables"
-sidebar_current: "docs-aws-datasource-route-tables"
 description: |-
     Get information on Amazon route tables.
 ---
@@ -17,7 +17,6 @@ kops) route table in a specified vpc to use a particular vpc peering
 connection.
 
 ```hcl
-
 data "aws_route_tables" "rts" {
   vpc_id = "${var.vpc_id}"
 
@@ -33,7 +32,6 @@ resource "aws_route" "r" {
   destination_cidr_block    = "10.0.1.0/22"
   vpc_peering_connection_id = "pcx-0e9a7a9ecd137dc54"
 }
-
 ```
 
 ## Argument Reference

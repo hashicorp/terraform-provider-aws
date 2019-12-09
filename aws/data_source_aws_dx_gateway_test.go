@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsDxGateway_Basic(t *testing.T) {
@@ -14,7 +14,7 @@ func TestAccDataSourceAwsDxGateway_Basic(t *testing.T) {
 	resourceName := "aws_dx_gateway.test"
 	datasourceName := "data.aws_dx_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -28,6 +28,7 @@ func TestAccDataSourceAwsDxGateway_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "amazon_side_asn", resourceName, "amazon_side_asn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "owner_account_id", resourceName, "owner_account_id"),
 				),
 			},
 		},
@@ -40,6 +41,7 @@ resource "aws_dx_gateway" "wrong" {
   amazon_side_asn = "%d"
   name            = "%s-wrong"
 }
+
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = "%d"
   name            = "%s"

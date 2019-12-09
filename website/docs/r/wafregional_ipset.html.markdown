@@ -1,12 +1,12 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
-page_title: "AWS: wafregional_ipset"
-sidebar_current: "docs-aws-resource-wafregional-ipset"
+page_title: "AWS: aws_wafregional_ipset"
 description: |-
   Provides a AWS WAF Regional IPSet resource for use with ALB.
 ---
 
-# aws_wafregional_ipset
+# Resource: aws_wafregional_ipset
 
 Provides a WAF Regional IPSet Resource for use with Application Load Balancer.
 
@@ -17,7 +17,7 @@ resource "aws_wafregional_ipset" "ipset" {
   name = "tfIPSet"
 
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
 
@@ -53,3 +53,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF IPSet.
 * `arn` - The ARN of the WAF IPSet.
+
+## Import
+
+WAF Regional IPSets can be imported using their ID, e.g.
+
+```
+$ terraform import aws_wafregional_ipset.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

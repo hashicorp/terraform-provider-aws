@@ -1,81 +1,50 @@
 package aws
 
 import (
-	"fmt"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsAcmpcaCertificateAuthority_Basic(t *testing.T) {
 	resourceName := "aws_acmpca_certificate_authority.test"
 	datasourceName := "data.aws_acmpca_certificate_authority.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
+				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
 				Config: testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN,
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsAcmpcaCertificateAuthorityCheck(datasourceName, resourceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrPair(datasourceName, "certificate_signing_request", resourceName, "certificate_signing_request"),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_after", resourceName, "not_after"),
+					resource.TestCheckResourceAttrPair(datasourceName, "not_before", resourceName, "not_before"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.#", resourceName, "revocation_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.#", resourceName, "revocation_configuration.0.crl_configuration.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.0.enabled", resourceName, "revocation_configuration.0.crl_configuration.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "serial", resourceName, "serial"),
+					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAwsAcmpcaCertificateAuthorityCheck(datasourceName, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		resource, ok := s.RootModule().Resources[datasourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", datasourceName)
-		}
-
-		dataSource, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", resourceName)
-		}
-
-		attrNames := []string{
-			"arn",
-			"certificate",
-			"certificate_chain",
-			"certificate_signing_request",
-			"not_after",
-			"not_before",
-			"revocation_configuration.#",
-			"revocation_configuration.0.crl_configuration.#",
-			"revocation_configuration.0.crl_configuration.0.enabled",
-			"serial",
-			"status",
-			"tags.%",
-			"type",
-		}
-
-		for _, attrName := range attrNames {
-			if resource.Primary.Attributes[attrName] != dataSource.Primary.Attributes[attrName] {
-				return fmt.Errorf(
-					"%s is %s; want %s",
-					attrName,
-					resource.Primary.Attributes[attrName],
-					dataSource.Primary.Attributes[attrName],
-				)
-			}
-		}
-
-		return nil
-	}
-}
-
 const testAccDataSourceAwsAcmpcaCertificateAuthorityConfig_ARN = `
 resource "aws_acmpca_certificate_authority" "wrong" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -87,6 +56,8 @@ resource "aws_acmpca_certificate_authority" "wrong" {
 }
 
 resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsAmiLaunchPermission() *schema.Resource {
@@ -106,7 +106,7 @@ func hasLaunchPermission(conn *ec2.EC2, image_id string, account_id string) (boo
 	}
 
 	for _, lp := range attrs.LaunchPermissions {
-		if *lp.UserId == account_id {
+		if aws.StringValue(lp.UserId) == account_id {
 			return true, nil
 		}
 	}

@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsApiGatewayDocumentationPart() *schema.Resource {
@@ -168,11 +168,7 @@ func resourceAwsApiGatewayDocumentationPartDelete(d *schema.ResourceData, meta i
 		DocumentationPartId: aws.String(id),
 		RestApiId:           aws.String(apiId),
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandApiGatewayDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {
@@ -203,7 +199,7 @@ func flattenApiGatewayDocumentationPartLocation(l *apigateway.DocumentationPartL
 		return []interface{}{}
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	m["type"] = *l.Type
 	if l.Method != nil {
 		m["method"] = *l.Method

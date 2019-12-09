@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/encryption"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/encryption"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsLightsailKeyPair() *schema.Resource {
@@ -103,10 +103,10 @@ func resourceAwsLightsailKeyPairCreate(d *schema.ResourceData, meta interface{})
 			return err
 		}
 		if resp.Operation == nil {
-			return fmt.Errorf("[ERR] No operation found for CreateKeyPair response")
+			return fmt.Errorf("No operation found for CreateKeyPair response")
 		}
 		if resp.KeyPair == nil {
-			return fmt.Errorf("[ERR] No KeyPair information found for CreateKeyPair response")
+			return fmt.Errorf("No KeyPair information found for CreateKeyPair response")
 		}
 		d.SetId(kName)
 
@@ -160,7 +160,7 @@ func resourceAwsLightsailKeyPairCreate(d *schema.ResourceData, meta interface{})
 
 	_, err := stateConf.WaitForState()
 	if err != nil {
-		// We don't return an error here because the Create call succeded
+		// We don't return an error here because the Create call succeeded
 		log.Printf("[ERR] Error waiting for KeyPair (%s) to become ready: %s", d.Id(), err)
 	}
 

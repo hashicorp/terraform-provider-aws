@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsRouteTable() *schema.Resource {
@@ -15,6 +15,11 @@ func dataSourceAwsRouteTable() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -66,6 +71,11 @@ func dataSourceAwsRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
+						"transit_gateway_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"vpc_peering_connection_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -98,12 +108,21 @@ func dataSourceAwsRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
+						"gateway_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"main": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
 				},
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -114,18 +133,20 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	req := &ec2.DescribeRouteTablesInput{}
 	vpcId, vpcIdOk := d.GetOk("vpc_id")
 	subnetId, subnetIdOk := d.GetOk("subnet_id")
+	gatewayId, gatewayIdOk := d.GetOk("gateway_id")
 	rtbId, rtbOk := d.GetOk("route_table_id")
 	tags, tagsOk := d.GetOk("tags")
 	filter, filterOk := d.GetOk("filter")
 
-	if !vpcIdOk && !subnetIdOk && !tagsOk && !filterOk && !rtbOk {
-		return fmt.Errorf("One of route_table_id, vpc_id, subnet_id, filters, or tags must be assigned")
+	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
+		return fmt.Errorf("One of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
 	}
 	req.Filters = buildEC2AttributeFilterList(
 		map[string]string{
-			"route-table-id":        rtbId.(string),
-			"vpc-id":                vpcId.(string),
-			"association.subnet-id": subnetId.(string),
+			"route-table-id":         rtbId.(string),
+			"vpc-id":                 vpcId.(string),
+			"association.subnet-id":  subnetId.(string),
+			"association.gateway-id": gatewayId.(string),
 		},
 	)
 	req.Filters = append(req.Filters, buildEC2TagFilterList(
@@ -141,7 +162,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 	if resp == nil || len(resp.RouteTables) == 0 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
 	}
 	if len(resp.RouteTables) > 1 {
 		return fmt.Errorf("Multiple Route Table matched; use additional constraints to reduce matches to a single Route Table")
@@ -153,6 +174,7 @@ func dataSourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("route_table_id", rt.RouteTableId)
 	d.Set("vpc_id", rt.VpcId)
 	d.Set("tags", tagsToMap(rt.Tags))
+	d.Set("owner_id", rt.OwnerId)
 	if err := d.Set("routes", dataSourceRoutesRead(rt.Routes)); err != nil {
 		return err
 	}
@@ -202,6 +224,9 @@ func dataSourceRoutesRead(ec2Routes []*ec2.Route) []map[string]interface{} {
 		if r.InstanceId != nil {
 			m["instance_id"] = *r.InstanceId
 		}
+		if r.TransitGatewayId != nil {
+			m["transit_gateway_id"] = *r.TransitGatewayId
+		}
 		if r.VpcPeeringConnectionId != nil {
 			m["vpc_peering_connection_id"] = *r.VpcPeeringConnectionId
 		}
@@ -225,6 +250,9 @@ func dataSourceAssociationsRead(ec2Assocations []*ec2.RouteTableAssociation) []m
 		// GH[11134]
 		if a.SubnetId != nil {
 			m["subnet_id"] = *a.SubnetId
+		}
+		if a.GatewayId != nil {
+			m["gateway_id"] = *a.GatewayId
 		}
 		m["main"] = *a.Main
 		associations = append(associations, m)
