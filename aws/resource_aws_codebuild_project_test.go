@@ -999,13 +999,6 @@ func TestAccAWSCodeBuildProject_ARMContainer(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_ARMContainer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.compute_type", "BUILD_GENERAL1_LARGE"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.environment_variable.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.image", "2"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.privileged_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.image_pull_credentials_type", "CODEBUILD"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.type", "ARM_CONTAINER"),
 				),
 			},
 			{
