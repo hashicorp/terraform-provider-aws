@@ -16,6 +16,8 @@ BUG FIXES:
 * provider: Prevent crash in planning IAM Policy equivalency checking with invalid `Resource` declarations (e.g. a list of list of strings) [GH-11107]
 * resource/aws_eks_cluster: Handle additional `InvalidParameterException: Error in role params` error during creation for IAM eventual consistency [GH-11127]
 * resource/aws_iam_role: Ignore additional `NoSuchEntity` errors on deletion [GH-11125]
+* resource/aws_security_group: Support ampersand (`&`) in `ingress` and `egress` configuration block `description` argument value validation [GH-9528]
+* resource/aws_security_group_rule: Support ampersand (`&`) in `description` argument value validation [GH-9528]
 
 ## 2.41.0 (December 04, 2019)
 
