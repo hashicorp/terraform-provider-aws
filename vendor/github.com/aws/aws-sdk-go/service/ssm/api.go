@@ -5420,6 +5420,103 @@ func (c *SSM) GetAutomationExecutionWithContext(ctx aws.Context, input *GetAutom
 	return out, req.Send()
 }
 
+const opGetCalendarState = "GetCalendarState"
+
+// GetCalendarStateRequest generates a "aws/request.Request" representing the
+// client's request for the GetCalendarState operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCalendarState for more information on using the GetCalendarState
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCalendarStateRequest method.
+//    req, resp := client.GetCalendarStateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCalendarState
+func (c *SSM) GetCalendarStateRequest(input *GetCalendarStateInput) (req *request.Request, output *GetCalendarStateOutput) {
+	op := &request.Operation{
+		Name:       opGetCalendarState,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetCalendarStateInput{}
+	}
+
+	output = &GetCalendarStateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCalendarState API operation for Amazon Simple Systems Manager (SSM).
+//
+// Gets the state of the AWS Systems Manager Change Calendar at an optional,
+// specified time. If you specify a time, GetCalendarState returns the state
+// of the calendar at a specific time, and returns the next time that the Change
+// Calendar state will transition. If you do not specify a time, GetCalendarState
+// assumes the current time. Change Calendar entries have two possible states:
+// OPEN or CLOSED. For more information about Systems Manager Change Calendar,
+// see AWS Systems Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation GetCalendarState for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeInvalidDocument "InvalidDocument"
+//   The specified document does not exist.
+//
+//   * ErrCodeInvalidDocumentType "InvalidDocumentType"
+//   The document type is not valid. Valid document types are described in the
+//   DocumentType property.
+//
+//   * ErrCodeUnsupportedCalendarException "UnsupportedCalendarException"
+//   The calendar entry contained in the specified Systems Manager document is
+//   not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCalendarState
+func (c *SSM) GetCalendarState(input *GetCalendarStateInput) (*GetCalendarStateOutput, error) {
+	req, out := c.GetCalendarStateRequest(input)
+	return out, req.Send()
+}
+
+// GetCalendarStateWithContext is the same as GetCalendarState with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCalendarState for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetCalendarStateWithContext(ctx aws.Context, input *GetCalendarStateInput, opts ...request.Option) (*GetCalendarStateOutput, error) {
+	req, out := c.GetCalendarStateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetCommandInvocation = "GetCommandInvocation"
 
 // GetCommandInvocationRequest generates a "aws/request.Request" representing the
@@ -14853,7 +14950,7 @@ type ComplianceItem struct {
 
 	// An ID for the compliance item. For example, if the compliance item is a Windows
 	// patch, the ID could be the number of the KB article; for example: KB4010320.
-	Id *string `min:"1" type:"string"`
+	Id *string `type:"string"`
 
 	// An ID for the resource. For a managed instance, this is the instance ID.
 	ResourceId *string `min:"1" type:"string"`
@@ -14948,7 +15045,7 @@ type ComplianceItemEntry struct {
 
 	// The compliance item ID. For example, if the compliance item is a Windows
 	// patch, the ID could be the number of the KB article.
-	Id *string `min:"1" type:"string"`
+	Id *string `type:"string"`
 
 	// The severity of the compliance status. Severity can be one of the following:
 	// Critical, High, Medium, Low, Informational, Unspecified.
@@ -14980,9 +15077,6 @@ func (s ComplianceItemEntry) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ComplianceItemEntry) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ComplianceItemEntry"}
-	if s.Id != nil && len(*s.Id) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
-	}
 	if s.Severity == nil {
 		invalidParams.Add(request.NewErrParamRequired("Severity"))
 	}
@@ -21013,8 +21107,7 @@ type DescribePatchGroupStateOutput struct {
 	// The number of instances with installed patches.
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
-	// The number of instances with patches installed that have not been rebooted
-	// after the patch installation. The status of these instances is NON_COMPLIANT.
+	// Reserved for future use.
 	InstancesWithInstalledPendingRebootPatches *int64 `type:"integer"`
 
 	// The number of instances with patches installed that are specified in a RejectedPatches
@@ -22337,6 +22430,104 @@ func (s GetAutomationExecutionOutput) GoString() string {
 // SetAutomationExecution sets the AutomationExecution field's value.
 func (s *GetAutomationExecutionOutput) SetAutomationExecution(v *AutomationExecution) *GetAutomationExecutionOutput {
 	s.AutomationExecution = v
+	return s
+}
+
+type GetCalendarStateInput struct {
+	_ struct{} `type:"structure"`
+
+	// (Optional) The specific time for which you want to get calendar state information,
+	// in ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) format. If you do not
+	// add AtTime, the current time is assumed.
+	AtTime *string `type:"string"`
+
+	// The names or Amazon Resource Names (ARNs) of the Systems Manager documents
+	// that represent the calendar entries for which you want to get the state.
+	//
+	// CalendarNames is a required field
+	CalendarNames []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCalendarStateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCalendarStateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCalendarStateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCalendarStateInput"}
+	if s.CalendarNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("CalendarNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAtTime sets the AtTime field's value.
+func (s *GetCalendarStateInput) SetAtTime(v string) *GetCalendarStateInput {
+	s.AtTime = &v
+	return s
+}
+
+// SetCalendarNames sets the CalendarNames field's value.
+func (s *GetCalendarStateInput) SetCalendarNames(v []*string) *GetCalendarStateInput {
+	s.CalendarNames = v
+	return s
+}
+
+type GetCalendarStateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The time, as an ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) string,
+	// that you specified in your command. If you did not specify a time, GetCalendarState
+	// uses the current time.
+	AtTime *string `type:"string"`
+
+	// The time, as an ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) string,
+	// that the calendar state will change. If the current calendar state is OPEN,
+	// NextTransitionTime indicates when the calendar state changes to CLOSED, and
+	// vice-versa.
+	NextTransitionTime *string `type:"string"`
+
+	// The state of the calendar. An OPEN calendar indicates that actions are allowed
+	// to proceed, and a CLOSED calendar indicates that actions are not allowed
+	// to proceed.
+	State *string `type:"string" enum:"CalendarState"`
+}
+
+// String returns the string representation
+func (s GetCalendarStateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCalendarStateOutput) GoString() string {
+	return s.String()
+}
+
+// SetAtTime sets the AtTime field's value.
+func (s *GetCalendarStateOutput) SetAtTime(v string) *GetCalendarStateOutput {
+	s.AtTime = &v
+	return s
+}
+
+// SetNextTransitionTime sets the NextTransitionTime field's value.
+func (s *GetCalendarStateOutput) SetNextTransitionTime(v string) *GetCalendarStateOutput {
+	s.NextTransitionTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *GetCalendarStateOutput) SetState(v string) *GetCalendarStateOutput {
+	s.State = &v
 	return s
 }
 
@@ -25841,7 +26032,7 @@ type InstancePatchState struct {
 	// on the instance.
 	InstalledOtherCount *int64 `type:"integer"`
 
-	// The number of patches installed since the last time the instance was rebooted.
+	// Reserved for future use.
 	InstalledPendingRebootCount *int64 `type:"integer"`
 
 	// The number of instances with patches installed that are specified in a RejectedPatches
@@ -25858,8 +26049,7 @@ type InstancePatchState struct {
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
 
-	// The time of the last attempt to patch the instance with NoReboot specified
-	// as the reboot option.
+	// Reserved for future use.
 	LastNoRebootInstallOperationTime *time.Time `type:"timestamp"`
 
 	// The number of patches from the patch baseline that are applicable for the
@@ -25897,18 +26087,7 @@ type InstancePatchState struct {
 	// PatchGroup is a required field
 	PatchGroup *string `min:"1" type:"string" required:"true"`
 
-	// Indicates the reboot option specified in the patch baseline.
-	//
-	// Reboot options apply to Install operations only. Reboots are not attempted
-	// for Patch Manager Scan operations.
-	//
-	//    * RebootIfNeeded: Patch Manager tries to reboot the instance if it installed
-	//    any patches, or if any patches are detected with a status of InstalledPendingReboot.
-	//
-	//    * NoReboot: Patch Manager attempts to install missing packages without
-	//    trying to reboot the system. Patches installed with this option are assigned
-	//    a status of InstalledPendingReboot. These patches might not be in effect
-	//    until a reboot is performed.
+	// Reserved for future use.
 	RebootOption *string `type:"string" enum:"RebootOption"`
 
 	// The ID of the patch baseline snapshot used during the patching operation
@@ -38162,6 +38341,14 @@ const (
 )
 
 const (
+	// CalendarStateOpen is a CalendarState enum value
+	CalendarStateOpen = "OPEN"
+
+	// CalendarStateClosed is a CalendarState enum value
+	CalendarStateClosed = "CLOSED"
+)
+
+const (
 	// CommandFilterKeyInvokedAfter is a CommandFilterKey enum value
 	CommandFilterKeyInvokedAfter = "InvokedAfter"
 
@@ -38331,6 +38518,9 @@ const (
 
 	// DocumentFormatJson is a DocumentFormat enum value
 	DocumentFormatJson = "JSON"
+
+	// DocumentFormatText is a DocumentFormat enum value
+	DocumentFormatText = "TEXT"
 )
 
 const (
@@ -38396,6 +38586,9 @@ const (
 
 	// DocumentTypeDeploymentStrategy is a DocumentType enum value
 	DocumentTypeDeploymentStrategy = "DeploymentStrategy"
+
+	// DocumentTypeChangeCalendar is a DocumentType enum value
+	DocumentTypeChangeCalendar = "ChangeCalendar"
 )
 
 const (

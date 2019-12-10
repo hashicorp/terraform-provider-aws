@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Global Accelerator" // Name of service.
 	EndpointsID = "globalaccelerator"  // ID to lookup a service endpoint with.
-	ServiceID   = "Global Accelerator" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Global Accelerator" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the GlobalAccelerator client with a session.

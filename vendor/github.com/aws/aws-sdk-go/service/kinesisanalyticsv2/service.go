@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Kinesis Analytics V2" // Name of service.
 	EndpointsID = "kinesisanalytics"     // ID to lookup a service endpoint with.
-	ServiceID   = "Kinesis Analytics V2" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Kinesis Analytics V2" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the KinesisAnalyticsV2 client with a session.

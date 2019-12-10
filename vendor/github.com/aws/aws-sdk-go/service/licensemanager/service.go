@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "License Manager" // Name of service.
 	EndpointsID = "license-manager" // ID to lookup a service endpoint with.
-	ServiceID   = "License Manager" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "License Manager" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the LicenseManager client with a session.

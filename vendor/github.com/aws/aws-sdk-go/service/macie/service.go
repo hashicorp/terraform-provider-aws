@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Macie" // Name of service.
 	EndpointsID = "macie" // ID to lookup a service endpoint with.
-	ServiceID   = "Macie" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Macie" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the Macie client with a session.

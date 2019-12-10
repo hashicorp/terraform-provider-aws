@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "LakeFormation" // Name of service.
 	EndpointsID = "lakeformation" // ID to lookup a service endpoint with.
-	ServiceID   = "LakeFormation" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "LakeFormation" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the LakeFormation client with a session.

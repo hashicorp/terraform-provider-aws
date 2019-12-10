@@ -275,6 +275,14 @@ const (
 	// in the AWS Key Management Service Developer Guide .
 	ErrCodeInvalidStateException = "KMSInvalidStateException"
 
+	// ErrCodeKMSInvalidSignatureException for service response error code
+	// "KMSInvalidSignatureException".
+	//
+	// The request was rejected because the signature verification failed. Signature
+	// verification fails when it cannot confirm that signature was produced by
+	// signing the specified message with the specified CMK and signing algorithm.
+	ErrCodeKMSInvalidSignatureException = "KMSInvalidSignatureException"
+
 	// ErrCodeKeyUnavailableException for service response error code
 	// "KeyUnavailableException".
 	//
