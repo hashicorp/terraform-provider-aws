@@ -402,7 +402,7 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if requiresTagging {
-		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), []*dynamodb.Tag{}, tags); err != nil {
+		if err := keyvaluetags.DynamodbUpdateTags(conn, d.Get("arn").(string), nil, tags); err != nil {
 			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -786,7 +786,7 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 	return nil
 }
 
-func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (keyvaluetags.KeyValueTags, error) {
+func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]string, error) {
 	output, err := conn.ListTagsOfResource(&dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(arn),
 	})
@@ -796,7 +796,7 @@ func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (keyvaluetags.Ke
 		return nil, fmt.Errorf("Error reading tags from dynamodb resource: %s", err)
 	}
 
-	result := keyvaluetags.DynamodbKeyValueTags(output.Tags)
+	result := keyvaluetags.DynamodbKeyValueTags(output.Tags).IgnoreAws().Map()
 
 	// TODO Read NextToken if available
 
