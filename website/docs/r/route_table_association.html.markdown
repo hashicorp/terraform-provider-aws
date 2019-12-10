@@ -3,8 +3,7 @@ subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_route_table_association"
 description: |-
-  Provides a resource to create an association between a route table and a subnet or a route table and an
-internet gateway or virtual private gateway.
+  Provides a resource to create an association between a route table and a subnet or a route table and an internet gateway or virtual private gateway.
 ---
 
 # Resource: aws_route_table_association
