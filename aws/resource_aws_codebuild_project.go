@@ -212,6 +212,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 								codebuild.EnvironmentTypeLinuxContainer,
 								codebuild.EnvironmentTypeLinuxGpuContainer,
 								codebuild.EnvironmentTypeWindowsContainer,
+								codebuild.EnvironmentTypeArmContainer,
 							}, false),
 						},
 						"image_pull_credentials_type": {
