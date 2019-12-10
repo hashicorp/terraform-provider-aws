@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "AccessAnalyzer"  // Name of service.
 	EndpointsID = "access-analyzer" // ID to lookup a service endpoint with.
-	ServiceID   = "AccessAnalyzer"  // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "AccessAnalyzer"  // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the AccessAnalyzer client with a session.

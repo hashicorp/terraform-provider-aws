@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Marketplace Catalog" // Name of service.
 	EndpointsID = "catalog.marketplace" // ID to lookup a service endpoint with.
-	ServiceID   = "Marketplace Catalog" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Marketplace Catalog" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the MarketplaceCatalog client with a session.

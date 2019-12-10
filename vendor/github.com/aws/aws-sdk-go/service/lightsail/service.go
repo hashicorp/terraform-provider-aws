@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "lightsail" // Name of service.
 	EndpointsID = ServiceName // ID to lookup a service endpoint with.
-	ServiceID   = "Lightsail" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Lightsail" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the Lightsail client with a session.

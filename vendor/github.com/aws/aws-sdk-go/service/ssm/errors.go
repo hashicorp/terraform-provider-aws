@@ -301,6 +301,13 @@ const (
 	// The version of the document schema is not supported.
 	ErrCodeInvalidDocumentSchemaVersion = "InvalidDocumentSchemaVersion"
 
+	// ErrCodeInvalidDocumentType for service response error code
+	// "InvalidDocumentType".
+	//
+	// The document type is not valid. Valid document types are described in the
+	// DocumentType property.
+	ErrCodeInvalidDocumentType = "InvalidDocumentType"
+
 	// ErrCodeInvalidDocumentVersion for service response error code
 	// "InvalidDocumentVersion".
 	//
@@ -710,6 +717,13 @@ const (
 	//
 	// The size of inventory data has exceeded the total size limit for the resource.
 	ErrCodeTotalSizeLimitExceededException = "TotalSizeLimitExceededException"
+
+	// ErrCodeUnsupportedCalendarException for service response error code
+	// "UnsupportedCalendarException".
+	//
+	// The calendar entry contained in the specified Systems Manager document is
+	// not supported.
+	ErrCodeUnsupportedCalendarException = "UnsupportedCalendarException"
 
 	// ErrCodeUnsupportedFeatureRequiredException for service response error code
 	// "UnsupportedFeatureRequiredException".

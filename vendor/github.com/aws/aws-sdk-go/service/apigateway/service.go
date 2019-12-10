@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "apigateway"  // Name of service.
 	EndpointsID = ServiceName   // ID to lookup a service endpoint with.
-	ServiceID   = "API Gateway" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "API Gateway" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the APIGateway client with a session.

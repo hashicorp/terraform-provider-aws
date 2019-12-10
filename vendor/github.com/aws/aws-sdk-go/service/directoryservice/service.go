@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "ds"                // Name of service.
 	EndpointsID = ServiceName         // ID to lookup a service endpoint with.
-	ServiceID   = "Directory Service" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Directory Service" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the DirectoryService client with a session.

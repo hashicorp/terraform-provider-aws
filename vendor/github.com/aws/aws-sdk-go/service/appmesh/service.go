@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "App Mesh" // Name of service.
 	EndpointsID = "appmesh"  // ID to lookup a service endpoint with.
-	ServiceID   = "App Mesh" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "App Mesh" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the AppMesh client with a session.

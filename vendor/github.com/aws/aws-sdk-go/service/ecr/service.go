@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "ecr"     // Name of service.
 	EndpointsID = "api.ecr" // ID to lookup a service endpoint with.
-	ServiceID   = "ECR"     // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "ECR"     // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the ECR client with a session.

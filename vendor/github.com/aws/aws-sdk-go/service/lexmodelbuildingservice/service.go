@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "models.lex"                 // Name of service.
 	EndpointsID = ServiceName                  // ID to lookup a service endpoint with.
-	ServiceID   = "Lex Model Building Service" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Lex Model Building Service" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the LexModelBuildingService client with a session.

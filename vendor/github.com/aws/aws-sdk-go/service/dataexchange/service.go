@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "DataExchange" // Name of service.
 	EndpointsID = "dataexchange" // ID to lookup a service endpoint with.
-	ServiceID   = "DataExchange" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "DataExchange" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the DataExchange client with a session.

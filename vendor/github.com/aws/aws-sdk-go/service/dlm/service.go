@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "DLM" // Name of service.
 	EndpointsID = "dlm" // ID to lookup a service endpoint with.
-	ServiceID   = "DLM" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "DLM" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the DLM client with a session.

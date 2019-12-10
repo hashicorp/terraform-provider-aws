@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "sagemaker"     // Name of service.
 	EndpointsID = "api.sagemaker" // ID to lookup a service endpoint with.
-	ServiceID   = "SageMaker"     // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "SageMaker"     // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the SageMaker client with a session.

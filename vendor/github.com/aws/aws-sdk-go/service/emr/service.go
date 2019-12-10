@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "elasticmapreduce" // Name of service.
 	EndpointsID = ServiceName        // ID to lookup a service endpoint with.
-	ServiceID   = "EMR"              // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "EMR"              // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the EMR client with a session.

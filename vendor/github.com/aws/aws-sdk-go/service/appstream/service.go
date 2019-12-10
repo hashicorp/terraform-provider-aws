@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "appstream2" // Name of service.
 	EndpointsID = ServiceName  // ID to lookup a service endpoint with.
-	ServiceID   = "AppStream"  // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "AppStream"  // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the AppStream client with a session.
