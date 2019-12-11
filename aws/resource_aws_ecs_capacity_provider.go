@@ -40,35 +40,33 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 						},
 						"managed_termination_protection": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"ENABLED",
 								"DISABLED",
 							}, false),
 						},
-
 						"managed_scaling": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
-										Default:      10000,
 									},
 									"minimum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
-										Default:      1,
 									},
 									"status": {
 										Type:     schema.TypeString,
 										Optional: true,
-										// TODO maybe Default: ENABLED
 										ValidateFunc: validation.StringInSlice([]string{
 											"ENABLED",
 											"DISABLED",
@@ -193,30 +191,32 @@ func resourceAwsEcsCapacityProviderImport(d *schema.ResourceData, meta interface
 func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGroupProvider {
 	prov := ecs.AutoScalingGroupProvider{}
 
-	p := configured.([]interface{})[0]
-	arn := p.(map[string]interface{})["auto_scaling_group_arn"].(string)
+	p := configured.([]interface{})[0].(map[string]interface{})
+	arn := p["auto_scaling_group_arn"].(string)
 	prov.AutoScalingGroupArn = aws.String(arn)
 
-	mtp := p.(map[string]interface{})["managed_termination_protection"].(string)
-	prov.ManagedTerminationProtection = aws.String(mtp)
+	if mtp := p["managed_termination_protection"].(string); len(mtp) > 0 {
+		prov.ManagedTerminationProtection = aws.String(mtp)
+	}
 
-	// TODO could this be simplified?
-	ms := p.(map[string]interface{})["managed_scaling"].([]interface{})[0].(map[string]interface{})
-	managedScaling := ecs.ManagedScaling{}
+	if v := p["managed_scaling"]; len(v.([]interface{})) > 0 {
+		ms := v.([]interface{})[0].(map[string]interface{})
+		managedScaling := ecs.ManagedScaling{}
 
-	if val, ok := ms["maximum_scaling_step_size"]; ok {
-		managedScaling.MaximumScalingStepSize = aws.Int64(int64(val.(int)))
+		if val, ok := ms["maximum_scaling_step_size"]; ok {
+			managedScaling.MaximumScalingStepSize = aws.Int64(int64(val.(int)))
+		}
+		if val, ok := ms["minimum_scaling_step_size"]; ok {
+			managedScaling.MinimumScalingStepSize = aws.Int64(int64(val.(int)))
+		}
+		if val, ok := ms["status"]; ok {
+			managedScaling.Status = aws.String(val.(string))
+		}
+		if val, ok := ms["target_capacity"]; ok {
+			managedScaling.TargetCapacity = aws.Int64(int64(val.(int)))
+		}
+		prov.ManagedScaling = &managedScaling
 	}
-	if val, ok := ms["minimum_scaling_step_size"]; ok {
-		managedScaling.MinimumScalingStepSize = aws.Int64(int64(val.(int)))
-	}
-	if val, ok := ms["status"]; ok {
-		managedScaling.Status = aws.String(val.(string))
-	}
-	if val, ok := ms["target_capacity"]; ok {
-		managedScaling.TargetCapacity = aws.Int64(int64(val.(int)))
-	}
-	prov.ManagedScaling = &managedScaling
 
 	return &prov
 }

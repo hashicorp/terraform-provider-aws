@@ -30,6 +30,12 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "id", "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.bar", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "100"),
 				),
 			},
 			{
@@ -134,14 +140,6 @@ resource "aws_ecs_capacity_provider" "test" {
 
 	auto_scaling_group_provider {
 		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
-		managed_termination_protection = "DISABLED"
-
-		managed_scaling {
-			maximum_scaling_step_size = 10
-			minimum_scaling_step_size = 1
-			status = "DISABLED"
-			target_capacity = 1
-		}
 	}
 }
 `, rName)
@@ -158,14 +156,6 @@ resource "aws_ecs_capacity_provider" "test" {
 
 	auto_scaling_group_provider {
 		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
-		managed_termination_protection = "DISABLED"
-
-		managed_scaling {
-			maximum_scaling_step_size = 10
-			minimum_scaling_step_size = 1
-			status = "DISABLED"
-			target_capacity = 1
-		}
 	}
 }
 `, rName, tag1Key, tag1Value)
@@ -183,14 +173,6 @@ resource "aws_ecs_capacity_provider" "test" {
 
 	auto_scaling_group_provider {
 		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
-		managed_termination_protection = "DISABLED"
-
-		managed_scaling {
-			maximum_scaling_step_size = 10
-			minimum_scaling_step_size = 1
-			status = "DISABLED"
-			target_capacity = 1
-		}
 	}
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
