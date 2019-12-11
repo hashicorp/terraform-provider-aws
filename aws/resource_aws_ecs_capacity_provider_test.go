@@ -28,11 +28,13 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "id", "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -60,6 +62,7 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
+				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

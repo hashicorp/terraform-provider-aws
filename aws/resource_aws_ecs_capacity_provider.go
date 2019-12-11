@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -18,7 +19,7 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 		Update: resourceAwsEcsCapacityProviderUpdate,
 		Delete: resourceAwsEcsCapacityProviderDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsEcsCapacityProviderImport,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -91,7 +92,7 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
-	// `CreateCapacityProviderInput` does not accept an empty array
+	// `CreateCapacityProviderInput` does not accept an empty array of tags
 	var tags []*ecs.Tag
 	if t, ok := d.GetOk("tags"); ok {
 		tags = keyvaluetags.New(t.(map[string]interface{})).IgnoreAws().EcsTags()
@@ -175,6 +176,18 @@ func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface
 func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
 	// TODO
 	return nil
+}
+
+func resourceAwsEcsCapacityProviderImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set("name", d.Id())
+	d.SetId(arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Service:   "ecs",
+		Resource:  fmt.Sprintf("capacity-provider/%s", d.Id()),
+	}.String())
+	return []*schema.ResourceData{d}, nil
 }
 
 func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGroupProvider {
