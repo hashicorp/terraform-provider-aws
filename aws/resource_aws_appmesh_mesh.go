@@ -122,8 +122,9 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
+	arn := *resp.Mesh.Metadata.Arn
 	d.Set("name", resp.Mesh.MeshName)
-	d.Set("arn", resp.Mesh.Metadata.Arn)
+	d.Set("arn", arn)
 	d.Set("created_date", resp.Mesh.Metadata.CreatedAt.Format(time.RFC3339))
 	d.Set("last_updated_date", resp.Mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	err = d.Set("spec", flattenAppmeshMeshSpec(resp.Mesh.Spec))
@@ -131,7 +132,6 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting spec: %s", err)
 	}
 
-	arn := *resp.Mesh.Metadata.Arn
 	tags, err := keyvaluetags.AppmeshListTags(conn, arn)
 
 	if err != nil {
