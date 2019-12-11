@@ -48,6 +48,72 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
+	var provider ecs.CapacityProvider
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsCapacityProviderConfigManagedScaling(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.bar", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "50"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsCapacityProvider_ManagedScalingPartial(t *testing.T) {
+	var provider ecs.CapacityProvider
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.bar", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.target_capacity", "100"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 	var provider ecs.CapacityProvider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -140,6 +206,42 @@ resource "aws_ecs_capacity_provider" "test" {
 
 	auto_scaling_group_provider {
 		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+	}
+}
+`, rName)
+}
+
+func testAccAWSEcsCapacityProviderConfigManagedScaling(rName string) string {
+	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+	name = %q
+
+	auto_scaling_group_provider {
+		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+
+		managed_scaling {
+			maximum_scaling_step_size = 10
+			minimum_scaling_step_size = 2
+			status = "ENABLED"
+			target_capacity = 50
+		}
+	}
+}
+`, rName)
+}
+
+func testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName string) string {
+	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+	name = %q
+
+	auto_scaling_group_provider {
+		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+
+		managed_scaling {
+			minimum_scaling_step_size = 2
+			status = "ENABLED"
+		}
 	}
 }
 `, rName)

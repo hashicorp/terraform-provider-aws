@@ -57,16 +57,19 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"minimum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"status": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											"ENABLED",
 											"DISABLED",
@@ -74,6 +77,7 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 									"target_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 100),
 									},
 								},
@@ -199,23 +203,24 @@ func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGrou
 		prov.ManagedTerminationProtection = aws.String(mtp)
 	}
 
-	if v := p["managed_scaling"]; len(v.([]interface{})) > 0 {
-		ms := v.([]interface{})[0].(map[string]interface{})
-		managedScaling := ecs.ManagedScaling{}
+	if v := p["managed_scaling"].([]interface{}); len(v) > 0 {
+		if ms, ok := v[0].(map[string]interface{}); ok {
+			managedScaling := ecs.ManagedScaling{}
 
-		if val, ok := ms["maximum_scaling_step_size"]; ok {
-			managedScaling.MaximumScalingStepSize = aws.Int64(int64(val.(int)))
+			if val, ok := ms["maximum_scaling_step_size"].(int); ok && val != 0 {
+				managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
+			}
+			if val, ok := ms["minimum_scaling_step_size"].(int); ok && val != 0 {
+				managedScaling.MinimumScalingStepSize = aws.Int64(int64(val))
+			}
+			if val, ok := ms["status"].(string); ok && len(val) > 0 {
+				managedScaling.Status = aws.String(val)
+			}
+			if val, ok := ms["target_capacity"].(int); ok && val != 0 {
+				managedScaling.TargetCapacity = aws.Int64(int64(val))
+			}
+			prov.ManagedScaling = &managedScaling
 		}
-		if val, ok := ms["minimum_scaling_step_size"]; ok {
-			managedScaling.MinimumScalingStepSize = aws.Int64(int64(val.(int)))
-		}
-		if val, ok := ms["status"]; ok {
-			managedScaling.Status = aws.String(val.(string))
-		}
-		if val, ok := ms["target_capacity"]; ok {
-			managedScaling.TargetCapacity = aws.Int64(int64(val.(int)))
-		}
-		prov.ManagedScaling = &managedScaling
 	}
 
 	return &prov
