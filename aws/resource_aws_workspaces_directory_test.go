@@ -156,7 +156,7 @@ resource "aws_workspaces_directory" "test" {
 }
 `
 
-	testAccWorkspaceConfig_selfServicePermissions = `
+	testAccWorkspaceConfig_selfServicePermissionsA = `
 data "aws_region" "current" {}
 
 data "aws_availability_zones" "available" {
@@ -235,6 +235,86 @@ resource "aws_workspaces_directory" "test" {
   }
 }
 `
+
+	testAccWorkspaceConfig_selfServicePermissionsB = `
+data "aws_region" "current" {}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+locals {
+  region_workspaces_az_ids = {
+    "us-east-1" = formatlist("use1-az%d", [2, 4, 6])
+  }
+
+  workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "primary" {
+  vpc_id = "${aws_vpc.test.id}"
+  availability_zone_id = "${local.workspaces_az_ids[0]}"
+  cidr_block = "10.0.1.0/24"
+}
+
+resource "aws_subnet" "secondary" {
+  vpc_id = "${aws_vpc.test.id}"
+  availability_zone_id = "${local.workspaces_az_ids[1]}"
+  cidr_block = "10.0.2.0/24"
+}
+resource "aws_directory_service_directory" "test" {
+  name = "tf-acctest.example.com"
+  password = "#S1ncerely"
+  size = "Small"
+  vpc_settings {
+    vpc_id = "${aws_vpc.test.id}"
+    subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
+  }
+}
+
+data aws_iam_policy_document workspaces {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["workspaces.amazonaws.com"]
+    }
+  }
+}
+
+resource aws_iam_role workspaces-default {
+  name               = "workspaces_DefaultRole"
+  assume_role_policy = data.aws_iam_policy_document.workspaces.json
+}
+
+resource aws_iam_role_policy_attachment workspaces-default-service-access {
+  role       = aws_iam_role.workspaces-default.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess"
+}
+
+resource aws_iam_role_policy_attachment workspaces-default-self-service-access {
+  role       = aws_iam_role.workspaces-default.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
+}
+
+resource "aws_workspaces_directory" "test" {
+  directory_id = "${aws_directory_service_directory.test.id}"
+  subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
+
+  self_service_permissions {
+    change_compute_type = false
+    increase_volume_size = true
+    rebuild_workspace = false
+    restart_workspace = true
+    switch_running_mode = false
+  }
+}
+`
 )
 
 func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
@@ -286,7 +366,18 @@ func TestAccAwsWorkspacesDirectory_selfServicePermissions(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_selfServicePermissions,
+				Config: testAccWorkspaceConfig_selfServicePermissionsA,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists("aws_workspaces_directory.test"),
+				),
+			},
+			{
+				ResourceName:      "aws_workspaces_directory.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfig_selfServicePermissionsB,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists("aws_workspaces_directory.test"),
 				),
