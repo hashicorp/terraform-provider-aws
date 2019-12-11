@@ -602,7 +602,6 @@ func TestAccAWSElasticSearchDomain_NodeToNodeEncryption(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	var td elasticsearch.ListTagsOutput
 	ri := acctest.RandInt()
 	resourceId := fmt.Sprintf("tf-test-%d", ri)
 	resourceName := "aws_elasticsearch_domain.test"
@@ -616,6 +615,7 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 				Config: testAccESDomainConfig(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -628,9 +628,9 @@ func TestAccAWSElasticSearchDomain_tags(t *testing.T) {
 				Config: testAccESDomainConfig_TagUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
-					testAccLoadESTags(&domain, &td),
-					testAccCheckElasticsearchServiceTags(&td.TagList, "foo", "bar"),
-					testAccCheckElasticsearchServiceTags(&td.TagList, "new", "type"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.new", "type"),
 				),
 			},
 		},
@@ -833,24 +833,6 @@ func testAccCheckESCognitoOptions(enabled bool, status *elasticsearch.Elasticsea
 		conf := status.CognitoOptions
 		if *conf.Enabled != enabled {
 			return fmt.Errorf("CognitoOptions not set properly. Given: %t, Expected: %t", *conf.Enabled, enabled)
-		}
-		return nil
-	}
-}
-
-func testAccLoadESTags(conf *elasticsearch.ElasticsearchDomainStatus, td *elasticsearch.ListTagsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).esconn
-
-		describe, err := conn.ListTags(&elasticsearch.ListTagsInput{
-			ARN: conf.ARN,
-		})
-
-		if err != nil {
-			return err
-		}
-		if len(describe.TagList) > 0 {
-			*td = *describe
 		}
 		return nil
 	}
