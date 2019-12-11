@@ -22,9 +22,9 @@ Additional information for using AWS Directory Service with Windows File Systems
 resource "aws_fsx_windows_file_system" "example" {
   active_directory_id = "${aws_directory_service_directory.example.id}"
   kms_key_id          = "${aws_kms_key.example.arn}"
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.example.id}"]
-  throughput_capacity = 1024
+  throughput_capacity = 8
 }
 ```
 
@@ -35,9 +35,9 @@ Additional information for using AWS Directory Service with Windows File Systems
 ```hcl
 resource "aws_fsx_windows_file_system" "example" {
   kms_key_id          = "${aws_kms_key.example.arn}"
-  storage_capacity    = 300
+  storage_capacity    = 32
   subnet_ids          = ["${aws_subnet.example.id}"]
-  throughput_capacity = 1024
+  throughput_capacity = 8
 
   self_managed_active_directory {
     dns_ips     = ["10.0.0.111", "10.0.0.222"]
@@ -52,7 +52,7 @@ resource "aws_fsx_windows_file_system" "example" {
 
 The following arguments are supported:
 
-* `storage_capacity` - (Required) Storage capacity (GiB) of the file system. Minimum of 300 and maximum of 65536.
+* `storage_capacity` - (Required) Storage capacity (GiB) of the file system. Minimum of 32 and maximum of 65536.
 * `subnet_ids` - (Required) A list of IDs for the subnets that the file system will be accessible from. File systems support only one subnet. The file server is also launched in that subnet's Availability Zone.
 * `throughput_capacity` - (Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
 * `active_directory_id` - (Optional) The ID for an existing Microsoft Active Directory instance that the file system should join when it's created. Cannot be specified with `self_managed_active_directory`.
