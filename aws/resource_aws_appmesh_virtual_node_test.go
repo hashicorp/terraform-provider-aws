@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,8 +14,8 @@ import (
 func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -36,7 +35,7 @@ func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualNode/%s", meshName, vnName))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -53,10 +52,10 @@ func testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	nsResourceName := "aws_service_discovery_http_namespace.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 	// Avoid 'config is invalid: last character of "name" must be a letter' for aws_service_discovery_http_namespace.
-	rName := fmt.Sprintf("tf-testacc-appmeshvn-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlpha))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -106,8 +105,8 @@ func testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -142,7 +141,7 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualNode/%s", meshName, vnName))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -174,7 +173,7 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb1.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualNode/%s", meshName, vnName))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -190,8 +189,8 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -236,8 +235,8 @@ func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
 func testAccAwsAppmeshVirtualNode_tags(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
