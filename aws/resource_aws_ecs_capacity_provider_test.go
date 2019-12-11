@@ -29,6 +29,7 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					testAccCheckResourceAttrRegionalARN(resourceName, "id", "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.bar", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
@@ -196,8 +197,6 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 		return fmt.Errorf("ECS Capacity Provider (%s) not found", rs.Primary.ID)
 	}
 }
-
-// TODO pull managed scaling out of _basic and make it a separate test
 
 func testAccAWSEcsCapacityProviderConfig(rName string) string {
 	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`

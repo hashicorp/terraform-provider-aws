@@ -27,6 +27,10 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_scaling_group_provider": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
