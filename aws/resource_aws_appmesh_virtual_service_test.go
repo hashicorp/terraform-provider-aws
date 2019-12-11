@@ -318,7 +318,7 @@ resource "aws_appmesh_mesh" "test" {
 }
 
 resource "aws_appmesh_virtual_router" "foo" {
-  name      = %[1]q
+  name      = %[2]q
   mesh_name = "${aws_appmesh_mesh.test.id}"
 
   spec {
