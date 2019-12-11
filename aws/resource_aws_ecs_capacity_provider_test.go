@@ -31,7 +31,11 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
-			// TODO import test once that is implemented
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -53,6 +57,11 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

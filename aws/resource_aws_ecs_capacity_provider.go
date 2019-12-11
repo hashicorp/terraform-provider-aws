@@ -17,8 +17,9 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 		Read:   resourceAwsEcsCapacityProviderRead,
 		Update: resourceAwsEcsCapacityProviderUpdate,
 		Delete: resourceAwsEcsCapacityProviderDelete,
-		// TODO Import
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
