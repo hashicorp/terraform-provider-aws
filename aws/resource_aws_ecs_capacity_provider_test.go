@@ -27,10 +27,33 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 				Config: testAccAWSEcsCapacityProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
-					// TODO check some of the attrs to make sure they're correct
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			// TODO import test once that is implemented
+		},
+	})
+}
+
+func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
+	var provider ecs.CapacityProvider
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsCapacityProviderDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsCapacityProviderConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
 		},
 	})
 }
@@ -73,19 +96,12 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 	}
 }
 
-// TODO tags test separately if those are in fact optional
-
 // TODO pull managed scaling out of _basic and make it a separate test
 
 func testAccAWSEcsCapacityProviderConfig(rName string) string {
 	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
-
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
-
-	tags = {
-		"foo" = "bar"
-	}
 
 	auto_scaling_group_provider {
 		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
@@ -100,4 +116,28 @@ resource "aws_ecs_capacity_provider" "test" {
 	}
 }
 `, rName)
+}
+
+func testAccAWSEcsCapacityProviderConfigTags1(rName, tag1Key, tag1Value string) string {
+	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+	name = %q
+
+	tags = {
+		%q = %q,
+	}
+
+	auto_scaling_group_provider {
+		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+		managed_termination_protection = "DISABLED"
+
+		managed_scaling {
+			maximum_scaling_step_size = 10
+			minimum_scaling_step_size = 1
+			status = "DISABLED"
+			target_capacity = 1
+		}
+	}
+}
+`, rName, tag1Key, tag1Value)
 }

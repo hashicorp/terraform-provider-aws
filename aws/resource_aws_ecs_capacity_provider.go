@@ -90,10 +90,15 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
+	// `CreateCapacityProviderInput` does not accept an empty array
+	var tags []*ecs.Tag
+	if t, ok := d.GetOk("tags"); ok {
+		tags = keyvaluetags.New(t.(map[string]interface{})).IgnoreAws().EcsTags()
+	}
 	input := ecs.CreateCapacityProviderInput{
 		Name:                     aws.String(d.Get("name").(string)),
 		AutoScalingGroupProvider: expandAutoScalingGroupProvider(d.Get("auto_scaling_group_provider")),
-		Tags:                     keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(), // TODO looks like this should be optional, but the API complains if it's missing
+		Tags:                     tags,
 	}
 	out, err := conn.CreateCapacityProvider(&input)
 	// TODO figure out which errors are retryable vs not, add a resource.Retry block if necessary
