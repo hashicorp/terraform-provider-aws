@@ -25,9 +25,6 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			// TODO while this was marked as optional in the info provided,  when it isn't provided, the API returns the following error:
-			// Error: error creating capacity provider: InvalidParameter: 1 validation error(s) found.
-			//- missing required field, CreateCapacityProviderInput.AutoScalingGroupProvider.
 			"auto_scaling_group_provider": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -42,7 +39,10 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 						"managed_termination_protection": {
 							Type:     schema.TypeString,
 							Required: true,
-							// TODO validateFunc ENABLED or DISABLED
+							ValidateFunc: validation.StringInSlice([]string{
+								"ENABLED",
+								"DISABLED",
+							}, false),
 						},
 
 						"managed_scaling": {
@@ -67,8 +67,10 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										// TODO maybe Default: ENABLED
-										// TODO validateFunc ENABLED or DISABLED
-									},
+										ValidateFunc: validation.StringInSlice([]string{
+											"ENABLED",
+											"DISABLED",
+										}, false)},
 									"target_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
