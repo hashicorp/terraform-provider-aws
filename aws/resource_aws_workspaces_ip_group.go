@@ -68,10 +68,6 @@ func resourceAwsWorkspacesIpGroupCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	//if len(tags) > 0 {
-	//	params.Tags = tags
-	//}
-
 	d.SetId(*resp.GroupId)
 
 	return resourceAwsWorkspacesIpGroupRead(d, meta)

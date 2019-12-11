@@ -25,6 +25,40 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"self_service_permissions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"change_compute_type": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"increase_volume_size": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"rebuild_workspace": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"restart_workspace": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"switch_running_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -42,7 +76,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		DirectoryId:       aws.String(directoryId),
-		EnableSelfService: aws.Bool(false),
+		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
 		Tenancy:           aws.String(workspaces.TenancyShared),
 	}
@@ -70,7 +104,17 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("workspace directory was not registered: %s", err)
+		return fmt.Errorf("workspaces directory was not registered: %s", err)
+	}
+
+	if v, ok := d.GetOk("self_service_permissions"); ok {
+		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
+			ResourceId:             aws.String(directoryId),
+			SelfservicePermissions: expandSelfServicePermissions(v.(*schema.Set).List()),
+		})
+		if err != nil {
+			return fmt.Errorf("workspaces directory self service permissions was not set: %s", err)
+		}
 	}
 
 	d.SetId(directoryId)
@@ -91,8 +135,27 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("directory_id", dir.DirectoryId)
 	d.Set("subnet_ids", dir.SubnetIds)
+	d.Set("self_service_permissions", flattenSelfServicePermissions(dir.SelfservicePermissions))
 
 	return nil
+}
+
+func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).workspacesconn
+
+	if d.HasChange("self_service_permissions") {
+		permissions := d.Get("self_service_permissions").(*schema.Set).List()
+
+		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
+			ResourceId:             aws.String(d.Id()),
+			SelfservicePermissions: expandSelfServicePermissions(permissions),
+		})
+		if err != nil {
+			return fmt.Errorf("workspaces directory self service permissions was not set: %s", err)
+		}
+	}
+
+	return resourceAwsWorkspacesDirectoryRead(d, meta)
 }
 
 func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
@@ -139,4 +202,101 @@ func workspacesDirectoryRefreshStateFunc(conn *workspaces.WorkSpaces, directoryI
 		}
 		return resp, *resp.Directories[0].State, nil
 	}
+}
+
+func expandSelfServicePermissions(permissions []interface{}) *workspaces.SelfservicePermissions {
+	if len(permissions) == 0 || permissions[0] == nil {
+		return nil
+	}
+
+	result := &workspaces.SelfservicePermissions{}
+
+	p := permissions[0].(map[string]interface{})
+
+	if p["change_compute_type"].(bool) {
+		result.ChangeComputeType = aws.String(workspaces.ReconnectEnumEnabled)
+	} else {
+		result.ChangeComputeType = aws.String(workspaces.ReconnectEnumDisabled)
+	}
+
+	if p["increase_volume_size"].(bool) {
+		result.IncreaseVolumeSize = aws.String(workspaces.ReconnectEnumEnabled)
+	} else {
+		result.IncreaseVolumeSize = aws.String(workspaces.ReconnectEnumDisabled)
+	}
+
+	if p["rebuild_workspace"].(bool) {
+		result.RebuildWorkspace = aws.String(workspaces.ReconnectEnumEnabled)
+	} else {
+		result.RebuildWorkspace = aws.String(workspaces.ReconnectEnumDisabled)
+	}
+
+	if p["restart_workspace"].(bool) {
+		result.RestartWorkspace = aws.String(workspaces.ReconnectEnumEnabled)
+	} else {
+		result.RestartWorkspace = aws.String(workspaces.ReconnectEnumDisabled)
+	}
+
+	if p["switch_running_mode"].(bool) {
+		result.SwitchRunningMode = aws.String(workspaces.ReconnectEnumEnabled)
+	} else {
+		result.SwitchRunningMode = aws.String(workspaces.ReconnectEnumDisabled)
+	}
+
+	return result
+}
+
+func flattenSelfServicePermissions(permissions *workspaces.SelfservicePermissions) []interface{} {
+	if permissions == nil {
+		return []interface{}{}
+	}
+
+	result := map[string]interface{}{}
+
+	switch *permissions.ChangeComputeType {
+	case workspaces.ReconnectEnumEnabled:
+		result["change_compute_type"] = true
+	case workspaces.ReconnectEnumDisabled:
+		result["change_compute_type"] = false
+	default:
+		result["change_compute_type"] = nil
+	}
+
+	switch *permissions.IncreaseVolumeSize {
+	case workspaces.ReconnectEnumEnabled:
+		result["increase_volume_size"] = true
+	case workspaces.ReconnectEnumDisabled:
+		result["increase_volume_size"] = false
+	default:
+		result["increase_volume_size"] = nil
+	}
+
+	switch *permissions.RebuildWorkspace {
+	case workspaces.ReconnectEnumEnabled:
+		result["rebuild_workspace"] = true
+	case workspaces.ReconnectEnumDisabled:
+		result["rebuild_workspace"] = false
+	default:
+		result["rebuild_workspace"] = nil
+	}
+
+	switch *permissions.RestartWorkspace {
+	case workspaces.ReconnectEnumEnabled:
+		result["restart_workspace"] = true
+	case workspaces.ReconnectEnumDisabled:
+		result["restart_workspace"] = false
+	default:
+		result["restart_workspace"] = nil
+	}
+
+	switch *permissions.SwitchRunningMode {
+	case workspaces.ReconnectEnumEnabled:
+		result["switch_running_mode"] = true
+	case workspaces.ReconnectEnumDisabled:
+		result["switch_running_mode"] = false
+	default:
+		result["switch_running_mode"] = nil
+	}
+
+	return []interface{}{result}
 }
