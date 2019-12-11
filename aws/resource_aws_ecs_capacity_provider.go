@@ -159,7 +159,16 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	// TODO
+	conn := meta.(*AWSClient).ecsconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ECS Cluster (%s) tags: %s", d.Id(), err)
+		}
+	}
+
 	return nil
 }
 

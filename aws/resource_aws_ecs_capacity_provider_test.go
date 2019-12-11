@@ -63,6 +63,23 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAWSEcsCapacityProviderConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSEcsCapacityProviderConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
@@ -149,4 +166,29 @@ resource "aws_ecs_capacity_provider" "test" {
 	}
 }
 `, rName, tag1Key, tag1Value)
+}
+
+func testAccAWSEcsCapacityProviderConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+	name = %q
+
+	tags = {
+		%q = %q,
+		%q = %q,
+	}
+
+	auto_scaling_group_provider {
+		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+		managed_termination_protection = "DISABLED"
+
+		managed_scaling {
+			maximum_scaling_step_size = 10
+			minimum_scaling_step_size = 1
+			status = "DISABLED"
+			target_capacity = 1
+		}
+	}
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
