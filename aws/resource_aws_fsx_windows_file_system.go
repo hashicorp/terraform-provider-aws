@@ -143,7 +143,7 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(300, 65536),
+				ValidateFunc: validation.IntBetween(32, 65536),
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
