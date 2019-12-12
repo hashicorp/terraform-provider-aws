@@ -46,7 +46,7 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 						"rebuild_workspace": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  true,
+							Default:  false,
 						},
 						"restart_workspace": {
 							Type:     schema.TypeBool,
@@ -88,8 +88,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
-		subnetIdsSet := v.(*schema.Set)
-		for _, id := range subnetIdsSet.List() {
+		for _, id := range v.(*schema.Set).List() {
 			input.SubnetIds = append(input.SubnetIds, aws.String(id.(string)))
 		}
 	}
@@ -159,7 +158,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).workspacesconn
 
 	if d.HasChange("self_service_permissions") {
-		permissions := d.Get("self_service_permissions").(*schema.Set).List()
+		permissions := d.Get("self_service_permissions").([]interface{})
 
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
@@ -172,8 +171,6 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		fmt.Printf("%+v", o)
-		fmt.Printf("%+v", n)
 		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
