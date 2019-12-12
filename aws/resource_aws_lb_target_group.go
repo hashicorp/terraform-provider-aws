@@ -121,6 +121,19 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				}, false),
 			},
 
+			"load_balancing_algorithm": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "round_robin",
+				ForceNew: false,
+				ValidateFunc: validation.StringInSlice([]string{
+					// elbv2 don't seem to have any value defined for this
+					// so I'm hardcoding this here for now
+					"round_robin",
+					"least_outstanding_requests",
+				}, false),
+			},
+
 			"stickiness": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -419,6 +432,13 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
 				Key:   aws.String("proxy_protocol_v2.enabled"),
 				Value: aws.String(strconv.FormatBool(d.Get("proxy_protocol_v2").(bool))),
+			})
+		}
+
+		if d.HasChange("load_balancing_algorithm") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.algorithm.type"),
+				Value: aws.String(d.Get("load_balancing_algorithm").(string)),
 			})
 		}
 
