@@ -132,6 +132,10 @@ data aws_iam_policy_document workspaces {
       type        = "Service"
       identifiers = ["workspaces.amazonaws.com"]
     }
+  tags = {
+    Name = "test"
+    Terraform = true
+    Directory = "tf-acctest.example.com"
   }
 }
 
@@ -233,6 +237,11 @@ resource "aws_workspaces_directory" "test" {
     restart_workspace = true
     switch_running_mode = true
   }
+
+  tags = {
+    Purpose   = "test"
+    Directory = "tf-acctest.example.com"
+  }
 }
 `
 
@@ -327,6 +336,10 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 				Config: testAccWorkspaceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists("aws_workspaces_directory.test"),
+					resource.TestCheckResourceAttr("aws_workspaces_directory.test", "tags.%", "3"),
+					resource.TestCheckResourceAttr("aws_workspaces_directory.test", "tags.Name", "test"),
+					resource.TestCheckResourceAttr("aws_workspaces_directory.test", "tags.Terraform", "true"),
+					resource.TestCheckResourceAttr("aws_workspaces_directory.test", "tags.Directory", "tf-acctest.example.com"),
 				),
 			},
 			{
@@ -348,6 +361,9 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 				Config: testAccWorkspaceConfig_subnetIds,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWorkspacesDirectoryExists("aws_workspaces_directory.test"),
+					resource.TestCheckResourceAttr("aws_workspaces_directory.test", "tags.%", "2"),
+					resource.TestCheckResourceAttr("aws_workspaces_directory.test", "tags.Directory", "tf-acctest.example.com"),
+					resource.TestCheckResourceAttr("aws_workspaces_directory.test", "tags.Purpose", "test"),
 				),
 			},
 			{

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -66,6 +67,7 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -74,11 +76,14 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).workspacesconn
 	directoryId := d.Get("directory_id").(string)
 
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WorkspacesTags()
+
 	input := &workspaces.RegisterWorkspaceDirectoryInput{
 		DirectoryId:       aws.String(directoryId),
 		EnableSelfService: aws.Bool(false), // this is handled separately below
 		EnableWorkDocs:    aws.Bool(false),
 		Tenancy:           aws.String(workspaces.TenancyShared),
+		Tags:              tags,
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
@@ -137,6 +142,15 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	d.Set("subnet_ids", dir.SubnetIds)
 	d.Set("self_service_permissions", flattenSelfServicePermissions(dir.SelfservicePermissions))
 
+	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
+	if err != nil {
+		return fmt.Errorf("error listing tags: %s", err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -152,6 +166,15 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 		})
 		if err != nil {
 			return fmt.Errorf("workspaces directory self service permissions was not set: %s", err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		fmt.Printf("%+v", o)
+		fmt.Printf("%+v", n)
+		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
