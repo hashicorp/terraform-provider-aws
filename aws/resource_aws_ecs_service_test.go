@@ -234,6 +234,7 @@ func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
+	providerName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -241,7 +242,7 @@ func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(clusterName, tdName, svcName),
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
 				),
@@ -1260,8 +1261,8 @@ resource "aws_ecs_service" "mongo" {
 }
 
 // TODO declare the capacity provider in here once it is written
-func testAccAWSEcsServiceWithCapacityProviderStrategy(clusterName, tdName, svcName string) string {
-	return fmt.Sprintf(`
+func testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName string) string {
+	return testAccAWSEcsCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
@@ -1289,12 +1290,12 @@ resource "aws_ecs_service" "mongo" {
   desired_count   = 1
 
   capacity_provider_strategy {
-    capacity_provider = "%s-capacity-provider"
+    capacity_provider = "%s"
     weight =  1
     base =  0
   }
 }
-`, clusterName, tdName, svcName, svcName)
+`, clusterName, tdName, svcName, providerName)
 }
 
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {

@@ -35,20 +35,23 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auto_scaling_group_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateArn,
+							ForceNew:     true,
 						},
 						"managed_termination_protection": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"ENABLED",
-								"DISABLED",
+								ecs.ManagedTerminationProtectionEnabled,
+								ecs.ManagedTerminationProtectionDisabled,
 							}, false),
 						},
 						"managed_scaling": {
@@ -56,32 +59,37 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 							MaxItems: 1,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"maximum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"minimum_scaling_step_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
 									"status": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 										ValidateFunc: validation.StringInSlice([]string{
-											"ENABLED",
-											"DISABLED",
+											ecs.ManagedScalingStatusEnabled,
+											ecs.ManagedScalingStatusDisabled,
 										}, false)},
 									"target_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 100),
 									},
 								},
@@ -98,18 +106,17 @@ func resourceAwsEcsCapacityProvider() *schema.Resource {
 func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
-	// `CreateCapacityProviderInput` does not accept an empty array of tags
-	var tags []*ecs.Tag
-	if t, ok := d.GetOk("tags"); ok {
-		tags = keyvaluetags.New(t.(map[string]interface{})).IgnoreAws().EcsTags()
-	}
 	input := ecs.CreateCapacityProviderInput{
 		Name:                     aws.String(d.Get("name").(string)),
 		AutoScalingGroupProvider: expandAutoScalingGroupProvider(d.Get("auto_scaling_group_provider")),
-		Tags:                     tags,
 	}
+
+	// `CreateCapacityProviderInput` does not accept an empty array of tags
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().EcsTags()
+	}
+
 	out, err := conn.CreateCapacityProvider(&input)
-	// TODO figure out which errors are retryable vs not, add a resource.Retry block if necessary
 
 	if err != nil {
 		return fmt.Errorf("error creating capacity provider: %s", err)
@@ -181,6 +188,7 @@ func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface
 
 func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
 	// TODO
+	log.Printf("[WARN] delete is not yet implemented for ECS capacity providers")
 	return nil
 }
 
@@ -197,8 +205,15 @@ func resourceAwsEcsCapacityProviderImport(d *schema.ResourceData, meta interface
 }
 
 func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGroupProvider {
-	prov := ecs.AutoScalingGroupProvider{}
+	if configured == nil {
+		return nil
+	}
 
+	if configured.([]interface{}) == nil || len(configured.([]interface{})) == 0 {
+		return nil
+	}
+
+	prov := ecs.AutoScalingGroupProvider{}
 	p := configured.([]interface{})[0].(map[string]interface{})
 	arn := p["auto_scaling_group_arn"].(string)
 	prov.AutoScalingGroupArn = aws.String(arn)
@@ -207,24 +222,23 @@ func expandAutoScalingGroupProvider(configured interface{}) *ecs.AutoScalingGrou
 		prov.ManagedTerminationProtection = aws.String(mtp)
 	}
 
-	if v := p["managed_scaling"].([]interface{}); len(v) > 0 {
-		if ms, ok := v[0].(map[string]interface{}); ok {
-			managedScaling := ecs.ManagedScaling{}
+	if v := p["managed_scaling"].([]interface{}); len(v) > 0 && v[0].(map[string]interface{}) != nil {
+		ms := v[0].(map[string]interface{})
+		managedScaling := ecs.ManagedScaling{}
 
-			if val, ok := ms["maximum_scaling_step_size"].(int); ok && val != 0 {
-				managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
-			}
-			if val, ok := ms["minimum_scaling_step_size"].(int); ok && val != 0 {
-				managedScaling.MinimumScalingStepSize = aws.Int64(int64(val))
-			}
-			if val, ok := ms["status"].(string); ok && len(val) > 0 {
-				managedScaling.Status = aws.String(val)
-			}
-			if val, ok := ms["target_capacity"].(int); ok && val != 0 {
-				managedScaling.TargetCapacity = aws.Int64(int64(val))
-			}
-			prov.ManagedScaling = &managedScaling
+		if val, ok := ms["maximum_scaling_step_size"].(int); ok && val != 0 {
+			managedScaling.MaximumScalingStepSize = aws.Int64(int64(val))
 		}
+		if val, ok := ms["minimum_scaling_step_size"].(int); ok && val != 0 {
+			managedScaling.MinimumScalingStepSize = aws.Int64(int64(val))
+		}
+		if val, ok := ms["status"].(string); ok && len(val) > 0 {
+			managedScaling.Status = aws.String(val)
+		}
+		if val, ok := ms["target_capacity"].(int); ok && val != 0 {
+			managedScaling.TargetCapacity = aws.Int64(int64(val))
+		}
+		prov.ManagedScaling = &managedScaling
 	}
 
 	return &prov
@@ -235,21 +249,20 @@ func flattenAutoScalingGroupProvider(provider *ecs.AutoScalingGroupProvider) []m
 		return nil
 	}
 
-	result := make([]map[string]interface{}, 0)
-	p := make(map[string]interface{})
-	p["auto_scaling_group_arn"] = aws.StringValue(provider.AutoScalingGroupArn)
-	p["managed_termination_protection"] = aws.StringValue(provider.ManagedTerminationProtection)
+	m := map[string]interface{}{
+		"maximum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MaximumScalingStepSize),
+		"minimum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MinimumScalingStepSize),
+		"status":                    aws.StringValue(provider.ManagedScaling.Status),
+		"target_capacity":           aws.Int64Value(provider.ManagedScaling.TargetCapacity),
+	}
+	ms := []map[string]interface{}{m}
 
-	ms := make(map[string]interface{})
-	msl := make([]map[string]interface{}, 0)
-	ms["maximum_scaling_step_size"] = aws.Int64Value(provider.ManagedScaling.MaximumScalingStepSize)
-	ms["minimum_scaling_step_size"] = aws.Int64Value(provider.ManagedScaling.MinimumScalingStepSize)
-	ms["status"] = aws.StringValue(provider.ManagedScaling.Status)
-	ms["target_capacity"] = aws.Int64Value(provider.ManagedScaling.TargetCapacity)
-	msl = append(msl, ms)
+	p := map[string]interface{}{
+		"auto_scaling_group_arn":         aws.StringValue(provider.AutoScalingGroupArn),
+		"managed_termination_protection": aws.StringValue(provider.ManagedTerminationProtection),
+		"managed_scaling":                ms,
+	}
 
-	p["managed_scaling"] = msl
-
-	result = append(result, p)
+	result := []map[string]interface{}{p}
 	return result
 }

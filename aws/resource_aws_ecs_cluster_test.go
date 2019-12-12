@@ -320,19 +320,19 @@ resource "aws_ecs_cluster" "test" {
 
 // TODO declare the provider strategy resource once it exists
 func testAccAWSEcsClusterCapacityProviders(rName, providerName string) string {
-	return fmt.Sprintf(`
+	return testAccAWSEcsCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-	name = %q
+	name = %[1]q
 
-	capacity_providers = [%q]
+	capacity_providers = [%[2]q]
 
 	default_capacity_provider_strategy {
 		base = 1
-		capacity_provider = %q
+		capacity_provider = %[2]q
 		weight = 1
 	}
 }
-`, rName, providerName, providerName)
+`, rName, providerName)
 }
 
 func testAccAWSEcsClusterConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
