@@ -70,6 +70,11 @@ func dataSourceAwsLbTargetGroup() *schema.Resource {
 				Computed: true,
 			},
 
+			"load_balancing_algorithm": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"stickiness": {
 				Type:     schema.TypeList,
 				Computed: true,
