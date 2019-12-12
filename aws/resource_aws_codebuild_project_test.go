@@ -2094,7 +2094,7 @@ resource "aws_codebuild_project" "test" {
     location = "https://github.com/hashicorp/packer.git"
   }
 }
-`, buildTimeout, rName)
+`, queuedTimeout, rName)
 }
 
 func testAccAWSCodeBuildProjectConfig_Cache(rName, cacheLocation, cacheType string) string {
