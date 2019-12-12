@@ -151,12 +151,7 @@ func resourceAwsServiceCatalogPortfolioUpdate(d *schema.ResourceData, meta inter
 		o, n := d.GetChange("tags")
 
 		input.AddTags = keyvaluetags.New(n).IgnoreAws().ServicecatalogTags()
-
-		var tagsToRemove []*string
-		for k := range keyvaluetags.New(o).IgnoreAws().Map() {
-			tagsToRemove = append(tagsToRemove, aws.String(k))
-		}
-		input.RemoveTags = tagsToRemove
+		input.RemoveTags = aws.StringSlice(keyvaluetags.New(o).IgnoreAws().Keys())
 	}
 
 	log.Printf("[DEBUG] Update Service Catalog Portfolio: %#v", input)
