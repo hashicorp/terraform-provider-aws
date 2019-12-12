@@ -227,6 +227,36 @@ func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
+	providerName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 10, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1234,6 +1264,51 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 `, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName string, weight, base int) string {
+	return testAccAWSEcsCapacityProviderConfigBase(providerName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name = %q
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
+}
+
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count   = 1
+
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.test.name
+    weight =  %d
+    base =  %d
+  }
+}
+
+`, providerName, clusterName, tdName, svcName, weight, base)
 }
 
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {
