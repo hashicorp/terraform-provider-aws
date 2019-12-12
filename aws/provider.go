@@ -187,6 +187,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_db_event_categories":                       dataSourceAwsDbEventCategories(),
 			"aws_db_instance":                               dataSourceAwsDbInstance(),
 			"aws_db_snapshot":                               dataSourceAwsDbSnapshot(),
+			"aws_directory_service_directory":               dataSourceAwsDirectoryServiceDirectory(),
 			"aws_dx_gateway":                                dataSourceAwsDxGateway(),
 			"aws_dynamodb_table":                            dataSourceAwsDynamoDbTable(),
 			"aws_ebs_default_kms_key":                       dataSourceAwsEbsDefaultKmsKey(),
