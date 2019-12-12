@@ -1690,8 +1690,8 @@ func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName str
   port = 8082
   protocol = "TCP"
   vpc_id = "${aws_vpc.test.id}"
-	
-	proxy_protocol_v2 = "true"    
+
+	proxy_protocol_v2 = "true"
 	deregistration_delay = 200
 
   health_check {
