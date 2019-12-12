@@ -83,8 +83,7 @@ func TestAccAWSCognitoUserPool_basic(t *testing.T) {
 				Config: testAccAWSCognitoUserPoolConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile(`^arn:aws:cognito-idp:[^:]+:[0-9]{12}:userpool/[\w-]+_[0-9a-zA-Z]+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cognito-idp", regexp.MustCompile(`userpool/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "endpoint",
 						regexp.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9a-zA-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", "terraform-test-pool-"+name),
@@ -397,10 +396,11 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withTags(name),
+				Config: testAccAWSCognitoUserPoolConfig_Tags1(name, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoUserPoolExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -409,10 +409,19 @@ func TestAccAWSCognitoUserPool_withTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withTagsUpdated(name),
+				Config: testAccAWSCognitoUserPoolConfig_Tags2(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "FooBar"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Project", "Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSCognitoUserPoolConfig_Tags1(name, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSCognitoUserPoolExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -789,7 +798,7 @@ func testAccCheckAWSCognitoUserPoolDestroy(s *terraform.State) error {
 		_, err := conn.DescribeUserPool(params)
 
 		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == cognitoidentityprovider.ErrCodeResourceNotFoundException {
 				return nil
 			}
 			return err
@@ -948,16 +957,29 @@ resource "aws_cognito_user_pool" "test" {
 `, name, authenticationMessage, verificationMessage)
 }
 
-func testAccAWSCognitoUserPoolConfig_withTags(name string) string {
+func testAccAWSCognitoUserPoolConfig_Tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name = "terraform-test-pool-%s"
+  name = %[1]q
 
   tags = {
-    "Name" = "Foo"
+    %[2]q = %[3]q
   }
 }
-`, name)
+`, name, tagKey1, tagValue1)
+}
+
+func testAccAWSCognitoUserPoolConfig_Tags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, email, arn, account string) string {
@@ -1032,19 +1054,6 @@ resource "aws_cognito_user_pool" "test" {
   sms_configuration {
     external_id    = "${data.aws_caller_identity.current.account_id}"
     sns_caller_arn = "${aws_iam_role.test.arn}"
-  }
-}
-`, name)
-}
-
-func testAccAWSCognitoUserPoolConfig_withTagsUpdated(name string) string {
-	return fmt.Sprintf(`
-resource "aws_cognito_user_pool" "test" {
-  name = "terraform-test-pool-%s"
-
-  tags = {
-    "Name"    = "FooBar"
-    "Project" = "Terraform"
   }
 }
 `, name)
