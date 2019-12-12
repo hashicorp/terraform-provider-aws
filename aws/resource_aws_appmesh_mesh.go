@@ -122,7 +122,7 @@ func resourceAwsAppmeshMeshRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	arn := *resp.Mesh.Metadata.Arn
+	arn := aws.StringValue(resp.Mesh.Metadata.Arn)
 	d.Set("name", resp.Mesh.MeshName)
 	d.Set("arn", arn)
 	d.Set("created_date", resp.Mesh.Metadata.CreatedAt.Format(time.RFC3339))

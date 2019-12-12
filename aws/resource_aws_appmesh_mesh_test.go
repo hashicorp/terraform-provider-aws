@@ -18,7 +18,9 @@ func init() {
 		Name: "aws_appmesh_mesh",
 		F:    testSweepAppmeshMeshes,
 		Dependencies: []string{
+			"aws_appmesh_virtual_service",
 			"aws_appmesh_virtual_router",
+			"aws_appmesh_virtual_node",
 		},
 	})
 }
