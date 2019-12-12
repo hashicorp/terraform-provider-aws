@@ -27,7 +27,8 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 				ForceNew: true,
 			},
 			"self_service_permissions": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
+				Computed: true,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -45,12 +46,12 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 						"rebuild_workspace": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Default:  true,
 						},
 						"restart_workspace": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
+							Default:  true,
 						},
 						"switch_running_mode": {
 							Type:     schema.TypeBool,
@@ -109,16 +110,16 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("workspaces directory was not registered: %s", err)
+		return fmt.Errorf("error registering directory: %s", err)
 	}
 
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(directoryId),
-			SelfservicePermissions: expandSelfServicePermissions(v.(*schema.Set).List()),
+			SelfservicePermissions: expandSelfServicePermissions(v.([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("workspaces directory self service permissions was not set: %s", err)
+			return fmt.Errorf("error setting self service permissions: %s", err)
 		}
 	}
 
@@ -165,7 +166,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			SelfservicePermissions: expandSelfServicePermissions(permissions),
 		})
 		if err != nil {
-			return fmt.Errorf("workspaces directory self service permissions was not set: %s", err)
+			return fmt.Errorf("error updating self service permissions: %s", err)
 		}
 	}
 
