@@ -1266,60 +1266,15 @@ resource "aws_ecs_service" "mongo" {
 `, clusterName, tdName, svcName)
 }
 
-func testAccEcsServiceCapacityProviderConfig(rName string) string {
-	return testAccAwsEcsServiceAutoScalingGroupConfig(rName) + fmt.Sprintf(`
-resource "aws_ecs_capacity_provider" "test" {
-	name = %q
-
-	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
-	}
-}
-`, rName)
-}
-
-func testAccAwsEcsServiceAutoScalingGroupConfig(rName string) string {
-	return fmt.Sprintf(`
-  data "aws_ami" "test_ami" {
-    most_recent = true
-    owners      = ["amazon"]
-
-    filter {
-      name   = "name"
-      values = ["amzn-ami-hvm-*-x86_64-gp2"]
-    }
-  }
-
-  resource "aws_launch_configuration" "foobar" {
-    image_id      = "${data.aws_ami.test_ami.id}"
-    instance_type = "t2.micro"
-  }
-
-  resource "aws_autoscaling_group" "bar" {
-    availability_zones   = ["us-west-2a"]
-    name                 = "%[1]s"
-    max_size             = 5
-    min_size             = 2
-    health_check_type    = "ELB"
-    desired_capacity     = 4
-    force_delete         = true
-    termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
-
-    launch_configuration = "${aws_launch_configuration.foobar.name}"
-
-    tags = [
-      {
-        key                 = "FromTags1"
-        value               = "value1"
-        propagate_at_launch = true
-      },
-    ]
-  }
-`, rName)
-}
-
 func testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName string, weight, base int) string {
-	return testAccEcsServiceCapacityProviderConfig(providerName) + fmt.Sprintf(`
+	return testAccAWSEcsCapacityProviderConfigBase(providerName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name = %q
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
+}
+
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
@@ -1352,7 +1307,8 @@ resource "aws_ecs_service" "mongo" {
     base =  %d
   }
 }
-`, clusterName, tdName, svcName, weight, base)
+
+`, providerName, clusterName, tdName, svcName, weight, base)
 }
 
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {

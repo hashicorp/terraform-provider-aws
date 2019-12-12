@@ -31,7 +31,7 @@ func TestAccAWSEcsCapacityProvider_basic(t *testing.T) {
 					testAccCheckResourceAttrRegionalARN(resourceName, "id", "ecs", fmt.Sprintf("capacity-provider/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.bar", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "10000"),
@@ -64,7 +64,7 @@ func TestAccAWSEcsCapacityProvider_ManagedScaling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.bar", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "10"),
@@ -97,7 +97,7 @@ func TestAccAWSEcsCapacityProvider_ManagedScalingPartial(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsCapacityProviderExists(resourceName, &provider),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.bar", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "auto_scaling_group_provider.0.auto_scaling_group_arn", "aws_autoscaling_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_termination_protection", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.minimum_scaling_step_size", "2"),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_group_provider.0.managed_scaling.0.maximum_scaling_step_size", "10000"),
@@ -198,39 +198,41 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 	}
 }
 
-func testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName string) string {
+func testAccAWSEcsCapacityProviderConfigBase(rName string) string {
 	return fmt.Sprintf(`
-data "aws_ami" "test_ami" {
-	most_recent = true
-	owners      = ["amazon"]
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
 
-	filter {
-		name   = "name"
-		values = ["amzn-ami-hvm-*-x86_64-gp2"]
-	}
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
 }
 
-resource "aws_launch_configuration" "foobar" {
-	image_id      = "${data.aws_ami.test_ami.id}"
-	instance_type = "t2.micro"
+data "aws_availability_zones" "available" {}
+
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.test.id
+  instance_type = "t3.micro"
+  name          = %[1]q
 }
 
-resource "aws_autoscaling_group" "bar" {
-	availability_zones   = ["us-west-2a"]
-	name                 = "%[1]s"
-	max_size             = 5
-	min_size             = 2
-	health_check_type    = "ELB"
-	desired_capacity     = 4
-	force_delete         = true
-	termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+resource "aws_autoscaling_group" "test" {
+  availability_zones = data.aws_availability_zones.available.names
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
 
-	launch_configuration = "${aws_launch_configuration.foobar.name}"
+  launch_template {
+    id = aws_launch_template.test.id
+  }
 
-	tags = [
+  	tags = [
 		{
-			key                 = "FromTags1"
-			value               = "value1"
+			key                 = "foo"
+			value               = "bar"
 			propagate_at_launch = true
 		},
 	]
@@ -239,24 +241,24 @@ resource "aws_autoscaling_group" "bar" {
 }
 
 func testAccAWSEcsCapacityProviderConfig(rName string) string {
-	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
 	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+		auto_scaling_group_arn = aws_autoscaling_group.test.arn
 	}
 }
 `, rName)
 }
 
 func testAccAWSEcsCapacityProviderConfigManagedScaling(rName string) string {
-	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
 	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+		auto_scaling_group_arn = aws_autoscaling_group.test.arn
 
 		managed_scaling {
 			maximum_scaling_step_size = 10
@@ -270,12 +272,12 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 func testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName string) string {
-	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
 	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+		auto_scaling_group_arn = aws_autoscaling_group.test.arn
 
 		managed_scaling {
 			minimum_scaling_step_size = 2
@@ -287,7 +289,7 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 func testAccAWSEcsCapacityProviderConfigTags1(rName, tag1Key, tag1Value string) string {
-	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
@@ -296,14 +298,14 @@ resource "aws_ecs_capacity_provider" "test" {
 	}
 
 	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+		auto_scaling_group_arn = aws_autoscaling_group.test.arn
 	}
 }
 `, rName, tag1Key, tag1Value)
 }
 
 func testAccAWSEcsCapacityProviderConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSEcsCapacityProviderConfigBase(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
@@ -313,7 +315,7 @@ resource "aws_ecs_capacity_provider" "test" {
 	}
 
 	auto_scaling_group_provider {
-		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+		auto_scaling_group_arn = aws_autoscaling_group.test.arn
 	}
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
