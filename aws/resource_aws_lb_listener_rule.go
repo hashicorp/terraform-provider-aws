@@ -65,7 +65,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 50000),
+							ValidateFunc: validation.IntBetween(0, 50000),
 						},
 
 						"target_group_arn": {

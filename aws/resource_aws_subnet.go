@@ -55,7 +55,6 @@ func resourceAwsSubnet() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"availability_zone_id"},
 			},
 
 			"availability_zone_id": {
@@ -63,7 +62,6 @@ func resourceAwsSubnet() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"availability_zone"},
 			},
 
 			"map_public_ip_on_launch": {

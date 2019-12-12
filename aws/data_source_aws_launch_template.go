@@ -422,7 +422,7 @@ func dataSourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
 	}
 
-	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
+	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings, meta.(*AWSClient).kmsconn)); err != nil {
 		return fmt.Errorf("error setting block_device_mappings: %s", err)
 	}
 

@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/kms"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -641,18 +643,12 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("ebs_optimized", strconv.FormatBool(aws.BoolValue(ltData.EbsOptimized)))
 	}
 
-<<<<<<< HEAD
-	kmsConn := meta.(*AWSClient).kmsconn
-	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings, kmsConn)); err != nil {
-		return err
-=======
-	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings)); err != nil {
+	if err := d.Set("block_device_mappings", getBlockDeviceMappings(ltData.BlockDeviceMappings, meta.(*AWSClient).kmsconn)); err != nil {
 		return fmt.Errorf("error setting block_device_mappings: %s", err)
 	}
 
 	if err := d.Set("capacity_reservation_specification", getCapacityReservationSpecification(ltData.CapacityReservationSpecification)); err != nil {
 		return fmt.Errorf("error setting capacity_reservation_specification: %s", err)
->>>>>>> upstream/master
 	}
 
 	if strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t2") || strings.HasPrefix(aws.StringValue(ltData.InstanceType), "t3") {

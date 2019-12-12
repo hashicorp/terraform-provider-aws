@@ -305,19 +305,6 @@ func resourceAwsAcmpcaCertificateAuthorityCreate(d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.CertificateAuthorityArn))
 
-	if v, ok := d.GetOk("tags"); ok {
-		input := &acmpca.TagCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(d.Id()),
-			Tags:                    tagsFromMapACMPCA(v.(map[string]interface{})),
-		}
-
-		log.Printf("[DEBUG] Tagging ACMPCA Certificate Authority: %s", input)
-		_, err := conn.TagCertificateAuthority(input)
-		if err != nil {
-			return fmt.Errorf("error tagging ACMPCA Certificate Authority %q: %s", d.Id(), input)
-		}
-	}
-
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"",
@@ -476,30 +463,10 @@ func resourceAwsAcmpcaCertificateAuthorityUpdate(d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("tags") {
-		oraw, nraw := d.GetChange("tags")
-		o := oraw.(map[string]interface{})
-		n := nraw.(map[string]interface{})
-		create, remove := diffTagsACMPCA(tagsFromMapACMPCA(o), tagsFromMapACMPCA(n))
+		o, n := d.GetChange("tags")
 
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing ACMPCA Certificate Authority %q tags: %#v", d.Id(), remove)
-			_, err := conn.UntagCertificateAuthority(&acmpca.UntagCertificateAuthorityInput{
-				CertificateAuthorityArn: aws.String(d.Id()),
-				Tags:                    remove,
-			})
-			if err != nil {
-				return fmt.Errorf("error updating ACMPCA Certificate Authority %q tags: %s", d.Id(), err)
-			}
-		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating ACMPCA Certificate Authority %q tags: %#v", d.Id(), create)
-			_, err := conn.TagCertificateAuthority(&acmpca.TagCertificateAuthorityInput{
-				CertificateAuthorityArn: aws.String(d.Id()),
-				Tags:                    create,
-			})
-			if err != nil {
-				return fmt.Errorf("error updating ACMPCA Certificate Authority %q tags: %s", d.Id(), err)
-			}
+		if err := keyvaluetags.AcmpcaUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ACMPCA Certificate Authority (%s) tags: %s", d.Id(), err)
 		}
 	}
 

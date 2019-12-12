@@ -1835,7 +1835,7 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	if ts[0].DefaultValue == nil {
 		m["default_value"] = ""
 	} else {
-		m["default_value"] = *ts[0].DefaultValue
+		m["default_value"] = fmt.Sprintf("%v", *ts[0].DefaultValue)
 	}
 
 	mts = append(mts, m)
