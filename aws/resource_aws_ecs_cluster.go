@@ -200,7 +200,9 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
 
-	d.Set("capacity_providers", cluster.CapacityProviders)
+	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
+		return fmt.Errorf("error setting capacity_providers: %s", err)
+	}
 	if err := d.Set("default_capacity_provider_strategy", flattenDefaultCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
 		return fmt.Errorf("error setting default_capacity_provider_strategy: %s", err)
 	}
