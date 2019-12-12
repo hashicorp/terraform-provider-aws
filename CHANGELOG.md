@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_ecs_capacity_provider` [GH-11151]
 * **New Resource:** `aws_media_convert_queue` [GH-10041]
 * **New Resource:** `aws_workspaces_ip_group` [GH-10904]
 
@@ -9,6 +10,8 @@ ENHANCEMENTS:
 
 * resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute [GH-10566]
 * resource/aws_codebuild_project: Add `ARM_CONTAINER` as valid `environment` configuration block `compute_type` argument value [GH-11206]
+* resource/aws_ecs_cluster: Add `capacity_providers` argument and `default_capacity_provider_strategy` configuration block (support ECS Capacity Providers) [GH-11151]
+* resource/aws_ecs_service: Add `capacity_provider_strategy` configuration block (support ECS Capacity Providers) [GH-11151]
 * resource/aws_emr_cluster: Add `step_concurrency_level` argument [GH-11196]
 * resource/aws_lb_listener_rule: Support ALB advanced routing rules [GH-8268]
 
