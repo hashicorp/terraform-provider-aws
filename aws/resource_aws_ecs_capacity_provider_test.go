@@ -160,10 +160,10 @@ func TestAccAWSEcsCapacityProvider_Tags(t *testing.T) {
 	})
 }
 
-// TODO update test once that is implemented
+// TODO add an update test config - Reference: https://github.com/aws/containers-roadmap/issues/633
 
 func testAccCheckAWSEcsCapacityProviderDestroy(s *terraform.State) error {
-	// TODO implement this once delete is implemented
+	// Reference: https://github.com/aws/containers-roadmap/issues/632
 	return nil
 }
 
@@ -178,7 +178,7 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 
 		input := &ecs.DescribeCapacityProvidersInput{
 			CapacityProviders: []*string{aws.String(rs.Primary.ID)},
-			Include:           []*string{aws.String(ecs.ClusterFieldTags)},
+			Include:           []*string{aws.String(ecs.CapacityProviderFieldTags)},
 		}
 
 		output, err := conn.DescribeCapacityProviders(input)
@@ -198,8 +198,48 @@ func testAccCheckAWSEcsCapacityProviderExists(resourceName string, provider *ecs
 	}
 }
 
+func testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "test_ami" {
+	most_recent = true
+	owners      = ["amazon"]
+
+	filter {
+		name   = "name"
+		values = ["amzn-ami-hvm-*-x86_64-gp2"]
+	}
+}
+
+resource "aws_launch_configuration" "foobar" {
+	image_id      = "${data.aws_ami.test_ami.id}"
+	instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+	availability_zones   = ["us-west-2a"]
+	name                 = "%[1]s"
+	max_size             = 5
+	min_size             = 2
+	health_check_type    = "ELB"
+	desired_capacity     = 4
+	force_delete         = true
+	termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+
+	launch_configuration = "${aws_launch_configuration.foobar.name}"
+
+	tags = [
+		{
+			key                 = "FromTags1"
+			value               = "value1"
+			propagate_at_launch = true
+		},
+	]
+}
+`, rName)
+}
+
 func testAccAWSEcsCapacityProviderConfig(rName string) string {
-	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
@@ -211,7 +251,7 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 func testAccAWSEcsCapacityProviderConfigManagedScaling(rName string) string {
-	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
@@ -230,7 +270,7 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 func testAccAWSEcsCapacityProviderConfigManagedScalingPartial(rName string) string {
-	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
@@ -247,7 +287,7 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 func testAccAWSEcsCapacityProviderConfigTags1(rName, tag1Key, tag1Value string) string {
-	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 
@@ -263,7 +303,7 @@ resource "aws_ecs_capacity_provider" "test" {
 }
 
 func testAccAWSEcsCapacityProviderConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return testAccAWSAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+	return testAccAWSECSCapacityProviderAutoScalingGroupConfig(rName) + fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
 	name = %q
 

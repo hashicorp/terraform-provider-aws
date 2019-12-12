@@ -242,7 +242,13 @@ func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName),
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 10, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
 				),
@@ -1260,9 +1266,60 @@ resource "aws_ecs_service" "mongo" {
 `, clusterName, tdName, svcName)
 }
 
-// TODO declare the capacity provider in here once it is written
-func testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName string) string {
-	return testAccAWSEcsCapacityProviderConfig(providerName) + fmt.Sprintf(`
+func testAccEcsServiceCapacityProviderConfig(rName string) string {
+	return testAccAwsEcsServiceAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+	name = %q
+
+	auto_scaling_group_provider {
+		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+	}
+}
+`, rName)
+}
+
+func testAccAwsEcsServiceAutoScalingGroupConfig(rName string) string {
+	return fmt.Sprintf(`
+  data "aws_ami" "test_ami" {
+    most_recent = true
+    owners      = ["amazon"]
+
+    filter {
+      name   = "name"
+      values = ["amzn-ami-hvm-*-x86_64-gp2"]
+    }
+  }
+
+  resource "aws_launch_configuration" "foobar" {
+    image_id      = "${data.aws_ami.test_ami.id}"
+    instance_type = "t2.micro"
+  }
+
+  resource "aws_autoscaling_group" "bar" {
+    availability_zones   = ["us-west-2a"]
+    name                 = "%[1]s"
+    max_size             = 5
+    min_size             = 2
+    health_check_type    = "ELB"
+    desired_capacity     = 4
+    force_delete         = true
+    termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+
+    launch_configuration = "${aws_launch_configuration.foobar.name}"
+
+    tags = [
+      {
+        key                 = "FromTags1"
+        value               = "value1"
+        propagate_at_launch = true
+      },
+    ]
+  }
+`, rName)
+}
+
+func testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName string, weight, base int) string {
+	return testAccEcsServiceCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
   name = "%s"
 }
@@ -1290,12 +1347,12 @@ resource "aws_ecs_service" "mongo" {
   desired_count   = 1
 
   capacity_provider_strategy {
-    capacity_provider = "%s"
-    weight =  1
-    base =  0
+    capacity_provider = aws_ecs_capacity_provider.test.name
+    weight =  %d
+    base =  %d
   }
 }
-`, clusterName, tdName, svcName, providerName)
+`, clusterName, tdName, svcName, weight, base)
 }
 
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {

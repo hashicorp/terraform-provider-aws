@@ -28,6 +28,8 @@ resource "aws_ecs_capacity_provider" "test" {
       status                    = "ENABLED"
       target_capacity           = 10
     }
+  }
+}
 ```
 
 ## Argument Reference
@@ -64,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS clusters can be imported using the `name`, e.g.
+ECS Capacity Providers can be imported using the `name`, e.g.
 
 ```hcl
 $ terraform import aws_ecs_capacity_provider.example example

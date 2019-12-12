@@ -184,6 +184,39 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
+	var cluster1 ecs.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	providerName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsClusterCapacityProvidersFargate(rName, providerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcsClusterCapacityProvidersFargateSpot(rName, providerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsCluster_containerInsights(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -318,21 +351,104 @@ resource "aws_ecs_cluster" "test" {
 `, rName, tag1Key, tag1Value)
 }
 
-// TODO declare the provider strategy resource once it exists
+func testAccAwsEcsClusterAutoScalingGroupConfig(rName string) string {
+	return fmt.Sprintf(`
+	data "aws_ami" "test_ami" {
+		most_recent = true
+		owners      = ["amazon"]
+	
+		filter {
+			name   = "name"
+			values = ["amzn-ami-hvm-*-x86_64-gp2"]
+		}
+	}
+	
+	resource "aws_launch_configuration" "foobar" {
+		image_id      = "${data.aws_ami.test_ami.id}"
+		instance_type = "t2.micro"
+	}
+	
+	resource "aws_autoscaling_group" "bar" {
+		availability_zones   = ["us-west-2a"]
+		name                 = "%[1]s"
+		max_size             = 5
+		min_size             = 2
+		health_check_type    = "ELB"
+		desired_capacity     = 4
+		force_delete         = true
+		termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+	
+		launch_configuration = "${aws_launch_configuration.foobar.name}"
+	
+		tags = [
+			{
+				key                 = "FromTags1"
+				value               = "value1"
+				propagate_at_launch = true
+			},
+		]
+	}
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProviderConfig(rName string) string {
+	return testAccAwsEcsClusterAutoScalingGroupConfig(rName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+	name = %q
+
+	auto_scaling_group_provider {
+		auto_scaling_group_arn = aws_autoscaling_group.bar.arn
+	}
+}
+`, rName)
+}
+
 func testAccAWSEcsClusterCapacityProviders(rName, providerName string) string {
-	return testAccAWSEcsCapacityProviderConfig(providerName) + fmt.Sprintf(`
+	return testAccAWSEcsClusterCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
 	name = %[1]q
 
-	capacity_providers = [%[2]q]
+	capacity_providers = [aws_ecs_capacity_provider.test.name]
 
 	default_capacity_provider_strategy {
 		base = 1
-		capacity_provider = %[2]q
+		capacity_provider = aws_ecs_capacity_provider.test.name
 		weight = 1
 	}
 }
-`, rName, providerName)
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProvidersFargate(rName, providerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %[1]q
+
+	capacity_providers = ["FARGATE"]
+
+	default_capacity_provider_strategy {
+		base = 1
+		capacity_provider = "FARGATE"
+		weight = 1
+	}
+}
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProvidersFargateSpot(rName, providerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %[1]q
+
+	capacity_providers = ["FARGATE_SPOT"]
+
+	default_capacity_provider_strategy {
+		base = 1
+		capacity_provider = "FARGATE_SPOT"
+		weight = 1
+	}
+}
+`, rName)
 }
 
 func testAccAWSEcsClusterConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {

@@ -135,7 +135,7 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 
 	input := &ecs.DescribeCapacityProvidersInput{
 		CapacityProviders: []*string{aws.String(d.Id())},
-		Include:           []*string{aws.String(ecs.ClusterFieldTags)},
+		Include:           []*string{aws.String(ecs.CapacityProviderFieldTags)},
 	}
 
 	output, err := conn.DescribeCapacityProviders(input)
@@ -187,7 +187,7 @@ func resourceAwsEcsCapacityProviderUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsEcsCapacityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	// TODO
+	// Reference: https://github.com/aws/containers-roadmap/issues/632
 	log.Printf("[WARN] delete is not yet implemented for ECS capacity providers")
 	return nil
 }
@@ -249,18 +249,21 @@ func flattenAutoScalingGroupProvider(provider *ecs.AutoScalingGroupProvider) []m
 		return nil
 	}
 
-	m := map[string]interface{}{
-		"maximum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MaximumScalingStepSize),
-		"minimum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MinimumScalingStepSize),
-		"status":                    aws.StringValue(provider.ManagedScaling.Status),
-		"target_capacity":           aws.Int64Value(provider.ManagedScaling.TargetCapacity),
-	}
-	ms := []map[string]interface{}{m}
-
 	p := map[string]interface{}{
 		"auto_scaling_group_arn":         aws.StringValue(provider.AutoScalingGroupArn),
 		"managed_termination_protection": aws.StringValue(provider.ManagedTerminationProtection),
-		"managed_scaling":                ms,
+		"managed_scaling":                []map[string]interface{}{},
+	}
+
+	if provider.ManagedScaling != nil {
+		m := map[string]interface{}{
+			"maximum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MaximumScalingStepSize),
+			"minimum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MinimumScalingStepSize),
+			"status":                    aws.StringValue(provider.ManagedScaling.Status),
+			"target_capacity":           aws.Int64Value(provider.ManagedScaling.TargetCapacity),
+		}
+
+		p["managed_scaling"] = []map[string]interface{}{m}
 	}
 
 	result := []map[string]interface{}{p}

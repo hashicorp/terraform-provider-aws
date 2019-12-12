@@ -119,11 +119,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
-		ps := make([]*string, 0)
-		for _, p := range v.([]interface{}) {
-			ps = append(ps, aws.String(p.(string)))
-		}
-		input.CapacityProviders = ps
+		input.CapacityProviders = expandStringList(v.([]interface{}))
 	}
 
 	input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").([]interface{}))
@@ -204,6 +200,11 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", cluster.ClusterArn)
 	d.Set("name", cluster.ClusterName)
 
+	d.Set("capacity_providers", cluster.CapacityProviders)
+	if err := d.Set("default_capacity_provider_strategy", flattenDefaultCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
+		return fmt.Errorf("error setting default_capacity_provider_strategy: %s", err)
+	}
+
 	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
 		return fmt.Errorf("error setting setting: %s", err)
 	}
@@ -243,10 +244,10 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			Cluster: aws.String(d.Id()),
 		}
 		if d.HasChange("capacity_providers") {
-			input.CapacityProviders = d.Get("capacity_providers").([]*string)
+			input.CapacityProviders = expandStringList(d.Get("capacity_providers").([]interface{}))
 		}
 		if d.HasChange("default_capacity_provider_strategy") {
-			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set).List())
+			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").([]interface{}))
 		}
 
 		_, err := conn.PutClusterCapacityProviders(&input)
@@ -372,4 +373,23 @@ func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 		result = append(result, l)
 	}
 	return result
+}
+
+func flattenDefaultCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
+	if cps == nil {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, cp := range cps {
+		s := make(map[string]interface{})
+		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
+		if cp.Weight != nil {
+			s["weight"] = aws.Int64Value(cp.Weight)
+		}
+		if cp.Base != nil {
+			s["base"] = aws.Int64Value(cp.Base)
+		}
+		results = append(results, s)
+	}
+	return results
 }

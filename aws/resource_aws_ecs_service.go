@@ -38,23 +38,27 @@ func resourceAwsEcsService() *schema.Resource {
 			"capacity_provider_strategy": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"base": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100000),
+							ForceNew:     true,
 						},
 
 						"capacity_provider": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 
 						"weight": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
+							ForceNew:     true,
 						},
 					},
 				},
@@ -96,7 +100,7 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
-				Default:  "EC2",
+				Computed: true,
 			},
 
 			"platform_version": {
@@ -764,12 +768,12 @@ func flattenEcsCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem)
 	results := make([]map[string]interface{}, 0)
 	for _, cp := range cps {
 		s := make(map[string]interface{})
-		s["capacityProvider"] = *cp.CapacityProvider
+		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
 		if cp.Weight != nil {
-			s["weight"] = *cp.Weight
+			s["weight"] = aws.Int64Value(cp.Weight)
 		}
 		if cp.Base != nil {
-			s["base"] = *cp.Base
+			s["base"] = aws.Int64Value(cp.Base)
 		}
 		results = append(results, s)
 	}
@@ -918,7 +922,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").([]interface{}))
+		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set).List())
 	}
 
 	if updateService {
