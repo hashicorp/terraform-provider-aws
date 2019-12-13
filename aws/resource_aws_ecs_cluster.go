@@ -35,15 +35,14 @@ func resourceAwsEcsCluster() *schema.Resource {
 				Computed: true,
 			},
 			"capacity_providers": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"default_capacity_provider_strategy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -115,14 +114,14 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("setting"); ok {
-		input.Settings = expandEcsSettings(v.(*schema.Set).List())
+		input.Settings = expandEcsSettings(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("capacity_providers"); ok {
-		input.CapacityProviders = expandStringList(v.([]interface{}))
+		input.CapacityProviders = expandStringSet(v.(*schema.Set))
 	}
 
-	input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").([]interface{}))
+	input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set))
 
 	out, err := conn.CreateCluster(&input)
 	if err != nil {
@@ -203,7 +202,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
 		return fmt.Errorf("error setting capacity_providers: %s", err)
 	}
-	if err := d.Set("default_capacity_provider_strategy", flattenDefaultCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
+	if err := d.Set("default_capacity_provider_strategy", flattenEcsCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
 		return fmt.Errorf("error setting default_capacity_provider_strategy: %s", err)
 	}
 
@@ -224,7 +223,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("setting") {
 		input := ecs.UpdateClusterSettingsInput{
 			Cluster:  aws.String(d.Id()),
-			Settings: expandEcsSettings(d.Get("setting").(*schema.Set).List()),
+			Settings: expandEcsSettings(d.Get("setting").(*schema.Set)),
 		}
 
 		_, err := conn.UpdateClusterSettings(&input)
@@ -246,10 +245,10 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			Cluster: aws.String(d.Id()),
 		}
 		if d.HasChange("capacity_providers") {
-			input.CapacityProviders = expandStringList(d.Get("capacity_providers").([]interface{}))
+			input.CapacityProviders = expandStringSet(d.Get("capacity_providers").(*schema.Set))
 		}
 		if d.HasChange("default_capacity_provider_strategy") {
-			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").([]interface{}))
+			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set))
 		}
 
 		_, err := conn.PutClusterCapacityProviders(&input)
@@ -281,6 +280,10 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 			return resource.RetryableError(err)
 		}
 		if isAWSErr(err, "ClusterContainsServicesException", "") {
+			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
+			return resource.RetryableError(err)
+		}
+		if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
 			log.Printf("[TRACE] Retrying ECS cluster %q deletion after %s", d.Id(), err)
 			return resource.RetryableError(err)
 		}
@@ -339,14 +342,15 @@ func ecsClusterInactive(out *ecs.DescribeClustersOutput, clusterName string) boo
 	return false
 }
 
-func expandEcsSettings(configured []interface{}) []*ecs.ClusterSetting {
-	if len(configured) == 0 {
+func expandEcsSettings(configured *schema.Set) []*ecs.ClusterSetting {
+	list := configured.List()
+	if len(list) == 0 {
 		return nil
 	}
 
-	settings := make([]*ecs.ClusterSetting, 0, len(configured))
+	settings := make([]*ecs.ClusterSetting, 0, len(list))
 
-	for _, raw := range configured {
+	for _, raw := range list {
 		data := raw.(map[string]interface{})
 
 		setting := &ecs.ClusterSetting{
@@ -375,23 +379,4 @@ func flattenEcsSettings(list []*ecs.ClusterSetting) []map[string]interface{} {
 		result = append(result, l)
 	}
 	return result
-}
-
-func flattenDefaultCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
-	if cps == nil {
-		return nil
-	}
-	results := make([]map[string]interface{}, 0)
-	for _, cp := range cps {
-		s := make(map[string]interface{})
-		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
-		if cp.Weight != nil {
-			s["weight"] = aws.Int64Value(cp.Weight)
-		}
-		if cp.Base != nil {
-			s["base"] = aws.Int64Value(cp.Base)
-		}
-		results = append(results, s)
-	}
-	return results
 }
