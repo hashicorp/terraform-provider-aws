@@ -42,6 +42,11 @@ resource "aws_directory_service_directory" "main" {
 
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
+  
+  self_service_permissions = {
+    increase_volume_size = true
+    rebuild_workspace = true
+  }
 }
 ```
 
