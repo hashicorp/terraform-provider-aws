@@ -321,7 +321,7 @@ func testAccWorkspacesDirectoryConfigA(booster string) string {
 	return fmt.Sprintf(`
 %s
 
-resource "aws_workspaces_directory" "test" {
+resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
   tags = {
