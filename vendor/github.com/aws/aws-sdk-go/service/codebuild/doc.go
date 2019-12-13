@@ -28,10 +28,6 @@
 //    language runtime, and tools that AWS CodeBuild uses to run a build. You
 //    can add tags to build projects to help manage your resources and costs.
 //
-//    * BatchGetReportGroups: Returns an array of report groups.
-//
-//    * BatchGetReports: Returns an array of reports.
-//
 //    * CreateProject: Creates a build project.
 //
 //    * CreateReportGroup: Creates a report group. A report group contains a
@@ -48,6 +44,9 @@
 //
 //    * DeleteReportGroup: Deletes a report group.
 //
+//    * DeleteResourcePolicy: Deletes a resource policy that is identified by
+//    its resource ARN.
+//
 //    * DeleteSourceCredentials: Deletes a set of GitHub, GitHub Enterprise,
 //    or Bitbucket source credentials.
 //
@@ -58,6 +57,9 @@
 //
 //    * DescribeTestCases: Returns a list of details about test cases for a
 //    report.
+//
+//    * GetResourcePolicy: Gets a resource policy that is identified by its
+//    resource ARN.
 //
 //    * ImportSourceCredentials: Imports the source repository credentials for
 //    an AWS CodeBuild project that has its source code stored in a GitHub,
@@ -85,9 +87,18 @@
 //    * ListReportsForReportGroup: Returns a list of ARNs for the reports that
 //    belong to a ReportGroup.
 //
+//    * ListSharedProjects: Gets a list of ARNs associated with projects shared
+//    with the current AWS account or user.
+//
+//    * ListSharedReportGroups: Gets a list of ARNs associated with report groups
+//    shared with the current AWS account or user
+//
 //    * ListSourceCredentials: Returns a list of SourceCredentialsInfo objects.
 //    Each SourceCredentialsInfo object includes the authentication type, token
 //    ARN, and type of source provider for one set of credentials.
+//
+//    * PutResourcePolicy: Stores a resource policy for the ARN of a Project
+//    or ReportGroup object.
 //
 //    * StartBuild: Starts running a build.
 //
