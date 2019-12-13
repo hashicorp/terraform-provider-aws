@@ -324,7 +324,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	// ModifyNetworkInterfaceAttribute needs to be called after creating an ENI
-	// since CreateNetworkInterface doesn't take SourceDeskCheck paramter.
+	// since CreateNetworkInterface doesn't take SourceDeskCheck parameter.
 	if d.HasChange("source_dest_check") || d.IsNewResource() {
 		request := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
