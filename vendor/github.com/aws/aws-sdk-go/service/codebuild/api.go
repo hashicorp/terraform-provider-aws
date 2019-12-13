@@ -924,6 +924,86 @@ func (c *CodeBuild) DeleteReportGroupWithContext(ctx aws.Context, input *DeleteR
 	return out, req.Send()
 }
 
+const opDeleteResourcePolicy = "DeleteResourcePolicy"
+
+// DeleteResourcePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteResourcePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteResourcePolicy for more information on using the DeleteResourcePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteResourcePolicyRequest method.
+//    req, resp := client.DeleteResourcePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteResourcePolicy
+func (c *CodeBuild) DeleteResourcePolicyRequest(input *DeleteResourcePolicyInput) (req *request.Request, output *DeleteResourcePolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteResourcePolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteResourcePolicyInput{}
+	}
+
+	output = &DeleteResourcePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteResourcePolicy API operation for AWS CodeBuild.
+//
+// Deletes a resource policy that is identified by its resource ARN.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation DeleteResourcePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteResourcePolicy
+func (c *CodeBuild) DeleteResourcePolicy(input *DeleteResourcePolicyInput) (*DeleteResourcePolicyOutput, error) {
+	req, out := c.DeleteResourcePolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteResourcePolicyWithContext is the same as DeleteResourcePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteResourcePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) DeleteResourcePolicyWithContext(ctx aws.Context, input *DeleteResourcePolicyInput, opts ...request.Option) (*DeleteResourcePolicyOutput, error) {
+	req, out := c.DeleteResourcePolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteSourceCredentials = "DeleteSourceCredentials"
 
 // DeleteSourceCredentialsRequest generates a "aws/request.Request" representing the
@@ -1171,6 +1251,88 @@ func (c *CodeBuild) DescribeTestCases(input *DescribeTestCasesInput) (*DescribeT
 // for more information on using Contexts.
 func (c *CodeBuild) DescribeTestCasesWithContext(ctx aws.Context, input *DescribeTestCasesInput, opts ...request.Option) (*DescribeTestCasesOutput, error) {
 	req, out := c.DescribeTestCasesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetResourcePolicy = "GetResourcePolicy"
+
+// GetResourcePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetResourcePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetResourcePolicy for more information on using the GetResourcePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetResourcePolicyRequest method.
+//    req, resp := client.GetResourcePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/GetResourcePolicy
+func (c *CodeBuild) GetResourcePolicyRequest(input *GetResourcePolicyInput) (req *request.Request, output *GetResourcePolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetResourcePolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetResourcePolicyInput{}
+	}
+
+	output = &GetResourcePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetResourcePolicy API operation for AWS CodeBuild.
+//
+// Gets a resource policy that is identified by its resource ARN.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation GetResourcePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified AWS resource cannot be found.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/GetResourcePolicy
+func (c *CodeBuild) GetResourcePolicy(input *GetResourcePolicyInput) (*GetResourcePolicyOutput, error) {
+	req, out := c.GetResourcePolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetResourcePolicyWithContext is the same as GetResourcePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetResourcePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) GetResourcePolicyWithContext(ctx aws.Context, input *GetResourcePolicyInput, opts ...request.Option) (*GetResourcePolicyOutput, error) {
+	req, out := c.GetResourcePolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1902,6 +2064,164 @@ func (c *CodeBuild) ListReportsForReportGroupWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opListSharedProjects = "ListSharedProjects"
+
+// ListSharedProjectsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSharedProjects operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListSharedProjects for more information on using the ListSharedProjects
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListSharedProjectsRequest method.
+//    req, resp := client.ListSharedProjectsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedProjects
+func (c *CodeBuild) ListSharedProjectsRequest(input *ListSharedProjectsInput) (req *request.Request, output *ListSharedProjectsOutput) {
+	op := &request.Operation{
+		Name:       opListSharedProjects,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListSharedProjectsInput{}
+	}
+
+	output = &ListSharedProjectsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListSharedProjects API operation for AWS CodeBuild.
+//
+// Gets a list of projects that are shared with other AWS accounts or users.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation ListSharedProjects for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedProjects
+func (c *CodeBuild) ListSharedProjects(input *ListSharedProjectsInput) (*ListSharedProjectsOutput, error) {
+	req, out := c.ListSharedProjectsRequest(input)
+	return out, req.Send()
+}
+
+// ListSharedProjectsWithContext is the same as ListSharedProjects with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSharedProjects for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListSharedProjectsWithContext(ctx aws.Context, input *ListSharedProjectsInput, opts ...request.Option) (*ListSharedProjectsOutput, error) {
+	req, out := c.ListSharedProjectsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListSharedReportGroups = "ListSharedReportGroups"
+
+// ListSharedReportGroupsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSharedReportGroups operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListSharedReportGroups for more information on using the ListSharedReportGroups
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListSharedReportGroupsRequest method.
+//    req, resp := client.ListSharedReportGroupsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedReportGroups
+func (c *CodeBuild) ListSharedReportGroupsRequest(input *ListSharedReportGroupsInput) (req *request.Request, output *ListSharedReportGroupsOutput) {
+	op := &request.Operation{
+		Name:       opListSharedReportGroups,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListSharedReportGroupsInput{}
+	}
+
+	output = &ListSharedReportGroupsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListSharedReportGroups API operation for AWS CodeBuild.
+//
+// Gets a list of report groups that are shared with other AWS accounts or users.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation ListSharedReportGroups for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedReportGroups
+func (c *CodeBuild) ListSharedReportGroups(input *ListSharedReportGroupsInput) (*ListSharedReportGroupsOutput, error) {
+	req, out := c.ListSharedReportGroupsRequest(input)
+	return out, req.Send()
+}
+
+// ListSharedReportGroupsWithContext is the same as ListSharedReportGroups with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSharedReportGroups for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) ListSharedReportGroupsWithContext(ctx aws.Context, input *ListSharedReportGroupsInput, opts ...request.Option) (*ListSharedReportGroupsOutput, error) {
+	req, out := c.ListSharedReportGroupsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListSourceCredentials = "ListSourceCredentials"
 
 // ListSourceCredentialsRequest generates a "aws/request.Request" representing the
@@ -1971,6 +2291,88 @@ func (c *CodeBuild) ListSourceCredentials(input *ListSourceCredentialsInput) (*L
 // for more information on using Contexts.
 func (c *CodeBuild) ListSourceCredentialsWithContext(ctx aws.Context, input *ListSourceCredentialsInput, opts ...request.Option) (*ListSourceCredentialsOutput, error) {
 	req, out := c.ListSourceCredentialsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutResourcePolicy = "PutResourcePolicy"
+
+// PutResourcePolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutResourcePolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutResourcePolicy for more information on using the PutResourcePolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutResourcePolicyRequest method.
+//    req, resp := client.PutResourcePolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/PutResourcePolicy
+func (c *CodeBuild) PutResourcePolicyRequest(input *PutResourcePolicyInput) (req *request.Request, output *PutResourcePolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutResourcePolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutResourcePolicyInput{}
+	}
+
+	output = &PutResourcePolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutResourcePolicy API operation for AWS CodeBuild.
+//
+// Stores a resource policy for the ARN of a Project or ReportGroup object.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS CodeBuild's
+// API operation PutResourcePolicy for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The specified AWS resource cannot be found.
+//
+//   * ErrCodeInvalidInputException "InvalidInputException"
+//   The input value that was provided is not valid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/PutResourcePolicy
+func (c *CodeBuild) PutResourcePolicy(input *PutResourcePolicyInput) (*PutResourcePolicyOutput, error) {
+	req, out := c.PutResourcePolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutResourcePolicyWithContext is the same as PutResourcePolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutResourcePolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *CodeBuild) PutResourcePolicyWithContext(ctx aws.Context, input *PutResourcePolicyInput, opts ...request.Option) (*PutResourcePolicyOutput, error) {
+	req, out := c.PutResourcePolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2543,7 +2945,9 @@ func (s *BatchGetBuildsOutput) SetBuildsNotFound(v []*string) *BatchGetBuildsOut
 type BatchGetProjectsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The names of the build projects.
+	// The names or ARNs of the build projects. To get information about a project
+	// shared with your AWS account, its ARN must be specified. You cannot specify
+	// a shared project using its name.
 	//
 	// Names is a required field
 	Names []*string `locationName:"names" min:"1" type:"list" required:"true"`
@@ -4111,6 +4515,61 @@ func (s DeleteReportOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteResourcePolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the resource that is associated with the resource policy.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteResourcePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteResourcePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteResourcePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteResourcePolicyInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *DeleteResourcePolicyInput) SetResourceArn(v string) *DeleteResourcePolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type DeleteResourcePolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteResourcePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteResourcePolicyOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteSourceCredentialsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4566,6 +5025,70 @@ func (s *ExportedEnvironmentVariable) SetName(v string) *ExportedEnvironmentVari
 // SetValue sets the Value field's value.
 func (s *ExportedEnvironmentVariable) SetValue(v string) *ExportedEnvironmentVariable {
 	s.Value = &v
+	return s
+}
+
+type GetResourcePolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the resource that is associated with the resource policy.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetResourcePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetResourcePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetResourcePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetResourcePolicyInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *GetResourcePolicyInput) SetResourceArn(v string) *GetResourcePolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type GetResourcePolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The resource policy for the resource identified by the input ARN parameter.
+	Policy *string `locationName:"policy" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetResourcePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetResourcePolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetPolicy sets the Policy field's value.
+func (s *GetResourcePolicyOutput) SetPolicy(v string) *GetResourcePolicyOutput {
+	s.Policy = &v
 	return s
 }
 
@@ -5464,6 +5987,249 @@ func (s *ListReportsOutput) SetNextToken(v string) *ListReportsOutput {
 // SetReports sets the Reports field's value.
 func (s *ListReportsOutput) SetReports(v []*string) *ListReportsOutput {
 	s.Reports = v
+	return s
+}
+
+type ListSharedProjectsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of paginated shared build projects returned per response.
+	// Use nextToken to iterate pages in the list of returned Project objects. The
+	// default value is 100.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// During a previous call, the maximum number of items that can be returned
+	// is the value specified in maxResults. If there more items in the list, then
+	// a unique string called a nextToken is returned. To get the next batch of
+	// items in the list, call this operation again, adding the next token to the
+	// call. To get all of the items in the list, keep calling this operation with
+	// each subsequent next token that is returned, until no more next tokens are
+	// returned.
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
+
+	// The criterion to be used to list build projects shared with the current AWS
+	// account or user. Valid values include:
+	//
+	//    * ARN: List based on the ARN.
+	//
+	//    * MODIFIED_TIME: List based on when information about the shared project
+	//    was last changed.
+	SortBy *string `locationName:"sortBy" type:"string" enum:"SharedResourceSortByType"`
+
+	// The order in which to list shared build projects. Valid values include:
+	//
+	//    * ASCENDING: List in ascending order.
+	//
+	//    * DESCENDING: List in descending order.
+	SortOrder *string `locationName:"sortOrder" type:"string" enum:"SortOrderType"`
+}
+
+// String returns the string representation
+func (s ListSharedProjectsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSharedProjectsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListSharedProjectsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListSharedProjectsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListSharedProjectsInput) SetMaxResults(v int64) *ListSharedProjectsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListSharedProjectsInput) SetNextToken(v string) *ListSharedProjectsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListSharedProjectsInput) SetSortBy(v string) *ListSharedProjectsInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListSharedProjectsInput) SetSortOrder(v string) *ListSharedProjectsInput {
+	s.SortOrder = &v
+	return s
+}
+
+type ListSharedProjectsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// During a previous call, the maximum number of items that can be returned
+	// is the value specified in maxResults. If there more items in the list, then
+	// a unique string called a nextToken is returned. To get the next batch of
+	// items in the list, call this operation again, adding the next token to the
+	// call. To get all of the items in the list, keep calling this operation with
+	// each subsequent next token that is returned, until no more next tokens are
+	// returned.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The list of ARNs for the build projects shared with the current AWS account
+	// or user.
+	Projects []*string `locationName:"projects" min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s ListSharedProjectsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSharedProjectsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListSharedProjectsOutput) SetNextToken(v string) *ListSharedProjectsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetProjects sets the Projects field's value.
+func (s *ListSharedProjectsOutput) SetProjects(v []*string) *ListSharedProjectsOutput {
+	s.Projects = v
+	return s
+}
+
+type ListSharedReportGroupsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of paginated shared report groups per response. Use nextToken
+	// to iterate pages in the list of returned ReportGroup objects. The default
+	// value is 100.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// During a previous call, the maximum number of items that can be returned
+	// is the value specified in maxResults. If there more items in the list, then
+	// a unique string called a nextToken is returned. To get the next batch of
+	// items in the list, call this operation again, adding the next token to the
+	// call. To get all of the items in the list, keep calling this operation with
+	// each subsequent next token that is returned, until no more next tokens are
+	// returned.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The criterion to be used to list report groups shared with the current AWS
+	// account or user. Valid values include:
+	//
+	//    * ARN: List based on the ARN.
+	//
+	//    * MODIFIED_TIME: List based on when information about the shared report
+	//    group was last changed.
+	SortBy *string `locationName:"sortBy" type:"string" enum:"SharedResourceSortByType"`
+
+	// The order in which to list shared report groups. Valid values include:
+	//
+	//    * ASCENDING: List in ascending order.
+	//
+	//    * DESCENDING: List in descending order.
+	SortOrder *string `locationName:"sortOrder" type:"string" enum:"SortOrderType"`
+}
+
+// String returns the string representation
+func (s ListSharedReportGroupsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSharedReportGroupsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListSharedReportGroupsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListSharedReportGroupsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListSharedReportGroupsInput) SetMaxResults(v int64) *ListSharedReportGroupsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListSharedReportGroupsInput) SetNextToken(v string) *ListSharedReportGroupsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetSortBy sets the SortBy field's value.
+func (s *ListSharedReportGroupsInput) SetSortBy(v string) *ListSharedReportGroupsInput {
+	s.SortBy = &v
+	return s
+}
+
+// SetSortOrder sets the SortOrder field's value.
+func (s *ListSharedReportGroupsInput) SetSortOrder(v string) *ListSharedReportGroupsInput {
+	s.SortOrder = &v
+	return s
+}
+
+type ListSharedReportGroupsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// During a previous call, the maximum number of items that can be returned
+	// is the value specified in maxResults. If there more items in the list, then
+	// a unique string called a nextToken is returned. To get the next batch of
+	// items in the list, call this operation again, adding the next token to the
+	// call. To get all of the items in the list, keep calling this operation with
+	// each subsequent next token that is returned, until no more next tokens are
+	// returned.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The list of ARNs for the report groups shared with the current AWS account
+	// or user.
+	ReportGroups []*string `locationName:"reportGroups" min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s ListSharedReportGroupsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSharedReportGroupsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListSharedReportGroupsOutput) SetNextToken(v string) *ListSharedReportGroupsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetReportGroups sets the ReportGroups field's value.
+func (s *ListSharedReportGroupsOutput) SetReportGroups(v []*string) *ListSharedReportGroupsOutput {
+	s.ReportGroups = v
 	return s
 }
 
@@ -6782,6 +7548,92 @@ func (s *ProjectSourceVersion) SetSourceIdentifier(v string) *ProjectSourceVersi
 // SetSourceVersion sets the SourceVersion field's value.
 func (s *ProjectSourceVersion) SetSourceVersion(v string) *ProjectSourceVersion {
 	s.SourceVersion = &v
+	return s
+}
+
+type PutResourcePolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// A JSON-formatted resource policy. For more information, see Sharing a Project
+	// (https://docs.aws.amazon.com/codebuild/latest/userguide/project-sharing.html#project-sharing-share)
+	// and Sharing a Report Group (https://docs.aws.amazon.com/codebuild/latest/userguide/report-groups-sharing.html#report-groups-sharing-share)
+	// in the AWS CodeBuild User Guide.
+	//
+	// Policy is a required field
+	Policy *string `locationName:"policy" min:"1" type:"string" required:"true"`
+
+	// The ARN of the Project or ReportGroup resource you want to associate with
+	// a resource policy.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutResourcePolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutResourcePolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutResourcePolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutResourcePolicyInput"}
+	if s.Policy == nil {
+		invalidParams.Add(request.NewErrParamRequired("Policy"))
+	}
+	if s.Policy != nil && len(*s.Policy) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Policy", 1))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPolicy sets the Policy field's value.
+func (s *PutResourcePolicyInput) SetPolicy(v string) *PutResourcePolicyInput {
+	s.Policy = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *PutResourcePolicyInput) SetResourceArn(v string) *PutResourcePolicyInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type PutResourcePolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the Project or ReportGroup resource that is associated with a
+	// resource policy.
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PutResourcePolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutResourcePolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *PutResourcePolicyOutput) SetResourceArn(v string) *PutResourcePolicyOutput {
+	s.ResourceArn = &v
 	return s
 }
 
@@ -9140,6 +9992,14 @@ const (
 
 	// ServerTypeGithubEnterprise is a ServerType enum value
 	ServerTypeGithubEnterprise = "GITHUB_ENTERPRISE"
+)
+
+const (
+	// SharedResourceSortByTypeArn is a SharedResourceSortByType enum value
+	SharedResourceSortByTypeArn = "ARN"
+
+	// SharedResourceSortByTypeModifiedTime is a SharedResourceSortByType enum value
+	SharedResourceSortByTypeModifiedTime = "MODIFIED_TIME"
 )
 
 const (

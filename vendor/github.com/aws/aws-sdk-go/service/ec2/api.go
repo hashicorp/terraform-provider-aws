@@ -69527,8 +69527,13 @@ func (s *ElasticGpus) SetInstanceId(v string) *ElasticGpus {
 type ElasticInferenceAccelerator struct {
 	_ struct{} `type:"structure"`
 
-	// The type of elastic inference accelerator. The possible values are eia1.small,
-	// eia1.medium, and eia1.large.
+	// The number of elastic inference accelerators of given type to be attached
+	// to the instance. Only positive values allowed. If not specified defaults
+	// to 1.
+	Count *int64 `min:"1" type:"integer"`
+
+	// The type of elastic inference accelerator. The possible values are eia1.medium,
+	// eia1.large, and eia1.xlarge.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true"`
@@ -69547,6 +69552,9 @@ func (s ElasticInferenceAccelerator) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ElasticInferenceAccelerator) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ElasticInferenceAccelerator"}
+	if s.Count != nil && *s.Count < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Count", 1))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
@@ -69555,6 +69563,12 @@ func (s *ElasticInferenceAccelerator) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCount sets the Count field's value.
+func (s *ElasticInferenceAccelerator) SetCount(v int64) *ElasticInferenceAccelerator {
+	s.Count = &v
+	return s
 }
 
 // SetType sets the Type field's value.
@@ -80193,6 +80207,11 @@ func (s *LaunchTemplateEbsBlockDeviceRequest) SetVolumeType(v string) *LaunchTem
 type LaunchTemplateElasticInferenceAccelerator struct {
 	_ struct{} `type:"structure"`
 
+	// The number of elastic inference accelerators of given type to be attached
+	// to the instance. Only positive values allowed. If not specified defaults
+	// to 1.
+	Count *int64 `min:"1" type:"integer"`
+
 	// The type of elastic inference accelerator. The possible values are eia1.medium,
 	// eia1.large, and eia1.xlarge.
 	//
@@ -80213,6 +80232,9 @@ func (s LaunchTemplateElasticInferenceAccelerator) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *LaunchTemplateElasticInferenceAccelerator) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "LaunchTemplateElasticInferenceAccelerator"}
+	if s.Count != nil && *s.Count < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Count", 1))
+	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
@@ -80221,6 +80243,12 @@ func (s *LaunchTemplateElasticInferenceAccelerator) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCount sets the Count field's value.
+func (s *LaunchTemplateElasticInferenceAccelerator) SetCount(v int64) *LaunchTemplateElasticInferenceAccelerator {
+	s.Count = &v
+	return s
 }
 
 // SetType sets the Type field's value.
@@ -80232,6 +80260,11 @@ func (s *LaunchTemplateElasticInferenceAccelerator) SetType(v string) *LaunchTem
 // Describes an elastic inference accelerator.
 type LaunchTemplateElasticInferenceAcceleratorResponse struct {
 	_ struct{} `type:"structure"`
+
+	// The number of elastic inference accelerators of given type to be attached
+	// to the instance. Only positive values allowed. If not specified defaults
+	// to 1.
+	Count *int64 `locationName:"count" type:"integer"`
 
 	// The type of elastic inference accelerator. The possible values are eia1.medium,
 	// eia1.large, and eia1.xlarge.
@@ -80246,6 +80279,12 @@ func (s LaunchTemplateElasticInferenceAcceleratorResponse) String() string {
 // GoString returns the string representation
 func (s LaunchTemplateElasticInferenceAcceleratorResponse) GoString() string {
 	return s.String()
+}
+
+// SetCount sets the Count field's value.
+func (s *LaunchTemplateElasticInferenceAcceleratorResponse) SetCount(v int64) *LaunchTemplateElasticInferenceAcceleratorResponse {
+	s.Count = &v
+	return s
 }
 
 // SetType sets the Type field's value.
