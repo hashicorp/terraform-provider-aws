@@ -2,16 +2,20 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSIamAssumeRolePolicy_basic(t *testing.T) {
 	rName := acctest.RandString(10)
+	roleResourceName := "aws_iam_role.role"
+	resourceName := "aws_iam_assume_role_policy.policy"
 	oldService := "ec2.amazonaws.com"
 	newService := "s3.amazonaws.com"
 
@@ -23,13 +27,13 @@ func TestAccAWSIamAssumeRolePolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSIamAssumeRolePolicy_roleConfig(rName, oldService),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAssumeRolePolicyServiceMatches(rName, oldService),
+					testAccCheckAWSAssumeRolePolicyServiceMatches(roleResourceName, oldService),
 				),
 			},
 			{
-				Config: testAccAWSIamAssumeRolePolicyConfig(rName, newService),
+				Config: testAccAWSIamAssumeRolePolicyConfig(rName, oldService, newService),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAssumeRolePolicyServiceMatches(rName, newService),
+					testAccCheckAWSAssumeRolePolicyServiceMatches(resourceName, newService),
 				),
 			},
 		},
@@ -78,11 +82,19 @@ resource "aws_iam_role" "role" {
   ]
 }
 EOF
+
+  lifecycle {
+    ignore_changes = [
+	  # Ignore changes to assume role policy because we are about
+	  # to change it via the resource under test
+      assume_role_policy,
+    ]
+  }
 }
 
 resource "aws_iam_assume_role_policy" "policy" {
-  role_name = "%s"
-  assume_role_policy = <<EOF
+  role_name = aws_iam_role.role.name
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -101,11 +113,11 @@ EOF
 `, rName, oldService, newService)
 }
 
-func testAccCheckAWSAssumeRolePolicyServiceMatches(rName string, service string) resource.TestCheckFunc {
+func testAccCheckAWSAssumeRolePolicyServiceMatches(resourceName string, service string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[rName]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", rName)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
@@ -122,10 +134,9 @@ func testAccCheckAWSAssumeRolePolicyServiceMatches(rName string, service string)
 		}
 
 		actualAssumeRolePolicy := *resp.Role.AssumeRolePolicyDocument
-		expectedAssumeRolePolicy := service
 
-		if actualAssumeRolePolicy != expectedAssumeRolePolicy {
-			return fmt.Errorf("AssumeRolePolicy: '%q', expected '%q'.", actualAssumeRolePolicy, expectedAssumeRolePolicy)
+		if !strings.Contains(actualAssumeRolePolicy, service) {
+			return fmt.Errorf("AssumeRolePolicy: '%q' did not contain expected service '%q'.", actualAssumeRolePolicy, service)
 		}
 
 		return nil

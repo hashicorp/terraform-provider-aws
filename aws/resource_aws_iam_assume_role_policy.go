@@ -39,7 +39,7 @@ func resourceAwsIamAssumeRolePolicyCreate(d *schema.ResourceData, meta interface
 
 	assumeRolePolicyInput := &iam.UpdateAssumeRolePolicyInput{
 		RoleName:       aws.String(d.Get("role_name").(string)),
-		PolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
+		PolicyDocument: aws.String(d.Get("policy").(string)),
 	}
 	_, err := iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 	if err != nil {
@@ -73,7 +73,7 @@ func resourceAwsIamAssumeRolePolicyRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	if err := d.Set("assume_role_policy", assumeRolePolicy); err != nil {
+	if err := d.Set("policy", assumeRolePolicy); err != nil {
 		return err
 	}
 	return nil
@@ -82,10 +82,10 @@ func resourceAwsIamAssumeRolePolicyRead(d *schema.ResourceData, meta interface{}
 func resourceAwsIamAssumeRolePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	if d.HasChange("assume_role_policy") {
+	if d.HasChange("policy") {
 		assumeRolePolicyInput := &iam.UpdateAssumeRolePolicyInput{
 			RoleName:       aws.String(d.Get("role_name").(string)),
-			PolicyDocument: aws.String(d.Get("assume_role_policy").(string)),
+			PolicyDocument: aws.String(d.Get("policy").(string)),
 		}
 		_, err := iamconn.UpdateAssumeRolePolicy(assumeRolePolicyInput)
 		if err != nil {
