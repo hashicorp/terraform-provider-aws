@@ -189,11 +189,6 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ecs_cluster.test"
 
-	providerNames := []string{
-		"FARGATE",
-		"FARGATE_SPOT",
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -203,7 +198,6 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 				Config: testAccAWSEcsClusterCapacityProviders(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster),
-					testAccCheckAWSEcsClusterCapacityProviders(&cluster, providerNames),
 				),
 			},
 			{
@@ -348,69 +342,6 @@ func testAccCheckAWSEcsClusterExists(resourceName string, cluster *ecs.Cluster) 
 		}
 
 		return fmt.Errorf("ECS Cluster (%s) not found", rs.Primary.ID)
-	}
-}
-
-func testAccCheckAWSEcsClusterCapacityProviders(cluster *ecs.Cluster, expectedProviderNames []string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ecsconn
-
-		input := &ecs.DescribeClustersInput{
-			Clusters: []*string{cluster.ClusterArn},
-		}
-
-		resp, err := conn.DescribeClusters(input)
-		if err != nil {
-			return fmt.Errorf("error describing ECS Cluster: %s", err)
-		}
-
-		var actual *ecs.Cluster
-		for _, c := range resp.Clusters {
-			if aws.StringValue(c.ClusterArn) == *cluster.ClusterArn {
-				actual = c
-				break
-			}
-
-		}
-		if actual == nil {
-			return fmt.Errorf("ECS Cluster has disappeared")
-		}
-
-		var match bool
-		if length := len(expectedProviderNames); len(actual.CapacityProviders) == length {
-			match = true
-
-			visited := make([]bool, length)
-			for i := 0; i < length; i++ {
-				found := false
-				element := *actual.CapacityProviders[i]
-				for j := 0; j < length; j++ {
-					if visited[j] {
-						continue
-					}
-					if element == expectedProviderNames[j] {
-						visited[j] = true
-						found = true
-						break
-					}
-				}
-				match = match && found
-				if !match {
-					break
-				}
-			}
-		} else {
-			match = false
-		}
-		if !match {
-			actualProviderNames := make([]string, len(actual.CapacityProviders))
-			for i, v := range actual.CapacityProviders {
-				actualProviderNames[i] = *v
-			}
-			return fmt.Errorf("error matching CapacityProviders:\n\texpected %v\n\tgot: %v", expectedProviderNames, actualProviderNames)
-		}
-
-		return nil
 	}
 }
 
