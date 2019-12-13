@@ -117,6 +117,8 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	}
 	log.Printf("[DEBUG] Workspaces directory %q is registered", d.Id())
 
+	d.Partial(true)
+
 	log.Printf("[DEBUG] Modifying workspaces directory %q self-service permissions...", d.Id())
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
@@ -126,8 +128,11 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("error setting self service permissions: %s", err)
 		}
+		d.SetPartial("self_service_permission")
 	}
 	log.Printf("[DEBUG] Workspaces directory %q self-sevice permissions are set", d.Id())
+
+	d.Partial(false)
 
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
 }
@@ -162,6 +167,8 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
+	d.Partial(true)
+
 	if d.HasChange("self_service_permissions") {
 		log.Printf("[DEBUG] Modifying workspaces directory %q self-service permissions...", d.Id())
 		permissions := d.Get("self_service_permissions").([]interface{})
@@ -174,6 +181,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating self service permissions: %s", err)
 		}
 		log.Printf("[DEBUG] Workspaces directory %q self-sevice permissions are set", d.Id())
+		d.SetPartial("self_service_permission")
 	}
 
 	if d.HasChange("tags") {
@@ -183,7 +191,10 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 		log.Printf("[DEBUG] Workspaces directory %q tags are modified", d.Id())
+		d.SetPartial("tags")
 	}
+
+	d.Partial(false)
 
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
 }
