@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -93,11 +94,14 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	log.Printf("[DEBUG] Regestering workspaces directory...\n%#v\n", *input)
 	_, err := conn.RegisterWorkspaceDirectory(input)
 	if err != nil {
 		return err
 	}
+	d.SetId(directoryId)
 
+	log.Printf("[DEBUG] Waiting for workspaces directory %q to become registered...", d.Id())
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
@@ -111,7 +115,9 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("error registering directory: %s", err)
 	}
+	log.Printf("[DEBUG] Workspaces directory %q is registered", d.Id())
 
+	log.Printf("[DEBUG] Modifying workspaces directory %q self-service permissions...", d.Id())
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(directoryId),
@@ -121,8 +127,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("error setting self service permissions: %s", err)
 		}
 	}
-
-	d.SetId(directoryId)
+	log.Printf("[DEBUG] Workspaces directory %q self-sevice permissions are set", d.Id())
 
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
 }
@@ -158,6 +163,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).workspacesconn
 
 	if d.HasChange("self_service_permissions") {
+		log.Printf("[DEBUG] Modifying workspaces directory %q self-service permissions...", d.Id())
 		permissions := d.Get("self_service_permissions").([]interface{})
 
 		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
@@ -167,13 +173,16 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("error updating self service permissions: %s", err)
 		}
+		log.Printf("[DEBUG] Workspaces directory %q self-sevice permissions are set", d.Id())
 	}
 
 	if d.HasChange("tags") {
+		log.Printf("[DEBUG] Modifying workspaces directory %q tags...", d.Id())
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
+		log.Printf("[DEBUG] Workspaces directory %q tags are modified", d.Id())
 	}
 
 	return resourceAwsWorkspacesDirectoryRead(d, meta)
@@ -182,13 +191,17 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
-	_, err := conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{
+	input := &workspaces.DeregisterWorkspaceDirectoryInput{
 		DirectoryId: aws.String(d.Id()),
-	})
+	}
+
+	log.Printf("[DEBUG] Deregestering workspaces directory...\n%#v\n", *input)
+	_, err := conn.DeregisterWorkspaceDirectory(input)
 	if err != nil {
 		return err
 	}
 
+	log.Printf("[DEBUG] Waiting for workspaces directory %q to become deregistered...", d.Id())
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
@@ -206,6 +219,7 @@ func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("directory was not deregistered: %s", err)
 	}
+	log.Printf("[DEBUG] Workspaces directory %q is deregistered", d.Id())
 
 	return nil
 }
