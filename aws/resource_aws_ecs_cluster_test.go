@@ -157,7 +157,7 @@ func TestAccAWSEcsCluster_Tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
+func TestAccAWSEcsCluster_SingleCapacityProvider(t *testing.T) {
 	var cluster1 ecs.Cluster
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	providerName := acctest.RandomWithPrefix("tf-acc-test")
@@ -169,7 +169,7 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsClusterCapacityProviders(rName, providerName),
+				Config: testAccAWSEcsClusterSingleCapacityProvider(rName, providerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 				),
@@ -179,6 +179,42 @@ func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
 				ImportStateId:     rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsCluster_CapacityProviders(t *testing.T) {
+	var cluster ecs.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_cluster.test"
+
+	providerNames := []string{
+		"FARGATE",
+		"FARGATE_SPOT",
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsClusterCapacityProviders(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster),
+					testAccCheckAWSEcsClusterCapacityProviders(&cluster, providerNames),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccAWSEcsClusterCapacityProvidersReOrdered(rName),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -315,6 +351,69 @@ func testAccCheckAWSEcsClusterExists(resourceName string, cluster *ecs.Cluster) 
 	}
 }
 
+func testAccCheckAWSEcsClusterCapacityProviders(cluster *ecs.Cluster, expectedProviderNames []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ecsconn
+
+		input := &ecs.DescribeClustersInput{
+			Clusters: []*string{cluster.ClusterArn},
+		}
+
+		resp, err := conn.DescribeClusters(input)
+		if err != nil {
+			return fmt.Errorf("error describing ECS Cluster: %s", err)
+		}
+
+		var actual *ecs.Cluster
+		for _, c := range resp.Clusters {
+			if aws.StringValue(c.ClusterArn) == *cluster.ClusterArn {
+				actual = c
+				break
+			}
+
+		}
+		if actual == nil {
+			return fmt.Errorf("ECS Cluster has disappeared")
+		}
+
+		var match bool
+		if length := len(expectedProviderNames); len(actual.CapacityProviders) == length {
+			match = true
+
+			visited := make([]bool, length)
+			for i := 0; i < length; i++ {
+				found := false
+				element := *actual.CapacityProviders[i]
+				for j := 0; j < length; j++ {
+					if visited[j] {
+						continue
+					}
+					if element == expectedProviderNames[j] {
+						visited[j] = true
+						found = true
+						break
+					}
+				}
+				match = match && found
+				if !match {
+					break
+				}
+			}
+		} else {
+			match = false
+		}
+		if !match {
+			actualProviderNames := make([]string, len(actual.CapacityProviders))
+			for i, v := range actual.CapacityProviders {
+				actualProviderNames[i] = *v
+			}
+			return fmt.Errorf("error matching CapacityProviders:\n\texpected %v\n\tgot: %v", expectedProviderNames, actualProviderNames)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSEcsClusterDisappears(cluster *ecs.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ecsconn
@@ -363,7 +462,7 @@ resource "aws_ecs_capacity_provider" "test" {
 `, rName)
 }
 
-func testAccAWSEcsClusterCapacityProviders(rName, providerName string) string {
+func testAccAWSEcsClusterSingleCapacityProvider(rName, providerName string) string {
 	return testAccAWSEcsClusterCapacityProviderConfig(providerName) + fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
 	name = %[1]q
@@ -374,6 +473,48 @@ resource "aws_ecs_cluster" "test" {
 		base = 1
 		capacity_provider = aws_ecs_capacity_provider.test.name
 		weight = 1
+	}
+}
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProviders(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %[1]q
+
+	capacity_providers = ["FARGATE_SPOT", "FARGATE"]
+
+	default_capacity_provider_strategy {
+		capacity_provider = "FARGATE_SPOT"
+		weight = 1
+		base   = 1
+	}
+
+	default_capacity_provider_strategy {
+		capacity_provider = "FARGATE"
+		weight = 1
+	}
+}
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProvidersReOrdered(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %[1]q
+
+	capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+
+	default_capacity_provider_strategy {
+		capacity_provider = "FARGATE"
+		weight = 1
+	}
+
+	default_capacity_provider_strategy {
+		capacity_provider = "FARGATE_SPOT"
+		weight = 1
+		base   = 1
 	}
 }
 `, rName)

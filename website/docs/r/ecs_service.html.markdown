@@ -77,7 +77,7 @@ resource "aws_ecs_service" "bar" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the service (up to 255 letters, numbers, hyphens, and underscores)
-* `capacity_provider_strategy` - (Optional) The capacity provider strategy to use for the service.  Defined below.
+* `capacity_provider_strategy` - (Optional) The capacity provider strategy to use for the service. Can be one or more.  Defined below.
 * `cluster` - (Optional) ARN of an ECS cluster
 * `deployment_controller` - (Optional) Configuration block containing deployment controller configuration. Defined below.
 * `deployment_maximum_percent` - (Optional) The upper limit (as a percentage of the service's desiredCount) of the number of running tasks that can be running in a service during a deployment. Not valid when using the `DAEMON` scheduling strategy.

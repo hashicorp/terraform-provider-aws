@@ -257,6 +257,31 @@ func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withMultipleCapacityProviderStrategies(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-mcps-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-mcps-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-mcps-%s", rString)
+	sgName := fmt.Sprintf("tf-acc-sg-svc-w-mcps-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithMultipleCapacityProviderStrategies(clusterName, tdName, svcName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "capacity_provider_strategy.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1303,12 +1328,88 @@ resource "aws_ecs_service" "mongo" {
 
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.test.name
-    weight =  %d
-    base =  %d
+    weight = %d
+    base   = %d
+  }
+}
+`, providerName, clusterName, tdName, svcName, weight, base)
+}
+
+func testAccAWSEcsServiceWithMultipleCapacityProviderStrategies(clusterName, tdName, svcName, sgName string) string {
+	return testAccAWSEcsClusterCapacityProviders(clusterName) + fmt.Sprintf(`
+resource "aws_ecs_service" "mongo" {
+  name            = "%s"
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.mongo.arn
+  desired_count   = 1
+  
+  network_configuration {
+    security_groups  = [aws_security_group.allow_all.id]
+    subnets          = [aws_subnet.main.id]
+    assign_public_ip = false
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    weight            = 1
+  }
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
   }
 }
 
-`, providerName, clusterName, tdName, svcName, weight, base)
+resource "aws_ecs_task_definition" "mongo" {
+  family                   = "%s"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_subnet" "main" {
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, 1)}"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
+  }
+}
+`, tdName, svcName, sgName)
 }
 
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {

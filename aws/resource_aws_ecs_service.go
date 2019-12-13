@@ -63,7 +63,6 @@ func resourceAwsEcsService() *schema.Resource {
 					},
 				},
 			},
-
 			"cluster": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -429,7 +428,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set).List())
+	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
@@ -738,12 +737,13 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandEcsCapacityProviderStrategy(cps []interface{}) []*ecs.CapacityProviderStrategyItem {
-	if len(cps) == 0 {
+func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
+	list := cps.List()
+	if len(list) == 0 {
 		return nil
 	}
 	results := make([]*ecs.CapacityProviderStrategyItem, 0)
-	for _, raw := range cps {
+	for _, raw := range list {
 		cp := raw.(map[string]interface{})
 		ps := &ecs.CapacityProviderStrategyItem{}
 		if val, ok := cp["base"]; ok {
@@ -922,7 +922,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set).List())
+		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 	}
 
 	if updateService {
