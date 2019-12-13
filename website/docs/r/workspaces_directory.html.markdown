@@ -51,6 +51,16 @@ The following arguments are supported:
 
 * `directory_id` - (Required) The directory identifier for registration in Workspaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides new workspaces.
+* `tags` – (Optional) A mapping of tags assigned to the workspaces directory.
+* `self_service_permissions` – (Optional) The permissions to enable or disable self-service capabilities.
+
+`self_service_permissions` supports the following:
+
+* `change_compute_type` – (Optional) Whether workspaces directory users can change the compute type (bundle) for their workspace. Default `false`.
+* `increase_volume_size` – (Optional) Whether workspaces directory users can increase the volume size of the drives on their workspace. Default `false`.
+* `rebuild_workspace` – (Optional) Whether workspaces directory users can rebuild the operating system of a workspace to its original state. Default `false`.
+* `restart_workspace` – (Optional) Whether workspaces directory users can restart their workspace. Default `true`.
+* `switch_running_mode` – (Optional) Whether workspaces directory users can switch the running mode of their workspace. Default `false`.
 
 ## Attributes Reference
 
