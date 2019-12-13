@@ -299,6 +299,8 @@ Alternatively the `tags` attributes can be used, which accepts a list of maps co
 This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
 `tag` and `tags` are mutually exclusive, only one of them can be specified.
 
+~> **NOTE:** If no tags are specified, the API will add one tag with a key of `AmazonECSManaged` and a value of `true`.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
