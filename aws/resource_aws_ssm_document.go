@@ -312,7 +312,7 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeDocument, o, n); err != nil {
+		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingDocument, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Document (%s) tags: %s", d.Id(), err)
 		}
 	}
