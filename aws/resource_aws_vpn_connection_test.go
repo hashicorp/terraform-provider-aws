@@ -389,18 +389,18 @@ func testAccAwsVpnConnectionExists(vpnConnectionResource string, vpnConnection *
 }
 
 func TestAWSVpnConnection_xmlconfig(t *testing.T) {
-	tunnelInfo, err := xmlConfigToTunnelInfo(testAccAwsVpnTunnelInfoXML)
+	tunnelInfo, err := xmlConfigToTunnelInfo(testAccAwsVpnTunnelInfoXML, testAccAwsVpnTunnel1InsideCidr)
 	if err != nil {
 		t.Fatalf("Error unmarshalling XML: %s", err)
 	}
-	if tunnelInfo.Tunnel1Address != "FIRST_ADDRESS" {
+	if tunnelInfo.Tunnel1Address != "123.123.123.124" {
 		t.Fatalf("First address from tunnel XML was incorrect.")
 	}
-	if tunnelInfo.Tunnel1CgwInsideAddress != "FIRST_CGW_INSIDE_ADDRESS" {
+	if tunnelInfo.Tunnel1CgwInsideAddress != "169.254.254.254" {
 		t.Fatalf("First Customer Gateway inside address from tunnel" +
 			" XML was incorrect.")
 	}
-	if tunnelInfo.Tunnel1VgwInsideAddress != "FIRST_VGW_INSIDE_ADDRESS" {
+	if tunnelInfo.Tunnel1VgwInsideAddress != "169.254.254.253" {
 		t.Fatalf("First VPN Gateway inside address from tunnel " +
 			" XML was incorrect.")
 	}
@@ -413,14 +413,14 @@ func TestAWSVpnConnection_xmlconfig(t *testing.T) {
 	if tunnelInfo.Tunnel1BGPHoldTime != 31 {
 		t.Fatalf("First bgp holdtime from tunnel XML was incorrect.")
 	}
-	if tunnelInfo.Tunnel2Address != "SECOND_ADDRESS" {
+	if tunnelInfo.Tunnel2Address != "123.123.123.125" {
 		t.Fatalf("Second address from tunnel XML was incorrect.")
 	}
-	if tunnelInfo.Tunnel2CgwInsideAddress != "SECOND_CGW_INSIDE_ADDRESS" {
+	if tunnelInfo.Tunnel2CgwInsideAddress != "169.254.254.250" {
 		t.Fatalf("Second Customer Gateway inside address from tunnel" +
 			" XML was incorrect.")
 	}
-	if tunnelInfo.Tunnel2VgwInsideAddress != "SECOND_VGW_INSIDE_ADDRESS" {
+	if tunnelInfo.Tunnel2VgwInsideAddress != "169.254.254.249" {
 		t.Fatalf("Second VPN Gateway inside address from tunnel " +
 			" XML was incorrect.")
 	}
@@ -581,20 +581,20 @@ const testAccAwsVpnTunnelInfoXML = `
   <ipsec_tunnel>
     <customer_gateway>
       <tunnel_outside_address>
-        <ip_address>123.123.123.123</ip_address>
+        <ip_address>1.1.1.1</ip_address>
       </tunnel_outside_address>
       <tunnel_inside_address>
-        <ip_address>SECOND_CGW_INSIDE_ADDRESS</ip_address>
+        <ip_address>169.254.254.250</ip_address>
         <network_mask>255.255.255.252</network_mask>
         <network_cidr>30</network_cidr>
       </tunnel_inside_address>
     </customer_gateway>
     <vpn_gateway>
       <tunnel_outside_address>
-        <ip_address>SECOND_ADDRESS</ip_address>
+        <ip_address>254.254.254.254</ip_address>
       </tunnel_outside_address>
       <tunnel_inside_address>
-        <ip_address>SECOND_VGW_INSIDE_ADDRESS</ip_address>
+        <ip_address>169.254.254.249</ip_address>
         <network_mask>255.255.255.252</network_mask>
         <network_cidr>30</network_cidr>
       </tunnel_inside_address>
@@ -610,20 +610,20 @@ const testAccAwsVpnTunnelInfoXML = `
   <ipsec_tunnel>
     <customer_gateway>
       <tunnel_outside_address>
-        <ip_address>123.123.123.123</ip_address>
+        <ip_address>2.2.2.2</ip_address>
       </tunnel_outside_address>
       <tunnel_inside_address>
-        <ip_address>FIRST_CGW_INSIDE_ADDRESS</ip_address>
+        <ip_address>169.254.254.254</ip_address>
         <network_mask>255.255.255.252</network_mask>
         <network_cidr>30</network_cidr>
       </tunnel_inside_address>
     </customer_gateway>
     <vpn_gateway>
       <tunnel_outside_address>
-        <ip_address>FIRST_ADDRESS</ip_address>
+        <ip_address>123.123.123.124</ip_address>
       </tunnel_outside_address>
       <tunnel_inside_address>
-        <ip_address>FIRST_VGW_INSIDE_ADDRESS</ip_address>
+        <ip_address>169.254.254.253</ip_address>
         <network_mask>255.255.255.252</network_mask>
         <network_cidr>30</network_cidr>
       </tunnel_inside_address>
@@ -638,3 +638,5 @@ const testAccAwsVpnTunnelInfoXML = `
   </ipsec_tunnel>
 </vpn_connection>
 `
+
+const testAccAwsVpnTunnel1InsideCidr = "169.254.254.252/30"
