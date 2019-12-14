@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -26,11 +25,8 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile(`^arn:aws:ssm:[a-z]{2}-[a-z]+-\d{1}:\d{12}:document/.*$`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.Name", "My Document"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("document/%s", name)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -437,7 +433,7 @@ func testAccCheckAWSSSMDocumentDestroy(s *terraform.State) error {
 
 		if err != nil {
 			// InvalidDocument means it's gone, this is good
-			if wserr, ok := err.(awserr.Error); ok && wserr.Code() == "InvalidDocument" {
+			if wserr, ok := err.(awserr.Error); ok && wserr.Code() == ssm.ErrCodeInvalidDocument {
 				return nil
 			}
 			return err
@@ -460,12 +456,8 @@ Based on examples from here: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGu
 func testAccAWSSSMDocumentBasicConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_document" "foo" {
-  name          = "test_document-%s"
+  name          = "%s"
   document_type = "Command"
-
-  tags = {
-    Name = "My Document"
-  }
 
   content = <<DOC
     {
