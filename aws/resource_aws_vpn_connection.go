@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -445,8 +444,10 @@ func resourceAwsVpnConnectionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("customer_gateway_configuration", vpnConnection.CustomerGatewayConfiguration)
 	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
 
+	tunnel1_inside_cidr := d.Get("tunnel1_inside_cidr").(string)
+
 	if vpnConnection.CustomerGatewayConfiguration != nil {
-		if tunnelInfo, err := xmlConfigToTunnelInfo(*vpnConnection.CustomerGatewayConfiguration); err != nil {
+		if tunnelInfo, err := xmlConfigToTunnelInfo(*vpnConnection.CustomerGatewayConfiguration, tunnel1_inside_cidr); err != nil {
 			log.Printf("[ERR] Error unmarshaling XML configuration for (%s): %s", d.Id(), err)
 		} else {
 			d.Set("tunnel1_address", tunnelInfo.Tunnel1Address)
@@ -586,14 +587,20 @@ func waitForEc2VpnConnectionDeletion(conn *ec2.EC2, id string) error {
 	return err
 }
 
-func xmlConfigToTunnelInfo(xmlConfig string) (*TunnelInfo, error) {
+func xmlConfigToTunnelInfo(xmlConfig string, tunnel1_inside_cidr string) (*TunnelInfo, error) {
 	var vpnConfig XmlVpnConnectionConfig
 	if err := xml.Unmarshal([]byte(xmlConfig), &vpnConfig); err != nil {
 		return nil, fmt.Errorf("Error Unmarshalling XML: %s", err)
 	}
 
-	// don't expect consistent ordering from the XML
-	sort.Sort(vpnConfig)
+	// don't expect consistent ordering
+	_, ipnet1, _ := net.ParseCIDR(tunnel1_inside_cidr)
+	if !(ipnet1.Contains(net.ParseIP(vpnConfig.Tunnels[0].VgwInsideAddress))) {
+		var vpnConfigRev XmlVpnConnectionConfig
+		vpnConfigRev.Tunnels = append(vpnConfigRev.Tunnels, vpnConfig.Tunnels[1])
+		vpnConfigRev.Tunnels = append(vpnConfigRev.Tunnels, vpnConfig.Tunnels[0])
+		vpnConfig = vpnConfigRev
+	}
 
 	tunnelInfo := TunnelInfo{
 		Tunnel1Address:          vpnConfig.Tunnels[0].OutsideAddress,
