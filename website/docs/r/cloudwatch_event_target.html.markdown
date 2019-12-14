@@ -204,7 +204,7 @@ resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
         {
             "Effect": "Allow",
             "Action": "ecs:RunTask",
-            "Resource": "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", ":*")}"
+            "Resource": "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", "")}"
         }
     ]
 }
@@ -219,7 +219,7 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
 
   ecs_target {
     task_count          = 1
-    task_definition_arn = "${aws_ecs_task_definition.task_name.arn}"
+    task_definition_arn = "${replace(aws_ecs_task_definition.task_name.arn, "/:\\d+$/", "")}"
   }
 
   input = <<DOC
