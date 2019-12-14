@@ -282,7 +282,7 @@ func ServiceTagFunction(serviceName string) string {
 	case "resourcegroups":
 		return "Tag"
 	case "route53":
-		return "ChangeTagsForResourceInput"
+		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "AddTags"
 	case "sqs":
@@ -480,7 +480,7 @@ func ServiceUntagFunction(serviceName string) string {
 	case "resourcegroups":
 		return "Untag"
 	case "route53":
-		return "ChangeTagsForResourceInput"
+		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "DeleteTags"
 	case "sqs":

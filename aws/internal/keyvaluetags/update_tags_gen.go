@@ -2695,13 +2695,13 @@ func Route53UpdateTags(conn *route53.Route53, identifier string, resourceType st
 	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &route53.ChangeTagsForResourceInputInput{
+		input := &route53.ChangeTagsForResourceInput{
 			ResourceId:    aws.String(identifier),
 			ResourceType:  aws.String(resourceType),
 			RemoveTagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
-		_, err := conn.ChangeTagsForResourceInput(input)
+		_, err := conn.ChangeTagsForResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
@@ -2709,13 +2709,13 @@ func Route53UpdateTags(conn *route53.Route53, identifier string, resourceType st
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &route53.ChangeTagsForResourceInputInput{
+		input := &route53.ChangeTagsForResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
 			AddTags:      updatedTags.IgnoreAws().Route53Tags(),
 		}
 
-		_, err := conn.ChangeTagsForResourceInput(input)
+		_, err := conn.ChangeTagsForResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
