@@ -1,13 +1,13 @@
 ---
 subcategory: "Organizations"
 layout: "aws"
-page_title: "AWS: aws_organizations_organizational_unit"
-sidebar_current: "docs-aws-datasource-organizations-organizational-unit"
+page_title: "AWS: aws_organizations_organizational_units"
+sidebar_current: "docs-aws-datasource-organizations-organizational-units"
 description: |-
   Get all direct child organizational units under a parent organizational unit. This only provides immediate children, not all children
 ---
 
-# Data Source: aws_organizations_organizational_unit
+# Data Source: aws_organizations_organizational_units
 Get all direct child organizational units under a parent organizational unit. This only provides immediate children, not all children.
 
 ## Example Usage
@@ -15,7 +15,7 @@ Get all direct child organizational units under a parent organizational unit. Th
 ```hcl
 data "aws_organizations_organization" "org" {}
 
-data "aws_organizations_organizational_unit" "ou" {
+data "aws_organizations_organizational_units" "ou" {
   parent_id = data.aws_organizations_organization.org.roots[0].id
 }
 ```

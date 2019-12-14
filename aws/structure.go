@@ -38,7 +38,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -5522,19 +5521,4 @@ func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.Targ
 	}
 
 	return vTargetIps
-}
-
-func flattenOrganizationsOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
-	if len(ous) == 0 {
-		return nil
-	}
-	var result []map[string]interface{}
-	for _, ou := range ous {
-		result = append(result, map[string]interface{}{
-			"arn":  aws.StringValue(ou.Arn),
-			"id":   aws.StringValue(ou.Id),
-			"name": aws.StringValue(ou.Name),
-		})
-	}
-	return result
 }

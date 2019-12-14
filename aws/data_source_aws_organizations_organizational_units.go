@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func dataSourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
+func dataSourceAwsOrganizationsOrganizationalUnits() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsOrganizationsOrganizationalUnitRead,
+		Read: dataSourceAwsOrganizationsOrganizationalUnitsRead,
 
 		Schema: map[string]*schema.Schema{
 			"parent_id": {
@@ -42,7 +42,7 @@ func dataSourceAwsOrganizationsOrganizationalUnit() *schema.Resource {
 	}
 }
 
-func dataSourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsOrganizationsOrganizationalUnitsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
 
 	parent_id := d.Get("parent_id").(string)
@@ -53,24 +53,36 @@ func dataSourceAwsOrganizationsOrganizationalUnitRead(d *schema.ResourceData, me
 	}
 
 	var children []*organizations.OrganizationalUnit
-	for {
-		ous, err := conn.ListOrganizationalUnitsForParent(params)
 
-		if err != nil {
-			return fmt.Errorf("Error listing organizational units for parent: %s", err)
-		}
+	err := conn.ListOrganizationalUnitsForParentPages(params,
+		func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
+			children = append(children, page.OrganizationalUnits...)
 
-		children = append(children, ous.OrganizationalUnits...)
+			return !lastPage
+		})
 
-		if ous.NextToken == nil {
-			break
-		}
-		params.NextToken = ous.NextToken
+	if err != nil {
+		return fmt.Errorf("error listing Organizations Organization Units for parent (%s): %s", parent_id, err)
 	}
 
 	if err := d.Set("children", flattenOrganizationsOrganizationalUnits(children)); err != nil {
-		return fmt.Errorf("Error setting children.")
+		return fmt.Errorf("Error setting children: %s", err)
 	}
 
 	return nil
+}
+
+func flattenOrganizationsOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {
+	if len(ous) == 0 {
+		return nil
+	}
+	var result []map[string]interface{}
+	for _, ou := range ous {
+		result = append(result, map[string]interface{}{
+			"arn":  aws.StringValue(ou.Arn),
+			"id":   aws.StringValue(ou.Id),
+			"name": aws.StringValue(ou.Name),
+		})
+	}
+	return result
 }
