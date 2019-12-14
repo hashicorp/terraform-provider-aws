@@ -389,7 +389,7 @@ func testAccAwsVpnConnectionExists(vpnConnectionResource string, vpnConnection *
 }
 
 func TestAWSVpnConnection_xmlconfig(t *testing.T) {
-	tunnelInfo, err := xmlConfigToTunnelInfo(testAccAwsVpnTunnelInfoXML)
+	tunnelInfo, err := xmlConfigToTunnelInfo(testAccAwsVpnTunnelInfoXML, testAccAwsVpnTunnel1InsideCidr)
 	if err != nil {
 		t.Fatalf("Error unmarshalling XML: %s", err)
 	}
@@ -638,3 +638,5 @@ const testAccAwsVpnTunnelInfoXML = `
   </ipsec_tunnel>
 </vpn_connection>
 `
+
+const testAccAwsVpnTunnel1InsideCidr = "169.254.254.252/30"
