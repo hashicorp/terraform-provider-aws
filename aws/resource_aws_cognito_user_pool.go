@@ -796,15 +796,6 @@ func resourceAwsCognitoUserPoolRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoidpconn
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := keyvaluetags.CognitoidentityproviderUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Cognito Identity Pool (%s) tags: %s", arn, err)
-		}
-	}
-
 	params := &cognitoidentityprovider.UpdateUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
 	}
@@ -936,6 +927,10 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if v, ok := d.GetOk("sms_verification_message"); ok {
 		params.SmsVerificationMessage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tags"); ok {
+		params.UserPoolTags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CognitoidentityproviderTags()
 	}
 
 	log.Printf("[DEBUG] Updating Cognito User Pool: %s", params)
