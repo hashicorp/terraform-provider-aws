@@ -200,15 +200,6 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).cognitoconn
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := keyvaluetags.CognitoidentityUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Cognito Identity Pool (%s) tags: %s", arn, err)
-		}
-	}
-
 	params := &cognitoidentity.IdentityPool{
 		IdentityPoolId:                 aws.String(d.Id()),
 		AllowUnauthenticatedIdentities: aws.Bool(d.Get("allow_unauthenticated_identities").(bool)),
@@ -242,8 +233,13 @@ func resourceAwsCognitoIdentityPoolUpdate(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error updating Cognito Identity Pool: %s", err)
 	}
 
-	if err := setTagsCognito(conn, d); err != nil {
-		return err
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CognitoidentityUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Cognito Identity Pool (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsCognitoIdentityPoolRead(d, meta)

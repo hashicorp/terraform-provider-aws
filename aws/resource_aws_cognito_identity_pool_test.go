@@ -30,8 +30,6 @@ func TestAccAWSCognitoIdentityPool_basic(t *testing.T) {
 					testAccCheckAWSCognitoIdentityPoolExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "cognito-identity", regexp.MustCompile(`identitypool/.+`)),
-					//resource.TestMatchResourceAttr(resourceName, "arn",
-					//	regexp.MustCompile("^arn:aws:cognito-identity:[^:]+:[0-9]{12}:identitypool/[^:]+:([0-9a-f]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}$")),
 					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", "false"),
 				),
 			},
