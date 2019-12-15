@@ -19,6 +19,12 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 		Update: resourceAwsBatchComputeEnvironmentUpdate,
 		Delete: resourceAwsBatchComputeEnvironmentDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("compute_environment_name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
 				Type:         schema.TypeString,
