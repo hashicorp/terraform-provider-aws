@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 type WafRetryer struct {
@@ -40,12 +40,15 @@ func (t *WafRetryer) RetryWithToken(f withTokenFunc) (interface{}, error) {
 	})
 	if isResourceTimeoutError(err) {
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
-		if err == nil {
-			out, err = f(tokenOut.ChangeToken)
+
+		if err != nil {
+			return nil, fmt.Errorf("error getting WAF change token: %s", err)
 		}
+
+		out, err = f(tokenOut.ChangeToken)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("Error getting WAF change token: %s", err)
+		return nil, err
 	}
 	return out, nil
 }

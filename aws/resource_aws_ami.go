@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const (
@@ -278,12 +279,18 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 	id := *res.ImageId
 	d.SetId(id)
 
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2UpdateTags(client, id, nil, v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
+	}
+
 	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 	if err != nil {
 		return err
 	}
 
-	return resourceAwsAmiUpdate(d, meta)
+	return resourceAwsAmiRead(d, meta)
 }
 
 func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
@@ -404,10 +411,12 @@ func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	d.Partial(true)
 
-	if err := setTags(client, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(client, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating AMI (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if d.Get("description").(string) != "" {

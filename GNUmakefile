@@ -9,6 +9,10 @@ default: build
 build: fmtcheck
 	go install
 
+gen:
+	rm -f aws/internal/keyvaluetags/*_gen.go
+	go generate ./...
+
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test $(TEST) -v -sweep=$(SWEEP) $(SWEEPARGS)
@@ -17,7 +21,7 @@ test: fmtcheck
 	go test $(TEST) -timeout=30s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v -parallel 20 $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test $(TEST) -v -count 1 -parallel 20 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
@@ -30,12 +34,16 @@ fmtcheck:
 websitefmtcheck:
 	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
 
+docscheck:
+	@sh -c "'$(CURDIR)/scripts/docscheck.sh'"
+
 lint:
 	@echo "==> Checking source code against linters..."
-	@GOGC=30 golangci-lint run ./$(PKG_NAME)
+	@golangci-lint run ./$(PKG_NAME)/...
 	@tfproviderlint \
 		-c 1 \
 		-AT001 \
+		-AT002 \
 		-S001 \
 		-S002 \
 		-S003 \
@@ -86,5 +94,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test
+.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test docscheck
 

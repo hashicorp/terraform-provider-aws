@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_default_kms_key"
-sidebar_current: "docs-aws-ebs-default-kms-key"
 description: |-
   Manages the default customer master key (CMK) that your AWS account uses to encrypt EBS volumes.
 ---

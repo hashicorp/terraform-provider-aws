@@ -25,6 +25,7 @@ ability to merge PRs and respond to issues.
         - [Documentation Update](#documentation-update)
         - [Enhancement/Bugfix to a Resource](#enhancementbugfix-to-a-resource)
         - [Adding Resource Import Support](#adding-resource-import-support)
+        - [Adding Resource Tagging Support](#adding-resource-tagging-support)
         - [New Resource](#new-resource)
         - [New Service](#new-service)
         - [New Region](#new-region)
@@ -37,6 +38,7 @@ ability to merge PRs and respond to issues.
         - [Running an Acceptance Test](#running-an-acceptance-test)
         - [Writing an Acceptance Test](#writing-an-acceptance-test)
         - [Writing and running Cross-Account Acceptance Tests](#writing-and-running-cross-account-acceptance-tests)
+        - [Writing and running Cross-Region Acceptance Tests](#writing-and-running-cross-region-acceptance-tests)
 
 <!-- /TOC -->
 
@@ -212,6 +214,220 @@ In addition to the below checklist and the items noted in the Extending Terrafor
 - [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
 - [ ] _Resource Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `Import` documentation section at the bottom of the page
 
+#### Adding Resource Tagging Support
+
+AWS provides key-value metadata across many services and resources, which can be used for a variety of use cases including billing, ownership, and more. See the [AWS Tagging Strategy page](https://aws.amazon.com/answers/account-management/aws-tagging-strategies/) for more information about tagging at a high level.
+
+Implementing tagging support for Terraform AWS Provider resources requires the following, each with its own section below:
+
+- [ ] _Generated Service Tagging Code_: In the internal code generators (e.g. `aws/internal/keyvaluetags`), implementation and customization of how a service handles tagging, which is standardized for the resources.
+- [ ] _Resource Tagging Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `tags` schema attribute, along with handling in `Create`, `Read`, and `Update` functions.
+- [ ] _Resource Tagging Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of new acceptance test function and configurations to exercise new tagging logic.
+- [ ] _Resource Tagging Documentation Implementation_: In the resource documentation (e.g. `website/docs/r/service_thing.html.markdown`), addition of `tags` argument
+
+See also a [full example pull request for implementing EKS tagging](https://github.com/terraform-providers/terraform-provider-aws/pull/10307).
+
+##### Adding Service to Tag Generating Code
+
+This step is only necessary for the first implementation and may have been previously completed. If so, move on to the next section.
+
+More details about this code generation, including fixes for potential error messages in this process, can be found in the [keyvaluetags documentation](aws/internal/keyvaluetags/README.md).
+
+- Open the AWS Go SDK documentation for the service, e.g. for [`service/eks`](https://docs.aws.amazon.com/sdk-for-go/api/service/eks/). Note: there can be a delay between the AWS announcement and the updated AWS Go SDK documentation.
+- Determine the "type" of tagging implementation. Some services will use a simple map style (`map[string]*string` in Go) while others will have a separate structure shape (`[]service.Tag` struct with `Key` and `Value` fields).
+
+  - If the type is a map, add the AWS Go SDK service name (e.g. `eks`) to `mapServiceNames` in `aws/internal/keyvaluetags/generators/servicetags/main.go`
+  - Otherwise, if the type is a struct, add the AWS Go SDK service name (e.g. `eks`) to `sliceServiceNames` in `aws/internal/keyvaluetags/generators/servicetags/main.go`. If the struct name is not exactly `Tag`, it can be customized via the `ServiceTagType` function. If the struct key field is not exactly `Key`, it can be customized via the `ServiceTagTypeKeyField` function. If the struct value field is not exactly `Value`, it can be customized via the `ServiceTagTypeValueField` function.
+
+- Determine if the service API includes functionality for listing tags (usually a `ListTags` or `ListTagsForResource` API call) or updating tags (usually `TagResource` and `UntagResource` API calls). If so, add the AWS Go SDK service client information to `ServiceClientType` (along with the new required import) in `aws/internal/keyvaluetags/service_generation_customizations.go`, e.g. for EKS:
+
+  ```go
+  case "eks":
+    funcType = reflect.TypeOf(eks.New)
+  ```
+
+  - If the service API includes functionality for listing tags, add the AWS Go SDK service name (e.g. `eks`) to `serviceNames` in `aws/internal/keyvaluetags/generators/listtags/main.go`.
+  - If the service API includes functionality for updating tags, add the AWS Go SDK service name (e.g. `eks`) to `serviceNames` in `aws/internal/keyvaluetags/generators/updatetags/main.go`.
+
+- Run `make gen` (`go generate ./...`) and ensure there are no errors via `make test` (`go test ./...`)
+
+##### Resource Tagging Code Implementation
+
+- In the resource Go file (e.g. `aws/resource_aws_eks_cluster.go`), add the following Go import: `"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"`
+- In the resource schema, add `"tags": tagsSchema(),`
+- If the API supports tagging on creation (the `Input` struct accepts a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service tags, e.g. with EKS Clusters:
+
+  ```go
+  input := &eks.CreateClusterInput{
+    /* ... other configuration ... */
+    Tags: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EksTags(),
+  }
+  ```
+
+  If the service API does not allow passing an empty list, the logic can be adjusted similar to:
+
+  ```go
+  input := &eks.CreateClusterInput{
+    /* ... other configuration ... */
+  }
+
+  if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+    input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
+  }
+  ```
+
+- Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g. with CloudHSM v2 Clusters:
+
+  ```go
+  if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+    if err := keyvaluetags.Cloudhsmv2UpdateTags(conn, d.Id(), nil, v); err != nil {
+      return fmt.Errorf("error adding CloudHSM v2 Cluster (%s) tags: %s", d.Id(), err)
+    }
+  }
+  ```
+
+- Some EC2 resources (for example [`aws_ec2_fleet`](https://www.terraform.io/docs/providers/aws/r/ec2_fleet.html)) have a `TagsSpecification` field in the `InputStruct` instead of a `Tags` field. In these cases the `ec2TagSpecificationsFromMap()` helper function should be used, e.g.:
+
+  ```go
+  input := &ec2.CreateFleetInput{
+    /* ... other configuration ... */
+    TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeFleet),
+  }
+  ```
+
+- In the resource `Read` function, implement the logic to convert the service tags to save them into the Terraform state for drift detection, e.g. with EKS Clusters (which had the tags available in the DescribeCluster API call):
+
+  ```go
+  if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+    return fmt.Errorf("error setting tags: %s", err)
+  }
+  ```
+
+  If the service API does not return the tags directly from reading the resource and requires a separate API call, its possible to use the `keyvaluetags` functionality like the following, e.g. with Athena Workgroups:
+
+  ```go
+  tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
+
+  if err != nil {
+    return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+  }
+
+  if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+    return fmt.Errorf("error setting tags: %s", err)
+  }
+  ```
+
+- In the resource `Update` function (this may be the first functionality requiring the creation of the `Update` function), implement the logic to handle tagging updates, e.g. with EKS Clusters:
+
+  ```go
+  if d.HasChange("tags") {
+    o, n := d.GetChange("tags")
+    if err := keyvaluetags.EksUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+      return fmt.Errorf("error updating tags: %s", err)
+    }
+  }
+  ```
+
+##### Resource Tagging Acceptance Testing Implementation
+
+- In the resource testing (e.g. `aws/resource_aws_eks_cluster_test.go`), verify that existing resources without tagging are unaffected and do not have tags saved into their Terraform state. This should be done in the `_basic` acceptance test by adding a line similar to `resource.TestCheckResourceAttr(resourceName, "tags.%s", "0"),`
+- In the resource testing, implement a new test named `_Tags` with associated configurations, that verifies creating the resource with tags and updating tags. e.g. EKS Clusters:
+
+  ```go
+  func TestAccAWSEksCluster_Tags(t *testing.T) {
+    var cluster1, cluster2, cluster3 eks.Cluster
+    rName := acctest.RandomWithPrefix("tf-acc-test")
+    resourceName := "aws_eks_cluster.test"
+
+    resource.ParallelTest(t, resource.TestCase{
+      PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+      Providers:    testAccProviders,
+      CheckDestroy: testAccCheckAWSEksClusterDestroy,
+      Steps: []resource.TestStep{
+        {
+          Config: testAccAWSEksClusterConfigTags1(rName, "key1", "value1"),
+          Check: resource.ComposeTestCheckFunc(
+            testAccCheckAWSEksClusterExists(resourceName, &cluster1),
+            resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+            resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+          ),
+        },
+        {
+          ResourceName:      resourceName,
+          ImportState:       true,
+          ImportStateVerify: true,
+        },
+        {
+          Config: testAccAWSEksClusterConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+          Check: resource.ComposeTestCheckFunc(
+            testAccCheckAWSEksClusterExists(resourceName, &cluster2),
+            resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+            resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+            resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+          ),
+        },
+        {
+          Config: testAccAWSEksClusterConfigTags1(rName, "key2", "value2"),
+          Check: resource.ComposeTestCheckFunc(
+            testAccCheckAWSEksClusterExists(resourceName, &cluster3),
+            resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+            resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+          ),
+        },
+      },
+    })
+  }
+
+  func testAccAWSEksClusterConfigTags1(rName, tagKey1, tagValue1 string) string {
+    return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
+  resource "aws_eks_cluster" "test" {
+    name     = %[1]q
+    role_arn = "${aws_iam_role.test.arn}"
+
+    tags = {
+      %[2]q = %[3]q
+    }
+
+    vpc_config {
+      subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    }
+
+    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  }
+  `, rName, tagKey1, tagValue1)
+  }
+
+  func testAccAWSEksClusterConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+    return testAccAWSEksClusterConfig_Base(rName) + fmt.Sprintf(`
+  resource "aws_eks_cluster" "test" {
+    name     = %[1]q
+    role_arn = "${aws_iam_role.test.arn}"
+
+    tags = {
+      %[2]q = %[3]q
+      %[4]q = %[5]q
+    }
+
+    vpc_config {
+      subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
+    }
+
+    depends_on = ["aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy", "aws_iam_role_policy_attachment.test-AmazonEKSServicePolicy"]
+  }
+  `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+  }
+  ```
+
+- Verify all acceptance testing passes for the resource (e.g. `make testacc TESTARGS='-run=TestAccAWSEksCluster_'`)
+
+#### Resource Tagging Documentation Implementation
+
+- In the resource documentation (e.g. `website/docs/r/eks_cluster.html.markdown`), add the following to the arguments reference:
+
+  ```markdown
+  * `tags` - (Optional) Key-value mapping of resource tags
+  ```
+
 #### New Resource
 
 Implementing a new resource is a good way to learn more about how Terraform
@@ -290,6 +506,35 @@ into Terraform.
     `quicksightconn: quicksight.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["quicksight"])})),`
   - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
+  - In `.hashibot.hcl`: Add the new service to automated issue and pull request labeling. e.g. with the `quicksight` service
+
+  ```hcl
+  behavior "regexp_issue_labeler_v2" "service_labels" {
+    # ... other configuration ...
+
+    label_map = {
+      # ... other services ...
+      "service/quicksight" = [
+        "aws_quicksight_",
+      ],
+      # ... other services ...
+    }
+  }
+
+  behavior "pull_request_path_labeler" "service_labels"
+    # ... other configuration ...
+
+    label_map = {
+      # ... other services ...
+      "service/quicksight" = [
+        "**/*_quicksight_*",
+        "**/quicksight_*",
+      ],
+      # ... other services ...
+    }
+  }
+  ```
+
   - Run the following then submit the pull request:
 
   ```sh
@@ -316,9 +561,9 @@ manually sourced values from documentation.
 
  - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
  - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
- - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
+ - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
- - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
+ - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
  - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
 
 ### Common Review Items
@@ -340,7 +585,7 @@ The following Go language resources provide common coding preferences that may b
 
 #### Resource Contribution Guidelines
 
-The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge. 
+The following resource checks need to be addressed before your contribution can be merged. The exclusion of any applicable check may result in a delayed time to merge.
 
 - [ ] __Passes Testing__: All code and documentation changes must pass unit testing, code linting, and website link testing. Resource code changes must pass all acceptance testing for the resource.
 - [ ] __Avoids API Calls Across Account, Region, and Service Boundaries__: Resources should not implement cross-account, cross-region, or cross-service API calls.
@@ -448,7 +693,7 @@ The below are location-based items that _may_ be noted during review and are rec
   ```
 
 - [ ] __Uses aws_availability_zones Data Source__: Any hardcoded AWS Availability Zone configuration, e.g. `us-west-2a`, should be replaced with the [`aws_availability_zones` data source](https://www.terraform.io/docs/providers/aws/d/availability_zones.html). A common pattern is declaring `data "aws_availability_zones" "current" {}` and referencing it via `data.aws_availability_zones.current.names[0]` or `data.aws_availability_zones.current.names[count.index]` in resources utilizing `count`.
-- [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g. `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "cname}` and referencing it via `data.aws_region.current.name`
+- [ ] __Uses aws_region Data Source__: Any hardcoded AWS Region configuration, e.g. `us-west-2`, should be replaced with the [`aws_region` data source](https://www.terraform.io/docs/providers/aws/d/region.html). A common pattern is declaring `data "aws_region" "current" {}` and referencing it via `data.aws_region.current.name`
 - [ ] __Uses aws_partition Data Source__: Any hardcoded AWS Partition configuration, e.g. the `aws` in a `arn:aws:SERVICE:REGION:ACCOUNT:RESOURCE` ARN, should be replaced with the [`aws_partition` data source](https://www.terraform.io/docs/providers/aws/d/partition.html). A common pattern is declaring `data "aws_partition" "current" {}` and referencing it via `data.aws_partition.current.partition`
 - [ ] __Uses Builtin ARN Check Functions__: Tests should utilize available ARN check functions, e.g. `testAccMatchResourceAttrRegionalARN()`, to validate ARN attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
 - [ ] __Uses testAccCheckResourceAttrAccountID()__: Tests should utilize the available AWS Account ID check function, `testAccCheckResourceAttrAccountID()` to validate account ID attribute values in the Terraform state over `resource.TestCheckResourceAttrSet()` and `resource.TestMatchResourceAttr()`
@@ -746,6 +991,77 @@ export AWS_ALTERNATE_PROFILE=...
 # Otherwise
 export AWS_ALTERNATE_ACCESS_KEY_ID=...
 export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
+```
+
+#### Writing and running Cross-Region Acceptance Tests
+
+When testing requires AWS infrastructure in a second AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
+
+- In the `PreCheck` function, include `testAccMultipleRegionsPreCheck(t)` and `testAccAlternateRegionPreCheck(t)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
+- Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
+- Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
+- Add `testAccAlternateRegionProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
+
+An example acceptance test implementation can be seen below:
+
+```go
+func TestAccAwsExample_basic(t *testing.T) {
+  var providers []*schema.Provider
+  resourceName := "aws_example.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck: func() {
+      testAccPreCheck(t)
+      testAccMultipleRegionsPreCheck(t)
+      testAccAlternateRegionPreCheck(t)
+    },
+    ProviderFactories: testAccProviderFactories(&providers),
+    CheckDestroy:      testAccCheckAwsExampleDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleConfig(),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleExists(resourceName),
+          // ... additional checks ...
+        ),
+      },
+      {
+        Config:            testAccAwsExampleConfig(),
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+func testAccAwsExampleConfig() string {
+  return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+# Cross region resources should be handled by the cross region provider.
+# The standardized provider alias is aws.alternate as seen below.
+resource "aws_cross_region_example" "test" {
+  provider = "aws.alternate"
+
+  # ... configuration ...
+}
+
+# The resource that is the focus of the testing should be handled by the default provider,
+# which is automatically done by not specifying the provider configuration in the resource.
+resource "aws_example" "test" {
+  # ... configuration ...
+}
+`)
+}
+```
+
+Searching for usage of `testAccAlternateRegionPreCheck` in the codebase will yield real world examples of this setup in action.
+
+Running these acceptance tests is the same as before, except if an AWS region other than the default alternate region - `us-east-1` - is required,
+in which case the following additional configuration information is required:
+
+```sh
+export AWS_ALTERNATE_REGION=...
 ```
 
 [website]: https://github.com/terraform-providers/terraform-provider-aws/tree/master/website

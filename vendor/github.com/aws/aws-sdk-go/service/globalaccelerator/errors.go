@@ -16,6 +16,12 @@ const (
 	// The accelerator that you specified doesn't exist.
 	ErrCodeAcceleratorNotFoundException = "AcceleratorNotFoundException"
 
+	// ErrCodeAccessDeniedException for service response error code
+	// "AccessDeniedException".
+	//
+	// You don't have access permission.
+	ErrCodeAccessDeniedException = "AccessDeniedException"
+
 	// ErrCodeAssociatedEndpointGroupFoundException for service response error code
 	// "AssociatedEndpointGroupFoundException".
 	//

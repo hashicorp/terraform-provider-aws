@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_cluster"
-sidebar_current: "docs-aws-datasource-redshift-cluster"
 description: |-
     Provides details about a specific redshift cluster
 ---

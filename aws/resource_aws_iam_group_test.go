@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestValidateIamGroupName(t *testing.T) {
@@ -50,33 +50,10 @@ func TestValidateIamGroupName(t *testing.T) {
 	}
 }
 
-func TestAccAWSIAMGroup_importBasic(t *testing.T) {
-	resourceName := "aws_iam_group.group"
-
-	rString := acctest.RandString(8)
-	groupName := fmt.Sprintf("tf-acc-group-import-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSGroupConfig(groupName),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSIAMGroup_basic(t *testing.T) {
 	var conf iam.GetGroupOutput
-
+	resourceName := "aws_iam_group.test"
+	resourceName2 := "aws_iam_group.test2"
 	rString := acctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
@@ -89,14 +66,19 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 			{
 				Config: testAccAWSGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupExists(resourceName, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSGroupConfig2(groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group2", &conf),
+					testAccCheckAWSGroupExists(resourceName2, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName2, "/funnypath/"),
 				),
 			},
@@ -106,7 +88,7 @@ func TestAccAWSIAMGroup_basic(t *testing.T) {
 
 func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 	var conf iam.GetGroupOutput
-
+	resourceName := "aws_iam_group.test"
 	rString := acctest.RandString(8)
 	groupName := fmt.Sprintf("tf-acc-group-basic-%s", rString)
 	groupName2 := fmt.Sprintf("tf-acc-group-basic-2-%s", rString)
@@ -119,14 +101,14 @@ func TestAccAWSIAMGroup_nameChange(t *testing.T) {
 			{
 				Config: testAccAWSGroupConfig(groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupExists(resourceName, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
 				Config: testAccAWSGroupConfig(groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGroupExists("aws_iam_group.group", &conf),
+					testAccCheckAWSGroupExists(resourceName, &conf),
 					testAccCheckAWSGroupAttributes(&conf, groupName2, "/"),
 				),
 			},
@@ -205,7 +187,7 @@ func testAccCheckAWSGroupAttributes(group *iam.GetGroupOutput, name string, path
 
 func testAccAWSGroupConfig(groupName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_group" "group" {
+resource "aws_iam_group" "test" {
   name = "%s"
   path = "/"
 }
@@ -214,7 +196,7 @@ resource "aws_iam_group" "group" {
 
 func testAccAWSGroupConfig2(groupName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_group" "group2" {
+resource "aws_iam_group" "test2" {
   name = "%s"
   path = "/funnypath/"
 }

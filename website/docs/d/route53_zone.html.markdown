@@ -1,7 +1,7 @@
 ---
+subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_zone"
-sidebar_current: "docs-aws-datasource-route53-zone"
 description: |-
     Provides details about a specific Route 53 Hosted Zone
 ---

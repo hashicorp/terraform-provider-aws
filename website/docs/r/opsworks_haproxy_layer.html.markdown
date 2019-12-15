@@ -1,7 +1,7 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_haproxy_layer"
-sidebar_current: "docs-aws-resource-opsworks-haproxy-layer"
 description: |-
   Provides an OpsWorks HAProxy layer resource.
 ---

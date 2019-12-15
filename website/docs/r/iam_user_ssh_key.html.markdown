@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_user_ssh_key"
-sidebar_current: "docs-aws-resource-iam-user-ssh-key"
 description: |-
   Uploads an SSH public key and associates it with the specified IAM user.
 ---

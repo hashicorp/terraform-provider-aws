@@ -1,7 +1,7 @@
 ---
+subcategory: "Batch"
 layout: "aws"
 page_title: "AWS: aws_batch_compute_environment"
-sidebar_current: "docs-aws-resource-batch-compute-environment"
 description: |-
   Creates a AWS Batch compute environment.
 ---
@@ -74,6 +74,13 @@ resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
 
 resource "aws_security_group" "sample" {
   name = "aws_batch_compute_environment_security_group"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_vpc" "sample" {

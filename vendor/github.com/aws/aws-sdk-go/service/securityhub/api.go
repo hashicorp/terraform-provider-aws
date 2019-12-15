@@ -1282,10 +1282,12 @@ func (c *SecurityHub) DescribeActionTargetsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeActionTargetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeActionTargetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1523,10 +1525,12 @@ func (c *SecurityHub) DescribeProductsPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeProductsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeProductsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2336,10 +2340,12 @@ func (c *SecurityHub) GetFindingsPagesWithContext(ctx aws.Context, input *GetFin
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetFindingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetFindingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2578,10 +2584,12 @@ func (c *SecurityHub) GetInsightsPagesWithContext(ctx aws.Context, input *GetIns
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetInsightsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetInsightsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3098,10 +3106,12 @@ func (c *SecurityHub) ListEnabledProductsForImportPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEnabledProductsForImportOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEnabledProductsForImportOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3834,10 +3844,14 @@ type AcceptInvitationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the invitation sent from the Security Hub master account.
-	InvitationId *string `type:"string"`
+	//
+	// InvitationId is a required field
+	InvitationId *string `type:"string" required:"true"`
 
 	// The account ID of the Security Hub master account that sent the invitation.
-	MasterId *string `type:"string"`
+	//
+	// MasterId is a required field
+	MasterId *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -3848,6 +3862,22 @@ func (s AcceptInvitationInput) String() string {
 // GoString returns the string representation
 func (s AcceptInvitationInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AcceptInvitationInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AcceptInvitationInput"}
+	if s.InvitationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("InvitationId"))
+	}
+	if s.MasterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("MasterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetInvitationId sets the InvitationId field's value.
@@ -5971,7 +6001,9 @@ type DeclineInvitationsInput struct {
 
 	// A list of account IDs that specify the accounts that invitations to Security
 	// Hub are declined from.
-	AccountIds []*string `type:"list"`
+	//
+	// AccountIds is a required field
+	AccountIds []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -5982,6 +6014,19 @@ func (s DeclineInvitationsInput) String() string {
 // GoString returns the string representation
 func (s DeclineInvitationsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeclineInvitationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeclineInvitationsInput"}
+	if s.AccountIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAccountIds sets the AccountIds field's value.
@@ -6150,7 +6195,9 @@ type DeleteInvitationsInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of the account IDs that sent the invitations to delete.
-	AccountIds []*string `type:"list"`
+	//
+	// AccountIds is a required field
+	AccountIds []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -6161,6 +6208,19 @@ func (s DeleteInvitationsInput) String() string {
 // GoString returns the string representation
 func (s DeleteInvitationsInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteInvitationsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteInvitationsInput"}
+	if s.AccountIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("AccountIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetAccountIds sets the AccountIds field's value.
@@ -6333,7 +6393,7 @@ type DescribeHubInput struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of the Hub resource to retrieve.
-	HubArn *string `type:"string"`
+	HubArn *string `location:"querystring" locationName:"HubArn" type:"string"`
 }
 
 // String returns the string representation

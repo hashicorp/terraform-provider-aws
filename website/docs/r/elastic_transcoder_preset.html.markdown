@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Transcoder"
 layout: "aws"
 page_title: "AWS: aws_elastictranscoder_preset"
-sidebar_current: "docs-aws-resource-elastic-transcoder-preset"
 description: |-
   Provides an Elastic Transcoder preset resource.
 ---

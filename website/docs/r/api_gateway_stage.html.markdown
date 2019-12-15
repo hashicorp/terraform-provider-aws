@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_stage"
-sidebar_current: "docs-aws-resource-api-gateway-stage"
 description: |-
   Provides an API Gateway Stage.
 ---
@@ -124,6 +124,7 @@ For more information on configuring the log format rules visit the AWS [document
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN)
 * `id` - The ID of the stage
 * `invoke_url` - The URL to invoke the API pointing to the stage,
   e.g. `https://z4675bid1j.execute-api.eu-west-2.amazonaws.com/prod`

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
-sidebar_current: "docs-aws-datasource-subnet-ids"
 description: |-
     Provides a list of subnet Ids for a VPC
 ---
@@ -17,16 +17,16 @@ This resource can be useful for getting back a set of subnet ids for a vpc.
 The following shows outputing all cidr blocks for every subnet id in a vpc.
 
 ```hcl
-data "aws_subnet_ids" "example" {
+data aws_subnet_ids example {
   vpc_id = var.vpc_id
 }
 
-data "aws_subnet" "example" {
+data aws_subnet example {
   count = length(data.aws_subnet_ids.example.ids)
   id    = tolist(data.aws_subnet_ids.example.ids)[count.index]
 }
 
-output "subnet_cidr_blocks" {
+output subnet_cidr_blocks {
   value = data.aws_subnet.example.*.cidr_block
 }
 ```
@@ -69,7 +69,7 @@ which take the following arguments:
   For example, if matching against tag `Name`, use:
 
 ```hcl
-data "aws_subnet_ids" "selected" {
+data aws_subnet_ids selected {
   filter {
     name   = "tag:Name"
     values = [""]       # insert values here

@@ -1,7 +1,7 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_rds_db_instance"
-sidebar_current: "docs-aws-resource-opsworks-rds-db-instance"
 description: |-
   Provides an OpsWorks RDS DB Instance resource.
 ---

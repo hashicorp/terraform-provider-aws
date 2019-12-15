@@ -5,9 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -251,9 +250,13 @@ func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v 
 		if v.Revision != nil {
 			m["revision"] = *v.Revision
 		}
-		// v.Password will, on read, contain the placeholder string
+
+		// v.Password and v.SshKey will, on read, contain the placeholder string
 		// "*****FILTERED*****", so we ignore it on read and let persist
 		// the value already in the state.
+		m["password"] = d.Get("custom_cookbooks_source.0.password").(string)
+		m["ssh_key"] = d.Get("custom_cookbooks_source.0.ssh_key").(string)
+
 		nv = append(nv, m)
 	}
 
@@ -387,7 +390,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
 
-	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", terraform.VersionString()))
+	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*AWSClient).terraformVersion))
 
 	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
 	newOpsworksconn := opsworks.New(newSession)

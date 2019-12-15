@@ -5,12 +5,13 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
@@ -203,6 +204,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -210,7 +212,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppautoscalingPolicySpotFleetRequestConfig(randPolicyName),
+				Config: testAccAWSAppautoscalingPolicySpotFleetRequestConfig(randPolicyName, validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.test", &policy),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", "name", randPolicyName),
@@ -497,9 +499,25 @@ resource "aws_appautoscaling_policy" "test" {
 `, rName)
 }
 
-func testAccAWSAppautoscalingPolicySpotFleetRequestConfig(
-	randPolicyName string) string {
+func testAccAWSAppautoscalingPolicySpotFleetRequestConfig(randPolicyName, validUntil string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "fleet_role" {
   assume_role_policy = <<EOF
 {
@@ -509,8 +527,8 @@ resource "aws_iam_role" "fleet_role" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
+          "spotfleet.${data.aws_partition.current.dns_suffix}",
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -522,19 +540,19 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
   role       = "${aws_iam_role.fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.fleet_role.arn}"
   spot_price                          = "0.005"
   target_capacity                     = 2
-  valid_until                         = "2019-11-04T20:44:20Z"
+  valid_until                         = %[2]q
   terminate_instances_with_expiration = true
 
   launch_specification {
     instance_type = "m3.medium"
-    ami           = "ami-d06a90b0"
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   }
 }
 
@@ -563,7 +581,7 @@ resource "aws_appautoscaling_policy" "test" {
     }
   }
 }
-`, randPolicyName)
+`, randPolicyName, validUntil)
 }
 
 func testAccAWSAppautoscalingPolicyDynamoDB(

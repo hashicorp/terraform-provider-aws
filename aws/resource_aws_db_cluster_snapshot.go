@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDbClusterSnapshot() *schema.Resource {
@@ -16,6 +16,7 @@ func resourceAwsDbClusterSnapshot() *schema.Resource {
 		Create: resourceAwsDbClusterSnapshotCreate,
 		Read:   resourceAwsDbClusterSnapshotRead,
 		Delete: resourceAwsDbClusterSnapshotDelete,
+		Update: resourceAwsdbClusterSnapshotUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -89,6 +90,7 @@ func resourceAwsDbClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -99,6 +101,7 @@ func resourceAwsDbClusterSnapshotCreate(d *schema.ResourceData, meta interface{}
 	params := &rds.CreateDBClusterSnapshotInput{
 		DBClusterIdentifier:         aws.String(d.Get("db_cluster_identifier").(string)),
 		DBClusterSnapshotIdentifier: aws.String(d.Get("db_cluster_snapshot_identifier").(string)),
+		Tags:                        tagsFromMapRDS(d.Get("tags").(map[string]interface{})),
 	}
 
 	_, err := conn.CreateDBClusterSnapshot(params)
@@ -166,6 +169,24 @@ func resourceAwsDbClusterSnapshotRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("status", snapshot.Status)
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
+
+	if err := saveTagsRDS(conn, d, aws.StringValue(snapshot.DBClusterSnapshotArn)); err != nil {
+		log.Printf("[WARN] Failed to save tags for RDS DB Cluster Snapshot (%s): %s", d.Id(), err)
+	}
+
+	return nil
+}
+
+func resourceAwsdbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).rdsconn
+
+	if d.HasChange("tags") {
+		if err := setTagsRDS(conn, d, d.Get("db_cluster_snapshot_arn").(string)); err != nil {
+			return err
+		} else {
+			d.SetPartial("tags")
+		}
+	}
 
 	return nil
 }

@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "kinesis"   // Name of service.
 	EndpointsID = ServiceName // ID to lookup a service endpoint with.
-	ServiceID   = "Kinesis"   // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Kinesis"   // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the Kinesis client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a Kinesis client from just a session.
 //     svc := kinesis.New(mySession)
 //
@@ -46,11 +48,11 @@ const (
 //     svc := kinesis.New(mySession, aws.NewConfig().WithRegion("us-west-2"))
 func New(p client.ConfigProvider, cfgs ...*aws.Config) *Kinesis {
 	c := p.ClientConfig(EndpointsID, cfgs...)
-	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
+	return newClient(*c.Config, c.Handlers, c.PartitionID, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
-func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *Kinesis {
+func newClient(cfg aws.Config, handlers request.Handlers, partitionID, endpoint, signingRegion, signingName string) *Kinesis {
 	svc := &Kinesis{
 		Client: client.New(
 			cfg,
@@ -59,6 +61,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
+				PartitionID:   partitionID,
 				Endpoint:      endpoint,
 				APIVersion:    "2013-12-02",
 				JSONVersion:   "1.1",

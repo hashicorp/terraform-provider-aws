@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -78,13 +78,14 @@ func testSweepKinesisFirehoseDeliveryStreams(region string) error {
 	return nil
 }
 
-func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
-	resName := "aws_kinesis_firehose_delivery_stream.test_stream"
+func TestAccAWSKinesisFirehoseDeliveryStream_basic(t *testing.T) {
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	rInt := acctest.RandInt()
 
 	funcName := fmt.Sprintf("aws_kinesis_firehose_ds_import_%d", rInt)
 	policyName := fmt.Sprintf("tf_acc_policy_%d", rInt)
 	roleName := fmt.Sprintf("tf_acc_role_%d", rInt)
+	var stream firehose.DeliveryStreamDescription
 
 	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
 		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic,
@@ -97,21 +98,25 @@ func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+				),
 			},
 			{
-				ResourceName:      resName,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			// Ensure we properly error on malformed import IDs
 			{
-				ResourceName:  resName,
+				ResourceName:  resourceName,
 				ImportState:   true,
 				ImportStateId: "just-a-name",
 				ExpectError:   regexp.MustCompile(`Expected ID in format`),
 			},
 			{
-				ResourceName:  resName,
+				ResourceName:  resourceName,
 				ImportState:   true,
 				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash",
 				ExpectError:   regexp.MustCompile(`Expected ID in format`),
@@ -123,6 +128,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_importBasic(t *testing.T) {
 func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
 		ri, ri, ri, ri)
 
@@ -134,8 +140,56 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithSSE(t *testing.T) {
+	var stream firehose.DeliveryStreamDescription
+	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
+	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
+		rInt, rInt, rInt, rInt)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+				),
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+				),
+			},
+			{
+				Config:   config,
+				PlanOnly: true,
+			},
+			{
+				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName, rInt, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
+					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 				),
 			},
 		},
@@ -148,6 +202,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 	rName := fmt.Sprintf("terraform-kinesis-firehose-basictest-%d", rInt)
 	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
 		rInt, rInt, rInt, rInt)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -157,27 +212,27 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 			{
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.Usage", "original"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
 			},
 			{
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.Usage", "changed"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
 			},
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -187,6 +242,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3basicWithTags(t *testing.T) {
 func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	config := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource,
 		ri, ri, ri, ri, ri, ri, ri)
 
@@ -198,7 +254,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
@@ -209,6 +265,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3KinesisStreamSource(t *testing.T)
 func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -218,7 +275,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.
 			{
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_s3WithCloudwatchLogging(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
@@ -228,6 +285,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3WithCloudwatchLogging(t *testing.
 
 func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	ri := acctest.RandInt()
 	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_s3basic,
@@ -250,15 +308,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_s3ConfigUpdates(t *testing.T) {
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
-
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, updatedS3DestinationConfig, nil, nil, nil, nil),
 				),
 			},
@@ -271,6 +328,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -286,14 +344,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3basic(t *testing.T) {
 			{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
-					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "extended_s3_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_kinesis_firehose_delivery_stream.test_stream", "extended_s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
 				),
 			},
 			{
-				ResourceName:      "aws_kinesis_firehose_delivery_stream.test_stream",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -369,6 +427,11 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_ExternalUpdate(t *testin
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				PreConfig: func() {
 					conn := testAccProvider.Meta().(*AWSClient).firehoseconn
 					udi := firehose.UpdateDestinationInput{
@@ -423,6 +486,11 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.0.input_format_configuration.0.deserializer.0.hive_json_ser_de.#", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_OpenXJsonSerDe_Empty(rName, rInt),
@@ -586,6 +654,11 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_DataFormatConversionConf
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_ExtendedS3_DataFormatConversionConfiguration_ParquetSerDe_Empty(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
@@ -641,7 +714,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
-	resourceName := "aws_kinesis_firehose_delivery_stream.test_stream"
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -662,53 +735,10 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3KmsKeyArn(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "extended_s3_configuration.0.kms_key_arn", regexp.MustCompile(`^arn:[^:]+:kms:[^:]+:[^:]+:key/.+$`)),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidProcessorType(t *testing.T) {
-	rString := acctest.RandString(8)
-	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
-
-	ri := acctest.RandInt()
-	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
-		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidProcessorType,
-			ri, ri, ri, ri)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
-		Steps: []resource.TestStep{
 			{
-				Config:      config,
-				ExpectError: regexp.MustCompile("(must be 'Lambda'|Member must satisfy enum value set)"),
-			},
-		},
-	})
-}
-
-func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3InvalidParameterName(t *testing.T) {
-	rString := acctest.RandString(8)
-	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
-
-	ri := acctest.RandInt()
-	config := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
-		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidParameterName,
-			ri, ri, ri, ri)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy_ExtendedS3,
-		Steps: []resource.TestStep{
-			{
-				Config:      config,
-				ExpectError: regexp.MustCompile("(must be one of 'LambdaArn', 'NumberOfRetries'|Member must satisfy enum value set)"),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -719,6 +749,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
@@ -760,14 +791,19 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, updatedExtendedS3DestinationConfig, nil, nil, nil),
 				),
 			},
@@ -778,6 +814,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3Updates(t *testing.T) {
 func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	ri := acctest.RandInt()
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
@@ -818,15 +855,20 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
-
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"redshift_configuration.0.password"},
+			},
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil, nil),
 				),
 			},
@@ -838,7 +880,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
 	ri := acctest.RandInt()
-
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
@@ -878,15 +920,19 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
-
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, updatedSplunkConfig),
 				),
 			},
@@ -897,6 +943,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_SplunkConfigUpdates(t *testing.T) {
 func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 	ri := acctest.RandInt()
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
@@ -936,14 +983,19 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 			{
 				Config: preConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream_es", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test", &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: postConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream_es", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test", &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, updatedElasticSearchConfig, nil),
 				),
 			},
@@ -955,6 +1007,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ElasticsearchConfigUpdates(t *testi
 func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
 	ri := acctest.RandInt()
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -964,9 +1017,14 @@ func TestAccAWSKinesisFirehoseDeliveryStream_missingProcessingConfiguration(t *t
 			{
 				Config: testAccKinesisFirehoseDeliveryStreamConfig_missingProcessingConfiguration(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKinesisFirehoseDeliveryStreamExists("aws_kinesis_firehose_delivery_stream.test_stream", &stream),
+					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1474,7 +1532,7 @@ resource "aws_cloudwatch_log_stream" "test" {
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = ["aws_iam_role_policy.firehose"]
   name        = "terraform-kinesis-firehose-cloudwatch-%d"
   destination = "s3"
@@ -1494,7 +1552,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3basic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-basictest-%d"
   destination = "s3"
@@ -1504,10 +1562,29 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   }
 }`
 
+func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithSSE(rName string, rInt int, sseEnabled bool) string {
+	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = ["aws_iam_role_policy.firehose"]
+  name = "%s"
+  destination = "s3"
+  s3_configuration {
+    role_arn = "${aws_iam_role.firehose.arn}"
+    bucket_arn = "${aws_s3_bucket.bucket.arn}"
+  }
+
+  server_side_encryption {
+    enabled = %t
+  }
+}
+`, rName, sseEnabled)
+}
+
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rInt int) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
-	resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+	resource "aws_kinesis_firehose_delivery_stream" "test" {
 		depends_on = ["aws_iam_role_policy.firehose"]
 		name = "%s"
 		destination = "s3"
@@ -1526,7 +1603,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTags(rName string, rI
 func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName string, rInt int) string {
 	return fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt) +
 		fmt.Sprintf(`
-	resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+	resource "aws_kinesis_firehose_delivery_stream" "test" {
 		depends_on = ["aws_iam_role_policy.firehose"]
 		name = "%s"
 		destination = "s3"
@@ -1542,7 +1619,7 @@ func testAccKinesisFirehoseDeliveryStreamConfig_s3basicWithTagsChanged(rName str
 }
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3KinesisStreamSource = testAccKinesisFirehoseDeliveryStreamBaseConfig + testAccFirehoseKinesisStreamSource + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose", "aws_iam_role_policy.kinesis_source"]
   name = "terraform-kinesis-firehose-basictest-%d"
   kinesis_source_configuration {
@@ -1557,7 +1634,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_s3Updates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-s3test-%d"
   destination = "s3"
@@ -1571,7 +1648,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3basic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
@@ -1901,7 +1978,7 @@ resource "aws_kms_key" "test" {
   description = "Terraform acc test %s"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
@@ -1923,52 +2000,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 `
 
-var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidProcessorType = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basictest-%d"
-  destination = "extended_s3"
-  extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration {
-      enabled = false
-      processors {
-        type = "NotLambda"
-        parameters {
-          parameter_name = "LambdaArn"
-          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }
-      }
-    }
-  }
-}
-`
-
-var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3InvalidParameterName = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
-  depends_on = ["aws_iam_role_policy.firehose"]
-  name = "terraform-kinesis-firehose-basictest-%d"
-  destination = "extended_s3"
-  extended_s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration {
-      enabled = false
-      processors {
-        type = "Lambda"
-        parameters {
-          parameter_name = "NotLambdaArn"
-          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
-        }
-      }
-    }
-  }
-}
-`
-
 var testAccKinesisFirehoseDeliveryStreamConfig_extendedS3Updates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-basictest-%d"
   destination = "extended_s3"
@@ -2009,7 +2042,7 @@ resource "aws_redshift_cluster" "test_cluster" {
 }`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_RedshiftBasic = testAccKinesisFirehoseDeliveryStreamBaseRedshiftConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose", "aws_redshift_cluster.test_cluster"]
   name = "terraform-kinesis-firehose-basicredshifttest-%d"
   destination = "redshift"
@@ -2027,7 +2060,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_RedshiftUpdates = testAccKinesisFirehoseDeliveryStreamBaseRedshiftConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose", "aws_redshift_cluster.test_cluster"]
   name = "terraform-kinesis-firehose-basicredshifttest-%d"
   destination = "redshift"
@@ -2065,7 +2098,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-basicsplunktest-%d"
   destination = "splunk"
@@ -2080,7 +2113,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkUpdates = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose"]
   name = "terraform-kinesis-firehose-basicsplunktest-%d"
   destination = "splunk"
@@ -2161,7 +2194,7 @@ EOF
 `
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchBasic = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
 
   name = "terraform-kinesis-firehose-es-%d"
@@ -2179,7 +2212,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
 }`
 
 var testAccKinesisFirehoseDeliveryStreamConfig_ElasticsearchUpdate = testAccKinesisFirehoseDeliveryStreamBaseElasticsearchConfig + `
-resource "aws_kinesis_firehose_delivery_stream" "test_stream_es" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on = ["aws_iam_role_policy.firehose-elasticsearch"]
 
   name = "terraform-kinesis-firehose-es-%d"
@@ -2274,7 +2307,7 @@ resource "aws_s3_bucket" "bucket" {
   acl    = "private"
 }
 
-resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
+resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "terraform-kinesis-firehose-mpc-%d"
   destination = "extended_s3"
 

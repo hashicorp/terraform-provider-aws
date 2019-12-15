@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_ipset"
-sidebar_current: "docs-aws-datasource-wafregional-ipset"
 description: |-
   Retrieves an AWS WAF Regional IP set id.
 ---

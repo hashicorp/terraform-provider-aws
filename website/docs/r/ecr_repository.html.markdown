@@ -1,7 +1,7 @@
 ---
+subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository"
-sidebar_current: "docs-aws-resource-ecr-repository"
 description: |-
   Provides an Elastic Container Registry Repository.
 ---
@@ -14,7 +14,12 @@ Provides an Elastic Container Registry Repository.
 
 ```hcl
 resource "aws_ecr_repository" "foo" {
-  name = "bar"
+  name                 = "bar"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 }
 ```
 
@@ -24,6 +29,8 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the repository.
 * `image_tag_mutability` - (Optional) The tag mutability setting for the repository. Must be one of: `MUTABLE` or `IMMUTABLE`. Defaults to `MUTABLE`.
+* `image_scanning_configuration` - (Optional) Configuration block that defines image scanning configuration for the repository. By default, image scanning must be manually triggered. See the [ECR User Guide](https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html) for more information about image scanning.
+  * `scan_on_push` - (Required) Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false).
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 ## Attributes Reference

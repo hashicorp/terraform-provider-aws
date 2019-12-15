@@ -1,7 +1,7 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_ganglia_layer"
-sidebar_current: "docs-aws-resource-opsworks-ganglia-layer"
 description: |-
   Provides an OpsWorks Ganglia layer resource.
 ---

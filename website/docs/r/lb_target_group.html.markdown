@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb_target_group"
-sidebar_current: "docs-aws-resource-elbv2-target-group"
 description: |-
   Provides a Target Group resource for use with Load Balancers.
 ---

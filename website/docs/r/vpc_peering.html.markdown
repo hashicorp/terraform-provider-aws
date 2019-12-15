@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection"
-sidebar_current: "docs-aws-resource-vpc-peering"
 description: |-
   Provides a resource to manage a VPC peering connection.
 ---

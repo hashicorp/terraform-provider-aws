@@ -463,10 +463,12 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalableTargetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalableTargetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -617,10 +619,12 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -777,10 +781,12 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalingPoliciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalingPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -815,6 +821,12 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsRequest(input *Describe
 		Name:       opDescribeScheduledActions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -881,6 +893,58 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
+// DescribeScheduledActionsPages iterates over the pages of a DescribeScheduledActions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeScheduledActions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeScheduledActions operation.
+//    pageNum := 0
+//    err := client.DescribeScheduledActionsPages(params,
+//        func(page *applicationautoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ApplicationAutoScaling) DescribeScheduledActionsPages(input *DescribeScheduledActionsInput, fn func(*DescribeScheduledActionsOutput, bool) bool) error {
+	return c.DescribeScheduledActionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeScheduledActionsPagesWithContext same as DescribeScheduledActionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApplicationAutoScaling) DescribeScheduledActionsPagesWithContext(ctx aws.Context, input *DescribeScheduledActionsInput, fn func(*DescribeScheduledActionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeScheduledActionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeScheduledActionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScheduledActionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opPutScalingPolicy = "PutScalingPolicy"
 
 // PutScalingPolicyRequest generates a "aws/request.Request" representing the
@@ -944,7 +1008,7 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 // more step scaling policies, or both. However, there is a chance that multiple
 // policies could conflict, instructing the scalable target to scale out or
 // in at the same time. Application Auto Scaling gives precedence to the policy
-// that provides the largest capacity for both scale in and scale out. For example,
+// that provides the largest capacity for both scale out and scale in. For example,
 // if one policy increases capacity by 3, another policy increases capacity
 // by 200 percent, and the current capacity is 10, Application Auto Scaling
 // uses the policy with the highest calculated capacity (200% of 10 = 20) and
@@ -1415,21 +1479,29 @@ type DeleteScalingPolicyInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1469,6 +1541,13 @@ type DeleteScalingPolicyInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1577,21 +1656,29 @@ type DeleteScheduledActionInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1631,6 +1718,13 @@ type DeleteScheduledActionInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1744,21 +1838,29 @@ type DeregisterScalableTargetInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1798,6 +1900,13 @@ type DeregisterScalableTargetInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -1907,21 +2016,29 @@ type DescribeScalableTargetsInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceIds []*string `type:"list"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -1960,6 +2077,13 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service that provides the resource or custom-resource
@@ -2089,21 +2213,29 @@ type DescribeScalingActivitiesInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2142,6 +2274,13 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service that provides the resource or custom-resource
@@ -2277,21 +2416,29 @@ type DescribeScalingPoliciesInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2330,6 +2477,13 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The namespace of the AWS service that provides the resource or custom-resource
@@ -2468,21 +2622,29 @@ type DescribeScheduledActionsInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2521,6 +2683,13 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The names of the scheduled actions to describe.
@@ -2760,13 +2929,12 @@ type PutScalingPolicyInput struct {
 	//
 	// The following policy types are supported:
 	//
-	// TargetTrackingScaling—Not supported for Amazon EMR or AppStream
+	// TargetTrackingScaling—Not supported for Amazon EMR
 	//
-	// StepScaling—Not supported for Amazon DynamoDB
+	// StepScaling—Not supported for DynamoDB, Amazon Comprehend, or AWS Lambda
 	//
-	// For more information, see Step Scaling Policies for Application Auto Scaling
-	// (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
-	// and Target Tracking Scaling Policies for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+	// For more information, see Target Tracking Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+	// and Step Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
 	// in the Application Auto Scaling User Guide.
 	PolicyType *string `type:"string" enum:"PolicyType"`
 
@@ -2786,21 +2954,29 @@ type PutScalingPolicyInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -2840,6 +3016,13 @@ type PutScalingPolicyInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3012,21 +3195,29 @@ type PutScheduledActionInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3066,6 +3257,13 @@ type PutScheduledActionInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3241,21 +3439,29 @@ type RegisterScalableTargetInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3264,9 +3470,9 @@ type RegisterScalableTargetInput struct {
 	// to modify the scalable target on your behalf. For more information, see Service-Linked
 	// Roles for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-service-linked-roles.html).
 	//
-	// For resources that are not supported using a service-linked role, this parameter
-	// is required, and it must specify the ARN of an IAM role that allows Application
-	// Auto Scaling to modify the scalable target on your behalf.
+	// For Amazon EMR, this parameter is required, and it must specify the ARN of
+	// an IAM role that allows Application Auto Scaling to modify the scalable target
+	// on your behalf.
 	RoleARN *string `min:"1" type:"string"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -3305,6 +3511,13 @@ type RegisterScalableTargetInput struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
@@ -3315,6 +3528,26 @@ type RegisterScalableTargetInput struct {
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
+
+	// An embedded object that contains attributes and attribute values that are
+	// used to suspend and resume automatic scaling. Setting the value of an attribute
+	// to true suspends the specified scaling activities. Setting it to false (default)
+	// resumes the specified scaling activities.
+	//
+	// Suspension Outcomes
+	//
+	//    * For DynamicScalingInSuspended, while a suspension is in effect, all
+	//    scale-in activities that are triggered by a scaling policy are suspended.
+	//
+	//    * For DynamicScalingOutSuspended, while a suspension is in effect, all
+	//    scale-out activities that are triggered by a scaling policy are suspended.
+	//
+	//    * For ScheduledScalingSuspended, while a suspension is in effect, all
+	//    scaling activities that involve scheduled actions are suspended.
+	//
+	// For more information, see Suspending and Resuming Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-suspend-resume-scaling.html)
+	// in the Application Auto Scaling User Guide.
+	SuspendedState *SuspendedState `type:"structure"`
 }
 
 // String returns the string representation
@@ -3388,6 +3621,12 @@ func (s *RegisterScalableTargetInput) SetServiceNamespace(v string) *RegisterSca
 	return s
 }
 
+// SetSuspendedState sets the SuspendedState field's value.
+func (s *RegisterScalableTargetInput) SetSuspendedState(v *SuspendedState) *RegisterScalableTargetInput {
+	s.SuspendedState = v
+	return s
+}
+
 type RegisterScalableTargetOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -3437,21 +3676,29 @@ type ScalableTarget struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3498,6 +3745,13 @@ type ScalableTarget struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
@@ -3508,6 +3762,10 @@ type ScalableTarget struct {
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
+
+	// Specifies whether the scaling activities for a scalable target are in a suspended
+	// state.
+	SuspendedState *SuspendedState `type:"structure"`
 }
 
 // String returns the string representation
@@ -3559,6 +3817,12 @@ func (s *ScalableTarget) SetScalableDimension(v string) *ScalableTarget {
 // SetServiceNamespace sets the ServiceNamespace field's value.
 func (s *ScalableTarget) SetServiceNamespace(v string) *ScalableTarget {
 	s.ServiceNamespace = &v
+	return s
+}
+
+// SetSuspendedState sets the SuspendedState field's value.
+func (s *ScalableTarget) SetSuspendedState(v *SuspendedState) *ScalableTarget {
+	s.SuspendedState = v
 	return s
 }
 
@@ -3636,21 +3900,29 @@ type ScalingActivity struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3690,6 +3962,13 @@ type ScalingActivity struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -3835,21 +4114,29 @@ type ScalingPolicy struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3889,6 +4176,13 @@ type ScalingPolicy struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
@@ -4006,21 +4300,29 @@ type ScheduledAction struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -4060,6 +4362,13 @@ type ScheduledAction struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
@@ -4390,6 +4699,55 @@ func (s *StepScalingPolicyConfiguration) SetStepAdjustments(v []*StepAdjustment)
 	return s
 }
 
+// Specifies whether the scaling activities for a scalable target are in a suspended
+// state.
+type SuspendedState struct {
+	_ struct{} `type:"structure"`
+
+	// Whether scale in by a target tracking scaling policy or a step scaling policy
+	// is suspended. Set the value to true if you don't want Application Auto Scaling
+	// to remove capacity when a scaling policy is triggered. The default is false.
+	DynamicScalingInSuspended *bool `type:"boolean"`
+
+	// Whether scale out by a target tracking scaling policy or a step scaling policy
+	// is suspended. Set the value to true if you don't want Application Auto Scaling
+	// to add capacity when a scaling policy is triggered. The default is false.
+	DynamicScalingOutSuspended *bool `type:"boolean"`
+
+	// Whether scheduled scaling is suspended. Set the value to true if you don't
+	// want Application Auto Scaling to add or remove capacity by initiating scheduled
+	// actions. The default is false.
+	ScheduledScalingSuspended *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s SuspendedState) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SuspendedState) GoString() string {
+	return s.String()
+}
+
+// SetDynamicScalingInSuspended sets the DynamicScalingInSuspended field's value.
+func (s *SuspendedState) SetDynamicScalingInSuspended(v bool) *SuspendedState {
+	s.DynamicScalingInSuspended = &v
+	return s
+}
+
+// SetDynamicScalingOutSuspended sets the DynamicScalingOutSuspended field's value.
+func (s *SuspendedState) SetDynamicScalingOutSuspended(v bool) *SuspendedState {
+	s.DynamicScalingOutSuspended = &v
+	return s
+}
+
+// SetScheduledScalingSuspended sets the ScheduledScalingSuspended field's value.
+func (s *SuspendedState) SetScheduledScalingSuspended(v bool) *SuspendedState {
+	s.ScheduledScalingSuspended = &v
+	return s
+}
+
 // Represents a target tracking scaling policy configuration to use with Application
 // Auto Scaling.
 type TargetTrackingScalingPolicyConfiguration struct {
@@ -4577,6 +4935,15 @@ const (
 
 	// MetricTypeEcsserviceAverageMemoryUtilization is a MetricType enum value
 	MetricTypeEcsserviceAverageMemoryUtilization = "ECSServiceAverageMemoryUtilization"
+
+	// MetricTypeAppStreamAverageCapacityUtilization is a MetricType enum value
+	MetricTypeAppStreamAverageCapacityUtilization = "AppStreamAverageCapacityUtilization"
+
+	// MetricTypeComprehendInferenceUtilization is a MetricType enum value
+	MetricTypeComprehendInferenceUtilization = "ComprehendInferenceUtilization"
+
+	// MetricTypeLambdaProvisionedConcurrencyUtilization is a MetricType enum value
+	MetricTypeLambdaProvisionedConcurrencyUtilization = "LambdaProvisionedConcurrencyUtilization"
 )
 
 const (
@@ -4620,6 +4987,12 @@ const (
 
 	// ScalableDimensionCustomResourceResourceTypeProperty is a ScalableDimension enum value
 	ScalableDimensionCustomResourceResourceTypeProperty = "custom-resource:ResourceType:Property"
+
+	// ScalableDimensionComprehendDocumentClassifierEndpointDesiredInferenceUnits is a ScalableDimension enum value
+	ScalableDimensionComprehendDocumentClassifierEndpointDesiredInferenceUnits = "comprehend:document-classifier-endpoint:DesiredInferenceUnits"
+
+	// ScalableDimensionLambdaFunctionProvisionedConcurrency is a ScalableDimension enum value
+	ScalableDimensionLambdaFunctionProvisionedConcurrency = "lambda:function:ProvisionedConcurrency"
 )
 
 const (
@@ -4666,4 +5039,10 @@ const (
 
 	// ServiceNamespaceCustomResource is a ServiceNamespace enum value
 	ServiceNamespaceCustomResource = "custom-resource"
+
+	// ServiceNamespaceComprehend is a ServiceNamespace enum value
+	ServiceNamespaceComprehend = "comprehend"
+
+	// ServiceNamespaceLambda is a ServiceNamespace enum value
+	ServiceNamespaceLambda = "lambda"
 )

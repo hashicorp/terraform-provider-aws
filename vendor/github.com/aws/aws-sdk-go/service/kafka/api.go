@@ -896,10 +896,12 @@ func (c *Kafka) ListClusterOperationsPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListClusterOperationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListClusterOperationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1040,10 +1042,12 @@ func (c *Kafka) ListClustersPagesWithContext(ctx aws.Context, input *ListCluster
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1097,7 +1101,7 @@ func (c *Kafka) ListConfigurationRevisionsRequest(input *ListConfigurationRevisi
 
 // ListConfigurationRevisions API operation for Managed Streaming for Kafka.
 //
-// Returns a list of all the MSK configurations in this Region.
+// Returns a list of all the revisions of an MSK configuration.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1190,10 +1194,12 @@ func (c *Kafka) ListConfigurationRevisionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListConfigurationRevisionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListConfigurationRevisionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1337,10 +1343,12 @@ func (c *Kafka) ListConfigurationsPagesWithContext(ctx aws.Context, input *ListC
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1481,10 +1489,12 @@ func (c *Kafka) ListNodesPagesWithContext(ctx aws.Context, input *ListNodesInput
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNodesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNodesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1745,6 +1755,99 @@ func (c *Kafka) UntagResourceWithContext(ctx aws.Context, input *UntagResourceIn
 	return out, req.Send()
 }
 
+const opUpdateBrokerCount = "UpdateBrokerCount"
+
+// UpdateBrokerCountRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateBrokerCount operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateBrokerCount for more information on using the UpdateBrokerCount
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateBrokerCountRequest method.
+//    req, resp := client.UpdateBrokerCountRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateBrokerCount
+func (c *Kafka) UpdateBrokerCountRequest(input *UpdateBrokerCountInput) (req *request.Request, output *UpdateBrokerCountOutput) {
+	op := &request.Operation{
+		Name:       opUpdateBrokerCount,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/nodes/count",
+	}
+
+	if input == nil {
+		input = &UpdateBrokerCountInput{}
+	}
+
+	output = &UpdateBrokerCountOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateBrokerCount API operation for Managed Streaming for Kafka.
+//
+// Updates the number of broker nodes in the cluster. You can use this operation
+// to increase the number of brokers in an existing cluster. You can't decrease
+// the number of brokers.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateBrokerCount for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   Returns information about an error.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Returns information about an error.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Returns information about an error.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Returns information about an error.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateBrokerCount
+func (c *Kafka) UpdateBrokerCount(input *UpdateBrokerCountInput) (*UpdateBrokerCountOutput, error) {
+	req, out := c.UpdateBrokerCountRequest(input)
+	return out, req.Send()
+}
+
+// UpdateBrokerCountWithContext is the same as UpdateBrokerCount with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateBrokerCount for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateBrokerCountWithContext(ctx aws.Context, input *UpdateBrokerCountInput, opts ...request.Option) (*UpdateBrokerCountOutput, error) {
+	req, out := c.UpdateBrokerCountRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateBrokerStorage = "UpdateBrokerStorage"
 
 // UpdateBrokerStorageRequest generates a "aws/request.Request" representing the
@@ -1931,6 +2034,99 @@ func (c *Kafka) UpdateClusterConfigurationWithContext(ctx aws.Context, input *Up
 	return out, req.Send()
 }
 
+const opUpdateMonitoring = "UpdateMonitoring"
+
+// UpdateMonitoringRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateMonitoring operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateMonitoring for more information on using the UpdateMonitoring
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateMonitoringRequest method.
+//    req, resp := client.UpdateMonitoringRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateMonitoring
+func (c *Kafka) UpdateMonitoringRequest(input *UpdateMonitoringInput) (req *request.Request, output *UpdateMonitoringOutput) {
+	op := &request.Operation{
+		Name:       opUpdateMonitoring,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/v1/clusters/{clusterArn}/monitoring",
+	}
+
+	if input == nil {
+		input = &UpdateMonitoringInput{}
+	}
+
+	output = &UpdateMonitoringOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateMonitoring API operation for Managed Streaming for Kafka.
+//
+// Updates the monitoring settings for the cluster. You can use this operation
+// to specify which Apache Kafka metrics you want Amazon MSK to send to Amazon
+// CloudWatch. You can also specify settings for open monitoring with Prometheus.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Managed Streaming for Kafka's
+// API operation UpdateMonitoring for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   Returns information about an error.
+//
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Returns information about an error.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Returns information about an error.
+//
+//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   Returns information about an error.
+//
+//   * ErrCodeForbiddenException "ForbiddenException"
+//   Returns information about an error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kafka-2018-11-14/UpdateMonitoring
+func (c *Kafka) UpdateMonitoring(input *UpdateMonitoringInput) (*UpdateMonitoringOutput, error) {
+	req, out := c.UpdateMonitoringRequest(input)
+	return out, req.Send()
+}
+
+// UpdateMonitoringWithContext is the same as UpdateMonitoring with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateMonitoring for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Kafka) UpdateMonitoringWithContext(ctx aws.Context, input *UpdateMonitoringInput, opts ...request.Option) (*UpdateMonitoringOutput, error) {
+	req, out := c.UpdateMonitoringRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Specifies the EBS volume upgrade information. The broker identifier must
 // be set to the keyword ALL. This means the changes apply to all the brokers
 // in the cluster.
@@ -2002,8 +2198,8 @@ type BrokerNodeGroupInfo struct {
 	ClientSubnets []*string `locationName:"clientSubnets" type:"list" required:"true"`
 
 	// The type of Amazon EC2 instances to use for Kafka brokers. The following
-	// instance types are allowed: kafka.m5.large, kafka.m5.xlarge, kafka.m5.2xlarge,kafka.m5.4xlarge,
-	// kafka.m5.12xlarge, and kafka.m5.24xlarge.
+	// instance types are allowed: kafka.m5.large, kafka.m5.xlarge, kafka.m5.2xlarge,
+	// kafka.m5.4xlarge, kafka.m5.12xlarge, and kafka.m5.24xlarge.
 	//
 	// InstanceType is a required field
 	InstanceType *string `locationName:"instanceType" min:"5" type:"string" required:"true"`
@@ -2011,7 +2207,9 @@ type BrokerNodeGroupInfo struct {
 	// The AWS security groups to associate with the elastic network interfaces
 	// in order to specify who can connect to and communicate with the Amazon MSK
 	// cluster. If you don't specify a security group, Amazon MSK uses the default
-	// security group associated with the VPC.
+	// security group associated with the VPC. If you specify security groups that
+	// were shared with you, you must ensure that you have permissions to them.
+	// Specifically, you need the ec2:DescribeSecurityGroups permission.
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
 	// Contains information about storage volumes attached to MSK broker nodes.
@@ -2246,7 +2444,9 @@ type ClusterInfo struct {
 	// brokers in the cluster.
 	CurrentBrokerSoftwareInfo *BrokerSoftwareInfo `locationName:"currentBrokerSoftwareInfo" type:"structure"`
 
-	// The current version of the MSK cluster.
+	// The current version of the MSK cluster. Cluster versions aren't simple integers.
+	// You can obtain the current version by describing the cluster. An example
+	// version is KTVPDKIKX0DER.
 	CurrentVersion *string `locationName:"currentVersion" type:"string"`
 
 	// Includes all encryption-related information.
@@ -2260,6 +2460,9 @@ type ClusterInfo struct {
 
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
+
+	// Settings for open monitoring using Prometheus.
+	OpenMonitoring *OpenMonitoring `locationName:"openMonitoring" type:"structure"`
 
 	// The state of the cluster. The possible states are CREATING, ACTIVE, and FAILED.
 	State *string `locationName:"state" type:"string" enum:"ClusterState"`
@@ -2344,6 +2547,12 @@ func (s *ClusterInfo) SetEnhancedMonitoring(v string) *ClusterInfo {
 // SetNumberOfBrokerNodes sets the NumberOfBrokerNodes field's value.
 func (s *ClusterInfo) SetNumberOfBrokerNodes(v int64) *ClusterInfo {
 	s.NumberOfBrokerNodes = &v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *ClusterInfo) SetOpenMonitoring(v *OpenMonitoring) *ClusterInfo {
+	s.OpenMonitoring = v
 	return s
 }
 
@@ -2499,7 +2708,8 @@ type Configuration struct {
 	// LatestRevision is a required field
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure" required:"true"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
@@ -2667,8 +2877,7 @@ type CreateClusterInput struct {
 	// ClusterName is a required field
 	ClusterName *string `locationName:"clusterName" min:"1" type:"string" required:"true"`
 
-	// Represents the configuration that you want MSK to use for the brokers in
-	// a cluster.
+	// Represents the configuration that you want MSK to use for the cluster.
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure"`
 
 	// Includes all encryption-related information.
@@ -2687,6 +2896,9 @@ type CreateClusterInput struct {
 	//
 	// NumberOfBrokerNodes is a required field
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" min:"1" type:"integer" required:"true"`
+
+	// The settings for open monitoring.
+	OpenMonitoring *OpenMonitoringInfo `locationName:"openMonitoring" type:"structure"`
 
 	// Create tags when creating the cluster.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -2741,6 +2953,11 @@ func (s *CreateClusterInput) Validate() error {
 			invalidParams.AddNested("EncryptionInfo", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.OpenMonitoring != nil {
+		if err := s.OpenMonitoring.Validate(); err != nil {
+			invalidParams.AddNested("OpenMonitoring", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2793,6 +3010,12 @@ func (s *CreateClusterInput) SetKafkaVersion(v string) *CreateClusterInput {
 // SetNumberOfBrokerNodes sets the NumberOfBrokerNodes field's value.
 func (s *CreateClusterInput) SetNumberOfBrokerNodes(v int64) *CreateClusterInput {
 	s.NumberOfBrokerNodes = &v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *CreateClusterInput) SetOpenMonitoring(v *OpenMonitoringInfo) *CreateClusterInput {
+	s.OpenMonitoring = v
 	return s
 }
 
@@ -2856,7 +3079,8 @@ type CreateConfigurationInput struct {
 	// KafkaVersions is a required field
 	KafkaVersions []*string `locationName:"kafkaVersions" type:"list" required:"true"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	//
 	// Name is a required field
 	Name *string `locationName:"name" type:"string" required:"true"`
@@ -2933,7 +3157,8 @@ type CreateConfigurationOutput struct {
 	// Latest revision of the configuration.
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
 }
 
@@ -3235,7 +3460,8 @@ type DescribeConfigurationOutput struct {
 	// Latest revision of the configuration.
 	LatestRevision *ConfigurationRevision `locationName:"latestRevision" type:"structure"`
 
-	// The name of the configuration.
+	// The name of the configuration. Configuration names are strings that match
+	// the regex "^[0-9A-Za-z-]+$".
 	Name *string `locationName:"name" type:"string"`
 }
 
@@ -3479,7 +3705,7 @@ type EncryptionInTransit struct {
 	_ struct{} `type:"structure"`
 
 	// Indicates the encryption setting for data in transit between clients and
-	// brokers. The following are the possible values.
+	// brokers. You must set it to one of the following values.
 	//
 	// TLS means that client-broker communication is enabled with TLS only.
 	//
@@ -3489,7 +3715,7 @@ type EncryptionInTransit struct {
 	// PLAINTEXT means that client-broker communication is enabled in plaintext
 	// only.
 	//
-	// The default value is TLS_PLAINTEXT.
+	// The default value is TLS.
 	ClientBroker *string `locationName:"clientBroker" type:"string" enum:"ClientBroker"`
 
 	// When set to true, it indicates that data communication among the broker nodes
@@ -3651,7 +3877,9 @@ type GetBootstrapBrokersOutput struct {
 	// A string containing one or more hostname:port pairs.
 	BootstrapBrokerString *string `locationName:"bootstrapBrokerString" type:"string"`
 
-	// A string containing one or more DNS names (or IP) and TLS port pairs.
+	// A string containing one or more DNS names (or IP) and TLS port pairs. The
+	// following is an example.
+	//  { "BootstrapBrokerStringTls": "b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094"}
 	BootstrapBrokerStringTls *string `locationName:"bootstrapBrokerStringTls" type:"string"`
 }
 
@@ -3674,6 +3902,71 @@ func (s *GetBootstrapBrokersOutput) SetBootstrapBrokerString(v string) *GetBoots
 // SetBootstrapBrokerStringTls sets the BootstrapBrokerStringTls field's value.
 func (s *GetBootstrapBrokersOutput) SetBootstrapBrokerStringTls(v string) *GetBootstrapBrokersOutput {
 	s.BootstrapBrokerStringTls = &v
+	return s
+}
+
+// Indicates whether you want to enable or disable the JMX Exporter.
+type JmxExporter struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the JMX Exporter.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s JmxExporter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JmxExporter) GoString() string {
+	return s.String()
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *JmxExporter) SetEnabledInBroker(v bool) *JmxExporter {
+	s.EnabledInBroker = &v
+	return s
+}
+
+// Indicates whether you want to enable or disable the JMX Exporter.
+type JmxExporterInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the JMX Exporter.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s JmxExporterInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JmxExporterInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *JmxExporterInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "JmxExporterInfo"}
+	if s.EnabledInBroker == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnabledInBroker"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *JmxExporterInfo) SetEnabledInBroker(v bool) *JmxExporterInfo {
+	s.EnabledInBroker = &v
 	return s
 }
 
@@ -4194,8 +4487,15 @@ type MutableClusterInfo struct {
 	// Information about the changes in the configuration of the brokers.
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure"`
 
+	// Specifies which Apache Kafka metrics Amazon MSK gathers and sends to Amazon
+	// CloudWatch for this cluster.
+	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
 	// The number of broker nodes in the cluster.
 	NumberOfBrokerNodes *int64 `locationName:"numberOfBrokerNodes" type:"integer"`
+
+	// Settings for open monitoring using Prometheus.
+	OpenMonitoring *OpenMonitoring `locationName:"openMonitoring" type:"structure"`
 }
 
 // String returns the string representation
@@ -4220,9 +4520,86 @@ func (s *MutableClusterInfo) SetConfigurationInfo(v *ConfigurationInfo) *Mutable
 	return s
 }
 
+// SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
+func (s *MutableClusterInfo) SetEnhancedMonitoring(v string) *MutableClusterInfo {
+	s.EnhancedMonitoring = &v
+	return s
+}
+
 // SetNumberOfBrokerNodes sets the NumberOfBrokerNodes field's value.
 func (s *MutableClusterInfo) SetNumberOfBrokerNodes(v int64) *MutableClusterInfo {
 	s.NumberOfBrokerNodes = &v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *MutableClusterInfo) SetOpenMonitoring(v *OpenMonitoring) *MutableClusterInfo {
+	s.OpenMonitoring = v
+	return s
+}
+
+// Indicates whether you want to enable or disable the Node Exporter.
+type NodeExporter struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the Node Exporter.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s NodeExporter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeExporter) GoString() string {
+	return s.String()
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *NodeExporter) SetEnabledInBroker(v bool) *NodeExporter {
+	s.EnabledInBroker = &v
+	return s
+}
+
+// Indicates whether you want to enable or disable the Node Exporter.
+type NodeExporterInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the Node Exporter.
+	//
+	// EnabledInBroker is a required field
+	EnabledInBroker *bool `locationName:"enabledInBroker" type:"boolean" required:"true"`
+}
+
+// String returns the string representation
+func (s NodeExporterInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NodeExporterInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NodeExporterInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NodeExporterInfo"}
+	if s.EnabledInBroker == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnabledInBroker"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabledInBroker sets the EnabledInBroker field's value.
+func (s *NodeExporterInfo) SetEnabledInBroker(v bool) *NodeExporterInfo {
+	s.EnabledInBroker = &v
 	return s
 }
 
@@ -4292,6 +4669,162 @@ func (s *NodeInfo) SetNodeType(v string) *NodeInfo {
 // SetZookeeperNodeInfo sets the ZookeeperNodeInfo field's value.
 func (s *NodeInfo) SetZookeeperNodeInfo(v *ZookeeperNodeInfo) *NodeInfo {
 	s.ZookeeperNodeInfo = v
+	return s
+}
+
+// JMX and Node monitoring for the MSK cluster.
+type OpenMonitoring struct {
+	_ struct{} `type:"structure"`
+
+	// Prometheus settings.
+	//
+	// Prometheus is a required field
+	Prometheus *Prometheus `locationName:"prometheus" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s OpenMonitoring) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpenMonitoring) GoString() string {
+	return s.String()
+}
+
+// SetPrometheus sets the Prometheus field's value.
+func (s *OpenMonitoring) SetPrometheus(v *Prometheus) *OpenMonitoring {
+	s.Prometheus = v
+	return s
+}
+
+// JMX and Node monitoring for the MSK cluster.
+type OpenMonitoringInfo struct {
+	_ struct{} `type:"structure"`
+
+	// Prometheus settings.
+	//
+	// Prometheus is a required field
+	Prometheus *PrometheusInfo `locationName:"prometheus" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s OpenMonitoringInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpenMonitoringInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpenMonitoringInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpenMonitoringInfo"}
+	if s.Prometheus == nil {
+		invalidParams.Add(request.NewErrParamRequired("Prometheus"))
+	}
+	if s.Prometheus != nil {
+		if err := s.Prometheus.Validate(); err != nil {
+			invalidParams.AddNested("Prometheus", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPrometheus sets the Prometheus field's value.
+func (s *OpenMonitoringInfo) SetPrometheus(v *PrometheusInfo) *OpenMonitoringInfo {
+	s.Prometheus = v
+	return s
+}
+
+// Prometheus settings for open monitoring.
+type Prometheus struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether you want to enable or disable the JMX Exporter.
+	JmxExporter *JmxExporter `locationName:"jmxExporter" type:"structure"`
+
+	// Indicates whether you want to enable or disable the Node Exporter.
+	NodeExporter *NodeExporter `locationName:"nodeExporter" type:"structure"`
+}
+
+// String returns the string representation
+func (s Prometheus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Prometheus) GoString() string {
+	return s.String()
+}
+
+// SetJmxExporter sets the JmxExporter field's value.
+func (s *Prometheus) SetJmxExporter(v *JmxExporter) *Prometheus {
+	s.JmxExporter = v
+	return s
+}
+
+// SetNodeExporter sets the NodeExporter field's value.
+func (s *Prometheus) SetNodeExporter(v *NodeExporter) *Prometheus {
+	s.NodeExporter = v
+	return s
+}
+
+// Prometheus settings.
+type PrometheusInfo struct {
+	_ struct{} `type:"structure"`
+
+	// JMX Exporter settings.
+	JmxExporter *JmxExporterInfo `locationName:"jmxExporter" type:"structure"`
+
+	// Node Exporter settings.
+	NodeExporter *NodeExporterInfo `locationName:"nodeExporter" type:"structure"`
+}
+
+// String returns the string representation
+func (s PrometheusInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PrometheusInfo) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PrometheusInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PrometheusInfo"}
+	if s.JmxExporter != nil {
+		if err := s.JmxExporter.Validate(); err != nil {
+			invalidParams.AddNested("JmxExporter", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NodeExporter != nil {
+		if err := s.NodeExporter.Validate(); err != nil {
+			invalidParams.AddNested("NodeExporter", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetJmxExporter sets the JmxExporter field's value.
+func (s *PrometheusInfo) SetJmxExporter(v *JmxExporterInfo) *PrometheusInfo {
+	s.JmxExporter = v
+	return s
+}
+
+// SetNodeExporter sets the NodeExporter field's value.
+func (s *PrometheusInfo) SetNodeExporter(v *NodeExporterInfo) *PrometheusInfo {
+	s.NodeExporter = v
 	return s
 }
 
@@ -4491,6 +5024,111 @@ func (s UntagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// Request body for UpdateBrokerCount.
+type UpdateBrokerCountInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// The current version of the cluster.
+	//
+	// CurrentVersion is a required field
+	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
+
+	// The number of broker nodes that you want the cluster to have after this operation
+	// completes successfully.
+	//
+	// TargetNumberOfBrokerNodes is a required field
+	TargetNumberOfBrokerNodes *int64 `locationName:"targetNumberOfBrokerNodes" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateBrokerCountInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateBrokerCountInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateBrokerCountInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateBrokerCountInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.CurrentVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.TargetNumberOfBrokerNodes == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetNumberOfBrokerNodes"))
+	}
+	if s.TargetNumberOfBrokerNodes != nil && *s.TargetNumberOfBrokerNodes < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("TargetNumberOfBrokerNodes", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateBrokerCountInput) SetClusterArn(v string) *UpdateBrokerCountInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *UpdateBrokerCountInput) SetCurrentVersion(v string) *UpdateBrokerCountInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetTargetNumberOfBrokerNodes sets the TargetNumberOfBrokerNodes field's value.
+func (s *UpdateBrokerCountInput) SetTargetNumberOfBrokerNodes(v int64) *UpdateBrokerCountInput {
+	s.TargetNumberOfBrokerNodes = &v
+	return s
+}
+
+// Response body for UpdateBrokerCount.
+type UpdateBrokerCountOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateBrokerCountOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateBrokerCountOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateBrokerCountOutput) SetClusterArn(v string) *UpdateBrokerCountOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *UpdateBrokerCountOutput) SetClusterOperationArn(v string) *UpdateBrokerCountOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
 // Request object for UpdateBrokerStorage.
 type UpdateBrokerStorageInput struct {
 	_ struct{} `type:"structure"`
@@ -4506,6 +5144,11 @@ type UpdateBrokerStorageInput struct {
 
 	// Describes the target volume size and the ID of the broker to apply the update
 	// to.
+	//
+	// The value you specify for Target-Volume-in-GiB must be a whole number that
+	// is greater than 100 GiB.
+	//
+	// The storage per broker after the update operation can't exceed 16384 GiB.
 	//
 	// TargetBrokerEBSVolumeInfo is a required field
 	TargetBrokerEBSVolumeInfo []*BrokerEBSVolumeInfo `locationName:"targetBrokerEBSVolumeInfo" type:"list" required:"true"`
@@ -4611,13 +5254,12 @@ type UpdateClusterConfigurationInput struct {
 	// ClusterArn is a required field
 	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
 
-	// Represents the configuration that you want MSK to use for the brokers in
-	// a cluster.
+	// Represents the configuration that you want MSK to use for the cluster.
 	//
 	// ConfigurationInfo is a required field
 	ConfigurationInfo *ConfigurationInfo `locationName:"configurationInfo" type:"structure" required:"true"`
 
-	// The version of the cluster that needs to be updated.
+	// The version of the cluster that you want to update.
 	//
 	// CurrentVersion is a required field
 	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
@@ -4711,6 +5353,118 @@ func (s *UpdateClusterConfigurationOutput) SetClusterOperationArn(v string) *Upd
 	return s
 }
 
+// Request body for UpdateMonitoring.
+type UpdateMonitoringInput struct {
+	_ struct{} `type:"structure"`
+
+	// ClusterArn is a required field
+	ClusterArn *string `location:"uri" locationName:"clusterArn" type:"string" required:"true"`
+
+	// The version of cluster to update from. A successful operation will then generate
+	// a new version.
+	//
+	// CurrentVersion is a required field
+	CurrentVersion *string `locationName:"currentVersion" type:"string" required:"true"`
+
+	// Specifies which Apache Kafka metrics Amazon MSK gathers and sends to Amazon
+	// CloudWatch for this cluster.
+	EnhancedMonitoring *string `locationName:"enhancedMonitoring" type:"string" enum:"EnhancedMonitoring"`
+
+	// The settings for open monitoring.
+	OpenMonitoring *OpenMonitoringInfo `locationName:"openMonitoring" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateMonitoringInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMonitoringInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateMonitoringInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateMonitoringInput"}
+	if s.ClusterArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterArn"))
+	}
+	if s.ClusterArn != nil && len(*s.ClusterArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterArn", 1))
+	}
+	if s.CurrentVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.OpenMonitoring != nil {
+		if err := s.OpenMonitoring.Validate(); err != nil {
+			invalidParams.AddNested("OpenMonitoring", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateMonitoringInput) SetClusterArn(v string) *UpdateMonitoringInput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *UpdateMonitoringInput) SetCurrentVersion(v string) *UpdateMonitoringInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetEnhancedMonitoring sets the EnhancedMonitoring field's value.
+func (s *UpdateMonitoringInput) SetEnhancedMonitoring(v string) *UpdateMonitoringInput {
+	s.EnhancedMonitoring = &v
+	return s
+}
+
+// SetOpenMonitoring sets the OpenMonitoring field's value.
+func (s *UpdateMonitoringInput) SetOpenMonitoring(v *OpenMonitoringInfo) *UpdateMonitoringInput {
+	s.OpenMonitoring = v
+	return s
+}
+
+// Response body for UpdateMonitoring.
+type UpdateMonitoringOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the cluster.
+	ClusterArn *string `locationName:"clusterArn" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the cluster operation.
+	ClusterOperationArn *string `locationName:"clusterOperationArn" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateMonitoringOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateMonitoringOutput) GoString() string {
+	return s.String()
+}
+
+// SetClusterArn sets the ClusterArn field's value.
+func (s *UpdateMonitoringOutput) SetClusterArn(v string) *UpdateMonitoringOutput {
+	s.ClusterArn = &v
+	return s
+}
+
+// SetClusterOperationArn sets the ClusterOperationArn field's value.
+func (s *UpdateMonitoringOutput) SetClusterOperationArn(v string) *UpdateMonitoringOutput {
+	s.ClusterOperationArn = &v
+	return s
+}
+
 // Zookeeper node information.
 type ZookeeperNodeInfo struct {
 	_ struct{} `type:"structure"`
@@ -4772,8 +5526,8 @@ func (s *ZookeeperNodeInfo) SetZookeeperVersion(v string) *ZookeeperNodeInfo {
 }
 
 // The distribution of broker nodes across Availability Zones. By default, broker
-// nodes are distributed among three Availability Zones. Currently, the only
-// supported value is DEFAULT. You can either specify this value explicitly
+// nodes are distributed among the Availability Zones of your Region. Currently,
+// the only supported value is DEFAULT. You can either specify this value explicitly
 // or leave it out.
 const (
 	// BrokerAZDistributionDefault is a BrokerAZDistribution enum value

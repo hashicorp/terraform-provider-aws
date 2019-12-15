@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoUserPool() *schema.Resource {
@@ -410,6 +410,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 			"sms_verification_message": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ValidateFunc:  validateCognitoUserPoolSmsVerificationMessage,
 				ConflictsWith: []string{"verification_message_template.0.sms_message"},
 			},

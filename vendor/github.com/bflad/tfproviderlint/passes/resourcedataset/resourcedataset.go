@@ -13,7 +13,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "resourcedataset",
-	Doc:  "find github.com/hashicorp/terraform/helper/schema.ResourceData.Set() calls for later passes",
+	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/helper/schema.ResourceData.Set() calls for later passes",
 	Requires: []*analysis.Analyzer{
 		inspect.Analyzer,
 	},
@@ -105,7 +105,7 @@ func isSchemaResourceData(t *types.Named) bool {
 	}
 
 	// HasSuffix here due to vendoring
-	if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform/helper/schema") {
+	if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform-plugin-sdk/helper/schema") {
 		return false
 	}
 

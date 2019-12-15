@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
@@ -117,13 +117,6 @@ func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{
 		name = resource.PrefixedUniqueId(v.(string))
 	} else {
 		name = resource.UniqueId()
-	}
-
-	_, hasRoles := d.GetOk("roles")
-	_, hasRole := d.GetOk("role")
-
-	if !hasRole && !hasRoles {
-		return fmt.Errorf("Either `role` or `roles` (deprecated) must be specified when creating an IAM Instance Profile")
 	}
 
 	request := &iam.CreateInstanceProfileInput{

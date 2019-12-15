@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
@@ -67,16 +67,18 @@ func TestDecodeApiGatewayBasePathMappingId(t *testing.T) {
 func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
-	// Our test cert is for a wildcard on this domain
 	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayBasePathConfig(name),
+				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, "tf-acc-test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayBasePathExists("aws_api_gateway_base_path_mapping.test", name, &conf),
 				),
@@ -94,16 +96,18 @@ func TestAccAWSAPIGatewayBasePathMapping_basic(t *testing.T) {
 func TestAccAWSAPIGatewayBasePathMapping_BasePath_Empty(t *testing.T) {
 	var conf apigateway.BasePathMapping
 
-	// Our test cert is for a wildcard on this domain
 	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAPIGatewayBasePathDestroy(name),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayEmptyBasePathConfig(name),
+				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayBasePathExists("aws_api_gateway_base_path_mapping.test", name, &conf),
 				),
@@ -184,11 +188,29 @@ func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFun
 	}
 }
 
-func testAccAWSAPIGatewayBasePathConfig(domainName string) string {
+func testAccAWSAPIGatewayBasePathConfigBase(domainName, key, certificate string) string {
 	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name              = %[1]q
+  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+}
+
 resource "aws_api_gateway_rest_api" "test" {
   name        = "tf-acc-apigateway-base-path-mapping"
   description = "Terraform Acceptance Tests"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 # API gateway won't let us deploy an empty API
@@ -217,70 +239,16 @@ resource "aws_api_gateway_deployment" "test" {
   stage_name  = "test"
   depends_on  = ["aws_api_gateway_integration.test"]
 }
+`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+}
 
+func testAccAWSAPIGatewayBasePathConfigBasePath(domainName, key, certificate, basePath string) string {
+	return testAccAWSAPIGatewayBasePathConfigBase(domainName, key, certificate) + fmt.Sprintf(`
 resource "aws_api_gateway_base_path_mapping" "test" {
   api_id      = "${aws_api_gateway_rest_api.test.id}"
-  base_path   = "tf-acc"
+  base_path   = %[1]q
   stage_name  = "${aws_api_gateway_deployment.test.stage_name}"
   domain_name = "${aws_api_gateway_domain_name.test.domain_name}"
 }
-
-resource "aws_api_gateway_domain_name" "test" {
-  domain_name             = "%s"
-  certificate_name        = "tf-apigateway-base-path-mapping-test"
-  certificate_body        = "${tls_locally_signed_cert.leaf.cert_pem}"
-  certificate_chain       = "${tls_self_signed_cert.ca.cert_pem}"
-  certificate_private_key = "${tls_private_key.test.private_key_pem}"
-}
-
-%s
-
-`, domainName, testAccAWSAPIGatewayCerts(domainName))
-}
-
-func testAccAWSAPIGatewayEmptyBasePathConfig(domainName string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name        = "tf-acc-apigateway-base-path-mapping"
-  description = "Terraform Acceptance Tests"
-}
-
-resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method   = "GET"
-  authorization = "NONE"
-}
-
-resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  type        = "MOCK"
-}
-
-resource "aws_api_gateway_deployment" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  stage_name  = "test"
-  depends_on  = ["aws_api_gateway_integration.test"]
-}
-
-resource "aws_api_gateway_base_path_mapping" "test" {
-  api_id      = "${aws_api_gateway_rest_api.test.id}"
-  base_path   = ""
-  stage_name  = "${aws_api_gateway_deployment.test.stage_name}"
-  domain_name = "${aws_api_gateway_domain_name.test.domain_name}"
-}
-
-resource "aws_api_gateway_domain_name" "test" {
-  domain_name             = "%s"
-  certificate_name        = "tf-apigateway-base-path-mapping-test"
-  certificate_body        = "${tls_locally_signed_cert.leaf.cert_pem}"
-  certificate_chain       = "${tls_self_signed_cert.ca.cert_pem}"
-  certificate_private_key = "${tls_private_key.test.private_key_pem}"
-}
-
-%s
-
-`, domainName, testAccAWSAPIGatewayCerts(domainName))
+`, basePath)
 }

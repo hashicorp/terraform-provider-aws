@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
@@ -43,8 +43,8 @@ func TestAccAWSAPIGatewayAuthorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "type", "TOKEN"),
 					testAccCheckAWSAPIGatewayAuthorizerAuthorizerCredentials(&conf, expectedCreds),
 					resource.TestMatchResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_credentials", expectedCreds),
-					testAccCheckAWSAPIGatewayAuthorizerAuthorizerResultTtlInSeconds(&conf, nil),
-					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_result_ttl_in_seconds", "0"),
+					testAccCheckAWSAPIGatewayAuthorizerAuthorizerResultTtlInSeconds(&conf, aws.Int64(defaultAuthorizerTTL)),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_result_ttl_in_seconds", "300"),
 					testAccCheckAWSAPIGatewayAuthorizerIdentityValidationExpression(&conf, nil),
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "identity_validation_expression", ""),
 				),
@@ -142,6 +142,54 @@ func TestAccAWSAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "type", "TOKEN"),
 					resource.TestMatchResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_uri", expectedAuthUri),
 					resource.TestMatchResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_credentials", expectedCreds),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayAuthorizer_switchAuthorizerTTL(t *testing.T) {
+	var conf apigateway.Authorizer
+	rString := acctest.RandString(7)
+	apiGatewayName := "tf-acctest-apigw-" + rString
+	authorizerName := "tf-acctest-igw-authorizer-" + rString
+	lambdaName := "tf-acctest-igw-auth-lambda-" + rString
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
+					testAccCheckAWSAPIGatewayAuthorizerAuthorizerResultTtlInSeconds(&conf, aws.Int64(defaultAuthorizerTTL)),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_result_ttl_in_seconds", "300"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaUpdate(apiGatewayName, authorizerName, lambdaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
+					testAccCheckAWSAPIGatewayAuthorizerAuthorizerResultTtlInSeconds(&conf, aws.Int64(360)),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_result_ttl_in_seconds", "360"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayAuthorizerConfig_lambdaNoCache(apiGatewayName, authorizerName, lambdaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_result_ttl_in_seconds", "0"),
+					testAccCheckAWSAPIGatewayAuthorizerAuthorizerResultTtlInSeconds(&conf, aws.Int64(0)),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayAuthorizerExists("aws_api_gateway_authorizer.acctest", &conf),
+					testAccCheckAWSAPIGatewayAuthorizerAuthorizerResultTtlInSeconds(&conf, aws.Int64(defaultAuthorizerTTL)),
+					resource.TestCheckResourceAttr("aws_api_gateway_authorizer.acctest", "authorizer_result_ttl_in_seconds", "300"),
 				),
 			},
 		},
@@ -431,6 +479,19 @@ resource "aws_api_gateway_authorizer" "acctest" {
   authorizer_uri = "${aws_lambda_function.authorizer.invoke_arn}"
   authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
   authorizer_result_ttl_in_seconds = 360
+  identity_validation_expression = ".*"
+}
+`, authorizerName)
+}
+
+func testAccAWSAPIGatewayAuthorizerConfig_lambdaNoCache(apiGatewayName, authorizerName, lambdaName string) string {
+	return testAccAWSAPIGatewayAuthorizerConfig_baseLambda(apiGatewayName, lambdaName) + fmt.Sprintf(`
+resource "aws_api_gateway_authorizer" "acctest" {
+  name = "%s_modified"
+  rest_api_id = "${aws_api_gateway_rest_api.acctest.id}"
+  authorizer_uri = "${aws_lambda_function.authorizer.invoke_arn}"
+  authorizer_credentials = "${aws_iam_role.invocation_role.arn}"
+  authorizer_result_ttl_in_seconds = 0
   identity_validation_expression = ".*"
 }
 `, authorizerName)

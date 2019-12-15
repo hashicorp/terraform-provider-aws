@@ -7,18 +7,18 @@ const (
 	// ErrCodeAuthorizationAlreadyExistsFault for service response error code
 	// "AuthorizationAlreadyExists".
 	//
-	// The specified CIDRIP or Amazon EC2 security group is already authorized for
-	// the specified DB security group.
+	// The specified CIDR IP range or Amazon EC2 security group is already authorized
+	// for the specified DB security group.
 	ErrCodeAuthorizationAlreadyExistsFault = "AuthorizationAlreadyExists"
 
 	// ErrCodeAuthorizationNotFoundFault for service response error code
 	// "AuthorizationNotFound".
 	//
-	// The specified CIDRIP or Amazon EC2 security group isn't authorized for the
-	// specified DB security group.
+	// The specified CIDR IP range or Amazon EC2 security group might not be authorized
+	// for the specified DB security group.
 	//
-	// RDS also may not be authorized by using IAM to perform necessary actions
-	// on your behalf.
+	// Or, RDS might not be authorized to perform necessary actions using IAM on
+	// your behalf.
 	ErrCodeAuthorizationNotFoundFault = "AuthorizationNotFound"
 
 	// ErrCodeAuthorizationQuotaExceededFault for service response error code
@@ -36,6 +36,26 @@ const (
 	//
 	// CertificateIdentifier doesn't refer to an existing certificate.
 	ErrCodeCertificateNotFoundFault = "CertificateNotFound"
+
+	// ErrCodeCustomAvailabilityZoneAlreadyExistsFault for service response error code
+	// "CustomAvailabilityZoneAlreadyExists".
+	//
+	// CustomAvailabilityZoneName is already used by an existing custom Availability
+	// Zone.
+	ErrCodeCustomAvailabilityZoneAlreadyExistsFault = "CustomAvailabilityZoneAlreadyExists"
+
+	// ErrCodeCustomAvailabilityZoneNotFoundFault for service response error code
+	// "CustomAvailabilityZoneNotFound".
+	//
+	// CustomAvailabilityZoneId doesn't refer to an existing custom Availability
+	// Zone identifier.
+	ErrCodeCustomAvailabilityZoneNotFoundFault = "CustomAvailabilityZoneNotFound"
+
+	// ErrCodeCustomAvailabilityZoneQuotaExceededFault for service response error code
+	// "CustomAvailabilityZoneQuotaExceeded".
+	//
+	// You have exceeded the maximum number of custom Availability Zones.
+	ErrCodeCustomAvailabilityZoneQuotaExceededFault = "CustomAvailabilityZoneQuotaExceeded"
 
 	// ErrCodeDBClusterAlreadyExistsFault for service response error code
 	// "DBClusterAlreadyExistsFault".
@@ -156,7 +176,7 @@ const (
 	// ErrCodeDBInstanceRoleNotFoundFault for service response error code
 	// "DBInstanceRoleNotFound".
 	//
-	// The specified RoleArn value doesn't match the specifed feature for the DB
+	// The specified RoleArn value doesn't match the specified feature for the DB
 	// instance.
 	ErrCodeDBInstanceRoleNotFoundFault = "DBInstanceRoleNotFound"
 
@@ -191,6 +211,48 @@ const (
 	// The request would result in the user exceeding the allowed number of DB parameter
 	// groups.
 	ErrCodeDBParameterGroupQuotaExceededFault = "DBParameterGroupQuotaExceeded"
+
+	// ErrCodeDBProxyAlreadyExistsFault for service response error code
+	// "DBProxyAlreadyExistsFault".
+	//
+	// The specified proxy name must be unique for all proxies owned by your AWS
+	// account in the specified AWS Region.
+	ErrCodeDBProxyAlreadyExistsFault = "DBProxyAlreadyExistsFault"
+
+	// ErrCodeDBProxyNotFoundFault for service response error code
+	// "DBProxyNotFoundFault".
+	//
+	// The specified proxy name doesn't correspond to a proxy owned by your AWS
+	// accoutn in the specified AWS Region.
+	ErrCodeDBProxyNotFoundFault = "DBProxyNotFoundFault"
+
+	// ErrCodeDBProxyQuotaExceededFault for service response error code
+	// "DBProxyQuotaExceededFault".
+	//
+	// Your AWS account already has the maximum number of proxies in the specified
+	// AWS Region.
+	ErrCodeDBProxyQuotaExceededFault = "DBProxyQuotaExceededFault"
+
+	// ErrCodeDBProxyTargetAlreadyRegisteredFault for service response error code
+	// "DBProxyTargetAlreadyRegisteredFault".
+	//
+	// The proxy is already associated with the specified RDS DB instance or Aurora
+	// DB cluster.
+	ErrCodeDBProxyTargetAlreadyRegisteredFault = "DBProxyTargetAlreadyRegisteredFault"
+
+	// ErrCodeDBProxyTargetGroupNotFoundFault for service response error code
+	// "DBProxyTargetGroupNotFoundFault".
+	//
+	// The specified target group isn't available for a proxy owned by your AWS
+	// account in the specified AWS Region.
+	ErrCodeDBProxyTargetGroupNotFoundFault = "DBProxyTargetGroupNotFoundFault"
+
+	// ErrCodeDBProxyTargetNotFoundFault for service response error code
+	// "DBProxyTargetNotFoundFault".
+	//
+	// The specified RDS DB instance or Aurora DB cluster isn't available for a
+	// proxy owned by your AWS account in the specified AWS Region.
+	ErrCodeDBProxyTargetNotFoundFault = "DBProxyTargetNotFoundFault"
 
 	// ErrCodeDBSecurityGroupAlreadyExistsFault for service response error code
 	// "DBSecurityGroupAlreadyExists".
@@ -300,6 +362,18 @@ const (
 	// "GlobalClusterQuotaExceededFault".
 	ErrCodeGlobalClusterQuotaExceededFault = "GlobalClusterQuotaExceededFault"
 
+	// ErrCodeInstallationMediaAlreadyExistsFault for service response error code
+	// "InstallationMediaAlreadyExists".
+	//
+	// The specified installation medium has already been imported.
+	ErrCodeInstallationMediaAlreadyExistsFault = "InstallationMediaAlreadyExists"
+
+	// ErrCodeInstallationMediaNotFoundFault for service response error code
+	// "InstallationMediaNotFound".
+	//
+	// InstallationMediaID doesn't refer to an existing installation medium.
+	ErrCodeInstallationMediaNotFoundFault = "InstallationMediaNotFound"
+
 	// ErrCodeInstanceQuotaExceededFault for service response error code
 	// "InstanceQuotaExceeded".
 	//
@@ -373,6 +447,12 @@ const (
 	// to delete the parameter group, you can't delete it when the parameter group
 	// is in this state.
 	ErrCodeInvalidDBParameterGroupStateFault = "InvalidDBParameterGroupState"
+
+	// ErrCodeInvalidDBProxyStateFault for service response error code
+	// "InvalidDBProxyStateFault".
+	//
+	// The requested operation can't be performed while the proxy is in this state.
+	ErrCodeInvalidDBProxyStateFault = "InvalidDBProxyStateFault"
 
 	// ErrCodeInvalidDBSecurityGroupStateFault for service response error code
 	// "InvalidDBSecurityGroupState".

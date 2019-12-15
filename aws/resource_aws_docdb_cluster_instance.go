@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDocDBClusterInstance() *schema.Resource {
@@ -156,6 +156,12 @@ func resourceAwsDocDBClusterInstance() *schema.Resource {
 
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+
+			"ca_cert_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 
@@ -306,6 +312,7 @@ func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
 	if err := saveTagsDocDB(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -343,6 +350,12 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 	if d.HasChange("promotion_tier") {
 		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
+		requestUpdate = true
+	}
+
+	if d.HasChange("ca_cert_identifier") {
+		d.SetPartial("ca_cert_identifier")
+		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_egress_only_internet_gateway"
-sidebar_current: "docs-aws-resource-egress-only-internet-gateway"
 description: |-
   Provides a resource to create a VPC Egress Only Internet Gateway.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_authorizer"
-sidebar_current: "docs-aws-resource-api-gateway-authorizer"
 description: |-
   Provides an API Gateway Authorizer.
 ---

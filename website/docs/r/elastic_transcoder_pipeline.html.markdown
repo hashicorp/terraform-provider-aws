@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Transcoder"
 layout: "aws"
 page_title: "AWS: aws_elastictranscoder_pipeline"
-sidebar_current: "docs-aws-resource-elastic-transcoder-pipeline"
 description: |-
   Provides an Elastic Transcoder pipeline resource.
 ---

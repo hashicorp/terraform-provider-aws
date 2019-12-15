@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_domain_mail_from"
-sidebar_current: "docs-aws-resource-ses-domain-mail-from"
 description: |-
   Provides an SES domain MAIL FROM resource
 ---

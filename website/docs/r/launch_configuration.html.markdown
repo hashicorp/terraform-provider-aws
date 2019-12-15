@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
-sidebar_current: "docs-aws-resource-launch-configuration"
 description: |-
   Provides a resource to create a new launch configuration, used for autoscaling groups.
 ---

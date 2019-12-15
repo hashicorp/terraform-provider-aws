@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_partition"
-sidebar_current: "docs-aws-datasource-partition"
 description: |-
   Get AWS partition identifier
 ---

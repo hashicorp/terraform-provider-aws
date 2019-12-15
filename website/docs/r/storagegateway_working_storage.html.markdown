@@ -1,7 +1,7 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_working_storage"
-sidebar_current: "docs-aws-resource-storagegateway-working-storage"
 description: |-
   Manages an AWS Storage Gateway working storage
 ---

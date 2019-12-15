@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_instance_role_association"
-sidebar_current: "docs-aws-resource-db-instance-role-association"
 description: |-
   Manages a RDS DB Instance association with an IAM Role.
 ---

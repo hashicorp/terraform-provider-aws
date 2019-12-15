@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection_accepter"
-sidebar_current: "docs-aws-resource-vpc-peering-accepter"
 description: |-
   Manage the accepter's side of a VPC Peering Connection.
 ---

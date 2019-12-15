@@ -4151,10 +4151,12 @@ func (c *Glue) GetClassifiersPagesWithContext(ctx aws.Context, input *GetClassif
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetClassifiersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetClassifiersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4383,10 +4385,12 @@ func (c *Glue) GetConnectionsPagesWithContext(ctx aws.Context, input *GetConnect
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetConnectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4600,10 +4604,12 @@ func (c *Glue) GetCrawlerMetricsPagesWithContext(ctx aws.Context, input *GetCraw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetCrawlerMetricsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetCrawlerMetricsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4735,10 +4741,12 @@ func (c *Glue) GetCrawlersPagesWithContext(ctx aws.Context, input *GetCrawlersIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetCrawlersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetCrawlersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5055,10 +5063,12 @@ func (c *Glue) GetDatabasesPagesWithContext(ctx aws.Context, input *GetDatabases
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDatabasesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDatabasesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5382,10 +5392,12 @@ func (c *Glue) GetDevEndpointsPagesWithContext(ctx aws.Context, input *GetDevEnd
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetDevEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetDevEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5566,151 +5578,6 @@ func (c *Glue) GetJobBookmarkWithContext(ctx aws.Context, input *GetJobBookmarkI
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
-}
-
-const opGetJobBookmarks = "GetJobBookmarks"
-
-// GetJobBookmarksRequest generates a "aws/request.Request" representing the
-// client's request for the GetJobBookmarks operation. The "output" return
-// value will be populated with the request's response once the request completes
-// successfully.
-//
-// Use "Send" method on the returned Request to send the API call to the service.
-// the "output" return value is not valid until after Send returns without error.
-//
-// See GetJobBookmarks for more information on using the GetJobBookmarks
-// API call, and error handling.
-//
-// This method is useful when you want to inject custom logic or configuration
-// into the SDK's request lifecycle. Such as custom headers, or retry logic.
-//
-//
-//    // Example sending a request using the GetJobBookmarksRequest method.
-//    req, resp := client.GetJobBookmarksRequest(params)
-//
-//    err := req.Send()
-//    if err == nil { // resp is now filled
-//        fmt.Println(resp)
-//    }
-//
-// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobBookmarks
-func (c *Glue) GetJobBookmarksRequest(input *GetJobBookmarksInput) (req *request.Request, output *GetJobBookmarksOutput) {
-	op := &request.Operation{
-		Name:       opGetJobBookmarks,
-		HTTPMethod: "POST",
-		HTTPPath:   "/",
-		Paginator: &request.Paginator{
-			InputTokens:     []string{"NextToken"},
-			OutputTokens:    []string{"NextToken"},
-			LimitToken:      "MaxResults",
-			TruncationToken: "",
-		},
-	}
-
-	if input == nil {
-		input = &GetJobBookmarksInput{}
-	}
-
-	output = &GetJobBookmarksOutput{}
-	req = c.newRequest(op, input, output)
-	return
-}
-
-// GetJobBookmarks API operation for AWS Glue.
-//
-// Returns information on the job bookmark entries. The list is ordered on decreasing
-// version numbers.
-//
-// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
-// with awserr.Error's Code and Message methods to get detailed information about
-// the error.
-//
-// See the AWS API reference guide for AWS Glue's
-// API operation GetJobBookmarks for usage and error information.
-//
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
-//   The input provided was not valid.
-//
-//   * ErrCodeEntityNotFoundException "EntityNotFoundException"
-//   A specified entity does not exist
-//
-//   * ErrCodeInternalServiceException "InternalServiceException"
-//   An internal service error occurred.
-//
-//   * ErrCodeOperationTimeoutException "OperationTimeoutException"
-//   The operation timed out.
-//
-// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetJobBookmarks
-func (c *Glue) GetJobBookmarks(input *GetJobBookmarksInput) (*GetJobBookmarksOutput, error) {
-	req, out := c.GetJobBookmarksRequest(input)
-	return out, req.Send()
-}
-
-// GetJobBookmarksWithContext is the same as GetJobBookmarks with the addition of
-// the ability to pass a context and additional request options.
-//
-// See GetJobBookmarks for details on how to use this API operation.
-//
-// The context must be non-nil and will be used for request cancellation. If
-// the context is nil a panic will occur. In the future the SDK may create
-// sub-contexts for http.Requests. See https://golang.org/pkg/context/
-// for more information on using Contexts.
-func (c *Glue) GetJobBookmarksWithContext(ctx aws.Context, input *GetJobBookmarksInput, opts ...request.Option) (*GetJobBookmarksOutput, error) {
-	req, out := c.GetJobBookmarksRequest(input)
-	req.SetContext(ctx)
-	req.ApplyOptions(opts...)
-	return out, req.Send()
-}
-
-// GetJobBookmarksPages iterates over the pages of a GetJobBookmarks operation,
-// calling the "fn" function with the response data for each page. To stop
-// iterating, return false from the fn function.
-//
-// See GetJobBookmarks method for more information on how to use this operation.
-//
-// Note: This operation can generate multiple requests to a service.
-//
-//    // Example iterating over at most 3 pages of a GetJobBookmarks operation.
-//    pageNum := 0
-//    err := client.GetJobBookmarksPages(params,
-//        func(page *glue.GetJobBookmarksOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
-func (c *Glue) GetJobBookmarksPages(input *GetJobBookmarksInput, fn func(*GetJobBookmarksOutput, bool) bool) error {
-	return c.GetJobBookmarksPagesWithContext(aws.BackgroundContext(), input, fn)
-}
-
-// GetJobBookmarksPagesWithContext same as GetJobBookmarksPages except
-// it takes a Context and allows setting request options on the pages.
-//
-// The context must be non-nil and will be used for request cancellation. If
-// the context is nil a panic will occur. In the future the SDK may create
-// sub-contexts for http.Requests. See https://golang.org/pkg/context/
-// for more information on using Contexts.
-func (c *Glue) GetJobBookmarksPagesWithContext(ctx aws.Context, input *GetJobBookmarksInput, fn func(*GetJobBookmarksOutput, bool) bool, opts ...request.Option) error {
-	p := request.Pagination{
-		NewRequest: func() (*request.Request, error) {
-			var inCpy *GetJobBookmarksInput
-			if input != nil {
-				tmp := *input
-				inCpy = &tmp
-			}
-			req, _ := c.GetJobBookmarksRequest(inCpy)
-			req.SetContext(ctx)
-			req.ApplyOptions(opts...)
-			return req, nil
-		},
-	}
-
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetJobBookmarksOutput), !p.HasNextPage())
-	}
-	return p.Err()
 }
 
 const opGetJobRun = "GetJobRun"
@@ -5938,10 +5805,12 @@ func (c *Glue) GetJobRunsPagesWithContext(ctx aws.Context, input *GetJobRunsInpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetJobRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetJobRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6082,10 +5951,12 @@ func (c *Glue) GetJobsPagesWithContext(ctx aws.Context, input *GetJobsInput, fn 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6325,10 +6196,12 @@ func (c *Glue) GetMLTaskRunsPagesWithContext(ctx aws.Context, input *GetMLTaskRu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetMLTaskRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetMLTaskRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6565,10 +6438,12 @@ func (c *Glue) GetMLTransformsPagesWithContext(ctx aws.Context, input *GetMLTran
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetMLTransformsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetMLTransformsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -6891,10 +6766,12 @@ func (c *Glue) GetPartitionsPagesWithContext(ctx aws.Context, input *GetPartitio
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetPartitionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetPartitionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7296,10 +7173,12 @@ func (c *Glue) GetSecurityConfigurationsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetSecurityConfigurationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetSecurityConfigurationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7626,10 +7505,12 @@ func (c *Glue) GetTableVersionsPagesWithContext(ctx aws.Context, input *GetTable
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTableVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTableVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -7773,10 +7654,12 @@ func (c *Glue) GetTablesPagesWithContext(ctx aws.Context, input *GetTablesInput,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8093,10 +7976,12 @@ func (c *Glue) GetTriggersPagesWithContext(ctx aws.Context, input *GetTriggersIn
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetTriggersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetTriggersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8331,10 +8216,12 @@ func (c *Glue) GetUserDefinedFunctionsPagesWithContext(ctx aws.Context, input *G
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUserDefinedFunctionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUserDefinedFunctionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8739,10 +8626,12 @@ func (c *Glue) GetWorkflowRunsPagesWithContext(ctx aws.Context, input *GetWorkfl
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetWorkflowRunsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetWorkflowRunsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -8963,10 +8852,12 @@ func (c *Glue) ListCrawlersPagesWithContext(ctx aws.Context, input *ListCrawlers
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCrawlersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCrawlersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9113,10 +9004,12 @@ func (c *Glue) ListDevEndpointsPagesWithContext(ctx aws.Context, input *ListDevE
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDevEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDevEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9263,10 +9156,12 @@ func (c *Glue) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, f
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9413,10 +9308,12 @@ func (c *Glue) ListTriggersPagesWithContext(ctx aws.Context, input *ListTriggers
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTriggersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTriggersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -9554,10 +9451,12 @@ func (c *Glue) ListWorkflowsPagesWithContext(ctx aws.Context, input *ListWorkflo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkflowsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkflowsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -10071,10 +9970,12 @@ func (c *Glue) SearchTablesPagesWithContext(ctx aws.Context, input *SearchTables
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*SearchTablesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*SearchTablesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -14723,6 +14624,25 @@ type Connection struct {
 	//    * JDBC_ENFORCE_SSL - A Boolean string (true, false) specifying whether
 	//    Secure Sockets Layer (SSL) with hostname matching is enforced for the
 	//    JDBC connection on the client. The default is false.
+	//
+	//    * CUSTOM_JDBC_CERT - An Amazon S3 location specifying the customer's root
+	//    certificate. AWS Glue uses this root certificate to validate the customer’s
+	//    certificate when connecting to the customer database. AWS Glue only handles
+	//    X.509 certificates. The certificate provided must be DER-encoded and supplied
+	//    in Base64 encoding PEM format.
+	//
+	//    * SKIP_CUSTOM_JDBC_CERT_VALIDATION - By default, this is false. AWS Glue
+	//    validates the Signature algorithm and Subject Public Key Algorithm for
+	//    the customer certificate. The only permitted algorithms for the Signature
+	//    algorithm are SHA256withRSA, SHA384withRSA or SHA512withRSA. For the Subject
+	//    Public Key Algorithm, the key length must be at least 2048. You can set
+	//    the value of this property to true to skip AWS Glue’s validation of
+	//    the customer certificate.
+	//
+	//    * CUSTOM_JDBC_CERT_STRING - A custom JDBC certificate string which is
+	//    used for domain match or distinguished name match to prevent a man-in-the-middle
+	//    attack. In Oracle database, this is used as the SSL_SERVER_CERT_DN; in
+	//    Microsoft SQL Server, this is used as the hostNameInCertificate.
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, only JDBC is supported; SFTP is not
@@ -15984,6 +15904,22 @@ type CreateDevEndpointInput struct {
 	// data analysis library, are not yet supported.
 	ExtraPythonLibsS3Path *string `type:"string"`
 
+	// Glue version determines the versions of Apache Spark and Python that AWS
+	// Glue supports. The Python version indicates the version supported for running
+	// your ETL scripts on development endpoints.
+	//
+	// For more information about the available AWS Glue versions and corresponding
+	// Spark and Python versions, see Glue version (https://docs.aws.amazon.com/glue/latest/dg/add-job.html)
+	// in the developer guide.
+	//
+	// Development endpoints that are created without specifying a Glue version
+	// default to Glue 0.9.
+	//
+	// You can specify a version of Python support for development endpoints by
+	// using the Arguments parameter in the CreateDevEndpoint or UpdateDevEndpoint
+	// APIs. If no arguments are provided, the version defaults to Python 2.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// The number of AWS Glue Data Processing Units (DPUs) to allocate to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
 
@@ -16065,6 +16001,9 @@ func (s *CreateDevEndpointInput) Validate() error {
 	if s.EndpointName == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointName"))
 	}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.RoleArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
 	}
@@ -16099,6 +16038,12 @@ func (s *CreateDevEndpointInput) SetExtraJarsS3Path(v string) *CreateDevEndpoint
 // SetExtraPythonLibsS3Path sets the ExtraPythonLibsS3Path field's value.
 func (s *CreateDevEndpointInput) SetExtraPythonLibsS3Path(v string) *CreateDevEndpointInput {
 	s.ExtraPythonLibsS3Path = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *CreateDevEndpointInput) SetGlueVersion(v string) *CreateDevEndpointInput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -16166,6 +16111,18 @@ type CreateDevEndpointOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The map of arguments used to configure this DevEndpoint.
+	//
+	// Valid arguments are:
+	//
+	//    * "--enable-glue-datacatalog": ""
+	//
+	//    * "GLUE_PYTHON_VERSION": "3"
+	//
+	//    * "GLUE_PYTHON_VERSION": "2"
+	//
+	// You can specify a version of Python support for development endpoints by
+	// using the Arguments parameter in the CreateDevEndpoint or UpdateDevEndpoint
+	// APIs. If no arguments are provided, the version defaults to Python 2.
 	Arguments map[string]*string `type:"map"`
 
 	// The AWS Availability Zone where this DevEndpoint is located.
@@ -16187,6 +16144,11 @@ type CreateDevEndpointOutput struct {
 
 	// The reason for a current failure in this DevEndpoint.
 	FailureReason *string `type:"string"`
+
+	// Glue version determines the versions of Apache Spark and Python that AWS
+	// Glue supports. The Python version indicates the version supported for running
+	// your ETL scripts on development endpoints.
+	GlueVersion *string `min:"1" type:"string"`
 
 	// The number of AWS Glue Data Processing Units (DPUs) allocated to this DevEndpoint.
 	NumberOfNodes *int64 `type:"integer"`
@@ -16273,6 +16235,12 @@ func (s *CreateDevEndpointOutput) SetExtraPythonLibsS3Path(v string) *CreateDevE
 // SetFailureReason sets the FailureReason field's value.
 func (s *CreateDevEndpointOutput) SetFailureReason(v string) *CreateDevEndpointOutput {
 	s.FailureReason = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *CreateDevEndpointOutput) SetGlueVersion(v string) *CreateDevEndpointOutput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -16795,6 +16763,13 @@ type CreateMLTransformInput struct {
 	// default is an empty string.
 	Description *string `type:"string"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	//
 	// InputRecordTables is a required field
@@ -16805,6 +16780,21 @@ type CreateMLTransformInput struct {
 	// is 10. A DPU is a relative measure of processing power that consists of 4
 	// vCPUs of compute capacity and 16 GB of memory. For more information, see
 	// the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
+	//
+	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
+	// field is set automatically and becomes read-only.
 	//
 	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
 	// field is set automatically and becomes read-only.
@@ -16821,6 +16811,8 @@ type CreateMLTransformInput struct {
 
 	// The number of workers of a defined workerType that are allocated when this
 	// task runs.
+	//
+	// If WorkerType is set, then NumberOfWorkers is required (and vice versa).
 	NumberOfWorkers *int64 `type:"integer"`
 
 	// The algorithmic parameters that are specific to the transform type used.
@@ -16830,9 +16822,17 @@ type CreateMLTransformInput struct {
 	Parameters *TransformParameters `type:"structure" required:"true"`
 
 	// The name or Amazon Resource Name (ARN) of the IAM role with the required
-	// permissions. Ensure that this role has permission to your Amazon Simple Storage
-	// Service (Amazon S3) sources, targets, temporary directory, scripts, and any
-	// libraries that are used by the task run for this transform.
+	// permissions. The required permissions include both AWS Glue service role
+	// permissions to AWS Glue resources, and Amazon S3 permissions required by
+	// the transform.
+	//
+	//    * This role needs AWS Glue service role permissions to allow access to
+	//    resources in AWS Glue. See Attach a Policy to IAM Users That Access AWS
+	//    Glue (https://docs.aws.amazon.com/glue/latest/dg/attach-policy-iam-user.html).
+	//
+	//    * This role needs permission to your Amazon Simple Storage Service (Amazon
+	//    S3) sources, targets, temporary directory, scripts, and any libraries
+	//    used by the task run for this transform.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
@@ -16853,6 +16853,18 @@ type CreateMLTransformInput struct {
 	//
 	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
 	//    and a 128GB disk, and 1 executor per worker.
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -16869,6 +16881,9 @@ func (s CreateMLTransformInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateMLTransformInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateMLTransformInput"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.InputRecordTables == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputRecordTables"))
 	}
@@ -16912,6 +16927,12 @@ func (s *CreateMLTransformInput) Validate() error {
 // SetDescription sets the Description field's value.
 func (s *CreateMLTransformInput) SetDescription(v string) *CreateMLTransformInput {
 	s.Description = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *CreateMLTransformInput) SetGlueVersion(v string) *CreateMLTransformInput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -19207,7 +19228,17 @@ type DevEndpoint struct {
 
 	// A map of arguments used to configure the DevEndpoint.
 	//
-	// Currently, only "--enable-glue-datacatalog": "" is supported as a valid argument.
+	// Valid arguments are:
+	//
+	//    * "--enable-glue-datacatalog": ""
+	//
+	//    * "GLUE_PYTHON_VERSION": "3"
+	//
+	//    * "GLUE_PYTHON_VERSION": "2"
+	//
+	// You can specify a version of Python support for development endpoints by
+	// using the Arguments parameter in the CreateDevEndpoint or UpdateDevEndpoint
+	// APIs. If no arguments are provided, the version defaults to Python 2.
 	Arguments map[string]*string `type:"map"`
 
 	// The AWS Availability Zone where this DevEndpoint is located.
@@ -19236,6 +19267,22 @@ type DevEndpoint struct {
 
 	// The reason for a current failure in this DevEndpoint.
 	FailureReason *string `type:"string"`
+
+	// Glue version determines the versions of Apache Spark and Python that AWS
+	// Glue supports. The Python version indicates the version supported for running
+	// your ETL scripts on development endpoints.
+	//
+	// For more information about the available AWS Glue versions and corresponding
+	// Spark and Python versions, see Glue version (https://docs.aws.amazon.com/glue/latest/dg/add-job.html)
+	// in the developer guide.
+	//
+	// Development endpoints that are created without specifying a Glue version
+	// default to Glue 0.9.
+	//
+	// You can specify a version of Python support for development endpoints by
+	// using the Arguments parameter in the CreateDevEndpoint or UpdateDevEndpoint
+	// APIs. If no arguments are provided, the version defaults to Python 2.
+	GlueVersion *string `min:"1" type:"string"`
 
 	// The point in time at which this DevEndpoint was last modified.
 	LastModifiedTimestamp *time.Time `type:"timestamp"`
@@ -19370,6 +19417,12 @@ func (s *DevEndpoint) SetExtraPythonLibsS3Path(v string) *DevEndpoint {
 // SetFailureReason sets the FailureReason field's value.
 func (s *DevEndpoint) SetFailureReason(v string) *DevEndpoint {
 	s.FailureReason = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *DevEndpoint) SetGlueVersion(v string) *DevEndpoint {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -21176,96 +21229,6 @@ func (s *GetJobBookmarkOutput) SetJobBookmarkEntry(v *JobBookmarkEntry) *GetJobB
 	return s
 }
 
-type GetJobBookmarksInput struct {
-	_ struct{} `type:"structure"`
-
-	// The name of the job in question.
-	//
-	// JobName is a required field
-	JobName *string `type:"string" required:"true"`
-
-	// The maximum size of the response.
-	MaxResults *int64 `type:"integer"`
-
-	// A continuation token, if this is a continuation call.
-	NextToken *int64 `type:"integer"`
-}
-
-// String returns the string representation
-func (s GetJobBookmarksInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s GetJobBookmarksInput) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *GetJobBookmarksInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "GetJobBookmarksInput"}
-	if s.JobName == nil {
-		invalidParams.Add(request.NewErrParamRequired("JobName"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetJobName sets the JobName field's value.
-func (s *GetJobBookmarksInput) SetJobName(v string) *GetJobBookmarksInput {
-	s.JobName = &v
-	return s
-}
-
-// SetMaxResults sets the MaxResults field's value.
-func (s *GetJobBookmarksInput) SetMaxResults(v int64) *GetJobBookmarksInput {
-	s.MaxResults = &v
-	return s
-}
-
-// SetNextToken sets the NextToken field's value.
-func (s *GetJobBookmarksInput) SetNextToken(v int64) *GetJobBookmarksInput {
-	s.NextToken = &v
-	return s
-}
-
-type GetJobBookmarksOutput struct {
-	_ struct{} `type:"structure"`
-
-	// A list of job bookmark entries that defines a point that a job can resume
-	// processing.
-	JobBookmarkEntries []*JobBookmarkEntry `type:"list"`
-
-	// A continuation token, which has a value of 1 if all the entries are returned,
-	// or > 1 if not all requested job runs have been returned.
-	NextToken *int64 `type:"integer"`
-}
-
-// String returns the string representation
-func (s GetJobBookmarksOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s GetJobBookmarksOutput) GoString() string {
-	return s.String()
-}
-
-// SetJobBookmarkEntries sets the JobBookmarkEntries field's value.
-func (s *GetJobBookmarksOutput) SetJobBookmarkEntries(v []*JobBookmarkEntry) *GetJobBookmarksOutput {
-	s.JobBookmarkEntries = v
-	return s
-}
-
-// SetNextToken sets the NextToken field's value.
-func (s *GetJobBookmarksOutput) SetNextToken(v int64) *GetJobBookmarksOutput {
-	s.NextToken = &v
-	return s
-}
-
 type GetJobInput struct {
 	_ struct{} `type:"structure"`
 
@@ -21926,6 +21889,13 @@ type GetMLTransformOutput struct {
 	// The latest evaluation metrics.
 	EvaluationMetrics *EvaluationMetrics `type:"structure"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	InputRecordTables []*Table `type:"list"`
 
@@ -22019,6 +21989,12 @@ func (s *GetMLTransformOutput) SetDescription(v string) *GetMLTransformOutput {
 // SetEvaluationMetrics sets the EvaluationMetrics field's value.
 func (s *GetMLTransformOutput) SetEvaluationMetrics(v *EvaluationMetrics) *GetMLTransformOutput {
 	s.EvaluationMetrics = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *GetMLTransformOutput) SetGlueVersion(v string) *GetMLTransformOutput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -26089,6 +26065,13 @@ type MLTransform struct {
 	// quality of your machine learning transform.
 	EvaluationMetrics *EvaluationMetrics `type:"structure"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	InputRecordTables []*Table `type:"list"`
 
@@ -26105,7 +26088,19 @@ type MLTransform struct {
 	// task runs for this transform. You can allocate from 2 to 100 DPUs; the default
 	// is 10. A DPU is a relative measure of processing power that consists of 4
 	// vCPUs of compute capacity and 16 GB of memory. For more information, see
-	// the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	// the AWS Glue pricing page (http://aws.amazon.com/glue/pricing/).
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	//
 	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
 	// field is set automatically and becomes read-only.
@@ -26121,6 +26116,8 @@ type MLTransform struct {
 
 	// The number of workers of a defined workerType that are allocated when a task
 	// of the transform runs.
+	//
+	// If WorkerType is set, then NumberOfWorkers is required (and vice versa).
 	NumberOfWorkers *int64 `type:"integer"`
 
 	// A TransformParameters object. You can use parameters to tune (customize)
@@ -26130,9 +26127,17 @@ type MLTransform struct {
 	Parameters *TransformParameters `type:"structure"`
 
 	// The name or Amazon Resource Name (ARN) of the IAM role with the required
-	// permissions. This role needs permission to your Amazon Simple Storage Service
-	// (Amazon S3) sources, targets, temporary directory, scripts, and any libraries
-	// used by the task run for this transform.
+	// permissions. The required permissions include both AWS Glue service role
+	// permissions to AWS Glue resources, and Amazon S3 permissions required by
+	// the transform.
+	//
+	//    * This role needs AWS Glue service role permissions to allow access to
+	//    resources in AWS Glue. See Attach a Policy to IAM Users That Access AWS
+	//    Glue (https://docs.aws.amazon.com/glue/latest/dg/attach-policy-iam-user.html).
+	//
+	//    * This role needs permission to your Amazon Simple Storage Service (Amazon
+	//    S3) sources, targets, temporary directory, scripts, and any libraries
+	//    used by the task run for this transform.
 	Role *string `type:"string"`
 
 	// A map of key-value pairs representing the columns and data types that this
@@ -26160,6 +26165,18 @@ type MLTransform struct {
 	//
 	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
 	//    and a 128GB disk, and 1 executor per worker.
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -26188,6 +26205,12 @@ func (s *MLTransform) SetDescription(v string) *MLTransform {
 // SetEvaluationMetrics sets the EvaluationMetrics field's value.
 func (s *MLTransform) SetEvaluationMetrics(v *EvaluationMetrics) *MLTransform {
 	s.EvaluationMetrics = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *MLTransform) SetGlueVersion(v string) *MLTransform {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -26647,6 +26670,11 @@ type PartitionInput struct {
 
 	// The values of the partition. Although this parameter is not required by the
 	// SDK, you must specify this parameter for a valid input.
+	//
+	// The values for the keys for the new partition must be passed as an array
+	// of String objects that must be ordered in the same order as the partition
+	// keys appearing in the Amazon S3 prefix. Otherwise AWS Glue will add the values
+	// to the wrong keys.
 	Values []*string `type:"list"`
 }
 
@@ -27851,11 +27879,14 @@ func (s *SkewedInfo) SetSkewedColumnValues(v []*string) *SkewedInfo {
 	return s
 }
 
+// Specifies a field to sort by and a sort order.
 type SortCriterion struct {
 	_ struct{} `type:"structure"`
 
+	// The name of the field on which to sort.
 	FieldName *string `type:"string"`
 
+	// An ascending or descending sort.
 	Sort *string `type:"string" enum:"Sort"`
 }
 
@@ -29873,6 +29904,13 @@ type TransformFilterCriteria struct {
 	// The time and date before which the transforms were created.
 	CreatedBefore *time.Time `type:"timestamp"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// Filter on transforms last modified after this date.
 	LastModifiedAfter *time.Time `type:"timestamp"`
 
@@ -29911,6 +29949,9 @@ func (s TransformFilterCriteria) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *TransformFilterCriteria) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "TransformFilterCriteria"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -29940,6 +29981,12 @@ func (s *TransformFilterCriteria) SetCreatedAfter(v time.Time) *TransformFilterC
 // SetCreatedBefore sets the CreatedBefore field's value.
 func (s *TransformFilterCriteria) SetCreatedBefore(v time.Time) *TransformFilterCriteria {
 	s.CreatedBefore = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *TransformFilterCriteria) SetGlueVersion(v string) *TransformFilterCriteria {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -30978,6 +31025,18 @@ type UpdateDevEndpointInput struct {
 	_ struct{} `type:"structure"`
 
 	// The map of arguments to add the map of arguments used to configure the DevEndpoint.
+	//
+	// Valid arguments are:
+	//
+	//    * "--enable-glue-datacatalog": ""
+	//
+	//    * "GLUE_PYTHON_VERSION": "3"
+	//
+	//    * "GLUE_PYTHON_VERSION": "2"
+	//
+	// You can specify a version of Python support for development endpoints by
+	// using the Arguments parameter in the CreateDevEndpoint or UpdateDevEndpoint
+	// APIs. If no arguments are provided, the version defaults to Python 2.
 	AddArguments map[string]*string `type:"map"`
 
 	// The list of public keys for the DevEndpoint to use.
@@ -31306,6 +31365,13 @@ type UpdateMLTransformInput struct {
 	// A description of the transform. The default is an empty string.
 	Description *string `type:"string"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// The number of AWS Glue data processing units (DPUs) that are allocated to
 	// task runs for this transform. You can allocate from 2 to 100 DPUs; the default
 	// is 10. A DPU is a relative measure of processing power that consists of 4
@@ -31372,6 +31438,9 @@ func (s UpdateMLTransformInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateMLTransformInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateMLTransformInput"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -31399,6 +31468,12 @@ func (s *UpdateMLTransformInput) Validate() error {
 // SetDescription sets the Description field's value.
 func (s *UpdateMLTransformInput) SetDescription(v string) *UpdateMLTransformInput {
 	s.Description = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *UpdateMLTransformInput) SetGlueVersion(v string) *UpdateMLTransformInput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -32610,6 +32685,15 @@ const (
 
 	// ConnectionPropertyKeyJdbcEnforceSsl is a ConnectionPropertyKey enum value
 	ConnectionPropertyKeyJdbcEnforceSsl = "JDBC_ENFORCE_SSL"
+
+	// ConnectionPropertyKeyCustomJdbcCert is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyCustomJdbcCert = "CUSTOM_JDBC_CERT"
+
+	// ConnectionPropertyKeySkipCustomJdbcCertValidation is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeySkipCustomJdbcCertValidation = "SKIP_CUSTOM_JDBC_CERT_VALIDATION"
+
+	// ConnectionPropertyKeyCustomJdbcCertString is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyCustomJdbcCertString = "CUSTOM_JDBC_CERT_STRING"
 )
 
 const (
