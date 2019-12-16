@@ -78,6 +78,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
   regexp = "(\\* ?`?|- ?`?|data \"|resource \")aws_(\\w+)"
 
   label_map = {
+    "service/accessanalyzer" = [
+      "aws_accessanalyzer_",
+    ],
     "service/acm" = [
       "aws_acm_",
     ],
@@ -187,6 +190,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/databasemigrationservice" = [
       "aws_dms_",
+    ],
+    "service/dataexchange" = [
+      "aws_dataexchange_",
     ],
     "service/datapipeline" = [
       "aws_datapipeline_",
@@ -308,6 +314,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iam" = [
       "aws_iam_",
     ],
+    "service/imagebuilder" = [
+      "aws_imagebuilder_",
+    ],
     "service/inspector" = [
       "aws_inspector_",
     ],
@@ -350,6 +359,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/macie" = [
       "aws_macie_",
+    ],
+    "service/marketplacecatalog" = [
+      "aws_marketplace_catalog_",
     ],
     "service/mediaconnect" = [
       "aws_media_connect_",
@@ -537,6 +549,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       ".travis.yml"
     ]
     # label services
+    "service/accessanalyzer" = [
+      "**/*_accessanalyzer_*",
+      "**/accessanalyzer_*"
+    ]
     "service/acm" = [
       "**/*_acm_*",
       "**/acm_*"
@@ -690,6 +706,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/databasemigrationservice" = [
       "**/*_dms_*",
       "**/dms_*"
+    ]
+    "service/dataexchange" = [
+      "**/*_dataexchange_*",
+      "**/dataexchange_*",
     ]
     "service/datapipeline" = [
       "**/*_datapipeline_*",
@@ -886,6 +906,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iam_*",
       "**/iam_*"
     ]
+    "service/imagebuilder" = [
+      "**/*_imagebuilder_*",
+      "**/imagebuilder_*"
+    ]
     "service/inspector" = [
       "**/*_inspector_*",
       "**/inspector_*"
@@ -941,6 +965,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/macie" = [
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/marketplacecatalog" = [
+      "**/*_marketplace_catalog_*",
+      "**/marketplace_catalog_*"
     ]
     "service/mediaconnect" = [
       "**/*_media_connect_*",

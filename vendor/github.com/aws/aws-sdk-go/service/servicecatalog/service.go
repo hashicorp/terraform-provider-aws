@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "servicecatalog"  // Name of service.
 	EndpointsID = ServiceName       // ID to lookup a service endpoint with.
-	ServiceID   = "Service Catalog" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Service Catalog" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the ServiceCatalog client with a session.

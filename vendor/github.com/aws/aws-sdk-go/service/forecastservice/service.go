@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "forecast"  // Name of service.
 	EndpointsID = ServiceName // ID to lookup a service endpoint with.
-	ServiceID   = "forecast"  // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "forecast"  // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the ForecastService client with a session.

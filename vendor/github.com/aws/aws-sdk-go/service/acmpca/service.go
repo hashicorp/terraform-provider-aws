@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "acm-pca"   // Name of service.
 	EndpointsID = ServiceName // ID to lookup a service endpoint with.
-	ServiceID   = "ACM PCA"   // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "ACM PCA"   // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the ACMPCA client with a session.

@@ -495,6 +495,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecr_lifecycle_policy":                                resourceAwsEcrLifecyclePolicy(),
 			"aws_ecr_repository":                                      resourceAwsEcrRepository(),
 			"aws_ecr_repository_policy":                               resourceAwsEcrRepositoryPolicy(),
+			"aws_ecs_capacity_provider":                               resourceAwsEcsCapacityProvider(),
 			"aws_ecs_cluster":                                         resourceAwsEcsCluster(),
 			"aws_ecs_service":                                         resourceAwsEcsService(),
 			"aws_ecs_task_definition":                                 resourceAwsEcsTaskDefinition(),
@@ -504,6 +505,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_eip":                                                 resourceAwsEip(),
 			"aws_eip_association":                                     resourceAwsEipAssociation(),
 			"aws_eks_cluster":                                         resourceAwsEksCluster(),
+			"aws_eks_fargate_profile":                                 resourceAwsEksFargateProfile(),
 			"aws_eks_node_group":                                      resourceAwsEksNodeGroup(),
 			"aws_elasticache_cluster":                                 resourceAwsElasticacheCluster(),
 			"aws_elasticache_parameter_group":                         resourceAwsElasticacheParameterGroup(),
@@ -599,6 +601,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_event_source_mapping":                         resourceAwsLambdaEventSourceMapping(),
 			"aws_lambda_alias":                                        resourceAwsLambdaAlias(),
 			"aws_lambda_permission":                                   resourceAwsLambdaPermission(),
+			"aws_lambda_provisioned_concurrency_config":               resourceAwsLambdaProvisionedConcurrencyConfig(),
 			"aws_lambda_layer_version":                                resourceAwsLambdaLayerVersion(),
 			"aws_launch_configuration":                                resourceAwsLaunchConfiguration(),
 			"aws_launch_template":                                     resourceAwsLaunchTemplate(),
@@ -619,6 +622,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_main_route_table_association":                        resourceAwsMainRouteTableAssociation(),
 			"aws_mq_broker":                                           resourceAwsMqBroker(),
 			"aws_mq_configuration":                                    resourceAwsMqConfiguration(),
+			"aws_media_convert_queue":                                 resourceAwsMediaConvertQueue(),
 			"aws_media_package_channel":                               resourceAwsMediaPackageChannel(),
 			"aws_media_store_container":                               resourceAwsMediaStoreContainer(),
 			"aws_media_store_container_policy":                        resourceAwsMediaStoreContainerPolicy(),
@@ -837,6 +841,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_pinpoint_gcm_channel":                                resourceAwsPinpointGCMChannel(),
 			"aws_pinpoint_sms_channel":                                resourceAwsPinpointSMSChannel(),
 			"aws_xray_sampling_rule":                                  resourceAwsXraySamplingRule(),
+			"aws_workspaces_ip_group":                                 resourceAwsWorkspacesIpGroup(),
 
 			// ALBs are actually LBs because they can be type `network` or `application`
 			// To avoid regressions, we will add a new resource for each and they both point
@@ -936,6 +941,7 @@ func init() {
 	}
 
 	endpointServiceNames = []string{
+		"accessanalyzer",
 		"acm",
 		"acmpca",
 		"amplify",
@@ -968,6 +974,7 @@ func init() {
 		"cognitoidp",
 		"configservice",
 		"cur",
+		"dataexchange",
 		"datapipeline",
 		"datasync",
 		"dax",
@@ -1000,6 +1007,7 @@ func init() {
 		"greengrass",
 		"guardduty",
 		"iam",
+		"imagebuilder",
 		"inspector",
 		"iot",
 		"iotanalytics",
@@ -1017,6 +1025,7 @@ func init() {
 		"lightsail",
 		"macie",
 		"managedblockchain",
+		"marketplacecatalog",
 		"mediaconnect",
 		"mediaconvert",
 		"medialive",

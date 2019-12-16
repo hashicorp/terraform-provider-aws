@@ -183,6 +183,27 @@ func StringMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
 	}
 }
 
+// StringDoesNotMatch returns a SchemaValidateFunc which tests if the provided value
+// does not match a given regexp. Optionally an error message can be provided to
+// return something friendlier than "must not match some globby regexp".
+func StringDoesNotMatch(r *regexp.Regexp, message string) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) ([]string, []error) {
+		v, ok := i.(string)
+		if !ok {
+			return nil, []error{fmt.Errorf("expected type of %s to be string", k)}
+		}
+
+		if ok := r.MatchString(v); ok {
+			if message != "" {
+				return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
+
+			}
+			return nil, []error{fmt.Errorf("expected value of %s to not match regular expression %q", k, r)}
+		}
+		return nil, nil
+	}
+}
+
 // NoZeroValues is a SchemaValidateFunc which tests if the provided value is
 // not a zero value. It's useful in situations where you want to catch
 // explicit zero values on things like required fields during validation.
@@ -333,6 +354,44 @@ func FloatBetween(min, max float64) schema.SchemaValidateFunc {
 
 		if v < min || v > max {
 			es = append(es, fmt.Errorf("expected %s to be in the range (%f - %f), got %f", k, min, max, v))
+			return
+		}
+
+		return
+	}
+}
+
+// FloatAtLeast returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is at least min (inclusive)
+func FloatAtLeast(min float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v < min {
+			es = append(es, fmt.Errorf("expected %s to be at least (%f), got %f", k, min, v))
+			return
+		}
+
+		return
+	}
+}
+
+// FloatAtMost returns a SchemaValidateFunc which tests if the provided value
+// is of type float and is at most max (inclusive)
+func FloatAtMost(max float64) schema.SchemaValidateFunc {
+	return func(i interface{}, k string) (s []string, es []error) {
+		v, ok := i.(float64)
+		if !ok {
+			es = append(es, fmt.Errorf("expected type of %s to be float", k))
+			return
+		}
+
+		if v > max {
+			es = append(es, fmt.Errorf("expected %s to be at most (%f), got %f", k, max, v))
 			return
 		}
 

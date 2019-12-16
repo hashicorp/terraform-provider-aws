@@ -192,6 +192,10 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "does not exist") {
 				return resource.RetryableError(err)
 			}
+			// InvalidParameterException: Error in role params
+			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Error in role params") {
+				return resource.RetryableError(err)
+			}
 			if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Role could not be assumed because the trusted entity is not correct") {
 				return resource.RetryableError(err)
 			}

@@ -4,6 +4,7 @@ package keyvaluetags
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/accessanalyzer"
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
@@ -24,6 +25,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go/service/dataexchange"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
@@ -44,6 +46,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -55,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	"github.com/aws/aws-sdk-go/service/mediaconnect"
+	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/aws/aws-sdk-go/service/medialive"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
 	"github.com/aws/aws-sdk-go/service/mediastore"
@@ -79,6 +83,23 @@ import (
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
+
+// AccessanalyzerListTags lists accessanalyzer service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func AccessanalyzerListTags(conn *accessanalyzer.AccessAnalyzer, identifier string) (KeyValueTags, error) {
+	input := &accessanalyzer.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return AccessanalyzerKeyValueTags(output.Tags), nil
+}
 
 // AcmListTags lists acm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
@@ -418,6 +439,23 @@ func DatabasemigrationserviceListTags(conn *databasemigrationservice.DatabaseMig
 	}
 
 	return DatabasemigrationserviceKeyValueTags(output.TagList), nil
+}
+
+// DataexchangeListTags lists dataexchange service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DataexchangeListTags(conn *dataexchange.DataExchange, identifier string) (KeyValueTags, error) {
+	input := &dataexchange.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DataexchangeKeyValueTags(output.Tags), nil
 }
 
 // DatasyncListTags lists datasync service tags.
@@ -760,6 +798,23 @@ func GuarddutyListTags(conn *guardduty.GuardDuty, identifier string) (KeyValueTa
 	return GuarddutyKeyValueTags(output.Tags), nil
 }
 
+// ImagebuilderListTags lists imagebuilder service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ImagebuilderListTags(conn *imagebuilder.Imagebuilder, identifier string) (KeyValueTags, error) {
+	input := &imagebuilder.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ImagebuilderKeyValueTags(output.Tags), nil
+}
+
 // InspectorListTags lists inspector service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -945,6 +1000,23 @@ func MediaconnectListTags(conn *mediaconnect.MediaConnect, identifier string) (K
 	}
 
 	return MediaconnectKeyValueTags(output.Tags), nil
+}
+
+// MediaconvertListTags lists mediaconvert service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func MediaconvertListTags(conn *mediaconvert.MediaConvert, identifier string) (KeyValueTags, error) {
+	input := &mediaconvert.ListTagsForResourceInput{
+		Arn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return MediaconvertKeyValueTags(output.ResourceTags.Tags), nil
 }
 
 // MedialiveListTags lists medialive service tags.

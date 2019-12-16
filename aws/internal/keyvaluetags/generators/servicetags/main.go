@@ -91,6 +91,7 @@ var sliceServiceNames = []string{
 }
 
 var mapServiceNames = []string{
+	"accessanalyzer",
 	"amplify",
 	"apigateway",
 	"apigatewayv2",
@@ -102,6 +103,7 @@ var mapServiceNames = []string{
 	"codecommit",
 	"cognitoidentity",
 	"cognitoidentityprovider",
+	"dataexchange",
 	"dlm",
 	"eks",
 	"glacier",
@@ -109,6 +111,7 @@ var mapServiceNames = []string{
 	"guardduty",
 	"greengrass",
 	"kafka",
+	"imagebuilder",
 	"lambda",
 	"mediaconnect",
 	"mediaconvert",

@@ -4,6 +4,19 @@ package kinesisvideo
 
 const (
 
+	// ErrCodeAccessDeniedException for service response error code
+	// "AccessDeniedException".
+	//
+	// You do not have required permissions to perform this operation.
+	ErrCodeAccessDeniedException = "AccessDeniedException"
+
+	// ErrCodeAccountChannelLimitExceededException for service response error code
+	// "AccountChannelLimitExceededException".
+	//
+	// You have reached the maximum limit of active signaling channels for this
+	// AWS account in this region.
+	ErrCodeAccountChannelLimitExceededException = "AccountChannelLimitExceededException"
+
 	// ErrCodeAccountStreamLimitExceededException for service response error code
 	// "AccountStreamLimitExceededException".
 	//

@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Application Insights" // Name of service.
 	EndpointsID = "applicationinsights"  // ID to lookup a service endpoint with.
-	ServiceID   = "Application Insights" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Application Insights" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the ApplicationInsights client with a session.

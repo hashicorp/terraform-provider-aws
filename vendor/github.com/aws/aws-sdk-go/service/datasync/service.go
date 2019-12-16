@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "DataSync" // Name of service.
 	EndpointsID = "datasync" // ID to lookup a service endpoint with.
-	ServiceID   = "DataSync" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "DataSync" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the DataSync client with a session.
