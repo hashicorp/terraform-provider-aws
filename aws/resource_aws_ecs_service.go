@@ -739,9 +739,6 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 
 func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
 	list := cps.List()
-	if len(list) == 0 {
-		return nil
-	}
 	results := make([]*ecs.CapacityProviderStrategyItem, 0)
 	for _, raw := range list {
 		cp := raw.(map[string]interface{})

@@ -243,6 +243,45 @@ func TestAccAWSEcsCluster_CapacityProvidersUpdate(t *testing.T) {
 					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
 				),
 			},
+			{
+				Config: testAccAWSEcsClusterCapacityProvidersFargateBoth(rName, providerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsCluster_CapacityProvidersNoStrategy(t *testing.T) {
+	var cluster1 ecs.Cluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	providerName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsClusterCapacityProvidersFargateNoStrategy(rName, providerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEcsClusterCapacityProvidersFargateSpotNoStrategy(rName, providerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsClusterExists(resourceName, &cluster1),
+				),
+			},
 		},
 	})
 }
@@ -479,6 +518,42 @@ resource "aws_ecs_cluster" "test" {
 		capacity_provider = "FARGATE_SPOT"
 		weight = 1
 	}
+}
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProvidersFargateBoth(rName, providerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %[1]q
+
+	capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+
+	default_capacity_provider_strategy {
+		base = 1
+		capacity_provider = "FARGATE_SPOT"
+		weight = 1
+	}
+}
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProvidersFargateNoStrategy(rName, providerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %[1]q
+
+	capacity_providers = ["FARGATE"]
+}
+`, rName)
+}
+
+func testAccAWSEcsClusterCapacityProvidersFargateSpotNoStrategy(rName, providerName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+	name = %[1]q
+
+	capacity_providers = ["FARGATE_SPOT"]
 }
 `, rName)
 }
