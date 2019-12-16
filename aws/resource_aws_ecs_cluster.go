@@ -267,7 +267,25 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set))
 		}
 
-		_, err := conn.PutClusterCapacityProviders(&input)
+		err := resource.Retry(timeoutUpdate, func() *resource.RetryError {
+			_, err := conn.PutClusterCapacityProviders(&input)
+			if err != nil {
+				if isAWSErr(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, ecs.ErrCodeResourceInUseException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.PutClusterCapacityProviders(&input)
+		}
 		if err != nil {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %s", d.Id(), err)
 		}
