@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	timeoutCreate = 10 * time.Minute
-	timeoutDelete = 10 * time.Minute
-	timeoutUpdate = 10 * time.Minute
+	ecsClusterTimeoutCreate = 10 * time.Minute
+	ecsClusterTimeoutDelete = 10 * time.Minute
+	ecsClusterTimeoutUpdate = 10 * time.Minute
 )
 
 func resourceAwsEcsCluster() *schema.Resource {
@@ -137,7 +137,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
-	if err = waitForEcsClusterActive(conn, clusterName, timeoutCreate); err != nil {
+	if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutCreate); err != nil {
 		return err
 	}
 
@@ -243,7 +243,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error changing ECS cluster settings (%s): %s", d.Id(), err)
 		}
 
-		if err = waitForEcsClusterActive(conn, clusterName, timeoutUpdate); err != nil {
+		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
 			return err
 		}
 	}
@@ -267,7 +267,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set))
 		}
 
-		err := resource.Retry(timeoutUpdate, func() *resource.RetryError {
+		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
 			_, err := conn.PutClusterCapacityProviders(&input)
 			if err != nil {
 				if isAWSErr(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
@@ -290,7 +290,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %s", d.Id(), err)
 		}
 
-		if err = waitForEcsClusterActive(conn, clusterName, timeoutUpdate); err != nil {
+		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
 			return err
 		}
 	}
@@ -305,7 +305,7 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(timeoutDelete, func() *resource.RetryError {
+	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {
@@ -338,7 +338,7 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	stateConf := resource.StateChangeConf{
 		Pending: []string{"ACTIVE", "DEPROVISIONING"},
 		Target:  []string{"INACTIVE"},
-		Timeout: timeoutDelete,
+		Timeout: ecsClusterTimeoutDelete,
 		Refresh: refreshEcsClusterStatus(conn, clusterName),
 	}
 	_, err = stateConf.WaitForState()
