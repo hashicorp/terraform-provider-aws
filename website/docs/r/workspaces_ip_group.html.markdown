@@ -2,7 +2,6 @@
 subcategory: "Workspaces"
 layout: "aws"
 page_title: "AWS: aws_workspaces_ip_group"
-sidebar_current: "docs-aws-resource-workspaces-ip-group"
 description: |-
   Provides an IP access control group in AWS Workspaces Service.
 ---
