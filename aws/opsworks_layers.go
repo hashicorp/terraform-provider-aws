@@ -195,6 +195,12 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 						Optional: true,
 						Default:  "standard",
 					},
+
+					"encrypted": {
+						Type:     schema.TypeBool,
+						Optional: true,
+						Default:  false,
+					},
 				},
 			},
 			Set: func(v interface{}) int {
@@ -593,7 +599,9 @@ func (lt *opsworksLayerType) VolumeConfigurations(d *schema.ResourceData) []*ops
 			NumberOfDisks: aws.Int64(int64(volumeData["number_of_disks"].(int))),
 			Size:          aws.Int64(int64(volumeData["size"].(int))),
 			VolumeType:    aws.String(volumeData["type"].(string)),
+			Encrypted:     aws.Bool(volumeData["encrypted"].(bool)),
 		}
+
 		iops := int64(volumeData["iops"].(int))
 		if iops != 0 {
 			result[i].Iops = aws.Int64(iops)
@@ -638,6 +646,9 @@ func (lt *opsworksLayerType) SetVolumeConfigurations(d *schema.ResourceData, v [
 		}
 		if config.VolumeType != nil {
 			data["type"] = *config.VolumeType
+		}
+		if config.Encrypted != nil {
+			data["encrypted"] = *config.Encrypted
 		}
 	}
 
