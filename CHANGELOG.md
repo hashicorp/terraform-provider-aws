@@ -1,4 +1,9 @@
 ## 2.43.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_opsworks_custom_layer: Add `encrypted` `ebs_volume` configuration [GH-7110]
+
 ## 2.42.0 (December 13, 2019)
 
 FEATURES:
