@@ -2,7 +2,6 @@
 subcategory: "MediaConvert"
 layout: "aws"
 page_title: "AWS: aws_media_convert_queue"
-sidebar_current: "docs-aws-resource-media-convert-queue"
 description: |-
   Provides an AWS Elemental MediaConvert Queue.
 ---

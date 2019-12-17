@@ -25,6 +25,13 @@ for doc in $docs; do
         echo "Doc is missing a subcategory: $doc"
         error=true
       fi
+
+      # sidebar_current is deprecated
+      # https://github.com/hashicorp/terraform-website#yaml-frontmatter
+      grep "^sidebar_current: " "$doc" > /dev/null
+      if [[ "$?" == "0" ]]; then
+        echo "Doc contains a deprecated sidebar_current: $doc"
+      fi
       ;;
 
     *)
