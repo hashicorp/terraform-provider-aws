@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_opsworks_custom_layer: Add `encrypted` `ebs_volume` configuration [GH-7110]
 
+BUG FIXES:
+
+* resource/aws_ecs_cluster: Fixes bug where ECS cluster capacity providers are updated but default provider strategy is not changed [GH-11316]
+
 ## 2.42.0 (December 13, 2019)
 
 FEATURES:
