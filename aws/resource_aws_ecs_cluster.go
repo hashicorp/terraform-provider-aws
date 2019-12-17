@@ -242,13 +242,9 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("capacity_providers") || d.HasChange("default_capacity_provider_strategy") {
 		input := ecs.PutClusterCapacityProvidersInput{
-			Cluster: aws.String(d.Id()),
-		}
-		if d.HasChange("capacity_providers") {
-			input.CapacityProviders = expandStringSet(d.Get("capacity_providers").(*schema.Set))
-		}
-		if d.HasChange("default_capacity_provider_strategy") {
-			input.DefaultCapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set))
+			Cluster:                         aws.String(d.Id()),
+			CapacityProviders:               expandStringSet(d.Get("capacity_providers").(*schema.Set)),
+			DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
 		_, err := conn.PutClusterCapacityProviders(&input)
