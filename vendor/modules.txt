@@ -199,6 +199,11 @@ github.com/aws/aws-sdk-go/service/workspaces
 github.com/aws/aws-sdk-go/service/xray
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
+# github.com/bflad/tfproviderdocs v0.3.0
+github.com/bflad/tfproviderdocs
+github.com/bflad/tfproviderdocs/check
+github.com/bflad/tfproviderdocs/command
+github.com/bflad/tfproviderdocs/version
 # github.com/bflad/tfproviderlint v0.5.1
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/helper/terraformtype
@@ -240,6 +245,8 @@ github.com/bflad/tfproviderlint/passes/schemaschema
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0
 github.com/bgentry/speakeasy
+# github.com/bmatcuk/doublestar v1.2.1
+github.com/bmatcuk/doublestar
 # github.com/bombsimon/wsl v1.2.5
 github.com/bombsimon/wsl
 # github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc
@@ -382,7 +389,7 @@ github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-getter v1.4.0
 github.com/hashicorp/go-getter
 github.com/hashicorp/go-getter/helper/url
-# github.com/hashicorp/go-hclog v0.9.2
+# github.com/hashicorp/go-hclog v0.10.0
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
@@ -423,6 +430,8 @@ github.com/hashicorp/hcl/v2/json
 github.com/hashicorp/logutils
 # github.com/hashicorp/terraform-config-inspect v0.0.0-20191115094559-17f92b0546e8
 github.com/hashicorp/terraform-config-inspect/tfconfig
+# github.com/hashicorp/terraform-json v0.3.1
+github.com/hashicorp/terraform-json
 # github.com/hashicorp/terraform-plugin-sdk v1.4.0
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff
@@ -514,7 +523,7 @@ github.com/magiconair/properties
 github.com/matoous/godox
 # github.com/mattn/go-colorable v0.1.4
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.8
+# github.com/mattn/go-isatty v0.0.10
 github.com/mattn/go-isatty
 # github.com/mitchellh/cli v1.0.0
 github.com/mitchellh/cli
@@ -663,7 +672,7 @@ golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sys v0.0.0-20190922100055-0a153f010e69
+# golang.org/x/sys v0.0.0-20191008105621-543471e840be
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
