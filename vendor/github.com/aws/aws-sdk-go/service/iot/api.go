@@ -20533,6 +20533,33 @@ func (s *AwsJobExecutionsRolloutConfig) SetMaximumPerMinute(v int64) *AwsJobExec
 	return s
 }
 
+// Configuration information for pre-signed URLs. Valid when protocols contains
+// HTTP.
+type AwsJobPresignedUrlConfig struct {
+	_ struct{} `type:"structure"`
+
+	// How long (in seconds) pre-signed URLs are valid. Valid values are 60 - 3600,
+	// the default value is 1800 seconds. Pre-signed URLs are generated when a request
+	// for the job document is received.
+	ExpiresInSec *int64 `locationName:"expiresInSec" type:"long"`
+}
+
+// String returns the string representation
+func (s AwsJobPresignedUrlConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobPresignedUrlConfig) GoString() string {
+	return s.String()
+}
+
+// SetExpiresInSec sets the ExpiresInSec field's value.
+func (s *AwsJobPresignedUrlConfig) SetExpiresInSec(v int64) *AwsJobPresignedUrlConfig {
+	s.ExpiresInSec = &v
+	return s
+}
+
 // A Device Defender security profile behavior.
 type Behavior struct {
 	_ struct{} `type:"structure"`
@@ -22988,6 +23015,9 @@ type CreateOTAUpdateInput struct {
 	// Configuration for the rollout of OTA updates.
 	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
 
+	// Configuration information for pre-signed URLs.
+	AwsJobPresignedUrlConfig *AwsJobPresignedUrlConfig `locationName:"awsJobPresignedUrlConfig" type:"structure"`
+
 	// The description of the OTA update.
 	Description *string `locationName:"description" type:"string"`
 
@@ -23000,6 +23030,11 @@ type CreateOTAUpdateInput struct {
 	//
 	// OtaUpdateId is a required field
 	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
+
+	// The protocol used to transfer the OTA update image. Valid values are [HTTP],
+	// [MQTT], [HTTP, MQTT]. When both HTTP and MQTT are specified, the target device
+	// can choose the protocol.
+	Protocols []*string `locationName:"protocols" min:"1" type:"list"`
 
 	// The IAM role that allows access to the AWS IoT Jobs service.
 	//
@@ -23048,6 +23083,9 @@ func (s *CreateOTAUpdateInput) Validate() error {
 	if s.OtaUpdateId != nil && len(*s.OtaUpdateId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("OtaUpdateId", 1))
 	}
+	if s.Protocols != nil && len(s.Protocols) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Protocols", 1))
+	}
 	if s.RoleArn == nil {
 		invalidParams.Add(request.NewErrParamRequired("RoleArn"))
 	}
@@ -23094,6 +23132,12 @@ func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecuti
 	return s
 }
 
+// SetAwsJobPresignedUrlConfig sets the AwsJobPresignedUrlConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobPresignedUrlConfig(v *AwsJobPresignedUrlConfig) *CreateOTAUpdateInput {
+	s.AwsJobPresignedUrlConfig = v
+	return s
+}
+
 // SetDescription sets the Description field's value.
 func (s *CreateOTAUpdateInput) SetDescription(v string) *CreateOTAUpdateInput {
 	s.Description = &v
@@ -23109,6 +23153,12 @@ func (s *CreateOTAUpdateInput) SetFiles(v []*OTAUpdateFile) *CreateOTAUpdateInpu
 // SetOtaUpdateId sets the OtaUpdateId field's value.
 func (s *CreateOTAUpdateInput) SetOtaUpdateId(v string) *CreateOTAUpdateInput {
 	s.OtaUpdateId = &v
+	return s
+}
+
+// SetProtocols sets the Protocols field's value.
+func (s *CreateOTAUpdateInput) SetProtocols(v []*string) *CreateOTAUpdateInput {
+	s.Protocols = v
 	return s
 }
 
@@ -37892,6 +37942,10 @@ type OTAUpdateInfo struct {
 	// Configuration for the rollout of OTA updates.
 	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
 
+	// Configuration information for pre-signed URLs. Valid when protocols contains
+	// HTTP.
+	AwsJobPresignedUrlConfig *AwsJobPresignedUrlConfig `locationName:"awsJobPresignedUrlConfig" type:"structure"`
+
 	// The date when the OTA update was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
@@ -37915,6 +37969,11 @@ type OTAUpdateInfo struct {
 
 	// The status of the OTA update.
 	OtaUpdateStatus *string `locationName:"otaUpdateStatus" type:"string" enum:"OTAUpdateStatus"`
+
+	// The protocol used to transfer the OTA update image. Valid values are [HTTP],
+	// [MQTT], [HTTP, MQTT]. When both HTTP and MQTT are specified, the target device
+	// can choose the protocol.
+	Protocols []*string `locationName:"protocols" min:"1" type:"list"`
 
 	// Specifies whether the OTA update will continue to run (CONTINUOUS), or will
 	// be complete after all those things specified as targets have completed the
@@ -37959,6 +38018,12 @@ func (s *OTAUpdateInfo) SetAwsIotJobId(v string) *OTAUpdateInfo {
 // SetAwsJobExecutionsRolloutConfig sets the AwsJobExecutionsRolloutConfig field's value.
 func (s *OTAUpdateInfo) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecutionsRolloutConfig) *OTAUpdateInfo {
 	s.AwsJobExecutionsRolloutConfig = v
+	return s
+}
+
+// SetAwsJobPresignedUrlConfig sets the AwsJobPresignedUrlConfig field's value.
+func (s *OTAUpdateInfo) SetAwsJobPresignedUrlConfig(v *AwsJobPresignedUrlConfig) *OTAUpdateInfo {
+	s.AwsJobPresignedUrlConfig = v
 	return s
 }
 
@@ -38007,6 +38072,12 @@ func (s *OTAUpdateInfo) SetOtaUpdateId(v string) *OTAUpdateInfo {
 // SetOtaUpdateStatus sets the OtaUpdateStatus field's value.
 func (s *OTAUpdateInfo) SetOtaUpdateStatus(v string) *OTAUpdateInfo {
 	s.OtaUpdateStatus = &v
+	return s
+}
+
+// SetProtocols sets the Protocols field's value.
+func (s *OTAUpdateInfo) SetProtocols(v []*string) *OTAUpdateInfo {
+	s.Protocols = v
 	return s
 }
 
@@ -38498,7 +38569,7 @@ type PutAssetPropertyValueEntry struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the AWS IoT SiteWise asset. You must specify either a propertyAlias
-	// or both an analiasId and a propertyId. Accepts substitution templates.
+	// or both an aliasId and a propertyId. Accepts substitution templates.
 	AssetId *string `locationName:"assetId" type:"string"`
 
 	// Optional. A unique identifier for this entry that you can define to better
@@ -38512,7 +38583,7 @@ type PutAssetPropertyValueEntry struct {
 	PropertyAlias *string `locationName:"propertyAlias" min:"1" type:"string"`
 
 	// The ID of the asset's property. You must specify either a propertyAlias or
-	// both an analiasId and a propertyId. Accepts substitution templates.
+	// both an aliasId and a propertyId. Accepts substitution templates.
 	PropertyId *string `locationName:"propertyId" type:"string"`
 
 	// A list of property values to insert that each contain timestamp, quality,
@@ -42005,7 +42076,7 @@ type TestInvokeAuthorizerInput struct {
 	// Specifies a test HTTP authorization request.
 	HttpContext *HttpContext `locationName:"httpContext" type:"structure"`
 
-	// Specifies a test MQTT authorization request.>
+	// Specifies a test MQTT authorization request.
 	MqttContext *MqttContext `locationName:"mqttContext" type:"structure"`
 
 	// Specifies a test TLS authorization request.
@@ -46300,6 +46371,14 @@ const (
 const (
 	// PolicyTemplateNameBlankPolicy is a PolicyTemplateName enum value
 	PolicyTemplateNameBlankPolicy = "BLANK_POLICY"
+)
+
+const (
+	// ProtocolMqtt is a Protocol enum value
+	ProtocolMqtt = "MQTT"
+
+	// ProtocolHttp is a Protocol enum value
+	ProtocolHttp = "HTTP"
 )
 
 const (

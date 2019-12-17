@@ -11763,8 +11763,10 @@ func (c *EC2) DescribeAccountAttributesRequest(input *DescribeAccountAttributesI
 //
 //    * default-vpc: The ID of the default VPC for your account, or none.
 //
-//    * max-instances: The maximum number of On-Demand Instances that you can
-//    run.
+//    * max-instances: This attribute is no longer supported. The returned value
+//    does not reflect your actual vCPU limit for running On-Demand Instances.
+//    For more information, see On-Demand Instance Limits (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-on-demand-instances.html#ec2-on-demand-instances-limits)
+//    in the Amazon Elastic Compute Cloud User Guide.
 //
 //    * vpc-max-security-groups-per-interface: The maximum number of security
 //    groups that you can assign to a network interface.
@@ -14307,7 +14309,7 @@ func (c *EC2) DescribeFleetsRequest(input *DescribeFleetsInput) (req *request.Re
 
 // DescribeFleets API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the specified EC2 Fleets or all your EC2 Fleets.
+// Describes the specified EC2 Fleets or all of your EC2 Fleets.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -40585,6 +40587,96 @@ func (s *CapacityReservation) SetTotalInstanceCount(v int64) *CapacityReservatio
 	return s
 }
 
+// Describes the strategy for using unused Capacity Reservations for fulfilling
+// On-Demand capacity.
+//
+// This strategy can only be used if the EC2 Fleet is of type instant.
+//
+// For more information about Capacity Reservations, see On-Demand Capacity
+// Reservations (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-capacity-reservations.html)
+// in the Amazon Elastic Compute Cloud User Guide. For examples of using Capacity
+// Reservations in an EC2 Fleet, see EC2 Fleet Example Configurations (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-examples.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+type CapacityReservationOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether to use unused Capacity Reservations for fulfilling On-Demand
+	// capacity.
+	//
+	// If you specify use-capacity-reservations-first, the fleet uses unused Capacity
+	// Reservations to fulfill On-Demand capacity up to the target On-Demand capacity.
+	// If multiple instance pools have unused Capacity Reservations, the On-Demand
+	// allocation strategy (lowest-price or prioritized) is applied. If the number
+	// of unused Capacity Reservations is less than the On-Demand target capacity,
+	// the remaining On-Demand target capacity is launched according to the On-Demand
+	// allocation strategy (lowest-price or prioritized).
+	//
+	// If you do not specify a value, the fleet fulfils the On-Demand capacity according
+	// to the chosen On-Demand allocation strategy.
+	UsageStrategy *string `locationName:"usageStrategy" type:"string" enum:"FleetCapacityReservationUsageStrategy"`
+}
+
+// String returns the string representation
+func (s CapacityReservationOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CapacityReservationOptions) GoString() string {
+	return s.String()
+}
+
+// SetUsageStrategy sets the UsageStrategy field's value.
+func (s *CapacityReservationOptions) SetUsageStrategy(v string) *CapacityReservationOptions {
+	s.UsageStrategy = &v
+	return s
+}
+
+// Describes the strategy for using unused Capacity Reservations for fulfilling
+// On-Demand capacity.
+//
+// This strategy can only be used if the EC2 Fleet is of type instant.
+//
+// For more information about Capacity Reservations, see On-Demand Capacity
+// Reservations (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-capacity-reservations.html)
+// in the Amazon Elastic Compute Cloud User Guide. For examples of using Capacity
+// Reservations in an EC2 Fleet, see EC2 Fleet Example Configurations (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-fleet-examples.html)
+// in the Amazon Elastic Compute Cloud User Guide.
+type CapacityReservationOptionsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates whether to use unused Capacity Reservations for fulfilling On-Demand
+	// capacity.
+	//
+	// If you specify use-capacity-reservations-first, the fleet uses unused Capacity
+	// Reservations to fulfill On-Demand capacity up to the target On-Demand capacity.
+	// If multiple instance pools have unused Capacity Reservations, the On-Demand
+	// allocation strategy (lowest-price or prioritized) is applied. If the number
+	// of unused Capacity Reservations is less than the On-Demand target capacity,
+	// the remaining On-Demand target capacity is launched according to the On-Demand
+	// allocation strategy (lowest-price or prioritized).
+	//
+	// If you do not specify a value, the fleet fulfils the On-Demand capacity according
+	// to the chosen On-Demand allocation strategy.
+	UsageStrategy *string `type:"string" enum:"FleetCapacityReservationUsageStrategy"`
+}
+
+// String returns the string representation
+func (s CapacityReservationOptionsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CapacityReservationOptionsRequest) GoString() string {
+	return s.String()
+}
+
+// SetUsageStrategy sets the UsageStrategy field's value.
+func (s *CapacityReservationOptionsRequest) SetUsageStrategy(v string) *CapacityReservationOptionsRequest {
+	s.UsageStrategy = &v
+	return s
+}
+
 // Describes an instance's Capacity Reservation targeting option. You can specify
 // only one parameter at a time. If you specify CapacityReservationPreference
 // and CapacityReservationTarget, the request fails.
@@ -43704,12 +43796,12 @@ type CreateFleetError struct {
 	ErrorCode *string `locationName:"errorCode" type:"string"`
 
 	// The error message that describes why the instance could not be launched.
-	// For more information about error messages, see ee Error Codes (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html.html).
+	// For more information about error messages, see Error Codes (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html.html).
 	ErrorMessage *string `locationName:"errorMessage" type:"string"`
 
 	// The launch templates and overrides that were used for launching the instances.
-	// Any parameters that you specify in the Overrides override the same parameters
-	// in the launch template.
+	// The values that you specify in the Overrides replace the values in the launch
+	// template.
 	LaunchTemplateAndOverrides *LaunchTemplateAndOverridesResponse `locationName:"launchTemplateAndOverrides" type:"structure"`
 
 	// Indicates if the instance that could not be launched was a Spot Instance
@@ -43754,8 +43846,8 @@ func (s *CreateFleetError) SetLifecycle(v string) *CreateFleetError {
 type CreateFleetInput struct {
 	_ struct{} `type:"structure"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	ClientToken *string `type:"string"`
 
 	// Checks whether you have the required permissions for the action, without
@@ -43948,15 +44040,15 @@ type CreateFleetInstance struct {
 	InstanceType *string `locationName:"instanceType" type:"string" enum:"InstanceType"`
 
 	// The launch templates and overrides that were used for launching the instances.
-	// Any parameters that you specify in the Overrides override the same parameters
-	// in the launch template.
+	// The values that you specify in the Overrides replace the values in the launch
+	// template.
 	LaunchTemplateAndOverrides *LaunchTemplateAndOverridesResponse `locationName:"launchTemplateAndOverrides" type:"structure"`
 
 	// Indicates if the instance that was launched is a Spot Instance or On-Demand
 	// Instance.
 	Lifecycle *string `locationName:"lifecycle" type:"string" enum:"InstanceLifecycle"`
 
-	// The value is Windows for Windows instances; otherwise blank.
+	// The value is Windows for Windows instances. Otherwise, the value is blank.
 	Platform *string `locationName:"platform" type:"string" enum:"PlatformValues"`
 }
 
@@ -55606,12 +55698,12 @@ type DescribeFleetError struct {
 	ErrorCode *string `locationName:"errorCode" type:"string"`
 
 	// The error message that describes why the instance could not be launched.
-	// For more information about error messages, see ee Error Codes (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html.html).
+	// For more information about error messages, see Error Codes (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html.html).
 	ErrorMessage *string `locationName:"errorMessage" type:"string"`
 
 	// The launch templates and overrides that were used for launching the instances.
-	// Any parameters that you specify in the Overrides override the same parameters
-	// in the launch template.
+	// The values that you specify in the Overrides replace the values in the launch
+	// template.
 	LaunchTemplateAndOverrides *LaunchTemplateAndOverridesResponse `locationName:"launchTemplateAndOverrides" type:"structure"`
 
 	// Indicates if the instance that could not be launched was a Spot Instance
@@ -56021,15 +56113,15 @@ type DescribeFleetsInstances struct {
 	InstanceType *string `locationName:"instanceType" type:"string" enum:"InstanceType"`
 
 	// The launch templates and overrides that were used for launching the instances.
-	// Any parameters that you specify in the Overrides override the same parameters
-	// in the launch template.
+	// The values that you specify in the Overrides replace the values in the launch
+	// template.
 	LaunchTemplateAndOverrides *LaunchTemplateAndOverridesResponse `locationName:"launchTemplateAndOverrides" type:"structure"`
 
 	// Indicates if the instance that was launched is a Spot Instance or On-Demand
 	// Instance.
 	Lifecycle *string `locationName:"lifecycle" type:"string" enum:"InstanceLifecycle"`
 
-	// The value is Windows for Windows instances; otherwise blank.
+	// The value is Windows for Windows instances. Otherwise, the value is blank.
 	Platform *string `locationName:"platform" type:"string" enum:"PlatformValues"`
 }
 
@@ -58389,8 +58481,9 @@ type DescribeInstancesInput struct {
 	//    * hypervisor - The hypervisor type of the instance (ovm | xen).
 	//
 	//    * iam-instance-profile.arn - The instance profile associated with the
-	//    instance. Specified as an ARN. image-id - The ID of the image used to
-	//    launch the instance.
+	//    instance. Specified as an ARN.
+	//
+	//    * image-id - The ID of the image used to launch the instance.
 	//
 	//    * instance-id - The ID of the instance.
 	//
@@ -68934,7 +69027,7 @@ type DiskInfo struct {
 	// The number of disks with this configuration.
 	Count *int64 `locationName:"count" type:"integer"`
 
-	// The size of the disk in GiB.
+	// The size of the disk in GB.
 	SizeInGB *int64 `locationName:"sizeInGB" type:"long"`
 
 	// The type of disk.
@@ -69103,8 +69196,9 @@ type EbsBlockDevice struct {
 	// size.
 	VolumeSize *int64 `locationName:"volumeSize" type:"integer"`
 
-	// The volume type. If you set the type to io1, you must also specify the IOPS
-	// that the volume supports.
+	// The volume type. If you set the type to io1, you must also specify the Iops
+	// parameter. If you set the type to gp2, st1, sc1, or standard, you must omit
+	// the Iops parameter.
 	//
 	// Default: gp2
 	VolumeType *string `locationName:"volumeType" type:"string" enum:"VolumeType"`
@@ -71367,8 +71461,8 @@ type FleetData struct {
 	// is pending_termination while instances are terminating.
 	ActivityStatus *string `locationName:"activityStatus" type:"string" enum:"FleetActivityStatus"`
 
-	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	//
 	// Constraints: Maximum 64 ASCII characters
 	ClientToken *string `locationName:"clientToken" type:"string"`
@@ -71431,11 +71525,11 @@ type FleetData struct {
 	// The type of request. Indicates whether the EC2 Fleet only requests the target
 	// capacity, or also attempts to maintain it. If you request a certain target
 	// capacity, EC2 Fleet only places the required requests; it does not attempt
-	// to replenish instances if capacity is diminished, and does not submit requests
-	// in alternative capacity pools if capacity is unavailable. To maintain a certain
-	// target capacity, EC2 Fleet places the required requests to meet this target
-	// capacity. It also automatically replenishes any interrupted Spot Instances.
-	// Default: maintain.
+	// to replenish instances if capacity is diminished, and it does not submit
+	// requests in alternative capacity pools if capacity is unavailable. To maintain
+	// a certain target capacity, EC2 Fleet places the required requests to meet
+	// this target capacity. It also automatically replenishes any interrupted Spot
+	// Instances. Default: maintain.
 	Type *string `locationName:"type" type:"string" enum:"FleetType"`
 
 	// The start date and time of the request, in UTC format (for example, YYYY-MM-DDTHH:MM:SSZ).
@@ -78752,7 +78846,7 @@ type InstanceStorageInfo struct {
 	// Array describing the disks that are available for the instance type.
 	Disks []*DiskInfo `locationName:"disks" locationNameList:"item" type:"list"`
 
-	// The total size of the disks, in GiB.
+	// The total size of the disks, in GB.
 	TotalSizeInGB *int64 `locationName:"totalSizeInGB" type:"long"`
 }
 
@@ -87743,6 +87837,10 @@ type OnDemandOptions struct {
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"FleetOnDemandAllocationStrategy"`
 
+	// The strategy for using unused Capacity Reservations for fulfilling On-Demand
+	// capacity. Only available for fleets of type instant.
+	CapacityReservationOptions *CapacityReservationOptions `locationName:"capacityReservationOptions" type:"structure"`
+
 	// The maximum amount per hour for On-Demand Instances that you're willing to
 	// pay.
 	MaxTotalPrice *string `locationName:"maxTotalPrice" type:"string"`
@@ -87773,6 +87871,12 @@ func (s OnDemandOptions) GoString() string {
 // SetAllocationStrategy sets the AllocationStrategy field's value.
 func (s *OnDemandOptions) SetAllocationStrategy(v string) *OnDemandOptions {
 	s.AllocationStrategy = &v
+	return s
+}
+
+// SetCapacityReservationOptions sets the CapacityReservationOptions field's value.
+func (s *OnDemandOptions) SetCapacityReservationOptions(v *CapacityReservationOptions) *OnDemandOptions {
+	s.CapacityReservationOptions = v
 	return s
 }
 
@@ -87812,6 +87916,10 @@ type OnDemandOptionsRequest struct {
 	// Fleet defaults to lowest-price.
 	AllocationStrategy *string `type:"string" enum:"FleetOnDemandAllocationStrategy"`
 
+	// The strategy for using unused Capacity Reservations for fulfilling On-Demand
+	// capacity. Only available for fleets of type instant.
+	CapacityReservationOptions *CapacityReservationOptionsRequest `type:"structure"`
+
 	// The maximum amount per hour for On-Demand Instances that you're willing to
 	// pay.
 	MaxTotalPrice *string `type:"string"`
@@ -87842,6 +87950,12 @@ func (s OnDemandOptionsRequest) GoString() string {
 // SetAllocationStrategy sets the AllocationStrategy field's value.
 func (s *OnDemandOptionsRequest) SetAllocationStrategy(v string) *OnDemandOptionsRequest {
 	s.AllocationStrategy = &v
+	return s
+}
+
+// SetCapacityReservationOptions sets the CapacityReservationOptions field's value.
+func (s *OnDemandOptionsRequest) SetCapacityReservationOptions(v *CapacityReservationOptionsRequest) *OnDemandOptionsRequest {
+	s.CapacityReservationOptions = v
 	return s
 }
 
@@ -88552,7 +88666,7 @@ func (s *PlacementGroupInfo) SetSupportedStrategies(v []*string) *PlacementGroup
 type PlacementResponse struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the placement group the instance is in.
+	// The name of the placement group that the instance is in.
 	GroupName *string `locationName:"groupName" type:"string"`
 }
 
@@ -99005,7 +99119,7 @@ type SpotOptions struct {
 	// strategy.
 	//
 	// If the allocation strategy is diversified, EC2 Fleet launches instances from
-	// all the Spot Instance pools that you specify.
+	// all of the Spot Instance pools that you specify.
 	//
 	// If the allocation strategy is capacity-optimized, EC2 Fleet launches instances
 	// from Spot Instance pools with optimal capacity for the number of instances
@@ -99101,7 +99215,7 @@ type SpotOptionsRequest struct {
 	// strategy.
 	//
 	// If the allocation strategy is diversified, EC2 Fleet launches instances from
-	// all the Spot Instance pools that you specify.
+	// all of the Spot Instance pools that you specify.
 	//
 	// If the allocation strategy is capacity-optimized, EC2 Fleet launches instances
 	// from Spot Instance pools with optimal capacity for the number of instances
@@ -100193,13 +100307,13 @@ func (s *TagSpecification) SetTags(v []*Tag) *TagSpecification {
 // later.
 //
 // You can use the On-Demand Instance MaxTotalPrice parameter, the Spot Instance
-// MaxTotalPrice, or both to ensure your fleet cost does not exceed your budget.
-// If you set a maximum price per hour for the On-Demand Instances and Spot
-// Instances in your request, EC2 Fleet will launch instances until it reaches
-// the maximum amount you're willing to pay. When the maximum amount you're
-// willing to pay is reached, the fleet stops launching instances even if it
-// hasn’t met the target capacity. The MaxTotalPrice parameters are located
-// in and
+// MaxTotalPrice, or both to ensure that your fleet cost does not exceed your
+// budget. If you set a maximum price per hour for the On-Demand Instances and
+// Spot Instances in your request, EC2 Fleet will launch instances until it
+// reaches the maximum amount that you're willing to pay. When the maximum amount
+// you're willing to pay is reached, the fleet stops launching instances even
+// if it hasn’t met the target capacity. The MaxTotalPrice parameters are
+// located in and
 type TargetCapacitySpecification struct {
 	_ struct{} `type:"structure"`
 
@@ -100262,9 +100376,9 @@ func (s *TargetCapacitySpecification) SetTotalTargetCapacity(v int64) *TargetCap
 // MaxTotalPrice parameter, or both parameters to ensure that your fleet cost
 // does not exceed your budget. If you set a maximum price per hour for the
 // On-Demand Instances and Spot Instances in your request, EC2 Fleet will launch
-// instances until it reaches the maximum amount you're willing to pay. When
-// the maximum amount you're willing to pay is reached, the fleet stops launching
-// instances even if it hasn’t met the target capacity. The MaxTotalPrice
+// instances until it reaches the maximum amount that you're willing to pay.
+// When the maximum amount you're willing to pay is reached, the fleet stops
+// launching instances even if it hasn’t met the target capacity. The MaxTotalPrice
 // parameters are located in and .
 type TargetCapacitySpecificationRequest struct {
 	_ struct{} `type:"structure"`
@@ -106517,6 +106631,11 @@ const (
 
 	// FleetActivityStatusFulfilled is a FleetActivityStatus enum value
 	FleetActivityStatusFulfilled = "fulfilled"
+)
+
+const (
+	// FleetCapacityReservationUsageStrategyUseCapacityReservationsFirst is a FleetCapacityReservationUsageStrategy enum value
+	FleetCapacityReservationUsageStrategyUseCapacityReservationsFirst = "use-capacity-reservations-first"
 )
 
 const (
