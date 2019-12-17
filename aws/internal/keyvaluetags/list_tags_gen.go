@@ -29,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
@@ -507,6 +508,23 @@ func DevicefarmListTags(conn *devicefarm.DeviceFarm, identifier string) (KeyValu
 	}
 
 	return DevicefarmKeyValueTags(output.Tags), nil
+}
+
+// DirectconnectListTags lists directconnect service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DirectconnectListTags(conn *directconnect.DirectConnect, identifier string) (KeyValueTags, error) {
+	input := &directconnect.DescribeTagsInput{
+		ResourceArns: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DirectconnectKeyValueTags(output.ResourceTags[0].Tags), nil
 }
 
 // DirectoryserviceListTags lists directoryservice service tags.

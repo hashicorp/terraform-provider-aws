@@ -42,6 +42,7 @@ var serviceNames = []string{
 	"datasync",
 	"dax",
 	"devicefarm",
+	"directconnect",
 	"directoryservice",
 	"dlm",
 	"docdb",
@@ -209,6 +210,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTagsLogGroup"
 	case "dax":
 		return "ListTags"
+	case "directconnect":
+		return "DescribeTags"
 	case "dynamodb":
 		return "ListTagsOfResource"
 	case "efs":
@@ -267,6 +270,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "devicefarm":
 		return "ResourceARN"
+	case "directconnect":
+		return "ResourceArns"
 	case "directoryservice":
 		return "ResourceId"
 	case "docdb":
@@ -329,6 +334,8 @@ func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "cloudtrail":
 		return "yes"
+	case "directconnect":
+		return "yes"
 	case "elbv2":
 		return "yes"
 	default:
@@ -355,6 +362,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "ResourceTagList[0].TagsList"
 	case "databasemigrationservice":
 		return "TagList"
+	case "directconnect":
+		return "ResourceTags[0].Tags"
 	case "docdb":
 		return "TagList"
 	case "elasticache":
