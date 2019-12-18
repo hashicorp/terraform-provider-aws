@@ -14,6 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	ecsClusterTimeoutCreate = 10 * time.Minute
+	ecsClusterTimeoutDelete = 10 * time.Minute
+	ecsClusterTimeoutUpdate = 10 * time.Minute
+)
+
 func resourceAwsEcsCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEcsClusterCreate,
@@ -131,6 +137,10 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
+	if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutCreate); err != nil {
+		return err
+	}
+
 	return resourceAwsEcsClusterRead(d, meta)
 }
 
@@ -220,6 +230,8 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
 
+	clusterName := d.Get("name").(string)
+
 	if d.HasChange("setting") {
 		input := ecs.UpdateClusterSettingsInput{
 			Cluster:  aws.String(d.Id()),
@@ -229,6 +241,10 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		_, err := conn.UpdateClusterSettings(&input)
 		if err != nil {
 			return fmt.Errorf("error changing ECS cluster settings (%s): %s", d.Id(), err)
+		}
+
+		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
+			return err
 		}
 	}
 
@@ -247,9 +263,31 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			DefaultCapacityProviderStrategy: expandEcsCapacityProviderStrategy(d.Get("default_capacity_provider_strategy").(*schema.Set)),
 		}
 
-		_, err := conn.PutClusterCapacityProviders(&input)
+		err := resource.Retry(ecsClusterTimeoutUpdate, func() *resource.RetryError {
+			_, err := conn.PutClusterCapacityProviders(&input)
+			if err != nil {
+				if isAWSErr(err, ecs.ErrCodeClientException, "Cluster was not ACTIVE") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, ecs.ErrCodeResourceInUseException, "") {
+					return resource.RetryableError(err)
+				}
+				if isAWSErr(err, ecs.ErrCodeUpdateInProgressException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.PutClusterCapacityProviders(&input)
+		}
 		if err != nil {
 			return fmt.Errorf("error changing ECS cluster capacity provider settings (%s): %s", d.Id(), err)
+		}
+
+		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
+			return err
 		}
 	}
 
@@ -263,7 +301,7 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	input := &ecs.DeleteClusterInput{
 		Cluster: aws.String(d.Id()),
 	}
-	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(ecsClusterTimeoutDelete, func() *resource.RetryError {
 		_, err := conn.DeleteCluster(input)
 
 		if err == nil {
@@ -293,32 +331,13 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	clusterName := d.Get("name").(string)
-	dcInput := &ecs.DescribeClustersInput{
-		Clusters: []*string{aws.String(clusterName)},
+	stateConf := resource.StateChangeConf{
+		Pending: []string{"ACTIVE", "DEPROVISIONING"},
+		Target:  []string{"INACTIVE"},
+		Timeout: ecsClusterTimeoutDelete,
+		Refresh: refreshEcsClusterStatus(conn, clusterName),
 	}
-	var out *ecs.DescribeClustersOutput
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] Checking if ECS Cluster %q is INACTIVE", d.Id())
-		out, err = conn.DescribeClusters(dcInput)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if !ecsClusterInactive(out, clusterName) {
-			return resource.RetryableError(fmt.Errorf("ECS Cluster %q is not inactive", clusterName))
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeClusters(dcInput)
-		if err != nil {
-			return fmt.Errorf("Error waiting for ECS cluster to become inactive: %s", err)
-		}
-		if !ecsClusterInactive(out, clusterName) {
-			return fmt.Errorf("ECS Cluster %q is still not inactive", clusterName)
-		}
-	}
+	_, err = stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for ECS cluster to become inactive: %s", err)
 	}
@@ -327,15 +346,32 @@ func resourceAwsEcsClusterDelete(d *schema.ResourceData, meta interface{}) error
 	return nil
 }
 
-func ecsClusterInactive(out *ecs.DescribeClustersOutput, clusterName string) bool {
-	for _, c := range out.Clusters {
-		if aws.StringValue(c.ClusterName) == clusterName {
-			if *c.Status == "INACTIVE" {
-				return true
+func waitForEcsClusterActive(conn *ecs.ECS, clusterName string, timeout time.Duration) error {
+	stateConf := resource.StateChangeConf{
+		Pending: []string{"PROVISIONING"},
+		Target:  []string{"ACTIVE"},
+		Timeout: timeout,
+		Refresh: refreshEcsClusterStatus(conn, clusterName),
+	}
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func refreshEcsClusterStatus(conn *ecs.ECS, clusterName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := conn.DescribeClusters(&ecs.DescribeClustersInput{
+			Clusters: []*string{aws.String(clusterName)},
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		for _, c := range output.Clusters {
+			if aws.StringValue(c.ClusterName) == clusterName {
+				return c, aws.StringValue(c.Status), nil
 			}
 		}
+		return nil, "", fmt.Errorf("ECS cluster %q missing", clusterName)
 	}
-	return false
 }
 
 func expandEcsSettings(configured *schema.Set) []*ecs.ClusterSetting {
