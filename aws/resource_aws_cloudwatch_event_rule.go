@@ -68,11 +68,6 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
-				ValidateFunc: validation.StringInSlice(
-					[]string{
-						events.RuleStateEnabled,
-						events.RuleStateDisabled,
-					}, false),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -296,9 +291,9 @@ func buildPutRuleInputStruct(d *schema.ResourceData, name string) (*events.PutRu
 
 // State is represented as (ENABLED|DISABLED) in the API
 func getBooleanStateFromString(state string) (bool, error) {
-	if state == "ENABLED" {
+	if state == events.RuleStateEnabled {
 		return true, nil
-	} else if state == "DISABLED" {
+	} else if state == events.RuleStateDisabled {
 		return false, nil
 	}
 	// We don't just blindly trust AWS as they tend to return
@@ -309,9 +304,9 @@ func getBooleanStateFromString(state string) (bool, error) {
 // State is represented as (ENABLED|DISABLED) in the API
 func getStringStateFromBoolean(isEnabled bool) string {
 	if isEnabled {
-		return "ENABLED"
+		return events.RuleStateEnabled
 	}
-	return "DISABLED"
+	return events.RuleStateDisabled
 }
 
 func validateEventPatternValue() schema.SchemaValidateFunc {
