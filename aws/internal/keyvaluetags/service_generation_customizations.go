@@ -61,6 +61,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -216,6 +217,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(iotevents.New)
 	case "kafka":
 		funcType = reflect.TypeOf(kafka.New)
+	case "kinesis":
+		funcType = reflect.TypeOf(kinesis.New)
 	case "kinesisanalytics":
 		funcType = reflect.TypeOf(kinesisanalytics.New)
 	case "kinesisanalyticsv2":

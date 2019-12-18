@@ -69,6 +69,7 @@ var serviceNames = []string{
 	"iotanalytics",
 	"iotevents",
 	"kafka",
+	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
 	"kms",
@@ -122,6 +123,7 @@ func main() {
 		"TagFunction":                     ServiceTagFunction,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
+		"TagInputRequiresStringMap":       ServiceTagInputRequiresStringMap,
 		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
 		"TagInputTagsField":               ServiceTagInputTagsField,
 		"TagPackage":                      keyvaluetags.ServiceTagPackage,
@@ -221,7 +223,11 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
+			{{- if . | TagInputRequiresStringMap }}
+			{{ . | TagInputTagsField }}:         aws.StringMap(updatedTags.IgnoreAws().Map()),
+			{{- else }}
 			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{- end }}
 		}
 
 		_, err := conn.{{ . | TagFunction }}(input)
@@ -269,6 +275,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTags"
 	case "firehose":
 		return "TagDeliveryStream"
+	case "kinesis":
+		return "AddTagsToStream"
 	case "medialive":
 		return "CreateTags"
 	case "mq":
@@ -343,6 +351,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "DeliveryStreamName"
 	case "fsx":
 		return "ResourceARN"
+	case "kinesis":
+		return "StreamName"
 	case "kinesisanalytics":
 		return "ResourceARN"
 	case "kinesisanalyticsv2":
@@ -422,6 +432,16 @@ func ServiceTagInputTagsField(serviceName string) string {
 	}
 }
 
+// ServiceTagInputResourceTypeField determines the service tagging tags field requires a map[string]*string.
+func ServiceTagInputRequiresStringMap(serviceName string) string {
+	switch serviceName {
+	case "kinesis":
+		return "yes"
+	default:
+		return ""
+	}
+}
+
 // ServiceTagInputResourceTypeField determines the service tagging resource type field.
 func ServiceTagInputResourceTypeField(serviceName string) string {
 	switch serviceName {
@@ -467,6 +487,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTags"
 	case "firehose":
 		return "UntagDeliveryStream"
+	case "kinesis":
+		return "RemoveTagsFromStream"
 	case "medialive":
 		return "DeleteTags"
 	case "mq":
