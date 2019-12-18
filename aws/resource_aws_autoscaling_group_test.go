@@ -2036,9 +2036,9 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Wei
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t3.small"),
-					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "4"),
 				),
 			},
 			{
@@ -3980,9 +3980,9 @@ func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Overri
 	return testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Base(rName) + fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
+  desired_capacity   = 4
+  max_size           = 6
+  min_size           = 2
   name               = %q
 
   mixed_instances_policy {
@@ -3993,11 +3993,11 @@ resource "aws_autoscaling_group" "test" {
 
       override {
         instance_type = "t2.micro"
-        weighted_capacity = "1"
+        weighted_capacity = "2"
       }
       override {
         instance_type = "t3.small"
-        weighted_capacity = "2"
+        weighted_capacity = "4"
       }
     }
   }
