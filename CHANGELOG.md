@@ -13,6 +13,7 @@ BUG FIXES:
 
 * resource/aws_datasync_agent: Trigger resource recreation on updated `InvalidRequestException` error for agents deleted outside Terraform [GH-11005]
 * resource/aws_ecs_cluster: Fixes bug where ECS cluster capacity providers are updated but default provider strategy is not changed [GH-11316]
+* resource/aws_globalaccelerator_endpoint_group: Allow `traffic_dial_percentage` to be set to `0` [GH-11253]
 * resource/aws_ssm_activation: Ensure `tags` are refreshed into Terraform state during read for drift detection [GH-11290]
 
 ## 2.42.0 (December 13, 2019)
