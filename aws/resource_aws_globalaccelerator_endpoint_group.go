@@ -151,7 +151,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupCreate(d *schema.ResourceData, met
 		return err
 	}
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, acceleratorArn)
 
 	if err != nil {
 		return err
@@ -302,7 +302,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupUpdate(d *schema.ResourceData, met
 		return err
 	}
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, acceleratorArn)
 
 	if err != nil {
 		return err
@@ -332,7 +332,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupDelete(d *schema.ResourceData, met
 		return err
 	}
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, acceleratorArn)
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, acceleratorArn)
 
 	if err != nil {
 		return err
