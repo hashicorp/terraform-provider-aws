@@ -69569,6 +69569,9 @@ type ElasticGpus struct {
 
 	// The ID of the instance to which the Elastic Graphics accelerator is attached.
 	InstanceId *string `locationName:"instanceId" type:"string"`
+
+	// The tags assigned to the Elastic Graphics accelerator.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -69614,6 +69617,12 @@ func (s *ElasticGpus) SetElasticGpuType(v string) *ElasticGpus {
 // SetInstanceId sets the InstanceId field's value.
 func (s *ElasticGpus) SetInstanceId(v string) *ElasticGpus {
 	s.InstanceId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ElasticGpus) SetTags(v []*Tag) *ElasticGpus {
+	s.Tags = v
 	return s
 }
 
