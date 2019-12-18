@@ -3,7 +3,7 @@ module github.com/terraform-providers/terraform-provider-aws
 go 1.13
 
 require (
-	github.com/aws/aws-sdk-go v1.26.4
+	github.com/aws/aws-sdk-go v1.26.5
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderdocs v0.3.0
 	github.com/bflad/tfproviderlint v0.5.1
