@@ -89,6 +89,7 @@ var serviceNames = []string{
 	"rds",
 	"redshift",
 	"resourcegroups",
+	"route53",
 	"route53resolver",
 	"sagemaker",
 	"secretsmanager",
@@ -280,6 +281,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "CreateTags"
 	case "resourcegroups":
 		return "Tag"
+	case "route53":
+		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "AddTags"
 	case "sqs":
@@ -366,6 +369,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "resourcegroups":
 		return "Arn"
+	case "route53":
+		return "ResourceId"
 	case "secretsmanager":
 		return "SecretId"
 	case "sqs":
@@ -410,6 +415,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 		return "TagList"
 	case "glue":
 		return "TagsToAdd"
+	case "route53":
+		return "AddTags"
 	default:
 		return "Tags"
 	}
@@ -418,6 +425,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 // ServiceTagInputResourceTypeField determines the service tagging resource type field.
 func ServiceTagInputResourceTypeField(serviceName string) string {
 	switch serviceName {
+	case "route53":
+		return "ResourceType"
 	case "ssm":
 		return "ResourceType"
 	default:
@@ -470,6 +479,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "DeleteTags"
 	case "resourcegroups":
 		return "Untag"
+	case "route53":
+		return "ChangeTagsForResource"
 	case "sagemaker":
 		return "DeleteTags"
 	case "sqs":
@@ -524,6 +535,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "TagsToRemove"
 	case "resourcegroups":
 		return "Keys"
+	case "route53":
+		return "RemoveTagKeys"
 	default:
 		return "TagKeys"
 	}

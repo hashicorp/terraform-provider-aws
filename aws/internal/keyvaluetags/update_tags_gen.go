@@ -78,6 +78,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -2677,6 +2678,44 @@ func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier st
 		}
 
 		_, err := conn.Tag(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// Route53UpdateTags updates route53 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53UpdateTags(conn *route53.Route53, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &route53.ChangeTagsForResourceInput{
+			ResourceId:    aws.String(identifier),
+			ResourceType:  aws.String(resourceType),
+			RemoveTagKeys: aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.ChangeTagsForResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &route53.ChangeTagsForResourceInput{
+			ResourceId:   aws.String(identifier),
+			ResourceType: aws.String(resourceType),
+			AddTags:      updatedTags.IgnoreAws().Route53Tags(),
+		}
+
+		_, err := conn.ChangeTagsForResource(input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)

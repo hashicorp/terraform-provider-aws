@@ -82,6 +82,7 @@ var serviceNames = []string{
 	"qldb",
 	"rds",
 	"resourcegroups",
+	"route53",
 	"route53resolver",
 	"sagemaker",
 	"securityhub",
@@ -305,6 +306,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "resourcegroups":
 		return "Arn"
+	case "route53":
+		return "ResourceId"
 	case "sqs":
 		return "QueueUrl"
 	case "ssm":
@@ -339,6 +342,8 @@ func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 // ServiceListTagsInputResourceTypeField determines the service tagging resource type field.
 func ServiceListTagsInputResourceTypeField(serviceName string) string {
 	switch serviceName {
+	case "route53":
+		return "ResourceType"
 	case "ssm":
 		return "ResourceType"
 	default:
@@ -371,6 +376,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "TagList"
 	case "rds":
 		return "TagList"
+	case "route53":
+		return "ResourceTagSet.Tags"
 	case "ssm":
 		return "TagList"
 	case "waf":
