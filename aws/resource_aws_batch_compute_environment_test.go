@@ -83,7 +83,7 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_createEc2WithTags(t *testing.T) {
 	rInt := acctest.RandInt()
-
+	resourceName := "aws_batch_compute_environment.ec2"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
 		Providers:    testAccProviders,
@@ -93,9 +93,14 @@ func TestAccAWSBatchComputeEnvironment_createEc2WithTags(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2WithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.Key1", "Value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -139,6 +144,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -149,15 +155,20 @@ func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.max_vcpus", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 				),
 			},
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateMaxvCpus(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.max_vcpus", "32"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "32"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -165,6 +176,7 @@ func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_updateInstanceType(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -175,15 +187,20 @@ func TestAccAWSBatchComputeEnvironment_updateInstanceType(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.instance_type.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "1"),
 				),
 			},
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateInstanceType(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.instance_type.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.instance_type.#", "2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -193,6 +210,7 @@ func TestAccAWSBatchComputeEnvironment_updateComputeEnvironmentName(t *testing.T
 	rInt := acctest.RandInt()
 	expectedName := fmt.Sprintf("tf_acc_test_%d", rInt)
 	expectedUpdatedName := fmt.Sprintf("tf_acc_test_updated_%d", rInt)
+	resourceName := "aws_batch_compute_environment.ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -203,15 +221,20 @@ func TestAccAWSBatchComputeEnvironment_updateComputeEnvironmentName(t *testing.T
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_environment_name", expectedName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", expectedName),
 				),
 			},
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateComputeEnvironmentName(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_environment_name", expectedUpdatedName),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_name", expectedUpdatedName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -254,6 +277,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanagedWithComputeResources(t *te
 
 func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -264,13 +288,18 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigLaunchTemplate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2",
+					resource.TestCheckResourceAttr(resourceName,
 						"compute_resources.0.launch_template.#",
 						"1"),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2",
+					resource.TestCheckResourceAttr(resourceName,
 						"compute_resources.0.launch_template.0.launch_template_name",
 						fmt.Sprintf("tf_acc_test_%d", rInt)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -278,6 +307,7 @@ func TestAccAWSBatchComputeEnvironment_launchTemplate(t *testing.T) {
 
 func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -288,15 +318,20 @@ func TestAccAWSBatchComputeEnvironment_UpdateLaunchTemplate(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentUpdateLaunchTemplateInExistingComputeEnvironment(rInt, "$Default"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.launch_template.0.version", "$Default"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.version", "$Default"),
 				),
 			},
 			{
 				Config: testAccAWSBatchComputeEnvironmentUpdateLaunchTemplateInExistingComputeEnvironment(rInt, "$Latest"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.launch_template.0.version", "$Latest"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.launch_template.0.version", "$Latest"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -320,6 +355,7 @@ func TestAccAWSBatchComputeEnvironment_createSpotWithoutBidPercentage(t *testing
 
 func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
@@ -330,15 +366,20 @@ func TestAccAWSBatchComputeEnvironment_updateState(t *testing.T) {
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt, batch.CEStateEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", batch.CEStateEnabled),
+					resource.TestCheckResourceAttr(resourceName, "state", batch.CEStateEnabled),
 				),
 			},
 			{
 				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateState(rInt, batch.CEStateDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "state", batch.CEStateDisabled),
+					resource.TestCheckResourceAttr(resourceName, "state", batch.CEStateDisabled),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

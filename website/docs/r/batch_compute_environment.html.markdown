@@ -165,3 +165,11 @@ resource "aws_batch_compute_environment" "sample" {
 [1]: http://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html
 [3]: http://docs.aws.amazon.com/batch/latest/userguide/troubleshooting.html
+
+ ## Import
+
+AWS Batch compute can be imported using the `compute_environment_name`, e.g.
+
+```
+$ terraform import aws_batch_compute_environment.sample sample
+```
