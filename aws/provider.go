@@ -315,6 +315,7 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"aws_accessanalyzer_analyzer":                             resourceAwsAccessAnalyzerAnalyzer(),
 			"aws_acm_certificate":                                     resourceAwsAcmCertificate(),
 			"aws_acm_certificate_validation":                          resourceAwsAcmCertificateValidation(),
 			"aws_acmpca_certificate_authority":                        resourceAwsAcmpcaCertificateAuthority(),
