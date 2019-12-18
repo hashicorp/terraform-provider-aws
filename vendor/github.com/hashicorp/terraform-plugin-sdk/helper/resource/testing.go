@@ -191,8 +191,13 @@ func filterSweepers(f string, source map[string]*Sweeper) map[string]*Sweeper {
 // Since filterSweepers performs fuzzy matching, this function is used
 // to perform exact sweeper and dependency lookup.
 func filterSweeperWithDependencies(name string, source map[string]*Sweeper) map[string]*Sweeper {
-	currentSweeper := source[name]
 	result := make(map[string]*Sweeper)
+
+	currentSweeper, ok := source[name]
+	if !ok {
+		log.Printf("[DEBUG] Sweeper has dependency (%s), but that sweeper was not found", name)
+		return result
+	}
 
 	result[name] = currentSweeper
 
