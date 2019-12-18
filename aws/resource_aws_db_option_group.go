@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsDbOptionGroup() *schema.Resource {
@@ -281,9 +281,7 @@ func resourceAwsDbOptionGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
-				_, err = rdsconn.ModifyOptionGroup(modifyOpts)
-			}
+
 			if err != nil {
 				return fmt.Errorf("Error modifying DB Option Group: %s", err)
 			}
@@ -308,7 +306,7 @@ func resourceAwsDbOptionGroupDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Delete DB Option Group: %#v", deleteOpts)
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	ret := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		_, err := rdsconn.DeleteOptionGroup(deleteOpts)
 		if err != nil {
 			if isAWSErr(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
@@ -319,11 +317,8 @@ func resourceAwsDbOptionGroupDelete(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = rdsconn.DeleteOptionGroup(deleteOpts)
-	}
-	if err != nil {
-		return fmt.Errorf("Error Deleting DB Option Group: %s", err)
+	if ret != nil {
+		return fmt.Errorf("Error Deleting DB Option Group: %s", ret)
 	}
 	return nil
 }

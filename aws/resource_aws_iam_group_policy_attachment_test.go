@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
@@ -116,14 +116,13 @@ func testAccCheckAWSGroupPolicyAttachmentAttributes(policies []string, out *iam.
 func testAccAWSGroupPolicyAttachConfig(groupName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-  name = "%s"
+    name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-  name        = "%s"
-  description = "A test policy"
-
-  policy = <<EOF
+    name = "%s"
+    description = "A test policy"
+    policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -140,8 +139,8 @@ EOF
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
-  group      = "${aws_iam_group.group.name}"
-  policy_arn = "${aws_iam_policy.policy.arn}"
+    group = "${aws_iam_group.group.name}"
+    policy_arn = "${aws_iam_policy.policy.arn}"
 }
 `, groupName, policyName)
 }
@@ -149,14 +148,13 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 func testAccAWSGroupPolicyAttachConfigUpdate(groupName, policyName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-  name = "%s"
+    name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-  name        = "%s"
-  description = "A test policy"
-
-  policy = <<EOF
+    name = "%s"
+    description = "A test policy"
+    policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -173,10 +171,9 @@ EOF
 }
 
 resource "aws_iam_policy" "policy2" {
-  name        = "%s"
-  description = "A test policy"
-
-  policy = <<EOF
+    name = "%s"
+    description = "A test policy"
+    policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -193,10 +190,9 @@ EOF
 }
 
 resource "aws_iam_policy" "policy3" {
-  name        = "%s"
-  description = "A test policy"
-
-  policy = <<EOF
+    name = "%s"
+    description = "A test policy"
+    policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -213,13 +209,13 @@ EOF
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
-  group      = "${aws_iam_group.group.name}"
-  policy_arn = "${aws_iam_policy.policy2.arn}"
+    group = "${aws_iam_group.group.name}"
+    policy_arn = "${aws_iam_policy.policy2.arn}"
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach2" {
-  group      = "${aws_iam_group.group.name}"
-  policy_arn = "${aws_iam_policy.policy3.arn}"
+    group = "${aws_iam_group.group.name}"
+    policy_arn = "${aws_iam_policy.policy3.arn}"
 }
 `, groupName, policyName, policyName2, policyName3)
 }

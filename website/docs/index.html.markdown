@@ -19,13 +19,14 @@ Use the navigation to the left to read about the available resources.
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 2.0"
-  region  = "us-east-1"
+  access_key = "${var.aws_access_key}"
+  secret_key = "${var.aws_secret_key}"
+  region     = "us-east-1"
 }
 
-# Create a VPC
-resource "aws_vpc" "example" {
-  cidr_block = "10.0.0.0/16"
+# Create a web server
+resource "aws_instance" "web" {
+  # ...
 }
 ```
 
@@ -42,20 +43,16 @@ explained below:
 
 ### Static credentials ###
 
-!> **Warning:** Hard-coding credentials into any Terraform configuration is not
-recommended, and risks secret leakage should this file ever be committed to a
-public version control system.
-
-Static credentials can be provided by adding an `access_key` and `secret_key`
-in-line in the AWS provider block:
+Static credentials can be provided by adding an `access_key` and `secret_key` in-line in the
+AWS provider block:
 
 Usage:
 
 ```hcl
 provider "aws" {
   region     = "us-west-2"
-  access_key = "my-access-key"
-  secret_key = "my-secret-key"
+  access_key = "anaccesskey"
+  secret_key = "asecretkey"
 }
 ```
 
@@ -103,9 +100,6 @@ provider "aws" {
   profile                 = "customprofile"
 }
 ```
-
-If specifying the profile through the `AWS_PROFILE` environment variable, you
-may also need to set `AWS_SDK_LOAD_CONFIG` to a truthy value (e.g. `AWS_SDK_LOAD_CONFIG=1`) for advanced AWS client configurations, such as profiles that use the `source_profile` or `role_arn` configurations.
 
 ### ECS and CodeBuild Task Roles
 
@@ -302,7 +296,7 @@ Approaches differ per authentication providers:
  * EC2 instance w/ IAM Instance Profile - [Metadata API](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html)
     is always used. Introduced in Terraform `0.6.16`.
  * All other providers (environment variable, shared credentials file, ...)
-    will try three approaches in the following order
+    will try two approaches in the following order
    * `iam:GetUser` - Typically useful for IAM Users. It also means
       that each user needs to be privileged to call `iam:GetUser` for themselves.
    * `sts:GetCallerIdentity` - _Should_ work for both IAM Users and federated IAM Roles,

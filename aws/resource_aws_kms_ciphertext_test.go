@@ -3,14 +3,13 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccResourceAwsKmsCiphertext_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAwsKmsCiphertextConfig_basic,
@@ -28,9 +27,8 @@ func TestAccResourceAwsKmsCiphertext_validate(t *testing.T) {
 	resourceName := "aws_kms_ciphertext.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAwsKmsCiphertextConfig_validate,
@@ -48,9 +46,8 @@ func TestAccResourceAwsKmsCiphertext_validate_withContext(t *testing.T) {
 	resourceName := "aws_kms_ciphertext.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: nil,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAwsKmsCiphertextConfig_validate_withContext,

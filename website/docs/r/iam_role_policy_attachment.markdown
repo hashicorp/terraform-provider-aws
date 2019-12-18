@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_role_policy_attachment"
+sidebar_current: "docs-aws-resource-iam-role-policy-attachment"
 description: |-
   Attaches a Managed IAM Policy to an IAM role
 ---

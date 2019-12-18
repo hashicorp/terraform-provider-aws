@@ -2,13 +2,12 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsSnapshotCreateVolumePermission() *schema.Resource {
@@ -36,11 +35,9 @@ func resourceAwsSnapshotCreateVolumePermission() *schema.Resource {
 func resourceAwsSnapshotCreateVolumePermissionExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	conn := meta.(*AWSClient).ec2conn
 
-	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())
-	if err != nil {
-		return false, err
-	}
-	return hasCreateVolumePermission(conn, snapshotID, accountID)
+	snapshot_id := d.Get("snapshot_id").(string)
+	account_id := d.Get("account_id").(string)
+	return hasCreateVolumePermission(conn, snapshot_id, account_id)
 }
 
 func resourceAwsSnapshotCreateVolumePermissionCreate(d *schema.ResourceData, meta interface{}) error {
@@ -89,17 +86,15 @@ func resourceAwsSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta 
 func resourceAwsSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	snapshotID, accountID, err := resourceAwsSnapshotCreateVolumePermissionParseID(d.Id())
-	if err != nil {
-		return err
-	}
+	snapshot_id := d.Get("snapshot_id").(string)
+	account_id := d.Get("account_id").(string)
 
-	_, err = conn.ModifySnapshotAttribute(&ec2.ModifySnapshotAttributeInput{
-		SnapshotId: aws.String(snapshotID),
+	_, err := conn.ModifySnapshotAttribute(&ec2.ModifySnapshotAttributeInput{
+		SnapshotId: aws.String(snapshot_id),
 		Attribute:  aws.String("createVolumePermission"),
 		CreateVolumePermission: &ec2.CreateVolumePermissionModifications{
 			Remove: []*ec2.CreateVolumePermission{
-				{UserId: aws.String(accountID)},
+				{UserId: aws.String(account_id)},
 			},
 		},
 	})
@@ -111,7 +106,7 @@ func resourceAwsSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, met
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"granted"},
 		Target:     []string{"denied"},
-		Refresh:    resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshotID, accountID),
+		Refresh:    resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn, snapshot_id, account_id),
 		Timeout:    5 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
@@ -148,18 +143,10 @@ func resourceAwsSnapshotCreateVolumePermissionStateRefreshFunc(conn *ec2.EC2, sn
 		}
 
 		for _, vp := range attrs.CreateVolumePermissions {
-			if aws.StringValue(vp.UserId) == account_id {
+			if *vp.UserId == account_id {
 				return attrs, "granted", nil
 			}
 		}
 		return attrs, "denied", nil
 	}
-}
-
-func resourceAwsSnapshotCreateVolumePermissionParseID(id string) (string, string, error) {
-	idParts := strings.SplitN(id, "-", 3)
-	if len(idParts) != 3 || idParts[0] != "snap" || idParts[1] == "" || idParts[2] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected SNAPSHOT_ID-ACCOUNT_ID", id)
-	}
-	return fmt.Sprintf("%s-%s", idParts[0], idParts[1]), idParts[2], nil
 }

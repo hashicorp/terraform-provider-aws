@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_autoscaling_policy"
+sidebar_current: "docs-aws-resource-autoscaling-policy"
 description: |-
   Provides an AutoScaling Scaling Group resource.
 ---

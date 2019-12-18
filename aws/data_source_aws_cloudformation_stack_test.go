@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSCloudFormationStack_dataSource_basic(t *testing.T) {
@@ -42,13 +42,10 @@ func testAccCheckAwsCloudFormationStackDataSourceConfig_basic(stackName string) 
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "cfs" {
   name = "%s"
-
   parameters = {
     CIDR = "10.10.10.0/24"
   }
-
   timeout_in_minutes = 6
-
   template_body = <<STACK
 {
   "Parameters": {
@@ -75,9 +72,8 @@ resource "aws_cloudformation_stack" "cfs" {
   }
 }
 STACK
-
   tags = {
-    Name   = "Form the Cloud"
+    Name = "Form the Cloud"
     Second = "meh"
   }
 }
@@ -121,13 +117,10 @@ func testAccCheckAwsCloudFormationStackDataSourceConfig_yaml(stackName string) s
 	return fmt.Sprintf(`
 resource "aws_cloudformation_stack" "yaml" {
   name = "%s"
-
   parameters = {
     CIDR = "10.10.10.0/24"
   }
-
   timeout_in_minutes = 6
-
   template_body = <<STACK
 Parameters:
   CIDR:
@@ -148,9 +141,8 @@ Outputs:
     Value: !Ref myvpc
     Description: VPC ID
 STACK
-
   tags = {
-    Name   = "Form the Cloud"
+    Name = "Form the Cloud"
     Second = "meh"
   }
 }

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_availability_zones"
+sidebar_current: "docs-aws-datasource-availability-zones"
 description: |-
     Provides a list of Availability Zones which can be used by an AWS account.
 ---
@@ -18,9 +19,7 @@ which provides some details about a specific availability zone.
 
 ```hcl
 # Declare the data source
-data "aws_availability_zones" "available" {
-  state = "available"
-}
+data "aws_availability_zones" "available" {}
 
 # e.g. Create subnets in the first two available availability zones
 

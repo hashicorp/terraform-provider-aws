@@ -3,23 +3,20 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsLightsailInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLightsailInstanceCreate,
 		Read:   resourceAwsLightsailInstanceRead,
-		Update: resourceAwsLightsailInstanceUpdate,
 		Delete: resourceAwsLightsailInstanceDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -30,11 +27,6 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
-				),
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
@@ -111,7 +103,6 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -133,12 +124,6 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 	}
 	if v, ok := d.GetOk("user_data"); ok {
 		req.UserData = aws.String(v.(string))
-	}
-
-	tags := tagsFromMapLightsail(d.Get("tags").(map[string]interface{}))
-
-	if len(tags) != 0 {
-		req.Tags = tags
 	}
 
 	resp, err := conn.CreateInstances(&req)
@@ -214,10 +199,6 @@ func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
 
-	if err := d.Set("tags", tagsToMapLightsail(i.Tags)); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
-	}
-
 	return nil
 }
 
@@ -250,19 +231,6 @@ func resourceAwsLightsailInstanceDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
-}
-
-func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).lightsailconn
-
-	if d.HasChange("tags") {
-		if err := setTagsLightsail(conn, d); err != nil {
-			return err
-		}
-		d.SetPartial("tags")
-	}
-
-	return resourceAwsLightsailInstanceRead(d, meta)
 }
 
 // method to check the status of an Operation, which is returned from

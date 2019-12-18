@@ -1,4 +1,4 @@
-all: vet test testrace
+all: vet test testrace testappengine
 
 build: deps
 	go build google.golang.org/grpc/...

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_redshift_parameter_group"
+sidebar_current: "docs-aws-resource-redshift-parameter-group"
 description: |-
   Provides a Redshift Cluster parameter group resource.
 ---
@@ -46,7 +47,6 @@ Parameter blocks support the following:
 
 * `name` - (Required) The name of the Redshift parameter.
 * `value` - (Required) The value of the Redshift parameter.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 You can read more about the parameters that Redshift supports in the [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-parameter-groups.html)
 
@@ -54,7 +54,6 @@ You can read more about the parameters that Redshift supports in the [documentat
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - Amazon Resource Name (ARN) of parameter group
 * `id` - The Redshift parameter group name.
 
 ## Import

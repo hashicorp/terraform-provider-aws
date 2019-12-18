@@ -9,9 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsAcmCertificate() *schema.Resource {
@@ -23,6 +22,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
 				Type:      schema.TypeString,
@@ -40,11 +40,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Optional:  true,
 				StateFunc: normalizeCert,
 				Sensitive: true,
-			},
-			"certificate_authority_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
 			},
 			"domain_name": {
 				Type:          schema.TypeString,
@@ -78,7 +73,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain", "certificate_authority_arn"},
+				ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -113,35 +108,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if _, ok := d.GetOk("private_key"); ok {
-						// ignore diffs for imported certs; they have a different logging preference
-						// default to requested certs which can't be changed by the ImportCertificate API
-						return true
-					}
-					// behave just like suppressMissingOptionalConfigurationBlock() for requested certs
-					return old == "1" && new == "0"
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"certificate_transparency_logging_preference": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Default:       acm.CertificateTransparencyLoggingPreferenceEnabled,
-							ForceNew:      true,
-							ConflictsWith: []string{"private_key", "certificate_body", "certificate_chain"},
-							ValidateFunc: validation.StringInSlice([]string{
-								acm.CertificateTransparencyLoggingPreferenceEnabled,
-								acm.CertificateTransparencyLoggingPreferenceDisabled,
-							}, false),
-						},
-					},
-				},
-			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -149,10 +115,6 @@ func resourceAwsAcmCertificate() *schema.Resource {
 
 func resourceAwsAcmCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("domain_name"); ok {
-		if _, ok := d.GetOk("certificate_authority_arn"); ok {
-			return resourceAwsAcmCertificateCreateRequested(d, meta)
-		}
-
 		if _, ok := d.GetOk("validation_method"); !ok {
 			return errors.New("validation_method must be set when creating a certificate")
 		}
@@ -193,12 +155,7 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 	acmconn := meta.(*AWSClient).acmconn
 	params := &acm.RequestCertificateInput{
 		DomainName:       aws.String(strings.TrimSuffix(d.Get("domain_name").(string), ".")),
-		IdempotencyToken: aws.String(resource.PrefixedUniqueId("tf")), // 32 character limit
-		Options:          expandAcmCertificateOptions(d.Get("options").([]interface{})),
-	}
-
-	if caARN, ok := d.GetOk("certificate_authority_arn"); ok {
-		params.CertificateAuthorityArn = aws.String(caARN.(string))
+		ValidationMethod: aws.String(d.Get("validation_method").(string)),
 	}
 
 	if sans, ok := d.GetOk("subject_alternative_names"); ok {
@@ -207,10 +164,6 @@ func resourceAwsAcmCertificateCreateRequested(d *schema.ResourceData, meta inter
 			subjectAlternativeNames[i] = aws.String(strings.TrimSuffix(sanRaw.(string), "."))
 		}
 		params.SubjectAlternativeNames = subjectAlternativeNames
-	}
-
-	if v, ok := d.GetOk("validation_method"); ok {
-		params.ValidationMethod = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] ACM Certificate Request: %#v", params)
@@ -256,7 +209,6 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 		d.Set("domain_name", resp.Certificate.DomainName)
 		d.Set("arn", resp.Certificate.CertificateArn)
-		d.Set("certificate_authority_arn", resp.Certificate.CertificateAuthorityArn)
 
 		if err := d.Set("subject_alternative_names", cleanUpSubjectAlternativeNames(resp.Certificate)); err != nil {
 			return resource.NonRetryableError(err)
@@ -276,10 +228,6 @@ func resourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) err
 		}
 
 		d.Set("validation_method", resourceAwsAcmCertificateGuessValidationMethod(domainValidationOptions, emailValidationOptions))
-
-		if err := d.Set("options", flattenAcmCertificateOptions(resp.Certificate.Options)); err != nil {
-			return resource.NonRetryableError(fmt.Errorf("error setting certificate options: %s", err))
-		}
 
 		params := &acm.ListTagsForCertificateInput{
 			CertificateArn: aws.String(d.Id()),
@@ -343,12 +291,7 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 	var domainValidationResult []map[string]interface{}
 	var emailValidationResult []string
 
-	switch aws.StringValue(certificate.Type) {
-	case acm.CertificateTypeAmazonIssued:
-		if len(certificate.DomainValidationOptions) == 0 && aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
-			log.Printf("[DEBUG] No validation options need to retry.")
-			return nil, nil, fmt.Errorf("No validation options need to retry.")
-		}
+	if *certificate.Type == acm.CertificateTypeAmazonIssued {
 		for _, o := range certificate.DomainValidationOptions {
 			if o.ResourceRecord != nil {
 				validationOption := map[string]interface{}{
@@ -366,12 +309,6 @@ func convertValidationOptions(certificate *acm.CertificateDetail) ([]map[string]
 				log.Printf("[DEBUG] No validation options need to retry: %#v", o)
 				return nil, nil, fmt.Errorf("No validation options need to retry: %#v", o)
 			}
-		}
-	case acm.CertificateTypePrivate:
-		// While ACM PRIVATE certificates do not need to be validated, there is a slight delay for
-		// the API to fill in all certificate details, which is during the PENDING_VALIDATION status.
-		if aws.StringValue(certificate.Status) == acm.DomainStatusPendingValidation {
-			return nil, nil, fmt.Errorf("certificate still pending issuance")
 		}
 	}
 
@@ -420,28 +357,4 @@ func resourceAwsAcmCertificateImport(conn *acm.ACM, d *schema.ResourceData, upda
 
 	log.Printf("[DEBUG] ACM Certificate Import: %#v", params)
 	return conn.ImportCertificate(params)
-}
-
-func expandAcmCertificateOptions(l []interface{}) *acm.CertificateOptions {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	options := &acm.CertificateOptions{}
-
-	if v, ok := m["certificate_transparency_logging_preference"]; ok {
-		options.CertificateTransparencyLoggingPreference = aws.String(v.(string))
-	}
-
-	return options
-}
-
-func flattenAcmCertificateOptions(co *acm.CertificateOptions) []interface{} {
-	m := map[string]interface{}{
-		"certificate_transparency_logging_preference": aws.StringValue(co.CertificateTransparencyLoggingPreference),
-	}
-
-	return []interface{}{m}
 }

@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSCustomerGateway_importBasic(t *testing.T) {
@@ -222,70 +222,64 @@ func testAccCheckCustomerGateway(gatewayResource string, cgw *ec2.CustomerGatewa
 
 func testAccCustomerGatewayConfig(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
-  bgp_asn    = %d
-  ip_address = "172.0.0.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name = "foo-gateway-%d"
-  }
-}
-`, rBgpAsn, rInt)
+		resource "aws_customer_gateway" "foo" {
+			bgp_asn = %d
+			ip_address = "172.0.0.1"
+			type = "ipsec.1"
+	tags = {
+				Name = "foo-gateway-%d"
+			}
+		}
+		`, rBgpAsn, rInt)
 }
 
 func testAccCustomerGatewayConfigIdentical(randInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
-  bgp_asn    = %d
-  ip_address = "172.0.0.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name = "foo-gateway-%d"
-  }
-}
-
-resource "aws_customer_gateway" "identical" {
-  bgp_asn    = %d
-  ip_address = "172.0.0.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name = "foo-gateway-identical-%d"
-  }
-}
-`, rBgpAsn, randInt, rBgpAsn, randInt)
+		resource "aws_customer_gateway" "foo" {
+			bgp_asn = %d
+			ip_address = "172.0.0.1"
+			type = "ipsec.1"
+	tags = {
+				Name = "foo-gateway-%d"
+			}
+		}
+		resource "aws_customer_gateway" "identical" {
+			bgp_asn = %d
+			ip_address = "172.0.0.1"
+			type = "ipsec.1"
+	tags = {
+				Name = "foo-gateway-identical-%d"
+			}
+		}
+		`, rBgpAsn, randInt, rBgpAsn, randInt)
 }
 
 // Add the Another: "tag" tag.
 func testAccCustomerGatewayConfigUpdateTags(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
-  bgp_asn    = %d
-  ip_address = "172.0.0.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name    = "foo-gateway-%d"
-    Another = "tag"
-  }
-}
-`, rBgpAsn, rInt)
+	resource "aws_customer_gateway" "foo" {
+		bgp_asn = %d
+		ip_address = "172.0.0.1"
+		type = "ipsec.1"
+	tags = {
+			Name = "foo-gateway-%d"
+			Another = "tag"
+		}
+	}
+	`, rBgpAsn, rInt)
 }
 
 // Change the ip_address.
 func testAccCustomerGatewayConfigForceReplace(rInt, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_customer_gateway" "foo" {
-  bgp_asn    = %d
-  ip_address = "172.10.10.1"
-  type       = "ipsec.1"
-
-  tags = {
-    Name    = "foo-gateway-%d"
-    Another = "tag"
-  }
-}
-`, rBgpAsn, rInt)
+		resource "aws_customer_gateway" "foo" {
+			bgp_asn = %d
+			ip_address = "172.10.10.1"
+			type = "ipsec.1"
+	tags = {
+				Name = "foo-gateway-%d"
+				Another = "tag"
+			}
+		}
+		`, rBgpAsn, rInt)
 }

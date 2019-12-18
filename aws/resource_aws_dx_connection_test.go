@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSDxConnection_importBasic(t *testing.T) {
@@ -123,9 +123,9 @@ func testAccCheckAwsDxConnectionExists(name string) resource.TestCheckFunc {
 func testAccDxConnectionConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name      = "%s"
+  name = "%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location = "EqSe2"
 }
 `, n)
 }
@@ -133,13 +133,13 @@ resource "aws_dx_connection" "hoge" {
 func testAccDxConnectionConfig_tags(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name      = "%s"
+  name = "%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location = "EqSe2"
 
   tags = {
     Environment = "production"
-    Usage       = "original"
+    Usage = "original"
   }
 }
 `, n)
@@ -148,9 +148,9 @@ resource "aws_dx_connection" "hoge" {
 func testAccDxConnectionConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_connection" "hoge" {
-  name      = "%s"
+  name = "%s"
   bandwidth = "1Gbps"
-  location  = "EqSe2"
+  location = "EqSe2"
 
   tags = {
     Usage = "changed"

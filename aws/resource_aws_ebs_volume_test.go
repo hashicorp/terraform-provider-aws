@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -74,7 +74,6 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
@@ -106,7 +105,6 @@ func TestAccAWSEBSVolume_updateAttachedEbsVolume(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsAttachedVolumeConfig,
@@ -139,7 +137,6 @@ func TestAccAWSEBSVolume_updateSize(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
@@ -172,7 +169,6 @@ func TestAccAWSEBSVolume_updateType(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfig,
@@ -205,7 +201,6 @@ func TestAccAWSEBSVolume_updateIops(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithIops,
@@ -241,7 +236,6 @@ func TestAccAWSEBSVolume_kmsKey(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: config,
@@ -265,9 +259,8 @@ func TestAccAWSEBSVolume_NoIops(t *testing.T) {
 	resourceName := "aws_ebs_volume.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVolumeDestroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithNoIops,
@@ -292,7 +285,6 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEbsVolumeConfigWithTags,
@@ -309,38 +301,6 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckVolumeDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ebs_volume" {
-			continue
-		}
-
-		request := &ec2.DescribeVolumesInput{
-			VolumeIds: []*string{aws.String(rs.Primary.ID)},
-		}
-
-		resp, err := conn.DescribeVolumes(request)
-
-		if isAWSErr(err, "InvalidVolume.NotFound", "") {
-			continue
-		}
-
-		if err == nil {
-			for _, volume := range resp.Volumes {
-				if aws.StringValue(volume.VolumeId) == rs.Primary.ID {
-					return fmt.Errorf("Volume still exists")
-				}
-			}
-		}
-
-		return err
-	}
-
-	return nil
 }
 
 func testAccCheckVolumeExists(n string, v *ec2.Volume) resource.TestCheckFunc {

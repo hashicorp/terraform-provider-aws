@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func timePtr(t time.Time) *time.Time {
@@ -39,18 +39,15 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMServerCertificate_basic(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDataIAMServerCertConfig(rName, key, certificate),
+				Config: testAccAwsDataIAMServerCertConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iam_server_certificate.test_cert", "arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "arn"),
@@ -81,20 +78,17 @@ func TestAccAWSDataSourceIAMServerCertificate_matchNamePrefix(t *testing.T) {
 }
 
 func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rInt := acctest.RandInt()
 	path := "/test-path/"
 	pathPrefix := "/test-path/"
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsDataIAMServerCertConfigPath(rName, path, pathPrefix, key, certificate),
+				Config: testAccAwsDataIAMServerCertConfigPath(rInt, path, pathPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "path", path),
 				),
@@ -103,36 +97,27 @@ func TestAccAWSDataSourceIAMServerCertificate_path(t *testing.T) {
 	})
 }
 
-func testAccAwsDataIAMServerCertConfig(rName, key, certificate string) string {
+func testAccAwsDataIAMServerCertConfig(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_iam_server_certificate" "test_cert" {
-  name             = "%[1]s"
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
+%s
 
 data "aws_iam_server_certificate" "test" {
-  name   = "${aws_iam_server_certificate.test_cert.name}"
+  name = "${aws_iam_server_certificate.test_cert.name}"
   latest = true
 }
-`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, testAccIAMServerCertConfig(rInt))
 }
 
-func testAccAwsDataIAMServerCertConfigPath(rName, path, pathPrefix, key, certificate string) string {
+func testAccAwsDataIAMServerCertConfigPath(rInt int, path, pathPrefix string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_server_certificate" "test_cert" {
-  name             = "%[1]s"
-  path             = "%[2]s"
-  certificate_body = "%[3]s"
-  private_key      = "%[4]s"
-}
+%s
 
 data "aws_iam_server_certificate" "test" {
-  name        = "${aws_iam_server_certificate.test_cert.name}"
-  path_prefix = "%[5]s"
-  latest      = true
+  name = "${aws_iam_server_certificate.test_cert.name}"
+  path_prefix = "%s"
+  latest = true
 }
-`, rName, path, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), pathPrefix)
+`, testAccIAMServerCertConfig_path(rInt, path), pathPrefix)
 }
 
 var testAccAwsDataIAMServerCertConfigMatchNamePrefix = `

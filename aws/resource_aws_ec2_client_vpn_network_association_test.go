@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
@@ -18,7 +18,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,46 +134,59 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 	}
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigAcmCertificateBase() string {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
-
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-}
-`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
-}
-
 func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
-	return testAccEc2ClientVpnNetworkAssociationConfigAcmCertificateBase() + fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-subnet-%s"
-  }
+	cidr_block = "10.1.0.0/16"
+	tags = {
+		Name = "terraform-testacc-subnet-%s"
+	}
 }
 
 resource "aws_subnet" "test" {
-  cidr_block              = "10.1.1.0/24"
-  vpc_id                  = "${aws_vpc.test.id}"
-  map_public_ip_on_launch = true
+	cidr_block = "10.1.1.0/24"
+	vpc_id = "${aws_vpc.test.id}"
+	map_public_ip_on_launch = true
+	tags = {
+		Name = "tf-acc-subnet-%s"
+	}
+}
 
-  tags = {
-    Name = "tf-acc-subnet-%s"
+resource "tls_private_key" "example" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "example" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.example.private_key_pem}"
+
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
   }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "cert" {
+  private_key      = "${tls_private_key.example.private_key_pem}"
+  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
-  client_cidr_block      = "10.0.0.0/16"
+  description = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  client_cidr_block = "10.0.0.0/16"
 
   authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+    type = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
   }
 
   connection_log_options {
@@ -183,7 +196,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  subnet_id              = "${aws_subnet.test.id}"
+  subnet_id = "${aws_subnet.test.id}"
 }
 `, rName, rName, rName)
 }

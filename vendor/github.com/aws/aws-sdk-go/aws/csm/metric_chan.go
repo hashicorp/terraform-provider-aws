@@ -16,26 +16,25 @@ var (
 
 type metricChan struct {
 	ch     chan metric
-	paused *int64
+	paused int64
 }
 
 func newMetricChan(size int) metricChan {
 	return metricChan{
-		ch:     make(chan metric, size),
-		paused: new(int64),
+		ch: make(chan metric, size),
 	}
 }
 
 func (ch *metricChan) Pause() {
-	atomic.StoreInt64(ch.paused, pausedEnum)
+	atomic.StoreInt64(&ch.paused, pausedEnum)
 }
 
 func (ch *metricChan) Continue() {
-	atomic.StoreInt64(ch.paused, runningEnum)
+	atomic.StoreInt64(&ch.paused, runningEnum)
 }
 
 func (ch *metricChan) IsPaused() bool {
-	v := atomic.LoadInt64(ch.paused)
+	v := atomic.LoadInt64(&ch.paused)
 	return v == pausedEnum
 }
 

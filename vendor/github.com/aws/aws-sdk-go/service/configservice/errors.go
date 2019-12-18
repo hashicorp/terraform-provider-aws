@@ -15,15 +15,11 @@ const (
 	//
 	// Indicates one of the following errors:
 	//
-	//    * For PutConfigRule, the rule cannot be created because the IAM role assigned
-	//    to AWS Config lacks permissions to perform the config:Put* action.
+	//    * The rule cannot be created because the IAM role assigned to AWS Config
+	//    lacks permissions to perform the config:Put* action.
 	//
-	//    * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
-	//    the function ARN, and check the function's permissions.
-	//
-	//    * For OrganizationConfigRule, organization config rule cannot be created
-	//    because you do not have permissions to call IAM GetRole action or create
-	//    service linked role.
+	//    * The AWS Lambda function cannot be invoked. Check the function ARN, and
+	//    check the function's permissions.
 	ErrCodeInsufficientPermissionsException = "InsufficientPermissionsException"
 
 	// ErrCodeInvalidConfigurationRecorderNameException for service response error code
@@ -140,13 +136,6 @@ const (
 	// You have reached the limit of the number of delivery channels you can create.
 	ErrCodeMaxNumberOfDeliveryChannelsExceededException = "MaxNumberOfDeliveryChannelsExceededException"
 
-	// ErrCodeMaxNumberOfOrganizationConfigRulesExceededException for service response error code
-	// "MaxNumberOfOrganizationConfigRulesExceededException".
-	//
-	// You have reached the limit of the number of organization config rules you
-	// can create.
-	ErrCodeMaxNumberOfOrganizationConfigRulesExceededException = "MaxNumberOfOrganizationConfigRulesExceededException"
-
 	// ErrCodeMaxNumberOfRetentionConfigurationsExceededException for service response error code
 	// "MaxNumberOfRetentionConfigurationsExceededException".
 	//
@@ -170,7 +159,7 @@ const (
 	// ErrCodeNoAvailableOrganizationException for service response error code
 	// "NoAvailableOrganizationException".
 	//
-	// Organization is no longer available.
+	// Organization does is no longer available.
 	ErrCodeNoAvailableOrganizationException = "NoAvailableOrganizationException"
 
 	// ErrCodeNoRunningConfigurationRecorderException for service response error code
@@ -210,23 +199,11 @@ const (
 	// You have specified a delivery channel that does not exist.
 	ErrCodeNoSuchDeliveryChannelException = "NoSuchDeliveryChannelException"
 
-	// ErrCodeNoSuchOrganizationConfigRuleException for service response error code
-	// "NoSuchOrganizationConfigRuleException".
-	//
-	// You specified one or more organization config rules that do not exist.
-	ErrCodeNoSuchOrganizationConfigRuleException = "NoSuchOrganizationConfigRuleException"
-
 	// ErrCodeNoSuchRemediationConfigurationException for service response error code
 	// "NoSuchRemediationConfigurationException".
 	//
 	// You specified an AWS Config rule without a remediation configuration.
 	ErrCodeNoSuchRemediationConfigurationException = "NoSuchRemediationConfigurationException"
-
-	// ErrCodeNoSuchRemediationExceptionException for service response error code
-	// "NoSuchRemediationExceptionException".
-	//
-	// You tried to delete a remediation exception that does not exist.
-	ErrCodeNoSuchRemediationExceptionException = "NoSuchRemediationExceptionException"
 
 	// ErrCodeNoSuchRetentionConfigurationException for service response error code
 	// "NoSuchRetentionConfigurationException".
@@ -237,19 +214,14 @@ const (
 	// ErrCodeOrganizationAccessDeniedException for service response error code
 	// "OrganizationAccessDeniedException".
 	//
-	// For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
-	// API.
-	//
-	// For all OrganizationConfigRule APIs, AWS Config throws an exception if APIs
-	// are called from member accounts. All APIs must be called from organization
-	// master account.
+	// No permission to call the EnableAWSServiceAccess API.
 	ErrCodeOrganizationAccessDeniedException = "OrganizationAccessDeniedException"
 
 	// ErrCodeOrganizationAllFeaturesNotEnabledException for service response error code
 	// "OrganizationAllFeaturesNotEnabledException".
 	//
-	// AWS Config resource cannot be created because your organization does not
-	// have all features enabled.
+	// The configuration aggregator cannot be created because organization does
+	// not have all features enabled.
 	ErrCodeOrganizationAllFeaturesNotEnabledException = "OrganizationAllFeaturesNotEnabledException"
 
 	// ErrCodeOversizedConfigurationItemException for service response error code
@@ -258,34 +230,11 @@ const (
 	// The configuration item size is outside the allowable range.
 	ErrCodeOversizedConfigurationItemException = "OversizedConfigurationItemException"
 
-	// ErrCodeRemediationInProgressException for service response error code
-	// "RemediationInProgressException".
-	//
-	// Remediation action is in progress. You can either cancel execution in AWS
-	// Systems Manager or wait and try again later.
-	ErrCodeRemediationInProgressException = "RemediationInProgressException"
-
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
 	//
-	// You see this exception in the following cases:
-	//
-	//    * For DeleteConfigRule API, AWS Config is deleting this rule. Try your
-	//    request again later.
-	//
-	//    * For DeleteConfigRule API, the rule is deleting your evaluation results.
-	//    Try your request again later.
-	//
-	//    * For DeleteConfigRule API, a remediation action is associated with the
-	//    rule and AWS Config cannot delete this rule. Delete the remediation action
-	//    associated with the rule before deleting the rule and try your request
-	//    again later.
-	//
-	//    * For PutConfigOrganizationRule, organization config rule deletion is
-	//    in progress. Try your request again later.
-	//
-	//    * For DeleteOrganizationConfigRule, organization config rule creation
-	//    is in progress. Try your request again later.
+	// The rule is currently being deleted or the rule is deleting your evaluation
+	// results. Try your request again later.
 	ErrCodeResourceInUseException = "ResourceInUseException"
 
 	// ErrCodeResourceNotDiscoveredException for service response error code

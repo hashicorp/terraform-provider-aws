@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -310,8 +310,7 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 
 	log.Printf("[DEBUG] S3 bucket: %s, Putting notification: %v", bucket, i)
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := s3conn.PutBucketNotificationConfiguration(i)
-		if err != nil {
+		if _, err := s3conn.PutBucketNotificationConfiguration(i); err != nil {
 			if awserr, ok := err.(awserr.Error); ok {
 				switch awserr.Message() {
 				case "Unable to validate the following destination configurations":
@@ -324,9 +323,6 @@ func resourceAwsS3BucketNotificationPut(d *schema.ResourceData, meta interface{}
 		// Successful put configuration
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = s3conn.PutBucketNotificationConfiguration(i)
-	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 notification configuration: %s", err)
 	}

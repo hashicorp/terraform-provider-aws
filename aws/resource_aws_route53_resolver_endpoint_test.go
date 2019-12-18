@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -75,7 +75,7 @@ func TestAccAwsRoute53ResolverEndpoint_basicInbound(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -107,7 +107,7 @@ func TestAccAwsRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 	updatedName := fmt.Sprintf("terraform-testacc-r53-rupdated-%d", rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -184,22 +184,6 @@ func testAccCheckRoute53ResolverEndpointExists(n string, ep *route53resolver.Res
 		*ep = *resp.ResolverEndpoint
 
 		return nil
-	}
-}
-
-func testAccPreCheckAWSRoute53Resolver(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).route53resolverconn
-
-	input := &route53resolver.ListResolverEndpointsInput{}
-
-	_, err := conn.ListResolverEndpoints(input)
-
-	if testAccPreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -291,7 +275,7 @@ resource "aws_route53_resolver_endpoint" "foo" {
 
   tags = {
     Environment = "production"
-    Usage       = "original"
+    Usage = "original"
   }
 }
 `, testAccRoute53ResolverEndpointConfig_base(rInt), direction, name)

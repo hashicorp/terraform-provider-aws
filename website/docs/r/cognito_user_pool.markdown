@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool"
+sidebar_current: "docs-aws-resource-cognito-user-pool"
 description: |-
   Provides a Cognito User Pool resource.
 ---
@@ -64,7 +65,6 @@ The following arguments are supported:
 
   * `reply_to_email_address` (Optional) - The REPLY-TO email address.
   * `source_arn` (Optional) - The ARN of the email source.
-  * `email_sending_account` (Optional) - Instruct Cognito to either use its built-in functional or Amazon SES to send out emails.
 
 #### Lambda Configuration
 

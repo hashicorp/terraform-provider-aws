@@ -5,16 +5,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/golangci/golangci-lint/internal/pkgcache"
-	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/fsutils"
-	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis/load"
+
+	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/goutil"
 	"github.com/golangci/golangci-lint/pkg/lint"
 	"github.com/golangci/golangci-lint/pkg/lint/lintersdb"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/report"
-	"github.com/golangci/golangci-lint/pkg/timeutils"
 )
 
 type Executor struct {
@@ -33,11 +31,6 @@ type Executor struct {
 	goenv             *goutil.Env
 	fileCache         *fsutils.FileCache
 	lineCache         *fsutils.LineCache
-	pkgCache          *pkgcache.Cache
-	debugf            logutils.DebugFunc
-	sw                *timeutils.Stopwatch
-
-	loadGuard *load.Guard
 }
 
 func NewExecutor(version, commit, date string) *Executor {
@@ -47,10 +40,8 @@ func NewExecutor(version, commit, date string) *Executor {
 		commit:    commit,
 		date:      date,
 		DBManager: lintersdb.NewManager(nil),
-		debugf:    logutils.Debug("exec"),
 	}
 
-	e.debugf("Starting execution...")
 	e.log = report.NewLogWrapper(logutils.NewStderrLog(""), &e.reportData)
 
 	// to setup log level early we need to parse config from command line extra time to
@@ -81,15 +72,13 @@ func NewExecutor(version, commit, date string) *Executor {
 	e.initHelp()
 	e.initLinters()
 	e.initConfig()
-	e.initCompletion()
-	e.initVersion()
 
 	// init e.cfg by values from config: flags parse will see these values
 	// like the default ones. It will overwrite them only if the same option
 	// is found in command-line: it's ok, command-line has higher priority.
 
 	r := config.NewFileReader(e.cfg, commandLineCfg, e.log.Child("config_reader"))
-	if err = r.Read(); err != nil {
+	if err := r.Read(); err != nil {
 		e.log.Fatalf("Can't read config: %s", err)
 	}
 
@@ -97,7 +86,7 @@ func NewExecutor(version, commit, date string) *Executor {
 	e.DBManager = lintersdb.NewManager(e.cfg)
 
 	e.cfg.LintersSettings.Gocritic.InferEnabledChecks(e.log)
-	if err = e.cfg.LintersSettings.Gocritic.Validate(e.log); err != nil {
+	if err := e.cfg.LintersSettings.Gocritic.Validate(e.log); err != nil {
 		e.log.Fatalf("Invalid gocritic settings: %s", err)
 	}
 
@@ -107,18 +96,10 @@ func NewExecutor(version, commit, date string) *Executor {
 	e.EnabledLintersSet = lintersdb.NewEnabledSet(e.DBManager,
 		lintersdb.NewValidator(e.DBManager), e.log.Child("lintersdb"), e.cfg)
 	e.goenv = goutil.NewEnv(e.log.Child("goenv"))
+	e.contextLoader = lint.NewContextLoader(e.cfg, e.log.Child("loader"), e.goenv)
 	e.fileCache = fsutils.NewFileCache()
 	e.lineCache = fsutils.NewLineCache(e.fileCache)
 
-	e.sw = timeutils.NewStopwatch("pkgcache", e.log.Child("stopwatch"))
-	e.pkgCache, err = pkgcache.NewCache(e.sw, e.log.Child("pkgcache"))
-	if err != nil {
-		e.log.Fatalf("Failed to build packages cache: %s", err)
-	}
-	e.loadGuard = load.NewGuard()
-	e.contextLoader = lint.NewContextLoader(e.cfg, e.log.Child("loader"), e.goenv,
-		e.lineCache, e.fileCache, e.pkgCache, e.loadGuard)
-	e.debugf("Initialized executor")
 	return e
 }
 

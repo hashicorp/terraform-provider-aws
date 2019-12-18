@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codecommit_trigger"
+sidebar_current: "docs-aws-resource-codecommit-trigger"
 description: |-
   Provides a CodeCommit Trigger Resource.
 ---
@@ -16,15 +17,12 @@ in all regions - available regions are listed
 ## Example Usage
 
 ```hcl
-resource "aws_codecommit_repository" "test" {
-  repository_name = "test"
-}
-
 resource "aws_codecommit_trigger" "test" {
-  repository_name = "${aws_codecommit_repository.test.repository_name}"
+  depends_on      = ["aws_codecommit_repository.test"]
+  repository_name = "my_test_repository"
 
   trigger {
-    name            = "all"
+    name            = "noname"
     events          = ["all"]
     destination_arn = "${aws_sns_topic.test.arn}"
   }

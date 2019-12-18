@@ -25,9 +25,14 @@ type JSONResult struct {
 	Report *report.Data
 }
 
-func (p JSON) Print(ctx context.Context, issues []result.Issue) error {
+func (p JSON) Print(ctx context.Context, issues <-chan result.Issue) error {
+	allIssues := []result.Issue{}
+	for i := range issues {
+		allIssues = append(allIssues, i)
+	}
+
 	res := JSONResult{
-		Issues: issues,
+		Issues: allIssues,
 		Report: p.rd,
 	}
 

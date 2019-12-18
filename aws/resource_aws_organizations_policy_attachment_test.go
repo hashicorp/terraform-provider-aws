@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func testAccAwsOrganizationsPolicyAttachment_Account(t *testing.T) {
@@ -201,8 +201,8 @@ resource "aws_organizations_organization" "test" {
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name    = "%s"
+  content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name        = "%s"
 }
 
 resource "aws_organizations_policy_attachment" "test" {
@@ -226,8 +226,8 @@ resource "aws_organizations_organizational_unit" "test" {
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name    = %[1]q
+  content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name        = %[1]q
 }
 
 resource "aws_organizations_policy_attachment" "test" {
@@ -246,8 +246,8 @@ resource "aws_organizations_organization" "test" {
 resource "aws_organizations_policy" "test" {
   depends_on = ["aws_organizations_organization.test"]
 
-  content = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
-  name    = %[1]q
+  content     = "{\"Version\": \"2012-10-17\", \"Statement\": { \"Effect\": \"Allow\", \"Action\": \"*\", \"Resource\": \"*\"}}"
+  name        = %[1]q
 }
 
 resource "aws_organizations_policy_attachment" "test" {

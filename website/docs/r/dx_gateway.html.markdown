@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dx_gateway"
+sidebar_current: "docs-aws-resource-dx-gateway"
 description: |-
   Provides a Direct Connect Gateway.
 ---

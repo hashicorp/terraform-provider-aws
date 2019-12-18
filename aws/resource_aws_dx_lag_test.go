@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSDxLag_importBasic(t *testing.T) {
@@ -144,10 +144,10 @@ func testAccCheckAwsDxLagExists(name string) resource.TestCheckFunc {
 func testAccDxLagConfig(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name                  = "%s"
+  name = "%s"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
-  force_destroy         = true
+  location = "EqSe2"
+  force_destroy = true
 }
 `, n)
 }
@@ -155,14 +155,14 @@ resource "aws_dx_lag" "hoge" {
 func testAccDxLagConfig_tags(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name                  = "%s"
+  name = "%s"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
-  force_destroy         = true
+  location = "EqSe2"
+  force_destroy = true
 
   tags = {
     Environment = "production"
-    Usage       = "original"
+    Usage = "original"
   }
 }
 `, n)
@@ -171,10 +171,10 @@ resource "aws_dx_lag" "hoge" {
 func testAccDxLagConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
 resource "aws_dx_lag" "hoge" {
-  name                  = "%s"
+  name = "%s"
   connections_bandwidth = "1Gbps"
-  location              = "EqSe2"
-  force_destroy         = true
+  location = "EqSe2"
+  force_destroy = true
 
   tags = {
     Usage = "changed"

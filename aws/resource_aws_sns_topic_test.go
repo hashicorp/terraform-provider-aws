@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
+	"github.com/jen20/awspolicyequivalence"
 )
 
 func TestAccAWSSNSTopic_importBasic(t *testing.T) {
@@ -256,46 +256,6 @@ func TestAccAWSSNSTopic_encryption(t *testing.T) {
 	})
 }
 
-func TestAccAWSSNSTopic_tags(t *testing.T) {
-	attributes := make(map[string]string)
-
-	rName := acctest.RandString(10)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_sns_topic.test_topic",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSSNSTopicDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSNSTopicConfigTags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
-					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccAWSSNSTopicConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
-					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSSNSTopicConfigTags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSNSTopicExists("aws_sns_topic.test_topic", attributes),
-					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sns_topic.test_topic", "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckAWSNSTopicHasPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -461,7 +421,7 @@ resource "aws_sns_topic" "test_topic" {}
 func testAccAWSSNSTopicConfig_withName(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-  name = "terraform-test-topic-%s"
+    name = "terraform-test-topic-%s"
 }
 `, r)
 }
@@ -478,7 +438,6 @@ func testAccAWSSNSTopicWithPolicy(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
   name = "example-%s"
-
   policy = <<EOF
 {
   "Statement": [
@@ -506,7 +465,6 @@ func testAccAWSSNSTopicConfig_withIAMRole(r string) string {
 resource "aws_iam_role" "example" {
   name = "tf_acc_test_%s"
   path = "/test/"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -526,7 +484,6 @@ EOF
 
 resource "aws_sns_topic" "test_topic" {
   name = "tf-acc-test-with-iam-role-%s"
-
   policy = <<EOF
 {
   "Statement": [
@@ -553,7 +510,6 @@ func testAccAWSSNSTopicConfig_withDeliveryPolicy(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
   name = "tf_acc_test_delivery_policy_%s"
-
   delivery_policy = <<EOF
 {
   "http": {
@@ -579,7 +535,6 @@ func testAccAWSSNSTopicConfig_withFakeIAMRole(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
   name = "tf_acc_test_fake_iam_role_%s"
-
   policy = <<EOF
 {
   "Statement": [
@@ -671,31 +626,8 @@ EOF
 func testAccAWSSNSTopicConfig_withEncryption(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test_topic" {
-  name              = "terraform-test-topic-%s"
-  kms_master_key_id = "alias/aws/sns"
+	name = "terraform-test-topic-%s"
+	kms_master_key_id = "alias/aws/sns"
 }
 `, r)
-}
-
-func testAccAWSSNSTopicConfigTags1(r, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-resource "aws_sns_topic" "test_topic" {
-	name = "terraform-test-topic-%s"
-	tags = {
-		%q = %q
-	}
-	}
-`, r, tag1Key, tag1Value)
-}
-
-func testAccAWSSNSTopicConfigTags2(r, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_sns_topic" "test_topic" {
-	name = "terraform-test-topic-%s"
-	tags = {
-		%q = %q
-		%q = %q
-	  }
-	}
-`, r, tag1Key, tag1Value, tag2Key, tag2Value)
 }

@@ -193,8 +193,8 @@ func (c *KMS) ConnectCustomKeyStoreRequest(input *ConnectCustomKeyStoreInput) (r
 // During the connection process, AWS KMS finds the AWS CloudHSM cluster that
 // is associated with the custom key store, creates the connection infrastructure,
 // connects to the cluster, logs into the AWS CloudHSM client as the kmsuser
-// crypto user (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
-// (CU), and rotates its password.
+// (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
+// crypto user (CU), and rotates its password.
 //
 // The ConnectCustomKeyStore operation might fail for various reasons. To find
 // the reason, use the DescribeCustomKeyStores operation and see the ConnectionErrorCode
@@ -268,9 +268,11 @@ func (c *KMS) ConnectCustomKeyStoreRequest(input *ConnectCustomKeyStoreInput) (r
 //
 //      * The cluster must contain at least as many HSMs as the operation requires.
 //      To add HSMs, use the AWS CloudHSM CreateHsm (https://docs.aws.amazon.com/cloudhsm/latest/APIReference/API_CreateHsm.html)
-//      operation. For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey
-//      operations, the AWS CloudHSM cluster must have at least two active HSMs,
-//      each in a different Availability Zone. For the ConnectCustomKeyStore operation,
+//      operation.
+//
+//   For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey operations,
+//      the AWS CloudHSM cluster must have at least two active HSMs, each in a
+//      different Availability Zone. For the ConnectCustomKeyStore operation,
 //      the AWS CloudHSM must contain at least one active HSM.
 //
 //   For information about the requirements for an AWS CloudHSM cluster that is
@@ -280,7 +282,7 @@ func (c *KMS) ConnectCustomKeyStoreRequest(input *ConnectCustomKeyStoreInput) (r
 //   Subnet (https://docs.aws.amazon.com/cloudhsm/latest/userguide/create-subnets.html)
 //   in the AWS CloudHSM User Guide. For information about cluster security groups,
 //   see Configure a Default Security Group (https://docs.aws.amazon.com/cloudhsm/latest/userguide/configure-sg.html)
-//   in the AWS CloudHSM User Guide .
+//   in the AWS CloudHSM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kms-2014-11-01/ConnectCustomKeyStore
 func (c *KMS) ConnectCustomKeyStore(input *ConnectCustomKeyStoreInput) (*ConnectCustomKeyStoreOutput, error) {
@@ -573,9 +575,11 @@ func (c *KMS) CreateCustomKeyStoreRequest(input *CreateCustomKeyStoreInput) (req
 //
 //      * The cluster must contain at least as many HSMs as the operation requires.
 //      To add HSMs, use the AWS CloudHSM CreateHsm (https://docs.aws.amazon.com/cloudhsm/latest/APIReference/API_CreateHsm.html)
-//      operation. For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey
-//      operations, the AWS CloudHSM cluster must have at least two active HSMs,
-//      each in a different Availability Zone. For the ConnectCustomKeyStore operation,
+//      operation.
+//
+//   For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey operations,
+//      the AWS CloudHSM cluster must have at least two active HSMs, each in a
+//      different Availability Zone. For the ConnectCustomKeyStore operation,
 //      the AWS CloudHSM must contain at least one active HSM.
 //
 //   For information about the requirements for an AWS CloudHSM cluster that is
@@ -585,7 +589,7 @@ func (c *KMS) CreateCustomKeyStoreRequest(input *CreateCustomKeyStoreInput) (req
 //   Subnet (https://docs.aws.amazon.com/cloudhsm/latest/userguide/create-subnets.html)
 //   in the AWS CloudHSM User Guide. For information about cluster security groups,
 //   see Configure a Default Security Group (https://docs.aws.amazon.com/cloudhsm/latest/userguide/configure-sg.html)
-//   in the AWS CloudHSM User Guide .
+//   in the AWS CloudHSM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kms-2014-11-01/CreateCustomKeyStore
 func (c *KMS) CreateCustomKeyStore(input *CreateCustomKeyStoreInput) (*CreateCustomKeyStoreOutput, error) {
@@ -664,7 +668,7 @@ func (c *KMS) CreateGrantRequest(input *CreateGrantInput) (req *request.Request,
 // To perform this operation on a CMK in a different AWS account, specify the
 // key ARN in the value of the KeyId parameter. For more information about grants,
 // see Grants (https://docs.aws.amazon.com/kms/latest/developerguide/grants.html)
-// in the AWS Key Management Service Developer Guide .
+// in the AWS Key Management Service Developer Guide.
 //
 // The result of this operation varies with the key state of the CMK. For details,
 // see How Key State Affects Use of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
@@ -874,9 +878,11 @@ func (c *KMS) CreateKeyRequest(input *CreateKeyInput) (req *request.Request, out
 //
 //      * The cluster must contain at least as many HSMs as the operation requires.
 //      To add HSMs, use the AWS CloudHSM CreateHsm (https://docs.aws.amazon.com/cloudhsm/latest/APIReference/API_CreateHsm.html)
-//      operation. For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey
-//      operations, the AWS CloudHSM cluster must have at least two active HSMs,
-//      each in a different Availability Zone. For the ConnectCustomKeyStore operation,
+//      operation.
+//
+//   For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey operations,
+//      the AWS CloudHSM cluster must have at least two active HSMs, each in a
+//      different Availability Zone. For the ConnectCustomKeyStore operation,
 //      the AWS CloudHSM must contain at least one active HSM.
 //
 //   For information about the requirements for an AWS CloudHSM cluster that is
@@ -886,7 +892,7 @@ func (c *KMS) CreateKeyRequest(input *CreateKeyInput) (req *request.Request, out
 //   Subnet (https://docs.aws.amazon.com/cloudhsm/latest/userguide/create-subnets.html)
 //   in the AWS CloudHSM User Guide. For information about cluster security groups,
 //   see Configure a Default Security Group (https://docs.aws.amazon.com/cloudhsm/latest/userguide/configure-sg.html)
-//   in the AWS CloudHSM User Guide .
+//   in the AWS CloudHSM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kms-2014-11-01/CreateKey
 func (c *KMS) CreateKey(input *CreateKeyInput) (*CreateKeyOutput, error) {
@@ -1665,7 +1671,7 @@ func (c *KMS) DisableKeyRequest(input *DisableKeyInput) (req *request.Request, o
 //
 // For more information about how key state affects the use of a CMK, see How
 // Key State Affects the Use of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
-// in the AWS Key Management Service Developer Guide .
+// in the AWS Key Management Service Developer Guide.
 //
 // The result of this operation varies with the key state of the CMK. For details,
 // see How Key State Affects Use of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
@@ -1895,15 +1901,11 @@ func (c *KMS) DisconnectCustomKeyStoreRequest(input *DisconnectCustomKeyStoreInp
 // operations will fail. This action can prevent users from storing and accessing
 // sensitive data.
 //
-// To find the connection state of a custom key store, use the DescribeCustomKeyStores
-// operation. To reconnect a custom key store, use the ConnectCustomKeyStore
-// operation.
+// To find the connection state of a custom key store, use the DescribeCustomKeyStoresoperation. To reconnect a custom key store, use the ConnectCustomKeyStoreoperation.
 //
 // If the operation succeeds, it returns a JSON object with no properties.
 //
 // This operation is part of the Custom Key Store feature (https://docs.aws.amazon.com/kms/latest/developerguide/custom-key-store-overview.html)
-// feature in AWS KMS, which combines the convenience and extensive integration
-// of AWS KMS with the isolation and control of a single-tenant key store.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2418,7 +2420,7 @@ func (c *KMS) GenerateDataKeyRequest(input *GenerateDataKeyInput) (req *request.
 // exact match) in your request to Decrypt the data key. Otherwise, the request
 // to decrypt fails with an InvalidCiphertextException. For more information,
 // see Encryption Context (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context)
-// in the AWS Key Management Service Developer Guide .
+// in the AWS Key Management Service Developer Guide.
 //
 // The result of this operation varies with the key state of the CMK. For details,
 // see How Key State Affects Use of a Customer Master Key (https://docs.aws.amazon.com/kms/latest/developerguide/key-state.html)
@@ -3141,9 +3143,10 @@ func (c *KMS) ImportKeyMaterialRequest(input *ImportKeyMaterialInput) (req *requ
 // When calling this operation, you must specify the following values:
 //
 //    * The key ID or key ARN of a CMK with no key material. Its Origin must
-//    be EXTERNAL. To create a CMK with no key material, call CreateKey and
-//    set the value of its Origin parameter to EXTERNAL. To get the Origin of
-//    a CMK, call DescribeKey.)
+//    be EXTERNAL.
+//
+// To create a CMK with no key material, call CreateKey and set the value of
+//    its Origin parameter to EXTERNAL. To get the Origin of a CMK, call DescribeKey.)
 //
 //    * The encrypted key material. To get the public key to encrypt the key
 //    material, call GetParametersForImport.
@@ -3372,7 +3375,7 @@ func (c *KMS) ListAliasesWithContext(ctx aws.Context, input *ListAliasesInput, o
 //    // Example iterating over at most 3 pages of a ListAliases operation.
 //    pageNum := 0
 //    err := client.ListAliasesPages(params,
-//        func(page *kms.ListAliasesOutput, lastPage bool) bool {
+//        func(page *ListAliasesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3535,7 +3538,7 @@ func (c *KMS) ListGrantsWithContext(ctx aws.Context, input *ListGrantsInput, opt
 //    // Example iterating over at most 3 pages of a ListGrants operation.
 //    pageNum := 0
 //    err := client.ListGrantsPages(params,
-//        func(page *kms.ListGrantsResponse, lastPage bool) bool {
+//        func(page *ListGrantsResponse, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3694,7 +3697,7 @@ func (c *KMS) ListKeyPoliciesWithContext(ctx aws.Context, input *ListKeyPolicies
 //    // Example iterating over at most 3 pages of a ListKeyPolicies operation.
 //    pageNum := 0
 //    err := client.ListKeyPoliciesPages(params,
-//        func(page *kms.ListKeyPoliciesOutput, lastPage bool) bool {
+//        func(page *ListKeyPoliciesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3839,7 +3842,7 @@ func (c *KMS) ListKeysWithContext(ctx aws.Context, input *ListKeysInput, opts ..
 //    // Example iterating over at most 3 pages of a ListKeys operation.
 //    pageNum := 0
 //    err := client.ListKeysPages(params,
-//        func(page *kms.ListKeysOutput, lastPage bool) bool {
+//        func(page *ListKeysOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5086,9 +5089,9 @@ func (c *KMS) UpdateCustomKeyStoreRequest(input *UpdateCustomKeyStoreInput) (req
 //    of the custom key store to the value that you specify.
 //
 //    * Use the KeyStorePassword parameter tell AWS KMS the current password
-//    of the kmsuser crypto user (CU) (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
-//    in the associated AWS CloudHSM cluster. You can use this parameter to
-//    fix connection failures (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html#fix-keystore-password)
+//    of the kmsuser (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
+//    crypto user (CU) in the associated AWS CloudHSM cluster. You can use this
+//    parameter to fix connection failures (https://docs.aws.amazon.com/kms/latest/developerguide/fix-keystore.html#fix-keystore-password)
 //    that occur when AWS KMS cannot log into the associated cluster because
 //    the kmsuser password has changed. This value does not change the password
 //    in the AWS CloudHSM cluster.
@@ -5184,9 +5187,11 @@ func (c *KMS) UpdateCustomKeyStoreRequest(input *UpdateCustomKeyStoreInput) (req
 //
 //      * The cluster must contain at least as many HSMs as the operation requires.
 //      To add HSMs, use the AWS CloudHSM CreateHsm (https://docs.aws.amazon.com/cloudhsm/latest/APIReference/API_CreateHsm.html)
-//      operation. For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey
-//      operations, the AWS CloudHSM cluster must have at least two active HSMs,
-//      each in a different Availability Zone. For the ConnectCustomKeyStore operation,
+//      operation.
+//
+//   For the CreateCustomKeyStore, UpdateCustomKeyStore, and CreateKey operations,
+//      the AWS CloudHSM cluster must have at least two active HSMs, each in a
+//      different Availability Zone. For the ConnectCustomKeyStore operation,
 //      the AWS CloudHSM must contain at least one active HSM.
 //
 //   For information about the requirements for an AWS CloudHSM cluster that is
@@ -5196,7 +5201,7 @@ func (c *KMS) UpdateCustomKeyStoreRequest(input *UpdateCustomKeyStoreInput) (req
 //   Subnet (https://docs.aws.amazon.com/cloudhsm/latest/userguide/create-subnets.html)
 //   in the AWS CloudHSM User Guide. For information about cluster security groups,
 //   see Configure a Default Security Group (https://docs.aws.amazon.com/cloudhsm/latest/userguide/configure-sg.html)
-//   in the AWS CloudHSM User Guide .
+//   in the AWS CloudHSM User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kms-2014-11-01/UpdateCustomKeyStore
 func (c *KMS) UpdateCustomKeyStore(input *UpdateCustomKeyStoreInput) (*UpdateCustomKeyStoreOutput, error) {
@@ -5595,9 +5600,9 @@ type CreateCustomKeyStoreInput struct {
 	// CustomKeyStoreName is a required field
 	CustomKeyStoreName *string `min:"1" type:"string" required:"true"`
 
-	// Enter the password of the kmsuser crypto user (CU) account (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
-	// in the specified AWS CloudHSM cluster. AWS KMS logs into the cluster as this
-	// user to manage key material on your behalf.
+	// Enter the password of the kmsuser (https://docs.aws.amazon.com/kms/latest/developerguide/key-store-concepts.html#concept-kmsuser)
+	// crypto user (CU) account in the specified AWS CloudHSM cluster. AWS KMS logs
+	// into the cluster as this user to manage key material on your behalf.
 	//
 	// This parameter tells AWS KMS the kmsuser account password; it does not change
 	// the password in the AWS CloudHSM cluster.
@@ -5710,7 +5715,7 @@ type CreateGrantInput struct {
 	// Allows a cryptographic operation only when the encryption context matches
 	// or includes the encryption context specified in this structure. For more
 	// information about encryption context, see Encryption Context (https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#encrypt_context)
-	// in the AWS Key Management Service Developer Guide .
+	// in the AWS Key Management Service Developer Guide.
 	Constraints *GrantConstraints `type:"structure"`
 
 	// A list of grant tokens.
@@ -5909,7 +5914,7 @@ type CreateKeyInput struct {
 	// Do not set this value to true indiscriminately.
 	//
 	// For more information, refer to the scenario in the Default Key Policy (https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
-	// section in the AWS Key Management Service Developer Guide .
+	// section in the AWS Key Management Service Developer Guide.
 	//
 	// Use this parameter only when you include a policy in the request and you
 	// intend to prevent the principal that is making the request from making a
@@ -5973,7 +5978,7 @@ type CreateKeyInput struct {
 	//    a subsequent PutKeyPolicy request on the CMK. This reduces the risk that
 	//    the CMK becomes unmanageable. For more information, refer to the scenario
 	//    in the Default Key Policy (https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html#key-policy-default-allow-root-enable-iam)
-	//    section of the AWS Key Management Service Developer Guide .
+	//    section of the AWS Key Management Service Developer Guide.
 	//
 	//    * Each statement in the key policy must contain one or more principals.
 	//    The principals in the key policy must exist and be visible to AWS KMS.
@@ -7897,7 +7902,7 @@ func (s *GetParametersForImportOutput) SetPublicKey(v []byte) *GetParametersForI
 // only by case. To require a fully case-sensitive encryption context, use the
 // kms:EncryptionContext: and kms:EncryptionContextKeys conditions in an IAM
 // or key policy. For details, see kms:EncryptionContext: (https://docs.aws.amazon.com/kms/latest/developerguide/policy-conditions.html#conditions-kms-encryption-context)
-// in the AWS Key Management Service Developer Guide .
+// in the AWS Key Management Service Developer Guide.
 type GrantConstraints struct {
 	_ struct{} `type:"structure"`
 

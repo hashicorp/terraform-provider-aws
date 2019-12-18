@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_db_cluster_snapshot"
+sidebar_current: "docs-aws-resource-db-cluster-snapshot"
 description: |-
   Manages a RDS database cluster snapshot.
 ---

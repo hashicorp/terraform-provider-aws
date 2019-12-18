@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_codedeploy_deployment_group"
+sidebar_current: "docs-aws-resource-codedeploy-deployment-group"
 description: |-
   Provides a CodeDeploy deployment group.
 ---
@@ -275,13 +276,6 @@ Multiple occurrences of `ec2_tag_filter` are allowed, where any instance that ma
 ### ec2_tag_set Argument Reference
 
 You can form a tag group by putting a set of tag filters into `ec2_tag_set`. If multiple tag groups are specified, any instance that matches to at least one tag filter of every tag group is selected.
-
-### ecs_service Argument Reference
-
-Each `ecs_service` configuration block supports the following:
-
-* `cluster_name` - (Required) The name of the ECS cluster.
-* `service_name` - (Required) The name of the ECS service.
 
 ### load_balancer_info Argument Reference
 

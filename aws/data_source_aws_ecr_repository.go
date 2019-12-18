@@ -6,8 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func dataSourceAwsEcrRepository() *schema.Resource {
@@ -55,22 +54,17 @@ func dataSourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	repository := out.Repositories[0]
-	arn := aws.StringValue(repository.RepositoryArn)
+
+	log.Printf("[DEBUG] Received ECR repository %s", out)
 
 	d.SetId(aws.StringValue(repository.RepositoryName))
-	d.Set("arn", arn)
+	d.Set("arn", repository.RepositoryArn)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("name", repository.RepositoryName)
 	d.Set("repository_url", repository.RepositoryUri)
 
-	tags, err := keyvaluetags.EcrListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for ECR Repository (%s): %s", arn, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := getTagsECR(conn, d); err != nil {
+		return fmt.Errorf("error getting ECR repository tags: %s", err)
 	}
 
 	return nil

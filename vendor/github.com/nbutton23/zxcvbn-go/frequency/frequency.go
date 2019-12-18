@@ -2,19 +2,16 @@ package frequency
 
 import (
 	"encoding/json"
-	"log"
-
 	"github.com/nbutton23/zxcvbn-go/data"
+	"log"
 )
 
-// List holds a frequency list
-type List struct {
+type FrequencyList struct {
 	Name string
 	List []string
 }
 
-// Lists holds all the frequency list in a map
-var Lists = make(map[string]List)
+var FrequencyLists = make(map[string]FrequencyList)
 
 func init() {
 	maleFilePath := getAsset("data/MaleNames.json")
@@ -23,24 +20,24 @@ func init() {
 	englishFilePath := getAsset("data/English.json")
 	passwordsFilePath := getAsset("data/Passwords.json")
 
-	Lists["MaleNames"] = getStringListFromAsset(maleFilePath, "MaleNames")
-	Lists["FemaleNames"] = getStringListFromAsset(femaleFilePath, "FemaleNames")
-	Lists["Surname"] = getStringListFromAsset(surnameFilePath, "Surname")
-	Lists["English"] = getStringListFromAsset(englishFilePath, "English")
-	Lists["Passwords"] = getStringListFromAsset(passwordsFilePath, "Passwords")
+	FrequencyLists["MaleNames"] = GetStringListFromAsset(maleFilePath, "MaleNames")
+	FrequencyLists["FemaleNames"] = GetStringListFromAsset(femaleFilePath, "FemaleNames")
+	FrequencyLists["Surname"] = GetStringListFromAsset(surnameFilePath, "Surname")
+	FrequencyLists["English"] = GetStringListFromAsset(englishFilePath, "English")
+	FrequencyLists["Passwords"] = GetStringListFromAsset(passwordsFilePath, "Passwords")
 
 }
 func getAsset(name string) []byte {
-	data, err := data.Asset(name)
+	data, err := zxcvbn_data.Asset(name)
 	if err != nil {
 		panic("Error getting asset " + name)
 	}
 
 	return data
 }
-func getStringListFromAsset(data []byte, name string) List {
+func GetStringListFromAsset(data []byte, name string) FrequencyList {
 
-	var tempList List
+	var tempList FrequencyList
 	err := json.Unmarshal(data, &tempList)
 	if err != nil {
 		log.Fatal(err)

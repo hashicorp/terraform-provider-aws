@@ -8,12 +8,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
+	// This test must always run in us-east-1
+	// BadRequestException: Invalid certificate ARN: arn:aws:acm:us-west-2:123456789012:certificate/xxxxx. Certificate must be in 'us-east-1'.
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	// For now, use an environment variable to limit running this test
 	certificateArn := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_ARN")
 	if certificateArn == "" {
 		t.Skip(
@@ -22,19 +29,13 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 				"an ISSUED ACM certificate in us-east-1 to enable this test.")
 	}
 
-	// This test must always run in us-east-1
-	// BadRequestException: Invalid certificate ARN: arn:aws:acm:us-west-2:123456789012:certificate/xxxxx. Certificate must be in 'us-east-1'.
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
-
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -51,53 +52,45 @@ func TestAccAWSAPIGatewayDomainName_CertificateArn(t *testing.T) {
 }
 
 func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
-	certificateBody := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_BODY")
-	if certificateBody == "" {
-		t.Skip(
-			"Environment variable AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_BODY is not set. " +
-				"This environment variable must be set to any non-empty value " +
-				"with a publicly trusted certificate body to enable the test.")
-	}
-
-	certificateChain := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_CHAIN")
-	if certificateChain == "" {
-		t.Skip(
-			"Environment variable AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_CHAIN is not set. " +
-				"This environment variable must be set to any non-empty value " +
-				"with a chain certificate acceptable for the certificate to enable the test.")
-	}
-
-	certificatePrivateKey := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_PRIVATE_KEY")
-	if certificatePrivateKey == "" {
-		t.Skip(
-			"Environment variable AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_PRIVATE_KEY is not set. " +
-				"This environment variable must be set to any non-empty value " +
-				"with a private key of a publicly trusted certificate to enable the test.")
-	}
-
-	domainName := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_DOMAIN_NAME")
-	if domainName == "" {
-		t.Skip(
-			"Environment variable AWS_API_GATEWAY_DOMAIN_NAME_DOMAIN_NAME is not set. " +
-				"This environment variable must be set to any non-empty value " +
-				"with a domain name acceptable for the certificate to enable the test.")
-	}
-
 	var conf apigateway.DomainName
+
+	rString := acctest.RandString(8)
+	name := fmt.Sprintf("tf-acc-%s.terraformtest.com", rString)
+	nameModified := fmt.Sprintf("tf-acc-%s-modified.terraformtest.com", rString)
+	commonName := "*.terraformtest.com"
+	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
+	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_CertificateName(domainName, certificatePrivateKey, certificateBody, certificateChain),
+				Config: testAccAWSAPIGatewayDomainNameConfig_CertificateName(name, commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists("aws_api_gateway_domain_name.test", &conf),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_body", certRe),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_chain", certRe),
 					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "certificate_name", "tf-acc-apigateway-domain-name"),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_private_key", keyRe),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "cloudfront_domain_name"),
 					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
-					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "domain_name", domainName),
+					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "domain_name", name),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "certificate_upload_date"),
+				),
+			},
+			{
+				Config: testAccAWSAPIGatewayDomainNameConfig_CertificateName(nameModified, commonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDomainNameExists("aws_api_gateway_domain_name.test", &conf),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_body", certRe),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_chain", certRe),
+					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "certificate_name", "tf-acc-apigateway-domain-name"),
+					resource.TestMatchResourceAttr("aws_api_gateway_domain_name.test", "certificate_private_key", keyRe),
+					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "cloudfront_domain_name"),
+					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
+					resource.TestCheckResourceAttr("aws_api_gateway_domain_name.test", "domain_name", nameModified),
 					resource.TestCheckResourceAttrSet("aws_api_gateway_domain_name.test", "certificate_upload_date"),
 				),
 			},
@@ -112,20 +105,27 @@ func TestAccAWSAPIGatewayDomainName_CertificateName(t *testing.T) {
 }
 
 func TestAccAWSAPIGatewayDomainName_RegionalCertificateArn(t *testing.T) {
+	// For now, use an environment variable to limit running this test
+	regionalCertificateArn := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_REGIONAL_CERTIFICATE_ARN")
+	if regionalCertificateArn == "" {
+		t.Skip(
+			"Environment variable AWS_API_GATEWAY_DOMAIN_NAME_REGIONAL_CERTIFICATE_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"an ISSUED ACM certificate in the region where this test " +
+				"is running to enable the test.")
+	}
+
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
 
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(rName, key, certificate),
+				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(rName, regionalCertificateArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
@@ -155,59 +155,28 @@ func TestAccAWSAPIGatewayDomainName_RegionalCertificateName(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 
 	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
-
-	caKey := tlsRsaPrivateKeyPem(2048)
-	caCertificate := tlsRsaX509SelfSignedCaCertificatePem(caKey)
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509LocallySignedCertificatePem(caKey, caCertificate, key, "*.terraformtest.com")
+	commonName := "*.terraformtest.com"
+	certRe := regexp.MustCompile("^-----BEGIN CERTIFICATE-----\n")
+	keyRe := regexp.MustCompile("^-----BEGIN RSA PRIVATE KEY-----\n")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		Providers:    testAccProvidersWithTLS,
 		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateName(rName, key, certificate, caCertificate),
+				Config: testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateName(rName, commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "certificate_body", certificate),
-					resource.TestCheckResourceAttr(resourceName, "certificate_chain", caCertificate),
+					resource.TestMatchResourceAttr(resourceName, "certificate_body", certRe),
+					resource.TestMatchResourceAttr(resourceName, "certificate_chain", certRe),
 					resource.TestCheckResourceAttr(resourceName, "certificate_name", "tf-acc-apigateway-domain-name"),
-					resource.TestCheckResourceAttr(resourceName, "certificate_private_key", key),
+					resource.TestMatchResourceAttr(resourceName, "certificate_private_key", keyRe),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_upload_date"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "regional_domain_name", regexp.MustCompile(`.*\.execute-api\..*`)),
 					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexp.MustCompile(`^Z`)),
 				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAPIGatewayDomainName_SecurityPolicy(t *testing.T) {
-	var domainName apigateway.DomainName
-	resourceName := "aws_api_gateway_domain_name.test"
-	rName := fmt.Sprintf("tf-acc-%s.terraformtest.com", acctest.RandString(8))
-
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, rName)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayDomainNameDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSAPIGatewayDomainNameConfig_SecurityPolicy(rName, key, certificate, apigateway.SecurityPolicyTls12),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayDomainNameExists(resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "security_policy", apigateway.SecurityPolicyTls12),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -269,6 +238,56 @@ func testAccCheckAWSAPIGatewayDomainNameDestroy(s *terraform.State) error {
 	return nil
 }
 
+func testAccAWSAPIGatewayCerts(commonName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "ca" {
+  key_algorithm         = "RSA"
+  private_key_pem       = "${tls_private_key.test.private_key_pem}"
+  is_ca_certificate     = true
+  validity_period_hours = 12
+
+  subject {
+    common_name  = "ACME Root CA"
+    organization = "ACME Example Holdings"
+  }
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "tls_cert_request" "test" {
+  key_algorithm   = "RSA"
+  private_key_pem = "${tls_private_key.test.private_key_pem}"
+
+  subject {
+    common_name  = "%s"
+    organization = "ACME Example Holdings, Inc"
+  }
+}
+
+resource "tls_locally_signed_cert" "leaf" {
+  cert_request_pem      = "${tls_cert_request.test.cert_request_pem}"
+  ca_key_algorithm      = "RSA"
+  ca_private_key_pem    = "${tls_private_key.test.private_key_pem}"
+  ca_cert_pem           = "${tls_self_signed_cert.ca.cert_pem}"
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+`, commonName)
+}
+
 func testAccAWSAPIGatewayDomainNameConfig_CertificateArn(domainName, certificateArn string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
@@ -282,67 +301,45 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, certificateArn)
 }
 
-func testAccAWSAPIGatewayDomainNameConfig_CertificateName(domainName, key, certificate, chainCertificate string) string {
+func testAccAWSAPIGatewayDomainNameConfig_CertificateName(domainName, commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
-  domain_name             = "%[1]s"
-  certificate_body        = "%[2]s"
-  certificate_chain       = "%[3]s"
-  certificate_name        = "tf-acc-apigateway-domain-name"
-  certificate_private_key = "%[4]s"
+  domain_name = "%s"
+  certificate_body = "${tls_locally_signed_cert.leaf.cert_pem}"
+  certificate_chain = "${tls_self_signed_cert.ca.cert_pem}"
+  certificate_name = "tf-acc-apigateway-domain-name"
+  certificate_private_key = "${tls_private_key.test.private_key_pem}"
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(chainCertificate), tlsPemEscapeNewlines(key))
+%s
+`, domainName, testAccAWSAPIGatewayCerts(commonName))
 }
 
-func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(domainName, key, certificate string) string {
+func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateArn(domainName, regionalCertificateArn string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-
 resource "aws_api_gateway_domain_name" "test" {
-  domain_name              = %[1]q
-  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
+  domain_name              = "%s"
+  regional_certificate_arn = "%s"
 
   endpoint_configuration {
     types = ["REGIONAL"]
   }
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+`, domainName, regionalCertificateArn)
 }
 
-func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateName(domainName, key, certificate, chainCertificate string) string {
+func testAccAWSAPIGatewayDomainNameConfig_RegionalCertificateName(domainName, commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
-  certificate_body          = "%[2]s"
-  certificate_chain         = "%[3]s"
-  certificate_private_key   = "%[4]s"
-  domain_name               = "%[1]s"
+  certificate_body          = "${tls_locally_signed_cert.leaf.cert_pem}"
+  certificate_chain         = "${tls_self_signed_cert.ca.cert_pem}"
+  certificate_private_key   = "${tls_private_key.test.private_key_pem}"
+  domain_name               = "%s"
   regional_certificate_name = "tf-acc-apigateway-domain-name"
 
   endpoint_configuration {
     types = ["REGIONAL"]
   }
 }
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(chainCertificate), tlsPemEscapeNewlines(key))
-}
-
-func testAccAWSAPIGatewayDomainNameConfig_SecurityPolicy(domainName, key, certificate, securityPolicy string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-
-resource "aws_api_gateway_domain_name" "test" {
-  domain_name              = %[1]q
-  regional_certificate_arn = "${aws_acm_certificate.test.arn}"
-  security_policy          = %[4]q
-
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
-}
-`, domainName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key), securityPolicy)
+%s
+`, domainName, testAccAWSAPIGatewayCerts(commonName))
 }

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSEBSSnapshot_basic(t *testing.T) {
@@ -173,11 +173,6 @@ resource "aws_ebs_snapshot" "test" {
   tags = {
     Name = "%s"
   }
-
-  timeouts {
-	create = "10m"
-	delete = "10m"
-  }
 }
 `, rName)
 }
@@ -192,7 +187,7 @@ resource "aws_ebs_volume" "description_test" {
 }
 
 resource "aws_ebs_snapshot" "test" {
-  volume_id   = "${aws_ebs_volume.description_test.id}"
+  volume_id = "${aws_ebs_volume.description_test.id}"
   description = "%s"
 }
 `, rName)
@@ -200,10 +195,7 @@ resource "aws_ebs_snapshot" "test" {
 
 func testAccAwsEbsSnapshotConfigWithKms(rName string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
-}
-
+variable "name" { default = "%s" }
 data "aws_region" "current" {}
 
 resource "aws_kms_key" "test" {

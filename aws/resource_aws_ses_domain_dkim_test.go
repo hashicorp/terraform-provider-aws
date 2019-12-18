@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSSESDomainDkim_basic(t *testing.T) {
@@ -21,10 +21,8 @@ func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
-			testAccPreCheckAWSSES(t)
 		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSESDomainDkimDestroy,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: fmt.Sprintf(testAccAwsSESDomainDkimConfig, domain),
@@ -35,35 +33,6 @@ func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAwsSESDomainDkimDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_domain_dkim" {
-			continue
-		}
-
-		domain := rs.Primary.ID
-		params := &ses.GetIdentityDkimAttributesInput{
-			Identities: []*string{
-				aws.String(domain),
-			},
-		}
-
-		resp, err := conn.GetIdentityDkimAttributes(params)
-
-		if err != nil {
-			return err
-		}
-
-		if resp.DkimAttributes[domain] != nil {
-			return fmt.Errorf("SES Domain Dkim %s still exists.", domain)
-		}
-	}
-
-	return nil
 }
 
 func testAccCheckAwsSESDomainDkimExists(n string) resource.TestCheckFunc {

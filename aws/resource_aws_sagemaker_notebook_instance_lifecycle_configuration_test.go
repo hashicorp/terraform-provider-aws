@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 const SagemakerNotebookInstanceLifecycleConfigurationResourcePrefix = "tf-acc-test"
@@ -21,9 +21,6 @@ func init() {
 	resource.AddTestSweepers("aws_sagemaker_notebook_instance_lifecycle_configuration", &resource.Sweeper{
 		Name: "aws_sagemaker_notebook_instance_lifecycle_configuration",
 		F:    testSweepSagemakerNotebookInstanceLifecycleConfiguration,
-		Dependencies: []string{
-			"aws_sagemaker_notebook_instance",
-		},
 	})
 }
 
@@ -200,9 +197,9 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
 func testAccSagemakerNotebookInstanceLifecycleConfigurationConfig_Update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "test" {
-  name      = %q
+  name = %q
   on_create = "${base64encode("echo bla")}"
-  on_start  = "${base64encode("echo blub")}"
+  on_start = "${base64encode("echo blub")}"
 }
 `, rName)
 }

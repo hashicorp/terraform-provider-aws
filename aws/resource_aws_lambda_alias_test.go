@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSLambdaAlias_basic(t *testing.T) {
@@ -284,8 +284,7 @@ resource "aws_lambda_alias" "lambda_alias_test" {
   description      = "a sample description"
   function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
   function_version = "1"
-}
-`, roleName, policyName, attachmentName, funcName, aliasName)
+}`, roleName, policyName, attachmentName, funcName, aliasName)
 }
 
 func testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
@@ -358,6 +357,5 @@ resource "aws_lambda_alias" "lambda_alias_test" {
       "2" = 0.5
     }
   }
-}
-`, roleName, policyName, attachmentName, funcName, aliasName)
+}`, roleName, policyName, attachmentName, funcName, aliasName)
 }

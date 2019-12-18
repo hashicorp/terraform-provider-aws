@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route53_query_log"
+sidebar_current: "docs-aws-resource-route53-query-log"
 description: |-
   Provides a Route53 query logging configuration resource.
 ---

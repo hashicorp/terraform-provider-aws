@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dms_replication_task"
+sidebar_current: "docs-aws-resource-dms-replication-task"
 description: |-
   Provides a DMS (Data Migration Service) replication task resource.
 ---

@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func tagsFromMapSagemaker(m map[string]interface{}) []*sagemaker.Tag {
@@ -46,13 +46,12 @@ func setSagemakerTags(conn *sagemaker.SageMaker, d *schema.ResourceData) error {
 		create, remove := diffSagemakerTags(tagsFromMapSagemaker(o), tagsFromMapSagemaker(n))
 
 		if len(remove) > 0 {
-			input := &sagemaker.DeleteTagsInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
-				TagKeys:     remove,
-			}
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				log.Printf("[DEBUG] Removing tags: %#v from %s", remove, d.Id())
-				_, err := conn.DeleteTags(input)
+				_, err := conn.DeleteTags(&sagemaker.DeleteTagsInput{
+					ResourceArn: aws.String(d.Get("arn").(string)),
+					TagKeys:     remove,
+				})
 				if err != nil {
 					sagemakerErr, ok := err.(awserr.Error)
 					if ok && sagemakerErr.Code() == "ResourceNotFound" {
@@ -62,21 +61,17 @@ func setSagemakerTags(conn *sagemaker.SageMaker, d *schema.ResourceData) error {
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
-				_, err = conn.DeleteTags(input)
-			}
 			if err != nil {
 				return err
 			}
 		}
 		if len(create) > 0 {
-			input := &sagemaker.AddTagsInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
-				Tags:        create,
-			}
 			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 				log.Printf("[DEBUG] Creating tags: %s for %s", create, d.Id())
-				_, err := conn.AddTags(input)
+				_, err := conn.AddTags(&sagemaker.AddTagsInput{
+					ResourceArn: aws.String(d.Get("arn").(string)),
+					Tags:        create,
+				})
 				if err != nil {
 					sagemakerErr, ok := err.(awserr.Error)
 					if ok && sagemakerErr.Code() == "ResourceNotFound" {
@@ -86,9 +81,6 @@ func setSagemakerTags(conn *sagemaker.SageMaker, d *schema.ResourceData) error {
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
-				_, err = conn.AddTags(input)
-			}
 			if err != nil {
 				return err
 			}

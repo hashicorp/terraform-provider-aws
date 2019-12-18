@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elasticache_replication_group"
+sidebar_current: "docs-aws-resource-elasticache-replication-group"
 description: |-
   Provides an ElastiCache Replication Group resource.
 ---

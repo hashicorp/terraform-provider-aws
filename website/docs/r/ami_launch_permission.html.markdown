@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ami_launch_permission"
+sidebar_current: "docs-aws-resource-ami-launch-permission"
 description: |-
   Adds launch permission to Amazon Machine Image (AMI).
 ---

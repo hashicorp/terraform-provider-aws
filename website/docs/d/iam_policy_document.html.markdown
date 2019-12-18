@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_policy_document"
+sidebar_current: "docs-aws-datasource-iam-policy-document"
 description: |-
   Generates an IAM policy document in JSON format
 ---
@@ -118,15 +119,15 @@ each accept the following arguments:
 Each policy may have either zero or more `principals` blocks or zero or more
 `not_principals` blocks, both of which each accept the following arguments:
 
-* `type` (Required) The type of principal. For AWS ARNs this is "AWS".  For AWS services (e.g. Lambda), this is "Service".
+* `type` (Required) The type of principal. For AWS accounts this is "AWS".
 * `identifiers` (Required) List of identifiers for principals. When `type`
-  is "AWS", these are IAM user or role ARNs.  When `type` is "Service", these are AWS Service roles e.g. `lambda.amazonaws.com`.
+  is "AWS", these are IAM user or role ARNs.
 
 Each policy statement may have zero or more `condition` blocks, which each
 accept the following arguments:
 
 * `test` (Required) The name of the
-  [IAM condition operator](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_condition_operators.html)
+  [IAM condition type](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AccessPolicyLanguage_ConditionType)
   to evaluate.
 * `variable` (Required) The name of a
   [Context Variable](http://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements.html#AvailableKeys)

@@ -1,11 +1,10 @@
 sudo: false
 language: go
 go:
-  - 1.10.x
-  - 1.11.x
+  - 1.7.x
+  - 1.8.x
+  - 1.9.x
   - master
-
-go_import_path: github.com/golangci/lint-1
 
 install:
   - go get -t -v ./...

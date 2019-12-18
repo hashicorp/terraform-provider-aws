@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/customdiff"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsSsmParameter() *schema.Resource {
@@ -75,10 +75,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"version": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"tags": tagsSchema(),
 		},
 
@@ -125,7 +121,6 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("name", param.Name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
-	d.Set("version", param.Version)
 
 	describeParamsInput := &ssm.DescribeParametersInput{
 		ParameterFilters: []*ssm.ParameterStringFilter{
@@ -150,10 +145,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	detail := describeResp.Parameters[0]
 	d.Set("key_id", detail.KeyId)
 	d.Set("description", detail.Description)
-	d.Set("tier", ssm.ParameterTierStandard)
-	if detail.Tier != nil {
-		d.Set("tier", detail.Tier)
-	}
+	d.Set("tier", detail.Tier)
 	d.Set("allowed_pattern", detail.AllowedPattern)
 
 	if tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
@@ -217,14 +209,7 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", d.Get("name"))
-	_, err := ssmconn.PutParameter(paramInput)
-
-	if isAWSErr(err, "ValidationException", "Tier is not supported") {
-		paramInput.Tier = nil
-		_, err = ssmconn.PutParameter(paramInput)
-	}
-
-	if err != nil {
+	if _, err := ssmconn.PutParameter(paramInput); err != nil {
 		return fmt.Errorf("error creating SSM parameter: %s", err)
 	}
 

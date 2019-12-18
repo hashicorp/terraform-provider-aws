@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAccAWSCognitoUserGroup_basic(t *testing.T) {
 	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func TestAccAWSCognitoUserGroup_complex(t *testing.T) {
 	updatedGroupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccAWSCognitoUserGroup_RoleArn(t *testing.T) {
 	resourceName := "aws_cognito_user_group.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func TestAccAWSCognitoUserGroup_importBasic(t *testing.T) {
 	groupName := fmt.Sprintf("tf-acc-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoUserGroupDestroy,
 		Steps: []resource.TestStep{
@@ -249,7 +249,6 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_iam_role" "group_role" {
   name = "%[1]s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -283,7 +282,6 @@ resource "aws_cognito_user_pool" "main" {
 
 resource "aws_iam_role" "group_role_updated" {
   name = "%[1]s-updated"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

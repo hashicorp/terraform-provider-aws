@@ -11,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 	"github.com/pquerna/otp/totp"
 )
 
@@ -165,6 +165,31 @@ func testSweepIamUsers(region string) error {
 	return nil
 }
 
+func TestAccAWSUser_importBasic(t *testing.T) {
+	resourceName := "aws_iam_user.user"
+
+	n := fmt.Sprintf("test-user-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfig(n, "/"),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAWSUser_basic(t *testing.T) {
 	var conf iam.GetUserOutput
 
@@ -172,7 +197,6 @@ func TestAccAWSUser_basic(t *testing.T) {
 	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	path1 := "/"
 	path2 := "/path2/"
-	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -185,13 +209,6 @@ func TestAccAWSUser_basic(t *testing.T) {
 					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
 					testAccCheckAWSUserAttributes(&conf, name1, "/"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
 			},
 			{
 				Config: testAccAWSUserConfig(name2, path2),
@@ -245,13 +262,6 @@ func TestAccAWSUser_ForceDestroy_AccessKey(t *testing.T) {
 					testAccCheckAWSUserCreatesAccessKey(&user),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
-			},
 		},
 	})
 }
@@ -273,13 +283,6 @@ func TestAccAWSUser_ForceDestroy_LoginProfile(t *testing.T) {
 					testAccCheckAWSUserExists(resourceName, &user),
 					testAccCheckAWSUserCreatesLoginProfile(&user),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
 			},
 		},
 	})
@@ -303,13 +306,6 @@ func TestAccAWSUser_ForceDestroy_MFADevice(t *testing.T) {
 					testAccCheckAWSUserCreatesMFADevice(&user),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
-			},
 		},
 	})
 }
@@ -332,13 +328,6 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 					testAccCheckAWSUserUploadsSSHKey(&user),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
-			},
 		},
 	})
 }
@@ -349,7 +338,6 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 	name1 := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	name2 := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	path := "/"
-	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -361,13 +349,6 @@ func TestAccAWSUser_nameChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
 			},
 			{
 				Config: testAccAWSUserConfig(name2, path),
@@ -385,7 +366,6 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 	name := fmt.Sprintf("test-user-%d", acctest.RandInt())
 	path1 := "/"
 	path2 := "/updated/"
-	resourceName := "aws_iam_user.user"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -397,13 +377,6 @@ func TestAccAWSUser_pathChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSUserExists("aws_iam_user.user", &conf),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
 			},
 			{
 				Config: testAccAWSUserConfig(name, path2),
@@ -437,13 +410,6 @@ func TestAccAWSUser_permissionsBoundary(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
 					testAccCheckAWSUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
 			},
 			// Test update
 			{
@@ -511,13 +477,6 @@ func TestAccAWSUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-Name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-tag2"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"force_destroy"},
 			},
 			{
 				Config: testAccAWSUserConfig_tagsUpdate(rName),
@@ -748,7 +707,7 @@ func testAccAWSUserConfigForceDestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   force_destroy = true
-  name          = %q
+  name = %q
 }
 `, rName)
 }
@@ -757,7 +716,6 @@ func testAccAWSUserConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %q
-
   tags = {
     Name = "test-Name"
     tag2 = "test-tag2"
@@ -770,7 +728,6 @@ func testAccAWSUserConfig_tagsUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %q
-
   tags = {
     tag2 = "test-tagUpdate"
   }

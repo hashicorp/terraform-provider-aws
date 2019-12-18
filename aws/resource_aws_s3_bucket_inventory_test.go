@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSS3BucketInventory_basic(t *testing.T) {
@@ -224,10 +224,10 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format     = "ORC"
+      format = "ORC"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
       account_id = "${data.aws_caller_identity.current.account_id}"
-      prefix     = "inventory"
+      prefix = "inventory"
     }
   }
 }
@@ -249,7 +249,7 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format     = "CSV"
+      format = "CSV"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
       encryption {
@@ -281,7 +281,7 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format     = "Parquet"
+      format = "Parquet"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
       encryption {

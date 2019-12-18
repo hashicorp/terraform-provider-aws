@@ -1,9 +1,5 @@
 default: test lint
 
-fmt:
-	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./
-
 lint:
 	@echo "==> Checking source code against linters..."
 	@golangci-lint run ./...

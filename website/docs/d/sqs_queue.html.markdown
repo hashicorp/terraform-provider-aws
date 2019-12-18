@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_sqs_queue"
+sidebar_current: "docs-aws-datasource-sqs-queue"
 description: |-
   Get information on an Amazon Simple Queue Service (SQS) Queue
 ---

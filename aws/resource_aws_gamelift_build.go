@@ -1,15 +1,14 @@
 package aws
 
 import (
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsGameliftBuild() *schema.Resource {
@@ -94,11 +93,8 @@ func resourceAwsGameliftBuildCreate(d *schema.ResourceData, meta interface{}) er
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.CreateBuild(&input)
-	}
 	if err != nil {
-		return fmt.Errorf("Error creating Gamelift build client: %s", err)
+		return err
 	}
 
 	d.SetId(*out.Build.BuildId)

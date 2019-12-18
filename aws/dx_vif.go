@@ -7,14 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*directconnect.VirtualInterface, error) {
 	resp, state, err := dxVirtualInterfaceStateRefresh(conn, id)()
 	if err != nil {
-		return nil, fmt.Errorf("error reading Direct Connect virtual interface (%s): %s", id, err)
+		return nil, fmt.Errorf("Error reading Direct Connect virtual interface: %s", err)
 	}
 	if state == directconnect.VirtualInterfaceStateDeleted {
 		return nil, nil
@@ -26,21 +26,26 @@ func dxVirtualInterfaceRead(id string, conn *directconnect.DirectConnect) (*dire
 func dxVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dxconn
 
-	if d.HasChange("mtu") {
-		req := &directconnect.UpdateVirtualInterfaceAttributesInput{
-			Mtu:                aws.Int64(int64(d.Get("mtu").(int))),
-			VirtualInterfaceId: aws.String(d.Id()),
-		}
+	req := &directconnect.UpdateVirtualInterfaceAttributesInput{
+		VirtualInterfaceId: aws.String(d.Id()),
+	}
 
-		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %s", req)
+	requestUpdate := false
+	if d.HasChange("mtu") {
+		req.Mtu = aws.Int64(int64(d.Get("mtu").(int)))
+		requestUpdate = true
+	}
+
+	if requestUpdate {
+		log.Printf("[DEBUG] Modifying Direct Connect virtual interface attributes: %#v", req)
 		_, err := conn.UpdateVirtualInterfaceAttributes(req)
 		if err != nil {
-			return fmt.Errorf("error modifying Direct Connect virtual interface (%s) attributes, error: %s", d.Id(), err)
+			return fmt.Errorf("Error modifying Direct Connect virtual interface (%s) attributes, error: %s", d.Id(), err)
 		}
 	}
 
 	if err := setTagsDX(conn, d, d.Get("arn").(string)); err != nil {
-		return fmt.Errorf("error setting Direct Connect virtual interface (%s) tags: %s", d.Id(), err)
+		return err
 	}
 
 	return nil
@@ -57,7 +62,7 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 		if isAWSErr(err, directconnect.ErrCodeClientException, "does not exist") {
 			return nil
 		}
-		return fmt.Errorf("error deleting Direct Connect virtual interface (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error deleting Direct Connect virtual interface: %s", err)
 	}
 
 	deleteStateConf := &resource.StateChangeConf{
@@ -80,7 +85,7 @@ func dxVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	_, err = deleteStateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for Direct Connect virtual interface (%s) to be deleted: %s", d.Id(), err)
+		return fmt.Errorf("Error waiting for Direct Connect virtual interface (%s) to be deleted: %s", d.Id(), err)
 	}
 
 	return nil
@@ -120,7 +125,7 @@ func dxVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vif
 		MinTimeout: 5 * time.Second,
 	}
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for Direct Connect virtual interface (%s) to become available: %s", vifId, err)
+		return fmt.Errorf("Error waiting for Direct Connect virtual interface (%s) to become available: %s", vifId, err)
 	}
 
 	return nil

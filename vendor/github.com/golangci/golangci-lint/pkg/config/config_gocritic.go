@@ -97,6 +97,7 @@ func (s *GocriticSettings) gocriticDisabledCheckersDebugf() {
 	}
 }
 
+//nolint:gocyclo
 func (s *GocriticSettings) InferEnabledChecks(log logutils.Log) {
 	gocriticCheckerTagsDebugf()
 
@@ -174,6 +175,7 @@ func validateStringsUniq(ss []string) error {
 	return nil
 }
 
+//nolint:gocyclo
 func (s *GocriticSettings) Validate(log logutils.Log) error {
 	if len(s.EnabledTags) == 0 {
 		if len(s.EnabledChecks) != 0 && len(s.DisabledChecks) != 0 {

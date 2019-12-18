@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestParseStorageGatewayVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
@@ -228,9 +228,6 @@ func testAccCheckAWSStorageGatewayCachedIscsiVolumeDestroy(s *terraform.State) e
 				return nil
 			}
 			if isAWSErr(err, storagegateway.ErrorCodeVolumeNotFound, "") {
-				return nil
-			}
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 				return nil
 			}
 			return err

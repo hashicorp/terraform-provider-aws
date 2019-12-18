@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_appsync_resolver"
+sidebar_current: "docs-aws-resource-appsync-resolver"
 description: |-
   Provides an AppSync Resolver.
 ---
@@ -15,8 +16,7 @@ Provides an AppSync Resolver.
 resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = "tf-example"
-
-  schema = <<EOF
+  schema              = <<EOF
 type Mutation {
 	putPost(id: ID!, title: String!): Post
 }
@@ -38,22 +38,20 @@ EOF
 }
 
 resource "aws_appsync_datasource" "test" {
-  api_id = "${aws_appsync_graphql_api.test.id}"
-  name   = "tf_example"
-  type   = "HTTP"
+  api_id      = "${aws_appsync_graphql_api.test.id}"
+  name        = "tf-example"
+  type        = "HTTP"
 
   http_config {
     endpoint = "http://example.com"
   }
 }
 
-# UNIT type resolver (default)
 resource "aws_appsync_resolver" "test" {
-  api_id      = "${aws_appsync_graphql_api.test.id}"
-  field       = "singlePost"
-  type        = "Query"
-  data_source = "${aws_appsync_datasource.test.name}"
-
+  api_id           = "${aws_appsync_graphql_api.test.id}"
+  field            = "singlePost"
+  type             = "Query"
+  data_source      = "${aws_appsync_datasource.test.name}"
   request_template = <<EOF
 {
     "version": "2018-05-29",
@@ -64,7 +62,6 @@ resource "aws_appsync_resolver" "test" {
     }
 }
 EOF
-
   response_template = <<EOF
 #if($ctx.result.statusCode == 200)
     $ctx.result.body
@@ -72,23 +69,6 @@ EOF
     $utils.appendError($ctx.result.body, $ctx.result.statusCode)
 #end
 EOF
-}
-
-# PIPELINE type resolver
-resource "aws_appsync_resolver" "Mutation_pipelineTest" {
-  type = "Mutation"
-  api_id = "${aws_appsync_graphql_api.test.id}"
-  field = "pipelineTest"
-  request_template = "{}"
-  response_template = "$util.toJson($ctx.result)"
-  kind = "PIPELINE"
-  pipeline_config {
-    functions = [
-      "${aws_appsync_function.test1.function_id}",
-      "${aws_appsync_function.test2.function_id}",
-      "${aws_appsync_function.test3.function_id}"
-    ]
-  }
 }
 ```
 
@@ -99,15 +79,9 @@ The following arguments are supported:
 * `api_id` - (Required) The API ID for the GraphQL API.
 * `type` - (Required) The type name from the schema defined in the GraphQL API.
 * `field` - (Required) The field name from the schema defined in the GraphQL API.
-* `request_template` - (Required) The request mapping template for UNIT resolver or 'before mapping template' for PIPELINE resolver.
-* `response_template` - (Required) The response mapping template for UNIT resolver or 'after mapping template' for PIPELINE resolver.
-* `data_source` - (Optional) The DataSource name.
-* `kind`  - (Optional) The resolver type. Valid values are `UNIT` and `PIPELINE`.
-* `pipeline_config` - (Optional) The PipelineConfig. A `pipeline_config` block is documented below.
-
-An `pipeline_config` block supports the following arguments:
-
-* `functions` - (Required) The list of Function ID.
+* `data_source` - (Required) The DataSource name.
+* `request_template` - (Required) The request mapping template for this resolver.
+* `response_template` - (Required) The response mapping template for this resolver.
 
 ## Attributes Reference
 

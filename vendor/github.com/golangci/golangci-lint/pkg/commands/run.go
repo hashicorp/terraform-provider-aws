@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golangci/golangci-lint/pkg/result/processors"
+
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -20,13 +22,11 @@ import (
 	"github.com/golangci/golangci-lint/pkg/lint"
 	"github.com/golangci/golangci-lint/pkg/lint/lintersdb"
 	"github.com/golangci/golangci-lint/pkg/logutils"
-	"github.com/golangci/golangci-lint/pkg/packages"
 	"github.com/golangci/golangci-lint/pkg/printers"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/golangci/golangci-lint/pkg/result/processors"
 )
 
-func getDefaultIssueExcludeHelp() string {
+func getDefaultExcludeHelp() string {
 	parts := []string{"Use or not use default excludes:"}
 	for _, ep := range config.DefaultExcludePatterns {
 		parts = append(parts,
@@ -38,15 +38,6 @@ func getDefaultIssueExcludeHelp() string {
 	return strings.Join(parts, "\n")
 }
 
-func getDefaultDirectoryExcludeHelp() string {
-	parts := []string{"Use or not use default excluded directories:"}
-	for _, dir := range packages.StdExcludeDirRegexps {
-		parts = append(parts, fmt.Sprintf("  - %s", color.YellowString(dir)))
-	}
-	parts = append(parts, "")
-	return strings.Join(parts, "\n")
-}
-
 const welcomeMessage = "Run this tool in cloud on every github pull " +
 	"request in https://golangci.com for free (public repos)"
 
@@ -54,7 +45,6 @@ func wh(text string) string {
 	return color.GreenString(text)
 }
 
-//nolint:funlen
 func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, isFinalInit bool) {
 	hideFlag := func(name string) {
 		if err := fs.MarkHidden(name); err != nil {
@@ -85,17 +75,13 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	fs.IntVar(&rc.ExitCodeIfIssuesFound, "issues-exit-code",
 		exitcodes.IssuesFound, wh("Exit code when issues were found"))
 	fs.StringSliceVar(&rc.BuildTags, "build-tags", nil, wh("Build tags"))
-	fs.DurationVar(&rc.Timeout, "deadline", time.Minute, wh("Deadline for total work"))
-	hideFlag("deadline")
-	fs.DurationVar(&rc.Timeout, "timeout", time.Minute, wh("Timeout for total work"))
-
+	fs.DurationVar(&rc.Deadline, "deadline", time.Minute, wh("Deadline for total work"))
 	fs.BoolVar(&rc.AnalyzeTests, "tests", true, wh("Analyze tests (*_test.go)"))
 	fs.BoolVar(&rc.PrintResourcesUsage, "print-resources-usage", false,
 		wh("Print avg and max memory usage of golangci-lint and total time"))
 	fs.StringVarP(&rc.Config, "config", "c", "", wh("Read config from file path `PATH`"))
 	fs.BoolVar(&rc.NoConfig, "no-config", false, wh("Don't read config"))
 	fs.StringSliceVar(&rc.SkipDirs, "skip-dirs", nil, wh("Regexps of directories to skip"))
-	fs.BoolVar(&rc.UseDefaultSkipDirs, "skip-dirs-use-default", true, getDefaultDirectoryExcludeHelp())
 	fs.StringSliceVar(&rc.SkipFiles, "skip-files", nil, wh("Regexps of files to skip"))
 
 	// Linters settings config
@@ -175,7 +161,7 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	// Issues config
 	ic := &cfg.Issues
 	fs.StringSliceVarP(&ic.ExcludePatterns, "exclude", "e", nil, wh("Exclude issue by regexp"))
-	fs.BoolVar(&ic.UseDefaultExcludes, "exclude-use-default", true, getDefaultIssueExcludeHelp())
+	fs.BoolVar(&ic.UseDefaultExcludes, "exclude-use-default", true, getDefaultExcludeHelp())
 
 	fs.IntVar(&ic.MaxIssuesPerLinter, "max-issues-per-linter", 50,
 		wh("Maximum issues count per one linter. Set to 0 to disable"))
@@ -267,7 +253,7 @@ func fixSlicesFlags(fs *pflag.FlagSet) {
 	})
 }
 
-func (e *Executor) runAnalysis(ctx context.Context, args []string) ([]result.Issue, error) {
+func (e *Executor) runAnalysis(ctx context.Context, args []string) (<-chan result.Issue, error) {
 	e.cfg.Run.Args = args
 
 	enabledLinters, err := e.EnabledLintersSet.Get(true)
@@ -292,15 +278,15 @@ func (e *Executor) runAnalysis(ctx context.Context, args []string) ([]result.Iss
 	}
 	lintCtx.Log = e.log.Child("linters context")
 
-	runner, err := lint.NewRunner(e.cfg, e.log.Child("runner"),
-		e.goenv, e.lineCache, e.DBManager, lintCtx.Packages)
+	runner, err := lint.NewRunner(lintCtx.ASTCache, e.cfg, e.log.Child("runner"),
+		e.goenv, e.lineCache, e.DBManager)
 	if err != nil {
 		return nil, err
 	}
 
-	issues := runner.Run(ctx, enabledLinters, lintCtx)
+	issuesCh := runner.Run(ctx, enabledLinters, lintCtx)
 	fixer := processors.NewFixer(e.cfg, e.log, e.fileCache)
-	return fixer.Process(issues), nil
+	return fixer.Process(issuesCh), nil
 }
 
 func (e *Executor) setOutputToDevNull() (savedStdout, savedStderr *os.File) {
@@ -315,10 +301,24 @@ func (e *Executor) setOutputToDevNull() (savedStdout, savedStderr *os.File) {
 	return
 }
 
-func (e *Executor) setExitCodeIfIssuesFound(issues []result.Issue) {
-	if len(issues) != 0 {
-		e.exitCode = e.cfg.Run.ExitCodeIfIssuesFound
-	}
+func (e *Executor) setExitCodeIfIssuesFound(issues <-chan result.Issue) <-chan result.Issue {
+	resCh := make(chan result.Issue, 1024)
+
+	go func() {
+		issuesFound := false
+		for i := range issues {
+			issuesFound = true
+			resCh <- i
+		}
+
+		if issuesFound {
+			e.exitCode = e.cfg.Run.ExitCodeIfIssuesFound
+		}
+
+		close(resCh)
+	}()
+
+	return resCh
 }
 
 func (e *Executor) runAndPrint(ctx context.Context, args []string) error {
@@ -345,7 +345,7 @@ func (e *Executor) runAndPrint(ctx context.Context, args []string) error {
 		return err
 	}
 
-	e.setExitCodeIfIssuesFound(issues)
+	issues = e.setExitCodeIfIssuesFound(issues)
 
 	if err = p.Print(ctx, issues); err != nil {
 		return fmt.Errorf("can't print %d issues: %s", len(issues), err)
@@ -372,8 +372,6 @@ func (e *Executor) createPrinter() (printers.Printer, error) {
 		p = printers.NewCheckstyle()
 	case config.OutFormatCodeClimate:
 		p = printers.NewCodeClimate()
-	case config.OutFormatJunitXML:
-		p = printers.NewJunitXML()
 	default:
 		return nil, fmt.Errorf("unknown output format %s", format)
 	}
@@ -390,11 +388,11 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 		}
 	}()
 
-	ctx, cancel := context.WithTimeout(context.Background(), e.cfg.Run.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), e.cfg.Run.Deadline)
 	defer cancel()
 
 	if needTrackResources {
-		go watchResources(ctx, trackResourcesEndCh, e.log, e.debugf)
+		go watchResources(ctx, trackResourcesEndCh, e.log)
 	}
 
 	if err := e.runAndPrint(ctx, args); err != nil {
@@ -414,55 +412,35 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 func (e *Executor) setupExitCode(ctx context.Context) {
 	if ctx.Err() != nil {
 		e.exitCode = exitcodes.Timeout
-		e.log.Errorf("Timeout exceeded: try increase it by passing --timeout option")
-		return
+		e.log.Errorf("Deadline exceeded: try increase it by passing --deadline option")
 	}
 
-	if e.exitCode != exitcodes.Success {
-		return
-	}
+	if e.exitCode == exitcodes.Success &&
+		(os.Getenv("GL_TEST_RUN") == "1" || os.Getenv("FAIL_ON_WARNINGS") == "1") &&
+		len(e.reportData.Warnings) != 0 {
 
-	needFailOnWarnings := (os.Getenv("GL_TEST_RUN") == "1" || os.Getenv("FAIL_ON_WARNINGS") == "1")
-	if needFailOnWarnings && len(e.reportData.Warnings) != 0 {
 		e.exitCode = exitcodes.WarningInTest
-		return
-	}
-
-	if e.reportData.Error != "" {
-		// it's a case e.g. when typecheck linter couldn't parse and error and just logged it
-		e.exitCode = exitcodes.ErrorWasLogged
-		return
 	}
 }
 
-func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log, debugf logutils.DebugFunc) {
+func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log) {
 	startedAt := time.Now()
-	debugf("Started tracking time")
 
-	var maxRSSMB, totalRSSMB float64
-	var iterationsCount int
+	var rssValues []uint64
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
 	logEveryRecord := os.Getenv("GL_MEM_LOG_EVERY") == "1"
-	const MB = 1024 * 1024
 
 	track := func() {
-		debugf("Starting memory tracing iteration ...")
 		var m runtime.MemStats
 		runtime.ReadMemStats(&m)
 
 		if logEveryRecord {
-			debugf("Stopping memory tracing iteration, printing ...")
 			printMemStats(&m, logger)
 		}
 
-		rssMB := float64(m.Sys) / MB
-		if rssMB > maxRSSMB {
-			maxRSSMB = rssMB
-		}
-		totalRSSMB += rssMB
-		iterationsCount++
+		rssValues = append(rssValues, m.Sys)
 	}
 
 	for {
@@ -472,8 +450,7 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 		select {
 		case <-ctx.Done():
 			stop = true
-			debugf("Stopped resources tracking")
-		case <-ticker.C:
+		case <-ticker.C: // track every second
 		}
 
 		if stop {
@@ -482,10 +459,19 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 	}
 	track()
 
-	avgRSSMB := totalRSSMB / float64(iterationsCount)
+	var avg, max uint64
+	for _, v := range rssValues {
+		avg += v
+		if v > max {
+			max = v
+		}
+	}
+	avg /= uint64(len(rssValues))
 
+	const MB = 1024 * 1024
+	maxMB := float64(max) / MB
 	logger.Infof("Memory: %d samples, avg is %.1fMB, max is %.1fMB",
-		iterationsCount, avgRSSMB, maxRSSMB)
+		len(rssValues), float64(avg)/MB, maxMB)
 	logger.Infof("Execution took %s", time.Since(startedAt))
 	close(done)
 }

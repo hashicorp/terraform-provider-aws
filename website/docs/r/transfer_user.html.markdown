@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_transfer_user"
+sidebar_current: "docs-aws-resource-transfer-user"
 description: |-
   Provides a AWS Transfer User resource.
 ---
@@ -12,17 +13,17 @@ Provides a AWS Transfer User resource. Managing SSH keys can be accomplished wit
 
 ```hcl
 resource "aws_transfer_server" "foo" {
-  identity_provider_type = "SERVICE_MANAGED"
+	identity_provider_type = "SERVICE_MANAGED"
 
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-  }
+	tags = {
+		NAME     = "tf-acc-test-transfer-server"
+	}
 }
 
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role"
+	name = "tf-test-transfer-user-iam-role"
 
-  assume_role_policy = <<EOF
+	assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -39,10 +40,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy"
-  role = "${aws_iam_role.foo.id}"
-
-  policy = <<POLICY
+	name = "tf-test-transfer-user-iam-policy"
+	role = "${aws_iam_role.foo.id}"
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -60,10 +60,11 @@ POLICY
 }
 
 resource "aws_transfer_user" "foo" {
-  server_id = "${aws_transfer_server.foo.id}"
-  user_name = "tftestuser"
-  role      = "${aws_iam_role.foo.arn}"
+	server_id      = "${aws_transfer_server.foo.id}"
+	user_name      = "tftestuser"
+	role           = "${aws_iam_role.foo.arn}"
 }
+
 ```
 
 ## Argument Reference

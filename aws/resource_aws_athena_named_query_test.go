@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
@@ -21,22 +21,6 @@ func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
 				Config: testAccAthenaNamedQueryConfig(acctest.RandInt(), acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAthenaNamedQueryExists("aws_athena_named_query.foo"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAthenaNamedWorkGroupQueryConfig(acctest.RandInt(), acctest.RandString(5)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaNamedQueryExists("aws_athena_named_query.bar"),
 				),
 			},
 		},
@@ -110,46 +94,20 @@ func testAccCheckAWSAthenaNamedQueryExists(name string) resource.TestCheckFunc {
 func testAccAthenaNamedQueryConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-athena-db-%s-%d"
-  force_destroy = true
+	bucket = "tf-athena-db-%s-%d"
+	force_destroy = true
 }
 
 resource "aws_athena_database" "hoge" {
-  name   = "%s"
-  bucket = "${aws_s3_bucket.hoge.bucket}"
+	name = "%s"
+	bucket = "${aws_s3_bucket.hoge.bucket}"
 }
 
 resource "aws_athena_named_query" "foo" {
-  name        = "tf-athena-named-query-%s"
-  database    = "${aws_athena_database.hoge.name}"
-  query       = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
+  name = "tf-athena-named-query-%s"
+  database = "${aws_athena_database.hoge.name}"
+  query = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
   description = "tf test"
 }
-`, rName, rInt, rName, rName)
-}
-
-func testAccAthenaNamedWorkGroupQueryConfig(rInt int, rName string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-athena-db-%s-%d"
-  force_destroy = true
-}
-
-resource "aws_athena_workgroup" "test" {
-  name = "tf-athena-workgroup-%s-%d"
-}
-
-resource "aws_athena_database" "hoge" {
-  name   = "%s"
-  bucket = "${aws_s3_bucket.hoge.bucket}"
-}
-
-resource "aws_athena_named_query" "bar" {
-  name        = "tf-athena-named-query-%s"
-  workgroup   = "${aws_athena_workgroup.test.id}"
-  database    = "${aws_athena_database.hoge.name}"
-  query       = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
-  description = "tf test"
-}
-`, rName, rInt, rName, rInt, rName, rName)
+		`, rName, rInt, rName, rName)
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloud9"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsCloud9EnvironmentEc2() *schema.Resource {
@@ -100,12 +100,9 @@ func resourceAwsCloud9EnvironmentEc2Create(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.CreateEnvironmentEC2(params)
-	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating Cloud9 EC2 Environment: %s", err)
+		return err
 	}
 	d.SetId(*out.EnvironmentId)
 
@@ -207,13 +204,10 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
-
-	input := &cloud9.DescribeEnvironmentsInput{
-		EnvironmentIds: []*string{aws.String(d.Id())},
-	}
-	var out *cloud9.DescribeEnvironmentsOutput
-	err = resource.Retry(20*time.Minute, func() *resource.RetryError { // Deleting instances can take a long time
-		out, err = conn.DescribeEnvironments(input)
+	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+		out, err := conn.DescribeEnvironments(&cloud9.DescribeEnvironmentsInput{
+			EnvironmentIds: []*string{aws.String(d.Id())},
+		})
 		if err != nil {
 			if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
 				return nil
@@ -229,17 +223,6 @@ func resourceAwsCloud9EnvironmentEc2Delete(d *schema.ResourceData, meta interfac
 		}
 		return resource.RetryableError(fmt.Errorf("Cloud9 EC2 Environment %q still exists", d.Id()))
 	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeEnvironments(input)
-		if isAWSErr(err, cloud9.ErrCodeNotFoundException, "") {
-			return nil
-		}
-		if isAWSErr(err, "AccessDeniedException", "is not authorized to access this resource") {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting Cloud9 EC2 Environment: %s", err)
-	}
-	return nil
+
+	return err
 }

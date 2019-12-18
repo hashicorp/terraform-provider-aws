@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform/helper/acctest"
 )
 
 func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
-	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -26,29 +25,24 @@ func TestAccAWSWafRegionalSizeConstraintSet_basic(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists(resourceName, &constraints),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &constraints),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sizeConstraintSet),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "name", sizeConstraintSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.comparison_operator", "EQ"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.comparison_operator", "EQ"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.field_to_match.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.field_to_match.281401076.data", ""),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.field_to_match.281401076.data", ""),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.field_to_match.281401076.type", "BODY"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.field_to_match.281401076.type", "BODY"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.size", "4096"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.size", "4096"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.text_transformation", "NONE"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.text_transformation", "NONE"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -58,7 +52,6 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
 	sizeConstraintSetNewName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
-	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -68,27 +61,22 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists(resourceName, &before),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sizeConstraintSet),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "name", sizeConstraintSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.#", "1"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfigChangeName(sizeConstraintSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists(resourceName, &after),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sizeConstraintSetNewName),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "name", sizeConstraintSetNewName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.#", "1"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -97,7 +85,6 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	sizeConstraintSet := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
-	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -107,7 +94,7 @@ func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig(sizeConstraintSet),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists(resourceName, &constraints),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &constraints),
 					testAccCheckAWSWafRegionalSizeConstraintSetDisappears(&constraints),
 				),
 				ExpectNonEmptyPlan: true,
@@ -119,7 +106,6 @@ func TestAccAWSWafRegionalSizeConstraintSet_disappears(t *testing.T) {
 func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 	var before, after waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
-	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -129,51 +115,46 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists(resourceName, &before),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "name", setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.comparison_operator", "EQ"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.comparison_operator", "EQ"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.field_to_match.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.field_to_match.281401076.data", ""),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.field_to_match.281401076.data", ""),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.field_to_match.281401076.type", "BODY"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.field_to_match.281401076.type", "BODY"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.size", "4096"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.size", "4096"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.2029852522.text_transformation", "NONE"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.2029852522.text_transformation", "NONE"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig_changeConstraints(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists(resourceName, &after),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "name", setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.3222308386.comparison_operator", "GE"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.3222308386.comparison_operator", "GE"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.3222308386.field_to_match.#", "1"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.3222308386.field_to_match.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.3222308386.field_to_match.281401076.data", ""),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.3222308386.field_to_match.281401076.data", ""),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.3222308386.field_to_match.281401076.type", "BODY"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.3222308386.field_to_match.281401076.type", "BODY"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.3222308386.size", "1024"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.3222308386.size", "1024"),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.3222308386.text_transformation", "NONE"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.3222308386.text_transformation", "NONE"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -182,7 +163,6 @@ func TestAccAWSWafRegionalSizeConstraintSet_changeConstraints(t *testing.T) {
 func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	var constraints waf.SizeConstraintSet
 	setName := fmt.Sprintf("sizeConstraintSet-%s", acctest.RandString(5))
-	resourceName := "aws_wafregional_size_constraint_set.size_constraint_set"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -192,17 +172,12 @@ func TestAccAWSWafRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalSizeConstraintSetConfig_noConstraints(setName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalSizeConstraintSetExists(resourceName, &constraints),
+					testAccCheckAWSWafRegionalSizeConstraintSetExists("aws_wafregional_size_constraint_set.size_constraint_set", &constraints),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "name", setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "0"),
+						"aws_wafregional_size_constraint_set.size_constraint_set", "size_constraints.#", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -312,60 +287,50 @@ func testAccAWSWafRegionalSizeConstraintSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
-
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "EQ"
-    size                = "4096"
-
+    size = "4096"
     field_to_match {
       type = "BODY"
     }
   }
-}
-`, name)
+}`, name)
 }
 
 func testAccAWSWafRegionalSizeConstraintSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
-
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "EQ"
-    size                = "4096"
-
+    size = "4096"
     field_to_match {
       type = "BODY"
     }
   }
-}
-`, name)
+}`, name)
 }
 
 func testAccAWSWafRegionalSizeConstraintSetConfig_changeConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
-
   size_constraints {
     text_transformation = "NONE"
     comparison_operator = "GE"
-    size                = "1024"
-
+    size = "1024"
     field_to_match {
       type = "BODY"
     }
   }
-}
-`, name)
+}`, name)
 }
 
 func testAccAWSWafRegionalSizeConstraintSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
   name = "%s"
-}
-`, name)
+}`, name)
 }

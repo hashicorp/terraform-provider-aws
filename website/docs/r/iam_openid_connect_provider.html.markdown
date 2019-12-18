@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_openid_connect_provider"
+sidebar_current: "docs-aws-resource-iam-openid-connect-provider"
 description: |-
   Provides an IAM OpenID Connect provider.
 ---

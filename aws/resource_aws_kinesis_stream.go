@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsKinesisStream() *schema.Resource {
@@ -23,15 +23,6 @@ func resourceAwsKinesisStream() *schema.Resource {
 		Delete: resourceAwsKinesisStreamDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsKinesisStreamImport,
-		},
-
-		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    resourceAwsKinesisStreamResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceAwsKinesisStreamStateUpgradeV0,
-				Version: 0,
-			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -64,12 +55,6 @@ func resourceAwsKinesisStream() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
-			},
-
-			"enforce_consumer_deletion": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 
 			"encryption_type": {
@@ -219,8 +204,7 @@ func resourceAwsKinesisStreamDelete(d *schema.ResourceData, meta interface{}) er
 	sn := d.Get("name").(string)
 
 	_, err := conn.DeleteStream(&kinesis.DeleteStreamInput{
-		StreamName:              aws.String(sn),
-		EnforceConsumerDeletion: aws.Bool(d.Get("enforce_consumer_deletion").(bool)),
+		StreamName: aws.String(sn),
 	})
 	if err != nil {
 		return err

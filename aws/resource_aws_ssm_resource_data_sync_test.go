@@ -5,14 +5,12 @@ import (
 	"log"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
-	resourceName := "aws_ssm_resource_data_sync.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -21,13 +19,8 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 			{
 				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
+					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -35,8 +28,6 @@ func TestAccAWSSsmResourceDataSync_basic(t *testing.T) {
 
 func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 	rName := acctest.RandString(5)
-	resourceName := "aws_ssm_resource_data_sync.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -45,19 +36,35 @@ func TestAccAWSSsmResourceDataSync_update(t *testing.T) {
 			{
 				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
+					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSsmResourceDataSyncConfigUpdate(acctest.RandInt(), rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSsmResourceDataSyncExists(resourceName),
+					testAccCheckAWSSsmResourceDataSyncExists("aws_ssm_resource_data_sync.foo"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSsmResourceDataSync_import(t *testing.T) {
+	resourceName := "aws_ssm_resource_data_sync.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSsmResourceDataSyncDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSsmResourceDataSyncConfig(acctest.RandInt(), acctest.RandString(5)),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -94,16 +101,15 @@ func testAccCheckAWSSsmResourceDataSyncExists(name string) resource.TestCheckFun
 
 func testAccSsmResourceDataSyncConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-test-bucket-%d"
-  region        = "us-west-2"
-  force_destroy = true
-}
+    resource "aws_s3_bucket" "hoge" {
+      bucket = "tf-test-bucket-%d"
+      region = "us-west-2"
+      force_destroy = true
+    }
 
-resource "aws_s3_bucket_policy" "hoge" {
-  bucket = "${aws_s3_bucket.hoge.bucket}"
-
-  policy = <<EOF
+    resource "aws_s3_bucket_policy" "hoge" {
+    	bucket = "${aws_s3_bucket.hoge.bucket}"
+    	policy = <<EOF
 {
         "Version": "2012-10-17",
         "Statement": [
@@ -133,31 +139,29 @@ resource "aws_s3_bucket_policy" "hoge" {
           ]
       }
       EOF
-}
+    }
 
-resource "aws_ssm_resource_data_sync" "test" {
-  name = "tf-test-ssm-%s"
-
-  s3_destination {
-    bucket_name = "${aws_s3_bucket.hoge.bucket}"
-    region      = "${aws_s3_bucket.hoge.region}"
-  }
-}
-`, rInt, rInt, rInt, rName)
+    resource "aws_ssm_resource_data_sync" "foo" {
+      name = "tf-test-ssm-%s"
+      s3_destination {
+        bucket_name = "${aws_s3_bucket.hoge.bucket}"
+        region = "${aws_s3_bucket.hoge.region}"
+      }
+    }
+    `, rInt, rInt, rInt, rName)
 }
 
 func testAccSsmResourceDataSyncConfigUpdate(rInt int, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-test-bucket-%d"
-  region        = "us-west-2"
-  force_destroy = true
-}
+    resource "aws_s3_bucket" "hoge" {
+      bucket = "tf-test-bucket-%d"
+      region = "us-west-2"
+      force_destroy = true
+    }
 
-resource "aws_s3_bucket_policy" "hoge" {
-  bucket = "${aws_s3_bucket.hoge.bucket}"
-
-  policy = <<EOF
+    resource "aws_s3_bucket_policy" "hoge" {
+      bucket = "${aws_s3_bucket.hoge.bucket}"
+      policy = <<EOF
 {
         "Version": "2012-10-17",
         "Statement": [
@@ -187,16 +191,15 @@ resource "aws_s3_bucket_policy" "hoge" {
           ]
       }
       EOF
-}
+    }
 
-resource "aws_ssm_resource_data_sync" "test" {
-  name = "tf-test-ssm-%s"
-
-  s3_destination {
-    bucket_name = "${aws_s3_bucket.hoge.bucket}"
-    region      = "${aws_s3_bucket.hoge.region}"
-    prefix      = "test-"
-  }
-}
-`, rInt, rInt, rInt, rName)
+    resource "aws_ssm_resource_data_sync" "foo" {
+      name = "tf-test-ssm-%s"
+      s3_destination {
+        bucket_name = "${aws_s3_bucket.hoge.bucket}"
+        region = "${aws_s3_bucket.hoge.region}"
+        prefix = "test-"
+      }
+    }
+    `, rInt, rInt, rInt, rName)
 }

@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -753,17 +753,15 @@ func testAccAWSRouteTableConfigRouteConfigModeBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
+  tags       = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags = {
+  tags   = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
-
   vpc_id = "${aws_vpc.test.id}"
 }
 
@@ -787,17 +785,15 @@ func testAccAWSRouteTableConfigRouteConfigModeNoBlocks() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
+  tags       = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags = {
+  tags   = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
-
   vpc_id = "${aws_vpc.test.id}"
 }
 
@@ -811,17 +807,15 @@ func testAccAWSRouteTableConfigRouteConfigModeZeroed() string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-
-  tags = {
+  tags       = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags = {
+  tags   = {
     Name = "tf-acc-test-ec2-route-table-config-mode"
   }
-
   vpc_id = "${aws_vpc.test.id}"
 }
 
@@ -834,12 +828,6 @@ resource "aws_route_table" "test" {
 
 func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
-}
-
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -849,9 +837,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-test-ec2-route-table-transit-gateway-id"

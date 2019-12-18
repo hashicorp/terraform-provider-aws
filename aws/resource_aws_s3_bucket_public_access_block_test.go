@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSS3BucketPublicAccessBlock_basic(t *testing.T) {
@@ -318,20 +318,19 @@ func testAccCheckAWSS3BucketPublicAccessBlockDisappears(n string) resource.TestC
 func testAccAWSS3BucketPublicAccessBlockConfig(bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "bucket" {
-  bucket = "%s"
-
-  tags = {
-    TestName = "TestACCAWSS3BucketPublicAccessBlock_basic"
-  }
+	bucket = "%s"
+	tags = {
+		TestName = "TestACCAWSS3BucketPublicAccessBlock_basic"
+	}
 }
 
 resource "aws_s3_bucket_public_access_block" "bucket" {
-  bucket = "${aws_s3_bucket.bucket.bucket}"
+	bucket = "${aws_s3_bucket.bucket.bucket}"
 
-  block_public_acls       = "%s"
-  block_public_policy     = "%s"
-  ignore_public_acls      = "%s"
-  restrict_public_buckets = "%s"
+	block_public_acls		= "%s"
+	block_public_policy		= "%s"
+	ignore_public_acls		= "%s"
+	restrict_public_buckets = "%s"
 }
 `, bucketName, blockPublicAcls, blockPublicPolicy, ignorePublicAcls, restrictPublicBuckets)
 }

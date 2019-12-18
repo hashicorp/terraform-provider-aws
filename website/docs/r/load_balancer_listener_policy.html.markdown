@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_load_balancer_listener_policy"
+sidebar_current: "docs-aws-resource-load-balancer-listener-policy"
 description: |-
   Attaches a load balancer policy to an ELB Listener.
 ---

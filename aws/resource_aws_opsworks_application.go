@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsOpsworksApplication() *schema.Resource {
@@ -310,9 +312,24 @@ func resourceAwsOpsworksApplicationCreate(d *schema.ResourceData, meta interface
 		Attributes:       resourceAwsOpsworksApplicationAttributes(d),
 	}
 
-	resp, err := client.CreateApp(req)
+	var resp *opsworks.CreateAppOutput
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var cerr error
+		resp, cerr = client.CreateApp(req)
+		if cerr != nil {
+			log.Printf("[INFO] client error")
+			if opserr, ok := cerr.(awserr.Error); ok {
+				// XXX: handle errors
+				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
+				return resource.RetryableError(cerr)
+			}
+			return resource.NonRetryableError(cerr)
+		}
+		return nil
+	})
+
 	if err != nil {
-		return fmt.Errorf("Error creating OpsWorks application: %s", err)
+		return err
 	}
 
 	appID := *resp.AppId
@@ -345,11 +362,23 @@ func resourceAwsOpsworksApplicationUpdate(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] Updating OpsWorks layer: %s", d.Id())
 
-	_, err = client.UpdateApp(req)
-	if err != nil {
-		return fmt.Errorf("Error updating OpsWorks app: %s", err)
-	}
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		_, cerr := client.UpdateApp(req)
+		if cerr != nil {
+			log.Printf("[INFO] client error")
+			if opserr, ok := cerr.(awserr.Error); ok {
+				// XXX: handle errors
+				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
+				return resource.NonRetryableError(cerr)
+			}
+			return resource.RetryableError(cerr)
+		}
+		return nil
+	})
 
+	if err != nil {
+		return err
+	}
 	return resourceAwsOpsworksApplicationRead(d, meta)
 }
 

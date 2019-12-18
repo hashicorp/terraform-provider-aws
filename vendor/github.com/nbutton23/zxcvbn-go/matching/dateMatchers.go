@@ -10,24 +10,16 @@ import (
 )
 
 const (
-	dateSepMatcherName        = "DATESEP"
-	dateWithOutSepMatcherName = "DATEWITHOUT"
+	DATESEP_MATCHER_NAME        = "DATESEP"
+	DATEWITHOUTSEP_MATCHER_NAME = "DATEWITHOUT"
 )
 
-var (
-	dateRxYearSuffix    = regexp.MustCompile(`((\d{1,2})(\s|-|\/|\\|_|\.)(\d{1,2})(\s|-|\/|\\|_|\.)(19\d{2}|200\d|201\d|\d{2}))`)
-	dateRxYearPrefix    = regexp.MustCompile(`((19\d{2}|200\d|201\d|\d{2})(\s|-|/|\\|_|\.)(\d{1,2})(\s|-|/|\\|_|\.)(\d{1,2}))`)
-	dateWithOutSepMatch = regexp.MustCompile(`\d{4,8}`)
-)
-
-//FilterDateSepMatcher can be pass to zxcvbn-go.PasswordStrength to skip that matcher
 func FilterDateSepMatcher(m match.Matcher) bool {
-	return m.ID == dateSepMatcherName
+	return m.ID == DATESEP_MATCHER_NAME
 }
 
-//FilterDateWithoutSepMatcher can be pass to zxcvbn-go.PasswordStrength to skip that matcher
 func FilterDateWithoutSepMatcher(m match.Matcher) bool {
-	return m.ID == dateWithOutSepMatcherName
+	return m.ID == DATEWITHOUTSEP_MATCHER_NAME
 }
 
 func checkDate(day, month, year int64) (bool, int64, int64, int64) {
@@ -68,8 +60,9 @@ func dateSepMatchHelper(password string) []match.DateMatch {
 
 	var matches []match.DateMatch
 
-	for _, v := range dateRxYearSuffix.FindAllString(password, len(password)) {
-		splitV := dateRxYearSuffix.FindAllStringSubmatch(v, len(v))
+	matcher := regexp.MustCompile(DATE_RX_YEAR_SUFFIX)
+	for _, v := range matcher.FindAllString(password, len(password)) {
+		splitV := matcher.FindAllStringSubmatch(v, len(v))
 		i := strings.Index(password, v)
 		j := i + len(v)
 		day, _ := strconv.ParseInt(splitV[0][4], 10, 16)
@@ -79,8 +72,9 @@ func dateSepMatchHelper(password string) []match.DateMatch {
 		matches = append(matches, match)
 	}
 
-	for _, v := range dateRxYearPrefix.FindAllString(password, len(password)) {
-		splitV := dateRxYearPrefix.FindAllStringSubmatch(v, len(v))
+	matcher = regexp.MustCompile(DATE_RX_YEAR_PREFIX)
+	for _, v := range matcher.FindAllString(password, len(password)) {
+		splitV := matcher.FindAllStringSubmatch(v, len(v))
 		i := strings.Index(password, v)
 		j := i + len(v)
 		day, _ := strconv.ParseInt(splitV[0][4], 10, 16)
@@ -104,13 +98,13 @@ func dateSepMatchHelper(password string) []match.DateMatch {
 
 }
 
-type dateMatchCandidate struct {
+type DateMatchCandidate struct {
 	DayMonth string
 	Year     string
 	I, J     int
 }
 
-type dateMatchCandidateTwo struct {
+type DateMatchCandidateTwo struct {
 	Day   string
 	Month string
 	Year  string
@@ -138,12 +132,13 @@ func dateWithoutSepMatch(password string) []match.Match {
 
 //TODO Has issues with 6 digit dates
 func dateWithoutSepMatchHelper(password string) (matches []match.DateMatch) {
-	for _, v := range dateWithOutSepMatch.FindAllString(password, len(password)) {
+	matcher := regexp.MustCompile(DATE_WITHOUT_SEP_MATCH)
+	for _, v := range matcher.FindAllString(password, len(password)) {
 		i := strings.Index(password, v)
 		j := i + len(v)
 		length := len(v)
 		lastIndex := length - 1
-		var candidatesRoundOne []dateMatchCandidate
+		var candidatesRoundOne []DateMatchCandidate
 
 		if length <= 6 {
 			//2-digit year prefix
@@ -160,7 +155,7 @@ func dateWithoutSepMatchHelper(password string) (matches []match.DateMatch) {
 			candidatesRoundOne = append(candidatesRoundOne, buildDateMatchCandidate(v[0:lastIndex-3], v[lastIndex-3:], i, j))
 		}
 
-		var candidatesRoundTwo []dateMatchCandidateTwo
+		var candidatesRoundTwo []DateMatchCandidateTwo
 		for _, c := range candidatesRoundOne {
 			if len(c.DayMonth) == 2 {
 				candidatesRoundTwo = append(candidatesRoundTwo, buildDateMatchCandidateTwo(c.DayMonth[0:0], c.DayMonth[1:1], c.Year, c.I, c.J))
@@ -199,11 +194,11 @@ func dateWithoutSepMatchHelper(password string) (matches []match.DateMatch) {
 	return matches
 }
 
-func buildDateMatchCandidate(dayMonth, year string, i, j int) dateMatchCandidate {
-	return dateMatchCandidate{DayMonth: dayMonth, Year: year, I: i, J: j}
+func buildDateMatchCandidate(dayMonth, year string, i, j int) DateMatchCandidate {
+	return DateMatchCandidate{DayMonth: dayMonth, Year: year, I: i, J: j}
 }
 
-func buildDateMatchCandidateTwo(day, month string, year string, i, j int) dateMatchCandidateTwo {
+func buildDateMatchCandidateTwo(day, month string, year string, i, j int) DateMatchCandidateTwo {
 
-	return dateMatchCandidateTwo{Day: day, Month: month, Year: year, I: i, J: j}
+	return DateMatchCandidateTwo{Day: day, Month: month, Year: year, I: i, J: j}
 }

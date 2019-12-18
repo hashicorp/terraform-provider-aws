@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsWafRegionalSizeConstraintSet() *schema.Resource {
@@ -16,9 +16,6 @@ func resourceAwsWafRegionalSizeConstraintSet() *schema.Resource {
 		Read:   resourceAwsWafRegionalSizeConstraintSetRead,
 		Update: resourceAwsWafRegionalSizeConstraintSetUpdate,
 		Delete: resourceAwsWafRegionalSizeConstraintSetDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: wafSizeConstraintSetSchema(),
 	}
@@ -46,7 +43,7 @@ func resourceAwsWafRegionalSizeConstraintSetCreate(d *schema.ResourceData, meta 
 	}
 	resp := out.(*waf.CreateSizeConstraintSetOutput)
 
-	d.SetId(aws.StringValue(resp.SizeConstraintSet.SizeConstraintSetId))
+	d.SetId(*resp.SizeConstraintSet.SizeConstraintSetId)
 
 	return resourceAwsWafRegionalSizeConstraintSetUpdate(d, meta)
 }
@@ -60,13 +57,13 @@ func resourceAwsWafRegionalSizeConstraintSetRead(d *schema.ResourceData, meta in
 	}
 
 	resp, err := conn.GetSizeConstraintSet(params)
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-		log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
 	if err != nil {
-		return fmt.Errorf("Error getting WAF Regional Size Constraint Set (%s): %s", d.Id(), err)
+		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
+			log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return err
 	}
 
 	d.Set("name", resp.SizeConstraintSet.Name)
@@ -82,14 +79,8 @@ func resourceAwsWafRegionalSizeConstraintSetUpdate(d *schema.ResourceData, meta 
 		o, n := d.GetChange("size_constraints")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.wafregionalconn, client.region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-			log.Printf("[WARN] WAF Regional SizeConstraintSet (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("Error updating WAF Regional SizeConstraintSet(%s): %s", d.Id(), err)
+		if err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, client.wafregionalconn, client.region); err != nil {
+			return fmt.Errorf("Error updating WAF Regional SizeConstraintSet: %s", err)
 		}
 	}
 
@@ -104,12 +95,8 @@ func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta 
 
 	if len(oldConstraints) > 0 {
 		noConstraints := []interface{}{}
-		err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, noConstraints, conn, region)
-		if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("Error deleting WAF Regional SizeConstraintSet(%s): %s", d.Id(), err)
+		if err := updateRegionalSizeConstraintSetResource(d.Id(), oldConstraints, noConstraints, conn, region); err != nil {
+			return fmt.Errorf("Error deleting WAF Regional SizeConstraintSet: %s", err)
 		}
 	}
 
@@ -121,9 +108,6 @@ func resourceAwsWafRegionalSizeConstraintSetDelete(d *schema.ResourceData, meta 
 		}
 		return conn.DeleteSizeConstraintSet(req)
 	})
-	if isAWSErr(err, wafregional.ErrCodeWAFNonexistentItemException, "") {
-		return nil
-	}
 	if err != nil {
 		return fmt.Errorf("Error deleting WAF Regional SizeConstraintSet: %s", err)
 	}
@@ -143,6 +127,9 @@ func updateRegionalSizeConstraintSetResource(id string, oldConstraints, newConst
 		log.Printf("[INFO] Updating WAF Regional SizeConstraintSet: %s", req)
 		return conn.UpdateSizeConstraintSet(req)
 	})
+	if err != nil {
+		return fmt.Errorf("Error updating WAF Regional SizeConstraintSet: %s", err)
+	}
 
-	return err
+	return nil
 }

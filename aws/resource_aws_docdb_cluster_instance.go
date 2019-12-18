@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDocDBClusterInstance() *schema.Resource {
@@ -213,9 +213,6 @@ func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		resp, err = conn.CreateDBInstance(createOpts)
-	}
 	if err != nil {
 		return fmt.Errorf("error creating DocDB Instance: %s", err)
 	}
@@ -359,9 +356,6 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
-			_, err = conn.ModifyDBInstance(req)
-		}
 		if err != nil {
 			return fmt.Errorf("Error modifying DB Instance %s: %s", d.Id(), err)
 		}

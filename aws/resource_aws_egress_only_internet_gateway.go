@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsEgressOnlyInternetGateway() *schema.Resource {
@@ -50,29 +50,29 @@ func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta inter
 		EgressOnlyInternetGatewayIds: []*string{aws.String(d.Id())},
 	}
 
-	var resp *ec2.DescribeEgressOnlyInternetGatewaysOutput
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.DescribeEgressOnlyInternetGateways(req)
+		resp, err := conn.DescribeEgressOnlyInternetGateways(req)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-
-		found = hasEc2EgressOnlyInternetGateway(d.Id(), resp)
+		if resp != nil && len(resp.EgressOnlyInternetGateways) > 0 {
+			for _, igw := range resp.EgressOnlyInternetGateways {
+				if aws.StringValue(igw.EgressOnlyInternetGatewayId) == d.Id() {
+					found = true
+					break
+				}
+			}
+		}
 		if d.IsNewResource() && !found {
 			return resource.RetryableError(fmt.Errorf("Egress Only Internet Gateway (%s) not found.", d.Id()))
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		resp, err = conn.DescribeEgressOnlyInternetGateways(req)
-	}
 
 	if err != nil {
 		return fmt.Errorf("Error describing egress internet gateway: %s", err)
 	}
 
-	found = hasEc2EgressOnlyInternetGateway(d.Id(), resp)
 	if !found {
 		log.Printf("[Error] Cannot find Egress Only Internet Gateway: %q", d.Id())
 		d.SetId("")
@@ -80,19 +80,6 @@ func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta inter
 	}
 
 	return nil
-}
-
-func hasEc2EgressOnlyInternetGateway(id string, resp *ec2.DescribeEgressOnlyInternetGatewaysOutput) bool {
-	var found bool
-	if resp != nil && len(resp.EgressOnlyInternetGateways) > 0 {
-		for _, igw := range resp.EgressOnlyInternetGateways {
-			if aws.StringValue(igw.EgressOnlyInternetGatewayId) == id {
-				found = true
-				break
-			}
-		}
-	}
-	return found
 }
 
 func resourceAwsEgressOnlyInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {

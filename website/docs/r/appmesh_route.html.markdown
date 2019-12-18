@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_appmesh_route"
+sidebar_current: "docs-aws-resource-appmesh-route"
 description: |-
   Provides an AWS App Mesh route resource.
 ---
@@ -70,7 +71,6 @@ The following arguments are supported:
 * `mesh_name` - (Required) The name of the service mesh in which to create the route.
 * `virtual_router_name` - (Required) The name of the virtual router in which to create the route.
 * `spec` - (Required) The route specification to apply.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 The `spec` object supports the following:
 

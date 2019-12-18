@@ -67,20 +67,15 @@ of arguments with no format string.
 `
 
 // isWrapper is a fact indicating that a function is a print or printf wrapper.
-type isWrapper struct{ Kind funcKind }
+type isWrapper struct{ Printf bool }
 
 func (f *isWrapper) AFact() {}
 
 func (f *isWrapper) String() string {
-	switch f.Kind {
-	case kindPrintf:
+	if f.Printf {
 		return "printfWrapper"
-	case kindPrint:
+	} else {
 		return "printWrapper"
-	case kindErrorf:
-		return "errorfWrapper"
-	default:
-		return "unknownWrapper"
 	}
 }
 
@@ -117,11 +112,7 @@ func maybePrintfWrapper(info *types.Info, decl ast.Decl) *printfWrapper {
 	if !ok || fdecl.Body == nil {
 		return nil
 	}
-	fn, ok := info.Defs[fdecl.Name].(*types.Func)
-	// Type information may be incomplete.
-	if !ok {
-		return nil
-	}
+	fn := info.Defs[fdecl.Name].(*types.Func)
 
 	sig := fn.Type().(*types.Signature)
 	if !sig.Variadic() {
@@ -232,20 +223,16 @@ func match(info *types.Info, arg ast.Expr, param *types.Var) bool {
 	return ok && info.ObjectOf(id) == param
 }
 
-type funcKind int
-
 const (
-	kindUnknown funcKind = iota
-	kindPrintf           = iota
-	kindPrint
-	kindErrorf
+	kindPrintf = 1
+	kindPrint  = 2
 )
 
 // checkPrintfFwd checks that a printf-forwarding wrapper is forwarding correctly.
 // It diagnoses writing fmt.Printf(format, args) instead of fmt.Printf(format, args...).
-func checkPrintfFwd(pass *analysis.Pass, w *printfWrapper, call *ast.CallExpr, kind funcKind) {
+func checkPrintfFwd(pass *analysis.Pass, w *printfWrapper, call *ast.CallExpr, kind int) {
 	matched := kind == kindPrint ||
-		kind != kindUnknown && len(call.Args) >= 2 && match(pass.TypesInfo, call.Args[len(call.Args)-2], w.format)
+		kind == kindPrintf && len(call.Args) >= 2 && match(pass.TypesInfo, call.Args[len(call.Args)-2], w.format)
 	if !matched {
 		return
 	}
@@ -275,7 +262,7 @@ func checkPrintfFwd(pass *analysis.Pass, w *printfWrapper, call *ast.CallExpr, k
 	fn := w.obj
 	var fact isWrapper
 	if !pass.ImportObjectFact(fn, &fact) {
-		fact.Kind = kind
+		fact.Printf = kind == kindPrintf
 		pass.ExportObjectFact(fn, &fact)
 		for _, caller := range w.callers {
 			checkPrintfFwd(pass, caller.w, caller.call, kind)
@@ -427,18 +414,27 @@ func checkCall(pass *analysis.Pass) {
 		call := n.(*ast.CallExpr)
 		fn, kind := printfNameAndKind(pass, call)
 		switch kind {
-		case kindPrintf, kindErrorf:
-			checkPrintf(pass, kind, call, fn)
+		case kindPrintf:
+			checkPrintf(pass, call, fn)
 		case kindPrint:
 			checkPrint(pass, call, fn)
 		}
 	})
 }
 
-func printfNameAndKind(pass *analysis.Pass, call *ast.CallExpr) (fn *types.Func, kind funcKind) {
+func printfNameAndKind(pass *analysis.Pass, call *ast.CallExpr) (fn *types.Func, kind int) {
 	fn, _ = typeutil.Callee(pass.TypesInfo, call).(*types.Func)
 	if fn == nil {
 		return nil, 0
+	}
+
+	var fact isWrapper
+	if pass.ImportObjectFact(fn, &fact) {
+		if fact.Printf {
+			return fn, kindPrintf
+		} else {
+			return fn, kindPrint
+		}
 	}
 
 	_, ok := isPrint[fn.FullName()]
@@ -447,22 +443,13 @@ func printfNameAndKind(pass *analysis.Pass, call *ast.CallExpr) (fn *types.Func,
 		_, ok = isPrint[strings.ToLower(fn.Name())]
 	}
 	if ok {
-		if fn.Name() == "Errorf" {
-			kind = kindErrorf
-		} else if strings.HasSuffix(fn.Name(), "f") {
+		if strings.HasSuffix(fn.Name(), "f") {
 			kind = kindPrintf
 		} else {
 			kind = kindPrint
 		}
-		return fn, kind
 	}
-
-	var fact isWrapper
-	if pass.ImportObjectFact(fn, &fact) {
-		return fn, fact.Kind
-	}
-
-	return fn, kindUnknown
+	return fn, kind
 }
 
 // isFormatter reports whether t satisfies fmt.Formatter.
@@ -504,7 +491,7 @@ type formatState struct {
 }
 
 // checkPrintf checks a call to a formatted print routine such as Printf.
-func checkPrintf(pass *analysis.Pass, kind funcKind, call *ast.CallExpr, fn *types.Func) {
+func checkPrintf(pass *analysis.Pass, call *ast.CallExpr, fn *types.Func) {
 	format, idx := formatString(pass, call)
 	if idx < 0 {
 		if false {
@@ -524,7 +511,6 @@ func checkPrintf(pass *analysis.Pass, kind funcKind, call *ast.CallExpr, fn *typ
 	argNum := firstArg
 	maxArgNum := firstArg
 	anyIndex := false
-	anyW := false
 	for i, w := 0, 0; i < len(format); i += w {
 		w = 1
 		if format[i] != '%' {
@@ -540,17 +526,6 @@ func checkPrintf(pass *analysis.Pass, kind funcKind, call *ast.CallExpr, fn *typ
 		}
 		if state.hasIndex {
 			anyIndex = true
-		}
-		if state.verb == 'w' {
-			if kind != kindErrorf {
-				pass.Reportf(call.Pos(), "%s call has error-wrapping directive %%w", state.name)
-				return
-			}
-			if anyW {
-				pass.Reportf(call.Pos(), "%s call has more than one error-wrapping directive %%w", state.name)
-				return
-			}
-			anyW = true
 		}
 		if len(state.argNums) > 0 {
 			// Continue with the next sequential argument.
@@ -722,7 +697,6 @@ const (
 	argFloat
 	argComplex
 	argPointer
-	argError
 	anyType printfArgType = ^0
 )
 
@@ -765,7 +739,7 @@ var printVerbs = []printVerb{
 	{'T', "-", anyType},
 	{'U', "-#", argRune | argInt},
 	{'v', allFlags, anyType},
-	{'w', allFlags, argError},
+	{'w', noFlag, anyType},
 	{'x', sharpNumFlag, argRune | argInt | argString | argPointer},
 	{'X', sharpNumFlag, argRune | argInt | argString | argPointer},
 }
@@ -882,26 +856,18 @@ func recursiveStringer(pass *analysis.Pass, e ast.Expr) bool {
 		return false
 	}
 
-	sig := stringMethod.Type().(*types.Signature)
-	if !isStringer(sig) {
+	// Is it the receiver r, or &r?
+	recv := stringMethod.Type().(*types.Signature).Recv()
+	if recv == nil {
 		return false
 	}
-
-	// Is it the receiver r, or &r?
 	if u, ok := e.(*ast.UnaryExpr); ok && u.Op == token.AND {
 		e = u.X // strip off & from &r
 	}
 	if id, ok := e.(*ast.Ident); ok {
-		return pass.TypesInfo.Uses[id] == sig.Recv()
+		return pass.TypesInfo.Uses[id] == recv
 	}
 	return false
-}
-
-// isStringer reports whether the method signature matches the String() definition in fmt.Stringer.
-func isStringer(sig *types.Signature) bool {
-	return sig.Params().Len() == 0 &&
-		sig.Results().Len() == 1 &&
-		sig.Results().At(0).Type() == types.Typ[types.String]
 }
 
 // isFunctionValue reports whether the expression is a function as opposed to a function call.

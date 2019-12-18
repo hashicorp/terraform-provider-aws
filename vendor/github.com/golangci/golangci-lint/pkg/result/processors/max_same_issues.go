@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"github.com/golangci/golangci-lint/pkg/config"
+
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
@@ -37,12 +38,12 @@ func (p *MaxSameIssues) Process(issues []result.Issue) ([]result.Issue, error) {
 		return issues, nil
 	}
 
-	return filterIssues(issues, func(i *result.Issue) bool {
-		if i.Replacement != nil && p.cfg.Issues.NeedFix {
-			// we need to fix all issues at once => we need to return all of them
-			return true
-		}
+	if p.cfg.Issues.NeedFix {
+		// we need to fix all issues at once => we need to return all of them
+		return issues, nil
+	}
 
+	return filterIssues(issues, func(i *result.Issue) bool {
 		p.tc[i.Text]++ // always inc for stat
 		return p.tc[i.Text] <= p.limit
 	}), nil

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_db_cluster_snapshot"
+sidebar_current: "docs-aws-datasource-db-cluster-snapshot"
 description: |-
   Get information on a DB Cluster Snapshot.
 ---

@@ -10,20 +10,19 @@ import (
 )
 
 const (
-	numYears  = float64(119) // years match against 1900 - 2019
-	numMonths = float64(12)
-	numDays   = float64(31)
+	START_UPPER string = `^[A-Z][^A-Z]+$`
+	END_UPPER   string = `^[^A-Z]+[A-Z]$'`
+	ALL_UPPER   string = `^[A-Z]+$`
+	NUM_YEARS          = float64(119) // years match against 1900 - 2019
+	NUM_MONTHS         = float64(12)
+	NUM_DAYS           = float64(31)
 )
 
 var (
-	startUpperRx            = regexp.MustCompile(`^[A-Z][^A-Z]+$`)
-	endUpperRx              = regexp.MustCompile(`^[^A-Z]+[A-Z]$'`)
-	allUpperRx              = regexp.MustCompile(`^[A-Z]+$`)
-	keyPadStartingPositions = len(adjacency.GraphMap["keypad"].Graph)
-	keyPadAvgDegree         = adjacency.GraphMap["keypad"].CalculateAvgDegree()
+	KEYPAD_STARTING_POSITIONS = len(adjacency.AdjacencyGph["keypad"].Graph)
+	KEYPAD_AVG_DEGREE         = adjacency.AdjacencyGph["keypad"].CalculateAvgDegree()
 )
 
-// DictionaryEntropy calculates the entropy of a dictionary match
 func DictionaryEntropy(match match.Match, rank float64) float64 {
 	baseEntropy := math.Log2(rank)
 	upperCaseEntropy := extraUpperCaseEntropy(match)
@@ -50,7 +49,9 @@ func extraUpperCaseEntropy(match match.Match) float64 {
 	//so it only doubles the search space (uncapitalized + capitalized): 1 extra bit of entropy.
 	//allcaps and end-capitalized are common enough too, underestimate as 1 extra bit to be safe.
 
-	for _, matcher := range []*regexp.Regexp{startUpperRx, endUpperRx, allUpperRx} {
+	for _, regex := range []string{START_UPPER, END_UPPER, ALL_UPPER} {
+		matcher := regexp.MustCompile(regex)
+
 		if matcher.MatchString(word) {
 			return float64(1)
 		}
@@ -71,7 +72,7 @@ func extraUpperCaseEntropy(match match.Match) float64 {
 	var possibililities float64
 
 	for i := float64(0); i <= math.Min(countUpper, countLower); i++ {
-		possibililities += float64(zxcvbnmath.NChoseK(totalLenght, i))
+		possibililities += float64(zxcvbn_math.NChoseK(totalLenght, i))
 	}
 
 	if possibililities < 1 {
@@ -81,7 +82,6 @@ func extraUpperCaseEntropy(match match.Match) float64 {
 	return float64(math.Log2(possibililities))
 }
 
-// SpatialEntropy calculates the entropy for spatial matches
 func SpatialEntropy(match match.Match, turns int, shiftCount int) float64 {
 	var s, d float64
 	if match.DictionaryName == "qwerty" || match.DictionaryName == "dvorak" {
@@ -89,8 +89,8 @@ func SpatialEntropy(match match.Match, turns int, shiftCount int) float64 {
 		s = float64(len(adjacency.BuildQwerty().Graph))
 		d = adjacency.BuildQwerty().CalculateAvgDegree()
 	} else {
-		s = float64(keyPadStartingPositions)
-		d = keyPadAvgDegree
+		s = float64(KEYPAD_STARTING_POSITIONS)
+		d = KEYPAD_AVG_DEGREE
 	}
 
 	possibilities := float64(0)
@@ -102,7 +102,7 @@ func SpatialEntropy(match match.Match, turns int, shiftCount int) float64 {
 	for i := float64(2); i <= length+1; i++ {
 		possibleTurns := math.Min(float64(turns), i-1)
 		for j := float64(1); j <= possibleTurns+1; j++ {
-			x := zxcvbnmath.NChoseK(i-1, j-1) * s * math.Pow(d, j)
+			x := zxcvbn_math.NChoseK(i-1, j-1) * s * math.Pow(d, j)
 			possibilities += x
 		}
 	}
@@ -116,7 +116,7 @@ func SpatialEntropy(match match.Match, turns int, shiftCount int) float64 {
 		U := length - S
 
 		for i := float64(0); i < math.Min(S, U)+1; i++ {
-			possibilities += zxcvbnmath.NChoseK(S+U, i)
+			possibilities += zxcvbn_math.NChoseK(S+U, i)
 		}
 
 		entropy += math.Log2(possibilities)
@@ -125,7 +125,6 @@ func SpatialEntropy(match match.Match, turns int, shiftCount int) float64 {
 	return entropy
 }
 
-// RepeatEntropy calculates the entropy for repeating entropy
 func RepeatEntropy(match match.Match) float64 {
 	cardinality := CalcBruteForceCardinality(match.Token)
 	entropy := math.Log2(cardinality * float64(len(match.Token)))
@@ -133,7 +132,6 @@ func RepeatEntropy(match match.Match) float64 {
 	return entropy
 }
 
-// CalcBruteForceCardinality calculates the brute force cardinality
 //TODO: Validate against python
 func CalcBruteForceCardinality(password string) float64 {
 	lower, upper, digits, symbols := float64(0), float64(0), float64(0), float64(0)
@@ -154,7 +152,6 @@ func CalcBruteForceCardinality(password string) float64 {
 	return cardinality
 }
 
-// SequenceEntropy calculates the entropy for sequences such as 4567 or cdef
 func SequenceEntropy(match match.Match, dictionaryLength int, ascending bool) float64 {
 	firstChar := match.Token[0]
 	baseEntropy := float64(0)
@@ -174,7 +171,6 @@ func SequenceEntropy(match match.Match, dictionaryLength int, ascending bool) fl
 	return baseEntropy + math.Log2(float64(len(match.Token)))
 }
 
-// ExtraLeetEntropy calulates the added entropy provied by l33t substitustions
 func ExtraLeetEntropy(match match.Match, password string) float64 {
 	var subsitutions float64
 	var unsub float64
@@ -191,7 +187,7 @@ func ExtraLeetEntropy(match match.Match, password string) float64 {
 	var possibilities float64
 
 	for i := float64(0); i <= math.Min(subsitutions, unsub)+1; i++ {
-		possibilities += zxcvbnmath.NChoseK(subsitutions+unsub, i)
+		possibilities += zxcvbn_math.NChoseK(subsitutions+unsub, i)
 	}
 
 	if possibilities <= 1 {
@@ -200,13 +196,16 @@ func ExtraLeetEntropy(match match.Match, password string) float64 {
 	return math.Log2(possibilities)
 }
 
-// DateEntropy calculates the entropy provided by a date
+func YearEntropy(dateMatch match.DateMatch) float64 {
+	return math.Log2(NUM_YEARS)
+}
+
 func DateEntropy(dateMatch match.DateMatch) float64 {
 	var entropy float64
 	if dateMatch.Year < 100 {
-		entropy = math.Log2(numDays * numMonths * 100)
+		entropy = math.Log2(NUM_DAYS * NUM_MONTHS * 100)
 	} else {
-		entropy = math.Log2(numDays * numMonths * numYears)
+		entropy = math.Log2(NUM_DAYS * NUM_MONTHS * NUM_YEARS)
 	}
 
 	if dateMatch.Separator != "" {

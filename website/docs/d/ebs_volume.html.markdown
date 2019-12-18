@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ebs_volume"
+sidebar_current: "docs-aws-datasource-ebs-volume"
 description: |-
   Get information on an EBS volume.
 ---

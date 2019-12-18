@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -49,39 +49,6 @@ func testSweepDirectConnectGateways(region string) error {
 
 			if aws.StringValue(gateway.DirectConnectGatewayState) != directconnect.GatewayStateAvailable {
 				log.Printf("[INFO] Skipping Direct Connect Gateway in non-available (%s) state: %s", aws.StringValue(gateway.DirectConnectGatewayState), id)
-				continue
-			}
-
-			var associations bool
-			associationInput := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
-				DirectConnectGatewayId: gateway.DirectConnectGatewayId,
-			}
-
-			for {
-				associationOutput, err := conn.DescribeDirectConnectGatewayAssociations(associationInput)
-
-				if err != nil {
-					return fmt.Errorf("error retrieving Direct Connect Gateway (%s) Associations: %s", id, err)
-				}
-
-				// If associations still remain, its likely that our region is not the home
-				// region of those associations and the previous sweepers skipped them.
-				// When we hit this condition, we skip trying to delete the gateway as it
-				// will go from deleting -> available after a few minutes and timeout.
-				if len(associationOutput.DirectConnectGatewayAssociations) > 0 {
-					associations = true
-					break
-				}
-
-				if aws.StringValue(associationOutput.NextToken) == "" {
-					break
-				}
-
-				associationInput.NextToken = associationOutput.NextToken
-			}
-
-			if associations {
-				log.Printf("[INFO] Skipping Direct Connect Gateway with remaining associations: %s", id)
 				continue
 			}
 
@@ -154,7 +121,7 @@ func TestAccAwsDxGateway_importComplex(t *testing.T) {
 		CheckDestroy: testAccCheckAwsDxGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName1, rName2, rBgpAsn),
+				Config: testAccDxGatewayAssociationConfig_multiVgws(rName1, rName2, rBgpAsn),
 			},
 
 			{
@@ -222,11 +189,11 @@ func testAccCheckAwsDxGatewayExists(name string) resource.TestCheckFunc {
 
 func testAccDxGatewayConfig(rName string, rBgpAsn int) string {
 	return fmt.Sprintf(`
-resource "aws_dx_gateway" "test" {
-  name            = "terraform-testacc-dxgw-%s"
-  amazon_side_asn = "%d"
-}
-`, rName, rBgpAsn)
+    resource "aws_dx_gateway" "test" {
+      name = "terraform-testacc-dxgw-%s"
+      amazon_side_asn = "%d"
+    }
+    `, rName, rBgpAsn)
 }
 
 // Local copy of acctest.RandIntRange until https://github.com/hashicorp/terraform/pull/17438 is merged.

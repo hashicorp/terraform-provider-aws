@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_directory_service_directory"
+sidebar_current: "docs-aws-resource-directory-service-directory"
 description: |-
   Provides a directory in AWS Directory Service.
 ---

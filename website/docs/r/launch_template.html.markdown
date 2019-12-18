@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_launch_template"
+sidebar_current: "docs-aws-resource-launch-template"
 description: |-
   Provides an EC2 launch template resource. Can be used to create instances or auto scaling groups.
 ---

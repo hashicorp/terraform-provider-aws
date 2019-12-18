@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route53_delegation_set"
+sidebar_current: "docs-aws-datasource-route53-delegation-set"
 description: |-
     Provides details about a specific Route 53 Delegation Set
 ---
@@ -17,7 +18,7 @@ The following example shows how to get a delegation set from its id.
 
 ```hcl
 data "aws_route53_delegation_set" "dset" {
-  id = "MQWGHCBFAKEID"
+  id         = "MQWGHCBFAKEID"
 }
 ```
 

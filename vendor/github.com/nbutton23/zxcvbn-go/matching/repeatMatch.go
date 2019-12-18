@@ -7,11 +7,10 @@ import (
 	"github.com/nbutton23/zxcvbn-go/match"
 )
 
-const repeatMatcherName = "REPEAT"
+const REPEAT_MATCHER_NAME = "REPEAT"
 
-//FilterRepeatMatcher can be pass to zxcvbn-go.PasswordStrength to skip that matcher
 func FilterRepeatMatcher(m match.Matcher) bool {
-	return m.ID == repeatMatcherName
+	return m.ID == REPEAT_MATCHER_NAME
 }
 
 func repeatMatch(password string) []match.Match {

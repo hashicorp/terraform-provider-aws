@@ -3,11 +3,11 @@ package processors
 import (
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"sort"
 	"strings"
 
+	"github.com/golangci/golangci-lint/pkg/lint/astcache"
 	"github.com/golangci/golangci-lint/pkg/lint/lintersdb"
 	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
@@ -47,15 +47,17 @@ type filesCache map[string]*fileData
 
 type Nolint struct {
 	cache     filesCache
+	astCache  *astcache.Cache
 	dbManager *lintersdb.Manager
 	log       logutils.Log
 
 	unknownLintersSet map[string]bool
 }
 
-func NewNolint(log logutils.Log, dbManager *lintersdb.Manager) *Nolint {
+func NewNolint(astCache *astcache.Cache, log logutils.Log, dbManager *lintersdb.Manager) *Nolint {
 	return &Nolint{
 		cache:             filesCache{},
+		astCache:          astCache,
 		dbManager:         dbManager,
 		log:               log,
 		unknownLintersSet: map[string]bool{},
@@ -85,18 +87,12 @@ func (p *Nolint) getOrCreateFileData(i *result.Issue) (*fileData, error) {
 		return nil, fmt.Errorf("no file path for issue")
 	}
 
-	// TODO: migrate this parsing to go/analysis facts
-	// or cache them somehow per file.
-
-	// Don't use cached AST because they consume a lot of memory on large projects.
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, i.FilePath(), nil, parser.ParseComments)
-	if err != nil {
-		// Don't report error because it's already must be reporter by typecheck or go/analysis.
-		return fd, nil
+	file := p.astCache.Get(i.FilePath())
+	if file == nil || file.Err != nil {
+		return nil, fmt.Errorf("can't parse file %s: %v, astcache is %v", i.FilePath(), file, p.astCache.ParsedFilenames())
 	}
 
-	fd.ignoredRanges = p.buildIgnoredRangesForFile(f, fset, i.FilePath())
+	fd.ignoredRanges = p.buildIgnoredRangesForFile(file.F, file.Fset, i.FilePath())
 	nolintDebugf("file %s: built nolint ranges are %+v", i.FilePath(), fd.ignoredRanges)
 	return fd, nil
 }
@@ -219,17 +215,22 @@ func (p *Nolint) extractInlineRangeFromComment(text string, g ast.Node, fset *to
 	var gotUnknownLinters bool
 	for _, linter := range linterItems {
 		linterName := strings.ToLower(strings.TrimSpace(linter))
+		metaLinter := p.dbManager.GetMetaLinter(linterName)
+		if metaLinter != nil {
+			// user can set metalinter name in nolint directive (e.g. megacheck), then
+			// we should add to nolint all the metalinter's default children
+			linters = append(linters, metaLinter.DefaultChildLinterNames()...)
+			continue
+		}
 
-		lcs := p.dbManager.GetLinterConfigs(linterName)
-		if lcs == nil {
+		lc := p.dbManager.GetLinterConfig(linterName)
+		if lc == nil {
 			p.unknownLintersSet[linterName] = true
 			gotUnknownLinters = true
 			continue
 		}
 
-		for _, lc := range lcs {
-			linters = append(linters, lc.Name()) // normalize name to work with aliases
-		}
+		linters = append(linters, lc.Name()) // normalize name to work with aliases
 	}
 
 	if gotUnknownLinters {

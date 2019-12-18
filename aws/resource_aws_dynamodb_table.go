@@ -10,11 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/customdiff"
+	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDynamoDbTable() *schema.Resource {
@@ -289,13 +289,10 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 
 	log.Printf("[DEBUG] Creating DynamoDB table with key schema: %#v", keySchemaMap)
 
-	tags := tagsFromMapDynamoDb(d.Get("tags").(map[string]interface{}))
-
 	req := &dynamodb.CreateTableInput{
 		TableName:   aws.String(d.Get("name").(string)),
 		BillingMode: aws.String(d.Get("billing_mode").(string)),
 		KeySchema:   expandDynamoDbKeySchema(keySchemaMap),
-		Tags:        tags,
 	}
 
 	billingMode := d.Get("billing_mode").(string)
@@ -354,7 +351,6 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	var output *dynamodb.CreateTableOutput
-	var requiresTagging bool
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 		var err error
 		output, err = conn.CreateTable(req)
@@ -374,21 +370,11 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 				req.BillingMode = nil
 				return resource.RetryableError(err)
 			}
-			// AWS GovCloud (US) and others may reply with the following until their API is updated:
-			// ValidationException: Unsupported input parameter Tags
-			if isAWSErr(err, "ValidationException", "Unsupported input parameter Tags") {
-				req.Tags = nil
-				requiresTagging = true
-				return resource.RetryableError(err)
-			}
 
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		output, err = conn.CreateTable(req)
-	}
 	if err != nil {
 		return fmt.Errorf("error creating DynamoDB Table: %s", err)
 	}
@@ -400,16 +386,14 @@ func resourceAwsDynamoDbTableCreate(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	if requiresTagging {
-		if err := setTagsDynamoDb(conn, d); err != nil {
-			return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	if d.Get("ttl.0.enabled").(bool) {
 		if err := updateDynamoDbTimeToLive(d.Id(), d.Get("ttl").([]interface{}), conn); err != nil {
 			return fmt.Errorf("error enabling DynamoDB Table (%s) Time to Live: %s", d.Id(), err)
 		}
+	}
+
+	if err := setTagsDynamoDb(conn, d); err != nil {
+		return fmt.Errorf("error adding DynamoDB Table (%s) tags: %s", d.Id(), err)
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
@@ -655,7 +639,7 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		TableName: aws.String(tableName),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteTable(input)
 		if err != nil {
 			// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously
@@ -677,13 +661,6 @@ func deleteAwsDynamoDbTable(tableName string, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteTable(input)
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting DynamoDB table: %s", err)
-	}
-	return nil
 }
 
 func waitForDynamodbTableDeletion(conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) error {
@@ -769,11 +746,9 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.UpdateContinuousBackups(input)
-	}
+
 	if err != nil {
-		return fmt.Errorf("Error updating DynamoDB PITR status: %s", err)
+		return err
 	}
 
 	if err := waitForDynamoDbBackupUpdateToBeCompleted(d.Id(), toEnable, conn); err != nil {

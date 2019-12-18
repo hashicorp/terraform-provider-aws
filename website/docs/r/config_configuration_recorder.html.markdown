@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_config_configuration_recorder"
+sidebar_current: "docs-aws-resource-config-configuration-recorder"
 description: |-
   Provides an AWS Config Configuration Recorder.
 ---

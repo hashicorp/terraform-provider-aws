@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsRedshiftCluster() *schema.Resource {
@@ -32,11 +32,6 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"database_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -615,25 +610,13 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("cluster_public_key", rsc.ClusterPublicKey)
 	d.Set("cluster_revision_number", rsc.ClusterRevisionNumber)
-	if err := d.Set("tags", tagsToMapRedshift(rsc.Tags)); err != nil {
-		return fmt.Errorf("Error setting Redshift Cluster Tags: %#v", err)
-	}
+	d.Set("tags", tagsToMapRedshift(rsc.Tags))
 
 	d.Set("snapshot_copy", flattenRedshiftSnapshotCopy(rsc.ClusterSnapshotCopyStatus))
 
 	if err := d.Set("logging", flattenRedshiftLogging(loggingStatus)); err != nil {
 		return fmt.Errorf("error setting logging: %s", err)
 	}
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
 
 	return nil
 }
@@ -642,7 +625,14 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).redshiftconn
 	d.Partial(true)
 
-	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "redshift",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("cluster:%s", d.Id()),
+	}.String()
+	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
 		return tagErr
 	} else {
 		d.SetPartial("tags")
@@ -888,7 +878,6 @@ func resourceAwsRedshiftClusterDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", deleteOpts)
-	log.Printf("[DEBUG] schema.TimeoutDelete: %+v", d.Timeout(schema.TimeoutDelete))
 	err := deleteAwsRedshiftCluster(&deleteOpts, conn, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return err
@@ -910,9 +899,6 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteCluster(opts)
-	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Redshift Cluster (%s): %s", id, err)
 	}

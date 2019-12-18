@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_datasync_location_efs"
+sidebar_current: "docs-aws-resource-datasync-location-efs"
 description: |-
   Manages an EFS Location within AWS DataSync.
 ---

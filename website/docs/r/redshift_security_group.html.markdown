@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_redshift_security_group"
+sidebar_current: "docs-aws-resource-redshift-security-group"
 description: |-
   Provides a Redshift security group resource.
 ---

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAwsDxPrivateVirtualInterface_basic(t *testing.T) {
@@ -170,7 +170,7 @@ resource "aws_vpn_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id = "%s"
+  connection_id    = "%s"
 
   vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
   name           = "%s"
@@ -190,7 +190,7 @@ resource "aws_vpn_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id = "%s"
+  connection_id    = "%s"
 
   vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
   name           = "%s"
@@ -213,7 +213,7 @@ resource "aws_dx_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id = "%s"
+  connection_id    = "%s"
 
   dx_gateway_id  = "${aws_dx_gateway.foo.id}"
   name           = "%s"
@@ -233,7 +233,7 @@ resource "aws_vpn_gateway" "foo" {
 }
 
 resource "aws_dx_private_virtual_interface" "foo" {
-  connection_id = "%s"
+  connection_id    = "%s"
 
   vpn_gateway_id = "${aws_vpn_gateway.foo.id}"
   name           = "%s"

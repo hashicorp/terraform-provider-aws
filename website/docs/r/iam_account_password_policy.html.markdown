@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_account_password_policy"
+sidebar_current: "docs-aws-resource-iam-account-password-policy"
 description: |-
   Manages Password Policy for the AWS Account.
 ---

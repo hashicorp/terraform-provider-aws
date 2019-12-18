@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSCloudTrail(t *testing.T) {
@@ -71,7 +71,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 				Config: testAccAWSCloudTrailConfigModified(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists("aws_cloudtrail.foobar", &trail),
-					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "s3_key_prefix", "prefix"),
+					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "s3_key_prefix", "/prefix"),
 					resource.TestCheckResourceAttr("aws_cloudtrail.foobar", "include_global_service_events", "false"),
 					testAccCheckCloudTrailLogValidationEnabled("aws_cloudtrail.foobar", false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals("aws_cloudtrail.foobar", "", &trail),
@@ -604,15 +604,14 @@ func testAccCheckCloudTrailLoadTags(trail *cloudtrail.Trail, tags *[]*cloudtrail
 func testAccAWSCloudTrailConfig(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-foobar-%d"
-  s3_bucket_name = "${aws_s3_bucket.foo.id}"
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -645,18 +644,17 @@ POLICY
 func testAccAWSCloudTrailConfigModified(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-trail-foobar-%d"
-  s3_bucket_name                = "${aws_s3_bucket.foo.id}"
-  s3_key_prefix                 = "prefix"
-  include_global_service_events = false
-  enable_logging                = false
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
+    s3_key_prefix = "/prefix"
+    include_global_service_events = false
+    enable_logging = false
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -689,17 +687,16 @@ POLICY
 func testAccAWSCloudTrailConfigCloudWatch(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
-  name           = "tf-acc-test-%d"
+  name = "tf-acc-test-%d"
   s3_bucket_name = "${aws_s3_bucket.test.id}"
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.test.arn}"
-  cloud_watch_logs_role_arn  = "${aws_iam_role.test.arn}"
+  cloud_watch_logs_role_arn = "${aws_iam_role.test.arn}"
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-trail-%d"
+  bucket = "tf-test-trail-%d"
   force_destroy = true
-
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -734,7 +731,6 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-cloudtrail-%d"
-
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -755,7 +751,6 @@ POLICY
 resource "aws_iam_role_policy" "test" {
   name = "tf-acc-test-cloudtrail-%d"
   role = "${aws_iam_role.test.id}"
-
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -779,17 +774,16 @@ POLICY
 func testAccAWSCloudTrailConfigCloudWatchModified(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "test" {
-  name           = "tf-acc-test-%d"
+  name = "tf-acc-test-%d"
   s3_bucket_name = "${aws_s3_bucket.test.id}"
 
   cloud_watch_logs_group_arn = "${aws_cloudwatch_log_group.second.arn}"
-  cloud_watch_logs_role_arn  = "${aws_iam_role.test.arn}"
+  cloud_watch_logs_role_arn = "${aws_iam_role.test.arn}"
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "tf-test-trail-%d"
+  bucket = "tf-test-trail-%d"
   force_destroy = true
-
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -828,7 +822,6 @@ resource "aws_cloudwatch_log_group" "second" {
 
 resource "aws_iam_role" "test" {
   name = "tf-acc-test-cloudtrail-%d"
-
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -849,7 +842,6 @@ POLICY
 resource "aws_iam_role_policy" "test" {
   name = "tf-acc-test-cloudtrail-%d"
   role = "${aws_iam_role.test.id}"
-
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -867,22 +859,22 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
+
 `, randInt, randInt, randInt, randInt, randInt, randInt, randInt, randInt)
 }
 
 func testAccAWSCloudTrailConfigMultiRegion(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name                  = "tf-trail-foobar-%d"
-  s3_bucket_name        = "${aws_s3_bucket.foo.id}"
-  is_multi_region_trail = true
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
+    is_multi_region_trail = true
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -961,18 +953,17 @@ POLICY
 func testAccAWSCloudTrailConfig_logValidation(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-acc-trail-log-validation-test-%d"
-  s3_bucket_name                = "${aws_s3_bucket.foo.id}"
-  is_multi_region_trail         = true
-  include_global_service_events = true
-  enable_log_file_validation    = true
+    name = "tf-acc-trail-log-validation-test-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
+    is_multi_region_trail = true
+    include_global_service_events = true
+    enable_log_file_validation = true
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -1005,16 +996,15 @@ POLICY
 func testAccAWSCloudTrailConfig_logValidationModified(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-acc-trail-log-validation-test-%d"
-  s3_bucket_name                = "${aws_s3_bucket.foo.id}"
-  include_global_service_events = true
+    name = "tf-acc-trail-log-validation-test-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
+    include_global_service_events = true
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -1048,7 +1038,6 @@ func testAccAWSCloudTrailConfig_kmsKey(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "foo" {
   description = "Terraform acc test %d"
-
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -1069,16 +1058,15 @@ POLICY
 }
 
 resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-acc-trail-log-validation-test-%d"
-  s3_bucket_name                = "${aws_s3_bucket.foo.id}"
+  name = "tf-acc-trail-log-validation-test-%d"
+  s3_bucket_name = "${aws_s3_bucket.foo.id}"
   include_global_service_events = true
-  kms_key_id                    = "${aws_kms_key.foo.arn}"
+  kms_key_id = "${aws_kms_key.foo.arn}"
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
+  bucket = "tf-test-trail-%d"
   force_destroy = true
-
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -1151,16 +1139,15 @@ POLICY
 func testAccAWSCloudTrailConfig_include_global_service_events(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name                          = "tf-trail-foobar-%d"
-  s3_bucket_name                = "${aws_s3_bucket.foo.id}"
+  name = "tf-trail-foobar-%d"
+  s3_bucket_name = "${aws_s3_bucket.foo.id}"
   include_global_service_events = false
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -1225,29 +1212,27 @@ func testAccAWSCloudTrailConfig_tagsModifiedAgain(cloudTrailRandInt int) string 
 func testAccAWSCloudTrailConfig_eventSelector(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-foobar-%d"
-  s3_bucket_name = "${aws_s3_bucket.foo.id}"
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
 
-  event_selector {
-    read_write_type           = "ReadOnly"
-    include_management_events = false
+	event_selector {
+		read_write_type = "ReadOnly"
+		include_management_events = false
 
-    data_resource {
-      type = "AWS::S3::Object"
-
-      values = [
-        "${aws_s3_bucket.bar.arn}/foobar",
-        "${aws_s3_bucket.bar.arn}/baz",
-      ]
-    }
-  }
+		data_resource {
+			type = "AWS::S3::Object"
+			values = [
+				"${aws_s3_bucket.bar.arn}/foobar",
+				"${aws_s3_bucket.bar.arn}/baz",
+			]
+		}
+	}
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -1276,8 +1261,8 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bar" {
-  bucket        = "tf-test-trail-event-select-%d"
-  force_destroy = true
+	bucket = "tf-test-trail-event-select-%d"
+	force_destroy = true
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
@@ -1285,51 +1270,47 @@ resource "aws_s3_bucket" "bar" {
 func testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudtrail" "foobar" {
-  name           = "tf-trail-foobar-%d"
-  s3_bucket_name = "${aws_s3_bucket.foo.id}"
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
 
-  event_selector {
-    read_write_type           = "ReadOnly"
-    include_management_events = true
+	event_selector {
+		read_write_type = "ReadOnly"
+		include_management_events = true
 
-    data_resource {
-      type = "AWS::S3::Object"
+		data_resource {
+			type = "AWS::S3::Object"
+			values = [
+				"${aws_s3_bucket.bar.arn}/foobar",
+				"${aws_s3_bucket.bar.arn}/baz",
+			]
+		}
+	}
 
-      values = [
-        "${aws_s3_bucket.bar.arn}/foobar",
-        "${aws_s3_bucket.bar.arn}/baz",
-      ]
-    }
-  }
+	event_selector {
+		read_write_type = "All"
+		include_management_events = false
 
-  event_selector {
-    read_write_type           = "All"
-    include_management_events = false
+		data_resource {
+			type = "AWS::S3::Object"
+			values = [
+				"${aws_s3_bucket.bar.arn}/tf1",
+				"${aws_s3_bucket.bar.arn}/tf2",
+			]
+		}
 
-    data_resource {
-      type = "AWS::S3::Object"
-
-      values = [
-        "${aws_s3_bucket.bar.arn}/tf1",
-        "${aws_s3_bucket.bar.arn}/tf2",
-      ]
-    }
-
-    data_resource {
-      type = "AWS::Lambda::Function"
-
-      values = [
-        "${aws_lambda_function.lambda_function_test.arn}",
-      ]
-    }
-  }
+		data_resource {
+			type = "AWS::Lambda::Function"
+			values = [
+				"${aws_lambda_function.lambda_function_test.arn}",
+			]
+		}
+	}
 }
 
 resource "aws_s3_bucket" "foo" {
-  bucket        = "tf-test-trail-%d"
-  force_destroy = true
-
-  policy = <<POLICY
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -1358,14 +1339,13 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bar" {
-  bucket        = "tf-test-trail-event-select-%d"
-  force_destroy = true
+	bucket = "tf-test-trail-event-select-%d"
+	force_destroy = true
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "tf-test-trail-event-select-%d"
-
-  assume_role_policy = <<EOF
+    name = "tf-test-trail-event-select-%d"
+    assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1383,11 +1363,11 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda_function_test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = "tf-test-trail-event-select-%d"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       = "exports.example"
-  runtime       = "nodejs8.10"
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "tf-test-trail-event-select-%d"
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs8.10"
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_service_discovery_http_namespace"
+sidebar_current: "docs-aws-resource-service-discovery-http-namespace"
 description: |-
   Provides a Service Discovery HTTP Namespace resource.
 ---

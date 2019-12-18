@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificate"
+sidebar_current: "docs-aws-resource-iam-server-certificate"
 description: |-
   Provides an IAM Server Certificate
 ---

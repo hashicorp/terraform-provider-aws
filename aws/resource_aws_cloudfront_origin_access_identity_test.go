@@ -7,15 +7,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSCloudFrontOriginAccessIdentity_importBasic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.origin_access_identity"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -34,7 +34,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_importBasic(t *testing.T) {
 
 func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -43,7 +43,9 @@ func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence("aws_cloudfront_origin_access_identity.origin_access_identity"),
 					resource.TestCheckResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity", "comment", "some comment"),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity", "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
+						"caller_reference",
+						regexp.MustCompile("^20[0-9]{2}.*")),
 					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
 						"s3_canonical_user_id",
 						regexp.MustCompile("^[a-z0-9]+")),
@@ -61,7 +63,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
 
 func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
 		Steps: []resource.TestStep{
@@ -69,7 +71,9 @@ func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 				Config: testAccAWSCloudFrontOriginAccessIdentityNoCommentConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence("aws_cloudfront_origin_access_identity.origin_access_identity"),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity", "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
+						"caller_reference",
+						regexp.MustCompile("^20[0-9]{2}.*")),
 					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
 						"s3_canonical_user_id",
 						regexp.MustCompile("^[a-z0-9]+")),

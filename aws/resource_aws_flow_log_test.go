@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSFlowLog_VPCID(t *testing.T) {
@@ -228,7 +228,6 @@ resource "aws_vpc" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -327,7 +326,6 @@ resource "aws_subnet" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -373,7 +371,6 @@ resource "aws_vpc" "test" {
 
 resource "aws_iam_role" "test" {
   name = %q
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",

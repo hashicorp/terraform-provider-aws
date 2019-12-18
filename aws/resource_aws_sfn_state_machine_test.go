@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
@@ -137,14 +137,11 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 
 func testAccAWSSfnStateMachineConfig(rName string, rMaxAttempts int) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "iam_policy_for_lambda_%s"
   role = "${aws_iam_role.iam_for_lambda.id}"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -155,7 +152,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ],
-    "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+    "Resource": "arn:aws:logs:*:*:*"
   }]
 }
 EOF
@@ -163,7 +160,6 @@ EOF
 
 resource "aws_iam_role" "iam_for_lambda" {
   name = "iam_for_lambda_%s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -184,7 +180,6 @@ EOF
 resource "aws_iam_role_policy" "iam_policy_for_sfn" {
   name = "iam_policy_for_sfn_%s"
   role = "${aws_iam_role.iam_for_sfn.id}"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -203,7 +198,6 @@ EOF
 
 resource "aws_iam_role" "iam_for_sfn" {
   name = "iam_for_sfn_%s"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -221,11 +215,11 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda_function_test" {
-  filename      = "test-fixtures/lambdatest.zip"
+  filename = "test-fixtures/lambdatest.zip"
   function_name = "sfn-%s"
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  role = "${aws_iam_role.iam_for_lambda.arn}"
+  handler = "exports.example"
+  runtime = "nodejs8.10"
 }
 
 resource "aws_sfn_state_machine" "foo" {
@@ -254,13 +248,12 @@ resource "aws_sfn_state_machine" "foo" {
 }
 EOF
 }
+
 `, rName, rName, rName, rName, rName, rName, rMaxAttempts)
 }
 
 func testAccAWSSfnStateMachineConfigTags1(rName string, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
@@ -276,7 +269,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ],
-    "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+    "Resource": "arn:aws:logs:*:*:*"
   }]
 }
 EOF
@@ -380,8 +373,6 @@ tags = {
 
 func testAccAWSSfnStateMachineConfigTags2(rName string, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 data "aws_region" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
@@ -397,7 +388,7 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ],
-    "Resource": "arn:${data.aws_partition.current.partition}:logs:*:*:*"
+    "Resource": "arn:aws:logs:*:*:*"
   }]
 }
 EOF

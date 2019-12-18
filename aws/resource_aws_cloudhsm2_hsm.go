@@ -5,11 +5,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func resourceAwsCloudHsm2Hsm() *schema.Resource {
@@ -100,16 +100,17 @@ func describeHsm(conn *cloudhsmv2.CloudHSMV2, hsmId string) (*cloudhsmv2.Hsm, er
 	return hsm, nil
 }
 
-func resourceAwsCloudHsm2HsmRefreshFunc(conn *cloudhsmv2.CloudHSMV2, id string) resource.StateRefreshFunc {
+func resourceAwsCloudHsm2HsmRefreshFunc(
+	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hsm, err := describeHsm(conn, id)
+		hsm, err := describeHsm(meta.(*AWSClient).cloudhsmv2conn, d.Id())
 
 		if hsm == nil {
 			return 42, "destroyed", nil
 		}
 
 		if hsm.State != nil {
-			log.Printf("[DEBUG] CloudHSMv2 Cluster status (%s): %s", id, *hsm.State)
+			log.Printf("[DEBUG] CloudHSMv2 Cluster status (%s): %s", d.Id(), *hsm.State)
 		}
 
 		return hsm, aws.StringValue(hsm.State), err
@@ -152,7 +153,7 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 
 	var output *cloudhsmv2.CreateHsmOutput
 
-	err = resource.Retry(180*time.Second, func() *resource.RetryError {
+	errRetry := resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
 		output, err = cloudhsm2.CreateHsm(input)
 		if err != nil {
@@ -164,18 +165,28 @@ func resourceAwsCloudHsm2HsmCreate(d *schema.ResourceData, meta interface{}) err
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		output, err = cloudhsm2.CreateHsm(input)
-	}
 
-	if err != nil {
-		return fmt.Errorf("error creating CloudHSM v2 HSM module: %s", err)
+	if errRetry != nil {
+		return fmt.Errorf("error creating CloudHSM v2 HSM module: %s", errRetry)
 	}
 
 	d.SetId(aws.StringValue(output.Hsm.HsmId))
+	log.Printf("[INFO] CloudHSMv2 HSM Id: %s", d.Id())
+	log.Println("[INFO] Waiting for CloudHSMv2 HSM to be available")
 
-	if err := waitForCloudhsmv2HsmActive(cloudhsm2, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for CloudHSMv2 HSM (%s) creation: %s", d.Id(), err)
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{cloudhsmv2.HsmStateCreateInProgress, "destroyed"},
+		Target:     []string{cloudhsmv2.HsmStateActive},
+		Refresh:    resourceAwsCloudHsm2HsmRefreshFunc(d, meta),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		MinTimeout: 30 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	// Wait, catching any errors
+	_, errWait := stateConf.WaitForState()
+	if errWait != nil {
+		return fmt.Errorf("Error waiting for CloudHSMv2 HSM state to be \"ACTIVE\": %s", errWait)
 	}
 
 	return resourceAwsCloudHsm2HsmRead(d, meta)
@@ -209,13 +220,13 @@ func resourceAwsCloudHsm2HsmDelete(d *schema.ResourceData, meta interface{}) err
 	clusterId := d.Get("cluster_id").(string)
 
 	log.Printf("[DEBUG] CloudHSMv2 HSM delete %s %s", clusterId, d.Id())
-	input := &cloudhsmv2.DeleteHsmInput{
-		ClusterId: aws.String(clusterId),
-		HsmId:     aws.String(d.Id()),
-	}
-	err := resource.Retry(180*time.Second, func() *resource.RetryError {
+
+	errRetry := resource.Retry(180*time.Second, func() *resource.RetryError {
 		var err error
-		_, err = cloudhsm2.DeleteHsm(input)
+		_, err = cloudhsm2.DeleteHsm(&cloudhsmv2.DeleteHsmInput{
+			ClusterId: aws.String(clusterId),
+			HsmId:     aws.String(d.Id()),
+		})
 		if err != nil {
 			if isAWSErr(err, cloudhsmv2.ErrCodeCloudHsmInternalFailureException, "request was rejected because of an AWS CloudHSM internal failure") {
 				log.Printf("[DEBUG] CloudHSMv2 HSM re-try deleting %s", d.Id())
@@ -226,46 +237,25 @@ func resourceAwsCloudHsm2HsmDelete(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
-		_, err = cloudhsm2.DeleteHsm(input)
+	if errRetry != nil {
+		return fmt.Errorf("error deleting CloudHSM v2 HSM module (%s): %s", d.Id(), errRetry)
 	}
-	if err != nil {
-		return fmt.Errorf("error deleting CloudHSM v2 HSM module (%s): %s", d.Id(), err)
-	}
+	log.Println("[INFO] Waiting for CloudHSMv2 HSM to be deleted")
 
-	if err := waitForCloudhsmv2HsmDeletion(cloudhsm2, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for CloudHSMv2 HSM (%s) deletion: %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func waitForCloudhsmv2HsmActive(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{cloudhsmv2.HsmStateCreateInProgress, "destroyed"},
-		Target:     []string{cloudhsmv2.HsmStateActive},
-		Refresh:    resourceAwsCloudHsm2HsmRefreshFunc(conn, id),
-		Timeout:    timeout,
-		MinTimeout: 30 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForCloudhsmv2HsmDeletion(conn *cloudhsmv2.CloudHSMV2, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{cloudhsmv2.HsmStateDeleteInProgress},
 		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsCloudHsm2HsmRefreshFunc(conn, id),
-		Timeout:    timeout,
+		Refresh:    resourceAwsCloudHsm2HsmRefreshFunc(d, meta),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 30 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	// Wait, catching any errors
+	_, errWait := stateConf.WaitForState()
+	if errWait != nil {
+		return fmt.Errorf("Error waiting for CloudHSMv2 HSM state to be \"DELETED\": %s", errWait)
+	}
 
-	return err
+	return nil
 }

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_dx_private_virtual_interface"
+sidebar_current: "docs-aws-resource-dx-private-virtual-interface"
 description: |-
   Provides a Direct Connect private virtual interface resource.
 ---

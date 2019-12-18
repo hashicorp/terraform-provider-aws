@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_policy_attachment"
+sidebar_current: "docs-aws-resource-iam-policy-attachment"
 description: |-
   Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 ---
@@ -22,7 +23,6 @@ resource "aws_iam_user" "user" {
 
 resource "aws_iam_role" "role" {
   name = "test-role"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -47,7 +47,6 @@ resource "aws_iam_group" "group" {
 resource "aws_iam_policy" "policy" {
   name        = "test-policy"
   description = "A test policy"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",

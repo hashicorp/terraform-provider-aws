@@ -2083,7 +2083,6 @@ func (c *Lambda) InvokeAsyncRequest(input *InvokeAsyncInput) (req *request.Reque
 
 // InvokeAsync API operation for AWS Lambda.
 //
-//
 // For asynchronous function invocation, use Invoke.
 //
 // Invokes a function asynchronously.
@@ -2166,12 +2165,6 @@ func (c *Lambda) ListAliasesRequest(input *ListAliasesInput) (req *request.Reque
 		Name:       opListAliases,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2015-03-31/functions/{FunctionName}/aliases",
-		Paginator: &request.Paginator{
-			InputTokens:     []string{"Marker"},
-			OutputTokens:    []string{"NextMarker"},
-			LimitToken:      "MaxItems",
-			TruncationToken: "",
-		},
 	}
 
 	if input == nil {
@@ -2231,56 +2224,6 @@ func (c *Lambda) ListAliasesWithContext(ctx aws.Context, input *ListAliasesInput
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
-}
-
-// ListAliasesPages iterates over the pages of a ListAliases operation,
-// calling the "fn" function with the response data for each page. To stop
-// iterating, return false from the fn function.
-//
-// See ListAliases method for more information on how to use this operation.
-//
-// Note: This operation can generate multiple requests to a service.
-//
-//    // Example iterating over at most 3 pages of a ListAliases operation.
-//    pageNum := 0
-//    err := client.ListAliasesPages(params,
-//        func(page *lambda.ListAliasesOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
-func (c *Lambda) ListAliasesPages(input *ListAliasesInput, fn func(*ListAliasesOutput, bool) bool) error {
-	return c.ListAliasesPagesWithContext(aws.BackgroundContext(), input, fn)
-}
-
-// ListAliasesPagesWithContext same as ListAliasesPages except
-// it takes a Context and allows setting request options on the pages.
-//
-// The context must be non-nil and will be used for request cancellation. If
-// the context is nil a panic will occur. In the future the SDK may create
-// sub-contexts for http.Requests. See https://golang.org/pkg/context/
-// for more information on using Contexts.
-func (c *Lambda) ListAliasesPagesWithContext(ctx aws.Context, input *ListAliasesInput, fn func(*ListAliasesOutput, bool) bool, opts ...request.Option) error {
-	p := request.Pagination{
-		NewRequest: func() (*request.Request, error) {
-			var inCpy *ListAliasesInput
-			if input != nil {
-				tmp := *input
-				inCpy = &tmp
-			}
-			req, _ := c.ListAliasesRequest(inCpy)
-			req.SetContext(ctx)
-			req.ApplyOptions(opts...)
-			return req, nil
-		},
-	}
-
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListAliasesOutput), !p.HasNextPage())
-	}
-	return p.Err()
 }
 
 const opListEventSourceMappings = "ListEventSourceMappings"
@@ -2392,7 +2335,7 @@ func (c *Lambda) ListEventSourceMappingsWithContext(ctx aws.Context, input *List
 //    // Example iterating over at most 3 pages of a ListEventSourceMappings operation.
 //    pageNum := 0
 //    err := client.ListEventSourceMappingsPages(params,
-//        func(page *lambda.ListEventSourceMappingsOutput, lastPage bool) bool {
+//        func(page *ListEventSourceMappingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2540,7 +2483,7 @@ func (c *Lambda) ListFunctionsWithContext(ctx aws.Context, input *ListFunctionsI
 //    // Example iterating over at most 3 pages of a ListFunctions operation.
 //    pageNum := 0
 //    err := client.ListFunctionsPages(params,
-//        func(page *lambda.ListFunctionsOutput, lastPage bool) bool {
+//        func(page *ListFunctionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2610,12 +2553,6 @@ func (c *Lambda) ListLayerVersionsRequest(input *ListLayerVersionsInput) (req *r
 		Name:       opListLayerVersions,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions",
-		Paginator: &request.Paginator{
-			InputTokens:     []string{"Marker"},
-			OutputTokens:    []string{"NextMarker"},
-			LimitToken:      "MaxItems",
-			TruncationToken: "",
-		},
 	}
 
 	if input == nil {
@@ -2679,56 +2616,6 @@ func (c *Lambda) ListLayerVersionsWithContext(ctx aws.Context, input *ListLayerV
 	return out, req.Send()
 }
 
-// ListLayerVersionsPages iterates over the pages of a ListLayerVersions operation,
-// calling the "fn" function with the response data for each page. To stop
-// iterating, return false from the fn function.
-//
-// See ListLayerVersions method for more information on how to use this operation.
-//
-// Note: This operation can generate multiple requests to a service.
-//
-//    // Example iterating over at most 3 pages of a ListLayerVersions operation.
-//    pageNum := 0
-//    err := client.ListLayerVersionsPages(params,
-//        func(page *lambda.ListLayerVersionsOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
-func (c *Lambda) ListLayerVersionsPages(input *ListLayerVersionsInput, fn func(*ListLayerVersionsOutput, bool) bool) error {
-	return c.ListLayerVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
-}
-
-// ListLayerVersionsPagesWithContext same as ListLayerVersionsPages except
-// it takes a Context and allows setting request options on the pages.
-//
-// The context must be non-nil and will be used for request cancellation. If
-// the context is nil a panic will occur. In the future the SDK may create
-// sub-contexts for http.Requests. See https://golang.org/pkg/context/
-// for more information on using Contexts.
-func (c *Lambda) ListLayerVersionsPagesWithContext(ctx aws.Context, input *ListLayerVersionsInput, fn func(*ListLayerVersionsOutput, bool) bool, opts ...request.Option) error {
-	p := request.Pagination{
-		NewRequest: func() (*request.Request, error) {
-			var inCpy *ListLayerVersionsInput
-			if input != nil {
-				tmp := *input
-				inCpy = &tmp
-			}
-			req, _ := c.ListLayerVersionsRequest(inCpy)
-			req.SetContext(ctx)
-			req.ApplyOptions(opts...)
-			return req, nil
-		},
-	}
-
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLayerVersionsOutput), !p.HasNextPage())
-	}
-	return p.Err()
-}
-
 const opListLayers = "ListLayers"
 
 // ListLayersRequest generates a "aws/request.Request" representing the
@@ -2760,12 +2647,6 @@ func (c *Lambda) ListLayersRequest(input *ListLayersInput) (req *request.Request
 		Name:       opListLayers,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2018-10-31/layers",
-		Paginator: &request.Paginator{
-			InputTokens:     []string{"Marker"},
-			OutputTokens:    []string{"NextMarker"},
-			LimitToken:      "MaxItems",
-			TruncationToken: "",
-		},
 	}
 
 	if input == nil {
@@ -2823,56 +2704,6 @@ func (c *Lambda) ListLayersWithContext(ctx aws.Context, input *ListLayersInput, 
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
-}
-
-// ListLayersPages iterates over the pages of a ListLayers operation,
-// calling the "fn" function with the response data for each page. To stop
-// iterating, return false from the fn function.
-//
-// See ListLayers method for more information on how to use this operation.
-//
-// Note: This operation can generate multiple requests to a service.
-//
-//    // Example iterating over at most 3 pages of a ListLayers operation.
-//    pageNum := 0
-//    err := client.ListLayersPages(params,
-//        func(page *lambda.ListLayersOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
-func (c *Lambda) ListLayersPages(input *ListLayersInput, fn func(*ListLayersOutput, bool) bool) error {
-	return c.ListLayersPagesWithContext(aws.BackgroundContext(), input, fn)
-}
-
-// ListLayersPagesWithContext same as ListLayersPages except
-// it takes a Context and allows setting request options on the pages.
-//
-// The context must be non-nil and will be used for request cancellation. If
-// the context is nil a panic will occur. In the future the SDK may create
-// sub-contexts for http.Requests. See https://golang.org/pkg/context/
-// for more information on using Contexts.
-func (c *Lambda) ListLayersPagesWithContext(ctx aws.Context, input *ListLayersInput, fn func(*ListLayersOutput, bool) bool, opts ...request.Option) error {
-	p := request.Pagination{
-		NewRequest: func() (*request.Request, error) {
-			var inCpy *ListLayersInput
-			if input != nil {
-				tmp := *input
-				inCpy = &tmp
-			}
-			req, _ := c.ListLayersRequest(inCpy)
-			req.SetContext(ctx)
-			req.ApplyOptions(opts...)
-			return req, nil
-		},
-	}
-
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListLayersOutput), !p.HasNextPage())
-	}
-	return p.Err()
 }
 
 const opListTags = "ListTags"
@@ -2998,12 +2829,6 @@ func (c *Lambda) ListVersionsByFunctionRequest(input *ListVersionsByFunctionInpu
 		Name:       opListVersionsByFunction,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2015-03-31/functions/{FunctionName}/versions",
-		Paginator: &request.Paginator{
-			InputTokens:     []string{"Marker"},
-			OutputTokens:    []string{"NextMarker"},
-			LimitToken:      "MaxItems",
-			TruncationToken: "",
-		},
 	}
 
 	if input == nil {
@@ -3063,56 +2888,6 @@ func (c *Lambda) ListVersionsByFunctionWithContext(ctx aws.Context, input *ListV
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
-}
-
-// ListVersionsByFunctionPages iterates over the pages of a ListVersionsByFunction operation,
-// calling the "fn" function with the response data for each page. To stop
-// iterating, return false from the fn function.
-//
-// See ListVersionsByFunction method for more information on how to use this operation.
-//
-// Note: This operation can generate multiple requests to a service.
-//
-//    // Example iterating over at most 3 pages of a ListVersionsByFunction operation.
-//    pageNum := 0
-//    err := client.ListVersionsByFunctionPages(params,
-//        func(page *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
-//            pageNum++
-//            fmt.Println(page)
-//            return pageNum <= 3
-//        })
-//
-func (c *Lambda) ListVersionsByFunctionPages(input *ListVersionsByFunctionInput, fn func(*ListVersionsByFunctionOutput, bool) bool) error {
-	return c.ListVersionsByFunctionPagesWithContext(aws.BackgroundContext(), input, fn)
-}
-
-// ListVersionsByFunctionPagesWithContext same as ListVersionsByFunctionPages except
-// it takes a Context and allows setting request options on the pages.
-//
-// The context must be non-nil and will be used for request cancellation. If
-// the context is nil a panic will occur. In the future the SDK may create
-// sub-contexts for http.Requests. See https://golang.org/pkg/context/
-// for more information on using Contexts.
-func (c *Lambda) ListVersionsByFunctionPagesWithContext(ctx aws.Context, input *ListVersionsByFunctionInput, fn func(*ListVersionsByFunctionOutput, bool) bool, opts ...request.Option) error {
-	p := request.Pagination{
-		NewRequest: func() (*request.Request, error) {
-			var inCpy *ListVersionsByFunctionInput
-			if input != nil {
-				tmp := *input
-				inCpy = &tmp
-			}
-			req, _ := c.ListVersionsByFunctionRequest(inCpy)
-			req.SetContext(ctx)
-			req.ApplyOptions(opts...)
-			return req, nil
-		},
-	}
-
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVersionsByFunctionOutput), !p.HasNextPage())
-	}
-	return p.Err()
 }
 
 const opPublishLayerVersion = "PublishLayerVersion"
@@ -4890,8 +4665,6 @@ type CreateEventSourceMappingInput struct {
 	// FunctionName is a required field
 	FunctionName *string `min:"1" type:"string" required:"true"`
 
-	MaximumBatchingWindowInSeconds *int64 `type:"integer"`
-
 	// The position in a stream from which to start reading. Required for Amazon
 	// Kinesis and Amazon DynamoDB Streams sources. AT_TIMESTAMP is only supported
 	// for Amazon Kinesis streams.
@@ -4954,12 +4727,6 @@ func (s *CreateEventSourceMappingInput) SetEventSourceArn(v string) *CreateEvent
 // SetFunctionName sets the FunctionName field's value.
 func (s *CreateEventSourceMappingInput) SetFunctionName(v string) *CreateEventSourceMappingInput {
 	s.FunctionName = &v
-	return s
-}
-
-// SetMaximumBatchingWindowInSeconds sets the MaximumBatchingWindowInSeconds field's value.
-func (s *CreateEventSourceMappingInput) SetMaximumBatchingWindowInSeconds(v int64) *CreateEventSourceMappingInput {
-	s.MaximumBatchingWindowInSeconds = &v
 	return s
 }
 
@@ -5684,8 +5451,6 @@ type EventSourceMappingConfiguration struct {
 	// The result of the last AWS Lambda invocation of your Lambda function.
 	LastProcessingResult *string `type:"string"`
 
-	MaximumBatchingWindowInSeconds *int64 `type:"integer"`
-
 	// The state of the event source mapping. It can be one of the following: Creating,
 	// Enabling, Enabled, Disabling, Disabled, Updating, or Deleting.
 	State *string `type:"string"`
@@ -5734,12 +5499,6 @@ func (s *EventSourceMappingConfiguration) SetLastModified(v time.Time) *EventSou
 // SetLastProcessingResult sets the LastProcessingResult field's value.
 func (s *EventSourceMappingConfiguration) SetLastProcessingResult(v string) *EventSourceMappingConfiguration {
 	s.LastProcessingResult = &v
-	return s
-}
-
-// SetMaximumBatchingWindowInSeconds sets the MaximumBatchingWindowInSeconds field's value.
-func (s *EventSourceMappingConfiguration) SetMaximumBatchingWindowInSeconds(v int64) *EventSourceMappingConfiguration {
-	s.MaximumBatchingWindowInSeconds = &v
 	return s
 }
 
@@ -5905,7 +5664,7 @@ type FunctionConfiguration struct {
 	// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ss.sTZD).
 	LastModified *string `type:"string"`
 
-	// The function's layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
+	// The function's  layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 	Layers []*Layer `type:"list"`
 
 	// For Lambda@Edge functions, the ARN of the master function.
@@ -8978,8 +8737,6 @@ type UpdateEventSourceMappingInput struct {
 	// function name, it's limited to 64 characters in length.
 	FunctionName *string `min:"1" type:"string"`
 
-	MaximumBatchingWindowInSeconds *int64 `type:"integer"`
-
 	// The identifier of the event source mapping.
 	//
 	// UUID is a required field
@@ -9033,12 +8790,6 @@ func (s *UpdateEventSourceMappingInput) SetEnabled(v bool) *UpdateEventSourceMap
 // SetFunctionName sets the FunctionName field's value.
 func (s *UpdateEventSourceMappingInput) SetFunctionName(v string) *UpdateEventSourceMappingInput {
 	s.FunctionName = &v
-	return s
-}
-
-// SetMaximumBatchingWindowInSeconds sets the MaximumBatchingWindowInSeconds field's value.
-func (s *UpdateEventSourceMappingInput) SetMaximumBatchingWindowInSeconds(v int64) *UpdateEventSourceMappingInput {
-	s.MaximumBatchingWindowInSeconds = &v
 	return s
 }
 
@@ -9495,9 +9246,6 @@ const (
 
 	// RuntimeNodejs810 is a Runtime enum value
 	RuntimeNodejs810 = "nodejs8.10"
-
-	// RuntimeNodejs10X is a Runtime enum value
-	RuntimeNodejs10X = "nodejs10.x"
 
 	// RuntimeJava8 is a Runtime enum value
 	RuntimeJava8 = "java8"

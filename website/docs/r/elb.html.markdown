@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elb"
+sidebar_current: "docs-aws-resource-elb"
 description: |-
   Provides an Elastic Load Balancer resource.
 ---

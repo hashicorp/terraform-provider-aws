@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ssm_patch_baseline"
+sidebar_current: "docs-aws-resource-ssm-patch-baseline"
 description: |-
   Provides an SSM Patch Baseline resource
 ---

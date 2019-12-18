@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glue_trigger"
+sidebar_current: "docs-aws-resource-glue-trigger"
 description: |-
   Manages a Glue Trigger resource.
 ---

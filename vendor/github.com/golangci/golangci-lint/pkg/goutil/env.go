@@ -5,19 +5,10 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
-	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/golangci/golangci-lint/pkg/logutils"
-)
-
-type EnvKey string
-
-const (
-	EnvGoCache EnvKey = "GOCACHE"
-	EnvGoRoot  EnvKey = "GOROOT"
 )
 
 type Env struct {
@@ -35,27 +26,24 @@ func NewEnv(log logutils.Log) *Env {
 }
 
 func (e *Env) Discover(ctx context.Context) error {
-	startedAt := time.Now()
-	args := []string{"env", "-json"}
-	args = append(args, string(EnvGoCache), string(EnvGoRoot))
-	out, err := exec.CommandContext(ctx, "go", args...).Output()
+	out, err := exec.CommandContext(ctx, "go", "env", "-json").Output()
 	if err != nil {
 		return errors.Wrap(err, "failed to run 'go env'")
 	}
 
 	if err = json.Unmarshal(out, &e.vars); err != nil {
-		return errors.Wrapf(err, "failed to parse 'go %s' json", strings.Join(args, " "))
+		return errors.Wrap(err, "failed to parse go env json")
 	}
 
-	e.debugf("Read go env for %s: %#v", time.Since(startedAt), e.vars)
+	e.debugf("Read go env: %#v", e.vars)
 	return nil
 }
 
-func (e Env) Get(k EnvKey) string {
-	envValue := os.Getenv(string(k))
+func (e Env) Get(k string) string {
+	envValue := os.Getenv(k)
 	if envValue != "" {
 		return envValue
 	}
 
-	return e.vars[string(k)]
+	return e.vars[k]
 }

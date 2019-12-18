@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_spot_fleet_request"
+sidebar_current: "docs-aws-resource-spot-fleet-request"
 description: |-
   Provides a Spot Fleet Request resource.
 ---
@@ -44,7 +45,7 @@ resource "aws_spot_fleet_request" "cheap_compute" {
       volume_type = "gp2"
     }
 
-    tags = {
+  tags = {
       Name = "spot-fleet-example"
     }
   }

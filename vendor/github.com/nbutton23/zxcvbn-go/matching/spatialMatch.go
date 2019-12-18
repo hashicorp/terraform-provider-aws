@@ -8,15 +8,14 @@ import (
 	"github.com/nbutton23/zxcvbn-go/match"
 )
 
-const spatialMatcherName = "SPATIAL"
+const SPATIAL_MATCHER_NAME = "SPATIAL"
 
-//FilterSpatialMatcher can be pass to zxcvbn-go.PasswordStrength to skip that matcher
 func FilterSpatialMatcher(m match.Matcher) bool {
-	return m.ID == spatialMatcherName
+	return m.ID == SPATIAL_MATCHER_NAME
 }
 
 func spatialMatch(password string) (matches []match.Match) {
-	for _, graph := range adjacencyGraphs {
+	for _, graph := range ADJACENCY_GRAPHS {
 		if graph.Graph != nil {
 			matches = append(matches, spatialMatchHelper(password, graph)...)
 		}
@@ -24,7 +23,7 @@ func spatialMatch(password string) (matches []match.Match) {
 	return matches
 }
 
-func spatialMatchHelper(password string, graph adjacency.Graph) (matches []match.Match) {
+func spatialMatchHelper(password string, graph adjacency.AdjacencyGraph) (matches []match.Match) {
 
 	for i := 0; i < len(password)-1; {
 		j := i + 1
@@ -43,7 +42,7 @@ func spatialMatchHelper(password string, graph adjacency.Graph) (matches []match
 			if j < len(password) {
 				curChar := password[j]
 				for _, adj := range adjacents {
-					curDirection++
+					curDirection += 1
 
 					if strings.Index(adj, string(curChar)) != -1 {
 						found = true
@@ -52,13 +51,13 @@ func spatialMatchHelper(password string, graph adjacency.Graph) (matches []match
 						if strings.Index(adj, string(curChar)) == 1 {
 							//index 1 in the adjacency means the key is shifted, 0 means unshifted: A vs a, % vs 5, etc.
 							//for example, 'q' is adjacent to the entry '2@'. @ is shifted w/ index 1, 2 is unshifted.
-							shiftedCount++
+							shiftedCount += 1
 						}
 
 						if lastDirection != foundDirection {
 							//adding a turn is correct even in the initial case when last_direction is null:
 							//every spatial pattern starts with a turn.
-							turns++
+							turns += 1
 							lastDirection = foundDirection
 						}
 						break
@@ -68,7 +67,7 @@ func spatialMatchHelper(password string, graph adjacency.Graph) (matches []match
 
 			//if the current pattern continued, extend j and try to grow again
 			if found {
-				j++
+				j += 1
 			} else {
 				//otherwise push the pattern discovered so far, if any...
 				//don't consider length 1 or 2 chains.

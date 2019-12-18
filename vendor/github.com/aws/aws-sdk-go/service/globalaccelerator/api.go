@@ -62,8 +62,6 @@ func (c *GlobalAccelerator) CreateAcceleratorRequest(input *CreateAcceleratorInp
 // each of which includes endpoints, such as Network Load Balancers. To see
 // an AWS CLI example of creating an accelerator, scroll down to Example.
 //
-// You must specify the US-West-2 (Oregon) Region to create or update accelerators.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -178,9 +176,6 @@ func (c *GlobalAccelerator) CreateEndpointGroupRequest(input *CreateEndpointGrou
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   Processing your request would cause you to exceed an AWS Global Accelerator
 //   limit.
-//
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/CreateEndpointGroup
 func (c *GlobalAccelerator) CreateEndpointGroup(input *CreateEndpointGroupInput) (*CreateEndpointGroupOutput, error) {
@@ -450,9 +445,6 @@ func (c *GlobalAccelerator) DeleteEndpointGroupRequest(input *DeleteEndpointGrou
 // API operation DeleteEndpointGroup for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
-//   An argument that you specified is invalid.
-//
 //   * ErrCodeEndpointGroupNotFoundException "EndpointGroupNotFoundException"
 //   The endpoint group that you specified doesn't exist.
 //
@@ -536,9 +528,6 @@ func (c *GlobalAccelerator) DeleteListenerRequest(input *DeleteListenerInput) (r
 // API operation DeleteListener for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
-//   An argument that you specified is invalid.
-//
 //   * ErrCodeListenerNotFoundException "ListenerNotFoundException"
 //   The listener that you specified doesn't exist.
 //
@@ -797,9 +786,6 @@ func (c *GlobalAccelerator) DescribeEndpointGroupRequest(input *DescribeEndpoint
 // API operation DescribeEndpointGroup for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
-//   An argument that you specified is invalid.
-//
 //   * ErrCodeEndpointGroupNotFoundException "EndpointGroupNotFoundException"
 //   The endpoint group that you specified doesn't exist.
 //
@@ -967,9 +953,6 @@ func (c *GlobalAccelerator) ListAcceleratorsRequest(input *ListAcceleratorsInput
 // API operation ListAccelerators for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
-//   An argument that you specified is invalid.
-//
 //   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
 //   There isn't another item to return.
 //
@@ -1140,9 +1123,6 @@ func (c *GlobalAccelerator) ListListenersRequest(input *ListListenersInput) (req
 // API operation ListListeners for usage and error information.
 //
 // Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
-//   An argument that you specified is invalid.
-//
 //   * ErrCodeAcceleratorNotFoundException "AcceleratorNotFoundException"
 //   The accelerator that you specified doesn't exist.
 //
@@ -1218,10 +1198,7 @@ func (c *GlobalAccelerator) UpdateAcceleratorRequest(input *UpdateAcceleratorInp
 
 // UpdateAccelerator API operation for AWS Global Accelerator.
 //
-// Update an accelerator. To see an AWS CLI example of updating an accelerator,
-// scroll down to Example.
-//
-// You must specify the US-West-2 (Oregon) Region to create or update accelerators.
+// Update an accelerator.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1326,9 +1303,6 @@ func (c *GlobalAccelerator) UpdateAcceleratorAttributesRequest(input *UpdateAcce
 //   * ErrCodeInvalidArgumentException "InvalidArgumentException"
 //   An argument that you specified is invalid.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access permission.
-//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/UpdateAcceleratorAttributes
 func (c *GlobalAccelerator) UpdateAcceleratorAttributes(input *UpdateAcceleratorAttributesInput) (*UpdateAcceleratorAttributesOutput, error) {
 	req, out := c.UpdateAcceleratorAttributesRequest(input)
@@ -1418,9 +1392,6 @@ func (c *GlobalAccelerator) UpdateEndpointGroupRequest(input *UpdateEndpointGrou
 //   * ErrCodeLimitExceededException "LimitExceededException"
 //   Processing your request would cause you to exceed an AWS Global Accelerator
 //   limit.
-//
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
-//   You don't have access permission.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/globalaccelerator-2018-08-08/UpdateEndpointGroup
 func (c *GlobalAccelerator) UpdateEndpointGroup(input *UpdateEndpointGroupInput) (*UpdateEndpointGroupOutput, error) {
@@ -1549,19 +1520,7 @@ type Accelerator struct {
 	// The date and time that the accelerator was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
-	// The Domain Name System (DNS) name that Global Accelerator creates that points
-	// to your accelerator's static IP addresses.
-	//
-	// The naming convention for the DNS name is: a lower case letter a, followed
-	// by a 16-bit random hex string, followed by .awsglobalaccelerator.com. For
-	// example: a1234567890abcdef.awsglobalaccelerator.com.
-	//
-	// For more information about the default DNS name, see Support for DNS Addressing
-	// in Global Accelerator (https://docs.aws.amazon.com/global-accelerator/latest/dg/about-accelerators.html#about-accelerators.dns-addressing)
-	// in the AWS Global Accelerator Developer Guide.
-	DnsName *string `type:"string"`
-
-	// Indicates whether the accelerator is enabled. The value is true or false.
+	// Indicates whether theaccelerator is enabled. The value is true or false.
 	// The default value is true.
 	//
 	// If the value is set to true, the accelerator cannot be deleted. If set to
@@ -1571,14 +1530,15 @@ type Accelerator struct {
 	// The value for the address type must be IPv4.
 	IpAddressType *string `type:"string" enum:"IpAddressType"`
 
-	// The static IP addresses that Global Accelerator associates with the accelerator.
+	// IP address set associated with the accelerator.
 	IpSets []*IpSet `type:"list"`
 
 	// The date and time that the accelerator was last modified.
 	LastModifiedTime *time.Time `type:"timestamp"`
 
-	// The name of the accelerator. The name must contain only alphanumeric characters
-	// or hyphens (-), and must not begin or end with a hyphen.
+	// The name of the accelerator. The name can have a maximum of 32 characters,
+	// must contain only alphanumeric characters or hyphens (-), and must not begin
+	// or end with a hyphen.
 	Name *string `type:"string"`
 
 	// Describes the deployment status of the accelerator.
@@ -1604,12 +1564,6 @@ func (s *Accelerator) SetAcceleratorArn(v string) *Accelerator {
 // SetCreatedTime sets the CreatedTime field's value.
 func (s *Accelerator) SetCreatedTime(v time.Time) *Accelerator {
 	s.CreatedTime = &v
-	return s
-}
-
-// SetDnsName sets the DnsName field's value.
-func (s *Accelerator) SetDnsName(v string) *Accelerator {
-	s.DnsName = &v
 	return s
 }
 
@@ -1666,8 +1620,8 @@ type AcceleratorAttributes struct {
 	FlowLogsS3Bucket *string `type:"string"`
 
 	// The prefix for the location in the Amazon S3 bucket for the flow logs. Attribute
-	// is required if FlowLogsEnabled is true. If you don’t specify a prefix,
-	// the flow logs are stored in the root of the bucket.
+	// is required if FlowLogsEnabled is true. If you don’t specify a prefix, the
+	// flow logs are stored in the root of the bucket.
 	FlowLogsS3Prefix *string `type:"string"`
 }
 
@@ -1994,11 +1948,10 @@ type CreateListenerInput struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to
-	// select the hash value, and then chooses the best endpoint. However, with
-	// this setting, if someone uses different ports to connect to Global Accelerator,
-	// their connections might not be always routed to the same endpoint because
-	// the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to select
+	// the hash value, and then chooses the best endpoint. However, with this setting,
+	// if someone uses different ports to connect to Global Accelerator, their connections
+	// might not be always routed to the same endpoint because the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,
@@ -2283,10 +2236,8 @@ type DescribeAcceleratorAttributesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the accelerator with the attributes that
-	// you want to describe.
-	//
-	// AcceleratorArn is a required field
-	AcceleratorArn *string `type:"string" required:"true"`
+	// you want to describe. Value is required.
+	AcceleratorArn *string `type:"string"`
 }
 
 // String returns the string representation
@@ -2297,19 +2248,6 @@ func (s DescribeAcceleratorAttributesInput) String() string {
 // GoString returns the string representation
 func (s DescribeAcceleratorAttributesInput) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *DescribeAcceleratorAttributesInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "DescribeAcceleratorAttributesInput"}
-	if s.AcceleratorArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("AcceleratorArn"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetAcceleratorArn sets the AcceleratorArn field's value.
@@ -2528,19 +2466,6 @@ func (s *DescribeListenerOutput) SetListener(v *Listener) *DescribeListenerOutpu
 type EndpointConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether client IP address preservation is enabled for an Application
-	// Load Balancer endpoint. The value is true or false. The default value is
-	// true for new accelerators.
-	//
-	// If the value is set to true, the client's IP address is preserved in the
-	// X-Forwarded-For request header as traffic travels to applications on the
-	// Application Load Balancer endpoint fronted by the accelerator.
-	//
-	// For more information, see Viewing Client IP Addresses in AWS Global Accelerator
-	// (https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works-client-ip.html)
-	// in the AWS Global Accelerator Developer Guide.
-	ClientIPPreservationEnabled *bool `type:"boolean"`
-
 	// An ID for the endpoint. If the endpoint is a Network Load Balancer or Application
 	// Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If
 	// the endpoint is an Elastic IP address, this is the Elastic IP address allocation
@@ -2568,12 +2493,6 @@ func (s EndpointConfiguration) GoString() string {
 	return s.String()
 }
 
-// SetClientIPPreservationEnabled sets the ClientIPPreservationEnabled field's value.
-func (s *EndpointConfiguration) SetClientIPPreservationEnabled(v bool) *EndpointConfiguration {
-	s.ClientIPPreservationEnabled = &v
-	return s
-}
-
 // SetEndpointId sets the EndpointId field's value.
 func (s *EndpointConfiguration) SetEndpointId(v string) *EndpointConfiguration {
 	s.EndpointId = &v
@@ -2591,23 +2510,10 @@ func (s *EndpointConfiguration) SetWeight(v int64) *EndpointConfiguration {
 type EndpointDescription struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates whether client IP address preservation is enabled for an Application
-	// Load Balancer endpoint. The value is true or false. The default value is
-	// true for new accelerators.
-	//
-	// If the value is set to true, the client's IP address is preserved in the
-	// X-Forwarded-For request header as traffic travels to applications on the
-	// Application Load Balancer endpoint fronted by the accelerator.
-	//
-	// For more information, see Viewing Client IP Addresses in AWS Global Accelerator
-	// (https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works-client-ip.html)
-	// in the AWS Global Accelerator Developer Guide.
-	ClientIPPreservationEnabled *bool `type:"boolean"`
-
 	// An ID for the endpoint. If the endpoint is a Network Load Balancer or Application
 	// Load Balancer, this is the Amazon Resource Name (ARN) of the resource. If
 	// the endpoint is an Elastic IP address, this is the Elastic IP address allocation
-	// ID. An Application Load Balancer can be either internal or internet-facing.
+	// ID.
 	EndpointId *string `type:"string"`
 
 	// The reason code associated with why the endpoint is not healthy. If the endpoint
@@ -2654,12 +2560,6 @@ func (s EndpointDescription) String() string {
 // GoString returns the string representation
 func (s EndpointDescription) GoString() string {
 	return s.String()
-}
-
-// SetClientIPPreservationEnabled sets the ClientIPPreservationEnabled field's value.
-func (s *EndpointDescription) SetClientIPPreservationEnabled(v bool) *EndpointDescription {
-	s.ClientIPPreservationEnabled = &v
-	return s
 }
 
 // SetEndpointId sets the EndpointId field's value.
@@ -3116,11 +3016,10 @@ type Listener struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to
-	// select the hash value, and then chooses the best endpoint. However, with
-	// this setting, if someone uses different ports to connect to Global Accelerator,
-	// their connections might not be always routed to the same endpoint because
-	// the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to select
+	// the hash value, and then chooses the best endpoint. However, with this setting,
+	// if someone uses different ports to connect to Global Accelerator, their connections
+	// might not be always routed to the same endpoint because the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,
@@ -3227,9 +3126,8 @@ type UpdateAcceleratorAttributesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the accelerator that you want to update.
-	//
-	// AcceleratorArn is a required field
-	AcceleratorArn *string `type:"string" required:"true"`
+	// Attribute is required.
+	AcceleratorArn *string `type:"string"`
 
 	// Update whether flow logs are enabled. The default value is false. If the
 	// value is true, FlowLogsS3Bucket and FlowLogsS3Prefix must be specified.
@@ -3244,8 +3142,8 @@ type UpdateAcceleratorAttributesInput struct {
 	FlowLogsS3Bucket *string `type:"string"`
 
 	// Update the prefix for the location in the Amazon S3 bucket for the flow logs.
-	// Attribute is required if FlowLogsEnabled is true. If you don’t specify
-	// a prefix, the flow logs are stored in the root of the bucket.
+	// Attribute is required if FlowLogsEnabled is true. If you don’t specify a
+	// prefix, the flow logs are stored in the root of the bucket.
 	FlowLogsS3Prefix *string `type:"string"`
 }
 
@@ -3257,19 +3155,6 @@ func (s UpdateAcceleratorAttributesInput) String() string {
 // GoString returns the string representation
 func (s UpdateAcceleratorAttributesInput) GoString() string {
 	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *UpdateAcceleratorAttributesInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "UpdateAcceleratorAttributesInput"}
-	if s.AcceleratorArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("AcceleratorArn"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
 }
 
 // SetAcceleratorArn sets the AcceleratorArn field's value.
@@ -3572,11 +3457,10 @@ type UpdateListenerInput struct {
 	// AWS Global Accelerator uses a consistent-flow hashing algorithm to choose
 	// the optimal endpoint for a connection. If client affinity is NONE, Global
 	// Accelerator uses the "five-tuple" (5-tuple) properties—source IP address,
-	// source port, destination IP address, destination port, and protocol—to
-	// select the hash value, and then chooses the best endpoint. However, with
-	// this setting, if someone uses different ports to connect to Global Accelerator,
-	// their connections might not be always routed to the same endpoint because
-	// the hash value changes.
+	// source port, destination IP address, destination port, and protocol—to select
+	// the hash value, and then chooses the best endpoint. However, with this setting,
+	// if someone uses different ports to connect to Global Accelerator, their connections
+	// might not be always routed to the same endpoint because the hash value changes.
 	//
 	// If you want a given client to always be routed to the same endpoint, set
 	// client affinity to SOURCE_IP instead. When you use the SOURCE_IP setting,

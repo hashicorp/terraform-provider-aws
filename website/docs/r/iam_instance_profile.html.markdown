@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_instance_profile"
+sidebar_current: "docs-aws-resource-iam-instance-profile"
 description: |-
   Provides an IAM instance profile.
 ---

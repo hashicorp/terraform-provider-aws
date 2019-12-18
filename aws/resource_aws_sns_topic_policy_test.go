@@ -4,12 +4,11 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 	attributes := make(map[string]string)
-	resourceName := "aws_sns_topic_policy.custom"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -20,14 +19,9 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 				Config: testAccAWSSNSTopicConfig_withPolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
-					resource.TestMatchResourceAttr(resourceName, "policy",
+					resource.TestMatchResourceAttr("aws_sns_topic_policy.custom", "policy",
 						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

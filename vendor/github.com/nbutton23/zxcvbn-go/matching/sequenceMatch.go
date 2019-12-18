@@ -7,11 +7,10 @@ import (
 	"github.com/nbutton23/zxcvbn-go/match"
 )
 
-const sequenceMatcherName = "SEQ"
+const SEQUENCE_MATCHER_NAME = "SEQ"
 
-//FilterSequenceMatcher can be pass to zxcvbn-go.PasswordStrength to skip that matcher
 func FilterSequenceMatcher(m match.Matcher) bool {
-	return m.ID == sequenceMatcherName
+	return m.ID == SEQUENCE_MATCHER_NAME
 }
 
 func sequenceMatch(password string) []match.Match {
@@ -21,7 +20,7 @@ func sequenceMatch(password string) []match.Match {
 		var seq string
 		var seqName string
 		seqDirection := 0
-		for seqCandidateName, seqCandidate := range sequences {
+		for seqCandidateName, seqCandidate := range SEQUENCES {
 			iN := strings.Index(seqCandidate, string(password[i]))
 			var jN int
 			if j < len(password) {
@@ -65,7 +64,7 @@ func sequenceMatch(password string) []match.Match {
 					}
 					break
 				} else {
-					j++
+					j += 1
 				}
 
 			}

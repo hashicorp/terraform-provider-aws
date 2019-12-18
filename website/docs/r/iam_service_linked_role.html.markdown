@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_service_linked_role"
+sidebar_current: "docs-aws-resource-iam-service-linked-role"
 description: |-
   Provides an IAM service-linked role.
 ---

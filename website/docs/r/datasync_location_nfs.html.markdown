@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_datasync_location_nfs"
+sidebar_current: "docs-aws-resource-datasync-location-nfs"
 description: |-
   Manages an AWS DataSync NFS Location
 ---

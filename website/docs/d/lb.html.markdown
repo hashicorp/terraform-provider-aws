@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lb"
+sidebar_current: "docs-aws-datasource-lb-x"
 description: |-
   Provides a Load Balancer data source.
 ---

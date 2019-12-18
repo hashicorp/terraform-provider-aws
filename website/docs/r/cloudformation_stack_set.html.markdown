@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack_set"
+sidebar_current: "docs-aws-resource-cloudformation-stack-set"
 description: |-
   Manages a CloudFormation Stack Set.
 ---

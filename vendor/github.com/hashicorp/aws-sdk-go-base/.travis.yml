@@ -1,20 +1,21 @@
 dist: xenial
 language: go
 go:
-- "1.13.x"
-
-matrix:
-  fast_finish: true
-  allow_failures:
-  - go: tip
+- "1.11.x"
+env:
+  GOFLAGS=-mod=vendor
 
 install:
 - make tools
 
 script:
 - make lint
-- go test -timeout=30s -parallel=4 -v ./...
+- make test
 
 branches:
   only:
   - master
+matrix:
+  fast_finish: true
+  allow_failures:
+  - go: tip

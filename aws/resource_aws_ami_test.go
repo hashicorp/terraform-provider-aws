@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAMI_basic(t *testing.T) {
@@ -224,8 +224,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "foo" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size              = 8
-
+  size = 8
   tags = {
     Name = "testAccAmiConfig_basic"
   }
@@ -259,8 +258,7 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_ebs_volume" "foo" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size              = 20
-
+  size = 20
   tags = {
     Name = "testAccAmiConfig_snapshotSize"
   }

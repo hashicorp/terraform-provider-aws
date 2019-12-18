@@ -5,9 +5,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -47,10 +47,9 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Optional: true,
 			},
 			"request_interval": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
-				ValidateFunc: validation.IntInSlice([]int{10, 30}),
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true, // todo this should be updateable but the awslabs route53 service doesnt have the ability
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
@@ -385,7 +384,7 @@ func resourceAwsRoute53HealthCheckRead(d *schema.ResourceData, meta interface{})
 func resourceAwsRoute53HealthCheckDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
 
-	log.Printf("[DEBUG] Deleting Route53 health check: %s", d.Id())
+	log.Printf("[DEBUG] Deleteing Route53 health check: %s", d.Id())
 	_, err := conn.DeleteHealthCheck(&route53.DeleteHealthCheckInput{HealthCheckId: aws.String(d.Id())})
 	return err
 }

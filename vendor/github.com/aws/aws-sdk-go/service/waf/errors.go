@@ -4,10 +4,6 @@ package waf
 
 const (
 
-	// ErrCodeBadRequestException for service response error code
-	// "WAFBadRequestException".
-	ErrCodeBadRequestException = "WAFBadRequestException"
-
 	// ErrCodeDisallowedNameException for service response error code
 	// "WAFDisallowedNameException".
 	//
@@ -62,16 +58,16 @@ const (
 	//    * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 	//    using an action other than INSERT or DELETE.
 	//
-	//    * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
+	//    * You tried to create a WebACL with a DefaultActionType other than ALLOW,
 	//    BLOCK, or COUNT.
 	//
 	//    * You tried to create a RateBasedRule with a RateKey value other than
 	//    IP.
 	//
-	//    * You tried to update a WebACL with a WafAction Type other than ALLOW,
+	//    * You tried to update a WebACL with a WafActionType other than ALLOW,
 	//    BLOCK, or COUNT.
 	//
-	//    * You tried to update a ByteMatchSet with a FieldToMatch Type other than
+	//    * You tried to update a ByteMatchSet with a FieldToMatchType other than
 	//    HEADER, METHOD, QUERY_STRING, URI, or BODY.
 	//
 	//    * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -201,12 +197,4 @@ const (
 	//
 	// The specified subscription does not exist.
 	ErrCodeSubscriptionNotFoundException = "WAFSubscriptionNotFoundException"
-
-	// ErrCodeTagOperationException for service response error code
-	// "WAFTagOperationException".
-	ErrCodeTagOperationException = "WAFTagOperationException"
-
-	// ErrCodeTagOperationInternalErrorException for service response error code
-	// "WAFTagOperationInternalErrorException".
-	ErrCodeTagOperationInternalErrorException = "WAFTagOperationInternalErrorException"
 )

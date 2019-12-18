@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lambda_layer_version"
+sidebar_current: "docs-aws-datasource-lambda-layer-version"
 description: |-
   Provides a Lambda Layer Version data source.
 ---

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costandusagereportservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAwsCurReportDefinition_basic(t *testing.T) {
@@ -112,15 +112,14 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "%[2]s"
-  acl           = "private"
-  force_destroy = true
-  region        = "%[3]s"
+    bucket = "%[2]s"
+	acl = "private"
+	force_destroy = true
+    region = "%[3]s"
 }
 
 resource "aws_s3_bucket_policy" "test" {
   bucket = "${aws_s3_bucket.test.id}"
-
   policy = <<POLICY
 {
     "Version": "2008-10-17",
@@ -153,15 +152,15 @@ POLICY
 }
 
 resource "aws_cur_report_definition" "test" {
-  report_name                = "%[1]s"
-  time_unit                  = "DAILY"
-  format                     = "textORcsv"
-  compression                = "GZIP"
-  additional_schema_elements = ["RESOURCES"]
-  s3_bucket                  = "${aws_s3_bucket.test.id}"
-  s3_prefix                  = ""
-  s3_region                  = "${aws_s3_bucket.test.region}"
-  additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
+    report_name = "%[1]s"
+    time_unit = "DAILY"
+    format = "textORcsv"
+    compression = "GZIP"
+    additional_schema_elements = ["RESOURCES"]
+    s3_bucket = "${aws_s3_bucket.test.id}"
+    s3_prefix = ""
+    s3_region = "${aws_s3_bucket.test.region}"
+	additional_artifacts = ["REDSHIFT", "QUICKSIGHT"]
 }
 `, reportName, bucketName, bucketRegion)
 }

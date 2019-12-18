@@ -1,6 +1,7 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_waf_byte_match_set"
+page_title: "AWS: waf_byte_match_set"
+sidebar_current: "docs-aws-resource-waf-bytematchset"
 description: |-
   Provides a AWS WAF Byte Match Set resource.
 ---
@@ -76,11 +77,3 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF Byte Match Set.
-
-## Import
-
-WAF Byte Match Set can be imported using the id, e.g.
-
-```
-$ terraform import aws_waf_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
-```

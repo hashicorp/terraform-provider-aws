@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
@@ -23,10 +23,6 @@ func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -52,7 +48,6 @@ func resourceAwsElasticBeanstalkApplicationVersion() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -76,7 +71,6 @@ func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData,
 		Description:     aws.String(description),
 		SourceBundle:    &s3Location,
 		VersionLabel:    aws.String(name),
-		Tags:            tagsFromMapBeanstalk(d.Get("tags").(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Elastic Beanstalk Application Version create opts: %s", createOpts)
@@ -117,14 +111,6 @@ func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, m
 		return err
 	}
 
-	if err := d.Set("arn", resp.ApplicationVersions[0].ApplicationVersionArn); err != nil {
-		return err
-	}
-
-	if err := saveTagsBeanstalk(conn, d, aws.StringValue(resp.ApplicationVersions[0].ApplicationVersionArn)); err != nil {
-		return fmt.Errorf("error saving tags for %s: %s", d.Id(), err)
-	}
-
 	return nil
 }
 
@@ -135,10 +121,6 @@ func resourceAwsElasticBeanstalkApplicationVersionUpdate(d *schema.ResourceData,
 		if err := resourceAwsElasticBeanstalkApplicationVersionDescriptionUpdate(conn, d); err != nil {
 			return err
 		}
-	}
-
-	if err := setTagsBeanstalk(conn, d, d.Get("arn").(string)); err != nil {
-		return fmt.Errorf("error setting tags for %s: %s", d.Id(), err)
 	}
 
 	return resourceAwsElasticBeanstalkApplicationVersionRead(d, meta)

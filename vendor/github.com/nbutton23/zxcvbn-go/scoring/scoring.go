@@ -10,16 +10,19 @@ import (
 )
 
 const (
+	START_UPPER string = `^[A-Z][^A-Z]+$`
+	END_UPPER   string = `^[^A-Z]+[A-Z]$'`
+	ALL_UPPER   string = `^[A-Z]+$`
+
 	//for a hash function like bcrypt/scrypt/PBKDF2, 10ms per guess is a safe lower bound.
 	//(usually a guess would take longer -- this assumes fast hardware and a small work factor.)
 	//adjust for your site accordingly if you use another hash function, possibly by
 	//several orders of magnitude!
-	singleGuess     float64 = 0.010
-	numAttackers    float64 = 100 //Cores used to make guesses
-	secondsPerGuess float64 = singleGuess / numAttackers
+	SINGLE_GUESS      float64 = 0.010
+	NUM_ATTACKERS     float64 = 100 //Cores used to make guesses
+	SECONDS_PER_GUESS float64 = SINGLE_GUESS / NUM_ATTACKERS
 )
 
-// MinEntropyMatch is the lowest entropy match found
 type MinEntropyMatch struct {
 	Password         string
 	Entropy          float64
@@ -31,7 +34,7 @@ type MinEntropyMatch struct {
 }
 
 /*
-MinimumEntropyMatchSequence returns the minimum entropy
+Returns minimum entropy
 
     Takes a list of overlapping matches, returns the non-overlapping sublist with
     minimum entropy. O(nm) dp alg for length-n password with m candidate matches.
@@ -127,13 +130,13 @@ func get(a []float64, i int) float64 {
 }
 
 func entropyToCrackTime(entropy float64) float64 {
-	crackTime := (0.5 * math.Pow(float64(2), entropy)) * secondsPerGuess
+	crackTime := (0.5 * math.Pow(float64(2), entropy)) * SECONDS_PER_GUESS
 
 	return crackTime
 }
 
 func roundToXDigits(number float64, digits int) float64 {
-	return zxcvbnmath.Round(number, .5, digits)
+	return zxcvbn_math.Round(number, .5, digits)
 }
 
 func displayTime(seconds float64) string {

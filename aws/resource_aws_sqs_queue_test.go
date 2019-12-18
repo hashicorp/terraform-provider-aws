@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
@@ -565,8 +565,7 @@ resource "aws_sqs_queue" "queue" {
   message_retention_seconds  = 86400
   receive_wait_time_seconds  = 10
   visibility_timeout_seconds = 60
-}
-`, r)
+}`, r)
 }
 
 func testAccAWSSQSConfigWithRedrive(name string) string {
@@ -697,7 +696,7 @@ resource "aws_sqs_queue" "queue" {
 
   tags = {
     Environment = "production"
-    Usage       = "original"
+    Usage = "original"
   }
 }
 `, r)

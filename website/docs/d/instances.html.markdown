@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_instances"
+sidebar_current: "docs-aws-datasource-instances"
 description: |-
   Get information on an Amazon EC2 instances.
 ---

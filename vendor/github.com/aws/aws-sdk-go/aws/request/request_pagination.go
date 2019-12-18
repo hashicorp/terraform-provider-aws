@@ -146,7 +146,7 @@ func (r *Request) nextPageTokens() []interface{} {
 				return nil
 			}
 		case bool:
-			if !v {
+			if v == false {
 				return nil
 			}
 		}

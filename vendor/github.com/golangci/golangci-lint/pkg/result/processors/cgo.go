@@ -18,7 +18,7 @@ var _ Processor = Cgo{}
 
 func NewCgo(goenv *goutil.Env) *Cgo {
 	return &Cgo{
-		goCacheDir: goenv.Get(goutil.EnvGoCache),
+		goCacheDir: goenv.Get("GOCACHE"),
 	}
 }
 

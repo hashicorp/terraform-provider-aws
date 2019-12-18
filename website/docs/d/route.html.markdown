@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route"
+sidebar_current: "docs-aws-datasource-route"
 description: |-
     Provides details about a specific Route
 ---

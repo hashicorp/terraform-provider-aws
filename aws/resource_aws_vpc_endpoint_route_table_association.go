@@ -3,13 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
@@ -18,7 +17,7 @@ func resourceAwsVpcEndpointRouteTableAssociation() *schema.Resource {
 		Read:   resourceAwsVpcEndpointRouteTableAssociationRead,
 		Delete: resourceAwsVpcEndpointRouteTableAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsVpcEndpointRouteTableAssociationImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -122,23 +121,6 @@ func resourceAwsVpcEndpointRouteTableAssociationDelete(d *schema.ResourceData, m
 	}
 
 	return nil
-}
-
-func resourceAwsVpcEndpointRouteTableAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	parts := strings.Split(d.Id(), "/")
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("Wrong format of resource: %s. Please follow 'vpc-endpoint-id/route-table-id'", d.Id())
-	}
-
-	vpceId := parts[0]
-	rtId := parts[1]
-	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) association", vpceId, rtId)
-
-	d.SetId(vpcEndpointIdRouteTableIdHash(vpceId, rtId))
-	d.Set("vpc_endpoint_id", vpceId)
-	d.Set("route_table_id", rtId)
-
-	return []*schema.ResourceData{d}, nil
 }
 
 func findResourceVpcEndpoint(conn *ec2.EC2, id string) (*ec2.VpcEndpoint, error) {

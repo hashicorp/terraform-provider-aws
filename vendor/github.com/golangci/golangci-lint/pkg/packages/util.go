@@ -3,10 +3,13 @@ package packages
 import (
 	"fmt"
 
+	"github.com/golangci/golangci-lint/pkg/lint/astcache"
+
 	"golang.org/x/tools/go/packages"
 )
 
-func ExtractErrors(pkg *packages.Package) []packages.Error {
+//nolint:gocyclo
+func ExtractErrors(pkg *packages.Package, astCache *astcache.Cache) []packages.Error {
 	errors := extractErrorsImpl(pkg, map[*packages.Package]bool{})
 	if len(errors) == 0 {
 		return errors
@@ -25,8 +28,8 @@ func ExtractErrors(pkg *packages.Package) []packages.Error {
 	if len(pkg.GoFiles) != 0 {
 		// errors were extracted from deps and have at leat one file in package
 		for i := range uniqErrors {
-			_, parseErr := ParseErrorPosition(uniqErrors[i].Pos)
-			if parseErr != nil {
+			errPos, parseErr := ParseErrorPosition(uniqErrors[i].Pos)
+			if parseErr != nil || astCache.Get(errPos.Filename) == nil {
 				// change pos to local file to properly process it by processors (properly read line etc)
 				uniqErrors[i].Msg = fmt.Sprintf("%s: %s", uniqErrors[i].Pos, uniqErrors[i].Msg)
 				uniqErrors[i].Pos = fmt.Sprintf("%s:1", pkg.GoFiles[0])

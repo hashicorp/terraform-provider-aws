@@ -2127,7 +2127,7 @@ func (c *DirectoryService) DescribeDomainControllersWithContext(ctx aws.Context,
 //    // Example iterating over at most 3 pages of a DescribeDomainControllers operation.
 //    pageNum := 0
 //    err := client.DescribeDomainControllersPages(params,
-//        func(page *directoryservice.DescribeDomainControllersOutput, lastPage bool) bool {
+//        func(page *DescribeDomainControllersOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4907,10 +4907,7 @@ type AddIpRoutesInput struct {
 	//
 	// Outbound:
 	//
-	//    * Type: All traffic, Protocol: All, Range: All, Destination: 0.0.0.0/0
-	//
-	// These security rules impact an internal network interface that is not exposed
-	// publicly.
+	// Type: All traffic, Protocol: All, Range: All, Destination: 0.0.0.0/0
 	UpdateSecurityGroupForDirectoryControllers *bool `type:"boolean"`
 }
 

@@ -443,7 +443,7 @@ func (c *S3Control) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, o
 //    // Example iterating over at most 3 pages of a ListJobs operation.
 //    pageNum := 0
 //    err := client.ListJobsPages(params,
-//        func(page *s3control.ListJobsOutput, lastPage bool) bool {
+//        func(page *ListJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -931,7 +931,7 @@ func (s *CreateJobOutput) SetJobId(v string) *CreateJobOutput {
 }
 
 type DeletePublicAccessBlockInput struct {
-	_ struct{} `locationName:"DeletePublicAccessBlockRequest" type:"structure"`
+	_ struct{} `type:"structure"`
 
 	// The account ID for the AWS account whose block public access configuration
 	// you want to delete.
@@ -993,7 +993,7 @@ func (s DeletePublicAccessBlockOutput) GoString() string {
 }
 
 type DescribeJobInput struct {
-	_ struct{} `locationName:"DescribeJobRequest" type:"structure"`
+	_ struct{} `type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -1079,7 +1079,7 @@ func (s *DescribeJobOutput) SetJob(v *JobDescriptor) *DescribeJobOutput {
 }
 
 type GetPublicAccessBlockInput struct {
-	_ struct{} `locationName:"GetPublicAccessBlockRequest" type:"structure"`
+	_ struct{} `type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -1896,7 +1896,7 @@ func (s *LambdaInvokeOperation) SetFunctionArn(v string) *LambdaInvokeOperation 
 }
 
 type ListJobsInput struct {
-	_ struct{} `locationName:"ListJobsRequest" type:"structure"`
+	_ struct{} `type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -2059,7 +2059,7 @@ func (s *PublicAccessBlockConfiguration) SetRestrictPublicBuckets(v bool) *Publi
 }
 
 type PutPublicAccessBlockInput struct {
-	_ struct{} `locationName:"PutPublicAccessBlockRequest" type:"structure" payload:"PublicAccessBlockConfiguration"`
+	_ struct{} `type:"structure" payload:"PublicAccessBlockConfiguration"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -2874,7 +2874,7 @@ func (s *S3Tag) SetValue(v string) *S3Tag {
 }
 
 type UpdateJobPriorityInput struct {
-	_ struct{} `locationName:"UpdateJobPriorityRequest" type:"structure"`
+	_ struct{} `type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
@@ -2986,7 +2986,7 @@ func (s *UpdateJobPriorityOutput) SetPriority(v int64) *UpdateJobPriorityOutput 
 }
 
 type UpdateJobStatusInput struct {
-	_ struct{} `locationName:"UpdateJobStatusRequest" type:"structure"`
+	_ struct{} `type:"structure"`
 
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_storagegateway_cache"
+sidebar_current: "docs-aws-resource-storagegateway-cache-x"
 description: |-
   Manages an AWS Storage Gateway cache
 ---

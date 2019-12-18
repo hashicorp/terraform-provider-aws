@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
@@ -40,8 +40,7 @@ func TestAccDataSourceAwsDynamoDbTable_basic(t *testing.T) {
 }
 
 func testAccDataSourceAwsDynamoDbTableConfigBasic(tableName string) string {
-	return fmt.Sprintf(`
-resource "aws_dynamodb_table" "dynamodb_table_test" {
+	return fmt.Sprintf(`resource "aws_dynamodb_table" "dynamodb_table_test" {
   name           = "%s"
   read_capacity  = 20
   write_capacity = 20
@@ -81,6 +80,5 @@ resource "aws_dynamodb_table" "dynamodb_table_test" {
 
 data "aws_dynamodb_table" "dynamodb_table_test" {
   name = "${aws_dynamodb_table.dynamodb_table_test.name}"
-}
-`, tableName)
+}`, tableName)
 }

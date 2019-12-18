@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"log"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -18,9 +17,7 @@ func init() {
 		Name: "aws_ec2_transit_gateway",
 		F:    testSweepEc2TransitGateways,
 		Dependencies: []string{
-			"aws_dx_gateway_association",
 			"aws_ec2_transit_gateway_vpc_attachment",
-			"aws_vpn_connection",
 		},
 	})
 }
@@ -57,34 +54,10 @@ func testSweepEc2TransitGateways(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting EC2 Transit Gateway: %s", id)
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteTransitGateway(input)
+			_, err := conn.DeleteTransitGateway(input)
 
-				if isAWSErr(err, "IncorrectState", "has non-deleted Transit Gateway Attachments") {
-					return resource.RetryableError(err)
-				}
-
-				if isAWSErr(err, "IncorrectState", "has non-deleted DirectConnect Gateway Attachments") {
-					return resource.RetryableError(err)
-				}
-
-				if isAWSErr(err, "IncorrectState", "has non-deleted VPN Attachments") {
-					return resource.RetryableError(err)
-				}
-
-				if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
-					return nil
-				}
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if isResourceTimeoutError(err) {
-				_, err = conn.DeleteTransitGateway(input)
+			if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+				continue
 			}
 
 			if err != nil {

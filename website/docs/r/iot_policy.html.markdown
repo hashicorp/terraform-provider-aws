@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iot_policy"
+sidebar_current: "docs-aws-resource-iot-policy"
 description: |-
   Provides an IoT policy.
 ---

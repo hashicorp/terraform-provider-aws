@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_elb_service_account"
+sidebar_current: "docs-aws-datasource-elb-service-account"
 description: |-
   Get AWS Elastic Load Balancing Service Account
 ---

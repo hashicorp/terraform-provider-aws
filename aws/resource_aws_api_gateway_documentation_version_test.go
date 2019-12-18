@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAPIGatewayDocumentationVersion_basic(t *testing.T) {
@@ -192,17 +192,16 @@ func testAccCheckAWSAPIGatewayDocumentationVersionDestroy(s *terraform.State) er
 func testAccAWSAPIGatewayDocumentationVersionBasicConfig(version, apiName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
-  version     = "%s"
+  version = "%s"
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  depends_on  = ["aws_api_gateway_documentation_part.test"]
+  depends_on = ["aws_api_gateway_documentation_part.test"]
 }
 
 resource "aws_api_gateway_documentation_part" "test" {
   location {
     type = "API"
   }
-
-  properties  = "{\"description\":\"Terraform Acceptance Test\"}"
+  properties = "{\"description\":\"Terraform Acceptance Test\"}"
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
 }
 
@@ -215,31 +214,30 @@ resource "aws_api_gateway_rest_api" "test" {
 func testAccAWSAPIGatewayDocumentationVersionAllFieldsConfig(version, apiName, stageName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_documentation_version" "test" {
-  version     = "%s"
+  version = "%s"
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   description = "%s"
-  depends_on  = ["aws_api_gateway_documentation_part.test"]
+  depends_on = ["aws_api_gateway_documentation_part.test"]
 }
 
 resource "aws_api_gateway_documentation_part" "test" {
   location {
     type = "API"
   }
-
-  properties  = "{\"description\":\"Terraform Acceptance Test\"}"
+  properties = "{\"description\":\"Terraform Acceptance Test\"}"
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
 }
 
 resource "aws_api_gateway_resource" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part   = "test"
+  parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
-  http_method   = "GET"
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  resource_id = "${aws_api_gateway_resource.test.id}"
+  http_method = "GET"
   authorization = "NONE"
 }
 
@@ -255,8 +253,8 @@ resource "aws_api_gateway_integration" "test" {
   resource_id = "${aws_api_gateway_resource.test.id}"
   http_method = "${aws_api_gateway_method.test.http_method}"
 
-  type                    = "HTTP"
-  uri                     = "https://www.google.co.uk"
+  type = "HTTP"
+  uri = "https://www.google.co.uk"
   integration_http_method = "GET"
 }
 
@@ -270,13 +268,13 @@ resource "aws_api_gateway_integration_response" "test" {
 resource "aws_api_gateway_deployment" "test" {
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name  = "first"
-  depends_on  = ["aws_api_gateway_integration_response.test"]
+  depends_on = ["aws_api_gateway_integration_response.test"]
 }
 
 resource "aws_api_gateway_stage" "test" {
-  stage_name            = "%s"
-  rest_api_id           = "${aws_api_gateway_rest_api.test.id}"
-  deployment_id         = "${aws_api_gateway_deployment.test.id}"
+  stage_name = "%s"
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  deployment_id = "${aws_api_gateway_deployment.test.id}"
   documentation_version = "${aws_api_gateway_documentation_version.test.version}"
 }
 

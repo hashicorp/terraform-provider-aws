@@ -6,13 +6,33 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
+
+func TestAccAWSIAMAccountPasswordPolicy_importBasic(t *testing.T) {
+	resourceName := "aws_iam_account_password_policy.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIAMAccountPasswordPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMAccountPasswordPolicy,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 	var policy iam.GetAccountPasswordPolicyOutput
-	resourceName := "aws_iam_account_password_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,20 +42,15 @@ func TestAccAWSIAMAccountPasswordPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSIAMAccountPasswordPolicy,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMAccountPasswordPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "8"),
+					testAccCheckAWSIAMAccountPasswordPolicyExists("aws_iam_account_password_policy.default", &policy),
+					resource.TestCheckResourceAttr("aws_iam_account_password_policy.default", "minimum_password_length", "8"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSIAMAccountPasswordPolicy_modified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIAMAccountPasswordPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "7"),
+					testAccCheckAWSIAMAccountPasswordPolicyExists("aws_iam_account_password_policy.default", &policy),
+					resource.TestCheckResourceAttr("aws_iam_account_password_policy.default", "minimum_password_length", "7"),
 				),
 			},
 		},
@@ -94,14 +109,14 @@ func testAccCheckAWSIAMAccountPasswordPolicyExists(n string, res *iam.GetAccount
 }
 
 const testAccAWSIAMAccountPasswordPolicy = `
-resource "aws_iam_account_password_policy" "test" {
+resource "aws_iam_account_password_policy" "default" {
 	allow_users_to_change_password = true
 	minimum_password_length = 8
 	require_numbers = true
 }
 `
 const testAccAWSIAMAccountPasswordPolicy_modified = `
-resource "aws_iam_account_password_policy" "test" {
+resource "aws_iam_account_password_policy" "default" {
 	allow_users_to_change_password = true
 	minimum_password_length = 7
 	require_numbers = false

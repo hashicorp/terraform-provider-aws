@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_route53_resolver_rule_association"
+sidebar_current: "docs-aws-resource-route53-resolver-rule-association"
 description: |-
   Provides a Route53 Resolver rule association.
 ---

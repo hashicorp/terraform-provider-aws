@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_gamelift_build"
+sidebar_current: "docs-aws-resource-gamelift-build"
 description: |-
   Provides a Gamelift Build resource.
 ---

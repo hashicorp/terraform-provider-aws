@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 // ACL Network ACLs all contain explicit deny-all rules that cannot be
@@ -35,6 +35,7 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				Computed: false,
 			},
 			// We want explicit management of Subnets here, so we do not allow them to be
 			// computed. Instead, an empty config will enforce just that; removal of the
@@ -53,6 +54,7 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 			// rules
 			"ingress": {
 				Type:     schema.TypeSet,
+				Required: false,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -98,6 +100,7 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 			},
 			"egress": {
 				Type:     schema.TypeSet,
+				Required: false,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

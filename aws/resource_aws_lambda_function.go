@@ -14,9 +14,9 @@ import (
 
 	"errors"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 const awsMutexLambdaKey = `aws_lambda_function`
@@ -32,7 +32,6 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeNodejs43Edge,
 	lambda.RuntimeNodejs610,
 	lambda.RuntimeNodejs810,
-	lambda.RuntimeNodejs10X,
 	lambda.RuntimeProvided,
 	lambda.RuntimePython27,
 	lambda.RuntimePython36,
@@ -434,9 +433,6 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
-			_, err = conn.CreateFunction(params)
-		}
 		if err != nil {
 			return fmt.Errorf("Error creating Lambda function: %s", err)
 		}
@@ -463,9 +459,6 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
-			_, err = conn.PutFunctionConcurrency(concurrencyParams)
-		}
 		if err != nil {
 			return fmt.Errorf("Error setting concurrency for Lambda %s: %s", functionName, err)
 		}
@@ -808,9 +801,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 				}
 				return nil
 			})
-			if isResourceTimeoutError(err) {
-				_, err = conn.UpdateFunctionConfiguration(configReq)
-			}
 			if err != nil {
 				return fmt.Errorf("Error modifying Lambda Function Configuration %s: %s", d.Id(), err)
 			}

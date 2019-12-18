@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_rds_cluster"
+sidebar_current: "docs-aws-datasource-rds-cluster"
 description: |-
   Provides a RDS cluster data source.
 ---

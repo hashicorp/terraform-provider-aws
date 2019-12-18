@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSEcrDataSource_ecrRepository(t *testing.T) {
@@ -38,7 +38,7 @@ resource "aws_ecr_repository" "default" {
 
   tags = {
     Environment = "production"
-    Usage       = "original"
+    Usage = "original"
   }
 }
 

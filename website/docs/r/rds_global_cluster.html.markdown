@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_rds_global_cluster"
+sidebar_current: "docs-aws-resource-ec2-transit-gateway-x"
 description: |-
   Manages a RDS Global Cluster
 ---
@@ -68,12 +69,11 @@ resource "aws_rds_cluster_instance" "secondary" {
 
 The following arguments are supported:
 
-*  `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
-* `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
+* `database_name` - (Optional) Name for an automatically created database on cluster creation.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
-* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Valid values: `aurora`. Defaults to `aurora`.
-* `engine_version` - (Optional, Forces new resources) Engine version of the Aurora global database.
-* `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false`.
+* `engine` - (Optional) Name of the database engine to be used for this DB cluster. Valid values: `aurora`. Defaults to `aurora`.
+* `engine_version` - (Optional) Engine version of the Aurora global database.
+* `storage_encrypted` - (Optional) Specifies whether the DB cluster is encrypted. The default is `false`.
 
 ## Attribute Reference
 

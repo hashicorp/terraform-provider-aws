@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -13,10 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	gversion "github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/customdiff"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsElasticacheCluster() *schema.Resource {
@@ -96,13 +95,7 @@ func resourceAwsElasticacheCluster() *schema.Resource {
 					// with non-converging diffs.
 					return strings.ToLower(val.(string))
 				},
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 50),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validateStringNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validateStringNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
-				),
+				ValidateFunc: validateElastiCacheClusterId,
 			},
 			"configuration_endpoint": {
 				Type:     schema.TypeString,
@@ -808,10 +801,6 @@ func deleteElasticacheCacheCluster(conn *elasticache.ElastiCache, cacheClusterID
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteCacheCluster(input)
-	}
-
 	return err
 }
 

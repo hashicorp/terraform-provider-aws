@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSDbInstanceDataSource_basic(t *testing.T) {
@@ -61,27 +61,28 @@ func TestAccAWSDbInstanceDataSource_ec2Classic(t *testing.T) {
 func testAccAWSDBInstanceDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-  identifier = "datasource-test-terraform-%d"
+	identifier = "datasource-test-terraform-%d"
 
-  allocated_storage = 10
-  engine            = "MySQL"
-  instance_class    = "db.t2.micro"
-  name              = "baz"
-  password          = "barbarbarbar"
-  username          = "foo"
+	allocated_storage = 10
+	engine = "MySQL"
+	instance_class = "db.t2.micro"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
 
-  backup_retention_period = 0
-  skip_final_snapshot     = true
+	backup_retention_period = 0
+	skip_final_snapshot = true
 
-  enabled_cloudwatch_logs_exports = [
-    "audit",
-    "error",
-  ]
+	enabled_cloudwatch_logs_exports = [
+		"audit",
+		"error",
+	]
 }
 
 data "aws_db_instance" "bar" {
-  db_instance_identifier = "${aws_db_instance.bar.identifier}"
+	db_instance_identifier = "${aws_db_instance.bar.identifier}"
 }
+
 `, rInt)
 }
 
@@ -90,7 +91,8 @@ func testAccAWSDBInstanceDataSourceConfig_ec2Classic(rInt int) string {
 %s
 
 data "aws_db_instance" "bar" {
-  db_instance_identifier = "${aws_db_instance.bar.identifier}"
+	db_instance_identifier = "${aws_db_instance.bar.identifier}"
 }
+
 `, testAccAWSDBInstanceConfigEc2Classic(rInt))
 }

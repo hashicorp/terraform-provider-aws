@@ -9,15 +9,35 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/glacier"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
+
+func TestAccAWSGlacierVault_importBasic(t *testing.T) {
+	resourceName := "aws_glacier_vault.full"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlacierVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlacierVault_full(rInt),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
 func TestAccAWSGlacierVault_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "aws_glacier_vault.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -26,13 +46,8 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 			{
 				Config: testAccGlacierVault_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists(resourceName),
+					testAccCheckGlacierVaultExists("aws_glacier_vault.test"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -40,8 +55,6 @@ func TestAccAWSGlacierVault_basic(t *testing.T) {
 
 func TestAccAWSGlacierVault_full(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "aws_glacier_vault.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -50,13 +63,8 @@ func TestAccAWSGlacierVault_full(t *testing.T) {
 			{
 				Config: testAccGlacierVault_full(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists(resourceName),
+					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -64,8 +72,6 @@ func TestAccAWSGlacierVault_full(t *testing.T) {
 
 func TestAccAWSGlacierVault_RemoveNotifications(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "aws_glacier_vault.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -74,19 +80,14 @@ func TestAccAWSGlacierVault_RemoveNotifications(t *testing.T) {
 			{
 				Config: testAccGlacierVault_full(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists(resourceName),
+					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccGlacierVault_withoutNotification(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists(resourceName),
-					testAccCheckVaultNotificationsMissing(resourceName),
+					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
+					testAccCheckVaultNotificationsMissing("aws_glacier_vault.full"),
 				),
 			},
 		},
@@ -244,16 +245,14 @@ resource "aws_sns_topic" "aws_sns_topic" {
   name = "glacier-sns-topic-%d"
 }
 
-resource "aws_glacier_vault" "test" {
+resource "aws_glacier_vault" "full" {
   name = "my_test_vault_%d"
-
   notification {
-    sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
-    events    = ["ArchiveRetrievalCompleted", "InventoryRetrievalCompleted"]
+  	sns_topic = "${aws_sns_topic.aws_sns_topic.arn}"
+  	events = ["ArchiveRetrievalCompleted","InventoryRetrievalCompleted"]
   }
-
   tags = {
-    Test = "Test1"
+    Test="Test1"
   }
 }
 `, rInt, rInt)
@@ -265,11 +264,10 @@ resource "aws_sns_topic" "aws_sns_topic" {
   name = "glacier-sns-topic-%d"
 }
 
-resource "aws_glacier_vault" "test" {
+resource "aws_glacier_vault" "full" {
   name = "my_test_vault_%d"
-
   tags = {
-    Test = "Test1"
+    Test="Test1"
   }
 }
 `, rInt, rInt)

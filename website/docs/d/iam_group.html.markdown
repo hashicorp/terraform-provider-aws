@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_group"
+sidebar_current: "docs-aws-datasource-iam-group"
 description: |-
   Get information on a Amazon IAM group
 ---

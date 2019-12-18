@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -1001,15 +1001,14 @@ func testAccCheckAWSLBDestroy(s *terraform.State) error {
 }
 
 func testAccAWSLBConfigWithIpAddressTypeUpdated(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
 
   ip_address_type = "dualstack"
 
-  idle_timeout               = 30
+  idle_timeout = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1018,38 +1017,38 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.lb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
+   load_balancer_arn = "${aws_lb.lb_test.id}"
+   protocol = "HTTP"
+   port = "80"
 
-  default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
-    type             = "forward"
-  }
+   default_action {
+     target_group_arn = "${aws_lb_target_group.test.id}"
+     type = "forward"
+   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
-  port     = 80
+  name = "%s"
+  port = 80
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id = "${aws_vpc.alb_test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health2"
-    interval            = 30
-    port                = 8082
-    protocol            = "HTTPS"
-    timeout             = 4
-    healthy_threshold   = 4
+    path = "/health2"
+    interval = 30
+    port = 8082
+    protocol = "HTTPS"
+    timeout = 4
+    healthy_threshold = 4
     unhealthy_threshold = 4
-    matcher             = "200"
+    matcher = "200"
   }
 }
 
@@ -1058,7 +1057,7 @@ resource "aws_egress_only_internet_gateway" "igw" {
 }
 
 resource "aws_vpc" "alb_test" {
-  cidr_block                       = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -1075,7 +1074,7 @@ resource "aws_subnet" "alb_test_1" {
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-1"
@@ -1087,7 +1086,7 @@ resource "aws_subnet" "alb_test_2" {
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2b"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-updated-2"
@@ -1109,20 +1108,18 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName, lbName)
+}`, lbName, lbName)
 }
 
 func testAccAWSLBConfigWithIpAddressType(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test_1.id}", "${aws_subnet.alb_test_2.id}"]
 
   ip_address_type = "ipv4"
 
-  idle_timeout               = 30
+  idle_timeout = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1131,38 +1128,38 @@ resource "aws_lb" "lb_test" {
 }
 
 resource "aws_lb_listener" "test" {
-  load_balancer_arn = "${aws_lb.lb_test.id}"
-  protocol          = "HTTP"
-  port              = "80"
+   load_balancer_arn = "${aws_lb.lb_test.id}"
+   protocol = "HTTP"
+   port = "80"
 
-  default_action {
-    target_group_arn = "${aws_lb_target_group.test.id}"
-    type             = "forward"
-  }
+   default_action {
+     target_group_arn = "${aws_lb_target_group.test.id}"
+     type = "forward"
+   }
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
-  port     = 80
+  name = "%s"
+  port = 80
   protocol = "HTTP"
-  vpc_id   = "${aws_vpc.alb_test.id}"
+  vpc_id = "${aws_vpc.alb_test.id}"
 
   deregistration_delay = 200
 
   stickiness {
-    type            = "lb_cookie"
+    type = "lb_cookie"
     cookie_duration = 10000
   }
 
   health_check {
-    path                = "/health2"
-    interval            = 30
-    port                = 8082
-    protocol            = "HTTPS"
-    timeout             = 4
-    healthy_threshold   = 4
+    path = "/health2"
+    interval = 30
+    port = 8082
+    protocol = "HTTPS"
+    timeout = 4
+    healthy_threshold = 4
     unhealthy_threshold = 4
-    matcher             = "200"
+    matcher = "200"
   }
 }
 
@@ -1171,7 +1168,7 @@ resource "aws_egress_only_internet_gateway" "igw" {
 }
 
 resource "aws_vpc" "alb_test" {
-  cidr_block                       = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -1188,7 +1185,7 @@ resource "aws_subnet" "alb_test_1" {
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 1)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-1"
@@ -1200,7 +1197,7 @@ resource "aws_subnet" "alb_test_2" {
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2b"
-  ipv6_cidr_block         = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.alb_test.ipv6_cidr_block, 8, 2)}"
 
   tags = {
     Name = "tf-acc-lb-with-ip-address-type-2"
@@ -1222,19 +1219,17 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName, lbName)
+}`, lbName, lbName)
 }
 
 func testAccAWSLBConfig_basic(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout               = 30
+  idle_timeout = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1291,19 +1286,17 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName)
+}`, lbName)
 }
 
 func testAccAWSLBConfig_enableHttp2(lbName string, http2 bool) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
+  
+  idle_timeout = 30
   enable_deletion_protection = false
 
   enable_http2 = %t
@@ -1362,19 +1355,17 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName, http2)
+}`, lbName, http2)
 }
 
 func testAccAWSLBConfig_enableDeletionProtection(lbName string, deletion_protection bool) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
-
-  idle_timeout               = 30
+  
+  idle_timeout = 30
   enable_deletion_protection = %t
 
   tags = {
@@ -1431,13 +1422,11 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName, deletion_protection)
+}`, lbName, deletion_protection)
 }
 
 func testAccAWSLBConfig_networkLoadbalancer_subnets(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "alb_test" {
+	return fmt.Sprintf(`resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -1498,17 +1487,16 @@ resource "aws_subnet" "alb_test_3" {
 }
 
 func testAccAWSLBConfig_networkLoadbalancer(lbName string, cz bool) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
-  name               = "%s"
-  internal           = true
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
   load_balancer_type = "network"
 
-  enable_deletion_protection       = false
+  enable_deletion_protection      = false
   enable_cross_zone_load_balancing = %t
 
   subnet_mapping {
-    subnet_id = "${aws_subnet.alb_test.id}"
+  	subnet_id = "${aws_subnet.alb_test.id}"
   }
 
   tags = {
@@ -1534,6 +1522,7 @@ resource "aws_subnet" "alb_test" {
     Name = "tf-acc-network-load-balancer"
   }
 }
+
 `, lbName, cz)
 }
 
@@ -1543,18 +1532,16 @@ data "aws_availability_zones" "available" {}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
-
   tags = {
-    Name = "terraform-testacc-lb-network-load-balancer-eip"
+  	Name = "terraform-testacc-lb-network-load-balancer-eip"
   }
 }
 
 resource "aws_subnet" "public" {
-  count             = "${length(data.aws_availability_zones.available.names)}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  cidr_block        = "10.10.${count.index}.0/24"
-  vpc_id            = "${aws_vpc.main.id}"
-
+  cidr_block = "10.10.${count.index}.0/24"
+  vpc_id = "${aws_vpc.main.id}"
   tags = {
     Name = "tf-acc-lb-network-load-balancer-eip-${count.index}"
   }
@@ -1566,7 +1553,6 @@ resource "aws_internet_gateway" "default" {
 
 resource "aws_route_table" "public" {
   vpc_id = "${aws_vpc.main.id}"
-
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.default.id}"
@@ -1574,22 +1560,20 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route_table_association" "a" {
-  count          = "${length(data.aws_availability_zones.available.names)}"
+  count = "${length(data.aws_availability_zones.available.names)}"
   subnet_id      = "${aws_subnet.public.*.id[count.index]}"
   route_table_id = "${aws_route_table.public.id}"
 }
 
 resource "aws_lb" "lb_test" {
-  name               = "%s"
+  name            = "%s"
   load_balancer_type = "network"
-
   subnet_mapping {
-    subnet_id     = "${aws_subnet.public.0.id}"
+    subnet_id = "${aws_subnet.public.0.id}"
     allocation_id = "${aws_eip.lb.0.id}"
   }
-
   subnet_mapping {
-    subnet_id     = "${aws_subnet.public.1.id}"
+    subnet_id = "${aws_subnet.public.1.id}"
     allocation_id = "${aws_eip.lb.1.id}"
   }
 
@@ -1603,14 +1587,13 @@ resource "aws_eip" "lb" {
 }
 
 func testAccAWSLBConfigBackwardsCompatibility(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_alb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_alb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout               = 30
+  idle_timeout = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1667,19 +1650,17 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName)
+}`, lbName)
 }
 
 func testAccAWSLBConfig_updateSubnets(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout               = 30
+  idle_timeout = 30
   enable_deletion_protection = false
 
   tags = {
@@ -1736,8 +1717,7 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName)
+}`, lbName)
 }
 
 func testAccAWSLBConfig_generatedName() string {
@@ -1964,8 +1944,7 @@ resource "aws_security_group" "alb_test" {
 }`)
 }
 func testAccAWSLBConfig_updatedTags(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}"]
@@ -2029,8 +2008,7 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName)
+}`, lbName)
 }
 
 func testAccAWSLBConfigALBAccessLogsBase(bucketName string) string {
@@ -2153,7 +2131,7 @@ data "aws_iam_policy_document" "test" {
     }
   }
 
-  statement {
+	statement {
     actions   = ["s3:GetBucketAcl"]
     effect    = "Allow"
     resources = ["${aws_s3_bucket.test.arn}"]
@@ -2201,13 +2179,12 @@ resource "aws_lb" "test" {
 }
 
 func testAccAWSLBConfig_nosg(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
-  name     = "%s"
-  internal = true
-  subnets  = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
+  name            = "%s"
+  internal        = true
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout               = 30
+  idle_timeout = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2240,19 +2217,17 @@ resource "aws_subnet" "alb_test" {
   tags = {
     Name = "tf-acc-lb-no-sg-${count.index}"
   }
-}
-`, lbName)
+}`, lbName)
 }
 
 func testAccAWSLBConfig_updateSecurityGroups(lbName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb" "lb_test" {
+	return fmt.Sprintf(`resource "aws_lb" "lb_test" {
   name            = "%s"
   internal        = true
   security_groups = ["${aws_security_group.alb_test.id}", "${aws_security_group.alb_test_2.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
 
-  idle_timeout               = 30
+  idle_timeout = 30
   enable_deletion_protection = false
 
   tags = {
@@ -2326,6 +2301,5 @@ resource "aws_security_group" "alb_test" {
   tags = {
     Name = "TestAccAWSALB_basic"
   }
-}
-`, lbName)
+}`, lbName)
 }

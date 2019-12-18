@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -473,9 +473,8 @@ func testAccAWSS3BucketNotificationConfigTopicMultiple(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_sns_topic" "topic" {
-  name = %[1]q
-
-  policy = <<POLICY
+    name = %[1]q
+	policy = <<POLICY
 {
 	"Version":"2012-10-17",
 	"Statement":[{
@@ -493,37 +492,31 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl    = "public-read"
+	bucket = %[1]q
+	acl = "public-read"
 }
 
 resource "aws_s3_bucket_notification" "notification" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-
-  topic {
-    id        = "notification-sns1"
-    topic_arn = "${aws_sns_topic.topic.arn}"
-
-    events = [
-      "s3:ObjectCreated:*",
-      "s3:ObjectRemoved:Delete",
-    ]
-
-    filter_prefix = "tf-acc-test/"
-    filter_suffix = ".txt"
-  }
-
-  topic {
-    id        = "notification-sns2"
-    topic_arn = "${aws_sns_topic.topic.arn}"
-
-    events = [
-      "s3:ObjectCreated:*",
-      "s3:ObjectRemoved:Delete",
-    ]
-
-    filter_suffix = ".log"
-  }
+	bucket = "${aws_s3_bucket.bucket.id}"
+	topic {
+		id = "notification-sns1"
+		topic_arn = "${aws_sns_topic.topic.arn}"
+		events = [
+		  "s3:ObjectCreated:*",
+		  "s3:ObjectRemoved:Delete",
+		]
+		filter_prefix = "tf-acc-test/"
+		filter_suffix = ".txt"
+	}
+	topic {
+		id = "notification-sns2"
+		topic_arn = "${aws_sns_topic.topic.arn}"
+		events = [
+		  "s3:ObjectCreated:*",
+		  "s3:ObjectRemoved:Delete",
+		]
+		filter_suffix = ".log"
+	}
 }
 `, rName)
 }
@@ -533,9 +526,8 @@ func testAccAWSS3BucketNotificationConfigQueue(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_sqs_queue" "queue" {
-  name = %[1]q
-
-  policy = <<POLICY
+    name = %[1]q
+	policy = <<POLICY
 {
 	"Version":"2012-10-17",
 	"Statement": [{
@@ -554,25 +546,22 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl    = "public-read"
+	bucket = %[1]q
+	acl = "public-read"
 }
 
 resource "aws_s3_bucket_notification" "notification" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-
-  queue {
-    id        = "notification-sqs"
-    queue_arn = "${aws_sqs_queue.queue.arn}"
-
-    events = [
-      "s3:ObjectCreated:*",
-      "s3:ObjectRemoved:Delete",
-    ]
-
-    filter_prefix = "tf-acc-test/"
-    filter_suffix = ".mp4"
-  }
+	bucket = "${aws_s3_bucket.bucket.id}"
+	queue {
+		id = "notification-sqs"
+		queue_arn = "${aws_sqs_queue.queue.arn}"
+		events = [
+		  "s3:ObjectCreated:*",
+		  "s3:ObjectRemoved:Delete",
+		]
+		filter_prefix = "tf-acc-test/"
+		filter_suffix = ".mp4"
+	}
 }
 `, rName)
 }
@@ -580,9 +569,8 @@ resource "aws_s3_bucket_notification" "notification" {
 func testAccAWSS3BucketNotificationConfigLambdaFunction(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
+    name = %[1]q
+    assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -600,41 +588,38 @@ EOF
 }
 
 resource "aws_lambda_permission" "allow_bucket" {
-  statement_id  = "AllowExecutionFromS3Bucket"
-  action        = "lambda:InvokeFunction"
-  function_name = "${aws_lambda_function.func.arn}"
-  principal     = "s3.amazonaws.com"
-  source_arn    = "${aws_s3_bucket.bucket.arn}"
+    statement_id = "AllowExecutionFromS3Bucket"
+    action = "lambda:InvokeFunction"
+    function_name = "${aws_lambda_function.func.arn}"
+    principal = "s3.amazonaws.com"
+    source_arn = "${aws_s3_bucket.bucket.arn}"
 }
 
 resource "aws_lambda_function" "func" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = "${aws_iam_role.iam_for_lambda.arn}"
-  handler       = "exports.example"
-  runtime       = "nodejs8.10"
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = %[1]q
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+		runtime = "nodejs8.10"
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl    = "public-read"
+	bucket = %[1]q
+	acl = "public-read"
 }
 
 resource "aws_s3_bucket_notification" "notification" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-
-  lambda_function {
-    id                  = "notification-lambda"
-    lambda_function_arn = "${aws_lambda_function.func.arn}"
-
-    events = [
-      "s3:ObjectCreated:*",
-      "s3:ObjectRemoved:Delete",
-    ]
-
-    filter_prefix = "tf-acc-test/"
-    filter_suffix = ".png"
-  }
+	bucket = "${aws_s3_bucket.bucket.id}"
+	lambda_function {
+		id = "notification-lambda"
+		lambda_function_arn = "${aws_lambda_function.func.arn}"
+		events = [
+		  "s3:ObjectCreated:*",
+		  "s3:ObjectRemoved:Delete",
+		]
+		filter_prefix = "tf-acc-test/"
+		filter_suffix = ".png"
+	}
 }
 `, rName)
 }
@@ -669,6 +654,7 @@ resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromS3Bucket"
 }
 
+
 resource "aws_s3_bucket" "test" {
   acl    = "private"
   bucket = %[1]q
@@ -689,11 +675,9 @@ resource "aws_s3_bucket_notification" "test" {
 func testAccAWSS3BucketNotificationConfigTopic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
-
 resource "aws_sns_topic" "topic" {
-  name = %[1]q
-
-  policy = <<POLICY
+    name = %[1]q
+	policy = <<POLICY
 {
 	"Version":"2012-10-17",
 	"Statement":[{
@@ -711,22 +695,20 @@ POLICY
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = %[1]q
-  acl    = "public-read"
+	bucket = %[1]q
+	acl = "public-read"
 }
 
 resource "aws_s3_bucket_notification" "notification" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-
-  topic {
-    id        = "notification-sns1"
-    topic_arn = "${aws_sns_topic.topic.arn}"
-
-    events = [
-      "s3:ObjectCreated:*",
-      "s3:ObjectRemoved:Delete",
-    ]
-  }
+	bucket = "${aws_s3_bucket.bucket.id}"
+	topic {
+		id = "notification-sns1"
+		topic_arn = "${aws_sns_topic.topic.arn}"
+		events = [
+		  "s3:ObjectCreated:*",
+		  "s3:ObjectRemoved:Delete",
+		]
+	}
 }
 `, rName)
 }

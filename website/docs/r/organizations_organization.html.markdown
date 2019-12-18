@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_organizations_organization"
+sidebar_current: "docs-aws-resource-organizations-organization"
 description: |-
   Provides a resource to create an organization.
 ---
@@ -34,7 +35,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `accounts` - List of organization accounts including the master account. For a list excluding the master account, see the `non_master_accounts` attribute. All elements have these attributes:
+* `accounts` - List of organization accounts (including the master account). All elements have these attributes:
   * `arn` - ARN of the account
   * `email` - Email of the account
   * `id` - Identifier of the account
@@ -44,11 +45,6 @@ In addition to all arguments above, the following attributes are exported:
 * `master_account_arn` - ARN of the master account
 * `master_account_email` - Email address of the master account
 * `master_account_id` - Identifier of the master account
-* `non_master_accounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
-  * `arn` - ARN of the account
-  * `email` - Email of the account
-  * `id` - Identifier of the account
-  * `name` - Name of the account
 * `roots` - List of organization roots. All elements have these attributes:
   * `arn` - ARN of the root
   * `id` - Identifier of the root

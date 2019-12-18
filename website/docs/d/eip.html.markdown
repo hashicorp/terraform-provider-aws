@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_eip"
+sidebar_current: "docs-aws-datasource-eip"
 description: |-
     Provides details about a specific Elastic IP
 ---

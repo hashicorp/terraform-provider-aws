@@ -5,7 +5,7 @@ import (
 
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
@@ -20,6 +20,7 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				Computed: false,
 			},
 			"auto_accept": {
 				Type:     schema.TypeBool,

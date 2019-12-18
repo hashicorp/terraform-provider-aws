@@ -6,7 +6,7 @@
 
 Check you have the latest version of its dependencies. Run
 ```
-go get -u github.com/golangci/lint-1/golint
+go get -u golang.org/x/lint/golint
 ```
 If you still have problems, consider searching for existing issues before filing a new issue.
 

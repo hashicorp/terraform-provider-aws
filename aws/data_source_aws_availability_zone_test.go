@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccDataSourceAwsAvailabilityZone(t *testing.T) {
@@ -33,6 +33,10 @@ func TestAccDataSourceAwsAvailabilityZone(t *testing.T) {
 }
 
 const testAccDataSourceAwsAvailabilityZoneConfig = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 data "aws_availability_zone" "by_name" {
   name = "us-west-2a"
 }

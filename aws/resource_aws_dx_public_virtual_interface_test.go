@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAwsDxPublicVirtualInterface_basic(t *testing.T) {
@@ -93,7 +93,7 @@ func testAccCheckAwsDxPublicVirtualInterfaceExists(name string) resource.TestChe
 func testAccDxPublicVirtualInterfaceConfig_noTags(cid, n string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "foo" {
-  connection_id = "%s"
+  connection_id    = "%s"
 
   name           = "%s"
   vlan           = %d
@@ -102,10 +102,9 @@ resource "aws_dx_public_virtual_interface" "foo" {
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
-
   route_filter_prefixes = [
     "210.52.109.0/24",
-    "175.45.176.0/22",
+	"175.45.176.0/22"
   ]
 }
 `, cid, n, vlan, bgpAsn)
@@ -114,7 +113,7 @@ resource "aws_dx_public_virtual_interface" "foo" {
 func testAccDxPublicVirtualInterfaceConfig_tags(cid, n string, bgpAsn, vlan int) string {
 	return fmt.Sprintf(`
 resource "aws_dx_public_virtual_interface" "foo" {
-  connection_id = "%s"
+  connection_id    = "%s"
 
   name           = "%s"
   vlan           = %d
@@ -123,10 +122,9 @@ resource "aws_dx_public_virtual_interface" "foo" {
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
-
   route_filter_prefixes = [
     "210.52.109.0/24",
-    "175.45.176.0/22",
+	"175.45.176.0/22"
   ]
 
   tags = {

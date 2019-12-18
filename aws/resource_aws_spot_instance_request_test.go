@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSSpotInstanceRequest_basic(t *testing.T) {
@@ -552,8 +552,7 @@ func testAccAWSSpotInstanceRequestConfig(rInt int) string {
 	tags = {
 			Name = "terraform-test"
 		}
-	}
-`, rInt)
+	}`, rInt)
 }
 
 func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) string {
@@ -583,8 +582,7 @@ func testAccAWSSpotInstanceRequestConfigValidUntil(rInt int, validUntil string) 
 	tags = {
 			Name = "terraform-test"
 		}
-	}
-`, rInt, validUntil)
+	}`, rInt, validUntil)
 }
 
 func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rInt int) string {
@@ -608,8 +606,7 @@ func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rInt int) string {
 	tags = {
 			Name = "terraform-test"
 		}
-	}
-`, rInt)
+	}`, rInt)
 }
 
 func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
@@ -637,8 +634,7 @@ func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rInt int) string {
 	tags = {
 			Name = "terraform-test"
 		}
-	}
-`, rInt)
+	}`, rInt)
 }
 
 func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
@@ -666,8 +662,7 @@ func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rInt int) string {
 	tags = {
 			Name = "terraform-test"
 		}
-	}
-`, rInt)
+	}`, rInt)
 }
 
 func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
@@ -711,8 +706,7 @@ func testAccAWSSpotInstanceRequestConfigVPC(rInt int) string {
 	tags = {
 			Name = "terraform-test-VPC"
 		}
-	}
-`, rInt)
+	}`, rInt)
 }
 
 func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int) string {
@@ -754,8 +748,7 @@ func testAccAWSSpotInstanceRequestConfig_SubnetAndSGAndPublicIpAddress(rInt int)
 	tags = {
 			Name = "tf_test_sg_ssh-%d"
 		}
-	}
-`, rInt, rInt)
+	}`, rInt, rInt)
 }
 
 func testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt int) string {
@@ -784,7 +777,7 @@ func testAccAWSSpotInstanceRequestConfig_getPasswordData(rInt int) string {
 		wait_for_fulfillment = true
 		get_password_data    = true
 	}
-`, rInt)
+	`, rInt)
 }
 
 func testAccAWSSpotInstanceRequestInterruptConfig(interruption_behavior string) string {

@@ -6,10 +6,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
@@ -18,15 +17,10 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 		// Instead changes to most fields will force a new resource
 		Create: resourceAwsRedshiftSnapshotCopyGrantCreate,
 		Read:   resourceAwsRedshiftSnapshotCopyGrantRead,
-		Update: resourceAwsRedshiftSnapshotCopyGrantUpdate,
 		Delete: resourceAwsRedshiftSnapshotCopyGrantDelete,
 		Exists: resourceAwsRedshiftSnapshotCopyGrantExists,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"snapshot_copy_grant_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -38,7 +32,11 @@ func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"tags": tagsSchema(),
+			"tags": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -92,16 +90,6 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 		return nil
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "redshift",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("snapshotcopygrant:%s", grantName),
-	}.String()
-
-	d.Set("arn", arn)
-
 	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
 	if err := d.Set("tags", tagsToMapRedshift(grant.Tags)); err != nil {
@@ -109,22 +97,6 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 	}
 
 	return nil
-}
-
-func resourceAwsRedshiftSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
-
-	d.Partial(true)
-
-	if tagErr := setTagsRedshift(conn, d); tagErr != nil {
-		return tagErr
-	} else {
-		d.SetPartial("tags")
-	}
-
-	d.Partial(false)
-
-	return resourceAwsRedshiftSnapshotCopyGrantRead(d, meta)
 }
 
 func resourceAwsRedshiftSnapshotCopyGrantDelete(d *schema.ResourceData, meta interface{}) error {
@@ -205,21 +177,14 @@ func findAwsRedshiftSnapshotCopyGrantWithRetry(conn *redshift.Redshift, grantNam
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("Error finding snapshot copy grant: %s", err)
-	}
-	return grant, nil
+
+	return grant, err
 }
 
 // Used by the tests as well
 func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, grantName string) error {
-	var grant *redshift.SnapshotCopyGrant
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		var err error
-		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
+		grant, err := findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
 		if err != nil {
 			if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
 				return nil
@@ -234,16 +199,8 @@ func waitForAwsRedshiftSnapshotCopyGrantToBeDeleted(conn *redshift.Redshift, gra
 
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
-		grant, err = findAwsRedshiftSnapshotCopyGrant(conn, grantName, nil)
-		if isAWSErr(err, redshift.ErrCodeSnapshotCopyGrantNotFoundFault, "") {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for snapshot copy grant to be deleted: %s", err)
-	}
-	return nil
+
+	return err
 }
 
 // The DescribeSnapshotCopyGrants API defaults to listing only 100 grants
@@ -275,9 +232,6 @@ func findAwsRedshiftSnapshotCopyGrant(conn *redshift.Redshift, grantName string,
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeSnapshotCopyGrants(&input)
-	}
 	if err != nil {
 		return nil, err
 	}

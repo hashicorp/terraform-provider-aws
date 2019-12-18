@@ -162,13 +162,6 @@ const (
 	// to the service-linked role for that service.
 	ErrCodePolicyNotAttachableException = "PolicyNotAttachable"
 
-	// ErrCodeReportGenerationLimitExceededException for service response error code
-	// "ReportGenerationLimitExceeded".
-	//
-	// The request failed because the maximum number of concurrent requests for
-	// this account are already running.
-	ErrCodeReportGenerationLimitExceededException = "ReportGenerationLimitExceeded"
-
 	// ErrCodeServiceFailureException for service response error code
 	// "ServiceFailure".
 	//

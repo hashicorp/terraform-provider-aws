@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsEip() *schema.Resource {
@@ -185,9 +185,6 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
-			describeAddresses, err = ec2conn.DescribeAddresses(req)
-		}
 		if err != nil {
 			return fmt.Errorf("Error retrieving EIP: %s", err)
 		}
@@ -343,9 +340,6 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 			return nil
 		})
-		if isResourceTimeoutError(err) {
-			_, err = ec2conn.AssociateAddress(assocOpts)
-		}
 		if err != nil {
 			// Prevent saving instance if association failed
 			// e.g. missing internet gateway in VPC
@@ -383,24 +377,22 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	domain := resourceAwsEipDomain(d)
-
-	var input *ec2.ReleaseAddressInput
-	switch domain {
-	case "vpc":
-		log.Printf("[DEBUG] EIP release (destroy) address allocation: %v", d.Id())
-		input = &ec2.ReleaseAddressInput{
-			AllocationId: aws.String(d.Id()),
-		}
-	case "standard":
-		log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())
-		input = &ec2.ReleaseAddressInput{
-			PublicIp: aws.String(d.Id()),
-		}
-	}
-
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	return resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		var err error
-		_, err = ec2conn.ReleaseAddress(input)
+		switch domain {
+		case "vpc":
+			log.Printf(
+				"[DEBUG] EIP release (destroy) address allocation: %v",
+				d.Id())
+			_, err = ec2conn.ReleaseAddress(&ec2.ReleaseAddressInput{
+				AllocationId: aws.String(d.Id()),
+			})
+		case "standard":
+			log.Printf("[DEBUG] EIP release (destroy) address: %v", d.Id())
+			_, err = ec2conn.ReleaseAddress(&ec2.ReleaseAddressInput{
+				PublicIp: aws.String(d.Id()),
+			})
+		}
 
 		if err == nil {
 			return nil
@@ -411,13 +403,6 @@ func resourceAwsEipDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return resource.RetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
-		_, err = ec2conn.ReleaseAddress(input)
-	}
-	if err != nil {
-		return fmt.Errorf("Error releasing EIP address: %s", err)
-	}
-	return nil
 }
 
 func resourceAwsEipDomain(d *schema.ResourceData) string {

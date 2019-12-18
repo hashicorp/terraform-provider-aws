@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -260,13 +260,6 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"encrypted": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-						},
-
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -428,10 +421,6 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
-				ebs.Encrypted = aws.Bool(v)
-			}
-
 			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
@@ -491,9 +480,6 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
-	}
 	if err != nil {
 		return fmt.Errorf("Error creating launch configuration: %s", err)
 	}
@@ -503,20 +489,13 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 	// We put a Retry here since sometimes eventual consistency bites
 	// us and we need to retry a few times to get the LC to load properly
-	err = resource.Retry(30*time.Second, func() *resource.RetryError {
+	return resource.Retry(30*time.Second, func() *resource.RetryError {
 		err := resourceAwsLaunchConfigurationRead(d, meta)
 		if err != nil {
 			return resource.RetryableError(err)
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		err = resourceAwsLaunchConfigurationRead(d, meta)
-	}
-	if err != nil {
-		return fmt.Errorf("Error reading launch configuration: %s", err)
-	}
-	return nil
 }
 
 func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
@@ -696,17 +675,16 @@ func readBlockDevicesFromLaunchConfiguration(d *schema.ResourceData, lc *autosca
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
 			bd["iops"] = *bdm.Ebs.Iops
 		}
-		if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
-			bd["encrypted"] = *bdm.Ebs.Encrypted
-		}
 
 		if bdm.DeviceName != nil && *bdm.DeviceName == *rootDeviceName {
 			blockDevices["root"] = bd
 		} else {
+			if bdm.Ebs != nil && bdm.Ebs.Encrypted != nil {
+				bd["encrypted"] = *bdm.Ebs.Encrypted
+			}
 			if bdm.DeviceName != nil {
 				bd["device_name"] = *bdm.DeviceName
 			}
-
 			if bdm.VirtualName != nil {
 				bd["virtual_name"] = *bdm.VirtualName
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)

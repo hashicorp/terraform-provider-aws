@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kinesis_analytics_application"
+sidebar_current: "docs-aws-resource-kinesis-analytics-application"
 description: |-
   Provides a AWS Kinesis Analytics Application
 ---
@@ -25,25 +26,20 @@ resource "aws_kinesis_analytics_application" "test_application" {
 
   inputs {
     name_prefix = "test_prefix"
-
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test_stream.arn}"
       role_arn     = "${aws_iam_role.test.arn}"
     }
-
     parallelism {
       count = 1
     }
-
     schema {
       record_columns {
         mapping  = "$.test"
         name     = "test"
         sql_type = "VARCHAR(8)"
       }
-
       record_encoding = "UTF-8"
-
       record_format {
         mapping_parameters {
           json {
@@ -69,7 +65,6 @@ See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more det
 * `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
 * `reference_data_sources` - (Optional) An S3 Reference Data Source for the application.
 See [Reference Data Sources](#reference-data-sources) below for more details.
-* `tags` - Key-value mapping of tags for the Kinesis Analytics Application.
 
 ### CloudWatch Logging Options
 

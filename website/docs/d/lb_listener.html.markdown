@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lb_listener"
+sidebar_current: "docs-aws-datasource-lb-listener"
 description: |-
   Provides a Load Balancer Listener data source.
 ---

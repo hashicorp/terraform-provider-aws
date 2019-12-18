@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_group"
+sidebar_current: "docs-aws-cloudwatch-log-group"
 description: |-
   Get information on a Cloudwatch Log Group.
 ---

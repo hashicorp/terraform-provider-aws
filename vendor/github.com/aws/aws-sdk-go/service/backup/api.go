@@ -162,9 +162,17 @@ func (c *Backup) CreateBackupSelectionRequest(input *CreateBackupSelectionInput)
 //
 //    * Resources: "arn:aws:ec2:region:account-id:volume/volume-id"
 //
-//    * ConditionKey:"department" ConditionValue:"finance" ConditionType:"StringEquals"
+//    * ConditionKey:"department"
 //
-//    * ConditionKey:"importance" ConditionValue:"critical" ConditionType:"StringEquals"
+// ConditionValue:"finance"
+//
+// ConditionType:"StringEquals"
+//
+//    * ConditionKey:"importance"
+//
+// ConditionValue:"critical"
+//
+// ConditionType:"StringEquals"
 //
 // Using these patterns would back up all Amazon Elastic Block Store (Amazon
 // EBS) volumes that are tagged as "department=finance", "importance=critical",
@@ -2239,7 +2247,7 @@ func (c *Backup) ListBackupJobsWithContext(ctx aws.Context, input *ListBackupJob
 //    // Example iterating over at most 3 pages of a ListBackupJobs operation.
 //    pageNum := 0
 //    err := client.ListBackupJobsPages(params,
-//        func(page *backup.ListBackupJobsOutput, lastPage bool) bool {
+//        func(page *ListBackupJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2385,7 +2393,7 @@ func (c *Backup) ListBackupPlanTemplatesWithContext(ctx aws.Context, input *List
 //    // Example iterating over at most 3 pages of a ListBackupPlanTemplates operation.
 //    pageNum := 0
 //    err := client.ListBackupPlanTemplatesPages(params,
-//        func(page *backup.ListBackupPlanTemplatesOutput, lastPage bool) bool {
+//        func(page *ListBackupPlanTemplatesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2532,7 +2540,7 @@ func (c *Backup) ListBackupPlanVersionsWithContext(ctx aws.Context, input *ListB
 //    // Example iterating over at most 3 pages of a ListBackupPlanVersions operation.
 //    pageNum := 0
 //    err := client.ListBackupPlanVersionsPages(params,
-//        func(page *backup.ListBackupPlanVersionsOutput, lastPage bool) bool {
+//        func(page *ListBackupPlanVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2679,7 +2687,7 @@ func (c *Backup) ListBackupPlansWithContext(ctx aws.Context, input *ListBackupPl
 //    // Example iterating over at most 3 pages of a ListBackupPlans operation.
 //    pageNum := 0
 //    err := client.ListBackupPlansPages(params,
-//        func(page *backup.ListBackupPlansOutput, lastPage bool) bool {
+//        func(page *ListBackupPlansOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2825,7 +2833,7 @@ func (c *Backup) ListBackupSelectionsWithContext(ctx aws.Context, input *ListBac
 //    // Example iterating over at most 3 pages of a ListBackupSelections operation.
 //    pageNum := 0
 //    err := client.ListBackupSelectionsPages(params,
-//        func(page *backup.ListBackupSelectionsOutput, lastPage bool) bool {
+//        func(page *ListBackupSelectionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -2971,7 +2979,7 @@ func (c *Backup) ListBackupVaultsWithContext(ctx aws.Context, input *ListBackupV
 //    // Example iterating over at most 3 pages of a ListBackupVaults operation.
 //    pageNum := 0
 //    err := client.ListBackupVaultsPages(params,
-//        func(page *backup.ListBackupVaultsOutput, lastPage bool) bool {
+//        func(page *ListBackupVaultsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3112,7 +3120,7 @@ func (c *Backup) ListProtectedResourcesWithContext(ctx aws.Context, input *ListP
 //    // Example iterating over at most 3 pages of a ListProtectedResources operation.
 //    pageNum := 0
 //    err := client.ListProtectedResourcesPages(params,
-//        func(page *backup.ListProtectedResourcesOutput, lastPage bool) bool {
+//        func(page *ListProtectedResourcesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3258,7 +3266,7 @@ func (c *Backup) ListRecoveryPointsByBackupVaultWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a ListRecoveryPointsByBackupVault operation.
 //    pageNum := 0
 //    err := client.ListRecoveryPointsByBackupVaultPages(params,
-//        func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
+//        func(page *ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3404,7 +3412,7 @@ func (c *Backup) ListRecoveryPointsByResourceWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a ListRecoveryPointsByResource operation.
 //    pageNum := 0
 //    err := client.ListRecoveryPointsByResourcePages(params,
-//        func(page *backup.ListRecoveryPointsByResourceOutput, lastPage bool) bool {
+//        func(page *ListRecoveryPointsByResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3550,7 +3558,7 @@ func (c *Backup) ListRestoreJobsWithContext(ctx aws.Context, input *ListRestoreJ
 //    // Example iterating over at most 3 pages of a ListRestoreJobs operation.
 //    pageNum := 0
 //    err := client.ListRestoreJobsPages(params,
-//        func(page *backup.ListRestoreJobsOutput, lastPage bool) bool {
+//        func(page *ListRestoreJobsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3696,7 +3704,7 @@ func (c *Backup) ListTagsWithContext(ctx aws.Context, input *ListTagsInput, opts
 //    // Example iterating over at most 3 pages of a ListTags operation.
 //    pageNum := 0
 //    err := client.ListTagsPages(params,
-//        func(page *backup.ListTagsOutput, lastPage bool) bool {
+//        func(page *ListTagsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4525,10 +4533,10 @@ func (c *Backup) UpdateRecoveryPointLifecycleRequest(input *UpdateRecoveryPointL
 // according to the lifecycle that you define.
 //
 // Backups transitioned to cold storage must be stored in cold storage for a
-// minimum of 90 days. Therefore, the “expire after days” setting must be
-// 90 days greater than the “transition to cold after days” setting. The
-// “transition to cold after days” setting cannot be changed after a backup
-// has been transitioned to cold.
+// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+// days greater than the “transition to cold after days” setting. The “transition
+// to cold after days” setting cannot be changed after a backup has been transitioned
+// to cold.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4581,10 +4589,10 @@ func (c *Backup) UpdateRecoveryPointLifecycleWithContext(ctx aws.Context, input 
 // according to the lifecycle that you define.
 //
 // Backups transitioned to cold storage must be stored in cold storage for a
-// minimum of 90 days. Therefore, the “expire after days” setting must be
-// 90 days greater than the “transition to cold after days” setting. The
-// “transition to cold after days” setting cannot be changed after a backup
-// has been transitioned to cold.
+// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+// days greater than the “transition to cold after days” setting. The “transition
+// to cold after days” setting cannot be changed after a backup has been transitioned
+// to cold.
 type CalculatedLifecycle struct {
 	_ struct{} `type:"structure"`
 
@@ -6038,10 +6046,10 @@ type DescribeRecoveryPointOutput struct {
 	// according to the lifecycle that you define.
 	//
 	// Backups that are transitioned to cold storage must be stored in cold storage
-	// for a minimum of 90 days. Therefore, the “expire after days” setting
-	// must be 90 days greater than the “transition to cold after days” setting.
-	// The “transition to cold after days” setting cannot be changed after a
-	// backup has been transitioned to cold.
+	// for a minimum of 90 days. Therefore, the “expire after days” setting must
+	// be 90 days greater than the “transition to cold after days” setting. The
+	// “transition to cold after days” setting cannot be changed after a backup
+	// has been transitioned to cold.
 	Lifecycle *Lifecycle `type:"structure"`
 
 	// An ARN that uniquely identifies a recovery point; for example, arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45.
@@ -9032,10 +9040,10 @@ type RecoveryPointByBackupVault struct {
 	// according to the lifecycle that you define.
 	//
 	// Backups transitioned to cold storage must be stored in cold storage for a
-	// minimum of 90 days. Therefore, the “expire after days” setting must be
-	// 90 days greater than the “transition to cold after days” setting. The
-	// “transition to cold after days” setting cannot be changed after a backup
-	// has been transitioned to cold.
+	// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+	// days greater than the “transition to cold after days” setting. The “transition
+	// to cold after days” setting cannot be changed after a backup has been transitioned
+	// to cold.
 	Lifecycle *Lifecycle `type:"structure"`
 
 	// An Amazon Resource Name (ARN) that uniquely identifies a recovery point;
@@ -9432,10 +9440,10 @@ type Rule struct {
 	// according to the lifecycle that you define.
 	//
 	// Backups transitioned to cold storage must be stored in cold storage for a
-	// minimum of 90 days. Therefore, the “expire after days” setting must be
-	// 90 days greater than the “transition to cold after days” setting. The
-	// “transition to cold after days” setting cannot be changed after a backup
-	// has been transitioned to cold.
+	// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+	// days greater than the “transition to cold after days” setting. The “transition
+	// to cold after days” setting cannot be changed after a backup has been transitioned
+	// to cold.
 	Lifecycle *Lifecycle `type:"structure"`
 
 	// An array of key-value pair strings that are assigned to resources that are
@@ -9538,9 +9546,9 @@ type RuleInput struct {
 	// according to the lifecycle that you define.
 	//
 	// Backups transitioned to cold storage must be stored in cold storage for a
-	// minimum of 90 days. Therefore, the “expire after days” setting must be
-	// 90 days greater than the “transition to cold after days”. The “transition
-	// to cold after days” setting cannot be changed after a backup has been transitioned
+	// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+	// days greater than the “transition to cold after days”. The “transition to
+	// cold after days” setting cannot be changed after a backup has been transitioned
 	// to cold.
 	Lifecycle *Lifecycle `type:"structure"`
 
@@ -9830,10 +9838,10 @@ type StartBackupJobInput struct {
 	// according to the lifecycle that you define.
 	//
 	// Backups transitioned to cold storage must be stored in cold storage for a
-	// minimum of 90 days. Therefore, the “expire after days” setting must be
-	// 90 days greater than the “transition to cold after days” setting. The
-	// “transition to cold after days” setting cannot be changed after a backup
-	// has been transitioned to cold.
+	// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+	// days greater than the “transition to cold after days” setting. The “transition
+	// to cold after days” setting cannot be changed after a backup has been transitioned
+	// to cold.
 	Lifecycle *Lifecycle `type:"structure"`
 
 	// To help organize your resources, you can assign your own metadata to the
@@ -10423,10 +10431,10 @@ type UpdateRecoveryPointLifecycleInput struct {
 	// according to the lifecycle that you define.
 	//
 	// Backups transitioned to cold storage must be stored in cold storage for a
-	// minimum of 90 days. Therefore, the “expire after days” setting must be
-	// 90 days greater than the “transition to cold after days” setting. The
-	// “transition to cold after days” setting cannot be changed after a backup
-	// has been transitioned to cold.
+	// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+	// days greater than the “transition to cold after days” setting. The “transition
+	// to cold after days” setting cannot be changed after a backup has been transitioned
+	// to cold.
 	Lifecycle *Lifecycle `type:"structure"`
 
 	// An Amazon Resource Name (ARN) that uniquely identifies a recovery point;
@@ -10501,10 +10509,10 @@ type UpdateRecoveryPointLifecycleOutput struct {
 	// according to the lifecycle that you define.
 	//
 	// Backups transitioned to cold storage must be stored in cold storage for a
-	// minimum of 90 days. Therefore, the “expire after days” setting must be
-	// 90 days greater than the “transition to cold after days” setting. The
-	// “transition to cold after days” setting cannot be changed after a backup
-	// has been transitioned to cold.
+	// minimum of 90 days. Therefore, the “expire after days” setting must be 90
+	// days greater than the “transition to cold after days” setting. The “transition
+	// to cold after days” setting cannot be changed after a backup has been transitioned
+	// to cold.
 	Lifecycle *Lifecycle `type:"structure"`
 
 	// An Amazon Resource Name (ARN) that uniquely identifies a recovery point;

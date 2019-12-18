@@ -4,8 +4,6 @@ package request
 
 import (
 	"net/http"
-
-	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
 // NoBody is a http.NoBody reader instructing Go HTTP client to not include
@@ -26,8 +24,7 @@ var NoBody = http.NoBody
 func (r *Request) ResetBody() {
 	body, err := r.getNextRequestBody()
 	if err != nil {
-		r.Error = awserr.New(ErrCodeSerialization,
-			"failed to reset request body", err)
+		r.Error = err
 		return
 	}
 

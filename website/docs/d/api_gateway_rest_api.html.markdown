@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_rest_api"
+sidebar_current: "docs-aws_api_gateway_rest_api"
 description: |-
   Get information on a API Gateway REST API
 ---

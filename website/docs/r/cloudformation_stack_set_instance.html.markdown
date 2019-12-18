@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack_set_instance"
+sidebar_current: "docs-aws-resource-cloudformation-stack-set-instance"
 description: |-
   Manages a CloudFormation Stack Set Instance.
 ---
@@ -47,12 +48,11 @@ resource "aws_iam_role" "AWSCloudFormationStackSetExecutionRole" {
 # Additional IAM permissions necessary depend on the resources defined in the Stack Set template
 data "aws_iam_policy_document" "AWSCloudFormationStackSetExecutionRole_MinimumExecutionPolicy" {
   statement {
-    actions = [
+    actions   = [
       "cloudformation:*",
       "s3:*",
       "sns:*",
     ]
-
     effect    = "Allow"
     resources = ["*"]
   }

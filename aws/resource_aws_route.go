@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/hashcode"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 // How long to sleep if a limit-exceeded event happens
@@ -269,9 +269,6 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.CreateRoute(createOpts)
-	}
 	if err != nil {
 		return fmt.Errorf("Error creating route: %s", err)
 	}
@@ -283,9 +280,6 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), v.(string), "")
 			return resource.RetryableError(err)
 		})
-		if isResourceTimeoutError(err) {
-			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), v.(string), "")
-		}
 		if err != nil {
 			return fmt.Errorf("Error finding route after creating it: %s", err)
 		}
@@ -296,9 +290,6 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), "", v.(string))
 			return resource.RetryableError(err)
 		})
-		if isResourceTimeoutError(err) {
-			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), "", v.(string))
-		}
 		if err != nil {
 			return fmt.Errorf("Error finding route after creating it: %s", err)
 		}
@@ -449,30 +440,29 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] Route delete opts: %s", deleteOpts)
 
-	var resp *ec2.DeleteRouteOutput
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+	var err error = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to delete route with opts %s", deleteOpts)
-		var err error
-		resp, err = conn.DeleteRoute(deleteOpts)
+		resp, err := conn.DeleteRoute(deleteOpts)
 		log.Printf("[DEBUG] Route delete result: %s", resp)
 
 		if err == nil {
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidParameterException", "") {
+		ec2err, ok := err.(awserr.Error)
+		if !ok {
+			return resource.NonRetryableError(err)
+		}
+		if ec2err.Code() == "InvalidParameterException" {
+			log.Printf("[DEBUG] Trying to delete route again: %q",
+				ec2err.Message())
 			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
-		resp, err = conn.DeleteRoute(deleteOpts)
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting route: %s", err)
-	}
-	return nil
+
+	return err
 }
 
 func resourceAwsRouteExists(d *schema.ResourceData, meta interface{}) (bool, error) {

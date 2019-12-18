@@ -1,70 +1,50 @@
 package golinters
 
 import (
+	"context"
 	"fmt"
 	"go/ast"
 	"go/token"
-	"sync"
 
-	"golang.org/x/tools/go/analysis"
-
-	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
-const scopelintName = "scopelint"
+type Scopelint struct{}
 
-func NewScopelint() *goanalysis.Linter {
-	var mu sync.Mutex
-	var resIssues []result.Issue
-
-	analyzer := &analysis.Analyzer{
-		Name: goanalysis.TheOnlyAnalyzerName,
-		Doc:  goanalysis.TheOnlyanalyzerDoc,
-	}
-	return goanalysis.NewLinter(
-		scopelintName,
-		"Scopelint checks for unpinned variables in go programs",
-		[]*analysis.Analyzer{analyzer},
-		nil,
-	).WithContextSetter(func(lintCtx *linter.Context) {
-		analyzer.Run = func(pass *analysis.Pass) (interface{}, error) {
-			var res []result.Issue
-			for _, file := range pass.Files {
-				n := Node{
-					fset:          pass.Fset,
-					DangerObjects: map[*ast.Object]int{},
-					UnsafeObjects: map[*ast.Object]int{},
-					SkipFuncs:     map[*ast.FuncLit]int{},
-					issues:        &res,
-				}
-				ast.Walk(&n, file)
-			}
-
-			if len(res) == 0 {
-				return nil, nil
-			}
-
-			mu.Lock()
-			resIssues = append(resIssues, res...)
-			mu.Unlock()
-
-			return nil, nil
-		}
-	}).WithIssuesReporter(func(*linter.Context) []result.Issue {
-		return resIssues
-	}).WithLoadMode(goanalysis.LoadModeSyntax)
+func (Scopelint) Name() string {
+	return "scopelint"
 }
 
-// The code below is copy-pasted from https://github.com/kyoh86/scopelint 92cbe2cc9276abda0e309f52cc9e309d407f174e
+func (Scopelint) Desc() string {
+	return "Scopelint checks for unpinned variables in go programs"
+}
+
+func (lint Scopelint) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
+	var res []result.Issue
+
+	for _, f := range lintCtx.ASTCache.GetAllValidFiles() {
+		n := Node{
+			fset:          f.Fset,
+			dangerObjects: map[*ast.Object]struct{}{},
+			unsafeObjects: map[*ast.Object]struct{}{},
+			skipFuncs:     map[*ast.FuncLit]struct{}{},
+			issues:        &res,
+		}
+		ast.Walk(&n, f.F)
+	}
+
+	return res, nil
+}
+
+// The code below is copy-pasted from https://github.com/kyoh86/scopelint
 
 // Node represents a Node being linted.
 type Node struct {
 	fset          *token.FileSet
-	DangerObjects map[*ast.Object]int
-	UnsafeObjects map[*ast.Object]int
-	SkipFuncs     map[*ast.FuncLit]int
+	dangerObjects map[*ast.Object]struct{}
+	unsafeObjects map[*ast.Object]struct{}
+	skipFuncs     map[*ast.FuncLit]struct{}
 	issues        *[]result.Issue
 }
 
@@ -80,7 +60,7 @@ func (f *Node) Visit(node ast.Node) ast.Visitor {
 			for _, lh := range init.Lhs {
 				switch tlh := lh.(type) {
 				case *ast.Ident:
-					f.UnsafeObjects[tlh.Obj] = 0
+					f.unsafeObjects[tlh.Obj] = struct{}{}
 				}
 			}
 		}
@@ -89,25 +69,25 @@ func (f *Node) Visit(node ast.Node) ast.Visitor {
 		// Memory variables declarated in range statement
 		switch k := typedNode.Key.(type) {
 		case *ast.Ident:
-			f.UnsafeObjects[k.Obj] = 0
+			f.unsafeObjects[k.Obj] = struct{}{}
 		}
 		switch v := typedNode.Value.(type) {
 		case *ast.Ident:
-			f.UnsafeObjects[v.Obj] = 0
+			f.unsafeObjects[v.Obj] = struct{}{}
 		}
 
 	case *ast.UnaryExpr:
 		if typedNode.Op == token.AND {
 			switch ident := typedNode.X.(type) {
 			case *ast.Ident:
-				if _, unsafe := f.UnsafeObjects[ident.Obj]; unsafe {
+				if _, unsafe := f.unsafeObjects[ident.Obj]; unsafe {
 					f.errorf(ident, "Using a reference for the variable on range scope %s", formatCode(ident.Name, nil))
 				}
 			}
 		}
 
 	case *ast.Ident:
-		if _, obj := f.DangerObjects[typedNode.Obj]; obj {
+		if _, obj := f.dangerObjects[typedNode.Obj]; obj {
 			// It is the naked variable in scope of range statement.
 			f.errorf(node, "Using the variable on range scope %s in function literal", formatCode(typedNode.Name, nil))
 			break
@@ -117,42 +97,25 @@ func (f *Node) Visit(node ast.Node) ast.Visitor {
 		// Ignore func literals that'll be called immediately.
 		switch funcLit := typedNode.Fun.(type) {
 		case *ast.FuncLit:
-			f.SkipFuncs[funcLit] = 0
+			f.skipFuncs[funcLit] = struct{}{}
 		}
 
 	case *ast.FuncLit:
-		if _, skip := f.SkipFuncs[typedNode]; !skip {
-			dangers := map[*ast.Object]int{}
-			for d := range f.DangerObjects {
-				dangers[d] = 0
+		if _, skip := f.skipFuncs[typedNode]; !skip {
+			dangers := map[*ast.Object]struct{}{}
+			for d := range f.dangerObjects {
+				dangers[d] = struct{}{}
 			}
-			for u := range f.UnsafeObjects {
-				dangers[u] = 0
-				f.UnsafeObjects[u]++
+			for u := range f.unsafeObjects {
+				dangers[u] = struct{}{}
 			}
 			return &Node{
 				fset:          f.fset,
-				DangerObjects: dangers,
-				UnsafeObjects: f.UnsafeObjects,
-				SkipFuncs:     f.SkipFuncs,
+				dangerObjects: dangers,
+				unsafeObjects: f.unsafeObjects,
+				skipFuncs:     f.skipFuncs,
 				issues:        f.issues,
 			}
-		}
-
-	case *ast.ReturnStmt:
-		unsafe := map[*ast.Object]int{}
-		for u := range f.UnsafeObjects {
-			if f.UnsafeObjects[u] == 0 {
-				continue
-			}
-			unsafe[u] = f.UnsafeObjects[u]
-		}
-		return &Node{
-			fset:          f.fset,
-			DangerObjects: f.DangerObjects,
-			UnsafeObjects: unsafe,
-			SkipFuncs:     f.SkipFuncs,
-			issues:        f.issues,
 		}
 	}
 	return f
@@ -171,6 +134,6 @@ func (f *Node) errorfAt(pos token.Position, format string, args ...interface{}) 
 	*f.issues = append(*f.issues, result.Issue{
 		Pos:        pos,
 		Text:       fmt.Sprintf(format, args...),
-		FromLinter: scopelintName,
+		FromLinter: Scopelint{}.Name(),
 	})
 }

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ecs_service"
+sidebar_current: "docs-aws-resource-ecs-service"
 description: |-
   Provides an ECS service.
 ---
@@ -112,7 +113,7 @@ The `deployment_controller` configuration block supports the following:
 * `container_name` - (Required) The name of the container to associate with the load balancer (as it appears in a container definition).
 * `container_port` - (Required) The port on the container to associate with the load balancer.
 
--> **Version note:** Multiple `load_balancer` configuration block support was added in Terraform AWS Provider version 2.22.0. This allows configuration of [ECS service support for multiple target groups](https://aws.amazon.com/about-aws/whats-new/2019/07/amazon-ecs-services-now-support-multiple-load-balancer-target-groups/).
+-> **Note:** As a result of an AWS limitation, a single `load_balancer` can be attached to the ECS service at most. See [related docs](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-load-balancing.html#load-balancing-concepts).
 
 ## ordered_placement_strategy
 

@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSPinpointSMSChannel_basic(t *testing.T) {
@@ -167,8 +167,7 @@ resource "aws_pinpoint_sms_channel" "test_sms_channel" {
   enabled        = "false"
   sender_id      = "%s"
   short_code     = "%s"
-}
-`, senderId, shortCode)
+}`, senderId, shortCode)
 }
 
 func testAccCheckAWSPinpointSMSChannelDestroy(s *terraform.State) error {

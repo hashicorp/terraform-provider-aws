@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
@@ -552,7 +552,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 					},
 				},
 			},
-			"tags": tagsSchema(),
 		},
 	}
 }
@@ -589,10 +588,6 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		createOpts.Outputs = outputs
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
-		createOpts.Tags = tagsFromMapKinesisAnalytics(v.(map[string]interface{}))
-	}
-
 	// Retry for IAM eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		output, err := conn.CreateApplication(createOpts)
@@ -614,13 +609,6 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		d.SetId(aws.StringValue(output.ApplicationSummary.ApplicationARN))
 		return nil
 	})
-
-	if isResourceTimeoutError(err) {
-		var output *kinesisanalytics.CreateApplicationOutput
-		output, err = conn.CreateApplication(createOpts)
-		d.SetId(aws.StringValue(output.ApplicationSummary.ApplicationARN))
-	}
-
 	if err != nil {
 		return fmt.Errorf("Unable to create Kinesis Analytics application: %s", err)
 	}
@@ -668,10 +656,6 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 
 	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ReferenceDataSourceDescriptions)); err != nil {
 		return fmt.Errorf("error setting reference_data_sources: %s", err)
-	}
-
-	if err := getTagsKinesisAnalytics(conn, d); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -729,10 +713,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationCloudWatchLoggingOption(addOpts)
-				}
-
 				if err != nil {
 					return fmt.Errorf("Unable to add CloudWatch logging options: %s", err)
 				}
@@ -765,10 +745,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationInput(addOpts)
-				}
-
 				if err != nil {
 					return fmt.Errorf("Unable to add application inputs: %s", err)
 				}
@@ -801,20 +777,12 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationOutput(addOpts)
-				}
 				if err != nil {
 					return fmt.Errorf("Unable to add application outputs: %s", err)
 				}
 				version = version + 1
 			}
 		}
-
-		if err := setTagsKinesisAnalytics(conn, d); err != nil {
-			return fmt.Errorf("Error update resource tags for %s: %s", d.Id(), err)
-		}
-
 	}
 
 	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
@@ -839,9 +807,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationReferenceDataSource(addOpts)
-				}
 				if err != nil {
 					return fmt.Errorf("Unable to add application reference data source: %s", err)
 				}

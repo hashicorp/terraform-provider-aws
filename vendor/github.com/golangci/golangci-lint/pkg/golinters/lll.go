@@ -2,21 +2,28 @@ package golinters
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"go/token"
 	"os"
 	"strings"
-	"sync"
 	"unicode/utf8"
 
-	"golang.org/x/tools/go/analysis"
-
-	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
-func getLLLIssuesForFile(filename string, maxLineLen int, tabSpaces string) ([]result.Issue, error) {
+type Lll struct{}
+
+func (Lll) Name() string {
+	return "lll"
+}
+
+func (Lll) Desc() string {
+	return "Reports long lines"
+}
+
+func (lint Lll) getIssuesForFile(filename string, maxLineLen int, tabSpaces string) ([]result.Issue, error) {
 	var res []result.Issue
 
 	f, err := os.Open(filename)
@@ -38,7 +45,7 @@ func getLLLIssuesForFile(filename string, maxLineLen int, tabSpaces string) ([]r
 					Line:     lineNumber,
 				},
 				Text:       fmt.Sprintf("line is %d characters", lineLen),
-				FromLinter: lllName,
+				FromLinter: lint.Name(),
 			})
 		}
 		lineNumber++
@@ -63,7 +70,7 @@ func getLLLIssuesForFile(filename string, maxLineLen int, tabSpaces string) ([]r
 					Column:   1,
 				},
 				Text:       fmt.Sprintf("line is more than %d characters", bufio.MaxScanTokenSize),
-				FromLinter: lllName,
+				FromLinter: lint.Name(),
 			})
 		} else {
 			return nil, fmt.Errorf("can't scan file %s: %s", filename, err)
@@ -73,50 +80,16 @@ func getLLLIssuesForFile(filename string, maxLineLen int, tabSpaces string) ([]r
 	return res, nil
 }
 
-const lllName = "lll"
-
-func NewLLL() *goanalysis.Linter {
-	var mu sync.Mutex
-	var resIssues []result.Issue
-
-	analyzer := &analysis.Analyzer{
-		Name: goanalysis.TheOnlyAnalyzerName,
-		Doc:  goanalysis.TheOnlyanalyzerDoc,
-	}
-	return goanalysis.NewLinter(
-		lllName,
-		"Reports long lines",
-		[]*analysis.Analyzer{analyzer},
-		nil,
-	).WithContextSetter(func(lintCtx *linter.Context) {
-		analyzer.Run = func(pass *analysis.Pass) (interface{}, error) {
-			var fileNames []string
-			for _, f := range pass.Files {
-				pos := pass.Fset.Position(f.Pos())
-				fileNames = append(fileNames, pos.Filename)
-			}
-
-			var res []result.Issue
-			spaces := strings.Repeat(" ", lintCtx.Settings().Lll.TabWidth)
-			for _, f := range fileNames {
-				issues, err := getLLLIssuesForFile(f, lintCtx.Settings().Lll.LineLength, spaces)
-				if err != nil {
-					return nil, err
-				}
-				res = append(res, issues...)
-			}
-
-			if len(res) == 0 {
-				return nil, nil
-			}
-
-			mu.Lock()
-			resIssues = append(resIssues, res...)
-			mu.Unlock()
-
-			return nil, nil
+func (lint Lll) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
+	var res []result.Issue
+	spaces := strings.Repeat(" ", lintCtx.Settings().Lll.TabWidth)
+	for _, f := range getAllFileNames(lintCtx) {
+		issues, err := lint.getIssuesForFile(f, lintCtx.Settings().Lll.LineLength, spaces)
+		if err != nil {
+			return nil, err
 		}
-	}).WithIssuesReporter(func(*linter.Context) []result.Issue {
-		return resIssues
-	}).WithLoadMode(goanalysis.LoadModeSyntax)
+		res = append(res, issues...)
+	}
+
+	return res, nil
 }

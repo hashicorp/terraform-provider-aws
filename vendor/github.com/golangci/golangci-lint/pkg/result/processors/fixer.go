@@ -8,66 +8,58 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/golangci/golangci-lint/pkg/fsutils"
+
+	"github.com/golangci/golangci-lint/pkg/logutils"
+
 	"github.com/pkg/errors"
 
 	"github.com/golangci/golangci-lint/pkg/config"
-	"github.com/golangci/golangci-lint/pkg/fsutils"
-	"github.com/golangci/golangci-lint/pkg/logutils"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/golangci/golangci-lint/pkg/timeutils"
 )
 
 type Fixer struct {
 	cfg       *config.Config
 	log       logutils.Log
 	fileCache *fsutils.FileCache
-	sw        *timeutils.Stopwatch
 }
 
 func NewFixer(cfg *config.Config, log logutils.Log, fileCache *fsutils.FileCache) *Fixer {
-	return &Fixer{
-		cfg:       cfg,
-		log:       log,
-		fileCache: fileCache,
-		sw:        timeutils.NewStopwatch("fixer", log),
-	}
+	return &Fixer{cfg: cfg, log: log, fileCache: fileCache}
 }
 
-func (f Fixer) printStat() {
-	f.sw.PrintStages()
-}
-
-func (f Fixer) Process(issues []result.Issue) []result.Issue {
+func (f Fixer) Process(issues <-chan result.Issue) <-chan result.Issue {
 	if !f.cfg.Issues.NeedFix {
 		return issues
 	}
 
-	outIssues := make([]result.Issue, 0, len(issues))
-	issuesToFixPerFile := map[string][]result.Issue{}
-	for _, issue := range issues {
-		if issue.Replacement == nil {
-			outIssues = append(outIssues, issue)
-			continue
+	outCh := make(chan result.Issue, 1024)
+
+	go func() {
+		issuesToFixPerFile := map[string][]result.Issue{}
+		for issue := range issues {
+			if issue.Replacement == nil {
+				outCh <- issue
+				continue
+			}
+
+			issuesToFixPerFile[issue.FilePath()] = append(issuesToFixPerFile[issue.FilePath()], issue)
 		}
 
-		issuesToFixPerFile[issue.FilePath()] = append(issuesToFixPerFile[issue.FilePath()], issue)
-	}
+		for file, issuesToFix := range issuesToFixPerFile {
+			if err := f.fixIssuesInFile(file, issuesToFix); err != nil {
+				f.log.Errorf("Failed to fix issues in file %s: %s", file, err)
 
-	for file, issuesToFix := range issuesToFixPerFile {
-		var err error
-		f.sw.TrackStage("all", func() {
-			err = f.fixIssuesInFile(file, issuesToFix) //nolint:scopelint
-		})
-		if err != nil {
-			f.log.Errorf("Failed to fix issues in file %s: %s", file, err)
-
-			// show issues only if can't fix them
-			outIssues = append(outIssues, issuesToFix...)
+				// show issues only if can't fix them
+				for _, issue := range issuesToFix {
+					outCh <- issue
+				}
+			}
 		}
-	}
+		close(outCh)
+	}()
 
-	f.printStat()
-	return outIssues
+	return outCh
 }
 
 func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
@@ -83,19 +75,6 @@ func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
 	tmpOutFile, err := os.Create(tmpFileName)
 	if err != nil {
 		return errors.Wrapf(err, "failed to make file %s", tmpFileName)
-	}
-
-	// merge multiple issues per line into one issue
-	issuesPerLine := map[int][]result.Issue{}
-	for _, i := range issues {
-		issuesPerLine[i.Line()] = append(issuesPerLine[i.Line()], i)
-	}
-
-	issues = issues[:0] // reuse the same memory
-	for line, lineIssues := range issuesPerLine {
-		if mergedIssue := f.mergeLineIssues(line, lineIssues, origFileLines); mergedIssue != nil {
-			issues = append(issues, *mergedIssue)
-		}
 	}
 
 	issues = f.findNotIntersectingIssues(issues)
@@ -115,75 +94,9 @@ func (f Fixer) fixIssuesInFile(filePath string, issues []result.Issue) error {
 	return nil
 }
 
-func (f Fixer) mergeLineIssues(lineNum int, lineIssues []result.Issue, origFileLines [][]byte) *result.Issue {
-	origLine := origFileLines[lineNum-1] // lineNum is 1-based
-
-	if len(lineIssues) == 1 && lineIssues[0].Replacement.Inline == nil {
-		return &lineIssues[0]
-	}
-
-	// check issues first
-	for _, i := range lineIssues {
-		if i.LineRange != nil {
-			f.log.Infof("Line %d has multiple issues but at least one of them is ranged: %#v", lineNum, lineIssues)
-			return &lineIssues[0]
-		}
-
-		r := i.Replacement
-		if r.Inline == nil || len(r.NewLines) != 0 || r.NeedOnlyDelete {
-			f.log.Infof("Line %d has multiple issues but at least one of them isn't inline: %#v", lineNum, lineIssues)
-			return &lineIssues[0]
-		}
-
-		if r.Inline.StartCol < 0 || r.Inline.Length <= 0 || r.Inline.StartCol+r.Inline.Length > len(origLine) {
-			f.log.Warnf("Line %d (%q) has invalid inline fix: %#v, %#v", lineNum, origLine, i, r.Inline)
-			return nil
-		}
-	}
-
-	return f.applyInlineFixes(lineIssues, origLine, lineNum)
-}
-
-func (f Fixer) applyInlineFixes(lineIssues []result.Issue, origLine []byte, lineNum int) *result.Issue {
-	sort.Slice(lineIssues, func(i, j int) bool {
-		return lineIssues[i].Replacement.Inline.StartCol < lineIssues[j].Replacement.Inline.StartCol
-	})
-
-	var newLineBuf bytes.Buffer
-	newLineBuf.Grow(len(origLine))
-
-	//nolint:misspell
-	// example: origLine="it's becouse of them", StartCol=5, Length=7, NewString="because"
-
-	curOrigLinePos := 0
-	for _, i := range lineIssues {
-		fix := i.Replacement.Inline
-		if fix.StartCol < curOrigLinePos {
-			f.log.Warnf("Line %d has multiple intersecting issues: %#v", lineNum, lineIssues)
-			return nil
-		}
-
-		if curOrigLinePos != fix.StartCol {
-			newLineBuf.Write(origLine[curOrigLinePos:fix.StartCol])
-		}
-		newLineBuf.WriteString(fix.NewString)
-		curOrigLinePos = fix.StartCol + fix.Length
-	}
-	if curOrigLinePos != len(origLine) {
-		newLineBuf.Write(origLine[curOrigLinePos:])
-	}
-
-	mergedIssue := lineIssues[0] // use text from the first issue (it's not really used)
-	mergedIssue.Replacement = &result.Replacement{
-		NewLines: []string{newLineBuf.String()},
-	}
-	return &mergedIssue
-}
-
 func (f Fixer) findNotIntersectingIssues(issues []result.Issue) []result.Issue {
 	sort.SliceStable(issues, func(i, j int) bool {
-		a, b := issues[i], issues[j] //nolint:scopelint
-		return a.Line() < b.Line()
+		return issues[i].Line() < issues[j].Line() //nolint:scopelint
 	})
 
 	var ret []result.Issue

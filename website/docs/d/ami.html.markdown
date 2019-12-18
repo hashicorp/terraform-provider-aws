@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ami"
+sidebar_current: "docs-aws-datasource-ami"
 description: |-
   Get information on a Amazon Machine Image (AMI).
 ---
@@ -20,17 +21,17 @@ data "aws_ami" "example" {
   owners           = ["self"]
 
   filter {
-    name   = "name"
+    name = "name"
     values = ["myami-*"]
   }
 
   filter {
-    name   = "root-device-type"
+    name = "root-device-type"
     values = ["ebs"]
   }
 
   filter {
-    name   = "virtualization-type"
+    name = "virtualization-type"
     values = ["hvm"]
   }
 }

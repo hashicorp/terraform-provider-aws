@@ -3,7 +3,6 @@ package fsutils
 import (
 	"bytes"
 	"fmt"
-	"sync"
 
 	"github.com/pkg/errors"
 )
@@ -11,12 +10,13 @@ import (
 type fileLinesCache [][]byte
 
 type LineCache struct {
-	files     sync.Map
+	files     map[string]fileLinesCache
 	fileCache *FileCache
 }
 
 func NewLineCache(fc *FileCache) *LineCache {
 	return &LineCache{
+		files:     map[string]fileLinesCache{},
 		fileCache: fc,
 	}
 }
@@ -53,9 +53,9 @@ func (lc *LineCache) getRawLine(filePath string, index0 int) ([]byte, error) {
 }
 
 func (lc *LineCache) getFileCache(filePath string) (fileLinesCache, error) {
-	loadedFc, ok := lc.files.Load(filePath)
-	if ok {
-		return loadedFc.(fileLinesCache), nil
+	fc := lc.files[filePath]
+	if fc != nil {
+		return fc, nil
 	}
 
 	fileBytes, err := lc.fileCache.GetFileBytes(filePath)
@@ -63,7 +63,7 @@ func (lc *LineCache) getFileCache(filePath string) (fileLinesCache, error) {
 		return nil, errors.Wrapf(err, "can't get file %s bytes from cache", filePath)
 	}
 
-	fc := bytes.Split(fileBytes, []byte("\n"))
-	lc.files.Store(filePath, fileLinesCache(fc))
+	fc = bytes.Split(fileBytes, []byte("\n"))
+	lc.files[filePath] = fc
 	return fc, nil
 }

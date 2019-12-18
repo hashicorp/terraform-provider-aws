@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSIoTPolicy_basic(t *testing.T) {
@@ -87,7 +87,6 @@ func testAccAWSIoTPolicyConfigInitialState(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
   name = "%s"
-
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -106,7 +105,6 @@ func testAccAWSIoTPolicyInvalidJsonConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "pubsub" {
   name = "%s"
-
   policy = <<EOF
 	{
 	  "Version": "2012-10-17",

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_storagegateway_gateway"
+sidebar_current: "docs-aws-resource-secretsmanager-secret"
 description: |-
   Manages an AWS Storage Gateway file, tape, or volume gateway in the provider region
 ---

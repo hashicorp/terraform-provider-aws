@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSIotRoleAlias_basic(t *testing.T) {
@@ -24,7 +24,6 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Config: testAccAWSIotRoleAliasConfig(alias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra"),
-					testAccCheckResourceAttrRegionalARN("aws_iot_role_alias.ra", "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(
 						"aws_iot_role_alias.ra", "credential_duration", "3600"),
 				),
@@ -34,7 +33,6 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra"),
 					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra2"),
-					testAccCheckResourceAttrRegionalARN("aws_iot_role_alias.ra", "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
 					resource.TestCheckResourceAttr(
 						"aws_iot_role_alias.ra", "credential_duration", "1800"),
 				),
@@ -126,7 +124,6 @@ func testAccAWSIotRoleAliasConfig(alias string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -140,7 +137,7 @@ EOF
 }
 
 resource "aws_iot_role_alias" "ra" {
-  alias    = "%s"
+  alias = "%s"
   role_arn = "${aws_iam_role.role.arn}"
 }
 `, alias)
@@ -150,7 +147,6 @@ func testAccAWSIotRoleAliasConfigUpdate1(alias string, alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -164,13 +160,13 @@ EOF
 }
 
 resource "aws_iot_role_alias" "ra" {
-  alias               = "%s"
-  role_arn            = "${aws_iam_role.role.arn}"
+  alias = "%s"
+  role_arn = "${aws_iam_role.role.arn}"
   credential_duration = 1800
 }
 
 resource "aws_iot_role_alias" "ra2" {
-  alias    = "%s"
+  alias = "%s"
   role_arn = "${aws_iam_role.role.arn}"
 }
 `, alias, alias2)
@@ -180,7 +176,6 @@ func testAccAWSIotRoleAliasConfigUpdate2(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -194,7 +189,7 @@ EOF
 }
 
 resource "aws_iot_role_alias" "ra2" {
-  alias    = "%s"
+  alias = "%s"
   role_arn = "${aws_iam_role.role.arn}"
 }
 `, alias2)
@@ -204,7 +199,6 @@ func testAccAWSIotRoleAliasConfigUpdate3(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -218,12 +212,12 @@ EOF
 }
 
 resource "aws_iot_role_alias" "ra2" {
-  alias    = "%s"
+  alias = "%s"
   role_arn = "${aws_iam_role.role.arn}"
 }
 
 resource "aws_iot_role_alias" "ra3" {
-  alias    = "%s"
+  alias = "%s"
   role_arn = "${aws_iam_role.role.arn}"
 }
 `, alias2, alias2)
@@ -233,7 +227,6 @@ func testAccAWSIotRoleAliasConfigUpdate4(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -248,7 +241,6 @@ EOF
 
 resource "aws_iam_role" "role2" {
   name = "role2"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -262,7 +254,7 @@ EOF
 }
 
 resource "aws_iot_role_alias" "ra2" {
-  alias    = "%s"
+  alias = "%s"
   role_arn = "${aws_iam_role.role2.arn}"
 }
 `, alias2)
@@ -272,7 +264,6 @@ func testAccAWSIotRoleAliasConfigUpdate5(alias2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "role" {
   name = "role"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -287,7 +278,6 @@ EOF
 
 resource "aws_iam_role" "role2" {
   name = "role2"
-
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -301,7 +291,7 @@ EOF
 }
 
 resource "aws_iot_role_alias" "ra2" {
-  alias    = "%s"
+  alias = "%s"
   role_arn = "${aws_iam_role.role.arn}bogus"
 }
 `, alias2)

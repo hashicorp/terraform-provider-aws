@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsS3BucketMetric() *schema.Resource {
@@ -62,9 +62,8 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("filter"); ok {
 		filterList := v.([]interface{})
-		if filterMap, ok := filterList[0].(map[string]interface{}); ok {
-			metricsConfiguration.Filter = expandS3MetricsFilter(filterMap)
-		}
+		filterMap := filterList[0].(map[string]interface{})
+		metricsConfiguration.Filter = expandS3MetricsFilter(filterMap)
 	}
 
 	input := &s3.PutBucketMetricsConfigurationInput{
@@ -84,9 +83,6 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 		}
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.PutBucketMetricsConfiguration(input)
-	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 metric configuration: %s", err)
 	}

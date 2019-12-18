@@ -12,9 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLbListener() *schema.Resource {
@@ -61,8 +61,6 @@ func resourceAwsLbListener() *schema.Resource {
 					elbv2.ProtocolEnumHttps,
 					elbv2.ProtocolEnumTcp,
 					elbv2.ProtocolEnumTls,
-					elbv2.ProtocolEnumUdp,
-					elbv2.ProtocolEnumTcpUdp,
 				}, true),
 			},
 
@@ -495,10 +493,6 @@ func resourceAwsLbListenerCreate(d *schema.ResourceData, meta interface{}) error
 		return nil
 	})
 
-	if isResourceTimeoutError(err) {
-		_, err = elbconn.CreateListener(params)
-	}
-
 	if err != nil {
 		return fmt.Errorf("Error creating LB Listener: %s", err)
 	}
@@ -531,10 +525,6 @@ func resourceAwsLbListenerRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
-
-	if isResourceTimeoutError(err) {
-		_, err = elbconn.DescribeListeners(request)
-	}
 
 	if isAWSErr(err, elbv2.ErrCodeListenerNotFoundException, "") {
 		log.Printf("[WARN] ELBv2 Listener (%s) not found - removing from state", d.Id())
@@ -809,11 +799,6 @@ func resourceAwsLbListenerUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
-
-	if isResourceTimeoutError(err) {
-		_, err = elbconn.ModifyListener(params)
-	}
-
 	if err != nil {
 		return fmt.Errorf("Error modifying LB Listener: %s", err)
 	}

@@ -2,12 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsCloudWatchLogDestination() *schema.Resource {
@@ -62,28 +64,28 @@ func resourceAwsCloudWatchLogDestinationPut(d *schema.ResourceData, meta interfa
 		TargetArn:       aws.String(target_arn),
 	}
 
-	var resp *cloudwatchlogs.PutDestinationOutput
-	var err error
-	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
-		resp, err = conn.PutDestination(params)
+	return resource.Retry(3*time.Minute, func() *resource.RetryError {
+		resp, err := conn.PutDestination(params)
 
-		if isAWSErr(err, cloudwatchlogs.ErrCodeInvalidParameterException, "Could not deliver test message to specified") {
+		if err == nil {
+			d.SetId(name)
+			d.Set("arn", *resp.Destination.Arn)
+		}
+
+		awsErr, ok := err.(awserr.Error)
+		if !ok {
 			return resource.RetryableError(err)
 		}
-		if err != nil {
+
+		if awsErr.Code() == "InvalidParameterException" {
+			if strings.Contains(awsErr.Message(), "Could not deliver test message to specified") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
-		return nil
+
+		return resource.NonRetryableError(err)
 	})
-	if isResourceTimeoutError(err) {
-		resp, err = conn.PutDestination(params)
-	}
-	if err != nil {
-		return fmt.Errorf("Error putting cloudwatch log destination: %s", err)
-	}
-	d.SetId(name)
-	d.Set("arn", resp.Destination.Arn)
-	return nil
 }
 
 func resourceAwsCloudWatchLogDestinationRead(d *schema.ResourceData, meta interface{}) error {

@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSMacieMemberAccountAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -35,10 +35,8 @@ func TestAccAWSMacieMemberAccountAssociation_basic(t *testing.T) {
 
 func TestAccAWSMacieMemberAccountAssociation_self(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSMacie(t) },
+		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
-		// master account associated with Macie it can't be disassociated.
-		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSMacieMemberAccountAssociationConfig_self,

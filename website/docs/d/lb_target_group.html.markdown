@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lb_target_group"
+sidebar_current: "docs-aws-datasource-lb-target-group"
 description: |-
   Provides a Load Balancer Target Group data source.
 ---

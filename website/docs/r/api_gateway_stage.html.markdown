@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_stage"
+sidebar_current: "docs-aws-resource-api-gateway-stage"
 description: |-
   Provides an API Gateway Stage.
 ---
@@ -58,38 +59,6 @@ resource "aws_api_gateway_integration" "test" {
   resource_id = "${aws_api_gateway_resource.test.id}"
   http_method = "${aws_api_gateway_method.test.http_method}"
   type        = "MOCK"
-}
-```
-
-### Managing the API Logging CloudWatch Log Group
-
-API Gateway provides the ability to [enable CloudWatch API logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html). To manage the CloudWatch Log Group when this feature is enabled, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used where the name matches the API Gateway naming convention. If the CloudWatch Log Group previously exists, the [`aws_cloudwatch_log_group` resource can be imported into Terraform](/docs/providers/aws/r/cloudwatch_log_group.html#import) as a one time operation and recreation of the environment can occur without import.
-
--> The below configuration uses [`depends_on`](/docs/configuration/resources.html#depends_on-explicit-resource-dependencies) to prevent ordering issues with API Gateway automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
-
-```hcl
-variable "stage_name" {
-  default = "example"
-  type    = "string"
-}
-
-resource "aws_api_gateway_rest_api" "example" {
-  # ... other configuration ...
-}
-
-resource "aws_api_gateway_stage" "example" {
-  depends_on = ["aws_cloudwatch_log_group.example"]
-
-  name = "${var.stage_name}"
-
-  # ... other configuration ...
-}
-
-resource "aws_cloudwatch_log_group" "example" {
-  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.example.id}/${var.stage_name}"
-  retention_in_days = 7
-
-  # ... potentially other configuration ...
 }
 ```
 

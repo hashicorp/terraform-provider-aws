@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_backup_vault"
+sidebar_current: "docs-aws-resource-backup-vault"
 description: |-
   Provides an AWS Backup vault resource.
 ---
@@ -33,11 +34,3 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The name of the vault.
 * `arn` - The ARN of the vault.
 * `recovery_points` - The number of recovery points that are stored in a backup vault.
-
-## Import
-
-Backup vault can be imported using the `name`, e.g.
-
-```
-$ terraform import aws_backup_vault.test-vault TestVault
-```

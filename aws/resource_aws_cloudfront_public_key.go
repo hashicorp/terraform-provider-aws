@@ -3,11 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsCloudFrontPublicKey() *schema.Resource {
@@ -162,7 +163,7 @@ func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {
 	if v, ok := d.GetOk("caller_reference"); ok {
 		publicKeyConfig.CallerReference = aws.String(v.(string))
 	} else {
-		publicKeyConfig.CallerReference = aws.String(resource.UniqueId())
+		publicKeyConfig.CallerReference = aws.String(time.Now().Format(time.RFC3339Nano))
 	}
 
 	return publicKeyConfig

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_user_policy"
+sidebar_current: "docs-aws-resource-iam-user-policy"
 description: |-
   Provides an IAM policy attached to a user.
 ---

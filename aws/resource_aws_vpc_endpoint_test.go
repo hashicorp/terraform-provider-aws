@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -81,10 +81,8 @@ func testSweepEc2VpcEndpoints(region string) error {
 	return nil
 }
 
-func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
-	var endpoint ec2.VpcEndpoint
-	resourceName := "aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+func TestAccAWSVpcEndpoint_importBasic(t *testing.T) {
+	resourceName := "aws_vpc_endpoint.s3"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -92,76 +90,9 @@ func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicyOrTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					testAccCheckVpcEndpointPrefixListAvailable(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-				),
+				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy,
 			},
-		},
-	})
-}
 
-func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicyAndTags(t *testing.T) {
-	var endpoint ec2.VpcEndpoint
-	var routeTable ec2.RouteTable
-	resourceName := "aws_vpc_endpoint.test"
-	resourceNameRt := "aws_route_table.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyAndTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					testAccCheckRouteTableExists(resourceNameRt, &routeTable),
-					testAccCheckVpcEndpointPrefixListAvailable(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-				),
-			},
-			{
-				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyAndTagsModified(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					testAccCheckRouteTableExists(resourceNameRt, &routeTable),
-					testAccCheckVpcEndpointPrefixListAvailable(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Gateway"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-				),
-			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -171,7 +102,73 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicyAndTags(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
+func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_vpc_endpoint.s3",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVpcEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),
+					testAccCheckVpcEndpointPrefixListAvailable("aws_vpc_endpoint.s3"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "private_dns_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
+	var endpoint ec2.VpcEndpoint
+	var routeTable ec2.RouteTable
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_vpc_endpoint.s3",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVpcEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),
+					testAccCheckRouteTableExists("aws_route_table.default", &routeTable),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "route_table_ids.#", "1"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "private_dns_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),
+					testAccCheckRouteTableExists("aws_route_table.default", &routeTable),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.s3", "private_dns_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSVpcEndpoint_Gateway_Policy(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	// This policy checks the DiffSuppressFunc
 	policy1 := `
@@ -205,7 +202,6 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 }
 `
 	resourceName := "aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -213,7 +209,7 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfigGatewayPolicy(rName, policy1),
+				Config: testAccVpcEndpointConfigGatewayPolicy(policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
 				),
@@ -224,7 +220,7 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVpcEndpointConfigGatewayPolicy(rName, policy2),
+				Config: testAccVpcEndpointConfigGatewayPolicy(policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
 				),
@@ -235,29 +231,24 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 
 func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
-	resourceName := "aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_vpc_endpoint.ec2",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceWithoutSubnet(rName),
+				Config: testAccVpcEndpointConfig_interfaceWithoutSubnet,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.ec2", &endpoint),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "vpc_endpoint_type", "Interface"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "private_dns_enabled", "false"),
 				),
 			},
 		},
@@ -266,95 +257,68 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 
 func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
-	resourceName := "aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_vpc_endpoint.ec2",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceWithSubnet(rName),
+				Config: testAccVpcEndpointConfig_interfaceWithSubnet,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.ec2", &endpoint),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "vpc_endpoint_type", "Interface"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "private_dns_enabled", "false"),
 				),
 			},
 			{
-				Config: testAccVpcEndpointConfig_interfaceWithSubnetModified(rName),
+				Config: testAccVpcEndpointConfig_interfaceWithSubnetModified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.ec2", &endpoint),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "vpc_endpoint_type", "Interface"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.ec2", "private_dns_enabled", "true"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
+	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	var endpoint ec2.VpcEndpoint
-	resourceName := "aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpcEndpointDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_vpc_endpoint.foo",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_interfaceNonAWSService(rName),
+				Config: testAccVpcEndpointConfig_interfaceNonAWSService(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", "available"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.foo", &endpoint),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.foo", "vpc_endpoint_type", "Interface"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.foo", "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.foo", "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.foo", "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.foo", "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr("aws_vpc_endpoint.foo", "state", "available"),
 				),
 			},
 		},
 	})
 }
-
 func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
-	resourceName := "aws_vpc_endpoint.test"
-	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
 
 	// reach out and DELETE the VPC Endpoint outside of Terraform
 	testDestroy := func(*terraform.State) error {
@@ -374,9 +338,9 @@ func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 		CheckDestroy: testAccCheckVpcEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicyOrTags(rName),
+				Config: testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointExists(resourceName, &endpoint),
+					testAccCheckVpcEndpointExists("aws_vpc_endpoint.s3", &endpoint),
 					testDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -475,54 +439,28 @@ func testAccCheckVpcEndpointPrefixListAvailable(n string) resource.TestCheckFunc
 	}
 }
 
-func testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicyOrTags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicy = `
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
 
-data "aws_region" "current" {}
-
-resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
-}
-`, rName)
-}
-
-func testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyAndTags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = "${aws_vpc.test.id}"
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.1.0/24"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
 
 data "aws_region" "current" {}
 
-resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id = "${aws_vpc.foo.id}"
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
-
-  route_table_ids = [
-    "${aws_route_table.test.id}",
-  ]
-
+  route_table_ids = ["${aws_route_table.default.id}"]
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -535,124 +473,104 @@ resource "aws_vpc_endpoint" "test" {
   }]
 }
 POLICY
-
-  tags = {
-    Environment = "test"
-    Usage       = "original"
-    Name        = %[1]q
-  }
 }
 
-resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_route_table" "default" {
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
-resource "aws_route_table_association" "test" {
-  subnet_id      = "${aws_subnet.test.id}"
-  route_table_id = "${aws_route_table.test.id}"
+resource "aws_route_table_association" "main" {
+  subnet_id = "${aws_subnet.foo.id}"
+  route_table_id = "${aws_route_table.default.id}"
 }
-`, rName)
-}
+`
 
-func testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyAndTagsModified(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+const testAccVpcEndpointConfig_gatewayWithRouteTableAndPolicyModified = `
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
 
-resource "aws_subnet" "test" {
-  vpc_id     = "${aws_vpc.test.id}"
+resource "aws_subnet" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
   cidr_block = "10.0.1.0/24"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-gw-w-route-table-and-policy"
   }
 }
 
 data "aws_region" "current" {}
 
-resource "aws_vpc_endpoint" "test" {
-  vpc_id       = "${aws_vpc.test.id}"
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id = "${aws_vpc.foo.id}"
   service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
-
   route_table_ids = []
-
   policy = ""
-
-  tags = {
-    Usage = "changed"
-    Name  = %[1]q
-  }
 }
 
-resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_internet_gateway" "gw" {
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
-resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+resource "aws_route_table" "default" {
+  vpc_id = "${aws_vpc.foo.id}"
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.test.id}"
-  }
-
-  tags = {
-    Name = %[1]q
+    gateway_id = "${aws_internet_gateway.gw.id}"
   }
 }
 
-resource "aws_route_table_association" "test" {
-  subnet_id      = "${aws_subnet.test.id}"
-  route_table_id = "${aws_route_table.test.id}"
+resource "aws_route_table_association" "main" {
+  subnet_id = "${aws_subnet.foo.id}"
+  route_table_id = "${aws_route_table.default.id}"
 }
-`, rName)
-}
+`
 
-func testAccVpcEndpointConfig_interfaceWithoutSubnet(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+const testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicy = `
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
-
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-endpoint-gw-wout-route-table-or-policy"
   }
-}
-
-data "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  name   = "default"
 }
 
 data "aws_region" "current" {}
 
-resource "aws_vpc_endpoint" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  service_name      = "com.amazonaws.${data.aws_region.current.name}.ec2"
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id = "${aws_vpc.foo.id}"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+`
+
+const testAccVpcEndpointConfig_interfaceWithoutSubnet = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.0.0.0/16"
+  tags = {
+    Name = "terraform-testacc-vpc-endpoint-iface-wout-subnet"
+  }
+}
+
+data "aws_security_group" "default" {
+  vpc_id = "${aws_vpc.foo.id}"
+  name = "default"
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "ec2" {
+  vpc_id = "${aws_vpc.foo.id}"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.ec2"
   vpc_endpoint_type = "Interface"
-
-  security_group_ids = [
-    "${data.aws_security_group.test.id}",
-  ]
+  security_group_ids = ["${data.aws_security_group.default.id}"]
 }
-`, rName)
-}
+`
 
-func testAccVpcEndpointConfigGatewayPolicy(rName, policy string) string {
+func testAccVpcEndpointConfigGatewayPolicy(policy string) string {
 	return fmt.Sprintf(`
-data "aws_vpc_endpoint_service" "test" {
+data "aws_vpc_endpoint_service" "s3" {
   service = "s3"
 }
 
@@ -660,27 +578,25 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-endpoint-gateway-policy"
   }
 }
 
 resource "aws_vpc_endpoint" "test" {
-  policy       = <<POLICY%[2]sPOLICY
-  service_name = "${data.aws_vpc_endpoint_service.test.service_name}"
+  policy       = <<POLICY%[1]sPOLICY
+  service_name = "${data.aws_vpc_endpoint_service.s3.service_name}"
   vpc_id       = "${aws_vpc.test.id}"
 }
-`, rName, policy)
+`, policy)
 }
 
-func testAccVpcEndpointConfig_interfaceWithSubnet(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
+const testAccVpcEndpointConfig_interfaceWithSubnet = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
   enable_dns_hostnames = true
-
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
   }
 }
 
@@ -688,83 +604,58 @@ data "aws_region" "current" {}
 
 data "aws_availability_zones" "available" {}
 
-resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 0)}"
+resource "aws_subnet" "sn1" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
   }
 }
 
-resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 1)}"
+resource "aws_subnet" "sn2" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
   }
 }
 
-resource "aws_subnet" "test3" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 2)}"
+resource "aws_subnet" "sn3" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
   availability_zone = "${data.aws_availability_zones.available.names[2]}"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-3"
   }
 }
 
-resource "aws_security_group" "test1" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_security_group" "sg1" {
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
-resource "aws_security_group" "test2" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_security_group" "sg2" {
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
-resource "aws_vpc_endpoint" "test" {
-  vpc_id              = "${aws_vpc.test.id}"
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
-  vpc_endpoint_type   = "Interface"
+resource "aws_vpc_endpoint" "ec2" {
+  vpc_id = "${aws_vpc.foo.id}"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
+  subnet_ids = ["${aws_subnet.sn1.id}"]
+  security_group_ids = ["${aws_security_group.sg1.id}", "${aws_security_group.sg2.id}"]
   private_dns_enabled = false
-
-  subnet_ids = [
-    "${aws_subnet.test1.id}",
-  ]
-
-  security_group_ids = [
-    "${aws_security_group.test1.id}",
-    "${aws_security_group.test2.id}",
-  ]
-
-  tags = {
-    Name = %[1]q
-  }
 }
-`, rName)
-}
+`
 
-func testAccVpcEndpointConfig_interfaceWithSubnetModified(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
+const testAccVpcEndpointConfig_interfaceWithSubnetModified = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
   enable_dns_hostnames = true
-
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-endpoint-iface-w-subnet"
   }
 }
 
@@ -772,87 +663,67 @@ data "aws_region" "current" {}
 
 data "aws_availability_zones" "available" {}
 
-resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 0)}"
+resource "aws_subnet" "sn1" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-1"
   }
 }
 
-resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 1)}"
+resource "aws_subnet" "sn2" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)}"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-2"
   }
 }
 
-resource "aws_subnet" "test3" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 2)}"
+resource "aws_subnet" "sn3" {
+  vpc_id = "${aws_vpc.foo.id}"
+  cidr_block = "${cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)}"
   availability_zone = "${data.aws_availability_zones.available.names[2]}"
-
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-w-subnet-3"
   }
 }
 
-resource "aws_security_group" "test1" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_security_group" "sg1" {
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
-resource "aws_security_group" "test2" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_security_group" "sg2" {
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
-resource "aws_vpc_endpoint" "test" {
-  vpc_id              = "${aws_vpc.test.id}"
-  service_name        = "com.amazonaws.${data.aws_region.current.name}.ec2"
-  vpc_endpoint_type   = "Interface"
+resource "aws_vpc_endpoint" "ec2" {
+  vpc_id = "${aws_vpc.foo.id}"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.ec2"
+  vpc_endpoint_type = "Interface"
+  subnet_ids = ["${aws_subnet.sn1.id}", "${aws_subnet.sn2.id}", "${aws_subnet.sn3.id}"]
+  security_group_ids = ["${aws_security_group.sg1.id}"]
   private_dns_enabled = true
-
-  subnet_ids = [
-    "${aws_subnet.test1.id}",
-    "${aws_subnet.test2.id}",
-    "${aws_subnet.test3.id}",
-  ]
-
-  security_group_ids = [
-    "${aws_security_group.test1.id}",
-  ]
 }
-`, rName)
-}
+`
 
-func testAccVpcEndpointConfig_interfaceNonAWSService(rName string) string {
+func testAccVpcEndpointConfig_interfaceNonAWSService(lbName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-endpoint-iface-non-aws-svc"
   }
 }
 
-resource "aws_lb" "test" {
-  name = %[1]q
+resource "aws_lb" "nlb_test_1" {
+  name = "%s"
 
   subnets = [
-    "${aws_subnet.test1.id}",
-    "${aws_subnet.test2.id}",
+    "${aws_subnet.nlb_test_1.id}",
+    "${aws_subnet.nlb_test_2.id}",
   ]
 
   load_balancer_type         = "network"
@@ -861,7 +732,7 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 
   tags = {
-    Name = %[1]q
+    Name = "testAccVpcEndpointServiceBasicConfig_nlb1"
   }
 }
 
@@ -869,56 +740,45 @@ data "aws_region" "current" {}
 
 data "aws_availability_zones" "available" {}
 
-resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
+resource "aws_subnet" "nlb_test_1" {
+  vpc_id            = "${aws_vpc.foo.id}"
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-1"
   }
 }
 
-resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
+resource "aws_subnet" "nlb_test_2" {
+  vpc_id            = "${aws_vpc.foo.id}"
   cidr_block        = "10.0.2.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[1]}"
 
   tags = {
-    Name = %[1]q
+    Name = "tf-acc-vpc-endpoint-iface-non-aws-svc-2"
   }
 }
 
-resource "aws_vpc_endpoint_service" "test" {
+resource "aws_vpc_endpoint_service" "foo" {
   acceptance_required = true
 
   network_load_balancer_arns = [
-    "${aws_lb.test.id}",
+    "${aws_lb.nlb_test_1.id}",
   ]
 }
 
-resource "aws_security_group" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_security_group" "sg1" {
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
-resource "aws_vpc_endpoint" "test" {
-  vpc_id              = "${aws_vpc.test.id}"
-  service_name        = "${aws_vpc_endpoint_service.test.service_name}"
-  vpc_endpoint_type   = "Interface"
+resource "aws_vpc_endpoint" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+  service_name = "${aws_vpc_endpoint_service.foo.service_name}"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = ["${aws_security_group.sg1.id}"]
   private_dns_enabled = false
-  auto_accept         = true
-
-  security_group_ids = [
-    "${aws_security_group.test.id}",
-  ]
-
-  tags = {
-    Name = %[1]q
-  }
+  auto_accept = true
 }
-`, rName)
+  `, lbName)
 }

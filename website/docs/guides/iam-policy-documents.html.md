@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS IAM Policy Documents with Terraform"
+sidebar_current: "docs-aws-guide-iam-policy-documents"
 description: |-
   Using Terraform to configure AWS IAM policy documents.
 ---
@@ -155,7 +156,7 @@ Those contents can be read and interpolated into the Terraform configuration via
 data "template_file" "example" {
   template = "${file("policy.json.tpl")}"
 
-  vars = {
+  vars {
     resource = "${aws_vpc.example.arn}"
   }
 }

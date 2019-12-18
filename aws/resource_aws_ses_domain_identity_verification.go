@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsSesDomainIdentityVerification() *schema.Resource {
@@ -73,16 +73,8 @@ func resourceAwsSesDomainIdentityVerificationCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		var att *ses.IdentityVerificationAttributes
-		att, err = getAwsSesIdentityVerificationAttributes(conn, domainName)
-
-		if att != nil && aws.StringValue(att.VerificationStatus) != ses.VerificationStatusSuccess {
-			return fmt.Errorf("Expected domain verification Success, but was in state %s", aws.StringValue(att.VerificationStatus))
-		}
-	}
 	if err != nil {
-		return fmt.Errorf("Error creating SES domain identity verification: %s", err)
+		return err
 	}
 
 	log.Printf("[INFO] Domain verification successful for %s", domainName)

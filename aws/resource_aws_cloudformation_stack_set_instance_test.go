@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSCloudFormationStackSetInstance_basic(t *testing.T) {
@@ -374,13 +374,11 @@ resource "aws_cloudformation_stack_set" "test" {
   administration_role_arn = "${aws_iam_role.Administration.arn}"
   execution_role_name     = "${aws_iam_role.Execution.name}"
   name                    = %[1]q
-
-  parameters = {
+  parameters              = {
     Parameter1 = "stacksetvalue1"
     Parameter2 = "stacksetvalue2"
   }
-
-  template_body = <<TEMPLATE
+  template_body           = <<TEMPLATE
 Parameters:
   Parameter1:
     Type: String

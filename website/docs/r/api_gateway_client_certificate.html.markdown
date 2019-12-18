@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_client_certificate"
+sidebar_current: "docs-aws-resource-api-gateway-client-certificate"
 description: |-
   Provides an API Gateway Client Certificate.
 ---

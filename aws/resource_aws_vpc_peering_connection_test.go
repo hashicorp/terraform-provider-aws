@@ -6,116 +6,55 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 )
 
-func init() {
-	resource.AddTestSweepers("aws_vpc_peering_connection", &resource.Sweeper{
-		Name: "aws_vpc_peering_connection",
-		F:    testSweepEc2VpcPeeringConnections,
+func TestAccAWSVPCPeeringConnection_importBasic(t *testing.T) {
+	resourceName := "aws_vpc_peering_connection.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcPeeringConfig,
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"auto_accept"},
+			},
+		},
 	})
-}
-
-func testSweepEc2VpcPeeringConnections(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-
-	conn := client.(*AWSClient).ec2conn
-	input := &ec2.DescribeVpcPeeringConnectionsInput{}
-
-	err = conn.DescribeVpcPeeringConnectionsPages(input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, vpcPeeringConnection := range page.VpcPeeringConnections {
-			deletedStatuses := map[string]bool{
-				ec2.VpcPeeringConnectionStateReasonCodeDeleted:  true,
-				ec2.VpcPeeringConnectionStateReasonCodeExpired:  true,
-				ec2.VpcPeeringConnectionStateReasonCodeFailed:   true,
-				ec2.VpcPeeringConnectionStateReasonCodeRejected: true,
-			}
-
-			if _, ok := deletedStatuses[aws.StringValue(vpcPeeringConnection.Status.Code)]; ok {
-				continue
-			}
-
-			id := aws.StringValue(vpcPeeringConnection.VpcPeeringConnectionId)
-			input := &ec2.DeleteVpcPeeringConnectionInput{
-				VpcPeeringConnectionId: vpcPeeringConnection.VpcPeeringConnectionId,
-			}
-
-			log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", id)
-
-			_, err := conn.DeleteVpcPeeringConnection(input)
-
-			if isAWSErr(err, "InvalidVpcPeeringConnectionID.NotFound", "") {
-				continue
-			}
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting EC2 VPC Peering Connection (%s): %s", id, err)
-				continue
-			}
-
-			if err := waitForEc2VpcPeeringConnectionDeletion(conn, id, 5*time.Minute); err != nil {
-				log.Printf("[ERROR] Error waiting for EC2 VPC Peering Connection (%s) to be deleted: %s", id, err)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC Peering Connection sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("Error describing EC2 VPC Peering Connections: %s", err)
-	}
-
-	return nil
 }
 
 func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
+		IDRefreshName:   "aws_vpc_peering_connection.foo",
 		IDRefreshIgnore: []string{"auto_accept"},
 
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConfig_basic(rName),
+				Config: testAccVpcPeeringConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
+						"aws_vpc_peering_connection.foo",
+						&connection),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"auto_accept",
-				},
 			},
 		},
 	})
@@ -123,8 +62,6 @@ func TestAccAWSVPCPeeringConnection_basic(t *testing.T) {
 
 func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	resourceName := "aws_vpc_peering_connection.test"
 
 	// reach out and DELETE the VPC Peering connection outside of Terraform
 	testDestroy := func(*terraform.State) error {
@@ -141,17 +78,15 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshIgnore: []string{"auto_accept"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConfig_basic(rName),
+				Config: testAccVpcPeeringConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
+						"aws_vpc_peering_connection.foo",
+						&connection),
 					testDestroy,
 				),
 				ExpectNonEmptyPlan: true,
@@ -162,35 +97,23 @@ func TestAccAWSVPCPeeringConnection_plan(t *testing.T) {
 
 func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
+		IDRefreshName:   "aws_vpc_peering_connection.foo",
 		IDRefreshIgnore: []string{"auto_accept"},
 
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConfig_tags(rName),
+				Config: testAccVpcPeeringConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
-					testAccCheckTags(&connection.Tags, "Name", rName),
-					testAccCheckTags(&connection.Tags, "test", "bar"),
+						"aws_vpc_peering_connection.foo",
+						&connection),
+					testAccCheckTags(&connection.Tags, "foo", "bar"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"auto_accept",
-				},
 			},
 		},
 	})
@@ -198,8 +121,6 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 
 func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	resourceName := "aws_vpc_peering_connection.test"
 
 	testAccepterChange := func(*terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -218,75 +139,46 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
+		IDRefreshName:   "aws_vpc_peering_connection.foo",
 		IDRefreshIgnore: []string{"auto_accept"},
 
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConfig_options(rName),
+				Config: testAccVpcPeeringConfigOptions,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
-					// Requester's view:
+						"aws_vpc_peering_connection.foo",
+						&connection),
 					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.#",
-						"1",
-					),
+						"aws_vpc_peering_connection.foo",
+						"accepter.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.41753983.allow_remote_vpc_dns_resolution",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.41753983.allow_classic_link_to_remote_vpc",
-						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.41753983.allow_vpc_to_remote_classic_link",
-						"true",
-					),
+						"aws_vpc_peering_connection.foo",
+						"accepter.1102046665.allow_remote_vpc_dns_resolution", "true"),
 					testAccCheckAWSVpcPeeringConnectionOptions(
-						resourceName, "requester",
-						&ec2.VpcPeeringConnectionOptionsDescription{
-							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
-							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(true),
-							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(true),
-						},
-					),
-					// Accepter's view:
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.#",
-						"1",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.1102046665.allow_remote_vpc_dns_resolution",
-						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.1102046665.allow_classic_link_to_remote_vpc",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.1102046665.allow_vpc_to_remote_classic_link",
-						"false",
-					),
-					testAccCheckAWSVpcPeeringConnectionOptions(
-						resourceName, "accepter",
+						"aws_vpc_peering_connection.foo", "accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
 							AllowDnsResolutionFromRemoteVpc:            aws.Bool(true),
 							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
 							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(false),
+						}),
+					resource.TestCheckResourceAttr(
+						"aws_vpc_peering_connection.foo",
+						"requester.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_vpc_peering_connection.foo",
+						"requester.41753983.allow_classic_link_to_remote_vpc", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_vpc_peering_connection.foo",
+						"requester.41753983.allow_vpc_to_remote_classic_link", "true"),
+					testAccCheckAWSVpcPeeringConnectionOptions(
+						"aws_vpc_peering_connection.foo", "requester",
+						&ec2.VpcPeeringConnectionOptionsDescription{
+							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
+							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(true),
+							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(true),
 						},
 					),
 					testAccepterChange,
@@ -294,72 +186,19 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"auto_accept",
-				},
-			},
-			{
-				Config: testAccVpcPeeringConfig_options(rName),
+				Config: testAccVpcPeeringConfigOptions,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
-					// Requester's view:
+						"aws_vpc_peering_connection.foo",
+						&connection),
 					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.#",
-						"1",
-					),
+						"aws_vpc_peering_connection.foo",
+						"accepter.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.41753983.allow_remote_vpc_dns_resolution",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.41753983.allow_classic_link_to_remote_vpc",
-						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"requester.41753983.allow_vpc_to_remote_classic_link",
-						"true",
-					),
+						"aws_vpc_peering_connection.foo",
+						"accepter.1102046665.allow_remote_vpc_dns_resolution", "true"),
 					testAccCheckAWSVpcPeeringConnectionOptions(
-						resourceName, "requester",
-						&ec2.VpcPeeringConnectionOptionsDescription{
-							AllowDnsResolutionFromRemoteVpc:            aws.Bool(false),
-							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(true),
-							AllowEgressFromLocalVpcToRemoteClassicLink: aws.Bool(true),
-						},
-					),
-					// Accepter's view:
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.#",
-						"1",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.1102046665.allow_remote_vpc_dns_resolution",
-						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.1102046665.allow_classic_link_to_remote_vpc",
-						"false",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accepter.1102046665.allow_vpc_to_remote_classic_link",
-						"false",
-					),
-					testAccCheckAWSVpcPeeringConnectionOptions(
-						resourceName, "accepter",
+						"aws_vpc_peering_connection.foo", "accepter",
 						&ec2.VpcPeeringConnectionOptionsDescription{
 							AllowDnsResolutionFromRemoteVpc:            aws.Bool(true),
 							AllowEgressFromLocalClassicLinkToRemoteVpc: aws.Bool(false),
@@ -373,17 +212,14 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 }
 
 func TestAccAWSVPCPeeringConnection_failedState(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshIgnore: []string{"auto_accept"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVpcPeeringConfig_failedState(rName),
+				Config:      testAccVpcPeeringConfigFailedState,
 				ExpectError: regexp.MustCompile(`.*Error waiting.*\(pcx-\w+\).*incorrect.*VPC-ID.*`),
 			},
 		},
@@ -435,10 +271,6 @@ func testAccCheckAWSVpcPeeringConnectionDestroy(s *terraform.State) error {
 }
 
 func testAccCheckAWSVpcPeeringConnectionExists(n string, connection *ec2.VpcPeeringConnection) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n, connection, testAccProviderFunc)
-}
-
-func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection *ec2.VpcPeeringConnection, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -449,7 +281,7 @@ func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection 
 			return fmt.Errorf("No VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*AWSClient).ec2conn
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeVpcPeeringConnections(
 			&ec2.DescribeVpcPeeringConnectionsInput{
 				VpcPeeringConnectionIds: []*string{aws.String(rs.Primary.ID)},
@@ -468,10 +300,6 @@ func testAccCheckAWSVpcPeeringConnectionExistsWithProvider(n string, connection 
 }
 
 func testAccCheckAWSVpcPeeringConnectionOptions(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
-	return testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block, options, testAccProviderFunc)
-}
-
-func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, options *ec2.VpcPeeringConnectionOptionsDescription, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -482,7 +310,7 @@ func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, opt
 			return fmt.Errorf("No VPC Peering Connection ID is set.")
 		}
 
-		conn := providerF().Meta().(*AWSClient).ec2conn
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeVpcPeeringConnections(
 			&ec2.DescribeVpcPeeringConnectionsInput{
 				VpcPeeringConnectionIds: []*string{aws.String(rs.Primary.ID)},
@@ -507,22 +335,15 @@ func testAccCheckAWSVpcPeeringConnectionOptionsWithProvider(n, block string, opt
 	}
 }
 
-func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-
+func TestAccAWSVPCPeeringConnection_peerRegionAndAutoAccept(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
-		},
+		PreCheck:        func() { testAccPreCheck(t) },
 		IDRefreshIgnore: []string{"auto_accept"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccVpcPeeringConfig_region_autoAccept(rName, true),
+				Config:      testAccVpcPeeringConfigRegionAutoAccept,
 				ExpectError: regexp.MustCompile(`.*peer_region cannot be set whilst auto_accept is true when creating a vpc peering connection.*`),
 			},
 		},
@@ -531,205 +352,96 @@ func TestAccAWSVPCPeeringConnection_peerRegionAutoAccept(t *testing.T) {
 
 func TestAccAWSVPCPeeringConnection_region(t *testing.T) {
 	var connection ec2.VpcPeeringConnection
+
 	var providers []*schema.Provider
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	resourceName := "aws_vpc_peering_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccMultipleRegionsPreCheck(t)
-			testAccAlternateRegionPreCheck(t)
-		},
-		IDRefreshName:   resourceName,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   "aws_vpc_peering_connection.foo",
 		IDRefreshIgnore: []string{"auto_accept"},
 
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVpcPeeringConfig_region_autoAccept(rName, false),
+				Config: testAccVpcPeeringConfigRegion,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accept_status",
-						"pending-acceptance",
-					),
+						"aws_vpc_peering_connection.foo",
+						&connection),
 				),
 			},
 		},
 	})
 }
 
-// Tests the peering connection acceptance functionality for same region, same account.
-func TestAccAWSVPCPeeringConnection_accept(t *testing.T) {
-	var connection ec2.VpcPeeringConnection
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	resourceName := "aws_vpc_peering_connection.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"auto_accept"},
-
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVpcPeeringConfig_autoAccept(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accept_status",
-						"pending-acceptance",
-					),
-				),
-			},
-			{
-				Config: testAccVpcPeeringConfig_autoAccept(rName, true),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accept_status",
-						"active",
-					),
-				),
-			},
-			// Tests that changing 'auto_accept' back to false keeps the connection active.
-			{
-				Config: testAccVpcPeeringConfig_autoAccept(rName, false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSVpcPeeringConnectionExists(
-						resourceName,
-						&connection,
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"accept_status",
-						"active",
-					),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"auto_accept",
-				},
-			},
-		},
-	})
-}
-
-// Tests that VPC peering connection options can't be set on non-active connection.
-func TestAccAWSVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
-	rName := fmt.Sprintf("tf-testacc-pcx-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccVpcPeeringConfig_options_noAutoAccept(rName),
-				ExpectError: regexp.MustCompile(`.*Unable to modify peering options\. The VPC Peering Connection "pcx-\w+" is not active\..*`),
-			},
-		},
-	})
-}
-
-func testAccVpcPeeringConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+const testAccVpcPeeringConfig = `
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-foo"
   }
 }
 
-resource "aws_vpc" "peer" {
+resource "aws_vpc" "bar" {
   cidr_block = "10.1.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-bar"
   }
 }
 
-resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+resource "aws_vpc_peering_connection" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+  peer_vpc_id = "${aws_vpc.bar.id}"
   auto_accept = true
-  tags = {
-    Name = %[1]q
-  }
 }
-`, rName)
-}
+`
 
-func testAccVpcPeeringConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+const testAccVpcPeeringConfigTags = `
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-tags-foo"
   }
 }
 
-resource "aws_vpc" "peer" {
+resource "aws_vpc" "bar" {
   cidr_block = "10.1.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-tags-bar"
   }
 }
 
-resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+resource "aws_vpc_peering_connection" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+  peer_vpc_id = "${aws_vpc.bar.id}"
   auto_accept = true
   tags = {
-	test = "bar"
-	Name = %[1]q
+    foo = "bar"
   }
 }
-`, rName)
-}
+`
 
-func testAccVpcPeeringConfig_options(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+const testAccVpcPeeringConfigOptions = `
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-options-foo"
   }
 }
 
-resource "aws_vpc" "peer" {
+resource "aws_vpc" "bar" {
   cidr_block = "10.1.0.0/16"
   enable_dns_hostnames = true
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-options-bar"
   }
 }
 
-resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
+resource "aws_vpc_peering_connection" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+  peer_vpc_id = "${aws_vpc.bar.id}"
   auto_accept = true
-  tags = {
-    Name = %[1]q
-  }
 
   accepter {
     allow_remote_vpc_dns_resolution = true
@@ -740,125 +452,96 @@ resource "aws_vpc_peering_connection" "test" {
     allow_classic_link_to_remote_vpc = true
   }
 }
-`, rName)
-}
+`
 
-func testAccVpcPeeringConfig_failedState(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+const testAccVpcPeeringConfigFailedState = `
+resource "aws_vpc" "foo" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-failed-state-foo"
   }
 }
 
-resource "aws_vpc" "peer" {
+resource "aws_vpc" "bar" {
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-failed-state-bar"
   }
 }
 
-resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_vpc_peering_connection" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+  peer_vpc_id = "${aws_vpc.bar.id}"
 }
-`, rName)
+`
+
+const testAccVpcPeeringConfigRegionAutoAccept = `
+provider "aws" {
+  alias = "main"
+  region = "us-west-2"
 }
 
-func testAccVpcPeeringConfig_region_autoAccept(rName string, autoAccept bool) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
-resource "aws_vpc" "test" {
+provider "aws" {
+  alias = "peer"
+  region = "us-east-1"
+}
+
+resource "aws_vpc" "foo" {
+  provider = "aws.main"
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-region-auto-accept-foo"
   }
 }
 
-resource "aws_vpc" "peer" {
-  provider = "aws.alternate"
-
+resource "aws_vpc" "bar" {
+  provider = "aws.peer"
   cidr_block = "10.1.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-region-auto-accept-bar"
   }
 }
 
-resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
-  peer_region = %[3]q
-  auto_accept = %[2]t
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_vpc_peering_connection" "foo" {
+  provider = "aws.main"
+  vpc_id = "${aws_vpc.foo.id}"
+  peer_vpc_id = "${aws_vpc.bar.id}"
+  peer_region = "us-east-1"
+  auto_accept = true
 }
-`, rName, autoAccept, testAccGetAlternateRegion())
+`
+
+const testAccVpcPeeringConfigRegion = `
+provider "aws" {
+  alias = "main"
+  region = "us-west-2"
 }
 
-func testAccVpcPeeringConfig_autoAccept(rName string, autoAccept bool) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
+provider "aws" {
+  alias = "peer"
+  region = "us-east-1"
+}
+
+resource "aws_vpc" "foo" {
+  provider = "aws.main"
   cidr_block = "10.0.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-region-foo"
   }
 }
 
-resource "aws_vpc" "peer" {
+resource "aws_vpc" "bar" {
+  provider = "aws.peer"
   cidr_block = "10.1.0.0/16"
   tags = {
-    Name = %[1]q
+    Name = "terraform-testacc-vpc-peering-conn-region-bar"
   }
 }
 
-resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
-  auto_accept = %t
-  tags = {
-    Name = %[1]q
-  }
+resource "aws_vpc_peering_connection" "foo" {
+  provider = "aws.main"
+  vpc_id = "${aws_vpc.foo.id}"
+  peer_vpc_id = "${aws_vpc.bar.id}"
+  peer_region = "us-east-1"
 }
-`, rName, autoAccept)
-}
-
-func testAccVpcPeeringConfig_options_noAutoAccept(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "peer" {
-  cidr_block = "10.1.0.0/16"
-  enable_dns_hostnames = true
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.peer.id}"
-  auto_accept = false
-  tags = {
-    Name = %[1]q
-  }
-
-  accepter {
-    allow_remote_vpc_dns_resolution = true
-  }
-
-  requester {
-    allow_vpc_to_remote_classic_link = true
-    allow_classic_link_to_remote_vpc = true
-  }
-}
-`, rName)
-}
+`

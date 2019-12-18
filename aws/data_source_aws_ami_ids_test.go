@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccDataSourceAwsAmiIds_basic(t *testing.T) {
@@ -73,7 +73,6 @@ func testAccDataSourceAwsAmiIdsConfig_sorted(sort_ascending bool) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn_linux_2016_09_0" {
   owners = ["amazon"]
-
   filter {
     name   = "name"
     values = ["amzn-ami-hvm-2016.09.0.20161028-x86_64-gp2"]
@@ -82,7 +81,6 @@ data "aws_ami" "amzn_linux_2016_09_0" {
 
 data "aws_ami" "amzn_linux_2018_03" {
   owners = ["amazon"]
-
   filter {
     name   = "name"
     values = ["amzn-ami-hvm-2018.03.0.20180811-x86_64-gp2"]
@@ -90,13 +88,11 @@ data "aws_ami" "amzn_linux_2018_03" {
 }
 
 data "aws_ami_ids" "test" {
-  owners = ["amazon"]
-
+  owners     = ["amazon"]
   filter {
     name   = "name"
     values = ["amzn-ami-hvm-2018.03.0.20180811-x86_64-gp2", "amzn-ami-hvm-2016.09.0.20161028-x86_64-gp2"]
   }
-
   sort_ascending = "%t"
 }
 `, sort_ascending)

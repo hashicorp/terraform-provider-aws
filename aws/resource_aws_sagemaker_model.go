@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func resourceAwsSagemakerModel() *schema.Resource {
@@ -305,24 +305,23 @@ func resourceAwsSagemakerModelDelete(d *schema.ResourceData, meta interface{}) e
 	}
 	log.Printf("[INFO] Deleting Sagemaker model: %s", d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	return resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteModel(deleteOpts)
 		if err == nil {
 			return nil
 		}
 
-		if isAWSErr(err, "ResourceNotFound", "") {
+		sagemakerErr, ok := err.(awserr.Error)
+		if !ok {
+			return resource.NonRetryableError(err)
+		}
+
+		if sagemakerErr.Code() == "ResourceNotFound" {
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+
+		return resource.NonRetryableError(fmt.Errorf("error deleting Sagemaker model: %s", err))
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteModel(deleteOpts)
-	}
-	if err != nil {
-		return fmt.Errorf("Error deleting sagemaker model: %s", err)
-	}
-	return nil
 }
 
 func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {

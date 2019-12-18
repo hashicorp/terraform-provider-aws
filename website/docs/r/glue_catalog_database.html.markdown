@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_glue_catalog_database"
+sidebar_current: "docs-aws-resource-glue-catalog-database"
 description: |-
   Provides a Glue Catalog Database.
 ---

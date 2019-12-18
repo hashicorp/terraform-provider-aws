@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
@@ -10,67 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/transfer"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
-
-func init() {
-	resource.AddTestSweepers("aws_transfer_server", &resource.Sweeper{
-		Name: "aws_transfer_server",
-		F:    testSweepTransferServers,
-	})
-}
-
-func testSweepTransferServers(region string) error {
-	client, err := sharedClientForRegion(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*AWSClient).transferconn
-	input := &transfer.ListServersInput{}
-
-	err = conn.ListServersPages(input, func(page *transfer.ListServersOutput, lastPage bool) bool {
-		for _, server := range page.Servers {
-			id := aws.StringValue(server.ServerId)
-			input := &transfer.DeleteServerInput{
-				ServerId: server.ServerId,
-			}
-
-			log.Printf("[INFO] Deleting Transfer Server: %s", id)
-			_, err := conn.DeleteServer(input)
-
-			if err != nil {
-				log.Printf("[ERROR] Error deleting Transfer Server (%s): %s", id, err)
-				continue
-			}
-
-			if err := waitForTransferServerDeletion(conn, id); err != nil {
-				log.Printf("[ERROR] Error waiting for Transfer Server (%s) deletion: %s", id, err)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping Transfer Server sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Transfer Servers: %s", err)
-	}
-
-	return nil
-}
 
 func TestAccAWSTransferServer_basic(t *testing.T) {
 	var conf transfer.DescribedServer
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_transfer_server.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -116,7 +65,7 @@ func TestAccAWSTransferServer_apigateway(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_transfer_server.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -145,7 +94,7 @@ func TestAccAWSTransferServer_disappears(t *testing.T) {
 	var conf transfer.DescribedServer
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSTransferServerDestroy,
 		Steps: []resource.TestStep{
@@ -167,7 +116,7 @@ func TestAccAWSTransferServer_forcedestroy(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_transfer_server.foo",
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -200,7 +149,7 @@ func TestAccAWSTransferServer_vpcEndpointId(t *testing.T) {
 	resourceName := "aws_transfer_server.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSTransfer(t) },
+		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSTransferServerDestroy,
@@ -328,22 +277,6 @@ func testAccCheckAWSTransferCreateSshKey(describedServer *transfer.DescribedServ
 	}
 }
 
-func testAccPreCheckAWSTransfer(t *testing.T) {
-	conn := testAccProvider.Meta().(*AWSClient).transferconn
-
-	input := &transfer.ListServersInput{}
-
-	_, err := conn.ListServers(input)
-
-	if testAccPreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 const testAccAWSTransferServerConfig_basic = `
 resource "aws_transfer_server" "foo" {}
 `
@@ -351,10 +284,11 @@ resource "aws_transfer_server" "foo" {}
 func testAccAWSTransferServerConfig_basicUpdate(rName string) string {
 
 	return fmt.Sprintf(`
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-server-iam-role-%s"
 
-  assume_role_policy = <<EOF
+resource "aws_iam_role" "foo" {
+	name = "tf-test-transfer-server-iam-role-%s"
+  
+	assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -371,10 +305,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-server-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
-
-  policy = <<POLICY
+	name = "tf-test-transfer-server-iam-policy-%s"
+	role = "${aws_iam_role.foo.id}"
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -393,11 +326,11 @@ POLICY
 
 resource "aws_transfer_server" "foo" {
   identity_provider_type = "SERVICE_MANAGED"
-  logging_role           = "${aws_iam_role.foo.arn}"
+  logging_role = "${aws_iam_role.foo.arn}"
 
   tags = {
-    NAME = "tf-acc-test-transfer-server"
-    ENV  = "test"
+	NAME   = "tf-acc-test-transfer-server"
+	ENV    = "test"
   }
 }
 `, rName, rName)
@@ -407,63 +340,65 @@ func testAccAWSTransferServerConfig_apigateway(rName string) string {
 
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+	name = "test"
 }
 
 resource "aws_api_gateway_resource" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
-  path_part   = "test"
+	rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+	parent_id = "${aws_api_gateway_rest_api.test.root_resource_id}"
+	path_part = "test"
 }
 
 resource "aws_api_gateway_method" "test" {
-  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
-  resource_id   = "${aws_api_gateway_resource.test.id}"
-  http_method   = "GET"
-  authorization = "NONE"
+	rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+	resource_id = "${aws_api_gateway_resource.test.id}"
+	http_method = "GET"
+	authorization = "NONE"
 }
 
 resource "aws_api_gateway_method_response" "error" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
-  status_code = "400"
+	rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+	resource_id = "${aws_api_gateway_resource.test.id}"
+	http_method = "${aws_api_gateway_method.test.http_method}"
+	status_code = "400"
 }
 
 resource "aws_api_gateway_integration" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_method.test.http_method}"
+	rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+	resource_id = "${aws_api_gateway_resource.test.id}"
+	http_method = "${aws_api_gateway_method.test.http_method}"
 
-  type                    = "HTTP"
-  uri                     = "https://www.google.de"
-  integration_http_method = "GET"
+	type = "HTTP"
+	uri = "https://www.google.de"
+	integration_http_method = "GET"
 }
 
 resource "aws_api_gateway_integration_response" "test" {
-  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
-  resource_id = "${aws_api_gateway_resource.test.id}"
-  http_method = "${aws_api_gateway_integration.test.http_method}"
-  status_code = "${aws_api_gateway_method_response.error.status_code}"
+	rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+	resource_id = "${aws_api_gateway_resource.test.id}"
+	http_method = "${aws_api_gateway_integration.test.http_method}"
+	status_code = "${aws_api_gateway_method_response.error.status_code}"
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+	depends_on = ["aws_api_gateway_integration.test"]
 
-  rest_api_id       = "${aws_api_gateway_rest_api.test.id}"
-  stage_name        = "test"
-  description       = "%s"
-  stage_description = "%s"
+	rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+	stage_name = "test"
+	description = "%s"
+	stage_description = "%s"
+
 
   variables = {
     "a" = "2"
   }
 }
 
-resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-server-iam-role-for-apigateway-%s"
 
-  assume_role_policy = <<EOF
+resource "aws_iam_role" "foo" {
+	name = "tf-test-transfer-server-iam-role-for-apigateway-%s"
+
+	assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -480,10 +415,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-server-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
-
-  policy = <<POLICY
+	name = "tf-test-transfer-server-iam-policy-%s"
+	role = "${aws_iam_role.foo.id}"
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -501,15 +435,15 @@ POLICY
 }
 
 resource "aws_transfer_server" "foo" {
-  identity_provider_type = "API_GATEWAY"
-  url                    = "https://${aws_api_gateway_rest_api.test.id}.execute-api.us-west-2.amazonaws.com${aws_api_gateway_resource.test.path}"
-  invocation_role        = "${aws_iam_role.foo.arn}"
-  logging_role           = "${aws_iam_role.foo.arn}"
+	identity_provider_type	= "API_GATEWAY"
+	url 				   	= "https://${aws_api_gateway_rest_api.test.id}.execute-api.us-west-2.amazonaws.com${aws_api_gateway_resource.test.path}"
+	invocation_role 	   	= "${aws_iam_role.foo.arn}"
+	logging_role 		   	= "${aws_iam_role.foo.arn}"
 
-  tags = {
-    NAME = "tf-acc-test-transfer-server"
-    TYPE = "apigateway"
-  }
+	tags = {
+	  NAME     = "tf-acc-test-transfer-server"
+	  TYPE	   = "apigateway"
+	}
 }
 `, rName, rName, rName, rName)
 
@@ -518,13 +452,13 @@ resource "aws_transfer_server" "foo" {
 func testAccAWSTransferServerConfig_forcedestroy(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_transfer_server" "foo" {
-  force_destroy = true
+	force_destroy = true
 }
 
 resource "aws_iam_role" "foo" {
-  name = "tf-test-transfer-user-iam-role-%s"
+	name = "tf-test-transfer-user-iam-role-%s"
 
-  assume_role_policy = <<EOF
+	assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -541,10 +475,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "foo" {
-  name = "tf-test-transfer-user-iam-policy-%s"
-  role = "${aws_iam_role.foo.id}"
-
-  policy = <<POLICY
+	name = "tf-test-transfer-user-iam-policy-%s"
+	role = "${aws_iam_role.foo.id}"
+	policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [

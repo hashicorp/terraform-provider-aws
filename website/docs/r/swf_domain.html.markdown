@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_swf_domain"
+sidebar_current: "docs-aws-resource-swf-domain"
 description: |-
   Provides an SWF Domain resource
 ---

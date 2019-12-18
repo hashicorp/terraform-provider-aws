@@ -1,55 +1,35 @@
 package golinters
 
 import (
+	"context"
 	"fmt"
 	"go/ast"
 	"go/token"
-	"sync"
 
-	"golang.org/x/tools/go/analysis"
-
-	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
 )
 
-const gochecknoinitsName = "gochecknoinits"
+type Gochecknoinits struct{}
 
-//nolint:dupl
-func NewGochecknoinits() *goanalysis.Linter {
-	var mu sync.Mutex
-	var resIssues []result.Issue
-
-	analyzer := &analysis.Analyzer{
-		Name: goanalysis.TheOnlyAnalyzerName,
-		Doc:  goanalysis.TheOnlyanalyzerDoc,
-		Run: func(pass *analysis.Pass) (interface{}, error) {
-			var res []result.Issue
-			for _, file := range pass.Files {
-				res = append(res, checkFileForInits(file, pass.Fset)...)
-			}
-			if len(res) == 0 {
-				return nil, nil
-			}
-
-			mu.Lock()
-			resIssues = append(resIssues, res...)
-			mu.Unlock()
-
-			return nil, nil
-		},
-	}
-	return goanalysis.NewLinter(
-		gochecknoinitsName,
-		"Checks that no init functions are present in Go code",
-		[]*analysis.Analyzer{analyzer},
-		nil,
-	).WithIssuesReporter(func(*linter.Context) []result.Issue {
-		return resIssues
-	}).WithLoadMode(goanalysis.LoadModeSyntax)
+func (Gochecknoinits) Name() string {
+	return "gochecknoinits"
 }
 
-func checkFileForInits(f *ast.File, fset *token.FileSet) []result.Issue {
+func (Gochecknoinits) Desc() string {
+	return "Checks that no init functions are present in Go code"
+}
+
+func (lint Gochecknoinits) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
+	var res []result.Issue
+	for _, f := range lintCtx.ASTCache.GetAllValidFiles() {
+		res = append(res, lint.checkFile(f.F, f.Fset)...)
+	}
+
+	return res, nil
+}
+
+func (lint Gochecknoinits) checkFile(f *ast.File, fset *token.FileSet) []result.Issue {
 	var res []result.Issue
 	for _, decl := range f.Decls {
 		funcDecl, ok := decl.(*ast.FuncDecl)
@@ -62,7 +42,7 @@ func checkFileForInits(f *ast.File, fset *token.FileSet) []result.Issue {
 			res = append(res, result.Issue{
 				Pos:        fset.Position(funcDecl.Pos()),
 				Text:       fmt.Sprintf("don't use %s function", formatCode(name, nil)),
-				FromLinter: gochecknoinitsName,
+				FromLinter: lint.Name(),
 			})
 		}
 	}

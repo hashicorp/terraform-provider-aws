@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func init() {
@@ -366,8 +366,8 @@ resource "aws_glue_job" "test2" {
 }
 
 resource "aws_glue_trigger" "test" {
-  name = "%s"
-  type = "CONDITIONAL"
+  name     = "%s"
+  type     = "CONDITIONAL"
 
   actions {
     job_name = "${aws_glue_job.test2.name}"

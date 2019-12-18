@@ -2237,7 +2237,7 @@ func (c *ElasticBeanstalk) DescribeEventsWithContext(ctx aws.Context, input *Des
 //    // Example iterating over at most 3 pages of a DescribeEvents operation.
 //    pageNum := 0
 //    err := client.DescribeEventsPages(params,
-//        func(page *elasticbeanstalk.DescribeEventsOutput, lastPage bool) bool {
+//        func(page *DescribeEventsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3647,15 +3647,11 @@ func (c *ElasticBeanstalk) UpdateTagsForResourceRequest(input *UpdateTagsForReso
 // specify one of the following two virtual actions (or both) instead of the
 // API operation name:
 //
-// elasticbeanstalk:AddTags
+// elasticbeanstalk:AddTagsControls permission to call UpdateTagsForResource
+// and pass a list of tags to add in the TagsToAdd parameter.
 //
-// Controls permission to call UpdateTagsForResource and pass a list of tags
-// to add in the TagsToAdd parameter.
-//
-// elasticbeanstalk:RemoveTags
-//
-// Controls permission to call UpdateTagsForResource and pass a list of tag
-// keys to remove in the TagsToRemove parameter.
+// elasticbeanstalk:RemoveTagsControls permission to call UpdateTagsForResource
+// and pass a list of tag keys to remove in the TagsToRemove parameter.
 //
 // For details about creating a custom user policy, see Creating a Custom User
 // Policy (https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/AWSHowTo.iam.managed-policies.html#AWSHowTo.iam.policies).
@@ -9468,7 +9464,7 @@ func (s *PlatformDescription) SetSupportedTierList(v []*string) *PlatformDescrip
 //
 // The filter is evaluated as the expression:
 //
-// Type Operator Values[i]
+// TypeOperatorValues[i]
 type PlatformFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -10687,7 +10683,7 @@ type TerminateEnvironmentInput struct {
 	//    * false: AWS Elastic Beanstalk resource management is removed from the
 	//    environment, but the AWS resources continue to operate.
 	//
-	// For more information, see the AWS Elastic Beanstalk User Guide. (https://docs.aws.amazon.com/elasticbeanstalk/latest/ug/)
+	// For more information, see the  AWS Elastic Beanstalk User Guide.  (https://docs.aws.amazon.com/elasticbeanstalk/latest/ug/)
 	//
 	// Default: true
 	//

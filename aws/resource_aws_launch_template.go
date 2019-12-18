@@ -10,10 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/customdiff"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsLaunchTemplate() *schema.Resource {
@@ -1421,10 +1421,7 @@ func readInstanceMarketOptionsFromConfig(imo map[string]interface{}) (*ec2.Launc
 	if v, ok := imo["spot_options"]; ok {
 		vL := v.([]interface{})
 		for _, v := range vL {
-			so, ok := v.(map[string]interface{})
-			if !ok {
-				continue
-			}
+			so := v.(map[string]interface{})
 
 			if v, ok := so["block_duration_minutes"].(int); ok && v != 0 {
 				spotOptions.BlockDurationMinutes = aws.Int64(int64(v))

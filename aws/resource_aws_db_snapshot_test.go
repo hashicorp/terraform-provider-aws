@@ -6,18 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSDBSnapshot_basic(t *testing.T) {
 	var v rds.DBSnapshot
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDbSnapshotDestroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDbSnapshotConfig(rInt),
@@ -33,9 +32,8 @@ func TestAccAWSDBSnapshot_tags(t *testing.T) {
 	var v rds.DBSnapshot
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDbSnapshotDestroy,
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDbSnapshotConfigTags1(rInt, "key1", "value1"),
@@ -56,60 +54,6 @@ func TestAccAWSDBSnapshot_tags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestAccAWSDBSnapshot_disappears(t *testing.T) {
-	var v rds.DBSnapshot
-	rInt := acctest.RandInt()
-	resourceName := "aws_db_snapshot.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckDbSnapshotDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsDbSnapshotConfig(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDbSnapshotExists(resourceName, &v),
-					testAccCheckDbSnapshotDisappears(&v),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCheckDbSnapshotDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).rdsconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_snapshot" {
-			continue
-		}
-
-		request := &rds.DescribeDBSnapshotsInput{
-			DBSnapshotIdentifier: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeDBSnapshots(request)
-
-		if isAWSErr(err, rds.ErrCodeDBSnapshotNotFoundFault, "") {
-			continue
-		}
-
-		if err == nil {
-			for _, dbSnapshot := range resp.DBSnapshots {
-				if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) == rs.Primary.ID {
-					return fmt.Errorf("AWS DB Snapshot is still exist: %s", rs.Primary.ID)
-				}
-			}
-		}
-
-		return err
-	}
-
-	return nil
 }
 
 func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestCheckFunc {
@@ -140,45 +84,30 @@ func testAccCheckDbSnapshotExists(n string, v *rds.DBSnapshot) resource.TestChec
 	}
 }
 
-func testAccCheckDbSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).rdsconn
-
-		if _, err := conn.DeleteDBSnapshot(&rds.DeleteDBSnapshotInput{
-			DBSnapshotIdentifier: snapshot.DBSnapshotIdentifier,
-		}); err != nil {
-			return err
-		}
-
-		return nil
-	}
-}
-
 func testAccAwsDbSnapshotConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-  allocated_storage = 10
-  engine            = "MySQL"
-  engine_version    = "5.6.35"
-  instance_class    = "db.t2.micro"
-  name              = "baz"
-  password          = "barbarbarbar"
-  username          = "foo"
+	allocated_storage = 10
+	engine = "MySQL"
+	engine_version = "5.6.35"
+	instance_class = "db.t2.micro"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
 
-  maintenance_window = "Fri:09:00-Fri:09:30"
+	maintenance_window = "Fri:09:00-Fri:09:30"
 
-  backup_retention_period = 0
+	backup_retention_period = 0
 
-  parameter_group_name = "default.mysql5.6"
+	parameter_group_name = "default.mysql5.6"
 
-  skip_final_snapshot = true
+	skip_final_snapshot = true
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = "${aws_db_instance.bar.id}"
-  db_snapshot_identifier = "testsnapshot%d"
-}
-`, rInt)
+	db_instance_identifier = "${aws_db_instance.bar.id}"
+	db_snapshot_identifier = "testsnapshot%d"
+}`, rInt)
 }
 
 func testAccAwsDbSnapshotConfigTags1(rInt int, tag1Key, tag1Value string) string {
@@ -208,8 +137,7 @@ resource "aws_db_snapshot" "test" {
 	tags = {
 		%q = %q
 	  }
-	}
-`, rInt, tag1Key, tag1Value)
+	}`, rInt, tag1Key, tag1Value)
 }
 
 func testAccAwsDbSnapshotConfigTags2(rInt int, tag1Key, tag1Value, tag2Key, tag2Value string) string {
@@ -240,6 +168,5 @@ resource "aws_db_snapshot" "test" {
 		%q = %q
 		%q = %q
 	  }
-	}
-`, rInt, tag1Key, tag1Value, tag2Key, tag2Value)
+	}`, rInt, tag1Key, tag1Value, tag2Key, tag2Value)
 }

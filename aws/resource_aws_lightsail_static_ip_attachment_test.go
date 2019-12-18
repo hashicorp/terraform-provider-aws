@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 	keypairName := fmt.Sprintf("tf-test-lightsail-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -28,7 +28,6 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 				Config: testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailStaticIpAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
-					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", "ip_address"),
 				),
 			},
 		},
@@ -55,7 +54,7 @@ func TestAccAWSLightsailStaticIpAttachment_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSLightsail(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLightsailStaticIpAttachmentDestroy,
 		Steps: []resource.TestStep{
@@ -136,13 +135,13 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 
 func testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+provider "aws" {
+  region = "us-east-1"
 }
 
 resource "aws_lightsail_static_ip_attachment" "test" {
   static_ip_name = "${aws_lightsail_static_ip.test.name}"
-  instance_name  = "${aws_lightsail_instance.test.name}"
+  instance_name = "${aws_lightsail_instance.test.name}"
 }
 
 resource "aws_lightsail_static_ip" "test" {
@@ -151,8 +150,8 @@ resource "aws_lightsail_static_ip" "test" {
 
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  blueprint_id      = "amazon_linux"
+  availability_zone = "us-east-1b"
+  blueprint_id      = "wordpress_4_6_1"
   bundle_id         = "micro_1_0"
   key_pair_name     = "${aws_lightsail_key_pair.test.name}"
 }

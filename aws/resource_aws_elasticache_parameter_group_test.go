@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSElasticacheParameterGroup_basic(t *testing.T) {
@@ -359,8 +359,7 @@ func testAccAWSElasticacheParameterGroupConfig(rName string) string {
 resource "aws_elasticache_parameter_group" "bar" {
   family = "redis2.8"
   name   = %q
-}
-`, rName)
+}`, rName)
 }
 
 func testAccAWSElasticacheParameterGroupConfigDescription(rName, description string) string {
@@ -369,29 +368,27 @@ resource "aws_elasticache_parameter_group" "bar" {
   description = %q
   family      = "redis2.8"
   name        = %q
-}
-`, description, rName)
+}`, description, rName)
 }
 
 func testAccAWSElasticacheParameterGroupConfigParameter1(rName, family, parameterName1, parameterValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_parameter_group" "bar" {
-  family = %q
-  name   = %q
+  family      = %q
+  name        = %q
 
   parameter {
     name  = %q
     value = %q
   }
-}
-`, family, rName, parameterName1, parameterValue1)
+}`, family, rName, parameterName1, parameterValue1)
 }
 
 func testAccAWSElasticacheParameterGroupConfigParameter2(rName, family, parameterName1, parameterValue1, parameterName2, parameterValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_parameter_group" "bar" {
-  family = %q
-  name   = %q
+  family      = %q
+  name        = %q
 
   parameter {
     name  = %q
@@ -402,6 +399,5 @@ resource "aws_elasticache_parameter_group" "bar" {
     name  = %q
     value = %q
   }
-}
-`, family, rName, parameterName1, parameterValue1, parameterName2, parameterValue2)
+}`, family, rName, parameterName1, parameterValue1, parameterName2, parameterValue2)
 }

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_autoscaling_notification"
+sidebar_current: "docs-aws-resource-autoscaling-notification"
 description: |-
   Provides an AutoScaling Group with Notification support
 ---
@@ -26,7 +27,6 @@ resource "aws_autoscaling_notification" "example_notifications" {
     "autoscaling:EC2_INSTANCE_LAUNCH",
     "autoscaling:EC2_INSTANCE_TERMINATE",
     "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
-    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR",
   ]
 
   topic_arn = "${aws_sns_topic.example.arn}"

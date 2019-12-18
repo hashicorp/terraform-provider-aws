@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
@@ -239,6 +239,10 @@ resource "aws_internet_gateway" "gw" {
 }`
 
 const testAccDefaultRouteTable_change = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -285,6 +289,10 @@ resource "aws_route_table" "r" {
 `
 
 const testAccDefaultRouteTable_change_mod = `
+provider "aws" {
+  region = "us-west-2"
+}
+
 resource "aws_vpc" "foo" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
@@ -374,6 +382,10 @@ resource "aws_default_route_table" "test" {
 }
 
 const testAccDefaultRouteTable_vpc_endpoint = `
+provider "aws" {
+    region = "us-west-2"
+}
+
 resource "aws_vpc" "test" {
     cidr_block = "10.0.0.0/16"
 

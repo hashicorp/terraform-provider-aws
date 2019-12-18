@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_api_gateway_vpc_link"
+sidebar_current: "docs-aws_api_gateway_vpc_link"
 description: |-
   Get information on a API Gateway VPC Link
 ---

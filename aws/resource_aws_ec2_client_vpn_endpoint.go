@@ -3,11 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
@@ -38,11 +40,6 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 			"server_certificate_arn": {
 				Type:     schema.TypeString,
 				Required: true,
-			},
-			"split_tunnel": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"transport_protocol": {
 				Type:     schema.TypeString,
@@ -123,7 +120,6 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
-		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
 		TagSpecifications:    ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeClientVpnEndpoint),
 	}
 
@@ -177,7 +173,19 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 		req.ConnectionLogOptions = connLogReq
 	}
 
-	resp, err := conn.CreateClientVpnEndpoint(req)
+	log.Printf("[DEBUG] Creating Client VPN endpoint: %#v", req)
+	var resp *ec2.CreateClientVpnEndpointOutput
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		resp, err = conn.CreateClientVpnEndpoint(req)
+		if isAWSErr(err, "OperationNotPermitted", "Endpoint cannot be created while another endpoint is being created") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 
 	if err != nil {
 		return fmt.Errorf("Error creating Client VPN endpoint: %s", err)
@@ -195,12 +203,6 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
-
-	if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, "InvalidClientVpnEndpointId.NotFound", "") {
-		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
 
 	if err != nil {
 		return fmt.Errorf("Error reading Client VPN endpoint: %s", err)
@@ -224,7 +226,6 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
 	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
 	d.Set("status", result.ClientVpnEndpoints[0].Status)
-	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
 	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
 	if err != nil {
@@ -289,10 +290,6 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 
 	if d.HasChange("server_certificate_arn") {
 		req.ServerCertificateArn = aws.String(d.Get("server_certificate_arn").(string))
-	}
-
-	if d.HasChange("split_tunnel") {
-		req.SplitTunnel = aws.Bool(d.Get("split_tunnel").(bool))
 	}
 
 	if d.HasChange("connection_log_options") {

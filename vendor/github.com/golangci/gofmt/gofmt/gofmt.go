@@ -21,7 +21,6 @@ import (
 	"runtime"
 	"runtime/pprof"
 	"strings"
-	"sync"
 )
 
 var (
@@ -43,11 +42,10 @@ const (
 )
 
 var (
-	fileSet            = token.NewFileSet() // per process FileSet
-	exitCode           = 0
-	rewrite            func(*ast.File) *ast.File
-	parserMode         parser.Mode
-	parserModeInitOnce sync.Once
+	fileSet    = token.NewFileSet() // per process FileSet
+	exitCode   = 0
+	rewrite    func(*ast.File) *ast.File
+	parserMode parser.Mode
 )
 
 func report(err error) {
@@ -61,12 +59,10 @@ func usage() {
 }
 
 func initParserMode() {
-	parserModeInitOnce.Do(func() {
-		parserMode = parser.ParseComments
-		if *allErrors {
-			parserMode |= parser.AllErrors
-		}
-	})
+	parserMode = parser.ParseComments
+	if *allErrors {
+		parserMode |= parser.AllErrors
+	}
 }
 
 func isGoFile(f os.FileInfo) bool {

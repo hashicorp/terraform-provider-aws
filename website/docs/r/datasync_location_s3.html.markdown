@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_datasync_location_s3"
+sidebar_current: "docs-aws-resource-datasync-location-s3"
 description: |-
   Manages an AWS DataSync S3 Location
 ---

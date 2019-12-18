@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSDBSecurityGroup_importBasic(t *testing.T) {
@@ -170,15 +170,15 @@ func testAccCheckAWSDBSecurityGroupExists(n string, v *rds.DBSecurityGroup) reso
 func testAccAWSDBSecurityGroupConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_db_security_group" "bar" {
-  name = "%s"
+    name = "%s"
 
-  ingress {
-    cidr = "10.0.0.1/24"
-  }
+    ingress {
+        cidr = "10.0.0.1/24"
+    }
 
   tags = {
-    foo = "bar"
-  }
+		foo = "bar"
+    }
 }
 `, name)
 }

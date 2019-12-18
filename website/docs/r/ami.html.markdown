@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_ami"
+sidebar_current: "docs-aws-resource-ami"
 description: |-
   Creates and manages a custom Amazon Machine Image (AMI).
 ---

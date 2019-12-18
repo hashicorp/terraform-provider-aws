@@ -6,15 +6,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAwsDaxParameterGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccAwsDaxParameterGroup_import(t *testing.T) {
 	resourceName := "aws_dax_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxParameterGroupDestroy,
 		Steps: []resource.TestStep{
@@ -108,14 +108,12 @@ func testAccDaxParameterGroupConfig_parameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dax_parameter_group" "test" {
   name = "%s"
-
   parameters {
-    name  = "query-ttl-millis"
+    name = "query-ttl-millis"
     value = "100000"
   }
-
   parameters {
-    name  = "record-ttl-millis"
+    name = "record-ttl-millis"
     value = "100000"
   }
 }

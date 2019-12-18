@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 	"github.com/hashicorp/vault/helper/pgpkeys"
 )
 
@@ -196,11 +196,11 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 func testAccAWSAccessKeyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-  name = "%s"
+        name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-  user = "${aws_iam_user.a_user.name}"
+        user    = "${aws_iam_user.a_user.name}"
 }
 `, rName)
 }
@@ -208,13 +208,12 @@ resource "aws_iam_access_key" "a_key" {
 func testAccAWSAccessKeyConfig_encrypted(rName, key string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-  name = "%s"
+        name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-  user = "${aws_iam_user.a_user.name}"
-
-  pgp_key = <<EOF
+        user    = "${aws_iam_user.a_user.name}"
+        pgp_key = <<EOF
 %s
 EOF
 }
@@ -224,12 +223,12 @@ EOF
 func testAccAWSAccessKeyConfig_inactive(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-  name = "%s"
+        name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-  user   = "${aws_iam_user.a_user.name}"
-  status = "Inactive"
+		user   = "${aws_iam_user.a_user.name}"
+		status = "Inactive"
 }
 `, rName)
 }

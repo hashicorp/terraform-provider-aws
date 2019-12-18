@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_lb_listener_rule"
+sidebar_current: "docs-aws-resource-elbv2-listener-rule"
 description: |-
   Provides a Load Balancer Listener Rule resource.
 ---
@@ -131,7 +132,7 @@ resource "aws_lb_listener_rule" "admin" {
 
 # Authenticate-oidc Action
 
-resource "aws_lb_listener_rule" "admin" {
+resource "aws_lb_listener" "admin" {
   listener_arn = "${aws_lb_listener.front_end.arn}"
 
   action {

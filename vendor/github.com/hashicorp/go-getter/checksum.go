@@ -19,38 +19,17 @@ import (
 	urlhelper "github.com/hashicorp/go-getter/helper/url"
 )
 
-// FileChecksum helps verifying the checksum for a file.
-type FileChecksum struct {
+// fileChecksum helps verifying the checksum for a file.
+type fileChecksum struct {
 	Type     string
 	Hash     hash.Hash
 	Value    []byte
 	Filename string
 }
 
-// A ChecksumError is returned when a checksum differs
-type ChecksumError struct {
-	Hash     hash.Hash
-	Actual   []byte
-	Expected []byte
-	File     string
-}
-
-func (cerr *ChecksumError) Error() string {
-	if cerr == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf(
-		"Checksums did not match for %s.\nExpected: %s\nGot: %s\n%T",
-		cerr.File,
-		hex.EncodeToString(cerr.Expected),
-		hex.EncodeToString(cerr.Actual),
-		cerr.Hash, // ex: *sha256.digest
-	)
-}
-
 // checksum is a simple method to compute the checksum of a source file
 // and compare it to the given expected value.
-func (c *FileChecksum) checksum(source string) error {
+func (c *fileChecksum) checksum(source string) error {
 	f, err := os.Open(source)
 	if err != nil {
 		return fmt.Errorf("Failed to open file for checksum: %s", err)
@@ -63,18 +42,16 @@ func (c *FileChecksum) checksum(source string) error {
 	}
 
 	if actual := c.Hash.Sum(nil); !bytes.Equal(actual, c.Value) {
-		return &ChecksumError{
-			Hash:     c.Hash,
-			Actual:   actual,
-			Expected: c.Value,
-			File:     source,
-		}
+		return fmt.Errorf(
+			"Checksums did not match.\nExpected: %s\nGot: %s",
+			hex.EncodeToString(c.Value),
+			hex.EncodeToString(actual))
 	}
 
 	return nil
 }
 
-// extractChecksum will return a FileChecksum based on the 'checksum'
+// extractChecksum will return a fileChecksum based on the 'checksum'
 // parameter of u.
 // ex:
 //  http://hashicorp.com/terraform?checksum=<checksumValue>
@@ -93,7 +70,7 @@ func (c *FileChecksum) checksum(source string) error {
 //  <checksum> *file2
 //
 // see parseChecksumLine for more detail on checksum file parsing
-func (c *Client) extractChecksum(u *url.URL) (*FileChecksum, error) {
+func (c *Client) extractChecksum(u *url.URL) (*fileChecksum, error) {
 	q := u.Query()
 	v := q.Get("checksum")
 
@@ -115,14 +92,14 @@ func (c *Client) extractChecksum(u *url.URL) (*FileChecksum, error) {
 
 	switch checksumType {
 	case "file":
-		return c.ChecksumFromFile(checksumValue, u)
+		return c.checksumFromFile(checksumValue, u)
 	default:
 		return newChecksumFromType(checksumType, checksumValue, filepath.Base(u.EscapedPath()))
 	}
 }
 
-func newChecksum(checksumValue, filename string) (*FileChecksum, error) {
-	c := &FileChecksum{
+func newChecksum(checksumValue, filename string) (*fileChecksum, error) {
+	c := &fileChecksum{
 		Filename: filename,
 	}
 	var err error
@@ -133,7 +110,7 @@ func newChecksum(checksumValue, filename string) (*FileChecksum, error) {
 	return c, nil
 }
 
-func newChecksumFromType(checksumType, checksumValue, filename string) (*FileChecksum, error) {
+func newChecksumFromType(checksumType, checksumValue, filename string) (*fileChecksum, error) {
 	c, err := newChecksum(checksumValue, filename)
 	if err != nil {
 		return nil, err
@@ -157,7 +134,7 @@ func newChecksumFromType(checksumType, checksumValue, filename string) (*FileChe
 	return c, nil
 }
 
-func newChecksumFromValue(checksumValue, filename string) (*FileChecksum, error) {
+func newChecksumFromValue(checksumValue, filename string) (*fileChecksum, error) {
 	c, err := newChecksum(checksumValue, filename)
 	if err != nil {
 		return nil, err
@@ -183,14 +160,14 @@ func newChecksumFromValue(checksumValue, filename string) (*FileChecksum, error)
 	return c, nil
 }
 
-// ChecksumFromFile will return all the FileChecksums found in file
+// checksumsFromFile will return all the fileChecksums found in file
 //
-// ChecksumFromFile will try to guess the hashing algorithm based on content
+// checksumsFromFile will try to guess the hashing algorithm based on content
 // of checksum file
 //
-// ChecksumFromFile will only return checksums for files that match file
+// checksumsFromFile will only return checksums for files that match file
 // behind src
-func (c *Client) ChecksumFromFile(checksumFile string, src *url.URL) (*FileChecksum, error) {
+func (c *Client) checksumFromFile(checksumFile string, src *url.URL) (*fileChecksum, error) {
 	checksumFileURL, err := urlhelper.Parse(checksumFile)
 	if err != nil {
 		return nil, err
@@ -286,7 +263,7 @@ func (c *Client) ChecksumFromFile(checksumFile string, src *url.URL) (*FileCheck
 // of a line.
 // for BSD type sums parseChecksumLine guesses the hashing algorithm
 // by checking the length of the checksum.
-func parseChecksumLine(line string) (*FileChecksum, error) {
+func parseChecksumLine(line string) (*fileChecksum, error) {
 	parts := strings.Fields(line)
 
 	switch len(parts) {

@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 const testAccGameliftGameSessionQueuePrefix = "tfAccQueue-"
@@ -91,7 +91,7 @@ func TestAccAWSGameliftGameSessionQueue_basic(t *testing.T) {
 	uTimeoutInSeconds := int64(600)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGameliftGameSessionQueueDestroy,
 		Steps: []resource.TestStep{
@@ -256,18 +256,15 @@ func testAccAWSGameliftGameSessionQueueBasicConfig(queueName string,
 	playerLatencyPolicies []gamelift.PlayerLatencyPolicy, timeoutInSeconds int64) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_game_session_queue" "test" {
-  name         = "%s"
+  name = "%s"
   destinations = []
-
   player_latency_policy {
     maximum_individual_player_latency_milliseconds = %d
-    policy_duration_seconds                        = %d
+    policy_duration_seconds = %d
   }
-
   player_latency_policy {
     maximum_individual_player_latency_milliseconds = %d
   }
-
   timeout_in_seconds = %d
 }
 `,

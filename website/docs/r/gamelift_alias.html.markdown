@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_gamelift_alias"
+sidebar_current: "docs-aws-resource-gamelift-alias"
 description: |-
   Provides a Gamelift Alias resource.
 ---

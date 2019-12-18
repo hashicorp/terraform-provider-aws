@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAMILaunchPermission_Basic(t *testing.T) {
@@ -257,12 +257,11 @@ data "aws_ami" "amzn-ami-minimal-hvm" {
   owners      = ["amazon"]
 
   filter {
-    name   = "name"
+    name = "name"
     values = ["amzn-ami-minimal-hvm-*"]
   }
-
   filter {
-    name   = "root-device-type"
+    name = "root-device-type"
     values = ["ebs"]
   }
 }

@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_devicefarm_project"
+sidebar_current: "docs-aws-resource-devicefarm-project"
 description: |-
   Provides a Devicefarm project
 ---

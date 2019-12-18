@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_instance_profile"
+sidebar_current: "docs-aws-datasource-iam-instance-profile"
 description: |-
   Get information on a Amazon IAM Instance Profile
 ---

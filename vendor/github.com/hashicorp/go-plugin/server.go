@@ -363,34 +363,14 @@ func serverListener() (net.Listener, error) {
 }
 
 func serverListener_tcp() (net.Listener, error) {
-	envMinPort := os.Getenv("PLUGIN_MIN_PORT")
-	envMaxPort := os.Getenv("PLUGIN_MAX_PORT")
-
-	var minPort, maxPort int64
-	var err error
-
-	switch {
-	case len(envMinPort) == 0:
-		minPort = 0
-	default:
-		minPort, err = strconv.ParseInt(envMinPort, 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("Couldn't get value from PLUGIN_MIN_PORT: %v", err)
-		}
+	minPort, err := strconv.ParseInt(os.Getenv("PLUGIN_MIN_PORT"), 10, 32)
+	if err != nil {
+		return nil, err
 	}
 
-	switch {
-	case len(envMaxPort) == 0:
-		maxPort = 0
-	default:
-		maxPort, err = strconv.ParseInt(envMaxPort, 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("Couldn't get value from PLUGIN_MAX_PORT: %v", err)
-		}
-	}
-
-	if minPort > maxPort {
-		return nil, fmt.Errorf("ENV_MIN_PORT value of %d is greater than PLUGIN_MAX_PORT value of %d", minPort, maxPort)
+	maxPort, err := strconv.ParseInt(os.Getenv("PLUGIN_MAX_PORT"), 10, 32)
+	if err != nil {
+		return nil, err
 	}
 
 	for port := minPort; port <= maxPort; port++ {

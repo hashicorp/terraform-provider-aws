@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
+sidebar_current: "docs-aws-resource-kms-alias"
 description: |-
   Provides a display name for a customer master key.
 ---

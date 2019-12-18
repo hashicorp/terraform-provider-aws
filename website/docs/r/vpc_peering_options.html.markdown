@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection_options"
+sidebar_current: "docs-aws-resource-vpc-peering-options"
 description: |-
   Provides a resource to manage VPC peering connection options.
 ---
@@ -15,8 +16,7 @@ resource with `accepter` and `requester` attributes. Do not manage options for t
 connection in both a VPC Peering Connection resource and a VPC Peering Connection Options resource.
 Doing so will cause a conflict of options and will overwrite the options.
 Using a VPC Peering Connection Options resource decouples management of the connection options from
-management of the VPC Peering Connection and allows options to be set correctly in cross-region and
-cross-account scenarios.
+management of the VPC Peering Connection and allows options to be set correctly in cross-account scenarios.
 
 Basic usage:
 
@@ -155,13 +155,15 @@ must have support for the DNS hostnames enabled. This can be done using the [`en
 (http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to
-private IP addresses when queried from instances in the peer VPC.
+private IP addresses when queried from instances in the peer VPC. This is
+[not supported](https://docs.aws.amazon.com/vpc/latest/peering/modify-peering-connections.html) for
+inter-region VPC peering.
 * `allow_classic_link_to_remote_vpc` - (Optional) Allow a local linked EC2-Classic instance to communicate
 with instances in a peer VPC. This enables an outbound communication from the local ClassicLink connection
-to the remote VPC. This option is not supported for inter-region VPC peering.
+to the remote VPC.
 * `allow_vpc_to_remote_classic_link` - (Optional) Allow a local VPC to communicate with a linked EC2-Classic
 instance in a peer VPC. This enables an outbound communication from the local VPC to the remote ClassicLink
-connection. This option is not supported for inter-region VPC peering.
+connection.
 
 ## Attributes Reference
 

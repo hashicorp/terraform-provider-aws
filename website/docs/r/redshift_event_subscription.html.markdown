@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_redshift_event_subscription"
+sidebar_current: "docs-aws-resource-redshift-event-subscription"
 description: |-
   Provides a Redshift event subscription resource.
 ---
@@ -62,7 +63,6 @@ The following arguments are supported:
 
 The following additional atttributes are provided:
 
-* `arn` - Amazon Resource Name (ARN) of the Redshift event notification subscription
 * `id` - The name of the Redshift event notification subscription
 * `customer_aws_id` - The AWS customer account associated with the Redshift event notification subscription
 

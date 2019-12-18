@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsDmsEndpoint() *schema.Resource {
@@ -65,7 +65,6 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"aurora",
 					"aurora-postgresql",
 					"azuredb",
-					"db2",
 					"docdb",
 					"dynamodb",
 					"mariadb",
@@ -139,17 +138,17 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						"auth_type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  dms.AuthTypeValuePassword,
+							Default:  "PASSWORD",
 						},
 						"auth_mechanism": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  dms.AuthMechanismValueDefault,
+							Default:  "DEFAULT",
 						},
 						"nesting_level": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  dms.NestingLevelValueNone,
+							Default:  "NONE",
 						},
 						"extract_doc_id": {
 							Type:     schema.TypeString,
@@ -299,22 +298,21 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	log.Println("[DEBUG] DMS create endpoint:", request)
 
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.CreateEndpoint(request)
-		if isAWSErr(err, "AccessDeniedFault", "") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
+		if _, err := conn.CreateEndpoint(request); err != nil {
+			if awserr, ok := err.(awserr.Error); ok {
+				switch awserr.Code() {
+				case "AccessDeniedFault":
+					return resource.RetryableError(awserr)
+				}
+			}
+			// Didn't recognize the error, so shouldn't retry.
 			return resource.NonRetryableError(err)
 		}
-
 		// Successful delete
 		return nil
 	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.CreateEndpoint(request)
-	}
 	if err != nil {
-		return fmt.Errorf("Error creating DMS endpoint: %s", err)
+		return err
 	}
 
 	d.SetId(d.Get("endpoint_id").(string))

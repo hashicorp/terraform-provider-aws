@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_iam_group_policy_attachment"
+sidebar_current: "docs-aws-resource-iam-group-policy-attachment"
 description: |-
   Attaches a Managed IAM Policy to an IAM group
 ---
@@ -21,7 +22,7 @@ resource "aws_iam_group" "group" {
 resource "aws_iam_policy" "policy" {
   name        = "test-policy"
   description = "A test policy"
-  policy      = ""              # insert policy here
+  policy      = "" # insert policy here
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {

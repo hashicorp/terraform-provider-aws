@@ -7,11 +7,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/simpledb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
+func TestAccAWSSimpleDBDomain_importBasic(t *testing.T) {
 	resourceName := "aws_simpledb_domain.test_domain"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -21,14 +21,28 @@ func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSimpleDBDomainConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSimpleDBDomainExists(resourceName),
-				),
 			},
+
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSimpleDBDomain_basic(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSimpleDBDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSimpleDBDomainConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSimpleDBDomainExists("aws_simpledb_domain.test_domain"),
+				),
 			},
 		},
 	})

@@ -28,7 +28,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"golang.org/x/net/http/httpguts"
@@ -200,7 +199,6 @@ type ClientConn struct {
 	t         *Transport
 	tconn     net.Conn             // usually *tls.Conn, except specialized impls
 	tlsState  *tls.ConnectionState // nil only for specialized impls
-	reused    uint32               // whether conn is being reused; atomic
 	singleUse bool                 // whether being used for a single http.Request
 
 	// readLoop goroutine fields:
@@ -442,8 +440,7 @@ func (t *Transport) RoundTripOpt(req *http.Request, opt RoundTripOpt) (*http.Res
 			t.vlogf("http2: Transport failed to get client conn for %s: %v", addr, err)
 			return nil, err
 		}
-		reused := !atomic.CompareAndSwapUint32(&cc.reused, 0, 1)
-		traceGotConn(req, cc, reused)
+		traceGotConn(req, cc)
 		res, gotErrAfterReqBodyWrite, err := cc.roundTrip(req)
 		if err != nil && retry <= 6 {
 			if req, err = shouldRetryRequest(req, err, gotErrAfterReqBodyWrite); err == nil {
@@ -992,7 +989,7 @@ func (cc *ClientConn) roundTrip(req *http.Request) (res *http.Response, gotErrAf
 		req.Method != "HEAD" {
 		// Request gzip only, not deflate. Deflate is ambiguous and
 		// not as universally supported anyway.
-		// See: https://zlib.net/zlib_faq.html#faq39
+		// See: http://www.gzip.org/zlib/zlib_faq.html#faq38
 		//
 		// Note that we don't request this for HEAD requests,
 		// due to a bug in nginx:
@@ -1216,8 +1213,6 @@ var (
 
 	// abort request body write, but send stream reset of cancel.
 	errStopReqBodyWriteAndCancel = errors.New("http2: canceling request")
-
-	errReqBodyTooLong = errors.New("http2: request body larger than specified content length")
 )
 
 func (cs *clientStream) writeRequestBody(body io.Reader, bodyCloser io.Closer) (err error) {
@@ -1240,32 +1235,10 @@ func (cs *clientStream) writeRequestBody(body io.Reader, bodyCloser io.Closer) (
 
 	req := cs.req
 	hasTrailers := req.Trailer != nil
-	remainLen := actualContentLength(req)
-	hasContentLen := remainLen != -1
 
 	var sawEOF bool
 	for !sawEOF {
-		n, err := body.Read(buf[:len(buf)-1])
-		if hasContentLen {
-			remainLen -= int64(n)
-			if remainLen == 0 && err == nil {
-				// The request body's Content-Length was predeclared and
-				// we just finished reading it all, but the underlying io.Reader
-				// returned the final chunk with a nil error (which is one of
-				// the two valid things a Reader can do at EOF). Because we'd prefer
-				// to send the END_STREAM bit early, double-check that we're actually
-				// at EOF. Subsequent reads should return (0, EOF) at this point.
-				// If either value is different, we return an error in one of two ways below.
-				var n1 int
-				n1, err = body.Read(buf[n:])
-				remainLen -= int64(n1)
-			}
-			if remainLen < 0 {
-				err = errReqBodyTooLong
-				cc.writeStreamReset(cs.ID, ErrCodeCancel, err)
-				return err
-			}
-		}
+		n, err := body.Read(buf)
 		if err == io.EOF {
 			sawEOF = true
 			err = nil
@@ -2586,15 +2559,15 @@ func traceGetConn(req *http.Request, hostPort string) {
 	trace.GetConn(hostPort)
 }
 
-func traceGotConn(req *http.Request, cc *ClientConn, reused bool) {
+func traceGotConn(req *http.Request, cc *ClientConn) {
 	trace := httptrace.ContextClientTrace(req.Context())
 	if trace == nil || trace.GotConn == nil {
 		return
 	}
 	ci := httptrace.GotConnInfo{Conn: cc.tconn}
-	ci.Reused = reused
 	cc.mu.Lock()
-	ci.WasIdle = len(cc.streams) == 0 && reused
+	ci.Reused = cc.nextStreamID > 1
+	ci.WasIdle = len(cc.streams) == 0 && ci.Reused
 	if ci.WasIdle && !cc.lastActive.IsZero() {
 		ci.IdleTime = time.Now().Sub(cc.lastActive)
 	}

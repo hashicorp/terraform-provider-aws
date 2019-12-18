@@ -9,8 +9,7 @@
 
 <!--- Thank you for keeping this note for the community --->
 
-<!--- If your PR fully resolves and should automatically close the linked issue, use Closes. Otherwise, use Relates --->
-Relates OR Closes #0000
+Fixes #0000
 
 Release note for [CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md):
 <!--

@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccAWSAPIGatewayAccount_importBasic(t *testing.T) {
@@ -138,9 +138,8 @@ resource "aws_api_gateway_account" "test" {
 }
 
 resource "aws_iam_role" "cloudwatch" {
-  name = "%s"
-
-  assume_role_policy = <<EOF
+    name = "%s"
+    assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -158,10 +157,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
-  name = "default"
-  role = "${aws_iam_role.cloudwatch.id}"
-
-  policy = <<EOF
+    name = "default"
+    role = "${aws_iam_role.cloudwatch.id}"
+    policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -192,9 +190,8 @@ resource "aws_api_gateway_account" "test" {
 }
 
 resource "aws_iam_role" "second" {
-  name = "%s"
-
-  assume_role_policy = <<EOF
+    name = "%s"
+    assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -212,10 +209,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "cloudwatch" {
-  name = "default"
-  role = "${aws_iam_role.second.id}"
-
-  policy = <<EOF
+    name = "default"
+    role = "${aws_iam_role.second.id}"
+    policy = <<EOF
 {
     "Version": "2012-10-17",
     "Statement": [

@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsCodePipelineWebhook() *schema.Resource {
@@ -93,11 +93,6 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
@@ -149,7 +144,6 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			AuthenticationConfiguration: extractCodePipelineWebhookAuthConfig(authType, authConfig),
 		},
-		Tags: tagsFromMapCodePipeline(d.Get("tags").(map[string]interface{})),
 	}
 
 	webhook, err := conn.PutWebhook(request)
@@ -269,10 +263,6 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 
 	if err := d.Set("filter", flattenCodePipelineWebhookFilters(webhook.Definition.Filters)); err != nil {
 		return fmt.Errorf("error setting filter: %s", err)
-	}
-
-	if err := d.Set("tags", tagsToMapCodePipeline(webhook.Tags)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

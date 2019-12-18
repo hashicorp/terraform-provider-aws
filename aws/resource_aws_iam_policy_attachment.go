@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsIamPolicyAttachment() *schema.Resource {
@@ -248,7 +248,6 @@ func attachPolicyToRoles(conn *iam.IAM, roles []*string, arn string) error {
 		if attachmentErr != nil {
 			return attachmentErr
 		}
-
 	}
 	return nil
 }
@@ -337,9 +336,6 @@ func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 			UserName:  u,
 			PolicyArn: aws.String(arn),
 		})
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-			continue
-		}
 		if err != nil {
 			return err
 		}
@@ -352,9 +348,6 @@ func detachPolicyFromRoles(conn *iam.IAM, roles []*string, arn string) error {
 			RoleName:  r,
 			PolicyArn: aws.String(arn),
 		})
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-			continue
-		}
 		if err != nil {
 			return err
 		}
@@ -367,9 +360,6 @@ func detachPolicyFromGroups(conn *iam.IAM, groups []*string, arn string) error {
 			GroupName: g,
 			PolicyArn: aws.String(arn),
 		})
-		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
-			continue
-		}
 		if err != nil {
 			return err
 		}

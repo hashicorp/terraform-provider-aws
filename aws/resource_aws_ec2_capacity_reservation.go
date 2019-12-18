@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsEc2CapacityReservation() *schema.Resource {
@@ -165,16 +165,13 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		if isAWSErr(err, "InvalidCapacityReservationId.NotFound", "") {
-			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("error reading EC2 Capacity Reservation %s: %s", d.Id(), err)
+		return fmt.Errorf("Error describing EC2 Capacity Reservations: %s", err)
 	}
 
-	if resp == nil || len(resp.CapacityReservations) == 0 || resp.CapacityReservations[0] == nil {
-		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): empty response", d.Id())
+	// If nothing was found, then return no state
+	if len(resp.CapacityReservations) == 0 {
+		log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
+		d.SetId("")
 	}
 
 	reservation := resp.CapacityReservations[0]

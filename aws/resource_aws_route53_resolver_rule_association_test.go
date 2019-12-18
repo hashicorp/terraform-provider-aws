@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
@@ -20,7 +20,7 @@ func TestAccAwsRoute53ResolverRuleAssociation_basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -93,10 +93,9 @@ func testAccCheckRoute53ResolverRuleAssociationExists(n string, assn *route53res
 func testAccRoute53ResolverRuleAssociationConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "example" {
-  cidr_block           = "10.6.0.0/16"
+  cidr_block = "10.6.0.0/16"
   enable_dns_hostnames = true
-  enable_dns_support   = true
-
+  enable_dns_support = true
   tags = {
     Name = %[1]q
   }

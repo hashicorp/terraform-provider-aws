@@ -6,6 +6,8 @@ package jsonrpc
 //go:generate go run -tags codegen ../../../models/protocol_tests/generate.go ../../../models/protocol_tests/output/json.json unmarshal_test.go
 
 import (
+	"encoding/json"
+	"io"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -35,7 +37,7 @@ func Build(req *request.Request) {
 	if req.ParamsFilled() {
 		buf, err = jsonutil.BuildJSON(req.Params)
 		if err != nil {
-			req.Error = awserr.New(request.ErrCodeSerialization, "failed encoding JSON RPC request", err)
+			req.Error = awserr.New("SerializationError", "failed encoding JSON RPC request", err)
 			return
 		}
 	} else {
@@ -66,7 +68,7 @@ func Unmarshal(req *request.Request) {
 		err := jsonutil.UnmarshalJSON(req.Data, req.HTTPResponse.Body)
 		if err != nil {
 			req.Error = awserr.NewRequestFailure(
-				awserr.New(request.ErrCodeSerialization, "failed decoding JSON RPC response", err),
+				awserr.New("SerializationError", "failed decoding JSON RPC response", err),
 				req.HTTPResponse.StatusCode,
 				req.RequestID,
 			)
@@ -85,11 +87,17 @@ func UnmarshalError(req *request.Request) {
 	defer req.HTTPResponse.Body.Close()
 
 	var jsonErr jsonErrorResponse
-	err := jsonutil.UnmarshalJSONError(&jsonErr, req.HTTPResponse.Body)
-	if err != nil {
+	err := json.NewDecoder(req.HTTPResponse.Body).Decode(&jsonErr)
+	if err == io.EOF {
 		req.Error = awserr.NewRequestFailure(
-			awserr.New(request.ErrCodeSerialization,
-				"failed to unmarshal error message", err),
+			awserr.New("SerializationError", req.HTTPResponse.Status, nil),
+			req.HTTPResponse.StatusCode,
+			req.RequestID,
+		)
+		return
+	} else if err != nil {
+		req.Error = awserr.NewRequestFailure(
+			awserr.New("SerializationError", "failed decoding JSON RPC error response", err),
 			req.HTTPResponse.StatusCode,
 			req.RequestID,
 		)

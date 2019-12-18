@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
@@ -33,9 +33,8 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 func testAccCheckAwsEcsTaskDefinitionDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "mongo_role" {
-  name = "%[1]s"
-
-  assume_role_policy = <<POLICY
+    name = "%[1]s"
+    assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -53,10 +52,9 @@ POLICY
 }
 
 resource "aws_ecs_task_definition" "mongo" {
-  family        = "%[1]s"
+  family = "%[1]s"
   task_role_arn = "${aws_iam_role.mongo_role.arn}"
-  network_mode  = "bridge"
-
+  network_mode = "bridge"
   container_definitions = <<DEFINITION
 [
   {

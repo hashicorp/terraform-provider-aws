@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_availability_zone"
+sidebar_current: "docs-aws-datasource-availability-zone"
 description: |-
     Provides details about a specific availability zone
 ---

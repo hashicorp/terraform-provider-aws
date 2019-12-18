@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_stream"
+sidebar_current: "docs-aws-resource-cloudwatch-log-stream"
 description: |-
   Provides a CloudWatch Log Stream resource.
 ---

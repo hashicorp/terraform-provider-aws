@@ -1,11 +1,12 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_eks_cluster_auth"
+sidebar_current: "docs-aws-datasource-eks-cluster-auth"
 description: |-
   Get an authentication token to communicate with an EKS Cluster
 ---
 
-# Data Source: aws_eks_cluster_auth
+# Data Source: aws_eks_cluster
 
 Get an authentication token to communicate with an EKS cluster.
 
@@ -17,6 +18,7 @@ server configured.
 ## Example Usage
 
 ```hcl
+
 data "aws_eks_cluster" "example" {
   name = "example"
 }

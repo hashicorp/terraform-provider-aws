@@ -8,9 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceAwsServiceCatalogPortfolio() *schema.Resource {
@@ -62,10 +61,12 @@ func resourceAwsServiceCatalogPortfolio() *schema.Resource {
 func resourceAwsServiceCatalogPortfolioCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.CreatePortfolioInput{
-		AcceptLanguage:   aws.String("en"),
-		DisplayName:      aws.String(d.Get("name").(string)),
-		IdempotencyToken: aws.String(resource.UniqueId()),
+		AcceptLanguage: aws.String("en"),
 	}
+	name := d.Get("name").(string)
+	input.DisplayName = &name
+	now := time.Now()
+	input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))

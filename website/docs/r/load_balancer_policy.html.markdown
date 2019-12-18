@@ -1,6 +1,7 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_load_balancer_policy"
+sidebar_current: "docs-aws-resource-load-balancer-policy"
 description: |-
   Provides a load balancer policy, which can be attached to an ELB listener or backend server.
 ---
