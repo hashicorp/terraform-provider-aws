@@ -194,7 +194,7 @@ func resourceAwsKinesisStreamRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 
 	}
-
+	d.SetId(state.arn)
 	d.Set("arn", state.arn)
 	d.Set("shard_count", len(state.openShards))
 	d.Set("retention_period", state.retentionPeriod)
