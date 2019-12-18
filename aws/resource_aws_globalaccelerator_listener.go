@@ -214,7 +214,7 @@ func resourceAwsGlobalAcceleratorListenerUpdate(d *schema.ResourceData, meta int
 	// Creating a listener triggers the accelerator to change status to InPending
 	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Get("accelerator_arn").(string))
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return resourceAwsGlobalAcceleratorListenerRead(d, meta)
