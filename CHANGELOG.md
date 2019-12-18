@@ -1,5 +1,9 @@
 ## 2.43.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_accessanalyzer_analyzer` [GH-11169]
+
 ENHANCEMENTS:
 
 * resource/aws_opsworks_custom_layer: Add `encrypted` `ebs_volume` configuration [GH-7110]
