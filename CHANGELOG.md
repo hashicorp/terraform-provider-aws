@@ -9,6 +9,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_batch_compute_environment: Support resource import [GH-11299]
+* resource/aws_fsx_windows_file_system: Support `storage_capacity` minimum value of `32` in validation to match recent updates to the API [GH-11272]
 * resource/aws_opsworks_custom_layer: Add `encrypted` `ebs_volume` configuration [GH-7110]
 
 BUG FIXES:
