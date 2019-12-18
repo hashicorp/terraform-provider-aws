@@ -2,7 +2,6 @@
 subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_organizational_units"
-sidebar_current: "docs-aws-datasource-organizations-organizational-units"
 description: |-
   Get all direct child organizational units under a parent organizational unit. This only provides immediate children, not all children
 ---
