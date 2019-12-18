@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_organizations_organizational_units` [GH-10395]
 * **New Resource:** `aws_accessanalyzer_analyzer` [GH-11169]
 * **New Resource:** `aws_lambda_function_event_invoke_config` [GH-11165]
 
