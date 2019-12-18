@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_accessanalyzer_analyzer` [GH-11169]
+* **New Resource:** `aws_lambda_function_event_invoke_config` [GH-11165]
 
 ENHANCEMENTS:
 
