@@ -186,6 +186,45 @@ import (
 func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if . | TagInputResourceTypeField }}, resourceType string{{ end }}, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := New(oldTagsMap)
 	newTags := New(newTagsMap)
+	{{- if eq (. | TagFunction) (. | UntagFunction) }}
+	removedTags := oldTags.Removed(newTags)
+	updatedTags := oldTags.Updated(newTags)
+
+	// Ensure we do not send empty requests
+	if len(removedTags) == 0 && len(updatedTags) == 0 {
+		return nil
+	}
+
+	input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
+		{{- if . | TagInputIdentifierRequiresSlice }}
+		{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+		{{- else }}
+		{{ . | TagInputIdentifierField }}:   aws.String(identifier),
+		{{- end }}
+		{{- if . | TagInputResourceTypeField }}
+		{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
+		{{- end }}
+	}
+
+	if len(updatedTags) > 0 {
+		input.{{ . | TagInputTagsField }} = updatedTags.IgnoreAws().{{ . | Title }}Tags()
+	}
+
+	if len(removedTags) > 0 {
+		{{- if . | UntagInputRequiresTagType }}
+		input.{{ . | UntagInputTagsField }} = removedTags.IgnoreAws().{{ . | Title }}Tags()
+		{{- else }}
+		input.{{ . | UntagInputTagsField }} = aws.StringSlice(removedTags.Keys())
+		{{- end }}
+	}
+
+	_, err := conn.{{ . | TagFunction }}(input)
+
+	if err != nil {
+		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+	}
+
+	{{- else }}
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &{{ . | TagPackage }}.{{ . | UntagFunction }}Input{
@@ -230,6 +269,8 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
 	}
+
+	{{- end }}
 
 	return nil
 }
