@@ -209,15 +209,15 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
 	}
-	//
-	//arn := d.Get("arn").(string)
-	//if d.HasChange("tags") {
-	//	o, n := d.GetChange("tags")
-	//
-	//	if err := keyvaluetags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
-	//		return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %s", arn, err)
-	//	}
-	//}
+
+	arn := d.Get("arn").(string)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %s", arn, err)
+		}
+	}
 
 	return resourceAwsCloudWatchEventRuleRead(d, meta)
 }

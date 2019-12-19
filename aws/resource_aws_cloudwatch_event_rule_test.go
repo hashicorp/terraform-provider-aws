@@ -285,11 +285,11 @@ func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName, true),
+				Config: testAccAWSCloudWatchEventRuleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED", &rule),
+					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED"),
 				),
 			},
 			{
@@ -303,6 +303,7 @@ func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					testAccCheckCloudWatchEventRuleEnabled(resourceName, "DISABLED"),
 				),
 			},
 			{
@@ -310,7 +311,7 @@ func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					//testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED", &rule),
+					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED"),
 				),
 			},
 		},
@@ -342,7 +343,7 @@ func testAccCheckCloudWatchEventRuleExists(n string, rule *events.DescribeRuleOu
 	}
 }
 
-func testAccCheckCloudWatchEventRuleEnabled(n string, desired string, rule *events.DescribeRuleOutput) resource.TestCheckFunc {
+func testAccCheckCloudWatchEventRuleEnabled(n string, desired string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
