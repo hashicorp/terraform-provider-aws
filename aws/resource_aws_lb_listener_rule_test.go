@@ -2821,7 +2821,7 @@ condition {
     values = ["example.com"]
   }
   field  = "host-header"
-  values = ["example.com"]
+  values = ["example2.com"]
 }`)
 }
 
