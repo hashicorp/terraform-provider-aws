@@ -90,7 +90,7 @@ func (check *FrontMatterCheck) Run(src []byte) error {
 	}
 
 	if len(check.Options.AllowedSubcategories) > 0 && frontMatter.Subcategory != nil && !isAllowedSubcategory(*frontMatter.Subcategory, check.Options.AllowedSubcategories) {
-		return fmt.Errorf("YAML frontmatter subcategory (%s) does not match allowed subcategories (%v)", *frontMatter.Subcategory, check.Options.AllowedSubcategories)
+		return fmt.Errorf("YAML frontmatter subcategory (%s) does not match allowed subcategories (%#v)", *frontMatter.Subcategory, check.Options.AllowedSubcategories)
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -19,14 +20,16 @@ import (
 )
 
 type CheckCommandConfig struct {
-	AllowedGuideSubcategories    string
-	AllowedResourceSubcategories string
-	LogLevel                     string
-	Path                         string
-	ProviderName                 string
-	ProvidersSchemaJson          string
-	RequireGuideSubcategory      bool
-	RequireResourceSubcategory   bool
+	AllowedGuideSubcategories        string
+	AllowedGuideSubcategoriesFile    string
+	AllowedResourceSubcategories     string
+	AllowedResourceSubcategoriesFile string
+	LogLevel                         string
+	Path                             string
+	ProviderName                     string
+	ProvidersSchemaJson              string
+	RequireGuideSubcategory          bool
+	RequireResourceSubcategory       bool
 }
 
 // CheckCommand is a Command implementation
@@ -39,7 +42,9 @@ func (*CheckCommand) Help() string {
 	opts := tabwriter.NewWriter(optsBuffer, 0, 0, 1, ' ', 0)
 	LogLevelFlagHelp(opts)
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-allowed-guide-subcategories", "Comma separated list of allowed guide frontmatter subcategories.")
+	fmt.Fprintf(opts, CommandHelpOptionFormat, "-allowed-guide-subcategories-file", "Path to newline separated file of allowed guide frontmatter subcategories.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-allowed-resource-subcategories", "Comma separated list of allowed data source and resource frontmatter subcategories.")
+	fmt.Fprintf(opts, CommandHelpOptionFormat, "-allowed-resource-subcategories-file", "Path to newline separated file of allowed data source and resource frontmatter subcategories.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-provider-name", "Terraform Provider name. Automatically determined if current working directory or provided path is prefixed with terraform-provider-*.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-providers-schema-json", "Path to terraform providers schema -json file. Enables enhanced validations.")
 	fmt.Fprintf(opts, CommandHelpOptionFormat, "-require-guide-subcategory", "Require guide frontmatter subcategory.")
@@ -68,7 +73,9 @@ func (c *CheckCommand) Run(args []string) int {
 	flags.Usage = func() { c.Ui.Info(c.Help()) }
 	LogLevelFlag(flags, &config.LogLevel)
 	flags.StringVar(&config.AllowedGuideSubcategories, "allowed-guide-subcategories", "", "")
+	flags.StringVar(&config.AllowedGuideSubcategoriesFile, "allowed-guide-subcategories-file", "", "")
 	flags.StringVar(&config.AllowedResourceSubcategories, "allowed-resource-subcategories", "", "")
+	flags.StringVar(&config.AllowedResourceSubcategoriesFile, "allowed-resource-subcategories-file", "", "")
 	flags.StringVar(&config.ProviderName, "provider-name", "", "")
 	flags.StringVar(&config.ProvidersSchemaJson, "providers-schema-json", "", "")
 	flags.BoolVar(&config.RequireGuideSubcategory, "require-guide-subcategory", false, "")
@@ -124,8 +131,28 @@ func (c *CheckCommand) Run(args []string) int {
 		allowedGuideSubcategories = strings.Split(v, ",")
 	}
 
+	if v := config.AllowedGuideSubcategoriesFile; v != "" {
+		var err error
+		allowedGuideSubcategories, err = allowedSubcategoriesFile(v)
+
+		if err != nil {
+			c.Ui.Error(fmt.Sprintf("Error getting allowed guide subcategories: %s", err))
+			return 1
+		}
+	}
+
 	if v := config.AllowedResourceSubcategories; v != "" {
 		allowedResourceSubcategories = strings.Split(v, ",")
+	}
+
+	if v := config.AllowedResourceSubcategoriesFile; v != "" {
+		var err error
+		allowedResourceSubcategories, err = allowedSubcategoriesFile(v)
+
+		if err != nil {
+			c.Ui.Error(fmt.Sprintf("Error getting allowed resource subcategories: %s", err))
+			return 1
+		}
 	}
 
 	fileOpts := &check.FileOptions{
@@ -213,6 +240,30 @@ Check that the current working directory or provided path is prefixed with terra
 
 func (c *CheckCommand) Synopsis() string {
 	return "Checks Terraform Provider documentation"
+}
+
+func allowedSubcategoriesFile(path string) ([]string, error) {
+	log.Printf("[DEBUG] Loading allowed subcategories file: %s", path)
+
+	file, err := os.Open(path)
+
+	if err != nil {
+		return nil, fmt.Errorf("error opening allowed subcategories file (%s): %w", path, err)
+	}
+
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	var allowedSubcategories []string
+
+	for scanner.Scan() {
+		allowedSubcategories = append(allowedSubcategories, scanner.Text())
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("error reading allowed subcategories file (%s): %w", path, err)
+	}
+
+	return allowedSubcategories, nil
 }
 
 func providerNameFromCurrentDirectory() string {
