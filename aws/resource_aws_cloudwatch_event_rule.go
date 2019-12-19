@@ -183,17 +183,6 @@ func resourceAwsCloudWatchEventRuleRead(d *schema.ResourceData, meta interface{}
 func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
-	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) {
-		log.Printf("[DEBUG] Enabling CloudWatch Event Rule %q", d.Id())
-		_, err := conn.EnableRule(&events.EnableRuleInput{
-			Name: aws.String(d.Id()),
-		})
-		if err != nil {
-			return err
-		}
-		log.Printf("[DEBUG] CloudWatch Event Rule (%q) enabled", d.Id())
-	}
-
 	input, err := buildPutRuleInputStruct(d, d.Id())
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
@@ -220,26 +209,15 @@ func resourceAwsCloudWatchEventRuleUpdate(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("Updating CloudWatch Event Rule failed: %s", err)
 	}
-
-	if d.HasChange("is_enabled") && !d.Get("is_enabled").(bool) {
-		log.Printf("[DEBUG] Disabling CloudWatch Event Rule %q", d.Id())
-		_, err := conn.DisableRule(&events.DisableRuleInput{
-			Name: aws.String(d.Id()),
-		})
-		if err != nil {
-			return err
-		}
-		log.Printf("[DEBUG] CloudWatch Event Rule (%q) disabled", d.Id())
-	}
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		if err := keyvaluetags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %s", arn, err)
-		}
-	}
+	//
+	//arn := d.Get("arn").(string)
+	//if d.HasChange("tags") {
+	//	o, n := d.GetChange("tags")
+	//
+	//	if err := keyvaluetags.CloudwatcheventsUpdateTags(conn, arn, o, n); err != nil {
+	//		return fmt.Errorf("error updating CloudwWatch Event Rule (%s) tags: %s", arn, err)
+	//	}
+	//}
 
 	return resourceAwsCloudWatchEventRuleRead(d, meta)
 }

@@ -87,6 +87,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "ENABLED"),
 				),
 			},
 			{
@@ -103,6 +104,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "ENABLED"),
 				),
 			},
 		},
@@ -283,30 +285,32 @@ func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName),
+				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED", &rule),
 				),
 			},
 			{
 				ResourceName:      resourceName,
-				Config:            testAccAWSCloudWatchEventRuleConfigDisabled(rName),
+				Config:            testAccAWSCloudWatchEventRuleConfigDisabled(rName, true),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName),
+				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
-					testAccCheckCloudWatchEventRuleEnabled(resourceName, "DISABLED", &rule),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName),
+				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
-					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED", &rule),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					//testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED", &rule),
 				),
 			},
 		},
@@ -416,14 +420,14 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name, description)
 }
 
-func testAccAWSCloudWatchEventRuleConfigDisabled(name string) string {
+func testAccAWSCloudWatchEventRuleConfigDisabled(name string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
 	name = "%s"
 	schedule_expression = "rate(1 hour)"
-	is_enabled = false
+	is_enabled = %t
 }
-`, name)
+`, name, enabled)
 }
 
 func testAccAWSCloudWatchEventRuleConfigPrefix(name string) string {
