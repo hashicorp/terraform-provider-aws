@@ -1,4 +1,9 @@
 ## 2.44.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_opsworks_stack: Ensure `tags` are refreshed in Terraform state during read for drift detection [GH-11373]
+
 ## 2.43.0 (December 19, 2019)
 
 NOTES:
