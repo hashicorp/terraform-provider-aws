@@ -118,6 +118,21 @@ case "athena":
     return "ResourceARN"
 ```
 
+#### ServiceTagInputIdentifierRequiresSlice
+
+Given the following compilation error:
+
+```text
+aws/internal/keyvaluetags/update_tags_gen.go:1296:4: cannot use aws.String(identifier) (type *string) as type []*string in field value
+```
+
+The value to identify the resource for tagging must be passed in a string slice. Add an entry within the `ServiceTagInputIdentifierRequiresSlice()` function of the generator to ensure that the value is passed as expected. In the above case
+
+```go
+case "ec2":
+	return "yes"
+```
+
 #### ServiceTagInputTagsField
 
 Given the following compilation error:
