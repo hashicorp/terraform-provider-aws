@@ -87,7 +87,8 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED"),
 				),
 			},
 			{
@@ -104,7 +105,8 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED"),
 				),
 			},
 		},
@@ -472,7 +474,7 @@ func testAccAWSCloudWatchEventRuleConfigRole(name string) string {
 resource "aws_iam_role" "test" {
   name = %[1]q
 
-  assume_role_policy = <<EOF
+  assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -485,7 +487,7 @@ resource "aws_iam_role" "test" {
     }
   ]
 }
-EOF
+POLICY
 }
 
 resource "aws_cloudwatch_event_rule" "test" {
