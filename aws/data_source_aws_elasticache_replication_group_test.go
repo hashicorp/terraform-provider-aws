@@ -23,6 +23,7 @@ func TestAccDataSourceAwsElasticacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_elasticache_replication_group.bar", "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr("data.aws_elasticache_replication_group.bar", "port", "6379"),
 					resource.TestCheckResourceAttrSet("data.aws_elasticache_replication_group.bar", "primary_endpoint_address"),
+					resource.TestCheckResourceAttrSet("data.aws_elasticache_replication_group.bar", "reader_endpoint_address"),
 					resource.TestCheckResourceAttr("data.aws_elasticache_replication_group.bar", "number_cache_clusters", "2"),
 					resource.TestCheckResourceAttr("data.aws_elasticache_replication_group.bar", "member_clusters.#", "2"),
 					resource.TestCheckResourceAttr("data.aws_elasticache_replication_group.bar", "node_type", "cache.m1.small"),
