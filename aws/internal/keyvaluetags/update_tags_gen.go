@@ -74,6 +74,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -2541,6 +2542,42 @@ func OrganizationsUpdateTags(conn *organizations.Organizations, identifier strin
 		input := &organizations.TagResourceInput{
 			ResourceId: aws.String(identifier),
 			Tags:       updatedTags.IgnoreAws().OrganizationsTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// PinpointUpdateTags updates pinpoint service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func PinpointUpdateTags(conn *pinpoint.Pinpoint, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &pinpoint.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &pinpoint.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagsModel:   updatedTags.IgnoreAws().PinpointTags(),
 		}
 
 		_, err := conn.TagResource(input)

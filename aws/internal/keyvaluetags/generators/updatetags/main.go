@@ -85,6 +85,7 @@ var serviceNames = []string{
 	"neptune",
 	"opsworks",
 	"organizations",
+	"pinpoint",
 	"qldb",
 	"ram",
 	"rds",
@@ -495,6 +496,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 		return "TagList"
 	case "glue":
 		return "TagsToAdd"
+	case "pinpoint":
+		return "TagsModel"
 	case "route53":
 		return "AddTags"
 	default:

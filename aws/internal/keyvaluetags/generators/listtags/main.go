@@ -81,6 +81,7 @@ var serviceNames = []string{
 	"neptune",
 	"opsworks",
 	"organizations",
+	"pinpoint",
 	"qldb",
 	"rds",
 	"resourcegroups",
@@ -391,6 +392,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "ResourceTags.Tags"
 	case "neptune":
 		return "TagList"
+	case "pinpoint":
+		return "TagsModel.Tags"
 	case "rds":
 		return "TagList"
 	case "route53":
