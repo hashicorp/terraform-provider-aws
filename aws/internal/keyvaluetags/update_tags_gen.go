@@ -1991,7 +1991,7 @@ func KinesisUpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap inte
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &kinesis.AddTagsToStreamInput{
 			StreamName: aws.String(identifier),
-			Tags:       aws.StringMap(updatedTags.IgnoreAws().Map()),
+			Tags:       KinesisTagInput(updatedTags.IgnoreAws()),
 		}
 
 		_, err := conn.AddTagsToStream(input)

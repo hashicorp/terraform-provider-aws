@@ -123,7 +123,7 @@ func main() {
 		"TagFunction":                     ServiceTagFunction,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
-		"TagInputRequiresStringMap":       ServiceTagInputRequiresStringMap,
+		"TagInputRequiresTransformation":  ServiceTagInputRequiresTransformation,
 		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
 		"TagInputTagsField":               ServiceTagInputTagsField,
 		"TagPackage":                      keyvaluetags.ServiceTagPackage,
@@ -223,8 +223,8 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
-			{{- if . | TagInputRequiresStringMap }}
-			{{ . | TagInputTagsField }}:         aws.StringMap(updatedTags.IgnoreAws().Map()),
+			{{- if . | TagInputRequiresTransformation }}
+			{{ . | TagInputTagsField }}:         {{ . | Title }}TagInput(updatedTags.IgnoreAws()),
 			{{- else }}
 			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | Title }}Tags(),
 			{{- end }}
@@ -432,8 +432,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 	}
 }
 
-// ServiceTagInputResourceTypeField determines the service tagging tags field requires a map[string]*string.
-func ServiceTagInputRequiresStringMap(serviceName string) string {
+// ServiceTagInputRequiresTransformation determines if the service tagging tags field requires transformation.
+func ServiceTagInputRequiresTransformation(serviceName string) string {
 	switch serviceName {
 	case "kinesis":
 		return "yes"

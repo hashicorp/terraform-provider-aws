@@ -133,6 +133,37 @@ case "ec2":
 	return "yes"
 ```
 
+#### ServiceTagInputRequiresTransformation
+
+Given the following compilation error:
+
+```text
+aws/internal/keyvaluetags/update_tags_gen.go:1994:4: cannot use updatedTags.IgnoreAws().KinesisTags() (type []*kinesis.Tag) as type map[string]*string in field value
+```
+
+or
+
+```text
+aws/internal/keyvaluetags/update_tags_gen.go:2534:4: cannot use updatedTags.IgnoreAws().PinpointTags() (type map[string]*string) as type *pinpoint.TagsModel in field value
+```
+
+The tags for tagging must be transformed. Add an entry within the `ServiceTagInputRequiresTransformation()` function of the generator to ensure that a transformation is done and add a custom transformation function to `service_customizations.go`. In the above case
+
+```go
+case "kinesis":
+	return "yes"
+```
+
+and
+
+```go
+// KinesisTagInput transforms a standard KeyValueTags to the form
+// required for input to the Kinesis AddTagsToStreamInput() method.
+func KinesisTagInput(tags KeyValueTags) map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+```
+
 #### ServiceTagInputTagsField
 
 Given the following compilation error:
