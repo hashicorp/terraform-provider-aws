@@ -1,5 +1,9 @@
 ## 2.43.0 (Unreleased)
 
+NOTES:
+
+* This will be the last planned release until early January. Enjoy the rest of your year!
+
 FEATURES:
 
 * **New Data Source:** `aws_organizations_organizational_units` [GH-10395]
