@@ -20,6 +20,7 @@ BUG FIXES:
 * resource/aws_ecs_cluster: Fixes intermittent failures on update when cluster dependencies are updating [GH-11310]
 * resource/aws_ecs_cluster: Fixes bug where ECS cluster capacity providers are updated but default provider strategy is not changed [GH-11316]
 * resource/aws_globalaccelerator_endpoint_group: Allow `traffic_dial_percentage` to be set to `0` [GH-11253]
+* resource/aws_lb_listener_rule: Fixes regression from version 2.42.0 when updating a rule without modifying condition [GH-11364]
 * resource/aws_ssm_activation: Ensure `tags` are refreshed into Terraform state during read for drift detection [GH-11290]
 
 ## 2.42.0 (December 13, 2019)
