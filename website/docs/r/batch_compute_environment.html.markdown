@@ -74,6 +74,13 @@ resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
 
 resource "aws_security_group" "sample" {
   name = "aws_batch_compute_environment_security_group"
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_vpc" "sample" {
@@ -154,6 +161,14 @@ resource "aws_batch_compute_environment" "sample" {
 * `ecs_cluster_arn` - The Amazon Resource Name (ARN) of the underlying Amazon ECS cluster used by the compute environment.
 * `status` - The current status of the compute environment (for example, CREATING or VALID).
 * `status_reason` - A short, human-readable string to provide additional details about the current status of the compute environment.
+
+## Import
+
+AWS Batch compute can be imported using the `compute_environment_name`, e.g.
+
+```
+$ terraform import aws_batch_compute_environment.sample sample
+```
 
 [1]: http://docs.aws.amazon.com/batch/latest/userguide/what-is-batch.html
 [2]: http://docs.aws.amazon.com/batch/latest/userguide/compute_environments.html

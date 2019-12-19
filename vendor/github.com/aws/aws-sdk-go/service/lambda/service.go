@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "lambda"    // Name of service.
 	EndpointsID = ServiceName // ID to lookup a service endpoint with.
-	ServiceID   = "Lambda"    // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Lambda"    // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the Lambda client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a Lambda client from just a session.
 //     svc := lambda.New(mySession)
 //

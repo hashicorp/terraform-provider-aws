@@ -120,7 +120,7 @@ variable "domain" {
 }
 
 data "aws_vpc" "selected" {
-  tags {
+  tags = {
     Name = "${var.vpc}"
   }
 }
@@ -128,7 +128,7 @@ data "aws_vpc" "selected" {
 data "aws_subnet_ids" "selected" {
   vpc_id = "${data.aws_vpc.selected.id}"
 
-  tags {
+  tags = {
     Tier = "private"
   }
 }
@@ -196,7 +196,7 @@ CONFIG
     automated_snapshot_start_hour = 23
   }
 
-  tags {
+  tags = {
     Domain = "TestDomain"
   }
 

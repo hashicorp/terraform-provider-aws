@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsDbInstance() *schema.Resource {
@@ -315,9 +316,14 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Error setting vpc_security_groups attribute: %#v, error: %#v", vpcSecurityGroups, err)
 	}
 
-	// Fetch and save tags
-	if err := saveTagsRDS(conn, d, aws.StringValue(dbInstance.DBInstanceArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for RDS Instance (%s): %s", aws.StringValue(dbInstance.DBInstanceArn), err)
+	tags, err := keyvaluetags.RdsListTags(conn, d.Get("db_instance_arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("db_instance_arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

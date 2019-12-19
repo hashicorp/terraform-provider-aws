@@ -83,6 +83,7 @@ var retryableCodes = map[string]struct{}{
 
 var throttleCodes = map[string]struct{}{
 	"ProvisionedThroughputExceededException": {},
+	"ThrottledException":                     {}, // SNS, XRay, ResourceGroupsTagging API
 	"Throttling":                             {},
 	"ThrottlingException":                    {},
 	"RequestLimitExceeded":                   {},
@@ -176,7 +177,7 @@ func shouldRetryError(origErr error) bool {
 		origErr := err.OrigErr()
 		var shouldRetry bool
 		if origErr != nil {
-			shouldRetry := shouldRetryError(origErr)
+			shouldRetry = shouldRetryError(origErr)
 			if err.Code() == "RequestError" && !shouldRetry {
 				return false
 			}

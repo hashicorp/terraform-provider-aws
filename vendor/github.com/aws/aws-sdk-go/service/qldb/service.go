@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "QLDB" // Name of service.
 	EndpointsID = "qldb" // ID to lookup a service endpoint with.
-	ServiceID   = "QLDB" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "QLDB" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the QLDB client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a QLDB client from just a session.
 //     svc := qldb.New(mySession)
 //

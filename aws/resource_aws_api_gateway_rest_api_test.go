@@ -65,6 +65,7 @@ func testSweepAPIGatewayRestApis(region string) error {
 
 func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,13 +74,13 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Config: testAccAWSAPIGatewayRestAPIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/+.`)),
-					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "bar"),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 0),
-					resource.TestCheckResourceAttr(resourceName, "name", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "0"),
@@ -96,13 +97,13 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayRestAPIUpdateConfig,
+				Config: testAccAWSAPIGatewayRestAPIUpdateConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
 					testAccCheckAWSAPIGatewayRestAPIDescriptionAttribute(&conf, "test"),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttribute(&conf, 10485760),
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "10485760"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
@@ -113,7 +114,7 @@ func TestAccAWSAPIGatewayRestApi_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccAWSAPIGatewayRestAPIDisableCompressionConfig,
+				Config: testAccAWSAPIGatewayRestAPIDisableCompressionConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
 					testAccCheckAWSAPIGatewayRestAPIMinimumCompressionSizeAttributeIsNil(&conf),
@@ -176,6 +177,7 @@ func TestAccAWSAPIGatewayRestApi_tags(t *testing.T) {
 func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
 	var restApi apigateway.RestApi
 	resourceName := "aws_api_gateway_rest_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -183,7 +185,7 @@ func TestAccAWSAPIGatewayRestApi_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Config: testAccAWSAPIGatewayRestAPIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &restApi),
 					testAccCheckAWSAPIGatewayRestAPIDisappears(&restApi),
@@ -325,6 +327,7 @@ func TestAccAWSAPIGatewayRestApi_EndpointConfiguration_Private(t *testing.T) {
 func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 	expectedAPIKeySource := "HEADER"
 	expectedUpdateAPIKeySource := "AUTHORIZER"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -333,7 +336,7 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource,
+				Config: testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", expectedAPIKeySource),
 				),
@@ -344,13 +347,13 @@ func TestAccAWSAPIGatewayRestApi_api_key_source(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource,
+				Config: testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", expectedUpdateAPIKeySource),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Config: testAccAWSAPIGatewayRestAPIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", expectedAPIKeySource),
 				),
@@ -363,6 +366,7 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 	resourceName := "aws_api_gateway_rest_api.test"
 	expectedPolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*","Condition":{"IpAddress":{"aws:SourceIp":"123.123.123.123/32"}}}]}`
 	expectedUpdatePolicyText := `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":{"AWS":"*"},"Action":"execute-api:Invoke","Resource":"*"}]}`
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -370,7 +374,7 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfigWithPolicy,
+				Config: testAccAWSAPIGatewayRestAPIConfigWithPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "policy", expectedPolicyText),
 				),
@@ -381,13 +385,13 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfigUpdatePolicy,
+				Config: testAccAWSAPIGatewayRestAPIConfigUpdatePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "policy", expectedUpdatePolicyText),
 				),
 			},
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfig,
+				Config: testAccAWSAPIGatewayRestAPIConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "policy", ""),
 				),
@@ -398,6 +402,7 @@ func TestAccAWSAPIGatewayRestApi_policy(t *testing.T) {
 
 func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 	var conf apigateway.RestApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_api_gateway_rest_api.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -406,12 +411,12 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayRestAPIDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayRestAPIConfigOpenAPI,
+				Config: testAccAWSAPIGatewayRestAPIConfigOpenAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/test"}),
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
@@ -425,12 +430,12 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body"},
 			},
 			{
-				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI,
+				Config: testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayRestAPIExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, "test"),
+					testAccCheckAWSAPIGatewayRestAPINameAttribute(&conf, rName),
 					testAccCheckAWSAPIGatewayRestAPIRoutes(&conf, []string{"/", "/update"}),
-					resource.TestCheckResourceAttr(resourceName, "name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
 				),
@@ -442,7 +447,7 @@ func TestAccAWSAPIGatewayRestApi_openapi(t *testing.T) {
 func testAccCheckAWSAPIGatewayRestAPINameAttribute(conf *apigateway.RestApi, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Name != name {
-			return fmt.Errorf("Wrong Name: %q", *conf.Name)
+			return fmt.Errorf("Wrong Name: %q instead of %s", *conf.Name, name)
 		}
 
 		return nil
@@ -582,12 +587,14 @@ func testAccCheckAWSAPIGatewayRestAPIDisappears(restApi *apigateway.RestApi) res
 	}
 }
 
-const testAccAWSAPIGatewayRestAPIConfig = `
+func testAccAWSAPIGatewayRestAPIConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "bar"
+  name = "%s"
   minimum_compression_size = 0
 }
-`
+`, rName)
+}
 
 func testAccAWSAPIGatewayRestAPIConfig_EndpointConfiguration(rName, endpointType string) string {
 	return fmt.Sprintf(`
@@ -634,22 +641,28 @@ resource "aws_api_gateway_rest_api" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-const testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource = `
+func testAccAWSAPIGatewayRestAPIConfigWithAPIKeySource(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "bar"
+  name = "%s"
 	api_key_source = "HEADER"
 }
-`
-const testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource = `
+`, rName)
+}
+
+func testAccAWSAPIGatewayRestAPIConfigWithUpdateAPIKeySource(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "bar"
+  name = "%s"
 	api_key_source = "AUTHORIZER"
 }
-`
+`, rName)
+}
 
-const testAccAWSAPIGatewayRestAPIConfigWithPolicy = `
+func testAccAWSAPIGatewayRestAPIConfigWithPolicy(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "bar"
+  name = "%s"
   minimum_compression_size = 0
   policy = <<EOF
 {
@@ -672,11 +685,13 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 EOF
 }
-`
+`, rName)
+}
 
-const testAccAWSAPIGatewayRestAPIConfigUpdatePolicy = `
+func testAccAWSAPIGatewayRestAPIConfigUpdatePolicy(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "bar"
+  name = "%s"
   minimum_compression_size = 0
   policy = <<EOF
 {
@@ -694,34 +709,40 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 EOF
 }
-`
+`, rName)
+}
 
-const testAccAWSAPIGatewayRestAPIUpdateConfig = `
+func testAccAWSAPIGatewayRestAPIUpdateConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "%s"
   description = "test"
   binary_media_types = ["application/octet-stream"]
   minimum_compression_size = 10485760
 }
-`
+`, rName)
+}
 
-const testAccAWSAPIGatewayRestAPIDisableCompressionConfig = `
+func testAccAWSAPIGatewayRestAPIDisableCompressionConfig(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "%s"
   description = "test"
   binary_media_types = ["application/octet-stream"]
   minimum_compression_size = -1
 }
-`
+`, rName)
+}
 
-const testAccAWSAPIGatewayRestAPIConfigOpenAPI = `
+func testAccAWSAPIGatewayRestAPIConfigOpenAPI(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "%s"
   body = <<EOF
 {
   "swagger": "2.0",
   "info": {
-    "title": "test",
+    "title": "%s",
     "version": "2017-04-20T04:08:08Z"
   },
   "schemes": [
@@ -751,16 +772,18 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 EOF
 }
-`
+`, rName, rName)
+}
 
-const testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI = `
+func testAccAWSAPIGatewayRestAPIUpdateConfigOpenAPI(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "test"
+  name = "%s"
   body = <<EOF
 {
   "swagger": "2.0",
   "info": {
-    "title": "test",
+    "title": "%s",
     "version": "2017-04-20T04:08:08Z"
   },
   "schemes": [
@@ -790,4 +813,5 @@ resource "aws_api_gateway_rest_api" "test" {
 }
 EOF
 }
-`
+`, rName, rName)
+}

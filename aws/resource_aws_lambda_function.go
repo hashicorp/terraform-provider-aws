@@ -28,15 +28,18 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeDotnetcore21,
 	lambda.RuntimeGo1X,
 	lambda.RuntimeJava8,
+	lambda.RuntimeJava11,
 	lambda.RuntimeNodejs43,
 	lambda.RuntimeNodejs43Edge,
 	lambda.RuntimeNodejs610,
 	lambda.RuntimeNodejs810,
 	lambda.RuntimeNodejs10X,
+	lambda.RuntimeNodejs12X,
 	lambda.RuntimeProvided,
 	lambda.RuntimePython27,
 	lambda.RuntimePython36,
 	lambda.RuntimePython37,
+	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
 }
 
@@ -444,6 +447,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(d.Get("function_name").(string))
 
+	if err := waitForLambdaFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("error waiting for Lambda Function (%s) creation: %s", d.Id(), err)
+	}
+
 	if reservedConcurrentExecutions >= 0 {
 
 		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
@@ -816,6 +823,10 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 
+		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("error waiting for Lambda Function (%s) update: %s", d.Id(), err)
+		}
+
 		d.SetPartial("description")
 		d.SetPartial("handler")
 		d.SetPartial("memory_size")
@@ -929,4 +940,84 @@ func lambdaFunctionInvokeArn(functionArn string, meta interface{}) string {
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionArn),
 	}.String()
+}
+
+func refreshLambdaFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &lambda.GetFunctionInput{
+			FunctionName: aws.String(functionName),
+		}
+
+		output, err := conn.GetFunction(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.Configuration == nil {
+			return nil, "", nil
+		}
+
+		lastUpdateStatus := aws.StringValue(output.Configuration.LastUpdateStatus)
+
+		if lastUpdateStatus == lambda.LastUpdateStatusFailed {
+			return output.Configuration, lastUpdateStatus, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.LastUpdateStatusReasonCode), aws.StringValue(output.Configuration.LastUpdateStatusReason))
+		}
+
+		return output.Configuration, lastUpdateStatus, nil
+	}
+}
+
+func refreshLambdaFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &lambda.GetFunctionInput{
+			FunctionName: aws.String(functionName),
+		}
+
+		output, err := conn.GetFunction(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.Configuration == nil {
+			return nil, "", nil
+		}
+
+		state := aws.StringValue(output.Configuration.State)
+
+		if state == lambda.StateFailed {
+			return output.Configuration, state, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.StateReasonCode), aws.StringValue(output.Configuration.StateReason))
+		}
+
+		return output.Configuration, state, nil
+	}
+}
+
+func waitForLambdaFunctionCreation(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{lambda.StatePending},
+		Target:  []string{lambda.StateActive},
+		Refresh: refreshLambdaFunctionState(conn, functionName),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{lambda.LastUpdateStatusInProgress},
+		Target:  []string{lambda.LastUpdateStatusSuccessful},
+		Refresh: refreshLambdaFunctionLastUpdateStatus(conn, functionName),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	_, err := stateConf.WaitForState()
+
+	return err
 }

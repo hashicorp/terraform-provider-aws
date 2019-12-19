@@ -11,6 +11,21 @@ poll "closed_issue_locker" "locker" {
   EOF
 }
 
+poll "stale_issue_closer" "closer" {
+    schedule = "0 22 23 * * *"
+    no_reply_in_last = "2160h" # 90 days
+    max_issues = 500
+    sleep_between_issues = "5s"
+    created_after = "2019-06-01"
+    exclude_labels = ["needs-triage", "technical-debt"]
+    extra_search_params = "reactions:<20 no:milestone no:assignee"
+    message = <<-EOF
+    I'm going to close this issue due to inactivity (_90 days_ without response ⏳ ). This helps our maintainers find and focus on the active issues.
+
+    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
+    EOF
+}
+
 behavior "deprecated_import_commenter" "hashicorp_terraform" {
   import_regexp = "github.com/hashicorp/terraform/"
   marker_label  = "terraform-plugin-sdk-migration"
@@ -63,6 +78,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
   regexp = "(\\* ?`?|- ?`?|data \"|resource \")aws_(\\w+)"
 
   label_map = {
+    "service/accessanalyzer" = [
+      "aws_accessanalyzer_",
+    ],
     "service/acm" = [
       "aws_acm_",
     ],
@@ -172,6 +190,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/databasemigrationservice" = [
       "aws_dms_",
+    ],
+    "service/dataexchange" = [
+      "aws_dataexchange_",
     ],
     "service/datapipeline" = [
       "aws_datapipeline_",
@@ -293,6 +314,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iam" = [
       "aws_iam_",
     ],
+    "service/imagebuilder" = [
+      "aws_imagebuilder_",
+    ],
     "service/inspector" = [
       "aws_inspector_",
     ],
@@ -335,6 +359,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/macie" = [
       "aws_macie_",
+    ],
+    "service/marketplacecatalog" = [
+      "aws_marketplace_catalog_",
     ],
     "service/mediaconnect" = [
       "aws_media_connect_",
@@ -522,6 +549,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       ".travis.yml"
     ]
     # label services
+    "service/accessanalyzer" = [
+      "**/*_accessanalyzer_*",
+      "**/accessanalyzer_*"
+    ]
     "service/acm" = [
       "**/*_acm_*",
       "**/acm_*"
@@ -675,6 +706,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/databasemigrationservice" = [
       "**/*_dms_*",
       "**/dms_*"
+    ]
+    "service/dataexchange" = [
+      "**/*_dataexchange_*",
+      "**/dataexchange_*",
     ]
     "service/datapipeline" = [
       "**/*_datapipeline_*",
@@ -871,6 +906,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iam_*",
       "**/iam_*"
     ]
+    "service/imagebuilder" = [
+      "**/*_imagebuilder_*",
+      "**/imagebuilder_*"
+    ]
     "service/inspector" = [
       "**/*_inspector_*",
       "**/inspector_*"
@@ -926,6 +965,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/macie" = [
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/marketplacecatalog" = [
+      "**/*_marketplace_catalog_*",
+      "**/marketplace_catalog_*"
     ]
     "service/mediaconnect" = [
       "**/*_media_connect_*",

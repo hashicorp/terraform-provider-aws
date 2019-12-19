@@ -30,8 +30,8 @@ var initRequest func(*request.Request)
 // Service information constants
 const (
 	ServiceName = "autoscaling"        // Name of service.
-	EndpointsID = ServiceName          // ID to lookup a service endpoint with.
-	ServiceID   = "Auto Scaling Plans" // ServiceID is a unique identifer of a specific service.
+	EndpointsID = "autoscaling-plans"  // ID to lookup a service endpoint with.
+	ServiceID   = "Auto Scaling Plans" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the AutoScalingPlans client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a AutoScalingPlans client from just a session.
 //     svc := autoscalingplans.New(mySession)
 //

@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "directconnect"  // Name of service.
 	EndpointsID = ServiceName      // ID to lookup a service endpoint with.
-	ServiceID   = "Direct Connect" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Direct Connect" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the DirectConnect client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a DirectConnect client from just a session.
 //     svc := directconnect.New(mySession)
 //

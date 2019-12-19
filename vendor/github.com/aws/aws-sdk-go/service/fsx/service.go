@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "FSx" // Name of service.
 	EndpointsID = "fsx" // ID to lookup a service endpoint with.
-	ServiceID   = "FSx" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "FSx" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the FSx client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a FSx client from just a session.
 //     svc := fsx.New(mySession)
 //

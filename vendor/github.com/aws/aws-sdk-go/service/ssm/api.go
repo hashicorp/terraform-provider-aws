@@ -289,8 +289,9 @@ func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWi
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelMaintenanceWindowExecution
 func (c *SSM) CancelMaintenanceWindowExecution(input *CancelMaintenanceWindowExecutionInput) (*CancelMaintenanceWindowExecutionOutput, error) {
@@ -820,11 +821,12 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -921,8 +923,8 @@ func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Requ
 //   The OpsItem already exists.
 //
 //   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
-//   The request caused OpsItems to exceed one or more limits. For information
-//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   The request caused OpsItems to exceed one or more quotas. For information
+//   about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -1012,11 +1014,12 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -1088,17 +1091,33 @@ func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) 
 
 // CreateResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
 //
-// Creates a resource data sync configuration to a single bucket in Amazon S3.
-// This is an asynchronous operation that returns immediately. After a successful
-// initial sync is completed, the system continuously syncs data to the Amazon
-// S3 bucket. To check the status of the sync, use the ListResourceDataSync.
+// A resource data sync helps you view data from multiple sources in a single
+// location. Systems Manager offers two types of resource data sync: SyncToDestination
+// and SyncFromSource.
+//
+// You can configure Systems Manager Inventory to use the SyncToDestination
+// type to synchronize Inventory data from multiple AWS Regions to a single
+// Amazon S3 bucket. For more information, see Configuring Resource Data Sync
+// for Inventory (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html)
+// in the AWS Systems Manager User Guide.
+//
+// You can configure Systems Manager Explorer to use the SyncToDestination type
+// to synchronize operational work items (OpsItems) and operational data (OpsData)
+// from multiple AWS Regions to a single Amazon S3 bucket. You can also configure
+// Explorer to use the SyncFromSource type. This type synchronizes OpsItems
+// and OpsData from multiple AWS accounts and Regions by using AWS Organizations.
+// For more information, see Setting Up Explorer to Display Data from Multiple
+// Accounts and Regions (http://docs.aws.amazon.com/systems-manager/latest/userguide/Explorer-resource-data-sync.html)
+// in the AWS Systems Manager User Guide.
+//
+// A resource data sync is an asynchronous operation that returns immediately.
+// After a successful initial sync is completed, the system continuously syncs
+// data. To check the status of a sync, use the ListResourceDataSync.
 //
 // By default, data is not encrypted in Amazon S3. We strongly recommend that
 // you enable encryption in Amazon S3 to ensure secure data storage. We also
 // recommend that you secure access to the Amazon S3 bucket by creating a restrictive
-// bucket policy. For more information, see Configuring Resource Data Sync for
-// Inventory (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html)
-// in the AWS Systems Manager User Guide.
+// bucket policy.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1904,9 +1923,8 @@ func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) 
 // DeleteResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
 //
 // Deletes a Resource Data Sync configuration. After the configuration is deleted,
-// changes to inventory data on managed instances are no longer synced with
-// the target Amazon S3 bucket. Deleting a sync configuration does not delete
-// data in the target Amazon S3 bucket.
+// changes to data on managed instances are no longer synced to or from the
+// target. Deleting a sync configuration does not delete data.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1921,6 +1939,9 @@ func (c *SSM) DeleteResourceDataSyncRequest(input *DeleteResourceDataSyncInput) 
 //
 //   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
 //   The specified sync name was not found.
+//
+//   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
+//   The specified sync configuration is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DeleteResourceDataSync
 func (c *SSM) DeleteResourceDataSync(input *DeleteResourceDataSyncInput) (*DeleteResourceDataSyncOutput, error) {
@@ -2179,8 +2200,9 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -2269,8 +2291,9 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -3314,8 +3337,9 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeUnsupportedOperatingSystem "UnsupportedOperatingSystem"
 //   The operating systems you specified is not supported, or the operation is
@@ -4021,8 +4045,9 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4107,8 +4132,9 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4277,8 +4303,9 @@ func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanc
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowSchedule
 func (c *SSM) DescribeMaintenanceWindowSchedule(input *DescribeMaintenanceWindowScheduleInput) (*DescribeMaintenanceWindowScheduleOutput, error) {
@@ -4360,8 +4387,9 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4446,8 +4474,9 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -5402,6 +5431,103 @@ func (c *SSM) GetAutomationExecutionWithContext(ctx aws.Context, input *GetAutom
 	return out, req.Send()
 }
 
+const opGetCalendarState = "GetCalendarState"
+
+// GetCalendarStateRequest generates a "aws/request.Request" representing the
+// client's request for the GetCalendarState operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetCalendarState for more information on using the GetCalendarState
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetCalendarStateRequest method.
+//    req, resp := client.GetCalendarStateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCalendarState
+func (c *SSM) GetCalendarStateRequest(input *GetCalendarStateInput) (req *request.Request, output *GetCalendarStateOutput) {
+	op := &request.Operation{
+		Name:       opGetCalendarState,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetCalendarStateInput{}
+	}
+
+	output = &GetCalendarStateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetCalendarState API operation for Amazon Simple Systems Manager (SSM).
+//
+// Gets the state of the AWS Systems Manager Change Calendar at an optional,
+// specified time. If you specify a time, GetCalendarState returns the state
+// of the calendar at a specific time, and returns the next time that the Change
+// Calendar state will transition. If you do not specify a time, GetCalendarState
+// assumes the current time. Change Calendar entries have two possible states:
+// OPEN or CLOSED. For more information about Systems Manager Change Calendar,
+// see AWS Systems Manager Change Calendar (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-change-calendar.html)
+// in the AWS Systems Manager User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation GetCalendarState for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+//   * ErrCodeInvalidDocument "InvalidDocument"
+//   The specified document does not exist.
+//
+//   * ErrCodeInvalidDocumentType "InvalidDocumentType"
+//   The document type is not valid. Valid document types are described in the
+//   DocumentType property.
+//
+//   * ErrCodeUnsupportedCalendarException "UnsupportedCalendarException"
+//   The calendar entry contained in the specified Systems Manager document is
+//   not supported.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetCalendarState
+func (c *SSM) GetCalendarState(input *GetCalendarStateInput) (*GetCalendarStateOutput, error) {
+	req, out := c.GetCalendarStateRequest(input)
+	return out, req.Send()
+}
+
+// GetCalendarStateWithContext is the same as GetCalendarState with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetCalendarState for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) GetCalendarStateWithContext(ctx aws.Context, input *GetCalendarStateInput, opts ...request.Option) (*GetCalendarStateOutput, error) {
+	req, out := c.GetCalendarStateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetCommandInvocation = "GetCommandInvocation"
 
 // GetCommandInvocationRequest generates a "aws/request.Request" representing the
@@ -6087,8 +6213,9 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6173,8 +6300,9 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6260,8 +6388,9 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6346,8 +6475,9 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6432,8 +6562,9 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6607,6 +6738,9 @@ func (c *SSM) GetOpsSummaryRequest(input *GetOpsSummaryInput) (req *request.Requ
 // Returned Error Codes:
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
+//
+//   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
+//   The specified sync name was not found.
 //
 //   * ErrCodeInvalidFilter "InvalidFilter"
 //   The filter name is not valid. Verify the you entered the correct name and
@@ -7013,9 +7147,7 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 
 // GetParametersByPath API operation for Amazon Simple Systems Manager (SSM).
 //
-// Retrieve parameters in a specific hierarchy. For more information, see Working
-// with Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-working.html)
-// in the AWS Systems Manager User Guide.
+// Retrieve information about one or more parameters in a specific hierarchy.
 //
 // Request results are returned on a best-effort basis. If you specify MaxResults
 // in the request, the response includes information up to the limit specified.
@@ -7024,8 +7156,6 @@ func (c *SSM) GetParametersByPathRequest(input *GetParametersByPathInput) (req *
 // the results, it stops the operation and returns the matching values up to
 // that point and a NextToken. You can specify the NextToken in a subsequent
 // call to get the next set of results.
-//
-// This API action doesn't support filtering by tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7186,8 +7316,9 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -8724,6 +8855,9 @@ func (c *SSM) ListResourceDataSyncRequest(input *ListResourceDataSyncInput) (req
 // API operation ListResourceDataSync for usage and error information.
 //
 // Returned Error Codes:
+//   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
+//   The specified sync configuration is invalid.
+//
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
 //
@@ -9406,8 +9540,9 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9496,19 +9631,21 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
 //   try again.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9597,15 +9734,17 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9694,15 +9833,17 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeFeatureNotAvailableException "FeatureNotAvailableException"
 //   You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
@@ -9989,8 +10130,9 @@ func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Requ
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -10666,8 +10808,9 @@ func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *reques
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11192,8 +11335,9 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11295,8 +11439,9 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11400,8 +11545,9 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11595,8 +11741,8 @@ func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Requ
 //   The OpsItem already exists.
 //
 //   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
-//   The request caused OpsItems to exceed one or more limits. For information
-//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   The request caused OpsItems to exceed one or more quotas. For information
+//   about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -11686,8 +11832,9 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11709,6 +11856,101 @@ func (c *SSM) UpdatePatchBaseline(input *UpdatePatchBaselineInput) (*UpdatePatch
 // for more information on using Contexts.
 func (c *SSM) UpdatePatchBaselineWithContext(ctx aws.Context, input *UpdatePatchBaselineInput, opts ...request.Option) (*UpdatePatchBaselineOutput, error) {
 	req, out := c.UpdatePatchBaselineRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateResourceDataSync = "UpdateResourceDataSync"
+
+// UpdateResourceDataSyncRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateResourceDataSync operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateResourceDataSync for more information on using the UpdateResourceDataSync
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateResourceDataSyncRequest method.
+//    req, resp := client.UpdateResourceDataSyncRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateResourceDataSync
+func (c *SSM) UpdateResourceDataSyncRequest(input *UpdateResourceDataSyncInput) (req *request.Request, output *UpdateResourceDataSyncOutput) {
+	op := &request.Operation{
+		Name:       opUpdateResourceDataSync,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateResourceDataSyncInput{}
+	}
+
+	output = &UpdateResourceDataSyncOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateResourceDataSync API operation for Amazon Simple Systems Manager (SSM).
+//
+// Update a resource data sync. After you create a resource data sync for a
+// Region, you can't change the account options for that sync. For example,
+// if you create a sync in the us-east-2 (Ohio) Region and you choose the Include
+// only the current account option, you can't edit that sync later and choose
+// the Include all accounts from my AWS Organizations configuration option.
+// Instead, you must delete the first resource data sync, and create a new one.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Simple Systems Manager (SSM)'s
+// API operation UpdateResourceDataSync for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeResourceDataSyncNotFoundException "ResourceDataSyncNotFoundException"
+//   The specified sync name was not found.
+//
+//   * ErrCodeResourceDataSyncInvalidConfigurationException "ResourceDataSyncInvalidConfigurationException"
+//   The specified sync configuration is invalid.
+//
+//   * ErrCodeResourceDataSyncConflictException "ResourceDataSyncConflictException"
+//   Another UpdateResourceDataSync request is being processed. Wait a few minutes
+//   and try again.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An error occurred on the server side.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/UpdateResourceDataSync
+func (c *SSM) UpdateResourceDataSync(input *UpdateResourceDataSyncInput) (*UpdateResourceDataSyncOutput, error) {
+	req, out := c.UpdateResourceDataSyncRequest(input)
+	return out, req.Send()
+}
+
+// UpdateResourceDataSyncWithContext is the same as UpdateResourceDataSync with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateResourceDataSync for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SSM) UpdateResourceDataSyncWithContext(ctx aws.Context, input *UpdateResourceDataSyncInput, opts ...request.Option) (*UpdateResourceDataSyncOutput, error) {
+	req, out := c.UpdateResourceDataSyncRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -11814,6 +12056,40 @@ func (c *SSM) UpdateServiceSettingWithContext(ctx aws.Context, input *UpdateServ
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Information includes the AWS account ID where the current document is shared
+// and the version shared with that account.
+type AccountSharingInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS account ID where the current document is shared.
+	AccountId *string `type:"string"`
+
+	// The version of the current document shared with the account.
+	SharedDocumentVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AccountSharingInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountSharingInfo) GoString() string {
+	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *AccountSharingInfo) SetAccountId(v string) *AccountSharingInfo {
+	s.AccountId = &v
+	return s
+}
+
+// SetSharedDocumentVersion sets the SharedDocumentVersion field's value.
+func (s *AccountSharingInfo) SetSharedDocumentVersion(v string) *AccountSharingInfo {
+	s.SharedDocumentVersion = &v
+	return s
 }
 
 // An activation registers one or more on-premises servers or virtual machines
@@ -14704,7 +14980,7 @@ type ComplianceItem struct {
 
 	// An ID for the compliance item. For example, if the compliance item is a Windows
 	// patch, the ID could be the number of the KB article; for example: KB4010320.
-	Id *string `min:"1" type:"string"`
+	Id *string `type:"string"`
 
 	// An ID for the resource. For a managed instance, this is the instance ID.
 	ResourceId *string `min:"1" type:"string"`
@@ -14799,7 +15075,7 @@ type ComplianceItemEntry struct {
 
 	// The compliance item ID. For example, if the compliance item is a Windows
 	// patch, the ID could be the number of the KB article.
-	Id *string `min:"1" type:"string"`
+	Id *string `type:"string"`
 
 	// The severity of the compliance status. Severity can be one of the following:
 	// Critical, High, Medium, Low, Informational, Unspecified.
@@ -14831,9 +15107,6 @@ func (s ComplianceItemEntry) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ComplianceItemEntry) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ComplianceItemEntry"}
-	if s.Id != nil && len(*s.Id) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
-	}
 	if s.Severity == nil {
 		invalidParams.Add(request.NewErrParamRequired("Severity"))
 	}
@@ -15479,10 +15752,11 @@ type CreateAssociationInput struct {
 	// The instance ID.
 	//
 	// InstanceId has been deprecated. To specify an instance ID for an association,
-	// use the Targets parameter. If you use the parameter InstanceId, you cannot
-	// use the parameters AssociationName, DocumentVersion, MaxErrors, MaxConcurrency,
-	// OutputLocation, or ScheduleExpression. To use these parameters, you must
-	// use the Targets parameter.
+	// use the Targets parameter. Requests that include the parameter InstanceID
+	// with SSM documents that use schema version 2.0 or later will fail. In addition,
+	// if you use the parameter InstanceId, you cannot use the parameters AssociationName,
+	// DocumentVersion, MaxErrors, MaxConcurrency, OutputLocation, or ScheduleExpression.
+	// To use these parameters, you must use the Targets parameter.
 	InstanceId *string `type:"string"`
 
 	// The maximum number of targets allowed to run the association at the same
@@ -15704,8 +15978,8 @@ type CreateDocumentInput struct {
 	// Content is a required field
 	Content *string `min:"1" type:"string" required:"true"`
 
-	// Specify the document format for the request. The document format can be either
-	// JSON or YAML. JSON is the default format.
+	// Specify the document format for the request. The document format can be JSON,
+	// YAML, or TEXT. JSON is the default format.
 	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
 	// The type of document to create. Valid document types include: Command, Policy,
@@ -15725,6 +15999,10 @@ type CreateDocumentInput struct {
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
+
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
 
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
 	// a resource in different ways, such as by purpose, owner, or environment.
@@ -15776,6 +16054,9 @@ func (s *CreateDocumentInput) Validate() error {
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
 	}
+	if s.Requires != nil && len(s.Requires) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Requires", 1))
+	}
 	if s.Attachments != nil {
 		for i, v := range s.Attachments {
 			if v == nil {
@@ -15783,6 +16064,16 @@ func (s *CreateDocumentInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Attachments", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Requires != nil {
+		for i, v := range s.Requires {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Requires", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -15830,6 +16121,12 @@ func (s *CreateDocumentInput) SetDocumentType(v string) *CreateDocumentInput {
 // SetName sets the Name field's value.
 func (s *CreateDocumentInput) SetName(v string) *CreateDocumentInput {
 	s.Name = &v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *CreateDocumentInput) SetRequires(v []*DocumentRequires) *CreateDocumentInput {
+	s.Requires = v
 	return s
 }
 
@@ -16101,6 +16398,9 @@ func (s *CreateMaintenanceWindowOutput) SetWindowId(v string) *CreateMaintenance
 type CreateOpsItemInput struct {
 	_ struct{} `type:"structure"`
 
+	// Specify a category to assign to an OpsItem.
+	Category *string `min:"1" type:"string"`
+
 	// Information about the OpsItem.
 	//
 	// Description is a required field
@@ -16141,6 +16441,9 @@ type CreateOpsItemInput struct {
 	// impacted resources, or statuses for the impacted resource.
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
 
+	// Specify a severity to assign to an OpsItem.
+	Severity *string `min:"1" type:"string"`
+
 	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager.
 	//
 	// Source is a required field
@@ -16178,6 +16481,9 @@ func (s CreateOpsItemInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateOpsItemInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateOpsItemInput"}
+	if s.Category != nil && len(*s.Category) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Category", 1))
+	}
 	if s.Description == nil {
 		invalidParams.Add(request.NewErrParamRequired("Description"))
 	}
@@ -16186,6 +16492,9 @@ func (s *CreateOpsItemInput) Validate() error {
 	}
 	if s.Priority != nil && *s.Priority < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Priority", 1))
+	}
+	if s.Severity != nil && len(*s.Severity) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Severity", 1))
 	}
 	if s.Source == nil {
 		invalidParams.Add(request.NewErrParamRequired("Source"))
@@ -16226,6 +16535,12 @@ func (s *CreateOpsItemInput) Validate() error {
 	return nil
 }
 
+// SetCategory sets the Category field's value.
+func (s *CreateOpsItemInput) SetCategory(v string) *CreateOpsItemInput {
+	s.Category = &v
+	return s
+}
+
 // SetDescription sets the Description field's value.
 func (s *CreateOpsItemInput) SetDescription(v string) *CreateOpsItemInput {
 	s.Description = &v
@@ -16253,6 +16568,12 @@ func (s *CreateOpsItemInput) SetPriority(v int64) *CreateOpsItemInput {
 // SetRelatedOpsItems sets the RelatedOpsItems field's value.
 func (s *CreateOpsItemInput) SetRelatedOpsItems(v []*RelatedOpsItem) *CreateOpsItemInput {
 	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *CreateOpsItemInput) SetSeverity(v string) *CreateOpsItemInput {
+	s.Severity = &v
 	return s
 }
 
@@ -16547,14 +16868,21 @@ type CreateResourceDataSyncInput struct {
 	_ struct{} `type:"structure"`
 
 	// Amazon S3 configuration details for the sync.
-	//
-	// S3Destination is a required field
-	S3Destination *ResourceDataSyncS3Destination `type:"structure" required:"true"`
+	S3Destination *ResourceDataSyncS3Destination `type:"structure"`
 
 	// A name for the configuration.
 	//
 	// SyncName is a required field
 	SyncName *string `min:"1" type:"string" required:"true"`
+
+	// Specify information about the data sources to synchronize.
+	SyncSource *ResourceDataSyncSource `type:"structure"`
+
+	// Specify SyncToDestination to create a resource data sync that synchronizes
+	// data from multiple AWS Regions to an Amazon S3 bucket. Specify SyncFromSource
+	// to synchronize data from multiple AWS accounts and Regions, as listed in
+	// AWS Organizations.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -16570,18 +16898,23 @@ func (s CreateResourceDataSyncInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateResourceDataSyncInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateResourceDataSyncInput"}
-	if s.S3Destination == nil {
-		invalidParams.Add(request.NewErrParamRequired("S3Destination"))
-	}
 	if s.SyncName == nil {
 		invalidParams.Add(request.NewErrParamRequired("SyncName"))
 	}
 	if s.SyncName != nil && len(*s.SyncName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
 	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
 	if s.S3Destination != nil {
 		if err := s.S3Destination.Validate(); err != nil {
 			invalidParams.AddNested("S3Destination", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SyncSource != nil {
+		if err := s.SyncSource.Validate(); err != nil {
+			invalidParams.AddNested("SyncSource", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -16600,6 +16933,18 @@ func (s *CreateResourceDataSyncInput) SetS3Destination(v *ResourceDataSyncS3Dest
 // SetSyncName sets the SyncName field's value.
 func (s *CreateResourceDataSyncInput) SetSyncName(v string) *CreateResourceDataSyncInput {
 	s.SyncName = &v
+	return s
+}
+
+// SetSyncSource sets the SyncSource field's value.
+func (s *CreateResourceDataSyncInput) SetSyncSource(v *ResourceDataSyncSource) *CreateResourceDataSyncInput {
+	s.SyncSource = v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *CreateResourceDataSyncInput) SetSyncType(v string) *CreateResourceDataSyncInput {
+	s.SyncType = &v
 	return s
 }
 
@@ -16731,6 +17076,12 @@ type DeleteDocumentInput struct {
 	// versions of the document are deleted.
 	DocumentVersion *string `type:"string"`
 
+	// Some SSM document types require that you specify a Force flag before you
+	// can delete the document. For example, you must specify a Force flag to delete
+	// a document of type ApplicationConfigurationSchema. You can restrict access
+	// to the Force flag in an AWS Identity and Access Management (IAM) policy.
+	Force *bool `type:"boolean"`
+
 	// The name of the document.
 	//
 	// Name is a required field
@@ -16767,6 +17118,12 @@ func (s *DeleteDocumentInput) Validate() error {
 // SetDocumentVersion sets the DocumentVersion field's value.
 func (s *DeleteDocumentInput) SetDocumentVersion(v string) *DeleteDocumentInput {
 	s.DocumentVersion = &v
+	return s
+}
+
+// SetForce sets the Force field's value.
+func (s *DeleteDocumentInput) SetForce(v bool) *DeleteDocumentInput {
+	s.Force = &v
 	return s
 }
 
@@ -17193,6 +17550,9 @@ type DeleteResourceDataSyncInput struct {
 	//
 	// SyncName is a required field
 	SyncName *string `min:"1" type:"string" required:"true"`
+
+	// Specify the type of resource data sync to delete.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -17214,6 +17574,9 @@ func (s *DeleteResourceDataSyncInput) Validate() error {
 	if s.SyncName != nil && len(*s.SyncName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
 	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -17224,6 +17587,12 @@ func (s *DeleteResourceDataSyncInput) Validate() error {
 // SetSyncName sets the SyncName field's value.
 func (s *DeleteResourceDataSyncInput) SetSyncName(v string) *DeleteResourceDataSyncInput {
 	s.SyncName = &v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *DeleteResourceDataSyncInput) SetSyncType(v string) *DeleteResourceDataSyncInput {
+	s.SyncType = &v
 	return s
 }
 
@@ -18505,6 +18874,10 @@ type DescribeDocumentPermissionOutput struct {
 	// The account IDs that have permission to use this document. The ID can be
 	// either an AWS account or All.
 	AccountIds []*string `type:"list"`
+
+	// A list of of AWS accounts where the current document is shared and the version
+	// shared with each account.
+	AccountSharingInfoList []*AccountSharingInfo `type:"list"`
 }
 
 // String returns the string representation
@@ -18520,6 +18893,12 @@ func (s DescribeDocumentPermissionOutput) GoString() string {
 // SetAccountIds sets the AccountIds field's value.
 func (s *DescribeDocumentPermissionOutput) SetAccountIds(v []*string) *DescribeDocumentPermissionOutput {
 	s.AccountIds = v
+	return s
+}
+
+// SetAccountSharingInfoList sets the AccountSharingInfoList field's value.
+func (s *DescribeDocumentPermissionOutput) SetAccountSharingInfoList(v []*AccountSharingInfo) *DescribeDocumentPermissionOutput {
+	s.AccountSharingInfoList = v
 	return s
 }
 
@@ -20483,7 +20862,7 @@ func (s *DescribeOpsItemsOutput) SetOpsItemSummaries(v []*OpsItemSummary) *Descr
 type DescribeParametersInput struct {
 	_ struct{} `type:"structure"`
 
-	// One or more filters. Use a filter to return a more specific list of results.
+	// This data type is deprecated. Instead, use ParameterFilters.
 	Filters []*ParametersFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -20759,6 +21138,9 @@ type DescribePatchGroupStateOutput struct {
 	// The number of instances with installed patches.
 	InstancesWithInstalledPatches *int64 `type:"integer"`
 
+	// Reserved for future use.
+	InstancesWithInstalledPendingRebootPatches *int64 `type:"integer"`
+
 	// The number of instances with patches installed that are specified in a RejectedPatches
 	// list. Patches with a status of INSTALLED_REJECTED were typically installed
 	// before they were added to a RejectedPatches list.
@@ -20809,6 +21191,12 @@ func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledOtherPatches(v 
 // SetInstancesWithInstalledPatches sets the InstancesWithInstalledPatches field's value.
 func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledPatches(v int64) *DescribePatchGroupStateOutput {
 	s.InstancesWithInstalledPatches = &v
+	return s
+}
+
+// SetInstancesWithInstalledPendingRebootPatches sets the InstancesWithInstalledPendingRebootPatches field's value.
+func (s *DescribePatchGroupStateOutput) SetInstancesWithInstalledPendingRebootPatches(v int64) *DescribePatchGroupStateOutput {
+	s.InstancesWithInstalledPendingRebootPatches = &v
 	return s
 }
 
@@ -21267,6 +21655,10 @@ type DocumentDescription struct {
 	// The list of OS platforms compatible with this Systems Manager document.
 	PlatformTypes []*string `type:"list"`
 
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
+
 	// The schema version.
 	SchemaVersion *string `type:"string"`
 
@@ -21386,6 +21778,12 @@ func (s *DocumentDescription) SetParameters(v []*DocumentParameter) *DocumentDes
 // SetPlatformTypes sets the PlatformTypes field's value.
 func (s *DocumentDescription) SetPlatformTypes(v []*string) *DocumentDescription {
 	s.PlatformTypes = v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *DocumentDescription) SetRequires(v []*DocumentRequires) *DocumentDescription {
+	s.Requires = v
 	return s
 }
 
@@ -21509,6 +21907,10 @@ type DocumentIdentifier struct {
 	// The operating system platform.
 	PlatformTypes []*string `type:"list"`
 
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
+
 	// The schema version.
 	SchemaVersion *string `type:"string"`
 
@@ -21570,6 +21972,12 @@ func (s *DocumentIdentifier) SetOwner(v string) *DocumentIdentifier {
 // SetPlatformTypes sets the PlatformTypes field's value.
 func (s *DocumentIdentifier) SetPlatformTypes(v []*string) *DocumentIdentifier {
 	s.PlatformTypes = v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *DocumentIdentifier) SetRequires(v []*DocumentRequires) *DocumentIdentifier {
+	s.Requires = v
 	return s
 }
 
@@ -21718,6 +22126,55 @@ func (s *DocumentParameter) SetName(v string) *DocumentParameter {
 // SetType sets the Type field's value.
 func (s *DocumentParameter) SetType(v string) *DocumentParameter {
 	s.Type = &v
+	return s
+}
+
+// An SSM document required by the current document.
+type DocumentRequires struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the required SSM document. The name can be an Amazon Resource
+	// Name (ARN).
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true"`
+
+	// The document version required by the current document.
+	Version *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DocumentRequires) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DocumentRequires) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DocumentRequires) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DocumentRequires"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *DocumentRequires) SetName(v string) *DocumentRequires {
+	s.Name = &v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *DocumentRequires) SetVersion(v string) *DocumentRequires {
+	s.Version = &v
 	return s
 }
 
@@ -22004,6 +22461,104 @@ func (s GetAutomationExecutionOutput) GoString() string {
 // SetAutomationExecution sets the AutomationExecution field's value.
 func (s *GetAutomationExecutionOutput) SetAutomationExecution(v *AutomationExecution) *GetAutomationExecutionOutput {
 	s.AutomationExecution = v
+	return s
+}
+
+type GetCalendarStateInput struct {
+	_ struct{} `type:"structure"`
+
+	// (Optional) The specific time for which you want to get calendar state information,
+	// in ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) format. If you do not
+	// add AtTime, the current time is assumed.
+	AtTime *string `type:"string"`
+
+	// The names or Amazon Resource Names (ARNs) of the Systems Manager documents
+	// that represent the calendar entries for which you want to get the state.
+	//
+	// CalendarNames is a required field
+	CalendarNames []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s GetCalendarStateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCalendarStateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetCalendarStateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetCalendarStateInput"}
+	if s.CalendarNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("CalendarNames"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAtTime sets the AtTime field's value.
+func (s *GetCalendarStateInput) SetAtTime(v string) *GetCalendarStateInput {
+	s.AtTime = &v
+	return s
+}
+
+// SetCalendarNames sets the CalendarNames field's value.
+func (s *GetCalendarStateInput) SetCalendarNames(v []*string) *GetCalendarStateInput {
+	s.CalendarNames = v
+	return s
+}
+
+type GetCalendarStateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The time, as an ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) string,
+	// that you specified in your command. If you did not specify a time, GetCalendarState
+	// uses the current time.
+	AtTime *string `type:"string"`
+
+	// The time, as an ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) string,
+	// that the calendar state will change. If the current calendar state is OPEN,
+	// NextTransitionTime indicates when the calendar state changes to CLOSED, and
+	// vice-versa.
+	NextTransitionTime *string `type:"string"`
+
+	// The state of the calendar. An OPEN calendar indicates that actions are allowed
+	// to proceed, and a CLOSED calendar indicates that actions are not allowed
+	// to proceed.
+	State *string `type:"string" enum:"CalendarState"`
+}
+
+// String returns the string representation
+func (s GetCalendarStateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetCalendarStateOutput) GoString() string {
+	return s.String()
+}
+
+// SetAtTime sets the AtTime field's value.
+func (s *GetCalendarStateOutput) SetAtTime(v string) *GetCalendarStateOutput {
+	s.AtTime = &v
+	return s
+}
+
+// SetNextTransitionTime sets the NextTransitionTime field's value.
+func (s *GetCalendarStateOutput) SetNextTransitionTime(v string) *GetCalendarStateOutput {
+	s.NextTransitionTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *GetCalendarStateOutput) SetState(v string) *GetCalendarStateOutput {
+	s.State = &v
 	return s
 }
 
@@ -22640,6 +23195,10 @@ type GetDocumentOutput struct {
 	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
+	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
+	// document requires an ApplicationConfigurationSchema document.
+	Requires []*DocumentRequires `min:"1" type:"list"`
+
 	// The status of the Systems Manager document, such as Creating, Active, Updating,
 	// Failed, and Deleting.
 	Status *string `type:"string" enum:"DocumentStatus"`
@@ -22699,6 +23258,12 @@ func (s *GetDocumentOutput) SetDocumentVersion(v string) *GetDocumentOutput {
 // SetName sets the Name field's value.
 func (s *GetDocumentOutput) SetName(v string) *GetDocumentOutput {
 	s.Name = &v
+	return s
+}
+
+// SetRequires sets the Requires field's value.
+func (s *GetDocumentOutput) SetRequires(v []*DocumentRequires) *GetDocumentOutput {
+	s.Requires = v
 	return s
 }
 
@@ -23963,9 +24528,7 @@ type GetOpsSummaryInput struct {
 
 	// Optional aggregators that return counts of OpsItems based on one or more
 	// expressions.
-	//
-	// Aggregators is a required field
-	Aggregators []*OpsAggregator `min:"1" type:"list" required:"true"`
+	Aggregators []*OpsAggregator `min:"1" type:"list"`
 
 	// Optional filters used to scope down the returned OpsItems.
 	Filters []*OpsFilter `min:"1" type:"list"`
@@ -23977,6 +24540,12 @@ type GetOpsSummaryInput struct {
 
 	// A token to start the list. Use this token to get the next set of results.
 	NextToken *string `type:"string"`
+
+	// The OpsItem data type to return.
+	ResultAttributes []*OpsResultAttribute `min:"1" type:"list"`
+
+	// Specify the name of a resource data sync to get.
+	SyncName *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -23992,9 +24561,6 @@ func (s GetOpsSummaryInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *GetOpsSummaryInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetOpsSummaryInput"}
-	if s.Aggregators == nil {
-		invalidParams.Add(request.NewErrParamRequired("Aggregators"))
-	}
 	if s.Aggregators != nil && len(s.Aggregators) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Aggregators", 1))
 	}
@@ -24003,6 +24569,12 @@ func (s *GetOpsSummaryInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ResultAttributes != nil && len(s.ResultAttributes) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResultAttributes", 1))
+	}
+	if s.SyncName != nil && len(*s.SyncName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
 	}
 	if s.Aggregators != nil {
 		for i, v := range s.Aggregators {
@@ -24021,6 +24593,16 @@ func (s *GetOpsSummaryInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.ResultAttributes != nil {
+		for i, v := range s.ResultAttributes {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ResultAttributes", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -24052,6 +24634,18 @@ func (s *GetOpsSummaryInput) SetMaxResults(v int64) *GetOpsSummaryInput {
 // SetNextToken sets the NextToken field's value.
 func (s *GetOpsSummaryInput) SetNextToken(v string) *GetOpsSummaryInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetResultAttributes sets the ResultAttributes field's value.
+func (s *GetOpsSummaryInput) SetResultAttributes(v []*OpsResultAttribute) *GetOpsSummaryInput {
+	s.ResultAttributes = v
+	return s
+}
+
+// SetSyncName sets the SyncName field's value.
+func (s *GetOpsSummaryInput) SetSyncName(v string) *GetOpsSummaryInput {
+	s.SyncName = &v
 	return s
 }
 
@@ -24282,8 +24876,6 @@ type GetParametersByPathInput struct {
 	NextToken *string `type:"string"`
 
 	// Filters to limit the request results.
-	//
-	// You can't filter using the parameter name.
 	ParameterFilters []*ParameterStringFilter `type:"list"`
 
 	// The hierarchy for the parameter. Hierarchies start with a forward slash (/)
@@ -25471,6 +26063,9 @@ type InstancePatchState struct {
 	// on the instance.
 	InstalledOtherCount *int64 `type:"integer"`
 
+	// Reserved for future use.
+	InstalledPendingRebootCount *int64 `type:"integer"`
+
 	// The number of instances with patches installed that are specified in a RejectedPatches
 	// list. Patches with a status of InstalledRejected were typically installed
 	// before they were added to a RejectedPatches list.
@@ -25484,6 +26079,9 @@ type InstancePatchState struct {
 	//
 	// InstanceId is a required field
 	InstanceId *string `type:"string" required:"true"`
+
+	// Reserved for future use.
+	LastNoRebootInstallOperationTime *time.Time `type:"timestamp"`
 
 	// The number of patches from the patch baseline that are applicable for the
 	// instance but aren't currently installed.
@@ -25519,6 +26117,9 @@ type InstancePatchState struct {
 	//
 	// PatchGroup is a required field
 	PatchGroup *string `min:"1" type:"string" required:"true"`
+
+	// Reserved for future use.
+	RebootOption *string `type:"string" enum:"RebootOption"`
 
 	// The ID of the patch baseline snapshot used during the patching operation
 	// when this compliance data was collected.
@@ -25569,6 +26170,12 @@ func (s *InstancePatchState) SetInstalledOtherCount(v int64) *InstancePatchState
 	return s
 }
 
+// SetInstalledPendingRebootCount sets the InstalledPendingRebootCount field's value.
+func (s *InstancePatchState) SetInstalledPendingRebootCount(v int64) *InstancePatchState {
+	s.InstalledPendingRebootCount = &v
+	return s
+}
+
 // SetInstalledRejectedCount sets the InstalledRejectedCount field's value.
 func (s *InstancePatchState) SetInstalledRejectedCount(v int64) *InstancePatchState {
 	s.InstalledRejectedCount = &v
@@ -25578,6 +26185,12 @@ func (s *InstancePatchState) SetInstalledRejectedCount(v int64) *InstancePatchSt
 // SetInstanceId sets the InstanceId field's value.
 func (s *InstancePatchState) SetInstanceId(v string) *InstancePatchState {
 	s.InstanceId = &v
+	return s
+}
+
+// SetLastNoRebootInstallOperationTime sets the LastNoRebootInstallOperationTime field's value.
+func (s *InstancePatchState) SetLastNoRebootInstallOperationTime(v time.Time) *InstancePatchState {
+	s.LastNoRebootInstallOperationTime = &v
 	return s
 }
 
@@ -25620,6 +26233,12 @@ func (s *InstancePatchState) SetOwnerInformation(v string) *InstancePatchState {
 // SetPatchGroup sets the PatchGroup field's value.
 func (s *InstancePatchState) SetPatchGroup(v string) *InstancePatchState {
 	s.PatchGroup = &v
+	return s
+}
+
+// SetRebootOption sets the RebootOption field's value.
+func (s *InstancePatchState) SetRebootOption(v string) *InstancePatchState {
+	s.RebootOption = &v
 	return s
 }
 
@@ -27210,7 +27829,7 @@ type ListDocumentVersionsInput struct {
 	// results.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// The name of the document about which you want version information.
+	// The name of the document. You can specify an Amazon Resource Name (ARN).
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
@@ -27700,6 +28319,12 @@ type ListResourceDataSyncInput struct {
 
 	// A token to start the list. Use this token to get the next set of results.
 	NextToken *string `type:"string"`
+
+	// View a list of resource data syncs according to the sync type. Specify SyncToDestination
+	// to view resource data syncs that synchronize data to an Amazon S3 buckets.
+	// Specify SyncFromSource to view resource data syncs from AWS Organizations
+	// or from multiple AWS Regions.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -27718,6 +28343,9 @@ func (s *ListResourceDataSyncInput) Validate() error {
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
 	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -27734,6 +28362,12 @@ func (s *ListResourceDataSyncInput) SetMaxResults(v int64) *ListResourceDataSync
 // SetNextToken sets the NextToken field's value.
 func (s *ListResourceDataSyncInput) SetNextToken(v string) *ListResourceDataSyncInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *ListResourceDataSyncInput) SetSyncType(v string) *ListResourceDataSyncInput {
+	s.SyncType = &v
 	return s
 }
 
@@ -28566,6 +29200,9 @@ func (s *MaintenanceWindowLambdaParameters) SetQualifier(v string) *MaintenanceW
 type MaintenanceWindowRunCommandParameters struct {
 	_ struct{} `type:"structure"`
 
+	// Configuration options for sending command output to CloudWatch Logs.
+	CloudWatchOutputConfig *CloudWatchOutputConfig `type:"structure"`
+
 	// Information about the commands to run.
 	Comment *string `type:"string"`
 
@@ -28575,6 +29212,19 @@ type MaintenanceWindowRunCommandParameters struct {
 
 	// SHA-256 or SHA-1. SHA-1 hashes have been deprecated.
 	DocumentHashType *string `type:"string" enum:"DocumentHashType"`
+
+	// The SSM document version to use in the request. You can specify $DEFAULT,
+	// $LATEST, or a specific version number. If you run commands by using the AWS
+	// CLI, then you must escape the first two options by using a backslash. If
+	// you specify a version number, then you don't need to use the backslash. For
+	// example:
+	//
+	// --document-version "\$DEFAULT"
+	//
+	// --document-version "\$LATEST"
+	//
+	// --document-version "3"
+	DocumentVersion *string `type:"string"`
 
 	// Configurations for sending notifications about command status changes on
 	// a per-instance basis.
@@ -28617,11 +29267,22 @@ func (s *MaintenanceWindowRunCommandParameters) Validate() error {
 	if s.TimeoutSeconds != nil && *s.TimeoutSeconds < 30 {
 		invalidParams.Add(request.NewErrParamMinValue("TimeoutSeconds", 30))
 	}
+	if s.CloudWatchOutputConfig != nil {
+		if err := s.CloudWatchOutputConfig.Validate(); err != nil {
+			invalidParams.AddNested("CloudWatchOutputConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCloudWatchOutputConfig sets the CloudWatchOutputConfig field's value.
+func (s *MaintenanceWindowRunCommandParameters) SetCloudWatchOutputConfig(v *CloudWatchOutputConfig) *MaintenanceWindowRunCommandParameters {
+	s.CloudWatchOutputConfig = v
+	return s
 }
 
 // SetComment sets the Comment field's value.
@@ -28639,6 +29300,12 @@ func (s *MaintenanceWindowRunCommandParameters) SetDocumentHash(v string) *Maint
 // SetDocumentHashType sets the DocumentHashType field's value.
 func (s *MaintenanceWindowRunCommandParameters) SetDocumentHashType(v string) *MaintenanceWindowRunCommandParameters {
 	s.DocumentHashType = &v
+	return s
+}
+
+// SetDocumentVersion sets the DocumentVersion field's value.
+func (s *MaintenanceWindowRunCommandParameters) SetDocumentVersion(v string) *MaintenanceWindowRunCommandParameters {
+	s.DocumentVersion = &v
 	return s
 }
 
@@ -29105,6 +29772,10 @@ type ModifyDocumentPermissionInput struct {
 	//
 	// PermissionType is a required field
 	PermissionType *string `type:"string" required:"true" enum:"DocumentPermissionType"`
+
+	// (Optional) The version of the document to share. If it's not specified, the
+	// system choose the Default version to share.
+	SharedDocumentVersion *string `type:"string"`
 }
 
 // String returns the string representation
@@ -29154,6 +29825,12 @@ func (s *ModifyDocumentPermissionInput) SetName(v string) *ModifyDocumentPermiss
 // SetPermissionType sets the PermissionType field's value.
 func (s *ModifyDocumentPermissionInput) SetPermissionType(v string) *ModifyDocumentPermissionInput {
 	s.PermissionType = &v
+	return s
+}
+
+// SetSharedDocumentVersion sets the SharedDocumentVersion field's value.
+func (s *ModifyDocumentPermissionInput) SetSharedDocumentVersion(v string) *ModifyDocumentPermissionInput {
+	s.SharedDocumentVersion = &v
 	return s
 }
 
@@ -29404,6 +30081,9 @@ func (s *OpsEntity) SetId(v string) *OpsEntity {
 type OpsEntityItem struct {
 	_ struct{} `type:"structure"`
 
+	// The time OpsItem data was captured.
+	CaptureTime *string `type:"string"`
+
 	// The detailed data content for an OpsItem summaries result item.
 	Content []map[string]*string `type:"list"`
 }
@@ -29416,6 +30096,12 @@ func (s OpsEntityItem) String() string {
 // GoString returns the string representation
 func (s OpsEntityItem) GoString() string {
 	return s.String()
+}
+
+// SetCaptureTime sets the CaptureTime field's value.
+func (s *OpsEntityItem) SetCaptureTime(v string) *OpsEntityItem {
+	s.CaptureTime = &v
+	return s
 }
 
 // SetContent sets the Content field's value.
@@ -29500,6 +30186,10 @@ func (s *OpsFilter) SetValues(v []*string) *OpsFilter {
 type OpsItem struct {
 	_ struct{} `type:"structure"`
 
+	// An OpsItem category. Category options include: Availability, Cost, Performance,
+	// Recovery, Security.
+	Category *string `min:"1" type:"string"`
+
 	// The ARN of the AWS account that created the OpsItem.
 	CreatedBy *string `type:"string"`
 
@@ -29553,6 +30243,9 @@ type OpsItem struct {
 	// impacted resources, or statuses for the impacted resource.
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
 
+	// The severity of the OpsItem. Severity options range from 1 to 4.
+	Severity *string `min:"1" type:"string"`
+
 	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager. The
 	// impacted resource is a subset of source.
 	Source *string `min:"1" type:"string"`
@@ -29579,6 +30272,12 @@ func (s OpsItem) String() string {
 // GoString returns the string representation
 func (s OpsItem) GoString() string {
 	return s.String()
+}
+
+// SetCategory sets the Category field's value.
+func (s *OpsItem) SetCategory(v string) *OpsItem {
+	s.Category = &v
+	return s
 }
 
 // SetCreatedBy sets the CreatedBy field's value.
@@ -29638,6 +30337,12 @@ func (s *OpsItem) SetPriority(v int64) *OpsItem {
 // SetRelatedOpsItems sets the RelatedOpsItems field's value.
 func (s *OpsItem) SetRelatedOpsItems(v []*RelatedOpsItem) *OpsItem {
 	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *OpsItem) SetSeverity(v string) *OpsItem {
+	s.Severity = &v
 	return s
 }
 
@@ -29795,6 +30500,9 @@ func (s *OpsItemNotification) SetArn(v string) *OpsItemNotification {
 type OpsItemSummary struct {
 	_ struct{} `type:"structure"`
 
+	// A list of OpsItems by category.
+	Category *string `min:"1" type:"string"`
+
 	// The Amazon Resource Name (ARN) of the IAM entity that created the OpsItem.
 	CreatedBy *string `type:"string"`
 
@@ -29817,6 +30525,9 @@ type OpsItemSummary struct {
 	// The importance of this OpsItem in relation to other OpsItems in the system.
 	Priority *int64 `min:"1" type:"integer"`
 
+	// A list of OpsItems by severity.
+	Severity *string `min:"1" type:"string"`
+
 	// The impacted AWS resource.
 	Source *string `min:"1" type:"string"`
 
@@ -29836,6 +30547,12 @@ func (s OpsItemSummary) String() string {
 // GoString returns the string representation
 func (s OpsItemSummary) GoString() string {
 	return s.String()
+}
+
+// SetCategory sets the Category field's value.
+func (s *OpsItemSummary) SetCategory(v string) *OpsItemSummary {
+	s.Category = &v
+	return s
 }
 
 // SetCreatedBy sets the CreatedBy field's value.
@@ -29880,6 +30597,12 @@ func (s *OpsItemSummary) SetPriority(v int64) *OpsItemSummary {
 	return s
 }
 
+// SetSeverity sets the Severity field's value.
+func (s *OpsItemSummary) SetSeverity(v string) *OpsItemSummary {
+	s.Severity = &v
+	return s
+}
+
 // SetSource sets the Source field's value.
 func (s *OpsItemSummary) SetSource(v string) *OpsItemSummary {
 	s.Source = &v
@@ -29895,6 +30618,49 @@ func (s *OpsItemSummary) SetStatus(v string) *OpsItemSummary {
 // SetTitle sets the Title field's value.
 func (s *OpsItemSummary) SetTitle(v string) *OpsItemSummary {
 	s.Title = &v
+	return s
+}
+
+// The OpsItem data type to return.
+type OpsResultAttribute struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the data type. Valid value: AWS:OpsItem, AWS:EC2InstanceInformation,
+	// AWS:OpsItemTrendline, or AWS:ComplianceSummary.
+	//
+	// TypeName is a required field
+	TypeName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s OpsResultAttribute) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpsResultAttribute) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpsResultAttribute) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpsResultAttribute"}
+	if s.TypeName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TypeName"))
+	}
+	if s.TypeName != nil && len(*s.TypeName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TypeName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTypeName sets the TypeName field's value.
+func (s *OpsResultAttribute) SetTypeName(v string) *OpsResultAttribute {
+	s.TypeName = &v
 	return s
 }
 
@@ -30313,9 +31079,19 @@ func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
 
 // One or more filters. Use a filter to return a more specific list of results.
 //
-// The Name and Tier filter keys can't be used with the GetParametersByPath
-// API action. Also, the Label filter key can't be used with the DescribeParameters
-// API action.
+// The ParameterStringFilter object is used by the DescribeParameters and GetParametersByPath
+// API actions. However, not all of the pattern values listed for Key can be
+// used with both actions.
+//
+// For DescribeActions, all of the listed patterns are valid, with the exception
+// of Label.
+//
+// For GetParametersByPath, the following patterns listed for Key are not valid:
+// Name, Path, and Tier.
+//
+// For examples of CLI commands demonstrating valid parameter filter constructions,
+// see Searching for Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
+// in the AWS Systems Manager User Guide.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -30324,8 +31100,14 @@ type ParameterStringFilter struct {
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
-	// Valid options are Equals and BeginsWith. For Path filter, valid options are
-	// Recursive and OneLevel.
+	// For all filters used with DescribeParameters, valid options include Equals
+	// and BeginsWith. The Name filter additionally supports the Contains option.
+	// (Exception: For filters using the key Path, valid options include Recursive
+	// and OneLevel.)
+	//
+	// For filters used with GetParametersByPath, valid options include Equals and
+	// BeginsWith. (Exception: For filters using the key Label, the only valid option
+	// is Equals.)
 	Option *string `min:"1" type:"string"`
 
 	// The value you want to search for.
@@ -31542,7 +32324,11 @@ type PutParameterInput struct {
 	//
 	// The maximum length constraint listed below includes capacity for additional
 	// system attributes that are not part of the name. The maximum length for the
-	// fully qualified parameter name is 1011 characters.
+	// fully qualified parameter name is 1011 characters, including the full length
+	// of the parameter ARN. For example, the following fully qualified parameter
+	// name is 65 characters, not 20 characters:
+	//
+	// arn:aws:ssm:us-east-2:111122223333:parameter/ExampleParameterName
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -32760,6 +33546,75 @@ func (s *ResourceComplianceSummaryItem) SetStatus(v string) *ResourceComplianceS
 	return s
 }
 
+// Information about the AwsOrganizationsSource resource data sync source. A
+// sync source of this type can synchronize data from AWS Organizations or,
+// if an AWS Organization is not present, from multiple AWS Regions.
+type ResourceDataSyncAwsOrganizationsSource struct {
+	_ struct{} `type:"structure"`
+
+	// If an AWS Organization is present, this is either OrganizationalUnits or
+	// EntireOrganization. For OrganizationalUnits, the data is aggregated from
+	// a set of organization units. For EntireOrganization, the data is aggregated
+	// from the entire AWS Organization.
+	//
+	// OrganizationSourceType is a required field
+	OrganizationSourceType *string `min:"1" type:"string" required:"true"`
+
+	// The AWS Organizations organization units included in the sync.
+	OrganizationalUnits []*ResourceDataSyncOrganizationalUnit `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncAwsOrganizationsSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncAwsOrganizationsSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncAwsOrganizationsSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncAwsOrganizationsSource"}
+	if s.OrganizationSourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationSourceType"))
+	}
+	if s.OrganizationSourceType != nil && len(*s.OrganizationSourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationSourceType", 1))
+	}
+	if s.OrganizationalUnits != nil && len(s.OrganizationalUnits) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationalUnits", 1))
+	}
+	if s.OrganizationalUnits != nil {
+		for i, v := range s.OrganizationalUnits {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "OrganizationalUnits", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOrganizationSourceType sets the OrganizationSourceType field's value.
+func (s *ResourceDataSyncAwsOrganizationsSource) SetOrganizationSourceType(v string) *ResourceDataSyncAwsOrganizationsSource {
+	s.OrganizationSourceType = &v
+	return s
+}
+
+// SetOrganizationalUnits sets the OrganizationalUnits field's value.
+func (s *ResourceDataSyncAwsOrganizationsSource) SetOrganizationalUnits(v []*ResourceDataSyncOrganizationalUnit) *ResourceDataSyncAwsOrganizationsSource {
+	s.OrganizationalUnits = v
+	return s
+}
+
 // Information about a Resource Data Sync configuration, including its current
 // status and last successful sync.
 type ResourceDataSyncItem struct {
@@ -32783,8 +33638,20 @@ type ResourceDataSyncItem struct {
 	// The date and time the configuration was created (UTC).
 	SyncCreatedTime *time.Time `type:"timestamp"`
 
+	// The date and time the resource data sync was changed.
+	SyncLastModifiedTime *time.Time `type:"timestamp"`
+
 	// The name of the Resource Data Sync.
 	SyncName *string `min:"1" type:"string"`
+
+	// Information about the source where the data was synchronized.
+	SyncSource *ResourceDataSyncSourceWithState `type:"structure"`
+
+	// The type of resource data sync. If SyncType is SyncToDestination, then the
+	// resource data sync synchronizes data to an Amazon S3 bucket. If the SyncType
+	// is SyncFromSource then the resource data sync synchronizes data from AWS
+	// Organizations or from multiple AWS Regions.
+	SyncType *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -32833,9 +33700,64 @@ func (s *ResourceDataSyncItem) SetSyncCreatedTime(v time.Time) *ResourceDataSync
 	return s
 }
 
+// SetSyncLastModifiedTime sets the SyncLastModifiedTime field's value.
+func (s *ResourceDataSyncItem) SetSyncLastModifiedTime(v time.Time) *ResourceDataSyncItem {
+	s.SyncLastModifiedTime = &v
+	return s
+}
+
 // SetSyncName sets the SyncName field's value.
 func (s *ResourceDataSyncItem) SetSyncName(v string) *ResourceDataSyncItem {
 	s.SyncName = &v
+	return s
+}
+
+// SetSyncSource sets the SyncSource field's value.
+func (s *ResourceDataSyncItem) SetSyncSource(v *ResourceDataSyncSourceWithState) *ResourceDataSyncItem {
+	s.SyncSource = v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *ResourceDataSyncItem) SetSyncType(v string) *ResourceDataSyncItem {
+	s.SyncType = &v
+	return s
+}
+
+// The AWS Organizations organizational unit data source for the sync.
+type ResourceDataSyncOrganizationalUnit struct {
+	_ struct{} `type:"structure"`
+
+	// The AWS Organization unit ID data source for the sync.
+	OrganizationalUnitId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncOrganizationalUnit) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncOrganizationalUnit) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncOrganizationalUnit) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncOrganizationalUnit"}
+	if s.OrganizationalUnitId != nil && len(*s.OrganizationalUnitId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationalUnitId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOrganizationalUnitId sets the OrganizationalUnitId field's value.
+func (s *ResourceDataSyncOrganizationalUnit) SetOrganizationalUnitId(v string) *ResourceDataSyncOrganizationalUnit {
+	s.OrganizationalUnitId = &v
 	return s
 }
 
@@ -32937,6 +33859,177 @@ func (s *ResourceDataSyncS3Destination) SetSyncFormat(v string) *ResourceDataSyn
 	return s
 }
 
+// Information about the source of the data included in the resource data sync.
+type ResourceDataSyncSource struct {
+	_ struct{} `type:"structure"`
+
+	// The field name in SyncSource for the ResourceDataSyncAwsOrganizationsSource
+	// type.
+	AwsOrganizationsSource *ResourceDataSyncAwsOrganizationsSource `type:"structure"`
+
+	// Whether to automatically synchronize and aggregate data from new AWS Regions
+	// when those Regions come online.
+	IncludeFutureRegions *bool `type:"boolean"`
+
+	// The SyncSource AWS Regions included in the resource data sync.
+	//
+	// SourceRegions is a required field
+	SourceRegions []*string `type:"list" required:"true"`
+
+	// The type of data source for the resource data sync. SourceType is either
+	// AwsOrganizations (if an organization is present in AWS Organizations) or
+	// singleAccountMultiRegions.
+	//
+	// SourceType is a required field
+	SourceType *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncSource"}
+	if s.SourceRegions == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceRegions"))
+	}
+	if s.SourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceType"))
+	}
+	if s.SourceType != nil && len(*s.SourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SourceType", 1))
+	}
+	if s.AwsOrganizationsSource != nil {
+		if err := s.AwsOrganizationsSource.Validate(); err != nil {
+			invalidParams.AddNested("AwsOrganizationsSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsOrganizationsSource sets the AwsOrganizationsSource field's value.
+func (s *ResourceDataSyncSource) SetAwsOrganizationsSource(v *ResourceDataSyncAwsOrganizationsSource) *ResourceDataSyncSource {
+	s.AwsOrganizationsSource = v
+	return s
+}
+
+// SetIncludeFutureRegions sets the IncludeFutureRegions field's value.
+func (s *ResourceDataSyncSource) SetIncludeFutureRegions(v bool) *ResourceDataSyncSource {
+	s.IncludeFutureRegions = &v
+	return s
+}
+
+// SetSourceRegions sets the SourceRegions field's value.
+func (s *ResourceDataSyncSource) SetSourceRegions(v []*string) *ResourceDataSyncSource {
+	s.SourceRegions = v
+	return s
+}
+
+// SetSourceType sets the SourceType field's value.
+func (s *ResourceDataSyncSource) SetSourceType(v string) *ResourceDataSyncSource {
+	s.SourceType = &v
+	return s
+}
+
+// The data type name for including resource data sync state. There are four
+// sync states:
+//
+// OrganizationNotExists (Your organization doesn't exist)
+//
+// NoPermissions (The system can't locate the service-linked role. This role
+// is automatically created when a user creates a resource data sync in Explorer.)
+//
+// InvalidOrganizationalUnit (You specified or selected an invalid unit in the
+// resource data sync configuration.)
+//
+// TrustedAccessDisabled (You disabled Systems Manager access in the organization
+// in AWS Organizations.)
+type ResourceDataSyncSourceWithState struct {
+	_ struct{} `type:"structure"`
+
+	// The field name in SyncSource for the ResourceDataSyncAwsOrganizationsSource
+	// type.
+	AwsOrganizationsSource *ResourceDataSyncAwsOrganizationsSource `type:"structure"`
+
+	// Whether to automatically synchronize and aggregate data from new AWS Regions
+	// when those Regions come online.
+	IncludeFutureRegions *bool `type:"boolean"`
+
+	// The SyncSource AWS Regions included in the resource data sync.
+	SourceRegions []*string `type:"list"`
+
+	// The type of data source for the resource data sync. SourceType is either
+	// AwsOrganizations (if an organization is present in AWS Organizations) or
+	// singleAccountMultiRegions.
+	SourceType *string `min:"1" type:"string"`
+
+	// The data type name for including resource data sync state. There are four
+	// sync states:
+	//
+	// OrganizationNotExists: Your organization doesn't exist.
+	//
+	// NoPermissions: The system can't locate the service-linked role. This role
+	// is automatically created when a user creates a resource data sync in Explorer.
+	//
+	// InvalidOrganizationalUnit: You specified or selected an invalid unit in the
+	// resource data sync configuration.
+	//
+	// TrustedAccessDisabled: You disabled Systems Manager access in the organization
+	// in AWS Organizations.
+	State *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncSourceWithState) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncSourceWithState) GoString() string {
+	return s.String()
+}
+
+// SetAwsOrganizationsSource sets the AwsOrganizationsSource field's value.
+func (s *ResourceDataSyncSourceWithState) SetAwsOrganizationsSource(v *ResourceDataSyncAwsOrganizationsSource) *ResourceDataSyncSourceWithState {
+	s.AwsOrganizationsSource = v
+	return s
+}
+
+// SetIncludeFutureRegions sets the IncludeFutureRegions field's value.
+func (s *ResourceDataSyncSourceWithState) SetIncludeFutureRegions(v bool) *ResourceDataSyncSourceWithState {
+	s.IncludeFutureRegions = &v
+	return s
+}
+
+// SetSourceRegions sets the SourceRegions field's value.
+func (s *ResourceDataSyncSourceWithState) SetSourceRegions(v []*string) *ResourceDataSyncSourceWithState {
+	s.SourceRegions = v
+	return s
+}
+
+// SetSourceType sets the SourceType field's value.
+func (s *ResourceDataSyncSourceWithState) SetSourceType(v string) *ResourceDataSyncSourceWithState {
+	s.SourceType = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *ResourceDataSyncSourceWithState) SetState(v string) *ResourceDataSyncSourceWithState {
+	s.State = &v
+	return s
+}
+
 // The inventory item result attribute.
 type ResultAttribute struct {
 	_ struct{} `type:"structure"`
@@ -33032,8 +34125,8 @@ type ResumeSessionOutput struct {
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
-	// of supported region values, see the Region column in the AWS Systems Manager
-	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// of supported region values, see the Region column in Systems Manager Service
+	// Endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
 	// in the AWS General Reference.
 	//
 	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
@@ -34293,8 +35386,8 @@ type StartSessionOutput struct {
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
-	// of supported region values, see the Region column in the AWS Systems Manager
-	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// of supported region values, see the Region column in Systems Manager Service
+	// Endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
 	// in the AWS General Reference.
 	//
 	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
@@ -36453,6 +37546,9 @@ func (s UpdateManagedInstanceRoleOutput) GoString() string {
 type UpdateOpsItemInput struct {
 	_ struct{} `type:"structure"`
 
+	// Specify a new category for an OpsItem.
+	Category *string `min:"1" type:"string"`
+
 	// Update the information about the OpsItem. Provide enough information so that
 	// users reading this OpsItem for the first time understand the issue.
 	Description *string `min:"1" type:"string"`
@@ -36503,6 +37599,9 @@ type UpdateOpsItemInput struct {
 	// impacted resources, or statuses for the impacted resource.
 	RelatedOpsItems []*RelatedOpsItem `type:"list"`
 
+	// Specify a new severity for an OpsItem.
+	Severity *string `min:"1" type:"string"`
+
 	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
 	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
 	// in the AWS Systems Manager User Guide.
@@ -36526,6 +37625,9 @@ func (s UpdateOpsItemInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateOpsItemInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateOpsItemInput"}
+	if s.Category != nil && len(*s.Category) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Category", 1))
+	}
 	if s.Description != nil && len(*s.Description) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Description", 1))
 	}
@@ -36534,6 +37636,9 @@ func (s *UpdateOpsItemInput) Validate() error {
 	}
 	if s.Priority != nil && *s.Priority < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Priority", 1))
+	}
+	if s.Severity != nil && len(*s.Severity) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Severity", 1))
 	}
 	if s.Title != nil && len(*s.Title) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Title", 1))
@@ -36553,6 +37658,12 @@ func (s *UpdateOpsItemInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCategory sets the Category field's value.
+func (s *UpdateOpsItemInput) SetCategory(v string) *UpdateOpsItemInput {
+	s.Category = &v
+	return s
 }
 
 // SetDescription sets the Description field's value.
@@ -36594,6 +37705,12 @@ func (s *UpdateOpsItemInput) SetPriority(v int64) *UpdateOpsItemInput {
 // SetRelatedOpsItems sets the RelatedOpsItems field's value.
 func (s *UpdateOpsItemInput) SetRelatedOpsItems(v []*RelatedOpsItem) *UpdateOpsItemInput {
 	s.RelatedOpsItems = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *UpdateOpsItemInput) SetSeverity(v string) *UpdateOpsItemInput {
+	s.Severity = &v
 	return s
 }
 
@@ -36962,6 +38079,100 @@ func (s *UpdatePatchBaselineOutput) SetSources(v []*PatchSource) *UpdatePatchBas
 	return s
 }
 
+type UpdateResourceDataSyncInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the resource data sync you want to update.
+	//
+	// SyncName is a required field
+	SyncName *string `min:"1" type:"string" required:"true"`
+
+	// Specify information about the data sources to synchronize.
+	//
+	// SyncSource is a required field
+	SyncSource *ResourceDataSyncSource `type:"structure" required:"true"`
+
+	// The type of resource data sync. If SyncType is SyncToDestination, then the
+	// resource data sync synchronizes data to an Amazon S3 bucket. If the SyncType
+	// is SyncFromSource then the resource data sync synchronizes data from AWS
+	// Organizations or from multiple AWS Regions.
+	//
+	// SyncType is a required field
+	SyncType *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateResourceDataSyncInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateResourceDataSyncInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateResourceDataSyncInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateResourceDataSyncInput"}
+	if s.SyncName == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncName"))
+	}
+	if s.SyncName != nil && len(*s.SyncName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncName", 1))
+	}
+	if s.SyncSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncSource"))
+	}
+	if s.SyncType == nil {
+		invalidParams.Add(request.NewErrParamRequired("SyncType"))
+	}
+	if s.SyncType != nil && len(*s.SyncType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SyncType", 1))
+	}
+	if s.SyncSource != nil {
+		if err := s.SyncSource.Validate(); err != nil {
+			invalidParams.AddNested("SyncSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSyncName sets the SyncName field's value.
+func (s *UpdateResourceDataSyncInput) SetSyncName(v string) *UpdateResourceDataSyncInput {
+	s.SyncName = &v
+	return s
+}
+
+// SetSyncSource sets the SyncSource field's value.
+func (s *UpdateResourceDataSyncInput) SetSyncSource(v *ResourceDataSyncSource) *UpdateResourceDataSyncInput {
+	s.SyncSource = v
+	return s
+}
+
+// SetSyncType sets the SyncType field's value.
+func (s *UpdateResourceDataSyncInput) SetSyncType(v string) *UpdateResourceDataSyncInput {
+	s.SyncType = &v
+	return s
+}
+
+type UpdateResourceDataSyncOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateResourceDataSyncOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateResourceDataSyncOutput) GoString() string {
+	return s.String()
+}
+
 // The request body of the UpdateServiceSetting API action.
 type UpdateServiceSettingInput struct {
 	_ struct{} `type:"structure"`
@@ -37194,6 +38405,14 @@ const (
 )
 
 const (
+	// CalendarStateOpen is a CalendarState enum value
+	CalendarStateOpen = "OPEN"
+
+	// CalendarStateClosed is a CalendarState enum value
+	CalendarStateClosed = "CLOSED"
+)
+
+const (
 	// CommandFilterKeyInvokedAfter is a CommandFilterKey enum value
 	CommandFilterKeyInvokedAfter = "InvokedAfter"
 
@@ -37363,6 +38582,9 @@ const (
 
 	// DocumentFormatJson is a DocumentFormat enum value
 	DocumentFormatJson = "JSON"
+
+	// DocumentFormatText is a DocumentFormat enum value
+	DocumentFormatText = "TEXT"
 )
 
 const (
@@ -37419,6 +38641,18 @@ const (
 
 	// DocumentTypePackage is a DocumentType enum value
 	DocumentTypePackage = "Package"
+
+	// DocumentTypeApplicationConfiguration is a DocumentType enum value
+	DocumentTypeApplicationConfiguration = "ApplicationConfiguration"
+
+	// DocumentTypeApplicationConfigurationSchema is a DocumentType enum value
+	DocumentTypeApplicationConfigurationSchema = "ApplicationConfigurationSchema"
+
+	// DocumentTypeDeploymentStrategy is a DocumentType enum value
+	DocumentTypeDeploymentStrategy = "DeploymentStrategy"
+
+	// DocumentTypeChangeCalendar is a DocumentType enum value
+	DocumentTypeChangeCalendar = "ChangeCalendar"
 )
 
 const (
@@ -37701,6 +38935,12 @@ const (
 
 	// OpsItemFilterKeyAutomationId is a OpsItemFilterKey enum value
 	OpsItemFilterKeyAutomationId = "AutomationId"
+
+	// OpsItemFilterKeyCategory is a OpsItemFilterKey enum value
+	OpsItemFilterKeyCategory = "Category"
+
+	// OpsItemFilterKeySeverity is a OpsItemFilterKey enum value
+	OpsItemFilterKeySeverity = "Severity"
 )
 
 const (
@@ -37775,6 +39015,9 @@ const (
 
 	// PatchComplianceDataStateInstalledOther is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalledOther = "INSTALLED_OTHER"
+
+	// PatchComplianceDataStateInstalledPendingReboot is a PatchComplianceDataState enum value
+	PatchComplianceDataStateInstalledPendingReboot = "INSTALLED_PENDING_REBOOT"
 
 	// PatchComplianceDataStateInstalledRejected is a PatchComplianceDataState enum value
 	PatchComplianceDataStateInstalledRejected = "INSTALLED_REJECTED"
@@ -37905,6 +39148,14 @@ const (
 
 	// PlatformTypeLinux is a PlatformType enum value
 	PlatformTypeLinux = "Linux"
+)
+
+const (
+	// RebootOptionRebootIfNeeded is a RebootOption enum value
+	RebootOptionRebootIfNeeded = "RebootIfNeeded"
+
+	// RebootOptionNoReboot is a RebootOption enum value
+	RebootOptionNoReboot = "NoReboot"
 )
 
 const (

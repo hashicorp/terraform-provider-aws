@@ -35,7 +35,8 @@ websitefmtcheck:
 	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
 
 docscheck:
-	@sh -c "'$(CURDIR)/scripts/docscheck.sh'"
+	@tfproviderdocs check \
+		-require-resource-subcategory
 
 lint:
 	@echo "==> Checking source code against linters..."
@@ -64,6 +65,7 @@ lint:
 		./$(PKG_NAME)
 
 tools:
+	GO111MODULE=on go install github.com/bflad/tfproviderdocs
 	GO111MODULE=on go install github.com/bflad/tfproviderlint/cmd/tfproviderlint
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint

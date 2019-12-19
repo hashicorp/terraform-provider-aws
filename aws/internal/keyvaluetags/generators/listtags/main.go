@@ -17,6 +17,7 @@ import (
 const filename = `list_tags_gen.go`
 
 var serviceNames = []string{
+	"accessanalyzer",
 	"acm",
 	"acmpca",
 	"amplify",
@@ -26,6 +27,7 @@ var serviceNames = []string{
 	"athena",
 	"backup",
 	"cloudhsmv2",
+	"cloudtrail",
 	"cloudwatch",
 	"cloudwatchevents",
 	"cloudwatchlogs",
@@ -36,9 +38,11 @@ var serviceNames = []string{
 	"cognitoidentityprovider",
 	"configservice",
 	"databasemigrationservice",
+	"dataexchange",
 	"datasync",
 	"dax",
 	"devicefarm",
+	"directconnect",
 	"directoryservice",
 	"dlm",
 	"docdb",
@@ -55,6 +59,8 @@ var serviceNames = []string{
 	"fsx",
 	"glue",
 	"guardduty",
+	"greengrass",
+	"imagebuilder",
 	"inspector",
 	"iot",
 	"iotanalytics",
@@ -66,6 +72,7 @@ var serviceNames = []string{
 	"lambda",
 	"licensemanager",
 	"mediaconnect",
+	"mediaconvert",
 	"medialive",
 	"mediapackage",
 	"mediastore",
@@ -76,6 +83,7 @@ var serviceNames = []string{
 	"qldb",
 	"rds",
 	"resourcegroups",
+	"route53",
 	"route53resolver",
 	"sagemaker",
 	"securityhub",
@@ -197,10 +205,14 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTags"
 	case "cloudhsmv2":
 		return "ListTags"
+	case "cloudtrail":
+		return "ListTags"
 	case "cloudwatchlogs":
 		return "ListTagsLogGroup"
 	case "dax":
 		return "ListTags"
+	case "directconnect":
+		return "DescribeTags"
 	case "dynamodb":
 		return "ListTagsOfResource"
 	case "efs":
@@ -247,6 +259,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "cloudhsmv2":
 		return "ResourceId"
+	case "cloudtrail":
+		return "ResourceIdList"
 	case "cloudwatch":
 		return "ResourceARN"
 	case "cloudwatchevents":
@@ -257,6 +271,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "devicefarm":
 		return "ResourceARN"
+	case "directconnect":
+		return "ResourceArns"
 	case "directoryservice":
 		return "ResourceId"
 	case "docdb":
@@ -281,6 +297,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "KeyId"
 	case "lambda":
 		return "Resource"
+	case "mediaconvert":
+		return "Arn"
 	case "mediastore":
 		return "Resource"
 	case "neptune":
@@ -293,6 +311,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "resourcegroups":
 		return "Arn"
+	case "route53":
+		return "ResourceId"
 	case "sqs":
 		return "QueueUrl"
 	case "ssm":
@@ -315,6 +335,10 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 // ServiceTagInputIdentifierRequiresSlice determines if the service tagging resource field requires a slice.
 func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
+	case "cloudtrail":
+		return "yes"
+	case "directconnect":
+		return "yes"
 	case "elbv2":
 		return "yes"
 	default:
@@ -325,6 +349,8 @@ func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 // ServiceListTagsInputResourceTypeField determines the service tagging resource type field.
 func ServiceListTagsInputResourceTypeField(serviceName string) string {
 	switch serviceName {
+	case "route53":
+		return "ResourceType"
 	case "ssm":
 		return "ResourceType"
 	default:
@@ -337,8 +363,12 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 	switch serviceName {
 	case "cloudhsmv2":
 		return "TagList"
+	case "cloudtrail":
+		return "ResourceTagList[0].TagsList"
 	case "databasemigrationservice":
 		return "TagList"
+	case "directconnect":
+		return "ResourceTags[0].Tags"
 	case "docdb":
 		return "TagList"
 	case "elasticache":
@@ -349,10 +379,14 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "TagList"
 	case "elbv2":
 		return "TagDescriptions[0].Tags"
+	case "mediaconvert":
+		return "ResourceTags.Tags"
 	case "neptune":
 		return "TagList"
 	case "rds":
 		return "TagList"
+	case "route53":
+		return "ResourceTagSet.Tags"
 	case "ssm":
 		return "TagList"
 	case "waf":

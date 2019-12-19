@@ -1655,7 +1655,8 @@ func (c *StorageGateway) DeleteBandwidthRateLimitRequest(input *DeleteBandwidthR
 // upload and download bandwidth rate limit, or you can delete both. If you
 // delete only one of the limits, the other limit remains unchanged. To specify
 // which gateway to work with, use the Amazon Resource Name (ARN) of the gateway
-// in your request.
+// in your request. This operation is supported for the stored volume, cached
+// volume and tape gateway types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1740,7 +1741,8 @@ func (c *StorageGateway) DeleteChapCredentialsRequest(input *DeleteChapCredentia
 // DeleteChapCredentials API operation for AWS Storage Gateway.
 //
 // Deletes Challenge-Handshake Authentication Protocol (CHAP) credentials for
-// a specified iSCSI target and initiator pair.
+// a specified iSCSI target and initiator pair. This operation is supported
+// in volume and tape gateway types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2326,6 +2328,92 @@ func (c *StorageGateway) DeleteVolumeWithContext(ctx aws.Context, input *DeleteV
 	return out, req.Send()
 }
 
+const opDescribeAvailabilityMonitorTest = "DescribeAvailabilityMonitorTest"
+
+// DescribeAvailabilityMonitorTestRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAvailabilityMonitorTest operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAvailabilityMonitorTest for more information on using the DescribeAvailabilityMonitorTest
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAvailabilityMonitorTestRequest method.
+//    req, resp := client.DescribeAvailabilityMonitorTestRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DescribeAvailabilityMonitorTest
+func (c *StorageGateway) DescribeAvailabilityMonitorTestRequest(input *DescribeAvailabilityMonitorTestInput) (req *request.Request, output *DescribeAvailabilityMonitorTestOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAvailabilityMonitorTest,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAvailabilityMonitorTestInput{}
+	}
+
+	output = &DescribeAvailabilityMonitorTestOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAvailabilityMonitorTest API operation for AWS Storage Gateway.
+//
+// Returns information about the most recent High Availability monitoring test
+// that was performed on the host in a cluster. If a test isn't performed, the
+// status and start time in the response would be null.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation DescribeAvailabilityMonitorTest for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DescribeAvailabilityMonitorTest
+func (c *StorageGateway) DescribeAvailabilityMonitorTest(input *DescribeAvailabilityMonitorTestInput) (*DescribeAvailabilityMonitorTestOutput, error) {
+	req, out := c.DescribeAvailabilityMonitorTestRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAvailabilityMonitorTestWithContext is the same as DescribeAvailabilityMonitorTest with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAvailabilityMonitorTest for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) DescribeAvailabilityMonitorTestWithContext(ctx aws.Context, input *DescribeAvailabilityMonitorTestInput, opts ...request.Option) (*DescribeAvailabilityMonitorTestOutput, error) {
+	req, out := c.DescribeAvailabilityMonitorTestRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeBandwidthRateLimit = "DescribeBandwidthRateLimit"
 
 // DescribeBandwidthRateLimitRequest generates a "aws/request.Request" representing the
@@ -2371,7 +2459,8 @@ func (c *StorageGateway) DescribeBandwidthRateLimitRequest(input *DescribeBandwi
 // DescribeBandwidthRateLimit API operation for AWS Storage Gateway.
 //
 // Returns the bandwidth rate limits of a gateway. By default, these limits
-// are not set, which means no bandwidth rate limiting is in effect.
+// are not set, which means no bandwidth rate limiting is in effect. This operation
+// is supported for the stored volume, cached volume and tape gateway types.'
 //
 // This operation only returns a value for a bandwidth rate limit only if the
 // limit is set. If no limits are set for the gateway, then this operation returns
@@ -2639,6 +2728,7 @@ func (c *StorageGateway) DescribeChapCredentialsRequest(input *DescribeChapCrede
 //
 // Returns an array of Challenge-Handshake Authentication Protocol (CHAP) credentials
 // information for a specified iSCSI target, one for each target-initiator pair.
+// This operation is supported in the volume and tape gateway types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4091,7 +4181,8 @@ func (c *StorageGateway) DetachVolumeRequest(input *DetachVolumeInput) (req *req
 // from the specified gateway. Detaching and attaching a volume enables you
 // to recover your data from one gateway to a different gateway without creating
 // a snapshot. It also makes it easier to move your volumes from an on-premises
-// gateway to a gateway hosted on an Amazon EC2 instance.
+// gateway to a gateway hosted on an Amazon EC2 instance. This operation is
+// only supported in the volume gateway type.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4747,7 +4838,7 @@ func (c *StorageGateway) ListTagsForResourceRequest(input *ListTagsForResourceIn
 // ListTagsForResource API operation for AWS Storage Gateway.
 //
 // Lists the tags that have been added to the specified resource. This operation
-// is only supported in the cached volume, stored volume and tape gateway type.
+// is supported in storage gateways of all types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5476,6 +5567,17 @@ func (c *StorageGateway) RefreshCacheRequest(input *RefreshCacheInput) (req *req
 // for new files on the gateway file share. You can subscribe to be notified
 // through an CloudWatch event when your RefreshCache operation completes.
 //
+// Throttle limit: This API is asynchronous so the gateway will accept no more
+// than two refreshes at any time. We recommend using the refresh-complete CloudWatch
+// event notification before issuing additional requests. For more information,
+// see Getting Notified About File Operations (https://docs.aws.amazon.com/storagegateway/latest/userguide/monitoring-file-gateway.html#get-notification).
+//
+// If you invoke the RefreshCache API when two requests are already being processed,
+// any new request will cause an InvalidGatewayRequestException error because
+// too many requests were sent to the server.
+//
+// For more information, see "https://docs.aws.amazon.com/storagegateway/latest/userguide/monitoring-file-gateway.html#get-notification".
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5558,8 +5660,8 @@ func (c *StorageGateway) RemoveTagsFromResourceRequest(input *RemoveTagsFromReso
 
 // RemoveTagsFromResource API operation for AWS Storage Gateway.
 //
-// Removes one or more tags from the specified resource. This operation is only
-// supported in the cached volume, stored volume and tape gateway types.
+// Removes one or more tags from the specified resource. This operation is supported
+// in storage gateways of all types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6156,6 +6258,96 @@ func (c *StorageGateway) ShutdownGatewayWithContext(ctx aws.Context, input *Shut
 	return out, req.Send()
 }
 
+const opStartAvailabilityMonitorTest = "StartAvailabilityMonitorTest"
+
+// StartAvailabilityMonitorTestRequest generates a "aws/request.Request" representing the
+// client's request for the StartAvailabilityMonitorTest operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartAvailabilityMonitorTest for more information on using the StartAvailabilityMonitorTest
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartAvailabilityMonitorTestRequest method.
+//    req, resp := client.StartAvailabilityMonitorTestRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/StartAvailabilityMonitorTest
+func (c *StorageGateway) StartAvailabilityMonitorTestRequest(input *StartAvailabilityMonitorTestInput) (req *request.Request, output *StartAvailabilityMonitorTestOutput) {
+	op := &request.Operation{
+		Name:       opStartAvailabilityMonitorTest,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartAvailabilityMonitorTestInput{}
+	}
+
+	output = &StartAvailabilityMonitorTestOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartAvailabilityMonitorTest API operation for AWS Storage Gateway.
+//
+// Start a test that verifies that the specified gateway is configured for High
+// Availability monitoring in your host environment. This request only initiates
+// the test and that a successful response only indicates that the test was
+// started. It doesn't indicate that the test passed. For the status of the
+// test, invoke the DescribeAvailabilityMonitorTest API.
+//
+// Starting this test will cause your gateway to go offline for a brief period.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation StartAvailabilityMonitorTest for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * ErrCodeInternalServerError "InternalServerError"
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/StartAvailabilityMonitorTest
+func (c *StorageGateway) StartAvailabilityMonitorTest(input *StartAvailabilityMonitorTestInput) (*StartAvailabilityMonitorTestOutput, error) {
+	req, out := c.StartAvailabilityMonitorTestRequest(input)
+	return out, req.Send()
+}
+
+// StartAvailabilityMonitorTestWithContext is the same as StartAvailabilityMonitorTest with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartAvailabilityMonitorTest for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) StartAvailabilityMonitorTestWithContext(ctx aws.Context, input *StartAvailabilityMonitorTestInput, opts ...request.Option) (*StartAvailabilityMonitorTestOutput, error) {
+	req, out := c.StartAvailabilityMonitorTestRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opStartGateway = "StartGateway"
 
 // StartGatewayRequest generates a "aws/request.Request" representing the
@@ -6297,7 +6489,8 @@ func (c *StorageGateway) UpdateBandwidthRateLimitRequest(input *UpdateBandwidthR
 //
 // Updates the bandwidth rate limits of a gateway. You can update both the upload
 // and download bandwidth rate limit or specify only one of the two. If you
-// don't set a bandwidth rate limit, the existing rate limit remains.
+// don't set a bandwidth rate limit, the existing rate limit remains. This operation
+// is supported for the stored volume, cached volume and tape gateway types.'
 //
 // By default, a gateway's bandwidth rate limits are not set. If you don't set
 // any limit, the gateway does not have any limitations on its bandwidth usage
@@ -6390,7 +6583,8 @@ func (c *StorageGateway) UpdateChapCredentialsRequest(input *UpdateChapCredentia
 //
 // Updates the Challenge-Handshake Authentication Protocol (CHAP) credentials
 // for a specified iSCSI target. By default, a gateway does not have CHAP enabled;
-// however, for added security, you might use it.
+// however, for added security, you might use it. This operation is supported
+// in the volume and tape gateway types.
 //
 // When you update CHAP credentials, all existing connections on the target
 // are closed and initiators must reconnect with the new credentials.
@@ -10648,6 +10842,92 @@ func (s *DeleteVolumeOutput) SetVolumeARN(v string) *DeleteVolumeOutput {
 	return s
 }
 
+type DescribeAvailabilityMonitorTestInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAvailabilityMonitorTestInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAvailabilityMonitorTestInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAvailabilityMonitorTestInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAvailabilityMonitorTestInput"}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *DescribeAvailabilityMonitorTestInput) SetGatewayARN(v string) *DescribeAvailabilityMonitorTestInput {
+	s.GatewayARN = &v
+	return s
+}
+
+type DescribeAvailabilityMonitorTestOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+
+	// The time the High Availability monitoring test was started. If a test hasn't
+	// been performed, the value of this field is null.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The status of the High Availability monitoring test. If a test hasn't been
+	// performed, the value of this field is null.
+	Status *string `type:"string" enum:"AvailabilityMonitorTestStatus"`
+}
+
+// String returns the string representation
+func (s DescribeAvailabilityMonitorTestOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAvailabilityMonitorTestOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *DescribeAvailabilityMonitorTestOutput) SetGatewayARN(v string) *DescribeAvailabilityMonitorTestOutput {
+	s.GatewayARN = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *DescribeAvailabilityMonitorTestOutput) SetStartTime(v time.Time) *DescribeAvailabilityMonitorTestOutput {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeAvailabilityMonitorTestOutput) SetStatus(v string) *DescribeAvailabilityMonitorTestOutput {
+	s.Status = &v
+	return s
+}
+
 // A JSON object containing the of the gateway.
 type DescribeBandwidthRateLimitInput struct {
 	_ struct{} `type:"structure"`
@@ -11058,8 +11338,8 @@ func (s *DescribeGatewayInformationInput) SetGatewayARN(v string) *DescribeGatew
 type DescribeGatewayInformationOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the Amazon CloudWatch log group that was
-	// used to monitor and log events in the gateway.
+	// The Amazon Resource Name (ARN) of the Amazon CloudWatch Log Group that is
+	// used to monitor events in the gateway.
 	CloudWatchLogGroupARN *string `type:"string"`
 
 	// The ID of the Amazon EC2 instance that was used to launch the gateway.
@@ -11092,6 +11372,9 @@ type DescribeGatewayInformationOutput struct {
 
 	// The type of the gateway.
 	GatewayType *string `min:"2" type:"string"`
+
+	// The type of hypervisor environment used by the host.
+	HostEnvironment *string `type:"string" enum:"HostEnvironment"`
 
 	// The date on which the last software update was applied to the gateway. If
 	// the gateway has never been updated, this field does not return a value in
@@ -11180,6 +11463,12 @@ func (s *DescribeGatewayInformationOutput) SetGatewayTimezone(v string) *Describ
 // SetGatewayType sets the GatewayType field's value.
 func (s *DescribeGatewayInformationOutput) SetGatewayType(v string) *DescribeGatewayInformationOutput {
 	s.GatewayType = &v
+	return s
+}
+
+// SetHostEnvironment sets the HostEnvironment field's value.
+func (s *DescribeGatewayInformationOutput) SetHostEnvironment(v string) *DescribeGatewayInformationOutput {
+	s.HostEnvironment = &v
 	return s
 }
 
@@ -11520,6 +11809,28 @@ func (s *DescribeSMBSettingsInput) SetGatewayARN(v string) *DescribeSMBSettingsI
 type DescribeSMBSettingsOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates the status of a gateway that is a member of the Active Directory
+	// domain.
+	//
+	//    * ACCESS_DENIED: Indicates that the JoinDomain operation failed due to
+	//    an authentication error.
+	//
+	//    * DETACHED: Indicates that gateway is not joined to a domain.
+	//
+	//    * JOINED: Indicates that the gateway has successfully joined a domain.
+	//
+	//    * JOINING: Indicates that a JoinDomain operation is in progress.
+	//
+	//    * NETWORK_ERROR: Indicates that JoinDomain operation failed due to a network
+	//    or connectivity error.
+	//
+	//    * TIMEOUT: Indicates that the JoinDomain operation failed because the
+	//    operation didn't complete within the allotted time.
+	//
+	//    * UNKNOWN_ERROR: Indicates that the JoinDomain operation failed due to
+	//    another type of error.
+	ActiveDirectoryStatus *string `type:"string" enum:"ActiveDirectoryStatus"`
+
 	// The name of the domain that the gateway is joined to.
 	DomainName *string `min:"1" type:"string"`
 
@@ -11556,6 +11867,12 @@ func (s DescribeSMBSettingsOutput) String() string {
 // GoString returns the string representation
 func (s DescribeSMBSettingsOutput) GoString() string {
 	return s.String()
+}
+
+// SetActiveDirectoryStatus sets the ActiveDirectoryStatus field's value.
+func (s *DescribeSMBSettingsOutput) SetActiveDirectoryStatus(v string) *DescribeSMBSettingsOutput {
+	s.ActiveDirectoryStatus = &v
+	return s
 }
 
 // SetDomainName sets the DomainName field's value.
@@ -12972,8 +13289,14 @@ type JoinDomainInput struct {
 	// Password is a required field
 	Password *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
+	// Specifies the time in seconds, in which the JoinDomain operation must complete.
+	// The default is 20 seconds.
+	TimeoutInSeconds *int64 `type:"integer"`
+
 	// Sets the user name of user who has permission to add the gateway to the Active
-	// Directory domain.
+	// Directory domain. The domain user account should be enabled to join computers
+	// to the domain. For example, you can use the domain administrator account
+	// or an account with delegated permissions to join computers to the domain.
 	//
 	// UserName is a required field
 	UserName *string `min:"1" type:"string" required:"true"`
@@ -13056,6 +13379,12 @@ func (s *JoinDomainInput) SetPassword(v string) *JoinDomainInput {
 	return s
 }
 
+// SetTimeoutInSeconds sets the TimeoutInSeconds field's value.
+func (s *JoinDomainInput) SetTimeoutInSeconds(v int64) *JoinDomainInput {
+	s.TimeoutInSeconds = &v
+	return s
+}
+
 // SetUserName sets the UserName field's value.
 func (s *JoinDomainInput) SetUserName(v string) *JoinDomainInput {
 	s.UserName = &v
@@ -13065,6 +13394,27 @@ func (s *JoinDomainInput) SetUserName(v string) *JoinDomainInput {
 // JoinDomainOutput
 type JoinDomainOutput struct {
 	_ struct{} `type:"structure"`
+
+	// Indicates the status of the gateway as a member of the Active Directory domain.
+	//
+	//    * ACCESS_DENIED: Indicates that the JoinDomain operation failed due to
+	//    an authentication error.
+	//
+	//    * DETACHED: Indicates that gateway is not joined to a domain.
+	//
+	//    * JOINED: Indicates that the gateway has successfully joined a domain.
+	//
+	//    * JOINING: Indicates that a JoinDomain operation is in progress.
+	//
+	//    * NETWORK_ERROR: Indicates that JoinDomain operation failed due to a network
+	//    or connectivity error.
+	//
+	//    * TIMEOUT: Indicates that the JoinDomain operation failed because the
+	//    operation didn't complete within the allotted time.
+	//
+	//    * UNKNOWN_ERROR: Indicates that the JoinDomain operation failed due to
+	//    another type of error.
+	ActiveDirectoryStatus *string `type:"string" enum:"ActiveDirectoryStatus"`
 
 	// The unique Amazon Resource Name (ARN) of the gateway that joined the domain.
 	GatewayARN *string `min:"50" type:"string"`
@@ -13078,6 +13428,12 @@ func (s JoinDomainOutput) String() string {
 // GoString returns the string representation
 func (s JoinDomainOutput) GoString() string {
 	return s.String()
+}
+
+// SetActiveDirectoryStatus sets the ActiveDirectoryStatus field's value.
+func (s *JoinDomainOutput) SetActiveDirectoryStatus(v string) *JoinDomainOutput {
+	s.ActiveDirectoryStatus = &v
+	return s
 }
 
 // SetGatewayARN sets the GatewayARN field's value.
@@ -15147,6 +15503,72 @@ func (s ShutdownGatewayOutput) GoString() string {
 
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *ShutdownGatewayOutput) SetGatewayARN(v string) *ShutdownGatewayOutput {
+	s.GatewayARN = &v
+	return s
+}
+
+type StartAvailabilityMonitorTestInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartAvailabilityMonitorTestInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAvailabilityMonitorTestInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartAvailabilityMonitorTestInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartAvailabilityMonitorTestInput"}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *StartAvailabilityMonitorTestInput) SetGatewayARN(v string) *StartAvailabilityMonitorTestInput {
+	s.GatewayARN = &v
+	return s
+}
+
+type StartAvailabilityMonitorTestOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s StartAvailabilityMonitorTestOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAvailabilityMonitorTestOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *StartAvailabilityMonitorTestOutput) SetGatewayARN(v string) *StartAvailabilityMonitorTestOutput {
 	s.GatewayARN = &v
 	return s
 }
@@ -17359,6 +17781,40 @@ func (s *VolumeiSCSIAttributes) SetTargetARN(v string) *VolumeiSCSIAttributes {
 }
 
 const (
+	// ActiveDirectoryStatusAccessDenied is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusAccessDenied = "ACCESS_DENIED"
+
+	// ActiveDirectoryStatusDetached is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusDetached = "DETACHED"
+
+	// ActiveDirectoryStatusJoined is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusJoined = "JOINED"
+
+	// ActiveDirectoryStatusJoining is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusJoining = "JOINING"
+
+	// ActiveDirectoryStatusNetworkError is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusNetworkError = "NETWORK_ERROR"
+
+	// ActiveDirectoryStatusTimeout is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusTimeout = "TIMEOUT"
+
+	// ActiveDirectoryStatusUnknownError is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusUnknownError = "UNKNOWN_ERROR"
+)
+
+const (
+	// AvailabilityMonitorTestStatusComplete is a AvailabilityMonitorTestStatus enum value
+	AvailabilityMonitorTestStatusComplete = "COMPLETE"
+
+	// AvailabilityMonitorTestStatusFailed is a AvailabilityMonitorTestStatus enum value
+	AvailabilityMonitorTestStatusFailed = "FAILED"
+
+	// AvailabilityMonitorTestStatusPending is a AvailabilityMonitorTestStatus enum value
+	AvailabilityMonitorTestStatusPending = "PENDING"
+)
+
+const (
 	// ErrorCodeActivationKeyExpired is a ErrorCode enum value
 	ErrorCodeActivationKeyExpired = "ActivationKeyExpired"
 
@@ -17451,6 +17907,9 @@ const (
 
 	// ErrorCodeLunInvalid is a ErrorCode enum value
 	ErrorCodeLunInvalid = "LunInvalid"
+
+	// ErrorCodeJoinDomainInProgress is a ErrorCode enum value
+	ErrorCodeJoinDomainInProgress = "JoinDomainInProgress"
 
 	// ErrorCodeMaximumContentLengthExceeded is a ErrorCode enum value
 	ErrorCodeMaximumContentLengthExceeded = "MaximumContentLengthExceeded"
@@ -17550,6 +18009,20 @@ const (
 
 	// FileShareTypeSmb is a FileShareType enum value
 	FileShareTypeSmb = "SMB"
+)
+
+const (
+	// HostEnvironmentVmware is a HostEnvironment enum value
+	HostEnvironmentVmware = "VMWARE"
+
+	// HostEnvironmentHyperV is a HostEnvironment enum value
+	HostEnvironmentHyperV = "HYPER-V"
+
+	// HostEnvironmentEc2 is a HostEnvironment enum value
+	HostEnvironmentEc2 = "EC2"
+
+	// HostEnvironmentOther is a HostEnvironment enum value
+	HostEnvironmentOther = "OTHER"
 )
 
 // A value that sets the access control list permission for objects in the S3
