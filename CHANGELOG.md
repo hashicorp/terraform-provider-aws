@@ -1,4 +1,4 @@
-## 2.43.0 (Unreleased)
+## 2.43.0 (December 19, 2019)
 
 NOTES:
 
@@ -6,26 +6,26 @@ NOTES:
 
 FEATURES:
 
-* **New Data Source:** `aws_organizations_organizational_units` [GH-10395]
-* **New Resource:** `aws_accessanalyzer_analyzer` [GH-11169]
-* **New Resource:** `aws_lambda_function_event_invoke_config` [GH-11165]
+* **New Data Source:** `aws_organizations_organizational_units` ([#10395](https://github.com/terraform-providers/terraform-provider-aws/issues/10395))
+* **New Resource:** `aws_accessanalyzer_analyzer` ([#11169](https://github.com/terraform-providers/terraform-provider-aws/issues/11169))
+* **New Resource:** `aws_lambda_function_event_invoke_config` ([#11165](https://github.com/terraform-providers/terraform-provider-aws/issues/11165))
 
 ENHANCEMENTS:
 
-* data-source/aws_elb: Add `arn` attribute [GH-11345]
-* resource/aws_batch_compute_environment: Support resource import [GH-11299]
-* resource/aws_codebuild_project: Add `queued_timeout` argument [GH-11261]
-* resource/aws_fsx_windows_file_system: Support `storage_capacity` minimum value of `32` in validation to match recent updates to the API [GH-11272]
-* resource/aws_opsworks_custom_layer: Add `encrypted` `ebs_volume` configuration [GH-7110]
+* data-source/aws_elb: Add `arn` attribute ([#11345](https://github.com/terraform-providers/terraform-provider-aws/issues/11345))
+* resource/aws_batch_compute_environment: Support resource import ([#11299](https://github.com/terraform-providers/terraform-provider-aws/issues/11299))
+* resource/aws_codebuild_project: Add `queued_timeout` argument ([#11261](https://github.com/terraform-providers/terraform-provider-aws/issues/11261))
+* resource/aws_fsx_windows_file_system: Support `storage_capacity` minimum value of `32` in validation to match recent updates to the API ([#11272](https://github.com/terraform-providers/terraform-provider-aws/issues/11272))
+* resource/aws_opsworks_custom_layer: Add `encrypted` `ebs_volume` configuration ([#7110](https://github.com/terraform-providers/terraform-provider-aws/issues/7110))
 
 BUG FIXES:
 
-* resource/aws_datasync_agent: Trigger resource recreation on updated `InvalidRequestException` error for agents deleted outside Terraform [GH-11005]
-* resource/aws_ecs_cluster: Fixes intermittent failures on update when cluster dependencies are updating [GH-11310]
-* resource/aws_ecs_cluster: Fixes bug where ECS cluster capacity providers are updated but default provider strategy is not changed [GH-11316]
-* resource/aws_globalaccelerator_endpoint_group: Allow `traffic_dial_percentage` to be set to `0` [GH-11253]
-* resource/aws_lb_listener_rule: Fixes regression from version 2.42.0 when updating a rule without modifying condition [GH-11364]
-* resource/aws_ssm_activation: Ensure `tags` are refreshed into Terraform state during read for drift detection [GH-11290]
+* resource/aws_datasync_agent: Trigger resource recreation on updated `InvalidRequestException` error for agents deleted outside Terraform ([#11005](https://github.com/terraform-providers/terraform-provider-aws/issues/11005))
+* resource/aws_ecs_cluster: Fixes intermittent failures on update when cluster dependencies are updating ([#11310](https://github.com/terraform-providers/terraform-provider-aws/issues/11310))
+* resource/aws_ecs_cluster: Fixes bug where ECS cluster capacity providers are updated but default provider strategy is not changed ([#11316](https://github.com/terraform-providers/terraform-provider-aws/issues/11316))
+* resource/aws_globalaccelerator_endpoint_group: Allow `traffic_dial_percentage` to be set to `0` ([#11253](https://github.com/terraform-providers/terraform-provider-aws/issues/11253))
+* resource/aws_lb_listener_rule: Fixes regression from version 2.42.0 when updating a rule without modifying condition ([#11364](https://github.com/terraform-providers/terraform-provider-aws/issues/11364))
+* resource/aws_ssm_activation: Ensure `tags` are refreshed into Terraform state during read for drift detection ([#11290](https://github.com/terraform-providers/terraform-provider-aws/issues/11290))
 
 ## 2.42.0 (December 13, 2019)
 
