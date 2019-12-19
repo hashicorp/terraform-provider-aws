@@ -1,3 +1,10 @@
+# v0.4.0
+
+ENHANCEMENTS
+
+* check: Accept newline-separated files of allowed subcategories with `-allowed-guide-subcategories-file` and `-allowed-resource-subcategories-file` flags
+* check: Improve readability with allowed subcategories values in allowed subcategories frontmatter error
+
 # v0.3.0
 
 ENHANCEMENTS
