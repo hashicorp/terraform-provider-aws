@@ -54,6 +54,15 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 				Computed: true,
 			},
 			"tags": tagsSchema(),
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  sfn.StateMachineTypeStandard,
+				ValidateFunc: validation.StringInSlice([]string{
+					sfn.StateMachineTypeStandard,
+					sfn.StateMachineTypeExpress,
+				}, false),
+			},
 		},
 	}
 }
@@ -66,6 +75,7 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 		Definition: aws.String(d.Get("definition").(string)),
 		Name:       aws.String(d.Get("name").(string)),
 		RoleArn:    aws.String(d.Get("role_arn").(string)),
+		Type:       aws.String(d.Get("type").(string)),
 		Tags:       keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SfnTags(),
 	}
 
@@ -111,7 +121,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 
 		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() == "NotFoundException" || awserr.Code() == "StateMachineDoesNotExist" {
+			if awserr.Code() == "NotFoundException" || awserr.Code() == sfn.ErrCodeStateMachineDoesNotExist {
 				d.SetId("")
 				return nil
 			}
@@ -123,6 +133,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", sm.Name)
 	d.Set("role_arn", sm.RoleArn)
 	d.Set("status", sm.Status)
+	d.Set("type", sm.Type)
 
 	if err := d.Set("creation_date", sm.CreationDate.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting creation_date: %s", err)
@@ -155,7 +166,7 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Updating Step Function State Machine: %#v", params)
 
 	if err != nil {
-		if isAWSErr(err, "StateMachineDoesNotExist", "State Machine Does Not Exist") {
+		if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "State Machine Does Not Exist") {
 			return fmt.Errorf("Error updating Step Function State Machine: %s", err)
 		}
 		return err
