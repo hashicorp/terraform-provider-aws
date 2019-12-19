@@ -128,7 +128,7 @@ func TestAccAWSCloudWatchEventRule_role(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile("arn+")),
+					testAccMatchResourceAttrGlobalARN(resourceName, "role_arn", "iam", regexp.MustCompile(`role/.+`)),
 				),
 			},
 			{
@@ -484,6 +484,7 @@ resource "aws_iam_role" "test" {
         "Service": "events.amazonaws.com"
       },
       "Effect": "Allow",
+      "Sid": ""
     }
   ]
 }
