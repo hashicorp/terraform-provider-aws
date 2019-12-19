@@ -83,6 +83,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchEventRuleConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(`rule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
