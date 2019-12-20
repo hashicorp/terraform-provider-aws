@@ -2,6 +2,7 @@
 
 BUG FIXES:
 
+* resource/aws_appautoscaling_policy: Prevent potential state removal of resource immediately after creation due to eventual consistency [GH-11222]
 * resource/aws_opsworks_stack: Ensure `tags` are refreshed in Terraform state during read for drift detection [GH-11373]
 
 ## 2.43.0 (December 19, 2019)
