@@ -304,6 +304,9 @@ func resourceAwsAppautoscalingPolicyRead(d *schema.ResourceData, meta interface{
 			}
 			return resource.NonRetryableError(err)
 		}
+		if d.IsNewResource() && p == nil {
+			return resource.RetryableError(&resource.NotFoundError{})
+		}
 		return nil
 	})
 	if isResourceTimeoutError(err) {
