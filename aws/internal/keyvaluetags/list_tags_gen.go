@@ -83,6 +83,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -1429,6 +1430,23 @@ func WafregionalListTags(conn *wafregional.WAFRegional, identifier string) (KeyV
 	}
 
 	return WafregionalKeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// Wafv2ListTags lists wafv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Wafv2ListTags(conn *wafv2.WAFV2, identifier string) (KeyValueTags, error) {
+	input := &wafv2.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Wafv2KeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

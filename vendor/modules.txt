@@ -194,6 +194,7 @@ github.com/aws/aws-sdk-go/service/swf
 github.com/aws/aws-sdk-go/service/transfer
 github.com/aws/aws-sdk-go/service/waf
 github.com/aws/aws-sdk-go/service/wafregional
+github.com/aws/aws-sdk-go/service/wafv2
 github.com/aws/aws-sdk-go/service/worklink
 github.com/aws/aws-sdk-go/service/workspaces
 github.com/aws/aws-sdk-go/service/xray
