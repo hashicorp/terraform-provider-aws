@@ -1,5 +1,9 @@
 ## 2.44.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_cloudformation_stack: Prevent difference with `Transform` templates showing processed template (support SAM templates) [GH-9006]
+
 BUG FIXES:
 
 * resource/aws_appautoscaling_policy: Prevent potential state removal of resource immediately after creation due to eventual consistency [GH-11222]
