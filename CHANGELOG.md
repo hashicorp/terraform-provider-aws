@@ -3,6 +3,7 @@
 ENHANCEMENTS:
 
 * resource/aws_cloudformation_stack: Prevent difference with `Transform` templates showing processed template (support SAM templates) [GH-9006]
+* resource/aws_db_instance: Remove `indentifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
 
 BUG FIXES:
 
