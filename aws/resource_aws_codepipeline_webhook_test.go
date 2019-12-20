@@ -151,8 +151,8 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1valueUpdate"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "tag2valueUpdate"),
 					func(s *terraform.State) error {
-						if aws.StringValue(v2.Url) == aws.StringValue(v1.Url) {
-							return fmt.Errorf("Codepipeline webhook not recreated when changing tags")
+						if aws.StringValue(v2.Url) != aws.StringValue(v1.Url) {
+							return fmt.Errorf("Codepipeline webhook recreated when changing tags")
 						}
 						return nil
 					},
@@ -170,8 +170,8 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 					testAccCheckAWSCodePipelineWebhookExists(resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					func(s *terraform.State) error {
-						if aws.StringValue(v3.Url) == aws.StringValue(v2.Url) {
-							return fmt.Errorf("Codepipeline webhook not recreated when changing tags")
+						if aws.StringValue(v3.Url) != aws.StringValue(v2.Url) {
+							return fmt.Errorf("Codepipeline webhook recreated when deleting tags")
 						}
 						return nil
 					},

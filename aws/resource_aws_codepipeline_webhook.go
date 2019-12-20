@@ -16,7 +16,7 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCodePipelineWebhookCreate,
 		Read:   resourceAwsCodePipelineWebhookRead,
-		Update: nil,
+		Update: resourceAwsCodePipelineWebhookUpdate,
 		Delete: resourceAwsCodePipelineWebhookDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -94,11 +94,7 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -277,6 +273,20 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 	}
 
 	return nil
+}
+
+func resourceAwsCodePipelineWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).codepipelineconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CodepipelineUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating CodePipeline Webhook (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsCodePipelineWebhookRead(d, meta)
 }
 
 func resourceAwsCodePipelineWebhookDelete(d *schema.ResourceData, meta interface{}) error {
