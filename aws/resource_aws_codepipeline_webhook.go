@@ -44,11 +44,13 @@ func resourceAwsCodePipelineWebhook() *schema.Resource {
 						"secret_token": {
 							Type:      schema.TypeString,
 							Optional:  true,
+							ForceNew:  true,
 							Sensitive: true,
 						},
 						"allowed_ip_range": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.CIDRNetwork(0, 32),
 						},
 					},

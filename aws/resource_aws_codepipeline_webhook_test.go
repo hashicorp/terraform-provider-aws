@@ -181,6 +181,53 @@ func TestAccAWSCodePipelineWebhook_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodePipelineWebhook_UpdateAuthenticationConfiguration_SecretToken(t *testing.T) {
+	if os.Getenv("GITHUB_TOKEN") == "" {
+		t.Skip("Environment variable GITHUB_TOKEN is not set")
+	}
+
+	var v1, v2 codepipeline.ListWebhookItem
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codepipeline_webhook.test"
+	pipelineResourceName := "aws_codepipeline.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineWebhookConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(pipelineResourceName),
+					testAccCheckAWSCodePipelineWebhookExists(resourceName, &v1),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.secret_token", "super-secret"),
+				),
+			},
+			{
+				Config: testAccAWSCodePipelineWebhookConfig_secretTokenUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(pipelineResourceName),
+					testAccCheckAWSCodePipelineWebhookExists(resourceName, &v2),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.secret_token", "even-more-secret"),
+					func(s *terraform.State) error {
+						if aws.StringValue(v2.Url) == aws.StringValue(v1.Url) {
+							return fmt.Errorf("Codepipeline webhook not recreated when updating authentication_configuration.secret_token")
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSCodePipelineWebhookExists(n string, webhook *codepipeline.ListWebhookItem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -286,6 +333,26 @@ resource "aws_codepipeline_webhook" "test" {
   }
 }
 `, rName, tag1, tag2)
+}
+
+func testAccAWSCodePipelineWebhookConfig_secretTokenUpdated(rName string) string {
+	return testAccAWSCodePipelineWebhookConfig_codePipeline(rName) + fmt.Sprintf(`
+resource "aws_codepipeline_webhook" "test" {
+  name            = %[1]q
+  authentication  = "GITHUB_HMAC"
+  target_action   = "Source"
+  target_pipeline = "${aws_codepipeline.test.name}"
+
+  authentication_configuration {
+    secret_token = "even-more-secret"
+  }
+
+  filter {
+    json_path    = "$.ref"
+    match_equals = "refs/head/{Branch}"
+  }
+}
+`, rName)
 }
 
 func testAccAWSCodePipelineWebhookConfig_codePipeline(rName string) string {
