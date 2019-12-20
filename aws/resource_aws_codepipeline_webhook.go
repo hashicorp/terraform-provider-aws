@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCodePipelineWebhook() *schema.Resource {
@@ -149,7 +150,7 @@ func resourceAwsCodePipelineWebhookCreate(d *schema.ResourceData, meta interface
 			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			AuthenticationConfiguration: extractCodePipelineWebhookAuthConfig(authType, authConfig),
 		},
-		Tags: tagsFromMapCodePipeline(d.Get("tags").(map[string]interface{})),
+		Tags: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodepipelineTags(),
 	}
 
 	webhook, err := conn.PutWebhook(request)
@@ -271,7 +272,7 @@ func resourceAwsCodePipelineWebhookRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error setting filter: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMapCodePipeline(webhook.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.CodepipelineKeyValueTags(webhook.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
