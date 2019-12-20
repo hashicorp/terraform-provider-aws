@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "WAFV2" // Name of service.
 	EndpointsID = "wafv2" // ID to lookup a service endpoint with.
-	ServiceID   = "WAFV2" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "WAFV2" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the WAFV2 client with a session.
