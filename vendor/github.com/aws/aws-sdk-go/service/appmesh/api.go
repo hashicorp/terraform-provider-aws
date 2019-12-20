@@ -1734,10 +1734,12 @@ func (c *AppMesh) ListMeshesPagesWithContext(ctx aws.Context, input *ListMeshesI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMeshesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMeshesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1887,10 +1889,12 @@ func (c *AppMesh) ListRoutesPagesWithContext(ctx aws.Context, input *ListRoutesI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListRoutesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListRoutesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2040,10 +2044,12 @@ func (c *AppMesh) ListTagsForResourcePagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2193,10 +2199,12 @@ func (c *AppMesh) ListVirtualNodesPagesWithContext(ctx aws.Context, input *ListV
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVirtualNodesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListVirtualNodesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2346,10 +2354,12 @@ func (c *AppMesh) ListVirtualRoutersPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVirtualRoutersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListVirtualRoutersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2499,10 +2509,12 @@ func (c *AppMesh) ListVirtualServicesPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVirtualServicesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListVirtualServicesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

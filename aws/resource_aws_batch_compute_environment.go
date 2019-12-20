@@ -19,6 +19,12 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 		Update: resourceAwsBatchComputeEnvironmentUpdate,
 		Delete: resourceAwsBatchComputeEnvironmentDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("compute_environment_name", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
 				Type:         schema.TypeString,
@@ -75,15 +81,18 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_name"},
+										ForceNew:      true,
 									},
 									"launch_template_name": {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_id"},
+										ForceNew:      true,
 									},
 									"version": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -114,7 +123,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"tags": tagsSchema(),
+						"tags": tagsSchemaForceNew(),
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,

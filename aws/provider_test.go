@@ -128,7 +128,7 @@ func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService
 	}
 }
 
-// testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region and no account id
+// testAccMatchResourceAttrRegionalARNNoAccount ensures the Terraform state regexp matches a formatted ARN with region but without account ID
 func testAccMatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arnRegexp := arn.ARN{
@@ -161,6 +161,18 @@ func testAccCheckResourceAttrGlobalARN(resourceName, attributeName, arnService, 
 	}
 }
 
+// testAccCheckResourceAttrGlobalARNNoAccount ensures the Terraform state exactly matches a formatted ARN without region or account ID
+func testAccCheckResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			Partition: testAccGetPartition(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
 // testAccMatchResourceAttrGlobalARN ensures the Terraform state regexp matches a formatted ARN without region
 func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -179,6 +191,67 @@ func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService s
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
 	}
+}
+
+// testAccCheckListHasSomeElementAttrPair is a TestCheckFunc which validates that the collection on the left has an element with an attribute value
+// matching the value on the left
+// Based on TestCheckResourceAttrPair from the Terraform SDK testing framework
+func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr string, elementAttr string, nameSecond string, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		isFirst, err := primaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		isSecond, err := primaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vSecond, ok := isSecond.Attributes[keySecond]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", nameSecond, keySecond)
+		} else if vSecond == "" {
+			return fmt.Errorf("%s: No value was set on attribute %q", nameSecond, keySecond)
+		}
+
+		attrsFirst := make([]string, 0, len(isFirst.Attributes))
+		attrMatcher := regexp.MustCompile(fmt.Sprintf("%s\\.\\d+\\.%s", resourceAttr, elementAttr))
+		for k := range isFirst.Attributes {
+			if attrMatcher.MatchString(k) {
+				attrsFirst = append(attrsFirst, k)
+			}
+		}
+
+		found := false
+		for _, attrName := range attrsFirst {
+			vFirst := isFirst.Attributes[attrName]
+			if vFirst == vSecond {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("%s: No element of %q found with attribute %q matching value %q set on %q of %s", nameFirst, resourceAttr, elementAttr, vSecond, keySecond, nameSecond)
+		}
+
+		return nil
+	}
+}
+
+// Copied and inlined from the SDK testing code
+func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+	rs, ok := s.RootModule().Resources[name]
+	if !ok {
+		return nil, fmt.Errorf("Not found: %s", name)
+	}
+
+	is := rs.Primary
+	if is == nil {
+		return nil, fmt.Errorf("No primary instance: %s", name)
+	}
+
+	return is, nil
 }
 
 // testAccGetAccountID returns the account ID of testAccProvider
@@ -210,6 +283,13 @@ func testAccGetPartition() string {
 	return "aws"
 }
 
+func testAccGetAlternateRegionPartition() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetAlternateRegion()); ok {
+		return partition.ID()
+	}
+	return "aws"
+}
+
 func testAccAlternateAccountPreCheck(t *testing.T) {
 	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
 		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
@@ -223,6 +303,10 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 func testAccAlternateRegionPreCheck(t *testing.T) {
 	if testAccGetRegion() == testAccGetAlternateRegion() {
 		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
+	}
+
+	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
+		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
 	}
 }
 

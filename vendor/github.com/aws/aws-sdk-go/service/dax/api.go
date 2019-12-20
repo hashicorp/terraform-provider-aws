@@ -101,6 +101,7 @@ func (c *DAX) CreateClusterRequest(input *CreateClusterInput) (req *request.Requ
 //   You have exceeded the maximum number of tags for this DAX cluster.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -195,6 +196,7 @@ func (c *DAX) CreateParameterGroupRequest(input *CreateParameterGroupInput) (req
 //   One or more parameters in a parameter group are in an invalid state.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -293,6 +295,7 @@ func (c *DAX) CreateSubnetGroupRequest(input *CreateSubnetGroupInput) (req *requ
 //   An invalid subnet identifier was specified.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/CreateSubnetGroup
 func (c *DAX) CreateSubnetGroup(input *CreateSubnetGroupInput) (*CreateSubnetGroupOutput, error) {
@@ -383,6 +386,7 @@ func (c *DAX) DecreaseReplicationFactorRequest(input *DecreaseReplicationFactorI
 //   The requested DAX cluster is not in the available state.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -476,6 +480,7 @@ func (c *DAX) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 //   The requested DAX cluster is not in the available state.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -567,6 +572,7 @@ func (c *DAX) DeleteParameterGroupRequest(input *DeleteParameterGroupInput) (req
 //   The specified parameter group does not exist.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -659,6 +665,7 @@ func (c *DAX) DeleteSubnetGroupRequest(input *DeleteSubnetGroupInput) (req *requ
 //   The requested subnet group name does not refer to an existing subnet group.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/DeleteSubnetGroup
 func (c *DAX) DeleteSubnetGroup(input *DeleteSubnetGroupInput) (*DeleteSubnetGroupOutput, error) {
@@ -756,6 +763,7 @@ func (c *DAX) DescribeClustersRequest(input *DescribeClustersInput) (req *reques
 //   The requested cluster ID does not refer to an existing DAX cluster.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -840,6 +848,7 @@ func (c *DAX) DescribeDefaultParametersRequest(input *DescribeDefaultParametersI
 //
 // Returned Error Codes:
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -917,7 +926,7 @@ func (c *DAX) DescribeEventsRequest(input *DescribeEventsInput) (req *request.Re
 // events specific to a particular DAX cluster or parameter group by providing
 // the name as a parameter.
 //
-// By default, only the events occurring within the last hour are returned;
+// By default, only the events occurring within the last 24 hours are returned;
 // however, you can retrieve up to 14 days' worth of events if necessary.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -929,6 +938,7 @@ func (c *DAX) DescribeEventsRequest(input *DescribeEventsInput) (req *request.Re
 //
 // Returned Error Codes:
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1017,6 +1027,7 @@ func (c *DAX) DescribeParameterGroupsRequest(input *DescribeParameterGroupsInput
 //   The specified parameter group does not exist.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1104,6 +1115,7 @@ func (c *DAX) DescribeParametersRequest(input *DescribeParametersInput) (req *re
 //   The specified parameter group does not exist.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1192,6 +1204,7 @@ func (c *DAX) DescribeSubnetGroupsRequest(input *DescribeSubnetGroupsInput) (req
 //   The requested subnet group name does not refer to an existing subnet group.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/DescribeSubnetGroups
 func (c *DAX) DescribeSubnetGroups(input *DescribeSubnetGroupsInput) (*DescribeSubnetGroupsOutput, error) {
@@ -1289,6 +1302,7 @@ func (c *DAX) IncreaseReplicationFactorRequest(input *IncreaseReplicationFactorI
 //   You have attempted to exceed the maximum number of nodes for your AWS account.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1383,6 +1397,7 @@ func (c *DAX) ListTagsRequest(input *ListTagsInput) (req *request.Request, outpu
 //   The requested DAX cluster is not in the available state.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1459,6 +1474,9 @@ func (c *DAX) RebootNodeRequest(input *RebootNodeInput) (req *request.Request, o
 // Reboots a single node of a DAX cluster. The reboot action takes place as
 // soon as possible. During the reboot, the node status is set to REBOOTING.
 //
+// RebootNode restarts the DAX engine process and does not remove the contents
+// of the cache.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -1477,6 +1495,7 @@ func (c *DAX) RebootNodeRequest(input *RebootNodeInput) (req *request.Request, o
 //   The requested DAX cluster is not in the available state.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1574,6 +1593,7 @@ func (c *DAX) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 //   The requested DAX cluster is not in the available state.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1671,6 +1691,7 @@ func (c *DAX) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 //   The requested DAX cluster is not in the available state.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1769,6 +1790,7 @@ func (c *DAX) UpdateClusterRequest(input *UpdateClusterInput) (req *request.Requ
 //   The specified parameter group does not exist.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1860,6 +1882,7 @@ func (c *DAX) UpdateParameterGroupRequest(input *UpdateParameterGroupInput) (req
 //   The specified parameter group does not exist.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   The value for a parameter is invalid.
@@ -1957,6 +1980,7 @@ func (c *DAX) UpdateSubnetGroupRequest(input *UpdateSubnetGroupInput) (req *requ
 //   An invalid subnet identifier was specified.
 //
 //   * ErrCodeServiceLinkedRoleNotFoundFault "ServiceLinkedRoleNotFoundFault"
+//   The specified service linked role (SLR) was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dax-2017-04-19/UpdateSubnetGroup
 func (c *DAX) UpdateSubnetGroup(input *UpdateSubnetGroupInput) (*UpdateSubnetGroupOutput, error) {
@@ -2163,9 +2187,10 @@ func (s *Cluster) SetTotalNodes(v int64) *Cluster {
 type CreateClusterInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Availability Zones (AZs) in which the cluster nodes will be created.
-	// All nodes belonging to the cluster are placed in these Availability Zones.
-	// Use this parameter if you want to distribute the nodes across multiple AZs.
+	// The Availability Zones (AZs) in which the cluster nodes will reside after
+	// the cluster has been created or updated. If provided, the length of this
+	// list must equal the ReplicationFactor parameter. If you omit this parameter,
+	// DAX will spread the nodes across Availability Zones for the highest availability.
 	AvailabilityZones []*string `type:"list"`
 
 	// The cluster identifier. This parameter is stored as a lowercase string.
@@ -2234,7 +2259,9 @@ type CreateClusterInput struct {
 	// The number of nodes in the DAX cluster. A replication factor of 1 will create
 	// a single-node cluster, without any read replicas. For additional fault tolerance,
 	// you can create a multiple node cluster with one or more read replicas. To
-	// do this, set ReplicationFactor to 2 or more.
+	// do this, set ReplicationFactor to a number between 3 (one primary and two
+	// read replicas) and 10 (one primary and nine read replicas). If the AvailabilityZones
+	// parameter is provided, its length must equal the ReplicationFactor.
 	//
 	// AWS recommends that you have at least two read replicas per cluster.
 	//
@@ -4170,7 +4197,7 @@ func (s *SecurityGroupMembership) SetStatus(v string) *SecurityGroupMembership {
 type Subnet struct {
 	_ struct{} `type:"structure"`
 
-	// The Availability Zone (AZ) for subnet subnet.
+	// The Availability Zone (AZ) for the subnet.
 	SubnetAvailabilityZone *string `type:"string"`
 
 	// The system-assigned identifier for the subnet.

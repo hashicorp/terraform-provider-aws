@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "states"    // Name of service.
 	EndpointsID = ServiceName // ID to lookup a service endpoint with.
-	ServiceID   = "SFN"       // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "SFN"       // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the SFN client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a SFN client from just a session.
 //     svc := sfn.New(mySession)
 //

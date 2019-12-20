@@ -701,10 +701,12 @@ func (c *MediaConnect) ListEntitlementsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEntitlementsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEntitlementsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -854,10 +856,12 @@ func (c *MediaConnect) ListFlowsPagesWithContext(ctx aws.Context, input *ListFlo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFlowsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFlowsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

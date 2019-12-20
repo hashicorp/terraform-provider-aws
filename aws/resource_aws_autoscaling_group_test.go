@@ -124,6 +124,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.0", "OldestInstance"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.1", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
+					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "max_instance_lifetime", "0"),
 				),
 			},
 			{
@@ -739,6 +740,48 @@ func TestAccAWSAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 					"wait_for_capacity_timeout",
 					"wait_for_elb_capacity",
 				},
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoScalingGroup_MaxInstanceLifetime(t *testing.T) {
+	var group autoscaling.Group
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "max_instance_lifetime", "864000"),
+				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_group.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
+			},
+			{
+				Config: testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime_update,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
+					resource.TestCheckResourceAttr(
+						"aws_autoscaling_group.bar", "max_instance_lifetime", "604800"),
+				),
 			},
 		},
 	})
@@ -1540,7 +1583,9 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.version", "$Default"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "2"),
 				),
 			},
 			{
@@ -1968,6 +2013,47 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Ins
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t3.medium"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t3.small"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"initial_lifecycle_hook",
+					"name_prefix",
+					"tag",
+					"tags",
+					"wait_for_capacity_timeout",
+					"wait_for_elb_capacity",
+				},
 			},
 		},
 	})
@@ -2566,6 +2652,58 @@ resource "aws_autoscaling_group" "bar" {
   min_size = 0
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   service_linked_role_arn = "${data.aws_iam_role.autoscaling_service_linked_role.arn}"
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  max_instance_lifetime = "864000"
+}
+`
+
+const testAccAWSAutoScalingGroupConfig_withMaxInstanceLifetime_update = `
+data "aws_ami" "test_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_configuration" "foobar" {
+  image_id = "${data.aws_ami.test_ami.id}"
+  instance_type = "t2.micro"
+}
+
+resource "aws_autoscaling_group" "bar" {
+  availability_zones = ["us-west-2a"]
+  desired_capacity = 0
+  max_size = 0
+  min_size = 0
+  launch_configuration = "${aws_launch_configuration.foobar.name}"
+  max_instance_lifetime = "604800"
 }
 `
 
@@ -3557,10 +3695,12 @@ resource "aws_autoscaling_group" "test" {
       }
 
       override {
-        instance_type = "t2.micro"
+        instance_type   = "t2.micro"
+        weighted_capacity = "1"
       }
       override {
-        instance_type = "t3.small"
+        instance_type   = "t3.small"
+        weighted_capacity = "2"
       }
     }
   }
@@ -3834,4 +3974,33 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, instanceType)
+}
+
+func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Override_WeightedCapacity(rName string) string {
+	return testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Base(rName) + fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %q
+
+  mixed_instances_policy {
+    launch_template {
+      launch_template_specification {
+        launch_template_id = "${aws_launch_template.test.id}"
+      }
+
+      override {
+        instance_type = "t2.micro"
+        weighted_capacity = "1"
+      }
+      override {
+        instance_type = "t3.small"
+        weighted_capacity = "2"
+      }
+    }
+  }
+}
+`, rName)
 }

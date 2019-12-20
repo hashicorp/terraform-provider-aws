@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDbParameterGroup() *schema.Resource {
@@ -88,7 +88,7 @@ func resourceAwsDbParameterGroup() *schema.Resource {
 
 func resourceAwsDbParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	rdsconn := meta.(*AWSClient).rdsconn
-	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags()
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -230,19 +230,15 @@ func resourceAwsDbParameterGroupRead(d *schema.ResourceData, meta interface{}) e
 	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
 	d.Set("arn", arn)
 
-	resp, err := rdsconn.ListTagsForResource(&rds.ListTagsForResourceInput{
-		ResourceName: aws.String(arn),
-	})
+	tags, err := keyvaluetags.RdsListTags(rdsconn, d.Get("arn").(string))
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retrieving tags for ARN: %s", arn)
+		return fmt.Errorf("error listing tags for RDS DB Parameter Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	var dt []*rds.Tag
-	if len(resp.TagList) > 0 {
-		dt = resp.TagList
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-	d.Set("tags", tagsToMapRDS(dt))
 
 	return nil
 }
@@ -296,9 +292,13 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if err := setTagsRDS(rdsconn, d, d.Get("arn").(string)); err != nil {
-		return err
-	} else {
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RdsUpdateTags(rdsconn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating RDS DB Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+		}
+
 		d.SetPartial("tags")
 	}
 

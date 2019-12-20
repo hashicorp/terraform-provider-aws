@@ -154,7 +154,7 @@ Each `block_device_mappings` supports the following:
 
 The `ebs` block supports the following:
 
-* `delete_on_termination` - Whether the volume should be destroyed on instance termination (Default: `true`).
+* `delete_on_termination` - Whether the volume should be destroyed on instance termination (Default: `false`). See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
 * `encrypted` - Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
   on the volume (Default: `false`). Cannot be used with `snapshot_id`.
 * `iops` - The amount of provisioned

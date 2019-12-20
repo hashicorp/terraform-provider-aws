@@ -150,7 +150,7 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err := conn.DescribeAgent(descAgentInput)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
 			return resource.RetryableError(err)
 		}
 
@@ -180,7 +180,7 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading DataSync Agent: %s", input)
 	output, err := conn.DescribeAgent(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if isAWSErr(err, "InvalidRequestException", "does not exist") {
 		log.Printf("[WARN] DataSync Agent %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -269,7 +269,7 @@ func resourceAwsDataSyncAgentDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", input)
 	_, err := conn.DeleteAgent(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if isAWSErr(err, "InvalidRequestException", "does not exist") {
 		return nil
 	}
 

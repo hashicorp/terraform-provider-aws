@@ -2300,10 +2300,12 @@ func (c *Glacier) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListJobsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2471,10 +2473,12 @@ func (c *Glacier) ListMultipartUploadsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMultipartUploadsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMultipartUploadsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2636,10 +2640,12 @@ func (c *Glacier) ListPartsPagesWithContext(ctx aws.Context, input *ListPartsInp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPartsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPartsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2969,10 +2975,12 @@ func (c *Glacier) ListVaultsPagesWithContext(ctx aws.Context, input *ListVaultsI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVaultsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListVaultsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

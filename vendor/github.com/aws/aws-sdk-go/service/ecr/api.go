@@ -918,10 +918,12 @@ func (c *ECR) DescribeImageScanFindingsPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeImageScanFindingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeImageScanFindingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1070,10 +1072,12 @@ func (c *ECR) DescribeImagesPagesWithContext(ctx aws.Context, input *DescribeIma
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeImagesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeImagesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1213,10 +1217,12 @@ func (c *ECR) DescribeRepositoriesPagesWithContext(ctx aws.Context, input *Descr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeRepositoriesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeRepositoriesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1639,10 +1645,12 @@ func (c *ECR) GetLifecyclePolicyPreviewPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetLifecyclePolicyPreviewOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetLifecyclePolicyPreviewOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1970,10 +1978,12 @@ func (c *ECR) ListImagesPagesWithContext(ctx aws.Context, input *ListImagesInput
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListImagesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListImagesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2304,7 +2314,11 @@ func (c *ECR) PutImageTagMutabilityRequest(input *PutImageTagMutabilityInput) (r
 
 // PutImageTagMutability API operation for Amazon EC2 Container Registry.
 //
-// Updates the image tag mutability settings for a repository.
+// Updates the image tag mutability settings for a repository. When a repository
+// is configured with tag immutability, all image tags within the repository
+// will be prevented them from being overwritten. For more information, see
+// Image Tag Mutability (https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-tag-mutability.html)
+// in the Amazon Elastic Container Registry User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2568,7 +2582,10 @@ func (c *ECR) StartImageScanRequest(input *StartImageScanInput) (req *request.Re
 
 // StartImageScan API operation for Amazon EC2 Container Registry.
 //
-// Starts an image vulnerability scan.
+// Starts an image vulnerability scan. An image scan can only be started once
+// per day on an individual image. This limit includes if an image was scanned
+// on initial push. For more information, see Image Scanning (https://docs.aws.amazon.com/AmazonECR/latest/userguide/image-scanning.html)
+// in the Amazon Elastic Container Registry User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about

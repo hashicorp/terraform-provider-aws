@@ -1,5 +1,5 @@
-//go:generate go run generators/listtags/main.go
 //go:generate go run generators/servicetags/main.go
+//go:generate go run generators/listtags/main.go
 //go:generate go run generators/updatetags/main.go
 
 package keyvaluetags

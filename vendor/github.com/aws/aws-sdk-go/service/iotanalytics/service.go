@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "iotanalytics" // Name of service.
 	EndpointsID = ServiceName    // ID to lookup a service endpoint with.
-	ServiceID   = "IoTAnalytics" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "IoTAnalytics" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the IoTAnalytics client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a IoTAnalytics client from just a session.
 //     svc := iotanalytics.New(mySession)
 //

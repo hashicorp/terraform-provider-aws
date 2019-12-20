@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEcsService() *schema.Resource {
@@ -34,6 +35,34 @@ func resourceAwsEcsService() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"capacity_provider_strategy": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"base": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 100000),
+							ForceNew:     true,
+						},
+
+						"capacity_provider": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+
+						"weight": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 1000),
+							ForceNew:     true,
+						},
+					},
+				},
+			},
 			"cluster": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -70,7 +99,7 @@ func resourceAwsEcsService() *schema.Resource {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
-				Default:  "EC2",
+				Computed: true,
 			},
 
 			"platform_version": {
@@ -362,7 +391,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		DeploymentController: expandEcsDeploymentController(d.Get("deployment_controller").([]interface{})),
 		SchedulingStrategy:   aws.String(schedulingStrategy),
 		ServiceName:          aws.String(d.Get("name").(string)),
-		Tags:                 tagsFromMapECS(d.Get("tags").(map[string]interface{})),
+		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcsTags(),
 		TaskDefinition:       aws.String(d.Get("task_definition").(string)),
 		EnableECSManagedTags: aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 	}
@@ -398,6 +427,8 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
 	}
+
+	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
@@ -495,8 +526,8 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 	service := *out.Service
 
-	log.Printf("[DEBUG] ECS service created: %s", *service.ServiceArn)
-	d.SetId(*service.ServiceArn)
+	log.Printf("[DEBUG] ECS service created: %s", aws.StringValue(service.ServiceArn))
+	d.SetId(aws.StringValue(service.ServiceArn))
 
 	return resourceAwsEcsServiceRead(d, meta)
 }
@@ -565,7 +596,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Received ECS service %s", service)
 
-	d.SetId(*service.ServiceArn)
+	d.SetId(aws.StringValue(service.ServiceArn))
 	d.Set("name", service.ServiceName)
 
 	// Save task definition in the same format
@@ -615,6 +646,10 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("load_balancer", flattenEcsLoadBalancers(service.LoadBalancers))
 	}
 
+	if err := d.Set("capacity_provider_strategy", flattenEcsCapacityProviderStrategy(service.CapacityProviderStrategy)); err != nil {
+		return fmt.Errorf("error setting capacity_provider_strategy: %s", err)
+	}
+
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		return fmt.Errorf("error setting ordered_placement_strategy: %s", err)
 	}
@@ -631,7 +666,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting service_registries for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tagsToMapECS(service.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(service.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -700,6 +735,46 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	}
 
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
+}
+
+func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
+	list := cps.List()
+	results := make([]*ecs.CapacityProviderStrategyItem, 0)
+	for _, raw := range list {
+		cp := raw.(map[string]interface{})
+		ps := &ecs.CapacityProviderStrategyItem{}
+		if val, ok := cp["base"]; ok {
+			ps.Base = aws.Int64(int64(val.(int)))
+		}
+		if val, ok := cp["weight"]; ok {
+			ps.Weight = aws.Int64(int64(val.(int)))
+		}
+		if val, ok := cp["capacity_provider"]; ok {
+			ps.CapacityProvider = aws.String(val.(string))
+		}
+
+		results = append(results, ps)
+	}
+	return results
+}
+
+func flattenEcsCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []map[string]interface{} {
+	if cps == nil {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, cp := range cps {
+		s := make(map[string]interface{})
+		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
+		if cp.Weight != nil {
+			s["weight"] = aws.Int64Value(cp.Weight)
+		}
+		if cp.Base != nil {
+			s["base"] = aws.Int64Value(cp.Base)
+		}
+		results = append(results, s)
+	}
+	return results
 }
 
 func flattenServicePlacementConstraints(pcs []*ecs.PlacementConstraint) []map[string]interface{} {
@@ -842,6 +917,11 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 		input.NetworkConfiguration = expandEcsNetworkConfiguration(d.Get("network_configuration").([]interface{}))
 	}
 
+	if d.HasChange("capacity_provider_strategy") {
+		updateService = true
+		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
+	}
+
 	if updateService {
 		log.Printf("[DEBUG] Updating ECS Service (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
@@ -867,38 +947,10 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("tags") {
-		oldTagsRaw, newTagsRaw := d.GetChange("tags")
-		oldTagsMap := oldTagsRaw.(map[string]interface{})
-		newTagsMap := newTagsRaw.(map[string]interface{})
-		createTags, removeTags := diffTagsECS(tagsFromMapECS(oldTagsMap), tagsFromMapECS(newTagsMap))
+		o, n := d.GetChange("tags")
 
-		if len(removeTags) > 0 {
-			removeTagKeys := make([]*string, len(removeTags))
-			for i, removeTag := range removeTags {
-				removeTagKeys[i] = removeTag.Key
-			}
-
-			input := &ecs.UntagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				TagKeys:     removeTagKeys,
-			}
-
-			log.Printf("[DEBUG] Untagging ECS Cluster: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging ECS Cluster (%s): %s", d.Id(), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &ecs.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging ECS Cluster: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging ECS Cluster (%s): %s", d.Id(), err)
-			}
+		if err := keyvaluetags.EcsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ECS Service (%s) tags: %s", d.Id(), err)
 		}
 	}
 

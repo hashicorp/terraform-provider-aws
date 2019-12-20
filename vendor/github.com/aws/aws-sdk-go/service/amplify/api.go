@@ -107,6 +107,99 @@ func (c *Amplify) CreateAppWithContext(ctx aws.Context, input *CreateAppInput, o
 	return out, req.Send()
 }
 
+const opCreateBackendEnvironment = "CreateBackendEnvironment"
+
+// CreateBackendEnvironmentRequest generates a "aws/request.Request" representing the
+// client's request for the CreateBackendEnvironment operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateBackendEnvironment for more information on using the CreateBackendEnvironment
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateBackendEnvironmentRequest method.
+//    req, resp := client.CreateBackendEnvironmentRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/CreateBackendEnvironment
+func (c *Amplify) CreateBackendEnvironmentRequest(input *CreateBackendEnvironmentInput) (req *request.Request, output *CreateBackendEnvironmentOutput) {
+	op := &request.Operation{
+		Name:       opCreateBackendEnvironment,
+		HTTPMethod: "POST",
+		HTTPPath:   "/apps/{appId}/backendenvironments",
+	}
+
+	if input == nil {
+		input = &CreateBackendEnvironmentInput{}
+	}
+
+	output = &CreateBackendEnvironmentOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateBackendEnvironment API operation for AWS Amplify.
+//
+// Creates a new backend environment for an Amplify App.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Amplify's
+// API operation CreateBackendEnvironment for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Exception thrown when a request contains unexpected data.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Exception thrown when an operation fails due to a lack of access.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Exception thrown when an entity has not been found during an operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   Exception thrown when the service fails to perform an operation due to an
+//   internal issue.
+//
+//   * ErrCodeLimitExceededException "LimitExceededException"
+//   Exception thrown when a resource could not be created because of service
+//   limits.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/CreateBackendEnvironment
+func (c *Amplify) CreateBackendEnvironment(input *CreateBackendEnvironmentInput) (*CreateBackendEnvironmentOutput, error) {
+	req, out := c.CreateBackendEnvironmentRequest(input)
+	return out, req.Send()
+}
+
+// CreateBackendEnvironmentWithContext is the same as CreateBackendEnvironment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateBackendEnvironment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Amplify) CreateBackendEnvironmentWithContext(ctx aws.Context, input *CreateBackendEnvironmentInput, opts ...request.Option) (*CreateBackendEnvironmentOutput, error) {
+	req, out := c.CreateBackendEnvironmentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateBranch = "CreateBranch"
 
 // CreateBranchRequest generates a "aws/request.Request" representing the
@@ -576,6 +669,99 @@ func (c *Amplify) DeleteApp(input *DeleteAppInput) (*DeleteAppOutput, error) {
 // for more information on using Contexts.
 func (c *Amplify) DeleteAppWithContext(ctx aws.Context, input *DeleteAppInput, opts ...request.Option) (*DeleteAppOutput, error) {
 	req, out := c.DeleteAppRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteBackendEnvironment = "DeleteBackendEnvironment"
+
+// DeleteBackendEnvironmentRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteBackendEnvironment operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteBackendEnvironment for more information on using the DeleteBackendEnvironment
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteBackendEnvironmentRequest method.
+//    req, resp := client.DeleteBackendEnvironmentRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/DeleteBackendEnvironment
+func (c *Amplify) DeleteBackendEnvironmentRequest(input *DeleteBackendEnvironmentInput) (req *request.Request, output *DeleteBackendEnvironmentOutput) {
+	op := &request.Operation{
+		Name:       opDeleteBackendEnvironment,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/apps/{appId}/backendenvironments/{environmentName}",
+	}
+
+	if input == nil {
+		input = &DeleteBackendEnvironmentInput{}
+	}
+
+	output = &DeleteBackendEnvironmentOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteBackendEnvironment API operation for AWS Amplify.
+//
+// Delete backend environment for an Amplify App.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Amplify's
+// API operation DeleteBackendEnvironment for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Exception thrown when a request contains unexpected data.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Exception thrown when an operation fails due to a lack of access.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Exception thrown when an entity has not been found during an operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   Exception thrown when the service fails to perform an operation due to an
+//   internal issue.
+//
+//   * ErrCodeDependentServiceFailureException "DependentServiceFailureException"
+//   Exception thrown when an operation fails due to a dependent service throwing
+//   an exception.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/DeleteBackendEnvironment
+func (c *Amplify) DeleteBackendEnvironment(input *DeleteBackendEnvironmentInput) (*DeleteBackendEnvironmentOutput, error) {
+	req, out := c.DeleteBackendEnvironmentRequest(input)
+	return out, req.Send()
+}
+
+// DeleteBackendEnvironmentWithContext is the same as DeleteBackendEnvironment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteBackendEnvironment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Amplify) DeleteBackendEnvironmentWithContext(ctx aws.Context, input *DeleteBackendEnvironmentInput, opts ...request.Option) (*DeleteBackendEnvironmentOutput, error) {
+	req, out := c.DeleteBackendEnvironmentRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1224,6 +1410,95 @@ func (c *Amplify) GetArtifactUrlWithContext(ctx aws.Context, input *GetArtifactU
 	return out, req.Send()
 }
 
+const opGetBackendEnvironment = "GetBackendEnvironment"
+
+// GetBackendEnvironmentRequest generates a "aws/request.Request" representing the
+// client's request for the GetBackendEnvironment operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetBackendEnvironment for more information on using the GetBackendEnvironment
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetBackendEnvironmentRequest method.
+//    req, resp := client.GetBackendEnvironmentRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/GetBackendEnvironment
+func (c *Amplify) GetBackendEnvironmentRequest(input *GetBackendEnvironmentInput) (req *request.Request, output *GetBackendEnvironmentOutput) {
+	op := &request.Operation{
+		Name:       opGetBackendEnvironment,
+		HTTPMethod: "GET",
+		HTTPPath:   "/apps/{appId}/backendenvironments/{environmentName}",
+	}
+
+	if input == nil {
+		input = &GetBackendEnvironmentInput{}
+	}
+
+	output = &GetBackendEnvironmentOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetBackendEnvironment API operation for AWS Amplify.
+//
+// Retrieves a backend environment for an Amplify App.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Amplify's
+// API operation GetBackendEnvironment for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Exception thrown when a request contains unexpected data.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Exception thrown when an operation fails due to a lack of access.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   Exception thrown when an entity has not been found during an operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   Exception thrown when the service fails to perform an operation due to an
+//   internal issue.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/GetBackendEnvironment
+func (c *Amplify) GetBackendEnvironment(input *GetBackendEnvironmentInput) (*GetBackendEnvironmentOutput, error) {
+	req, out := c.GetBackendEnvironmentRequest(input)
+	return out, req.Send()
+}
+
+// GetBackendEnvironmentWithContext is the same as GetBackendEnvironment with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetBackendEnvironment for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Amplify) GetBackendEnvironmentWithContext(ctx aws.Context, input *GetBackendEnvironmentInput, opts ...request.Option) (*GetBackendEnvironmentOutput, error) {
+	req, out := c.GetBackendEnvironmentRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetBranch = "GetBranch"
 
 // GetBranchRequest generates a "aws/request.Request" representing the
@@ -1759,6 +2034,92 @@ func (c *Amplify) ListArtifacts(input *ListArtifactsInput) (*ListArtifactsOutput
 // for more information on using Contexts.
 func (c *Amplify) ListArtifactsWithContext(ctx aws.Context, input *ListArtifactsInput, opts ...request.Option) (*ListArtifactsOutput, error) {
 	req, out := c.ListArtifactsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListBackendEnvironments = "ListBackendEnvironments"
+
+// ListBackendEnvironmentsRequest generates a "aws/request.Request" representing the
+// client's request for the ListBackendEnvironments operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListBackendEnvironments for more information on using the ListBackendEnvironments
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListBackendEnvironmentsRequest method.
+//    req, resp := client.ListBackendEnvironmentsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/ListBackendEnvironments
+func (c *Amplify) ListBackendEnvironmentsRequest(input *ListBackendEnvironmentsInput) (req *request.Request, output *ListBackendEnvironmentsOutput) {
+	op := &request.Operation{
+		Name:       opListBackendEnvironments,
+		HTTPMethod: "GET",
+		HTTPPath:   "/apps/{appId}/backendenvironments",
+	}
+
+	if input == nil {
+		input = &ListBackendEnvironmentsInput{}
+	}
+
+	output = &ListBackendEnvironmentsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListBackendEnvironments API operation for AWS Amplify.
+//
+// Lists backend environments for an Amplify App.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Amplify's
+// API operation ListBackendEnvironments for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   Exception thrown when a request contains unexpected data.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   Exception thrown when an operation fails due to a lack of access.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   Exception thrown when the service fails to perform an operation due to an
+//   internal issue.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/amplify-2017-07-25/ListBackendEnvironments
+func (c *Amplify) ListBackendEnvironments(input *ListBackendEnvironmentsInput) (*ListBackendEnvironmentsOutput, error) {
+	req, out := c.ListBackendEnvironmentsRequest(input)
+	return out, req.Send()
+}
+
+// ListBackendEnvironmentsWithContext is the same as ListBackendEnvironments with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListBackendEnvironments for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Amplify) ListBackendEnvironmentsWithContext(ctx aws.Context, input *ListBackendEnvironmentsInput, opts ...request.Option) (*ListBackendEnvironmentsOutput, error) {
+	req, out := c.ListBackendEnvironmentsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3398,6 +3759,84 @@ func (s *AutoBranchCreationConfig) SetStage(v string) *AutoBranchCreationConfig 
 	return s
 }
 
+// Backend environment for an Amplify App.
+type BackendEnvironment struct {
+	_ struct{} `type:"structure"`
+
+	// Arn for a backend environment, part of an Amplify App.
+	//
+	// BackendEnvironmentArn is a required field
+	BackendEnvironmentArn *string `locationName:"backendEnvironmentArn" min:"1" type:"string" required:"true"`
+
+	// Creation date and time for a backend environment, part of an Amplify App.
+	//
+	// CreateTime is a required field
+	CreateTime *time.Time `locationName:"createTime" type:"timestamp" required:"true"`
+
+	// Name of deployment artifacts.
+	DeploymentArtifacts *string `locationName:"deploymentArtifacts" min:"1" type:"string"`
+
+	// Name for a backend environment, part of an Amplify App.
+	//
+	// EnvironmentName is a required field
+	EnvironmentName *string `locationName:"environmentName" min:"1" type:"string" required:"true"`
+
+	// CloudFormation stack name of backend environment.
+	StackName *string `locationName:"stackName" min:"1" type:"string"`
+
+	// Last updated date and time for a backend environment, part of an Amplify
+	// App.
+	//
+	// UpdateTime is a required field
+	UpdateTime *time.Time `locationName:"updateTime" type:"timestamp" required:"true"`
+}
+
+// String returns the string representation
+func (s BackendEnvironment) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackendEnvironment) GoString() string {
+	return s.String()
+}
+
+// SetBackendEnvironmentArn sets the BackendEnvironmentArn field's value.
+func (s *BackendEnvironment) SetBackendEnvironmentArn(v string) *BackendEnvironment {
+	s.BackendEnvironmentArn = &v
+	return s
+}
+
+// SetCreateTime sets the CreateTime field's value.
+func (s *BackendEnvironment) SetCreateTime(v time.Time) *BackendEnvironment {
+	s.CreateTime = &v
+	return s
+}
+
+// SetDeploymentArtifacts sets the DeploymentArtifacts field's value.
+func (s *BackendEnvironment) SetDeploymentArtifacts(v string) *BackendEnvironment {
+	s.DeploymentArtifacts = &v
+	return s
+}
+
+// SetEnvironmentName sets the EnvironmentName field's value.
+func (s *BackendEnvironment) SetEnvironmentName(v string) *BackendEnvironment {
+	s.EnvironmentName = &v
+	return s
+}
+
+// SetStackName sets the StackName field's value.
+func (s *BackendEnvironment) SetStackName(v string) *BackendEnvironment {
+	s.StackName = &v
+	return s
+}
+
+// SetUpdateTime sets the UpdateTime field's value.
+func (s *BackendEnvironment) SetUpdateTime(v time.Time) *BackendEnvironment {
+	s.UpdateTime = &v
+	return s
+}
+
 // Branch for an Amplify App, which maps to a 3rd party repository branch.
 type Branch struct {
 	_ struct{} `type:"structure"`
@@ -3920,6 +4359,115 @@ func (s CreateAppOutput) GoString() string {
 // SetApp sets the App field's value.
 func (s *CreateAppOutput) SetApp(v *App) *CreateAppOutput {
 	s.App = v
+	return s
+}
+
+// Request structure for a backend environment create request.
+type CreateBackendEnvironmentInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id for an Amplify App.
+	//
+	// AppId is a required field
+	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
+
+	// Name of deployment artifacts.
+	DeploymentArtifacts *string `locationName:"deploymentArtifacts" min:"1" type:"string"`
+
+	// Name for the backend environment.
+	//
+	// EnvironmentName is a required field
+	EnvironmentName *string `locationName:"environmentName" min:"1" type:"string" required:"true"`
+
+	// CloudFormation stack name of backend environment.
+	StackName *string `locationName:"stackName" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateBackendEnvironmentInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateBackendEnvironmentInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateBackendEnvironmentInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateBackendEnvironmentInput"}
+	if s.AppId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AppId"))
+	}
+	if s.AppId != nil && len(*s.AppId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
+	}
+	if s.DeploymentArtifacts != nil && len(*s.DeploymentArtifacts) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DeploymentArtifacts", 1))
+	}
+	if s.EnvironmentName == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnvironmentName"))
+	}
+	if s.EnvironmentName != nil && len(*s.EnvironmentName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EnvironmentName", 1))
+	}
+	if s.StackName != nil && len(*s.StackName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("StackName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAppId sets the AppId field's value.
+func (s *CreateBackendEnvironmentInput) SetAppId(v string) *CreateBackendEnvironmentInput {
+	s.AppId = &v
+	return s
+}
+
+// SetDeploymentArtifacts sets the DeploymentArtifacts field's value.
+func (s *CreateBackendEnvironmentInput) SetDeploymentArtifacts(v string) *CreateBackendEnvironmentInput {
+	s.DeploymentArtifacts = &v
+	return s
+}
+
+// SetEnvironmentName sets the EnvironmentName field's value.
+func (s *CreateBackendEnvironmentInput) SetEnvironmentName(v string) *CreateBackendEnvironmentInput {
+	s.EnvironmentName = &v
+	return s
+}
+
+// SetStackName sets the StackName field's value.
+func (s *CreateBackendEnvironmentInput) SetStackName(v string) *CreateBackendEnvironmentInput {
+	s.StackName = &v
+	return s
+}
+
+// Result structure for create backend environment.
+type CreateBackendEnvironmentOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Backend environment structure for an amplify App.
+	//
+	// BackendEnvironment is a required field
+	BackendEnvironment *BackendEnvironment `locationName:"backendEnvironment" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateBackendEnvironmentOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateBackendEnvironmentOutput) GoString() string {
+	return s.String()
+}
+
+// SetBackendEnvironment sets the BackendEnvironment field's value.
+func (s *CreateBackendEnvironmentOutput) SetBackendEnvironment(v *BackendEnvironment) *CreateBackendEnvironmentOutput {
+	s.BackendEnvironment = v
 	return s
 }
 
@@ -4631,6 +5179,91 @@ func (s *DeleteAppOutput) SetApp(v *App) *DeleteAppOutput {
 	return s
 }
 
+// Request structure for delete backend environment request.
+type DeleteBackendEnvironmentInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id of an Amplify App.
+	//
+	// AppId is a required field
+	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
+
+	// Name of a backend environment of an Amplify App.
+	//
+	// EnvironmentName is a required field
+	EnvironmentName *string `location:"uri" locationName:"environmentName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteBackendEnvironmentInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteBackendEnvironmentInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteBackendEnvironmentInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteBackendEnvironmentInput"}
+	if s.AppId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AppId"))
+	}
+	if s.AppId != nil && len(*s.AppId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
+	}
+	if s.EnvironmentName == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnvironmentName"))
+	}
+	if s.EnvironmentName != nil && len(*s.EnvironmentName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EnvironmentName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAppId sets the AppId field's value.
+func (s *DeleteBackendEnvironmentInput) SetAppId(v string) *DeleteBackendEnvironmentInput {
+	s.AppId = &v
+	return s
+}
+
+// SetEnvironmentName sets the EnvironmentName field's value.
+func (s *DeleteBackendEnvironmentInput) SetEnvironmentName(v string) *DeleteBackendEnvironmentInput {
+	s.EnvironmentName = &v
+	return s
+}
+
+// Result structure of a delete backend environment result.
+type DeleteBackendEnvironmentOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Backend environment structure for an Amplify App.
+	//
+	// BackendEnvironment is a required field
+	BackendEnvironment *BackendEnvironment `locationName:"backendEnvironment" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteBackendEnvironmentOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteBackendEnvironmentOutput) GoString() string {
+	return s.String()
+}
+
+// SetBackendEnvironment sets the BackendEnvironment field's value.
+func (s *DeleteBackendEnvironmentOutput) SetBackendEnvironment(v *BackendEnvironment) *DeleteBackendEnvironmentOutput {
+	s.BackendEnvironment = v
+	return s
+}
+
 // Request structure for delete branch request.
 type DeleteBranchInput struct {
 	_ struct{} `type:"structure"`
@@ -5304,6 +5937,91 @@ func (s *GetArtifactUrlOutput) SetArtifactId(v string) *GetArtifactUrlOutput {
 // SetArtifactUrl sets the ArtifactUrl field's value.
 func (s *GetArtifactUrlOutput) SetArtifactUrl(v string) *GetArtifactUrlOutput {
 	s.ArtifactUrl = &v
+	return s
+}
+
+// Request structure for get backend environment request.
+type GetBackendEnvironmentInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id for an Amplify App.
+	//
+	// AppId is a required field
+	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
+
+	// Name for the backend environment.
+	//
+	// EnvironmentName is a required field
+	EnvironmentName *string `location:"uri" locationName:"environmentName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetBackendEnvironmentInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetBackendEnvironmentInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetBackendEnvironmentInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetBackendEnvironmentInput"}
+	if s.AppId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AppId"))
+	}
+	if s.AppId != nil && len(*s.AppId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
+	}
+	if s.EnvironmentName == nil {
+		invalidParams.Add(request.NewErrParamRequired("EnvironmentName"))
+	}
+	if s.EnvironmentName != nil && len(*s.EnvironmentName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EnvironmentName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAppId sets the AppId field's value.
+func (s *GetBackendEnvironmentInput) SetAppId(v string) *GetBackendEnvironmentInput {
+	s.AppId = &v
+	return s
+}
+
+// SetEnvironmentName sets the EnvironmentName field's value.
+func (s *GetBackendEnvironmentInput) SetEnvironmentName(v string) *GetBackendEnvironmentInput {
+	s.EnvironmentName = &v
+	return s
+}
+
+// Result structure for get backend environment result.
+type GetBackendEnvironmentOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Backend environment structure for an an Amplify App.
+	//
+	// BackendEnvironment is a required field
+	BackendEnvironment *BackendEnvironment `locationName:"backendEnvironment" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s GetBackendEnvironmentOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetBackendEnvironmentOutput) GoString() string {
+	return s.String()
+}
+
+// SetBackendEnvironment sets the BackendEnvironment field's value.
+func (s *GetBackendEnvironmentOutput) SetBackendEnvironment(v *BackendEnvironment) *GetBackendEnvironmentOutput {
+	s.BackendEnvironment = v
 	return s
 }
 
@@ -6011,6 +6729,119 @@ func (s *ListArtifactsOutput) SetArtifacts(v []*Artifact) *ListArtifactsOutput {
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListArtifactsOutput) SetNextToken(v string) *ListArtifactsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// Request structure for list backend environments request.
+type ListBackendEnvironmentsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique Id for an amplify App.
+	//
+	// AppId is a required field
+	AppId *string `location:"uri" locationName:"appId" min:"1" type:"string" required:"true"`
+
+	// Name of the backend environment
+	EnvironmentName *string `locationName:"environmentName" min:"1" type:"string"`
+
+	// Maximum number of records to list in a single response.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// Pagination token. Set to null to start listing backen environments from start.
+	// If a non-null pagination token is returned in a result, then pass its value
+	// in here to list more backend environments.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListBackendEnvironmentsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBackendEnvironmentsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListBackendEnvironmentsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListBackendEnvironmentsInput"}
+	if s.AppId == nil {
+		invalidParams.Add(request.NewErrParamRequired("AppId"))
+	}
+	if s.AppId != nil && len(*s.AppId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AppId", 1))
+	}
+	if s.EnvironmentName != nil && len(*s.EnvironmentName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EnvironmentName", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAppId sets the AppId field's value.
+func (s *ListBackendEnvironmentsInput) SetAppId(v string) *ListBackendEnvironmentsInput {
+	s.AppId = &v
+	return s
+}
+
+// SetEnvironmentName sets the EnvironmentName field's value.
+func (s *ListBackendEnvironmentsInput) SetEnvironmentName(v string) *ListBackendEnvironmentsInput {
+	s.EnvironmentName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListBackendEnvironmentsInput) SetMaxResults(v int64) *ListBackendEnvironmentsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListBackendEnvironmentsInput) SetNextToken(v string) *ListBackendEnvironmentsInput {
+	s.NextToken = &v
+	return s
+}
+
+// Result structure for list backend environments result.
+type ListBackendEnvironmentsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of backend environments for an Amplify App.
+	//
+	// BackendEnvironments is a required field
+	BackendEnvironments []*BackendEnvironment `locationName:"backendEnvironments" type:"list" required:"true"`
+
+	// Pagination token. If non-null pagination token is returned in a result, then
+	// pass its value in another request to fetch more entries.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListBackendEnvironmentsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListBackendEnvironmentsOutput) GoString() string {
+	return s.String()
+}
+
+// SetBackendEnvironments sets the BackendEnvironments field's value.
+func (s *ListBackendEnvironmentsOutput) SetBackendEnvironments(v []*BackendEnvironment) *ListBackendEnvironmentsOutput {
+	s.BackendEnvironments = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListBackendEnvironmentsOutput) SetNextToken(v string) *ListBackendEnvironmentsOutput {
 	s.NextToken = &v
 	return s
 }

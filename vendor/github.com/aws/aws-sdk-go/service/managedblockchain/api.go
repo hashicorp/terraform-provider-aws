@@ -1185,10 +1185,12 @@ func (c *ManagedBlockchain) ListInvitationsPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInvitationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInvitationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1334,10 +1336,12 @@ func (c *ManagedBlockchain) ListMembersPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMembersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMembersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1484,10 +1488,12 @@ func (c *ManagedBlockchain) ListNetworksPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNetworksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNetworksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1633,10 +1639,12 @@ func (c *ManagedBlockchain) ListNodesPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNodesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNodesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1783,10 +1791,12 @@ func (c *ManagedBlockchain) ListProposalVotesPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListProposalVotesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListProposalVotesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1936,10 +1946,12 @@ func (c *ManagedBlockchain) ListProposalsPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListProposalsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListProposalsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
