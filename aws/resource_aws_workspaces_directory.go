@@ -130,7 +130,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		}
 		d.SetPartial("self_service_permission")
 	}
-	log.Printf("[DEBUG] Workspaces directory %q self-sevice permissions are set", d.Id())
+	log.Printf("[DEBUG] Workspaces directory %q self-service permissions are set", d.Id())
 
 	d.Partial(false)
 
@@ -180,7 +180,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 		if err != nil {
 			return fmt.Errorf("error updating self service permissions: %s", err)
 		}
-		log.Printf("[DEBUG] Workspaces directory %q self-sevice permissions are set", d.Id())
+		log.Printf("[DEBUG] Workspaces directory %q self-service permissions are set", d.Id())
 		d.SetPartial("self_service_permission")
 	}
 
