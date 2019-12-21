@@ -318,9 +318,7 @@ resource "aws_iam_role_policy_attachment" "workspaces-default-self-service-acces
 }
 
 func testAccWorkspacesDirectoryConfigA(booster string) string {
-	return fmt.Sprintf(`
-%s
-
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster) + fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
@@ -330,13 +328,11 @@ resource "aws_workspaces_directory" "main" {
     Directory = "tf-acctest.example.com"
   }
 }
-`, testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster))
+`)
 }
 
 func testAccWorkspacesDirectoryConfigB(booster string) string {
-	return fmt.Sprintf(`
-%s
-
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster) + fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
@@ -353,13 +349,11 @@ resource "aws_workspaces_directory" "main" {
     Directory = "tf-acctest.example.com"
   }
 }
-`, testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster))
+`)
 }
 
 func testAccWorkspacesDirectoryConfigC(booster string) string {
-	return fmt.Sprintf(`
-%s
-
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster) + fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
 
@@ -368,16 +362,14 @@ resource "aws_workspaces_directory" "main" {
     switch_running_mode = true
   }
 }
-`, testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster))
+`)
 }
 
 func testAccWorkspacesDirectoryConfig_subnetIds(booster string) string {
-	return fmt.Sprintf(`
-%s
-
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster) + fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
   subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
 }
-`, testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster))
+`)
 }
