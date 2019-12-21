@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWorkspacesDirectory() *schema.Resource {
@@ -188,7 +188,7 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 	if d.HasChange("tags") {
 		log.Printf("[DEBUG] Modifying workspaces directory %q tags...", d.Id())
 		o, n := d.GetChange("tags")
-		if err := keyvaluetags.WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := WorkspacesUpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 		log.Printf("[DEBUG] Workspaces directory %q tags are modified", d.Id())
