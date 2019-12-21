@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -76,6 +75,13 @@ func TestAccAWSSfnStateMachine_type_express(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSfnStateMachineConfigType(rName, "STANDARD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "type", sfn.StateMachineTypeStandard)),
 			},
 		},
 	})
@@ -158,7 +164,7 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			if wserr, ok := err.(awserr.Error); ok && wserr.Code() == sfn.ErrCodeStateMachineDoesNotExist {
+			if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
 				return nil
 			}
 			return err
@@ -220,21 +226,7 @@ resource "aws_iam_role_policy" "iam_policy_for_sfn" {
         "lambda:InvokeFunction"
       ],
         "Resource": "${aws_lambda_function.test.arn}"
-	},
-	{
-    "Effect": "Allow",
-    "Action": [
-		"logs:CreateLogDelivery",
-		"logs:GetLogDelivery",
-		"logs:UpdateLogDelivery",
-		"logs:DeleteLogDelivery",
-		"logs:ListLogDeliveries",
-		"logs:PutResourcePolicy",
-		"logs:DescribeResourcePolicies",
-		"logs:DescribeLogGroups"
-    ],
-    "Resource": "*"
-  }
+	}
   ]
 }
 EOF
