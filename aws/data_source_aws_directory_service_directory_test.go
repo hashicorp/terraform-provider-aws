@@ -106,9 +106,7 @@ resource "aws_subnet" "secondary" {
 }
 
 func testAccDataSourceAwsDirectoryServiceDirectoryConfig_SimpleAD(alias string) string {
-	return fmt.Sprintf(`
-%s
-
+	return testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("simple-ad") + fmt.Sprintf(`
 resource "aws_directory_service_directory" "test-simple-ad" {
   type = "SimpleAD"
   size = "Small"
@@ -129,13 +127,11 @@ resource "aws_directory_service_directory" "test-simple-ad" {
 data "aws_directory_service_directory" "test-simple-ad" {
   directory_id = "${aws_directory_service_directory.test-simple-ad.id}"
 }
-`, testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("simple-ad"), alias)
+`, alias)
 }
 
 func testAccDataSourceAwsDirectoryServiceDirectoryConfig_MicrosoftAD(alias string) string {
-	return fmt.Sprintf(`
-%s
-
+	return testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("microsoft-ad") + fmt.Sprintf(`
 resource "aws_directory_service_directory" "test-microsoft-ad" {
   type = "MicrosoftAD"
   edition = "Standard"
@@ -156,5 +152,5 @@ resource "aws_directory_service_directory" "test-microsoft-ad" {
 data "aws_directory_service_directory" "test-microsoft-ad" {
   directory_id = "${aws_directory_service_directory.test-microsoft-ad.id}"
 }
-`, testAccDataSourceAwsDirectoryServiceDirectoryConfig_Prerequisites("microsoft-ad"), alias)
+`, alias)
 }
