@@ -35,6 +35,40 @@ EOF
 }
 ```
 
+## Express State Machine Example
+
+```hcl
+# ...
+
+resource "aws_sfn_state_machine" "sfn_state_machine" {
+  name     = "my-state-machine"
+  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+  type     = "EXPRESS"
+
+  logging_configuration {
+	destinations {
+		cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
+    }
+	include_execution_data = true
+	level                  = "ALL"
+  }
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.lambda.arn}",
+      "End": true
+    }
+  }
+}
+EOF
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -42,7 +76,19 @@ The following arguments are supported:
 * `name` - (Required) The name of the state machine.
 * `definition` - (Required) The Amazon States Language definition of the state machine.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to use for this state machine.
+* `type` - (Optional) Determines whether a `Standard` or `Express` state machine is created. If not set, Standard is created.
+* `logging_configuration` - (Optional) Configuration block to enable State Machine logging. Detailed below. Defines what execution history events are logged and where they are logged. Can only be used with an `EXPRESS` State Machine.
 * `tags` - (Optional) Key-value mapping of resource tags
+
+### `logging_configuration` Configuration Block
+
+* `destinations` - (Required) Configuration block to define logging destinations. Detailed below.
+* `include_execution_data` - (Required) Determines whether execution history data is included in your log. When set to false, data is excluded.
+* `level` - (Required) Defines which category of execution history events are logged. Possible values are `INFO`, `ERROR`, `FATAL` and `OFF`.
+
+### `destinations` Configuration Block
+
+* `cloudwatch_log_group_arn` - (Optional) Amazon Resource Name (ARN) of Cloudwatch Log Group.
 
 ## Attributes Reference
 
