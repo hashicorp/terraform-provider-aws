@@ -57,6 +57,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Default:  sfn.StateMachineTypeStandard,
 				ValidateFunc: validation.StringInSlice([]string{
 					sfn.StateMachineTypeStandard,
@@ -66,6 +67,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 			"logging_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -85,11 +87,11 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 						},
 						"include_execution_data": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Required: true,
 						},
 						"level": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								sfn.LogLevelAll,
 								sfn.LogLevelError,
@@ -270,10 +272,8 @@ func expandSfnLoggingConfig(config []interface{}) *sfn.LoggingConfiguration {
 	}
 
 	m := config[0].(map[string]interface{})
-	destinations := expandSfnDestinations(m["destinations"].([]interface{}))
-
 	loggingConfiguration := &sfn.LoggingConfiguration{
-		Destinations:         destinations,
+		Destinations:         expandSfnDestinations(m["destinations"].([]interface{})),
 		IncludeExecutionData: aws.Bool(m["include_execution_data"].(bool)),
 		Level:                aws.String(m["level"].(string)),
 	}

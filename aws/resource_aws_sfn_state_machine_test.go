@@ -92,13 +92,13 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfigLogging(rName, "ALL", true),
+				Config: testAccAWSSfnStateMachineConfigLogging(rName, "OFF", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "ALL"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "logs", regexp.MustCompile(`log-group.+`)),
 				),
 			},
@@ -106,28 +106,6 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSSfnStateMachineConfigLogging(rName, "FATAL", false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "FATAL"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "logs", regexp.MustCompile(`log-group.+`)),
-				),
-			},
-			{
-				Config: testAccAWSSfnStateMachineConfigLogging(rName, "OFF", false),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "logs", regexp.MustCompile(`log-group.+`)),
-				),
 			},
 		},
 	})
