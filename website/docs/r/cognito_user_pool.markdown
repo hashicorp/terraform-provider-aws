@@ -35,7 +35,7 @@ The following arguments are supported:
 * `lambda_config` (Optional) - A container for the AWS [Lambda triggers](#lambda-configuration) associated with the user pool.
 * `mfa_configuration` - (Optional, Default: OFF) Set to enable multi-factor authentication. Must be one of the following values (ON, OFF, OPTIONAL)
 * `password_policy` (Optional) - A container for information about the [user pool password policy](#password-policy).
-* `schema` (Optional) - A container with the [schema attributes](#schema-attributes) of a user pool. Maximum of 50 attributes.
+* `schema` (Optional) - A container with the [schema attributes](#schema-attributes) of a user pool. Schema attributes from the [standard attribute set](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) only need to be specified if they are different from the default configuration. Maximum of 50 attributes.
 * `sms_authentication_message` - (Optional) A string representing the SMS authentication message.
 * `sms_configuration` (Optional) - The [SMS Configuration](#sms-configuration).
 * `sms_verification_message` - (Optional) A string representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
@@ -92,6 +92,8 @@ The following arguments are supported:
 
 ~> **NOTE:** When defining an `attribute_data_type` of `String` or `Number`, the respective attribute constraints configuration block (e.g `string_attribute_constraints` or `number_attribute_contraints`) is required to prevent recreation of the Terraform resource. This requirement is true for both standard (e.g. name, email) and custom schema attributes.
 
+~> **NOTE:** Any changes to the schema attributes will re-create the User Pool.
+
   * `attribute_data_type` (Required) - The attribute data type. Must be one of `Boolean`, `Number`, `String`, `DateTime`.
   * `developer_only_attribute` (Optional) - Specifies whether the attribute type is developer only.
   * `mutable` (Optional) - Specifies whether the attribute can be changed once it has been created.
@@ -99,6 +101,24 @@ The following arguments are supported:
   * `number_attribute_constraints` (Optional) - Specifies the [constraints for an attribute of the number type](#number-attribute-constraints).
   * `required` (Optional) - Specifies whether a user pool attribute is required. If the attribute is required and the user does not provide a value, registration or sign-in will fail.
   * `string_attribute_constraints` (Optional) -Specifies the [constraints for an attribute of the string type](#string-attribute-constraints).
+
+##### Defaults for Standard Attributes
+
+The [standard attributes](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes) have the following defaults. Note that attributes which match the default values are not stored in Terraform state.
+
+```hcl
+schema {
+  name                     = <name>
+  attribute                = <appropriate type>
+  developer_only_attribute = false
+  mutable                  = true  // false for "sub"
+  required                 = false // true for "sub"
+  string_attribute_constraints { // if it's a string
+    min_length = 0    // 10 for "birthdate"
+    max_length = 2048 // 10 for "birthdate"
+  }
+}
+```
 
 ##### Number Attribute Constraints
 
