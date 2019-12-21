@@ -99,7 +99,7 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "ALL"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "logs", regexp.MustCompile(`log-group/.+`)),
 				),
 			},
 			{
@@ -115,7 +115,7 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "FATAL"),
-					//testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "logs", regexp.MustCompile(`log-group/.+`)),
 				),
 			},
 			{
@@ -126,8 +126,7 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
-					//resource.TestCheckResourceAttrSet(resourceName,"logging_configuration.0.destinations.0.cloudwatch_log_group_arn"),
-					//testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "logs", regexp.MustCompile(`log-group/.+`)),
 				),
 			},
 		},
