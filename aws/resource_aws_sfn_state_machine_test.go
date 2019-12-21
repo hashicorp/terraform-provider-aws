@@ -70,36 +70,7 @@ func TestAccAWSSfnStateMachine_type_express(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "EXPRESS")),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
-	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSfnStateMachineConfigLogging(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "true"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "logs", regexp.MustCompile(`log-group.+`)),
-				),
+					resource.TestCheckResourceAttr(resourceName, "type", sfn.StateMachineTypeExpress)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -320,50 +291,6 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 }
 `, rName, rMaxAttempts)
-}
-
-func testAccAWSSfnStateMachineConfigLogging(rName string) string {
-	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_sfn_state_machine" "test" {
-  name     = %[1]q
-  type     = "EXPRESS"
-  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
-
-  logging_configuration {
-	destinations {
-		cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
-    }
-	include_execution_data = true
-	level                  = "ALL"
-  }
-
-  definition = <<EOF
-{
-  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
-  "StartAt": "HelloWorld",
-  "States": {
-    "HelloWorld": {
-      "Type": "Task",
-      "Resource": "${aws_lambda_function.test.arn}",
-      "Retry": [
-        {
-          "ErrorEquals": ["States.ALL"],
-          "IntervalSeconds": 5,
-          "MaxAttempts": 5,
-          "BackoffRate": 8.0
-        }
-      ],
-      "End": true
-    }
-  }
-}
-EOF
-}
-`, rName)
 }
 
 func testAccAWSSfnStateMachineConfigType(rName, typ string) string {
