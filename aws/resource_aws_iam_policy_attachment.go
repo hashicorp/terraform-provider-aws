@@ -20,6 +20,9 @@ func resourceAwsIamPolicyAttachment() *schema.Resource {
 		Read:   resourceAwsIamPolicyAttachmentRead,
 		Update: resourceAwsIamPolicyAttachmentUpdate,
 		Delete: resourceAwsIamPolicyAttachmentDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsIamPolicyAttachmentImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -375,4 +378,10 @@ func detachPolicyFromGroups(conn *iam.IAM, groups []*string, arn string) error {
 		}
 	}
 	return nil
+}
+
+func resourceAwsIamPolicyAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.SetId(d.Id())
+	d.Set("policy_arn", d.Id())
+	return []*schema.ResourceData{d}, nil
 }

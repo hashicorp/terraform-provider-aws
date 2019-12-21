@@ -50,6 +50,11 @@ func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
 						[]string{roleName2, roleName3}, []string{groupName2, groupName3}, &out),
 				),
 			},
+			{
+				ResourceName:      policyName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
