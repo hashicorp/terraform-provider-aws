@@ -3,7 +3,8 @@
 ENHANCEMENTS:
 
 * resource/aws_cloudformation_stack: Prevent difference with `Transform` templates showing processed template (support SAM templates) [GH-9006]
-* resource/aws_db_instance: Remove `indentifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
+* resource/aws_db_instance: Remove `identifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
+* resource/aws_rds_cluster_instance: Allow updating `ca_cert_identifier` for `aws_rds_cluster_instance` [GH-10954]
 
 BUG FIXES:
 
