@@ -217,9 +217,9 @@ func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
 			workspaces.WorkspaceDirectoryStateRegistered,
+			workspaces.WorkspaceDirectoryStateDeregistering,
 		},
 		Target: []string{
-			workspaces.WorkspaceDirectoryStateDeregistering,
 			workspaces.WorkspaceDirectoryStateDeregistered,
 		},
 		Refresh: workspacesDirectoryRefreshStateFunc(conn, d.Id()),
