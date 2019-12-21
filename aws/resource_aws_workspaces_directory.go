@@ -106,9 +106,10 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
 		},
-		Target:  []string{workspaces.WorkspaceDirectoryStateRegistered},
-		Refresh: workspacesDirectoryRefreshStateFunc(conn, directoryId),
-		Timeout: 10 * time.Minute,
+		Target:       []string{workspaces.WorkspaceDirectoryStateRegistered},
+		Refresh:      workspacesDirectoryRefreshStateFunc(conn, directoryId),
+		PollInterval: 30 * time.Second,
+		Timeout:      10 * time.Minute,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -222,8 +223,9 @@ func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface
 		Target: []string{
 			workspaces.WorkspaceDirectoryStateDeregistered,
 		},
-		Refresh: workspacesDirectoryRefreshStateFunc(conn, d.Id()),
-		Timeout: 10 * time.Minute,
+		Refresh:      workspacesDirectoryRefreshStateFunc(conn, d.Id()),
+		PollInterval: 30 * time.Second,
+		Timeout:      10 * time.Minute,
 	}
 
 	_, err = stateConf.WaitForState()
