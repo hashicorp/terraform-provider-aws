@@ -805,6 +805,43 @@ func TestAccAWSRDSClusterInstance_PerformanceInsightsKmsKeyId_AuroraPostgresql_D
 	})
 }
 
+func TestAccAWSRDSClusterInstance_CACertificateIdentifier(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterInstanceConfig_CACertificateIdentifier(rName, "rds-ca-2015"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2015"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+				},
+			},
+			{
+				Config: testAccAWSRDSClusterInstanceConfig_CACertificateIdentifier(rName, "rds-ca-2019"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
+				),
+			},
+		},
+	})
+}
+
 // Add some random to the name, to avoid collision
 func testAccAWSClusterInstanceConfig(n int) string {
 	return fmt.Sprintf(`
@@ -1377,4 +1414,23 @@ resource "aws_rds_cluster_instance" "cluster_instances" {
   copy_tags_to_snapshot = %t
 }
 `, n, n, f)
+}
+
+func testAccAWSRDSClusterInstanceConfig_CACertificateIdentifier(rName string, caCertificateIdentifier string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %q
+  master_username     = "foo"
+  master_password     = "mustbeeightcharacters"
+  skip_final_snapshot = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately   = true
+  cluster_identifier  = "${aws_rds_cluster.test.id}"
+  identifier          = %q
+  instance_class      = "db.t2.small"
+  ca_cert_identifier  = %q
+}
+`, rName, rName, caCertificateIdentifier)
 }
