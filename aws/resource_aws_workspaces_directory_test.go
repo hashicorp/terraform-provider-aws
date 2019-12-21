@@ -67,7 +67,6 @@ func testSweepWorkspacesDirectories(region string) error {
 				Refresh: workspacesDirectoryRefreshStateFunc(conn, id),
 				Timeout: 10 * time.Minute,
 			}
-
 			_, err = stateConf.WaitForState()
 			if err != nil {
 				return fmt.Errorf("error waiting for Workspace Directory %q to be deregistered: %s", id, err)
