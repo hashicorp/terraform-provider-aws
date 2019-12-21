@@ -92,7 +92,7 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfigLogging(rName, "OFF", true),
+				Config: testAccAWSSfnStateMachineConfigLogging(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -323,7 +323,7 @@ EOF
 `, rName, rMaxAttempts)
 }
 
-func testAccAWSSfnStateMachineConfigLogging(rName, logLevel string, includeData bool) string {
+func testAccAWSSfnStateMachineConfigLogging(rName string) string {
 	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -338,8 +338,8 @@ resource "aws_sfn_state_machine" "test" {
 	destinations {
 		cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
     }
-	include_execution_data = %[3]t
-	level                  = %[2]q
+	include_execution_data = true
+	level                  = ALL
   }
 
   definition = <<EOF
@@ -364,7 +364,7 @@ resource "aws_sfn_state_machine" "test" {
 }
 EOF
 }
-`, rName, logLevel, includeData)
+`, rName)
 }
 
 func testAccAWSSfnStateMachineConfigType(rName, typ string) string {
