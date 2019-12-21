@@ -16,7 +16,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
@@ -79,7 +79,7 @@ func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
