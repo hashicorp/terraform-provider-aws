@@ -338,7 +338,7 @@ resource "aws_sfn_state_machine" "test" {
 		cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
     }
 	include_execution_data = true
-	level                  = ALL
+	level                  = "ALL"
   }
 
   definition = <<EOF
