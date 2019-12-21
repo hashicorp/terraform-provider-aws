@@ -118,8 +118,8 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 		Tags:       keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SfnTags(),
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok {
-		params.LoggingConfiguration = expandSfnLoggingConfig(v.([]interface{}))
+	if v := d.Get("logging_configuration").([]interface{}); len(v) == 1 {
+		params.LoggingConfiguration = expandSfnLoggingConfig(v)
 	}
 
 	var stateMachine *sfn.CreateStateMachineOutput
@@ -185,8 +185,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("status", sm.Status)
 	d.Set("type", sm.Type)
 
-	loggingConfig := flattenSfnLoggingConfig(sm.LoggingConfiguration)
-	if err := d.Set("logging_configuration", loggingConfig); err != nil {
+	if err := d.Set("logging_configuration", flattenSfnLoggingConfig(sm.LoggingConfiguration)); err != nil {
 		log.Printf("[DEBUG] Error setting logging_configuration: %s", err)
 	}
 
@@ -216,8 +215,8 @@ func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) 
 		RoleArn:         aws.String(d.Get("role_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok {
-		params.LoggingConfiguration = expandSfnLoggingConfig(v.([]interface{}))
+	if v := d.Get("logging_configuration").([]interface{}); len(v) == 1 {
+		params.LoggingConfiguration = expandSfnLoggingConfig(v)
 	}
 
 	_, err := conn.UpdateStateMachine(params)
@@ -287,7 +286,7 @@ func flattenSfnLoggingConfig(loggingConfiguration *sfn.LoggingConfiguration) []i
 	}
 
 	m := map[string]interface{}{
-		"destinations":           flattenSfnDestinations(loggingConfiguration.Destinations[0]),
+		"destinations":           flattenSfnDestinations(loggingConfiguration.Destinations),
 		"include_execution_data": aws.BoolValue(loggingConfiguration.IncludeExecutionData),
 		"level":                  aws.StringValue(loggingConfiguration.Level),
 	}
@@ -319,12 +318,12 @@ func expandSfnDestinations(l []interface{}) []*sfn.LogDestination {
 	return logDestinations
 }
 
-func flattenSfnDestinations(destinations *sfn.LogDestination) []interface{} {
-	if destinations == nil {
-		return []interface{}{}
+func flattenSfnDestinations(destinations []*sfn.LogDestination) []interface{} {
+	if len(destinations) == 0 || destinations[0] == nil {
+		return nil
 	}
 
-	logGroup := destinations.CloudWatchLogsLogGroup.LogGroupArn
+	logGroup := destinations[0].CloudWatchLogsLogGroup.LogGroupArn
 	m := map[string]interface{}{
 		"cloudwatch_log_group_arn": aws.StringValue(logGroup),
 	}

@@ -70,8 +70,7 @@ func TestAccAWSSfnStateMachine_type_express(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "EXPRESS"),
-				),
+					resource.TestCheckResourceAttr(resourceName, "type", "EXPRESS")),
 			},
 			{
 				ResourceName:      resourceName,
