@@ -22,11 +22,6 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
 			"size": {
 				Type:     schema.TypeString,
 				Computed: true,
