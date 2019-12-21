@@ -70,7 +70,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"destinations": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -270,7 +270,7 @@ func expandSfnLoggingConfig(config []interface{}) *sfn.LoggingConfiguration {
 	}
 
 	m := config[0].(map[string]interface{})
-	destinations := expandSfnDestinations(m["destinations"].(*schema.Set).List())
+	destinations := expandSfnDestinations(m["destinations"].([]interface{}))
 
 	loggingConfiguration := &sfn.LoggingConfiguration{
 		Destinations:         destinations,

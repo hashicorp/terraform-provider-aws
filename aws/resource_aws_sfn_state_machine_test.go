@@ -99,7 +99,7 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "ALL"),
-					//testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
 				),
 			},
 			{
@@ -108,13 +108,25 @@ func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfigLogging(rName, "ERROR", false),
+				Config: testAccAWSSfnStateMachineConfigLogging(rName, "FATAL", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "FATAL"),
+					//testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
+				),
+			},
+			{
+				Config: testAccAWSSfnStateMachineConfigLogging(rName, "OFF", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "OFF"),
+					//resource.TestCheckResourceAttrSet(resourceName,"logging_configuration.0.destinations.0.cloudwatch_log_group_arn"),
 					//testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
 				),
 			},
