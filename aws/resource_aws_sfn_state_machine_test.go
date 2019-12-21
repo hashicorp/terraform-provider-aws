@@ -15,7 +15,7 @@ import (
 
 func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -58,7 +58,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 
 func TestAccAWSSfnStateMachine_type_express(t *testing.T) {
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -82,9 +82,9 @@ func TestAccAWSSfnStateMachine_type_express(t *testing.T) {
 	})
 }
 
-func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
+func TestAccAWSSfnStateMachine_logging_configuration(t *testing.T) {
 	resourceName := "aws_sfn_state_machine.test"
-	name := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -92,7 +92,47 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSfnStateMachineConfigTags1(name, "key1", "value1"),
+				Config: testAccAWSSfnStateMachineConfigLogging(rName, "ALL", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "ALL"),
+					//testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSfnStateMachineConfigLogging(rName, "ERROR", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.include_execution_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.level", "ERROR"),
+					//testAccMatchResourceAttrRegionalARN(resourceName, "logging_configuration.0.destinations.0.cloudwatch_log_group_arn", "cloudwatch", regexp.MustCompile(`role/.+`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
+	resourceName := "aws_sfn_state_machine.test"
+	rName := acctest.RandomWithPrefix("tf-acc")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -105,7 +145,7 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfigTags2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAWSSfnStateMachineConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -114,7 +154,7 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSSfnStateMachineConfigTags1(name, "key2", "value2"),
+				Config: testAccAWSSfnStateMachineConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -221,7 +261,21 @@ resource "aws_iam_role_policy" "iam_policy_for_sfn" {
         "lambda:InvokeFunction"
       ],
         "Resource": "${aws_lambda_function.test.arn}"
-      }
+	},
+	{
+    "Effect": "Allow",
+    "Action": [
+		"logs:CreateLogDelivery",
+		"logs:GetLogDelivery",
+		"logs:UpdateLogDelivery",
+		"logs:DeleteLogDelivery",
+		"logs:ListLogDeliveries",
+		"logs:PutResourcePolicy",
+		"logs:DescribeResourcePolicies",
+		"logs:DescribeLogGroups"
+    ],
+    "Resource": "*"
+  }
   ]
 }
 EOF
@@ -278,6 +332,50 @@ resource "aws_sfn_state_machine" "test" {
 EOF
 }
 `, rName, rMaxAttempts)
+}
+
+func testAccAWSSfnStateMachineConfigLogging(rName, logLevel string, includeData bool) string {
+	return testAccAWSSfnStateMachineConfigBase(rName) + fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_sfn_state_machine" "test" {
+  name     = %[1]q
+  type     = "EXPRESS"
+  role_arn = "${aws_iam_role.iam_for_sfn.arn}"
+
+  logging_configuration {
+	destinations {
+		cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.test.arn}"
+    }
+	include_execution_data = %[3]t
+	level                  = %[2]q
+  }
+
+  definition = <<EOF
+{
+  "Comment": "A Hello World example of the Amazon States Language using an AWS Lambda Function",
+  "StartAt": "HelloWorld",
+  "States": {
+    "HelloWorld": {
+      "Type": "Task",
+      "Resource": "${aws_lambda_function.test.arn}",
+      "Retry": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "IntervalSeconds": 5,
+          "MaxAttempts": 5,
+          "BackoffRate": 8.0
+        }
+      ],
+      "End": true
+    }
+  }
+}
+EOF
+}
+`, rName, logLevel, includeData)
 }
 
 func testAccAWSSfnStateMachineConfigType(rName, typ string) string {
