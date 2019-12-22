@@ -1976,28 +1976,36 @@ func KinesisUpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap inte
 	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &kinesis.RemoveTagsFromStreamInput{
-			StreamName: aws.String(identifier),
-			TagKeys:    aws.StringSlice(removedTags.Keys()),
-		}
+		chunks := removedTags.Chunks(10)
 
-		_, err := conn.RemoveTagsFromStream(input)
+		for _, chunk := range chunks {
+			input := &kinesis.RemoveTagsFromStreamInput{
+				StreamName: aws.String(identifier),
+				TagKeys:    aws.StringSlice(chunk.Keys()),
+			}
 
-		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			_, err := conn.RemoveTagsFromStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			}
 		}
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &kinesis.AddTagsToStreamInput{
-			StreamName: aws.String(identifier),
-			Tags:       KinesisTagInput(updatedTags.IgnoreAws()),
-		}
+		chunks := updatedTags.Chunks(10)
 
-		_, err := conn.AddTagsToStream(input)
+		for _, chunk := range chunks {
+			input := &kinesis.AddTagsToStreamInput{
+				StreamName: aws.String(identifier),
+				Tags:       KinesisTagInput(chunk.IgnoreAws()),
+			}
 
-		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			_, err := conn.AddTagsToStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			}
 		}
 	}
 

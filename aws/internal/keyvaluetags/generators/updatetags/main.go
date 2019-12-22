@@ -121,6 +121,7 @@ func main() {
 	templateFuncMap := template.FuncMap{
 		"ClientType":                      keyvaluetags.ServiceClientType,
 		"TagFunction":                     ServiceTagFunction,
+		"TagFunctionBatchSize":            ServiceTagFunctionBatchSize,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
 		"TagInputRequiresTransformation":  ServiceTagInputRequiresTransformation,
@@ -190,6 +191,33 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 	newTags := New(newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		{{- if . | TagFunctionBatchSize }}
+		chunks := removedTags.Chunks({{ . | TagFunctionBatchSize }})
+
+		for _, chunk := range chunks {
+			input := &{{ . | TagPackage }}.{{ . | UntagFunction }}Input{
+				{{- if . | TagInputIdentifierRequiresSlice }}
+				{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+				{{- else }}
+				{{ . | TagInputIdentifierField }}:   aws.String(identifier),
+				{{- end }}
+				{{- if . | TagInputResourceTypeField }}
+				{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
+				{{- end }}
+				{{- if . | UntagInputRequiresTagType }}
+				{{ . | UntagInputTagsField }}:       chunk.IgnoreAws().{{ . | Title }}Tags(),
+				{{- else }}
+				{{ . | UntagInputTagsField }}:       aws.StringSlice(chunk.Keys()),
+				{{- end }}
+			}
+
+			_, err := conn.{{ . | UntagFunction }}(input)
+
+			if err != nil {
+				return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			}
+		}
+		{{- else }}
 		input := &{{ . | TagPackage }}.{{ . | UntagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
@@ -211,9 +239,37 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
 		}
+		{{- end }}
 	}
 
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		{{- if . | TagFunctionBatchSize }}
+		chunks := updatedTags.Chunks({{ . | TagFunctionBatchSize }})
+
+		for _, chunk := range chunks {
+			input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
+				{{- if . | TagInputIdentifierRequiresSlice }}
+				{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
+				{{- else }}
+				{{ . | TagInputIdentifierField }}:   aws.String(identifier),
+				{{- end }}
+				{{- if . | TagInputResourceTypeField }}
+				{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
+				{{- end }}
+				{{- if . | TagInputRequiresTransformation }}
+				{{ . | TagInputTagsField }}:         {{ . | Title }}TagInput(chunk.IgnoreAws()),
+				{{- else }}
+				{{ . | TagInputTagsField }}:         chunk.IgnoreAws().{{ . | Title }}Tags(),
+				{{- end }}
+			}
+
+			_, err := conn.{{ . | TagFunction }}(input)
+
+			if err != nil {
+				return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			}
+		}
+		{{- else }}
 		input := &{{ . | TagPackage }}.{{ . | TagFunction }}Input{
 			{{- if . | TagInputIdentifierRequiresSlice }}
 			{{ . | TagInputIdentifierField }}:   aws.StringSlice([]string{identifier}),
@@ -235,6 +291,7 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
+		{{- end }}
 	}
 
 	return nil
@@ -303,6 +360,16 @@ func ServiceTagFunction(serviceName string) string {
 		return "CreateTags"
 	default:
 		return "TagResource"
+	}
+}
+
+// ServiceTagFunctionBatchSize determines the batch size (if any) for tagging and untagging.
+func ServiceTagFunctionBatchSize(serviceName string) string {
+	switch serviceName {
+	case "kinesis":
+		return "10"
+	default:
+		return ""
 	}
 }
 
