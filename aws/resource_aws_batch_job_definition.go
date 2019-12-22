@@ -23,7 +23,7 @@ func resourceAwsBatchJobDefinition() *schema.Resource {
 				d.Set("arn", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
-		},		
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
