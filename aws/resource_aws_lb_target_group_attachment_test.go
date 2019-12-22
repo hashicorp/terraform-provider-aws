@@ -53,6 +53,16 @@ func TestAccAWSLBTargetGroupAttachment_multi_instances(t *testing.T) {
 						}),
 				),
 			},
+			{
+				Config: testAccAWSLBTargetGroupAttachmentConfig_multi_instances_replace(targetGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupAttachmentMultiInstancesExists(
+						"aws_lb_target_group.test",
+						[]string{
+							"aws_lb_target_group_attachment.test.0",
+						}),
+				),
+			},
 		},
 	})
 }
@@ -256,8 +266,8 @@ func testAccCheckAWSLBTargetGroupAttachmentMultiInstancesExists(n string, l []st
 			return err
 		}
 
-		if len(describe.TargetHealthDescriptions) != 3 {
-			return errors.New(fmt.Sprintf("Missing Target Group Attachments"))
+		if len(describe.TargetHealthDescriptions) != len(l) {
+			return errors.New("Missing Target Group Attachment(s)")
 		}
 
 		return nil
@@ -474,6 +484,17 @@ resource "aws_vpc" "test" {
   }
 }
 `, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupAttachmentConfig_multi_instances_replace(targetGroupName string) string {
+	return testAccAWSLBTargetGroupAttachmentConfig_multi_instances(targetGroupName) + `
+resource "aws_lb_target_group_attachment" "replace" {
+  target_group_arn          = "${aws_lb_target_group.test.arn}"
+  target_id                 = "${element(aws_instance.test.*.id, 0)}"
+  port                      = 80
+  replace_all_other_targets = true
+}
+`
 }
 
 func testAccAWSLBTargetGroupAttachmentConfigBackwardsCompatibility(targetGroupName string) string {
