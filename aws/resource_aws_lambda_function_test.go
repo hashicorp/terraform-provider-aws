@@ -345,7 +345,6 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_encrypted_env_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_encrypted_env_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_encrypted_env_%s", rString)
-	keyRegex := regexp.MustCompile(`^arn:aws[\w-]*:kms:`)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -360,7 +359,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_arn", keyRegex),
+					testAccMatchResourceAttrRegionalARN(resourceName, "kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
 				),
 			},
 			{
