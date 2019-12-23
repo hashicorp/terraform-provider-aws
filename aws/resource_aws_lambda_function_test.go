@@ -82,6 +82,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "lambda", regexp.MustCompile(`function.+`)),
 					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s/invocations$", funcName))),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
