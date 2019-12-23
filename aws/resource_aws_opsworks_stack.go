@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -391,7 +390,7 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 	originalConn := meta.(*AWSClient).opsworksconn
 
 	// Regions are the same, no need to reconfigure
-	if originalConn.Config.Region != nil && *originalConn.Config.Region == region {
+	if aws.StringValue(originalConn.Config.Region) == region {
 		return originalConn, nil
 	}
 
@@ -400,8 +399,6 @@ func opsworksConnForRegion(region string, meta interface{}) (*opsworks.OpsWorks,
 	if err != nil {
 		return nil, fmt.Errorf("Error creating AWS session: %s", err)
 	}
-
-	sess.Handlers.Build.PushBack(request.MakeAddToUserAgentHandler("APN/1.0 HashiCorp/1.0 Terraform", meta.(*AWSClient).terraformVersion))
 
 	newSession := sess.Copy(&aws.Config{Region: aws.String(region)})
 	newOpsworksconn := opsworks.New(newSession)
@@ -476,8 +473,7 @@ func resourceAwsOpsworksStackCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating Opsworks stack: %s", err)
 	}
 
-	stackId := *resp.StackId
-	d.SetId(stackId)
+	d.SetId(aws.StringValue(resp.StackId))
 
 	if inVpc && *req.UseOpsworksSecurityGroups {
 		// For VPC-based stacks, OpsWorks asynchronously creates some default
