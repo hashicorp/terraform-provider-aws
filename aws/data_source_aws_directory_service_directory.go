@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -161,13 +162,14 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 		d.Set("security_group_id", aws.StringValue(dir.VpcSettings.SecurityGroupId))
 	}
 
-	tagList, err := conn.ListTagsForResource(&directoryservice.ListTagsForResourceInput{
-		ResourceId: aws.String(directoryID),
-	})
+	tags, err := keyvaluetags.DirectoryserviceListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("Failed to get Directory service tags (id: %s): %s", directoryID, err)
+		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
 	}
-	d.Set("tags", tagsToMapDS(tagList.Tags))
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
