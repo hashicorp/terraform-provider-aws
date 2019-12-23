@@ -9,8 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -426,6 +428,43 @@ func testAccOrganizationsAccountPreCheck(t *testing.T) {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
+}
+
+// testAccPreCheckHasDefaultVpc checks that the test region has a default VPC.
+func testAccPreCheckHasDefaultVpc(t *testing.T) {
+	if !testAccHasDefaultVpc(t) {
+		region := testAccProvider.Meta().(*AWSClient).region
+		t.Skipf("skipping tests; %s does not have a default VPC", region)
+	}
+}
+
+// testAccPreCheckHasDefaultVpcOrEc2Classic checks that the test region has a default VPC or has the EC2-Classic platform.
+// This check is useful to ensure that an instance can be launched without specifying a subnet.
+func testAccPreCheckHasDefaultVpcOrEc2Classic(t *testing.T) {
+	client := testAccProvider.Meta().(*AWSClient)
+
+	if !testAccHasDefaultVpc(t) && !hasEc2Classic(client.supportedplatforms) {
+		t.Skipf("skipping tests; %s does not have a default VPC or EC2-Classic", client.region)
+	}
+}
+
+func testAccHasDefaultVpc(t *testing.T) bool {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	resp, err := conn.DescribeAccountAttributes(&ec2.DescribeAccountAttributesInput{
+		AttributeNames: aws.StringSlice([]string{ec2.AccountAttributeNameDefaultVpc}),
+	})
+	if testAccPreCheckSkipError(err) ||
+		len(resp.AccountAttributes) == 0 ||
+		len(resp.AccountAttributes[0].AttributeValues) == 0 ||
+		aws.StringValue(resp.AccountAttributes[0].AttributeValues[0].AttributeValue) == "none" {
+		return false
+	}
+	if err != nil {
+		t.Fatalf("error describing EC2 account attributes: %s", err)
+	}
+
+	return true
 }
 
 func testAccAlternateAccountProviderConfig() string {
