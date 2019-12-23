@@ -2,7 +2,6 @@
 subcategory: "Workspaces"
 layout: "aws"
 page_title: "AWS: aws_workspaces_directory"
-sidebar_current: "docs-aws-resource-workspaces-directory"
 description: |-
   Provides a directory registration in AWS Workspaces Service.
 ---
