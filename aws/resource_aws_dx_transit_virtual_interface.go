@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDxTransitVirtualInterface() *schema.Resource {
@@ -128,8 +129,8 @@ func resourceAwsDxTransitVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("customer_address"); ok && v.(string) != "" {
 		req.NewTransitVirtualInterface.CustomerAddress = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("tags"); ok {
-		req.NewTransitVirtualInterface.Tags = tagsFromMapDX(v.(map[string]interface{}))
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		req.NewTransitVirtualInterface.Tags = keyvaluetags.New(v).IgnoreAws().DirectconnectTags()
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect transit virtual interface: %s", req)
@@ -180,8 +181,15 @@ func resourceAwsDxTransitVirtualInterfaceRead(d *schema.ResourceData, meta inter
 	d.Set("mtu", vif.Mtu)
 	d.Set("name", vif.VirtualInterfaceName)
 	d.Set("vlan", vif.Vlan)
-	if err := getTagsDX(conn, d, d.Get("arn").(string)); err != nil {
-		return fmt.Errorf("error getting Direct Connect transit virtual interface (%s) tags: %s", d.Id(), err)
+
+	tags, err := keyvaluetags.DirectconnectListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Direct Connect transit virtual interface (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
