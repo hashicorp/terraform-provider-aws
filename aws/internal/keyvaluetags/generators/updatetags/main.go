@@ -122,9 +122,9 @@ func main() {
 		"ClientType":                      keyvaluetags.ServiceClientType,
 		"TagFunction":                     ServiceTagFunction,
 		"TagFunctionBatchSize":            ServiceTagFunctionBatchSize,
+		"TagInputCustomValue":             ServiceTagInputCustomValue,
 		"TagInputIdentifierField":         ServiceTagInputIdentifierField,
 		"TagInputIdentifierRequiresSlice": ServiceTagInputIdentifierRequiresSlice,
-		"TagInputRequiresTransformation":  ServiceTagInputRequiresTransformation,
 		"TagInputResourceTypeField":       ServiceTagInputResourceTypeField,
 		"TagInputTagsField":               ServiceTagInputTagsField,
 		"TagPackage":                      keyvaluetags.ServiceTagPackage,
@@ -256,8 +256,8 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 				{{- if . | TagInputResourceTypeField }}
 				{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 				{{- end }}
-				{{- if . | TagInputRequiresTransformation }}
-				{{ . | TagInputTagsField }}:         {{ . | Title }}TagInput(chunk.IgnoreAws()),
+				{{- if . | TagInputCustomValue }}
+				{{ . | TagInputTagsField }}:         {{ . | TagInputCustomValue }},
 				{{- else }}
 				{{ . | TagInputTagsField }}:         chunk.IgnoreAws().{{ . | Title }}Tags(),
 				{{- end }}
@@ -279,8 +279,8 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{- if . | TagInputResourceTypeField }}
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
-			{{- if . | TagInputRequiresTransformation }}
-			{{ . | TagInputTagsField }}:         {{ . | Title }}TagInput(updatedTags.IgnoreAws()),
+			{{- if . | TagInputCustomValue }}
+			{{ . | TagInputTagsField }}:         {{ . | TagInputCustomValue }},
 			{{- else }}
 			{{ . | TagInputTagsField }}:         updatedTags.IgnoreAws().{{ . | Title }}Tags(),
 			{{- end }}
@@ -499,11 +499,11 @@ func ServiceTagInputTagsField(serviceName string) string {
 	}
 }
 
-// ServiceTagInputRequiresTransformation determines if the service tagging tags field requires transformation.
-func ServiceTagInputRequiresTransformation(serviceName string) string {
+// ServiceTagInputCustomValue determines any custom value for the service tagging tags field.
+func ServiceTagInputCustomValue(serviceName string) string {
 	switch serviceName {
 	case "kinesis":
-		return "yes"
+		return "aws.StringMap(chunk.IgnoreAws().Map())"
 	default:
 		return ""
 	}

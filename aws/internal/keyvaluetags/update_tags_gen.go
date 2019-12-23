@@ -1998,7 +1998,7 @@ func KinesisUpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap inte
 		for _, chunk := range chunks {
 			input := &kinesis.AddTagsToStreamInput{
 				StreamName: aws.String(identifier),
-				Tags:       KinesisTagInput(chunk.IgnoreAws()),
+				Tags:       aws.StringMap(chunk.IgnoreAws().Map()),
 			}
 
 			_, err := conn.AddTagsToStream(input)
