@@ -396,7 +396,7 @@ func resourceAwsLbUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	switch d.Get("load_balancer_type").(string) {
 	case elbv2.LoadBalancerTypeEnumApplication:
-		if d.HasChange("idle_timeout") {
+		if d.HasChange("idle_timeout") || d.IsNewResource() {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String("idle_timeout.timeout_seconds"),
 				Value: aws.String(fmt.Sprintf("%d", d.Get("idle_timeout").(int))),
