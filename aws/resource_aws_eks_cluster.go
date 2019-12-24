@@ -1,8 +1,14 @@
 package aws
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/base64"
 	"fmt"
 	"log"
+	"net/http"
+	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -161,6 +167,11 @@ func resourceAwsEksCluster() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
+			"wait_for_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -224,7 +235,7 @@ func resourceAwsEksClusterCreate(d *schema.ResourceData, meta interface{}) error
 		Pending: []string{eks.ClusterStatusCreating},
 		Target:  []string{eks.ClusterStatusActive},
 		Timeout: d.Timeout(schema.TimeoutCreate),
-		Refresh: refreshEksClusterStatus(conn, name),
+		Refresh: refreshEksClusterStatus(conn, name, d.Get("wait_for_endpoint").(bool)),
 	}
 	_, err = stateConf.WaitForState()
 	if err != nil {
@@ -539,7 +550,7 @@ func flattenEksEnabledLogTypes(logging *eks.Logging) *schema.Set {
 	return flattenStringSet(enabledLogTypes)
 }
 
-func refreshEksClusterStatus(conn *eks.EKS, clusterName string) resource.StateRefreshFunc {
+func refreshEksClusterStatus(conn *eks.EKS, clusterName string, shouldWaitForEndpoint bool) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.DescribeCluster(&eks.DescribeClusterInput{
 			Name: aws.String(clusterName),
@@ -550,6 +561,12 @@ func refreshEksClusterStatus(conn *eks.EKS, clusterName string) resource.StateRe
 		cluster := output.Cluster
 		if cluster == nil {
 			return cluster, "", fmt.Errorf("EKS Cluster (%s) missing", clusterName)
+		}
+		if shouldWaitForEndpoint && aws.StringValue(cluster.Status) == eks.ClusterStatusActive {
+			if !isEndpointHealthzOK(aws.StringValue(cluster.Endpoint), cluster.CertificateAuthority) {
+				log.Printf("[DEBUG] EKS Endpoint is not ready")
+				return cluster, eks.ClusterStatusCreating, nil
+			}
 		}
 		return cluster, aws.StringValue(cluster.Status), nil
 	}
@@ -584,7 +601,7 @@ func waitForDeleteEksCluster(conn *eks.EKS, clusterName string, timeout time.Dur
 		},
 		Target:  []string{""},
 		Timeout: timeout,
-		Refresh: refreshEksClusterStatus(conn, clusterName),
+		Refresh: refreshEksClusterStatus(conn, clusterName, false),
 	}
 	cluster, err := stateConf.WaitForState()
 	if err != nil {
@@ -632,4 +649,43 @@ func waitForUpdateEksCluster(conn *eks.EKS, clusterName, updateID string, timeou
 	}
 
 	return fmt.Errorf("EKS Cluster (%s) update (%s) status (%s) not successful: Errors:\n%s", clusterName, updateID, aws.StringValue(update.Status), strings.Join(detailedErrors, "\n"))
+}
+
+func isEndpointHealthzOK(endpoint string, certificate *eks.Certificate) bool {
+	if endpoint == "" || certificate == nil {
+		return false
+	}
+
+	u, _ := url.Parse(endpoint)
+	u.Path = path.Join(u.Path, "healthz")
+	healthzEndpoint := u.String()
+	caCert, _ := base64.StdEncoding.DecodeString(aws.StringValue(certificate.Data))
+	log.Printf("[DEBUG] Getting EKS Endpoint %s", healthzEndpoint)
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			RootCAs:            caCertPool,
+			InsecureSkipVerify: false,
+		},
+	}
+	client := &http.Client{
+		Timeout:   2 * time.Second,
+		Transport: tr,
+	}
+	resp, err := client.Get(healthzEndpoint)
+
+	if err != nil {
+		log.Printf("[WARN] Error wile getting EKS Endpoint healthz: %s", err)
+		return false
+	}
+
+	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+		log.Printf("[DEBUG] Getted EKS Endpoint %s successfully", healthzEndpoint)
+		return true
+	}
+
+	return false
 }
