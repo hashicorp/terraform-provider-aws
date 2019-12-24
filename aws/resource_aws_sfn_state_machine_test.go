@@ -130,6 +130,31 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
+	var sm sfn.DescribeStateMachineOutput
+
+	resourceName := "aws_sfn_state_machine.test"
+	rName := acctest.RandomWithPrefix("tf-acc")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSfnStateMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSfnStateMachineConfig(rName, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSfnExists(resourceName),
+					testAccCheckAWSSfnStateMachineDisappears(&sm),
+				),
+			},
+			{
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSfnExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -178,6 +203,20 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 	}
 
 	return fmt.Errorf("Default error in Step Function Test")
+}
+
+func testAccCheckAWSSfnStateMachineDisappears(sm *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).sfnconn
+
+		input := &sfn.DeleteStateMachineInput{
+			StateMachineArn: sm.StateMachineArn,
+		}
+
+		_, err := conn.DeleteStateMachine(input)
+
+		return err
+	}
 }
 
 func testAccAWSSfnStateMachineConfigBase(rName string) string {
