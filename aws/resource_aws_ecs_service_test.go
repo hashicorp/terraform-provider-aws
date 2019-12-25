@@ -322,11 +322,6 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-rc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-rc-%s", rString)
 
-	//originalRegexp := regexp.MustCompile(
-	//	"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + clusterName + "$")
-	//modifiedRegexp := regexp.MustCompile(
-	//	"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
