@@ -124,11 +124,10 @@ func resourceAwsEcsService() *schema.Resource {
 			},
 
 			"iam_role": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
+				Computed: true,
 			},
 
 			"deployment_controller": {
