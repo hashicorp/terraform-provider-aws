@@ -322,10 +322,10 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-rc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-rc-%s", rString)
 
-	originalRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + clusterName + "$")
-	modifiedRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
+	//originalRegexp := regexp.MustCompile(
+	//	"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + clusterName + "$")
+	//modifiedRegexp := regexp.MustCompile(
+	//	"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -336,8 +336,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", originalRegexp),
+					testAccCheckResourceAttrRegionalARN("aws_ecs_service.ghost", "cluster", "ecs", "cluster/"+clusterName+"$"),
 				),
 			},
 
@@ -345,8 +344,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(uClusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", modifiedRegexp),
+					testAccCheckResourceAttrRegionalARN("aws_ecs_service.ghost", "cluster", "ecs", "cluster/"+uClusterName+"$"),
 				),
 			},
 		},
