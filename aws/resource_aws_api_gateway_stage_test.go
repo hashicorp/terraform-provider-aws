@@ -81,6 +81,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 	var conf apigateway.Stage
 	rName := acctest.RandString(5)
 	resourceName := "aws_api_gateway_stage.test"
+	logGroupArnRegex := regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:logs:[^:]+:[^:]+:log-group:foo-bar-%s$", rName))
 	clf := `$context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId`
 	json := `{ "requestId":"$context.requestId", "ip": "$context.identity.sourceIp", "caller":"$context.identity.caller", "user":"$context.identity.user", "requestTime":"$context.requestTime", "httpMethod":"$context.httpMethod", "resourcePath":"$context.resourcePath", "status":"$context.status", "protocol":"$context.protocol", "responseLength":"$context.responseLength" }`
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
@@ -97,7 +98,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "logs", regexp.MustCompile(`log-group:.+`)),
+					resource.TestMatchResourceAttr(resourceName, "access_log_settings.0.destination_arn", logGroupArnRegex),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", clf),
 				),
 			},
@@ -108,7 +109,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "logs", regexp.MustCompile(`log-group:.+`)),
+					resource.TestMatchResourceAttr(resourceName, "access_log_settings.0.destination_arn", logGroupArnRegex),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", json),
 				),
 			},
@@ -118,7 +119,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "logs", regexp.MustCompile(`log-group:.+`)),
+					resource.TestMatchResourceAttr(resourceName, "access_log_settings.0.destination_arn", logGroupArnRegex),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", xml),
 				),
 			},
@@ -128,7 +129,7 @@ func TestAccAWSAPIGatewayStage_accessLogSettings(t *testing.T) {
 					testAccCheckAWSAPIGatewayStageExists(resourceName, &conf),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/restapis/.+/stages/prod`)),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "access_log_settings.0.destination_arn", "logs", regexp.MustCompile(`log-group:.+`)),
+					resource.TestMatchResourceAttr(resourceName, "access_log_settings.0.destination_arn", logGroupArnRegex),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", csv),
 				),
 			},
