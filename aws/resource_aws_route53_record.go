@@ -334,11 +334,11 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 		Comment: aws.String("Managed by Terraform"),
 		Changes: []*route53.Change{
 			{
-				Action:            aws.String("DELETE"),
+				Action:            aws.String(route53.ChangeActionDelete),
 				ResourceRecordSet: oldRec,
 			},
 			{
-				Action:            aws.String("CREATE"),
+				Action:            aws.String(route53.ChangeActionCreate),
 				ResourceRecordSet: rec,
 			},
 		},
@@ -404,9 +404,9 @@ func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) er
 	// Else CREATE is used and fail if the same record exists
 	var action string
 	if d.Get("allow_overwrite").(bool) || !d.IsNewResource() {
-		action = "UPSERT"
+		action = route53.ChangeActionUpsert
 	} else {
-		action = "CREATE"
+		action = route53.ChangeActionCreate
 	}
 
 	// Create the new records. We abuse StateChangeConf for this to
@@ -482,8 +482,8 @@ func changeRoute53RecordSet(conn *route53.Route53, input *route53.ChangeResource
 func waitForRoute53RecordSetToSync(conn *route53.Route53, requestId string) error {
 	wait := resource.StateChangeConf{
 		Delay:      30 * time.Second,
-		Pending:    []string{"PENDING"},
-		Target:     []string{"INSYNC"},
+		Pending:    []string{route53.ChangeStatusPending},
+		Target:     []string{route53.ChangeStatusInsync},
 		Timeout:    30 * time.Minute,
 		MinTimeout: 5 * time.Second,
 		Refresh: func() (result interface{}, state string, err error) {
@@ -618,7 +618,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// get expanded name
 	zoneRecord, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone)})
 	if err != nil {
-		if r53err, ok := err.(awserr.Error); ok && r53err.Code() == "NoSuchHostedZone" {
+		if r53err, ok := err.(awserr.Error); ok && r53err.Code() == route53.ErrCodeNoSuchHostedZone {
 			return nil, r53NoHostedZoneFound
 		}
 		return nil, err
@@ -719,7 +719,7 @@ func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) er
 		Comment: aws.String("Deleted by Terraform"),
 		Changes: []*route53.Change{
 			{
-				Action:            aws.String("DELETE"),
+				Action:            aws.String(route53.ChangeActionDelete),
 				ResourceRecordSet: rec,
 			},
 		},
