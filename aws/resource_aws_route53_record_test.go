@@ -880,7 +880,7 @@ func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 
 func TestAccAWSRoute53Record_zero_ttl(t *testing.T) {
 	var record1 route53.ResourceRecordSet
-	resourceName := "aws_route53_record.test"
+	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
