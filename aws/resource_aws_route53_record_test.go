@@ -879,6 +879,33 @@ func TestAccAWSRoute53Record_allowOverwrite(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_zero_ttl(t *testing.T) {
+	var record1 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordZeroTTlConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+		},
+	})
+}
+
 func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).r53conn
 	for _, rs := range s.RootModule().Resources {
@@ -903,7 +930,7 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				// if NoSuchHostedZone, then all the things are destroyed
-				if awsErr.Code() == "NoSuchHostedZone" {
+				if awsErr.Code() == route53.ErrCodeNoSuchHostedZone {
 					return nil
 				}
 			}
@@ -1038,6 +1065,20 @@ resource "aws_route53_record" "default" {
 	name = "www.NOTexamplE.com"
 	type = "A"
 	ttl = "30"
+	records = ["127.0.0.1", "127.0.0.27"]
+}
+`
+
+const testAccRoute53RecordZeroTTlConfig = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "default" {
+	zone_id = "${aws_route53_zone.main.zone_id}"
+	name = "www.NOTexamplE.com"
+	type = "A"
+	ttl  = "0"
 	records = ["127.0.0.1", "127.0.0.27"]
 }
 `
