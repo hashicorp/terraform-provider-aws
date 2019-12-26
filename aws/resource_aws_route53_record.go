@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/route53"
 )
 
@@ -343,15 +344,15 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 		},
 	}
 
-	input := &route53.ChangeResourceRecordSetsInput{
+	req := &route53.ChangeResourceRecordSetsInput{
 		HostedZoneId: aws.String(cleanZoneID(*zoneRecord.HostedZone.Id)),
 		ChangeBatch:  changeBatch,
 	}
 
 	log.Printf("[DEBUG] Updating resource records for zone: %s, name: %s\n\n%s",
-		zone, *rec.Name, input)
+		zone, *rec.Name, req)
 
-	respRaw, err := changeRoute53RecordSet(conn, input)
+	respRaw, err := changeRoute53RecordSet(conn, req)
 	if err != nil {
 		return fmt.Errorf("[ERR]: Error building changeset: %s", err)
 	}
@@ -458,24 +459,30 @@ func resourceAwsRoute53RecordCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func changeRoute53RecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
-	var out *route53.ChangeResourceRecordSetsOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.ChangeResourceRecordSets(input)
-		if isAWSErr(err, "NoSuchHostedZone", "") {
-			log.Print("[DEBUG] Hosted Zone not found, retrying...")
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.ChangeResourceRecordSets(input)
+	wait := resource.StateChangeConf{
+		Pending:    []string{"rejected"},
+		Target:     []string{"accepted"},
+		Timeout:    5 * time.Minute,
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.ChangeResourceRecordSets(input)
+			if err != nil {
+				if r53err, ok := err.(awserr.Error); ok {
+					if r53err.Code() == route53.ErrCodePriorRequestNotComplete {
+						// There is some pending operation, so just retry
+						// in a bit.
+						return nil, "rejected", nil
+					}
+				}
+
+				return nil, "failure", err
+			}
+
+			return resp, "accepted", nil
+		},
 	}
 
-	return out, err
+	return wait.WaitForState()
 }
 
 func waitForRoute53RecordSetToSync(conn *route53.Route53, requestId string) error {
@@ -575,7 +582,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 
 	if record.Weight != nil {
 		v := []map[string]interface{}{{
-			"weight": aws.Int64Value(record.Weight),
+			"weight": aws.Int64Value((record.Weight)),
 		}}
 		if err := d.Set("weighted_routing_policy", v); err != nil {
 			return fmt.Errorf("Error setting weighted records for: %s, error: %#v", d.Id(), err)
@@ -583,7 +590,7 @@ func resourceAwsRoute53RecordRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if record.MultiValueAnswer != nil {
-		if err := d.Set("multivalue_answer_routing_policy", record.MultiValueAnswer); err != nil {
+		if err := d.Set("multivalue_answer_routing_policy", *record.MultiValueAnswer); err != nil {
 			return fmt.Errorf("Error setting multivalue answer records for: %s, error: %#v", d.Id(), err)
 		}
 	}
@@ -617,7 +624,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	// get expanded name
 	zoneRecord, err := conn.GetHostedZone(&route53.GetHostedZoneInput{Id: aws.String(zone)})
 	if err != nil {
-		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+		if r53err, ok := err.(awserr.Error); ok && r53err.Code() == route53.ErrCodeNoSuchHostedZone {
 			return nil, r53NoHostedZoneFound
 		}
 		return nil, err
@@ -747,12 +754,35 @@ func resourceAwsRoute53RecordDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func deleteRoute53RecordSet(conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
-	out, err := conn.ChangeResourceRecordSets(input)
-	if isAWSErr(err, "InvalidChangeBatch", "") {
-		return out, nil
+	wait := resource.StateChangeConf{
+		Pending:    []string{"rejected"},
+		Target:     []string{"accepted"},
+		Timeout:    5 * time.Minute,
+		MinTimeout: 1 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.ChangeResourceRecordSets(input)
+			if err != nil {
+				if r53err, ok := err.(awserr.Error); ok {
+					if r53err.Code() == route53.ErrCodePriorRequestNotComplete {
+						// There is some pending operation, so just retry
+						// in a bit.
+						return 42, "rejected", nil
+					}
+
+					if r53err.Code() == route53.ErrCodeInvalidChangeBatch {
+						// This means that the record is already gone.
+						return resp, "accepted", nil
+					}
+				}
+
+				return 42, "failure", err
+			}
+
+			return resp, "accepted", nil
+		},
 	}
 
-	return out, err
+	return wait.WaitForState()
 }
 
 func resourceAwsRoute53RecordBuildSet(d *schema.ResourceData, zoneName string) (*route53.ResourceRecordSet, error) {
