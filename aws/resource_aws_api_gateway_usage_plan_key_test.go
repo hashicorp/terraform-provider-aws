@@ -189,7 +189,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyImportStateIdFunc(resourceName string)
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["usage_plan_id"], rs.Primary.ID), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_type"], rs.Primary.ID), nil
 	}
 }
 

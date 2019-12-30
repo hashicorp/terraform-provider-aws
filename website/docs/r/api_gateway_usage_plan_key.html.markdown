@@ -60,8 +60,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-AWS API Gateway Usage Plan Key can be imported using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-ID`, e.g.
+AWS API Gateway Usage Plan Key can be imported using the `USAGE-PLAN-ID/USAGE-PLAN-KEY-TYPE/USAGE-PLAN-KEY-ID`, e.g.
 
 ```sh
-$ terraform import aws_api_gateway_usage_plan_key.key 12345abcde/example
+$ terraform import aws_api_gateway_usage_plan_key.key 12345abcde/example/zzz
 ```

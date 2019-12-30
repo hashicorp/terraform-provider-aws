@@ -19,12 +19,15 @@ func resourceAwsApiGatewayUsagePlanKey() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected USAGE-PLAN-ID/USAGE-PLAN-KEY-ID", d.Id())
+				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected USAGE-PLAN-ID/USAGE-PLAN-KEY-TYPE/USAGE-PLAN-KEY-ID", d.Id())
 				}
 				usagePlanId := idParts[0]
-				usagePlanKeyId := idParts[1]
+				usagePlanKeyType := idParts[1]
+				usagePlanKeyId := idParts[2]
 				d.Set("usage_plan_id", usagePlanId)
+				d.Set("key_type", usagePlanKeyType)
+				d.Set("key_id", usagePlanKeyId)
 				d.SetId(usagePlanKeyId)
 				return []*schema.ResourceData{d}, nil
 			},
