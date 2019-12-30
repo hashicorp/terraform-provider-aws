@@ -194,7 +194,7 @@ func resourceAwsApiGatewayAuthorizerUpdate(d *schema.ResourceData, meta interfac
 	}
 	if d.HasChange("name") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String("replace"),
+			Op:    aws.String(apigateway.OpReplace),
 			Path:  aws.String("/name"),
 			Value: aws.String(d.Get("name").(string)),
 		})

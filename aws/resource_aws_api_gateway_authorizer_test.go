@@ -247,6 +247,54 @@ func TestAccAWSAPIGatewayAuthorizer_authTypeValidation(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
+	var conf apigateway.Authorizer
+	apiGatewayName := acctest.RandomWithPrefix("tf-acctest-apigw")
+	authorizerName := acctest.RandomWithPrefix("tf-acctest-igw-authorizer")
+	lambdaName := acctest.RandomWithPrefix("tf-acctest-igw-auth-lambda")
+	resourceName := "aws_api_gateway_authorizer.acctest"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayAuthorizerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
+					testAccCheckAWSAPIGatewayAuthorizerDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSAPIGatewayAuthorizerDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No resource ID is set")
+		}
+		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		authorizerId := rs.Primary.ID
+		restApiId := rs.Primary.Attributes["rest_api_id"]
+
+		input := &apigateway.DeleteAuthorizerInput{
+			AuthorizerId: aws.String(authorizerId),
+			RestApiId:    aws.String(restApiId),
+		}
+		_, err := conn.DeleteAuthorizer(input)
+
+		return err
+	}
+}
+
 func testAccCheckAWSAPIGatewayAuthorizerAuthorizerUri(conf *apigateway.Authorizer, expectedUri *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.AuthorizerUri == nil {
