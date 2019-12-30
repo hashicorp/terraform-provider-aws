@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -19,21 +18,6 @@ func resourceAwsApiGatewayDeployment() *schema.Resource {
 		Read:   resourceAwsApiGatewayDeploymentRead,
 		Update: resourceAwsApiGatewayDeploymentUpdate,
 		Delete: resourceAwsApiGatewayDeploymentDelete,
-		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/DEPLOYMENT-ID/STAGE-NAME", d.Id())
-				}
-				restApiId := idParts[0]
-				deploymentId := idParts[1]
-				stageName := idParts[2]
-				d.Set("rest_api_id", restApiId)
-				d.Set("stage_name", stageName)
-				d.SetId(deploymentId)
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
@@ -122,7 +106,7 @@ func resourceAwsApiGatewayDeploymentRead(d *schema.ResourceData, meta interface{
 		DeploymentId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == apigateway.ErrCodeNotFoundException {
+		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
 			log.Printf("[WARN] API Gateway Deployment (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -158,7 +142,7 @@ func resourceAwsApiGatewayDeploymentUpdateOperations(d *schema.ResourceData) []*
 
 	if d.HasChange("description") {
 		operations = append(operations, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+			Op:    aws.String("replace"),
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
 		})
