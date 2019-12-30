@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -182,6 +183,10 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentDelete(d *schema.ResourceData,
 	if err := waitForEc2TransitGatewayPeeringAttachmentDeletion(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %s", d.Id(), err)
 	}
+
+	// When the deleted state is returned by API - the transit gateways aren't yet aware of this deleted state.
+	// thus the transit gateways cannot be deleted for a short period of time
+	time.Sleep(90 * time.Second)
 
 	return nil
 }
