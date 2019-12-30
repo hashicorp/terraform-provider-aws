@@ -37,6 +37,12 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "variables.%"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -86,6 +92,12 @@ func TestAccAWSAPIGatewayDeployment_createBeforeDestoryUpdate(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSAPIGatewayDeploymentConfigCreateBeforeDestroy("description2", "https://example.org"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
@@ -113,6 +125,12 @@ func TestAccAWSAPIGatewayDeployment_Description(t *testing.T) {
 					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayDeploymentConfigDescription("description2"),
@@ -143,6 +161,12 @@ func TestAccAWSAPIGatewayDeployment_StageDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -164,6 +188,12 @@ func TestAccAWSAPIGatewayDeployment_StageName(t *testing.T) {
 					testAccCheckAWSAPIGatewayDeploymentStageExists(resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", "test"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSAPIGatewayDeploymentConfigRequired(),
@@ -191,6 +221,12 @@ func TestAccAWSAPIGatewayDeployment_StageName_EmptyString(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -211,6 +247,12 @@ func TestAccAWSAPIGatewayDeployment_Variables(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variables.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "variables.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -423,4 +465,15 @@ resource "aws_api_gateway_deployment" "test" {
   }
 }
 `, key1, value1)
+}
+
+func testAccAWSAPIGatewayDeploymentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.ID, rs.Primary.Attributes["stage_name"]), nil
+	}
 }
