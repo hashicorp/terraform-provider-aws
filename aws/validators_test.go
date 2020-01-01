@@ -321,6 +321,7 @@ func TestValidateArn(t *testing.T) {
 	validNames := []string{
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // Beanstalk
 		"arn:aws:iam::123456789012:user/David",                                             // IAM User
+		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // Managed IAM policy
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // RDS
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // S3 object
 		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // CloudWatch Rule
