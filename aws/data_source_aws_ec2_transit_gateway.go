@@ -49,8 +49,8 @@ func dataSourceAwsEc2TransitGateway() *schema.Resource {
 				Computed: true,
 			},
 			"multicast_support": {
-					Type: schema.TypeString,
-					Computed: true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"filter": dataSourceFiltersSchema(),
 			"id": {

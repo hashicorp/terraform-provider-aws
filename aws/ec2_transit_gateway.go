@@ -285,6 +285,33 @@ func ec2DescribeTransitGatewayVpcAttachment(conn *ec2.EC2, transitGatewayAttachm
 	return nil, nil
 }
 
+func ec2DescribeTransitGatewayMulticastDomain(conn *ec2.EC2, domainID string) (*ec2.TransitGatewayMulticastDomain, error) {
+	if conn == nil || domainID == "" {
+		return nil, nil
+	}
+
+	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("transit-gateway-multicast-domain-id"),
+				Values: []*string{aws.String(domainID)},
+			},
+		},
+		TransitGatewayMulticastDomainIds: []*string{aws.String(domainID)},
+	}
+
+	output, err := conn.DescribeTransitGatewayMulticastDomains(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.TransitGatewayMulticastDomains) == 0 {
+		return nil, nil
+	}
+
+	return output.TransitGatewayMulticastDomains[0], nil
+}
+
 func ec2TransitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
 	transitGatewayAssociation, err := ec2DescribeTransitGatewayRouteTableAssociation(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 	if err != nil {
@@ -452,6 +479,26 @@ func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtta
 		}
 
 		return transitGatewayVpcAttachment, aws.StringValue(transitGatewayVpcAttachment.State), nil
+	}
+}
+
+func ec2TransitGatewayMulticastDomainRefreshFunc(conn *ec2.EC2, domainID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		multicastDomain, err := ec2DescribeTransitGatewayMulticastDomain(conn, domainID)
+
+		if isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
+			return nil, ec2.TransitGatewayMulticastDomainStateDeleted, nil
+		}
+
+		if err != nil {
+			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway Multicast Domain (%s): %s", domainID, err)
+		}
+
+		if multicastDomain == nil {
+			return nil, ec2.TransitGatewayMulticastDomainStateDeleted, nil
+		}
+
+		return multicastDomain, aws.StringValue(multicastDomain.State), nil
 	}
 }
 
@@ -690,6 +737,42 @@ func waitForEc2TransitGatewayVpcAttachmentUpdate(conn *ec2.EC2, transitGatewayAt
 
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway VPC Attachment (%s) availability", transitGatewayAttachmentID)
 	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForEc2TransitGatewayMulticastDomainCreation(conn *ec2.EC2, domainID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.TransitGatewayMulticastDomainStatePending},
+		Target:  []string{ec2.TransitGatewayMulticastDomainStateAvailable},
+		Refresh: ec2TransitGatewayMulticastDomainRefreshFunc(conn, domainID),
+		Timeout: 10 * time.Minute,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Multicast Domain (%s) availability", domainID)
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForEc2TransitGatewayMulticastDomainDeletion(conn *ec2.EC2, transitGatewayID string, domainID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.TransitGatewayMulticastDomainStateAvailable,
+			ec2.TransitGatewayMulticastDomainStateDeleting,
+		},
+		Target:         []string{ec2.TransitGatewayMulticastDomainStateDeleted},
+		Refresh:        ec2TransitGatewayMulticastDomainRefreshFunc(conn, domainID),
+		Timeout:        10 * time.Minute,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Multicast Domain (%s) deletion", domainID)
+	_, err := stateConf.WaitForState()
+
+	if isResourceNotFoundError(err) {
+		return nil
+	}
 
 	return err
 }
