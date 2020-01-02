@@ -326,7 +326,7 @@ func TestAccAWSMskCluster_EncryptionInfo_EncryptionInTransit_InCluster(t *testin
 }
 
 func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
-	var cluster kafka.ClusterInfo
+	var cluster1, cluster2 kafka.ClusterInfo
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_msk_cluster.test"
 
@@ -338,7 +338,7 @@ func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
 			{
 				Config: testAccMskClusterConfigEnhancedMonitoring(rName, "PER_BROKER"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMskClusterExists(resourceName, &cluster),
+					testAccCheckMskClusterExists(resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringPerBroker),
 				),
 			},
@@ -350,6 +350,14 @@ func TestAccAWSMskCluster_EnhancedMonitoring(t *testing.T) {
 					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
 					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
 				},
+			},
+			{
+				Config: testAccMskClusterConfigEnhancedMonitoring(rName, "PER_TOPIC_PER_BROKER"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", kafka.EnhancedMonitoringPerTopicPerBroker),
+				),
 			},
 		},
 	})
@@ -403,6 +411,32 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccAWSMskCluster_OpenMonitoring(t *testing.T) {
+	var cluster1, cluster2 kafka.ClusterInfo
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_msk_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMsk(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckMskClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMskClusterConfigOpenMonitoring(rName, false, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "false"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
+				),
+			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -411,6 +445,19 @@ func TestAccAWSMskCluster_NumberOfBrokerNodes(t *testing.T) {
 					"bootstrap_brokers",     // API may mutate ordering and selection of brokers to return
 					"bootstrap_brokers_tls", // API may mutate ordering and selection of brokers to return
 				},
+			},
+			{
+				Config: testAccMskClusterConfigOpenMonitoring(rName, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMskClusterExists(resourceName, &cluster2),
+					testAccCheckMskClusterNotRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "true"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
+				),
 			},
 		},
 	})
@@ -836,6 +883,12 @@ resource "aws_msk_cluster" "test" {
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
+
   broker_node_group_info {
     client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
     ebs_volume_size = 10
@@ -871,6 +924,38 @@ resource "aws_msk_cluster" "test" {
 
 }
 
+func testAccMskClusterConfigOpenMonitoring(rName string, jmxExporterEnabled bool, nodeExporterEnabled bool) string {
+	return testAccMskClusterBaseConfig() + fmt.Sprintf(`
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.2.1"
+  number_of_broker_nodes = 3
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
+
+  broker_node_group_info {
+    client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
+    ebs_volume_size = 10
+    instance_type   = "kafka.m5.large"
+    security_groups = ["${aws_security_group.example_sg.id}"]
+  }
+
+  open_monitoring {
+    prometheus {
+      jmx_exporter {
+		enabled_in_broker = %[2]t
+      }
+      node_exporter {
+		enabled_in_broker = %[3]t
+      }
+    }
+  }
+}
+`, rName, jmxExporterEnabled, nodeExporterEnabled)
 }
 
 func testAccMskClusterConfigTags1(rName string) string {

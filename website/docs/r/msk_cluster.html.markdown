@@ -68,6 +68,17 @@ resource "aws_msk_cluster" "example" {
     encryption_at_rest_kms_key_arn = "${aws_kms_key.kms.arn}"
   }
 
+  open_monitoring {
+    prometheus {
+      jmx_exporter {
+        enabled_in_broker = true
+      }
+      node_exporter {
+        enabled_in_broker = true
+      }
+    }
+  }
+
   tags = {
     foo = "bar"
   }
@@ -100,6 +111,7 @@ The following arguments are supported:
 * `configuration_info` - (Optional) Configuration block for specifying a MSK Configuration to attach to Kafka brokers. See below.
 * `encryption_info` - (Optional) Configuration block for specifying encryption. See below.
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level.  See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
+* `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See below.
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
 ### broker_node_group_info Argument Reference
@@ -132,6 +144,23 @@ The following arguments are supported:
 
 * `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value: `TLS_PLAINTEXT`.
 * `in_cluster` - (Optional) Whether data communication among broker nodes is encrypted. Default value: `true`.
+
+#### open_monitoring Argument Reference
+
+* `prometheus` - (Optional) Configuration block for Prometheus settings for open monitoring. See below.
+
+#### open_monitoring prometheus Argument Reference
+
+* `jmx_exporter` - (Optional) Configuration block for JMX Exporter. See below.
+* `node_exporter` - (Optional) Configuration block for Node Exporter. See below.
+
+#### open_monitoring prometheus jmx_exporter Argument Reference
+
+* `enabled_in_broker` - (Required) Indicates whether you want to enable or disable the JMX Exporter. 
+
+#### open_monitoring prometheus node_exporter Argument Reference
+
+* `enabled_in_broker` - (Required) Indicates whether you want to enable or disable the Node Exporter.
 
 ## Attributes Reference
 
