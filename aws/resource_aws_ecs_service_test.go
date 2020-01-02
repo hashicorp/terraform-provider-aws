@@ -339,7 +339,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(uClusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					testAccCheckResourceAttrRegionalARN("aws_ecs_service.ghost", "cluster", "ecs", "cluster/"+uClusterName+"$"),
+					resource.TestCheckResourceAttrPair("aws_ecs_service.ghost", "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 		},
