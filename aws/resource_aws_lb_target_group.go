@@ -317,7 +317,15 @@ func resourceAwsLbTargetGroupCreate(d *schema.ResourceData, meta interface{}) er
 		return errors.New("Error creating LB Target Group: no groups returned in response")
 	}
 	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
-	return resourceAwsLbTargetGroupUpdate(d, meta)
+
+	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+		var o = make(map[string]string)
+		if err := keyvaluetags.Elbv2UpdateTags(elbconn, d.Id(), o, v.(map[string]interface{})); err != nil {
+			return fmt.Errorf("error updating LB Target Group (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsLbTargetGroupRead(d, meta)
 }
 
 func resourceAwsLbTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
