@@ -682,7 +682,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 
 func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
-	if protocol == "TCP" {
+	if protocol == elbv2.ProtocolEnumTcp {
 		// TCP load balancers do not support stickiness
 		if stickinessBlocks := diff.Get("stickiness").([]interface{}); len(stickinessBlocks) == 1 {
 			stickiness := stickinessBlocks[0].(map[string]interface{})
@@ -698,7 +698,7 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		healthCheck := healthChecks[0].(map[string]interface{})
 		protocol := healthCheck["protocol"].(string)
 
-		if protocol == "TCP" {
+		if protocol == elbv2.ProtocolEnumTcp {
 			// Cannot set custom matcher on TCP health checks
 			if m := healthCheck["matcher"].(string); m != "" {
 				return fmt.Errorf("%s: health_check.matcher is not supported for target_groups with TCP protocol", diff.Id())
@@ -719,7 +719,7 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		}
 	}
 
-	if strings.Contains(protocol, "HTTP") {
+	if strings.Contains(protocol, elbv2.ProtocolEnumHttp) {
 		if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 			healthCheck := healthChecks[0].(map[string]interface{})
 			// HTTP(S) Target Groups cannot use TCP health checks
@@ -733,7 +733,7 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 		return nil
 	}
 
-	if protocol == "TCP" {
+	if protocol == elbv2.ProtocolEnumTcp {
 		if diff.HasChange("health_check.0.interval") {
 			old, new := diff.GetChange("health_check.0.interval")
 			return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
