@@ -2680,6 +2680,10 @@ data "aws_availability_zones" "test" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2687,6 +2691,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -2766,6 +2774,10 @@ data "aws_availability_zones" "test" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg-cont"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2773,6 +2785,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {
