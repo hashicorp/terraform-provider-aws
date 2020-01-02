@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-  "github.com/hashicorp/terraform/terraform" // TODO: (JP) Is this reference still correct?
 )
 
 func resourceAwsCloudWatchDashboard() *schema.Resource {
@@ -77,20 +76,10 @@ func resourceAwsCloudWatchDashboardRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{}) error {
-	var prevState *terraform.InstanceState = d.State()
-	var dashboardNameBefore string
-
-	dashboardBody := d.Get("dashboard_body")
-	dashboardName := d.Get("dashboard_name")
-
-	if prevState != nil {
-		dashboardNameBefore = (*d.State()).ID
-	}
-
 	conn := meta.(*AWSClient).cloudwatchconn
 	params := cloudwatch.PutDashboardInput{
-		DashboardBody: aws.String(dashboardBody.(string)),
-		DashboardName: aws.String(dashboardName.(string)),
+		DashboardBody: aws.String(d.Get("dashboard_body").(string)),
+		DashboardName: aws.String(d.Get("dashboard_name").(string)),
 	}
 
 	log.Printf("[DEBUG] Putting CloudWatch Dashboard: %#v", params)
@@ -99,27 +88,8 @@ func resourceAwsCloudWatchDashboardPut(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return fmt.Errorf("Putting dashboard failed: %s", err)
 	}
-	d.SetId(dashboardName.(string))
-
+	d.SetId(d.Get("dashboard_name").(string))
 	log.Println("[INFO] CloudWatch Dashboard put finished")
-
-	if prevState != nil && dashboardNameBefore != dashboardName {
-		log.Printf("[INFO] Dashboard name changed, cleaning up previous dashboard: %s", dashboardNameBefore)
-
-		newConn := meta.(*AWSClient).cloudwatchconn
-		params := cloudwatch.DeleteDashboardsInput{
-			DashboardNames: []*string{aws.String(dashboardNameBefore)},
-		}
-
-		if _, err := newConn.DeleteDashboards(&params); err != nil {
-			if isCloudWatchDashboardNotFoundErr(err) {
-				return nil
-			}
-			return fmt.Errorf("Error deleting CloudWatch Dashboard: %s", dashboardNameBefore)
-		}
-
-		log.Printf("[INFO] CloudWatch Dashboard %s deleted", dashboardNameBefore)
-	}
 
 	return resourceAwsCloudWatchDashboardRead(d, meta)
 }
