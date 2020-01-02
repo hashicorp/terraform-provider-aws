@@ -598,20 +598,28 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 		CheckDestroy:  testAccCheckAWSLBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBTargetGroupConfig_basic(targetGroupName),
+				Config: testAccAWSLBTargetGroupConfigTags1(targetGroupName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccAWSLBTargetGroupConfig_updateTags(targetGroupName),
+				Config: testAccAWSLBTargetGroupConfigTags2(targetGroupName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Production"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Type", "ALB Target Group"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSLBTargetGroupConfigTags1(targetGroupName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -1197,6 +1205,87 @@ resource "aws_vpc" "test" {
     Name = "terraform-testacc-lb-target-group-basic"
   }
 }`, targetGroupName)
+}
+
+func testAccAWSLBTargetGroupConfigTags1(targetGroupName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = %[1]q
+  port = 443
+  protocol = "HTTPS"
+  vpc_id = "${aws_vpc.test.id}"
+
+  deregistration_delay = 200
+  slow_start = 0
+
+  stickiness {
+    type = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, targetGroupName, tagKey1, tagValue1)
+}
+
+func testAccAWSLBTargetGroupConfigTags2(targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
+  name = %[1]q
+  port = 443
+  protocol = "HTTPS"
+  vpc_id = "${aws_vpc.test.id}"
+
+  deregistration_delay = 200
+  slow_start = 0
+
+  stickiness {
+    type = "lb_cookie"
+    cookie_duration = 10000
+  }
+
+  health_check {
+    path = "/health"
+    interval = 60
+    port = 8081
+    protocol = "HTTP"
+    timeout = 3
+    healthy_threshold = 3
+    unhealthy_threshold = 3
+    matcher = "200-299"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, targetGroupName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSLBTargetGroupConfig_basicUdp(targetGroupName string) string {
