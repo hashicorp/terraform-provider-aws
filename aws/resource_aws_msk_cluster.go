@@ -205,7 +205,6 @@ func resourceAwsMskCluster() *schema.Resource {
 			"number_of_broker_nodes": {
 				Type:     schema.TypeInt,
 				Required: true,
-				ForceNew: true,
 			},
 			"tags": tagsSchema(),
 			"zookeeper_connect_string": {
@@ -371,6 +370,30 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if output == nil {
 			return fmt.Errorf("error updating MSK Cluster (%s) broker storage: empty response", d.Id())
+		}
+
+		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+
+		if err := waitForMskClusterOperation(conn, clusterOperationARN); err != nil {
+			return fmt.Errorf("error waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		}
+	}
+
+	if d.HasChange("number_of_broker_nodes") {
+		input := &kafka.UpdateBrokerCountInput{
+			ClusterArn:                aws.String(d.Id()),
+			CurrentVersion:            aws.String(d.Get("current_version").(string)),
+			TargetNumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
+		}
+
+		output, err := conn.UpdateBrokerCount(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) broker count: %s", d.Id(), err)
+		}
+
+		if output == nil {
+			return fmt.Errorf("error updating MSK Cluster (%s) broker count: empty response", d.Id())
 		}
 
 		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
