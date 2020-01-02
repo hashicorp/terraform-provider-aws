@@ -13378,8 +13378,22 @@ type AttachmentsSource struct {
 	Name *string `type:"string"`
 
 	// The value of a key-value pair that identifies the location of an attachment
-	// to a document. The format is the URL of the location of a document attachment,
-	// such as the URL of an Amazon S3 bucket.
+	// to a document. The format for Value depends on the type of key you specify.
+	//
+	//    * For the key SourceUrl, the value is an S3 bucket location. For example:
+	//    "Values": [ "s3://my-bucket/my-folder" ]
+	//
+	//    * For the key S3FileUrl, the value is a file in an S3 bucket. For example:
+	//    "Values": [ "s3://my-bucket/my-folder/my-file.py" ]
+	//
+	//    * For the key AttachmentReference, the value is constructed from the name
+	//    of another SSM document in your account, a version number of that document,
+	//    and a file attached to that document version that you want to reuse. For
+	//    example: "Values": [ "MyOtherDocument/3/my-other-file.py" ] However, if
+	//    the SSM document is shared with you from another account, the full SSM
+	//    document ARN must be specified instead of the document name only. For
+	//    example: "Values": [ "arn:aws:ssm:us-east-2:111122223333:document/OtherAccountDocument/3/their-file.py"
+	//    ]
 	Values []*string `min:"1" type:"list"`
 }
 
@@ -35145,6 +35159,19 @@ type StartAutomationExecutionInput struct {
 	// in the Automation document.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
+	// Optional metadata that you assign to a resource. You can specify a maximum
+	// of five tags for an automation. Tags enable you to categorize a resource
+	// in different ways, such as by purpose, owner, or environment. For example,
+	// you might want to tag an automation to identify an environment or operating
+	// system. In this case, you could specify the following key name/value pairs:
+	//
+	//    * Key=environment,Value=test
+	//
+	//    * Key=OS,Value=Windows
+	//
+	// To add tags to an existing patch baseline, use the AddTagsToResource action.
+	Tags []*Tag `type:"list"`
+
 	// A location is a combination of AWS Regions and/or AWS accounts where you
 	// want to run the Automation. Use this action to start an Automation in multiple
 	// Regions and multiple accounts. For more information, see Executing Automations
@@ -35197,6 +35224,16 @@ func (s *StartAutomationExecutionInput) Validate() error {
 	}
 	if s.TargetParameterName != nil && len(*s.TargetParameterName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetParameterName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 	if s.TargetLocations != nil {
 		for i, v := range s.TargetLocations {
@@ -35264,6 +35301,12 @@ func (s *StartAutomationExecutionInput) SetMode(v string) *StartAutomationExecut
 // SetParameters sets the Parameters field's value.
 func (s *StartAutomationExecutionInput) SetParameters(v map[string][]*string) *StartAutomationExecutionInput {
 	s.Parameters = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StartAutomationExecutionInput) SetTags(v []*Tag) *StartAutomationExecutionInput {
+	s.Tags = v
 	return s
 }
 
@@ -38342,6 +38385,9 @@ const (
 
 	// AttachmentsSourceKeyS3fileUrl is a AttachmentsSourceKey enum value
 	AttachmentsSourceKeyS3fileUrl = "S3FileUrl"
+
+	// AttachmentsSourceKeyAttachmentReference is a AttachmentsSourceKey enum value
+	AttachmentsSourceKeyAttachmentReference = "AttachmentReference"
 )
 
 const (
@@ -38368,6 +38414,9 @@ const (
 
 	// AutomationExecutionFilterKeyAutomationType is a AutomationExecutionFilterKey enum value
 	AutomationExecutionFilterKeyAutomationType = "AutomationType"
+
+	// AutomationExecutionFilterKeyTagKey is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyTagKey = "TagKey"
 )
 
 const (

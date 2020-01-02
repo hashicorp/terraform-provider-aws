@@ -4275,6 +4275,9 @@ type BotAliasMetadata struct {
 	// Checksum of the bot alias.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// Settings that determine how Amazon Lex uses conversation logs for the alias.
+	ConversationLogs *ConversationLogsResponse `locationName:"conversationLogs" type:"structure"`
+
 	// The date that the bot alias was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
@@ -4314,6 +4317,12 @@ func (s *BotAliasMetadata) SetBotVersion(v string) *BotAliasMetadata {
 // SetChecksum sets the Checksum field's value.
 func (s *BotAliasMetadata) SetChecksum(v string) *BotAliasMetadata {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *BotAliasMetadata) SetConversationLogs(v *ConversationLogsResponse) *BotAliasMetadata {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -4674,6 +4683,111 @@ func (s *CodeHook) SetMessageVersion(v string) *CodeHook {
 // SetUri sets the Uri field's value.
 func (s *CodeHook) SetUri(v string) *CodeHook {
 	s.Uri = &v
+	return s
+}
+
+// Provides the settings needed for conversation logs.
+type ConversationLogsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of an IAM role with permission to write to
+	// your CloudWatch Logs for text logs and your S3 bucket for audio logs. If
+	// audio encryption is enabled, this role also provides access permission for
+	// the AWS KMS key used for encrypting audio logs. For more information, see
+	// Creating an IAM Role and Policy for Conversation Logs (https://docs.aws.amazon.com/lex/latest/dg/conversation-logs-role-and-policy.html).
+	//
+	// IamRoleArn is a required field
+	IamRoleArn *string `locationName:"iamRoleArn" min:"20" type:"string" required:"true"`
+
+	// The settings for your conversation logs. You can log the conversation text,
+	// conversation audio, or both.
+	//
+	// LogSettings is a required field
+	LogSettings []*LogSettingsRequest `locationName:"logSettings" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ConversationLogsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConversationLogsRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConversationLogsRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConversationLogsRequest"}
+	if s.IamRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("IamRoleArn"))
+	}
+	if s.IamRoleArn != nil && len(*s.IamRoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("IamRoleArn", 20))
+	}
+	if s.LogSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogSettings"))
+	}
+	if s.LogSettings != nil {
+		for i, v := range s.LogSettings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "LogSettings", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *ConversationLogsRequest) SetIamRoleArn(v string) *ConversationLogsRequest {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetLogSettings sets the LogSettings field's value.
+func (s *ConversationLogsRequest) SetLogSettings(v []*LogSettingsRequest) *ConversationLogsRequest {
+	s.LogSettings = v
+	return s
+}
+
+// Contains information about conversation log settings.
+type ConversationLogsResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the IAM role used to write your logs to
+	// CloudWatch Logs or an S3 bucket.
+	IamRoleArn *string `locationName:"iamRoleArn" min:"20" type:"string"`
+
+	// The settings for your conversation logs. You can log text, audio, or both.
+	LogSettings []*LogSettingsResponse `locationName:"logSettings" type:"list"`
+}
+
+// String returns the string representation
+func (s ConversationLogsResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConversationLogsResponse) GoString() string {
+	return s.String()
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *ConversationLogsResponse) SetIamRoleArn(v string) *ConversationLogsResponse {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetLogSettings sets the LogSettings field's value.
+func (s *ConversationLogsResponse) SetLogSettings(v []*LogSettingsResponse) *ConversationLogsResponse {
+	s.LogSettings = v
 	return s
 }
 
@@ -6164,6 +6278,10 @@ type GetBotAliasOutput struct {
 	// Checksum of the bot alias.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// The settings that determine how Amazon Lex uses conversation logs for the
+	// alias.
+	ConversationLogs *ConversationLogsResponse `locationName:"conversationLogs" type:"structure"`
+
 	// The date that the bot alias was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
@@ -6203,6 +6321,12 @@ func (s *GetBotAliasOutput) SetBotVersion(v string) *GetBotAliasOutput {
 // SetChecksum sets the Checksum field's value.
 func (s *GetBotAliasOutput) SetChecksum(v string) *GetBotAliasOutput {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *GetBotAliasOutput) SetConversationLogs(v *ConversationLogsResponse) *GetBotAliasOutput {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -8687,6 +8811,158 @@ func (s *IntentMetadata) SetVersion(v string) *IntentMetadata {
 	return s
 }
 
+// Settings used to configure delivery mode and destination for conversation
+// logs.
+type LogSettingsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Where the logs will be delivered. Text logs are delivered to a CloudWatch
+	// Logs log group. Audio logs are delivered to an S3 bucket.
+	//
+	// Destination is a required field
+	Destination *string `locationName:"destination" type:"string" required:"true" enum:"Destination"`
+
+	// The Amazon Resource Name (ARN) of the AWS KMS customer managed key for encrypting
+	// audio logs delivered to an S3 bucket. The key does not apply to CloudWatch
+	// Logs and is optional for S3 buckets.
+	KmsKeyArn *string `locationName:"kmsKeyArn" min:"20" type:"string"`
+
+	// The type of logging to enable. Text logs are delivered to a CloudWatch Logs
+	// log group. Audio logs are delivered to an S3 bucket.
+	//
+	// LogType is a required field
+	LogType *string `locationName:"logType" type:"string" required:"true" enum:"LogType"`
+
+	// The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket
+	// where the logs should be delivered.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s LogSettingsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogSettingsRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LogSettingsRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LogSettingsRequest"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.KmsKeyArn != nil && len(*s.KmsKeyArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("KmsKeyArn", 20))
+	}
+	if s.LogType == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogType"))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *LogSettingsRequest) SetDestination(v string) *LogSettingsRequest {
+	s.Destination = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *LogSettingsRequest) SetKmsKeyArn(v string) *LogSettingsRequest {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetLogType sets the LogType field's value.
+func (s *LogSettingsRequest) SetLogType(v string) *LogSettingsRequest {
+	s.LogType = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *LogSettingsRequest) SetResourceArn(v string) *LogSettingsRequest {
+	s.ResourceArn = &v
+	return s
+}
+
+// The settings for conversation logs.
+type LogSettingsResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The destination where logs are delivered.
+	Destination *string `locationName:"destination" type:"string" enum:"Destination"`
+
+	// The Amazon Resource Name (ARN) of the key used to encrypt audio logs in an
+	// S3 bucket.
+	KmsKeyArn *string `locationName:"kmsKeyArn" min:"20" type:"string"`
+
+	// The type of logging that is enabled.
+	LogType *string `locationName:"logType" type:"string" enum:"LogType"`
+
+	// The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket
+	// where the logs are delivered.
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string"`
+
+	// The resource prefix is the first part of the S3 object key within the S3
+	// bucket that you specified to contain audio logs. For CloudWatch Logs it is
+	// the prefix of the log stream name within the log group that you specified.
+	ResourcePrefix *string `locationName:"resourcePrefix" type:"string"`
+}
+
+// String returns the string representation
+func (s LogSettingsResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogSettingsResponse) GoString() string {
+	return s.String()
+}
+
+// SetDestination sets the Destination field's value.
+func (s *LogSettingsResponse) SetDestination(v string) *LogSettingsResponse {
+	s.Destination = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *LogSettingsResponse) SetKmsKeyArn(v string) *LogSettingsResponse {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetLogType sets the LogType field's value.
+func (s *LogSettingsResponse) SetLogType(v string) *LogSettingsResponse {
+	s.LogType = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *LogSettingsResponse) SetResourceArn(v string) *LogSettingsResponse {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetResourcePrefix sets the ResourcePrefix field's value.
+func (s *LogSettingsResponse) SetResourcePrefix(v string) *LogSettingsResponse {
+	s.ResourcePrefix = &v
+	return s
+}
+
 // The message object that provides the message text and its type.
 type Message struct {
 	_ struct{} `type:"structure"`
@@ -8869,6 +9145,9 @@ type PutBotAliasInput struct {
 	// you get a PreconditionFailedException exception.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// Settings for conversation logs for the alias.
+	ConversationLogs *ConversationLogsRequest `locationName:"conversationLogs" type:"structure"`
+
 	// A description of the alias.
 	Description *string `locationName:"description" type:"string"`
 
@@ -8909,6 +9188,11 @@ func (s *PutBotAliasInput) Validate() error {
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
+	if s.ConversationLogs != nil {
+		if err := s.ConversationLogs.Validate(); err != nil {
+			invalidParams.AddNested("ConversationLogs", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8931,6 +9215,12 @@ func (s *PutBotAliasInput) SetBotVersion(v string) *PutBotAliasInput {
 // SetChecksum sets the Checksum field's value.
 func (s *PutBotAliasInput) SetChecksum(v string) *PutBotAliasInput {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *PutBotAliasInput) SetConversationLogs(v *ConversationLogsRequest) *PutBotAliasInput {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -8957,6 +9247,10 @@ type PutBotAliasOutput struct {
 
 	// The checksum for the current version of the alias.
 	Checksum *string `locationName:"checksum" type:"string"`
+
+	// The settings that determine how Amazon Lex uses conversation logs for the
+	// alias.
+	ConversationLogs *ConversationLogsResponse `locationName:"conversationLogs" type:"structure"`
 
 	// The date that the bot alias was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
@@ -8997,6 +9291,12 @@ func (s *PutBotAliasOutput) SetBotVersion(v string) *PutBotAliasOutput {
 // SetChecksum sets the Checksum field's value.
 func (s *PutBotAliasOutput) SetChecksum(v string) *PutBotAliasOutput {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *PutBotAliasOutput) SetConversationLogs(v *ConversationLogsResponse) *PutBotAliasOutput {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -10247,6 +10547,13 @@ type Slot struct {
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
+	// Determines whether a slot is obfuscated in conversation logs and stored utterances.
+	// When you obfuscate a slot, the value is replaced by the slot name in curly
+	// braces ({}). For example, if the slot name is "full_name", obfuscated values
+	// are replaced with "{full_name}". For more information, see Slot Obfuscation
+	// (https://docs.aws.amazon.com/lex/latest/dg/how-obfuscate.html).
+	ObfuscationSetting *string `locationName:"obfuscationSetting" type:"string" enum:"ObfuscationSetting"`
+
 	// Directs Lex the order in which to elicit this slot value from the user. For
 	// example, if the intent has two slots with priorities 1 and 2, AWS Lex first
 	// elicits a value for the slot with priority 1.
@@ -10334,6 +10641,12 @@ func (s *Slot) SetDescription(v string) *Slot {
 // SetName sets the Name field's value.
 func (s *Slot) SetName(v string) *Slot {
 	s.Name = &v
+	return s
+}
+
+// SetObfuscationSetting sets the ObfuscationSetting field's value.
+func (s *Slot) SetObfuscationSetting(v string) *Slot {
+	s.ObfuscationSetting = &v
 	return s
 }
 
@@ -10794,6 +11107,14 @@ const (
 )
 
 const (
+	// DestinationCloudwatchLogs is a Destination enum value
+	DestinationCloudwatchLogs = "CLOUDWATCH_LOGS"
+
+	// DestinationS3 is a Destination enum value
+	DestinationS3 = "S3"
+)
+
+const (
 	// ExportStatusInProgress is a ExportStatus enum value
 	ExportStatusInProgress = "IN_PROGRESS"
 
@@ -10843,11 +11164,27 @@ const (
 )
 
 const (
+	// LogTypeAudio is a LogType enum value
+	LogTypeAudio = "AUDIO"
+
+	// LogTypeText is a LogType enum value
+	LogTypeText = "TEXT"
+)
+
+const (
 	// MergeStrategyOverwriteLatest is a MergeStrategy enum value
 	MergeStrategyOverwriteLatest = "OVERWRITE_LATEST"
 
 	// MergeStrategyFailOnConflict is a MergeStrategy enum value
 	MergeStrategyFailOnConflict = "FAIL_ON_CONFLICT"
+)
+
+const (
+	// ObfuscationSettingNone is a ObfuscationSetting enum value
+	ObfuscationSettingNone = "NONE"
+
+	// ObfuscationSettingDefaultObfuscation is a ObfuscationSetting enum value
+	ObfuscationSettingDefaultObfuscation = "DEFAULT_OBFUSCATION"
 )
 
 const (

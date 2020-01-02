@@ -2060,7 +2060,8 @@ func (c *SecurityHub) EnableSecurityHubRequest(input *EnableSecurityHubInput) (r
 // EnableSecurityHub API operation for AWS SecurityHub.
 //
 // Enables Security Hub for your account in the current Region or the Region
-// you specify in the request. When you enable Security Hub, you grant to Security
+// you specify in the request. Enabling Security Hub also enables the CIS AWS
+// Foundations standard. When you enable Security Hub, you grant to Security
 // Hub the permissions necessary to gather findings from AWS Config, Amazon
 // GuardDuty, Amazon Inspector, and Amazon Macie. To learn more, see Setting
 // Up AWS Security Hub (https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-settingup.html).
@@ -3987,6 +3988,241 @@ func (s *ActionTarget) SetName(v string) *ActionTarget {
 	return s
 }
 
+// Information about an Availability Zone.
+type AvailabilityZone struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the subnet. You can specify one subnet per Availability Zone.
+	SubnetId *string `type:"string"`
+
+	// The name of the Availability Zone.
+	ZoneName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AvailabilityZone) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AvailabilityZone) GoString() string {
+	return s.String()
+}
+
+// SetSubnetId sets the SubnetId field's value.
+func (s *AvailabilityZone) SetSubnetId(v string) *AvailabilityZone {
+	s.SubnetId = &v
+	return s
+}
+
+// SetZoneName sets the ZoneName field's value.
+func (s *AvailabilityZone) SetZoneName(v string) *AvailabilityZone {
+	s.ZoneName = &v
+	return s
+}
+
+// A distribution configuration.
+type AwsCloudFrontDistributionDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The domain name corresponding to the distribution.
+	DomainName *string `type:"string"`
+
+	// The entity tag is a hash of the object.
+	ETag *string `type:"string"`
+
+	// The date and time that the distribution was last modified.
+	LastModifiedTime *string `type:"string"`
+
+	// A complex type that controls whether access logs are written for the distribution.
+	Logging *AwsCloudFrontDistributionLogging `type:"structure"`
+
+	// A complex type that contains information about origins for this distribution.
+	Origins *AwsCloudFrontDistributionOrigins `type:"structure"`
+
+	// Indicates the current status of the distribution.
+	Status *string `type:"string"`
+
+	// A unique identifier that specifies the AWS WAF web ACL, if any, to associate
+	// with this distribution.
+	WebAclId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsCloudFrontDistributionDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsCloudFrontDistributionDetails) GoString() string {
+	return s.String()
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *AwsCloudFrontDistributionDetails) SetDomainName(v string) *AwsCloudFrontDistributionDetails {
+	s.DomainName = &v
+	return s
+}
+
+// SetETag sets the ETag field's value.
+func (s *AwsCloudFrontDistributionDetails) SetETag(v string) *AwsCloudFrontDistributionDetails {
+	s.ETag = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *AwsCloudFrontDistributionDetails) SetLastModifiedTime(v string) *AwsCloudFrontDistributionDetails {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetLogging sets the Logging field's value.
+func (s *AwsCloudFrontDistributionDetails) SetLogging(v *AwsCloudFrontDistributionLogging) *AwsCloudFrontDistributionDetails {
+	s.Logging = v
+	return s
+}
+
+// SetOrigins sets the Origins field's value.
+func (s *AwsCloudFrontDistributionDetails) SetOrigins(v *AwsCloudFrontDistributionOrigins) *AwsCloudFrontDistributionDetails {
+	s.Origins = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AwsCloudFrontDistributionDetails) SetStatus(v string) *AwsCloudFrontDistributionDetails {
+	s.Status = &v
+	return s
+}
+
+// SetWebAclId sets the WebAclId field's value.
+func (s *AwsCloudFrontDistributionDetails) SetWebAclId(v string) *AwsCloudFrontDistributionDetails {
+	s.WebAclId = &v
+	return s
+}
+
+// A complex type that controls whether access logs are written for the distribution.
+type AwsCloudFrontDistributionLogging struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon S3 bucket to store the access logs in.
+	Bucket *string `type:"string"`
+
+	// With this field, you can enable or disable the selected distribution.
+	Enabled *bool `type:"boolean"`
+
+	// Specifies whether you want CloudFront to include cookies in access logs.
+	IncludeCookies *bool `type:"boolean"`
+
+	// An optional string that you want CloudFront to prefix to the access log filenames
+	// for this distribution.
+	Prefix *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsCloudFrontDistributionLogging) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsCloudFrontDistributionLogging) GoString() string {
+	return s.String()
+}
+
+// SetBucket sets the Bucket field's value.
+func (s *AwsCloudFrontDistributionLogging) SetBucket(v string) *AwsCloudFrontDistributionLogging {
+	s.Bucket = &v
+	return s
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *AwsCloudFrontDistributionLogging) SetEnabled(v bool) *AwsCloudFrontDistributionLogging {
+	s.Enabled = &v
+	return s
+}
+
+// SetIncludeCookies sets the IncludeCookies field's value.
+func (s *AwsCloudFrontDistributionLogging) SetIncludeCookies(v bool) *AwsCloudFrontDistributionLogging {
+	s.IncludeCookies = &v
+	return s
+}
+
+// SetPrefix sets the Prefix field's value.
+func (s *AwsCloudFrontDistributionLogging) SetPrefix(v string) *AwsCloudFrontDistributionLogging {
+	s.Prefix = &v
+	return s
+}
+
+// A complex type that describes the Amazon S3 bucket, HTTP server (for example,
+// a web server), Amazon MediaStore, or other server from which CloudFront gets
+// your files.
+type AwsCloudFrontDistributionOriginItem struct {
+	_ struct{} `type:"structure"`
+
+	// Amazon S3 origins: The DNS name of the Amazon S3 bucket from which you want
+	// CloudFront to get objects for this origin.
+	DomainName *string `type:"string"`
+
+	// A unique identifier for the origin or origin group.
+	Id *string `type:"string"`
+
+	// An optional element that causes CloudFront to request your content from a
+	// directory in your Amazon S3 bucket or your custom origin.
+	OriginPath *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsCloudFrontDistributionOriginItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsCloudFrontDistributionOriginItem) GoString() string {
+	return s.String()
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *AwsCloudFrontDistributionOriginItem) SetDomainName(v string) *AwsCloudFrontDistributionOriginItem {
+	s.DomainName = &v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *AwsCloudFrontDistributionOriginItem) SetId(v string) *AwsCloudFrontDistributionOriginItem {
+	s.Id = &v
+	return s
+}
+
+// SetOriginPath sets the OriginPath field's value.
+func (s *AwsCloudFrontDistributionOriginItem) SetOriginPath(v string) *AwsCloudFrontDistributionOriginItem {
+	s.OriginPath = &v
+	return s
+}
+
+// A complex type that contains information about origins and origin groups
+// for this distribution.
+type AwsCloudFrontDistributionOrigins struct {
+	_ struct{} `type:"structure"`
+
+	// A complex type that contains origins or origin groups for this distribution.
+	Items []*AwsCloudFrontDistributionOriginItem `type:"list"`
+}
+
+// String returns the string representation
+func (s AwsCloudFrontDistributionOrigins) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsCloudFrontDistributionOrigins) GoString() string {
+	return s.String()
+}
+
+// SetItems sets the Items field's value.
+func (s *AwsCloudFrontDistributionOrigins) SetItems(v []*AwsCloudFrontDistributionOriginItem) *AwsCloudFrontDistributionOrigins {
+	s.Items = v
+	return s
+}
+
 // The details of an Amazon EC2 instance.
 type AwsEc2InstanceDetails struct {
 	_ struct{} `type:"structure"`
@@ -4083,6 +4319,113 @@ func (s *AwsEc2InstanceDetails) SetVpcId(v string) *AwsEc2InstanceDetails {
 	return s
 }
 
+// Information about a load balancer.
+type AwsElbv2LoadBalancerDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The Availability Zones for the load balancer.
+	AvailabilityZones []*AvailabilityZone `type:"list"`
+
+	// The ID of the Amazon Route 53 hosted zone associated with the load balancer.
+	CanonicalHostedZoneId *string `type:"string"`
+
+	// The date and time the load balancer was created.
+	CreatedTime *string `type:"string"`
+
+	// The public DNS name of the load balancer.
+	DNSName *string `type:"string"`
+
+	// The type of IP addresses used by the subnets for your load balancer. The
+	// possible values are ipv4 (for IPv4 addresses) and dualstack (for IPv4 and
+	// IPv6 addresses).
+	IpAddressType *string `type:"string"`
+
+	// The nodes of an Internet-facing load balancer have public IP addresses.
+	Scheme *string `type:"string"`
+
+	// The IDs of the security groups for the load balancer.
+	SecurityGroups []*string `type:"list"`
+
+	// The state of the load balancer.
+	State *LoadBalancerState `type:"structure"`
+
+	// The type of load balancer.
+	Type *string `type:"string"`
+
+	// The ID of the VPC for the load balancer.
+	VpcId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsElbv2LoadBalancerDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsElbv2LoadBalancerDetails) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZones sets the AvailabilityZones field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetAvailabilityZones(v []*AvailabilityZone) *AwsElbv2LoadBalancerDetails {
+	s.AvailabilityZones = v
+	return s
+}
+
+// SetCanonicalHostedZoneId sets the CanonicalHostedZoneId field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetCanonicalHostedZoneId(v string) *AwsElbv2LoadBalancerDetails {
+	s.CanonicalHostedZoneId = &v
+	return s
+}
+
+// SetCreatedTime sets the CreatedTime field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetCreatedTime(v string) *AwsElbv2LoadBalancerDetails {
+	s.CreatedTime = &v
+	return s
+}
+
+// SetDNSName sets the DNSName field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetDNSName(v string) *AwsElbv2LoadBalancerDetails {
+	s.DNSName = &v
+	return s
+}
+
+// SetIpAddressType sets the IpAddressType field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetIpAddressType(v string) *AwsElbv2LoadBalancerDetails {
+	s.IpAddressType = &v
+	return s
+}
+
+// SetScheme sets the Scheme field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetScheme(v string) *AwsElbv2LoadBalancerDetails {
+	s.Scheme = &v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetSecurityGroups(v []*string) *AwsElbv2LoadBalancerDetails {
+	s.SecurityGroups = v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetState(v *LoadBalancerState) *AwsElbv2LoadBalancerDetails {
+	s.State = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetType(v string) *AwsElbv2LoadBalancerDetails {
+	s.Type = &v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *AwsElbv2LoadBalancerDetails) SetVpcId(v string) *AwsElbv2LoadBalancerDetails {
+	s.VpcId = &v
+	return s
+}
+
 // IAM access key details related to a finding.
 type AwsIamAccessKeyDetails struct {
 	_ struct{} `type:"structure"`
@@ -4090,11 +4433,25 @@ type AwsIamAccessKeyDetails struct {
 	// The creation date/time of the IAM access key related to a finding.
 	CreatedAt *string `type:"string"`
 
+	// The ID of the principal associated with an access key.
+	PrincipalId *string `type:"string"`
+
+	// The name of the principal.
+	PrincipalName *string `type:"string"`
+
+	// The type of principal associated with an access key.
+	PrincipalType *string `type:"string"`
+
 	// The status of the IAM access key related to a finding.
 	Status *string `type:"string" enum:"AwsIamAccessKeyStatus"`
 
 	// The user associated with the IAM access key related to a finding.
-	UserName *string `type:"string"`
+	//
+	// The UserName parameter has been replaced with the PrincipalName parameter
+	// because access keys can also be assigned to principals that are not IAM users.
+	//
+	// Deprecated: This field is deprecated, use PrincipalName instead.
+	UserName *string `deprecated:"true" type:"string"`
 }
 
 // String returns the string representation
@@ -4113,6 +4470,24 @@ func (s *AwsIamAccessKeyDetails) SetCreatedAt(v string) *AwsIamAccessKeyDetails 
 	return s
 }
 
+// SetPrincipalId sets the PrincipalId field's value.
+func (s *AwsIamAccessKeyDetails) SetPrincipalId(v string) *AwsIamAccessKeyDetails {
+	s.PrincipalId = &v
+	return s
+}
+
+// SetPrincipalName sets the PrincipalName field's value.
+func (s *AwsIamAccessKeyDetails) SetPrincipalName(v string) *AwsIamAccessKeyDetails {
+	s.PrincipalName = &v
+	return s
+}
+
+// SetPrincipalType sets the PrincipalType field's value.
+func (s *AwsIamAccessKeyDetails) SetPrincipalType(v string) *AwsIamAccessKeyDetails {
+	s.PrincipalType = &v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *AwsIamAccessKeyDetails) SetStatus(v string) *AwsIamAccessKeyDetails {
 	s.Status = &v
@@ -4122,6 +4497,586 @@ func (s *AwsIamAccessKeyDetails) SetStatus(v string) *AwsIamAccessKeyDetails {
 // SetUserName sets the UserName field's value.
 func (s *AwsIamAccessKeyDetails) SetUserName(v string) *AwsIamAccessKeyDetails {
 	s.UserName = &v
+	return s
+}
+
+// Contains information about an IAM role, including all of the role's policies.
+type AwsIamRoleDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The trust policy that grants permission to assume the role.
+	AssumeRolePolicyDocument *string `min:"1" type:"string"`
+
+	// The date and time, in ISO 8601 date-time format, when the role was created.
+	CreateDate *string `type:"string"`
+
+	// The maximum session duration (in seconds) that you want to set for the specified
+	// role.
+	MaxSessionDuration *int64 `type:"integer"`
+
+	// The path to the role.
+	Path *string `type:"string"`
+
+	// The stable and unique string identifying the role.
+	RoleId *string `type:"string"`
+
+	// The friendly name that identifies the role.
+	RoleName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsIamRoleDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsIamRoleDetails) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsIamRoleDetails) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsIamRoleDetails"}
+	if s.AssumeRolePolicyDocument != nil && len(*s.AssumeRolePolicyDocument) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AssumeRolePolicyDocument", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssumeRolePolicyDocument sets the AssumeRolePolicyDocument field's value.
+func (s *AwsIamRoleDetails) SetAssumeRolePolicyDocument(v string) *AwsIamRoleDetails {
+	s.AssumeRolePolicyDocument = &v
+	return s
+}
+
+// SetCreateDate sets the CreateDate field's value.
+func (s *AwsIamRoleDetails) SetCreateDate(v string) *AwsIamRoleDetails {
+	s.CreateDate = &v
+	return s
+}
+
+// SetMaxSessionDuration sets the MaxSessionDuration field's value.
+func (s *AwsIamRoleDetails) SetMaxSessionDuration(v int64) *AwsIamRoleDetails {
+	s.MaxSessionDuration = &v
+	return s
+}
+
+// SetPath sets the Path field's value.
+func (s *AwsIamRoleDetails) SetPath(v string) *AwsIamRoleDetails {
+	s.Path = &v
+	return s
+}
+
+// SetRoleId sets the RoleId field's value.
+func (s *AwsIamRoleDetails) SetRoleId(v string) *AwsIamRoleDetails {
+	s.RoleId = &v
+	return s
+}
+
+// SetRoleName sets the RoleName field's value.
+func (s *AwsIamRoleDetails) SetRoleName(v string) *AwsIamRoleDetails {
+	s.RoleName = &v
+	return s
+}
+
+// Contains metadata about a customer master key (CMK).
+type AwsKmsKeyDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The twelve-digit account ID of the AWS account that owns the CMK.
+	AWSAccountId *string `type:"string"`
+
+	// The date and time when the CMK was created.
+	CreationDate *float64 `type:"double"`
+
+	// The globally unique identifier for the CMK.
+	KeyId *string `type:"string"`
+
+	// The manager of the CMK. CMKs in your AWS account are either customer managed
+	// or AWS managed.
+	KeyManager *string `type:"string"`
+
+	// The state of the CMK.
+	KeyState *string `type:"string"`
+
+	// The source of the CMK's key material. When this value is AWS_KMS, AWS KMS
+	// created the key material. When this value is EXTERNAL, the key material was
+	// imported from your existing key management infrastructure or the CMK lacks
+	// key material. When this value is AWS_CLOUDHSM, the key material was created
+	// in the AWS CloudHSM cluster associated with a custom key store.
+	Origin *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsKmsKeyDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsKmsKeyDetails) GoString() string {
+	return s.String()
+}
+
+// SetAWSAccountId sets the AWSAccountId field's value.
+func (s *AwsKmsKeyDetails) SetAWSAccountId(v string) *AwsKmsKeyDetails {
+	s.AWSAccountId = &v
+	return s
+}
+
+// SetCreationDate sets the CreationDate field's value.
+func (s *AwsKmsKeyDetails) SetCreationDate(v float64) *AwsKmsKeyDetails {
+	s.CreationDate = &v
+	return s
+}
+
+// SetKeyId sets the KeyId field's value.
+func (s *AwsKmsKeyDetails) SetKeyId(v string) *AwsKmsKeyDetails {
+	s.KeyId = &v
+	return s
+}
+
+// SetKeyManager sets the KeyManager field's value.
+func (s *AwsKmsKeyDetails) SetKeyManager(v string) *AwsKmsKeyDetails {
+	s.KeyManager = &v
+	return s
+}
+
+// SetKeyState sets the KeyState field's value.
+func (s *AwsKmsKeyDetails) SetKeyState(v string) *AwsKmsKeyDetails {
+	s.KeyState = &v
+	return s
+}
+
+// SetOrigin sets the Origin field's value.
+func (s *AwsKmsKeyDetails) SetOrigin(v string) *AwsKmsKeyDetails {
+	s.Origin = &v
+	return s
+}
+
+// The code for the Lambda function. You can specify either an object in Amazon
+// S3, or upload a deployment package directly.
+type AwsLambdaFunctionCode struct {
+	_ struct{} `type:"structure"`
+
+	// An Amazon S3 bucket in the same AWS Region as your function. The bucket can
+	// be in a different AWS account.
+	S3Bucket *string `type:"string"`
+
+	// The Amazon S3 key of the deployment package.
+	S3Key *string `type:"string"`
+
+	// For versioned objects, the version of the deployment package object to use.
+	S3ObjectVersion *string `type:"string"`
+
+	// The base64-encoded contents of the deployment package. AWS SDK and AWS CLI
+	// clients handle the encoding for you.
+	ZipFile *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionCode) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionCode) GoString() string {
+	return s.String()
+}
+
+// SetS3Bucket sets the S3Bucket field's value.
+func (s *AwsLambdaFunctionCode) SetS3Bucket(v string) *AwsLambdaFunctionCode {
+	s.S3Bucket = &v
+	return s
+}
+
+// SetS3Key sets the S3Key field's value.
+func (s *AwsLambdaFunctionCode) SetS3Key(v string) *AwsLambdaFunctionCode {
+	s.S3Key = &v
+	return s
+}
+
+// SetS3ObjectVersion sets the S3ObjectVersion field's value.
+func (s *AwsLambdaFunctionCode) SetS3ObjectVersion(v string) *AwsLambdaFunctionCode {
+	s.S3ObjectVersion = &v
+	return s
+}
+
+// SetZipFile sets the ZipFile field's value.
+func (s *AwsLambdaFunctionCode) SetZipFile(v string) *AwsLambdaFunctionCode {
+	s.ZipFile = &v
+	return s
+}
+
+// The dead-letter queue for failed asynchronous invocations.
+type AwsLambdaFunctionDeadLetterConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of an Amazon SQS queue or Amazon SNS topic.
+	TargetArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionDeadLetterConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionDeadLetterConfig) GoString() string {
+	return s.String()
+}
+
+// SetTargetArn sets the TargetArn field's value.
+func (s *AwsLambdaFunctionDeadLetterConfig) SetTargetArn(v string) *AwsLambdaFunctionDeadLetterConfig {
+	s.TargetArn = &v
+	return s
+}
+
+// Details about a function's configuration.
+type AwsLambdaFunctionDetails struct {
+	_ struct{} `type:"structure"`
+
+	// An AwsLambdaFunctionCode object.
+	Code *AwsLambdaFunctionCode `type:"structure"`
+
+	// The SHA256 hash of the function's deployment package.
+	CodeSha256 *string `type:"string"`
+
+	// The function's dead letter queue.
+	DeadLetterConfig *AwsLambdaFunctionDeadLetterConfig `type:"structure"`
+
+	// The function's environment variables.
+	Environment *AwsLambdaFunctionEnvironment `type:"structure"`
+
+	// The name of the function.
+	FunctionName *string `type:"string"`
+
+	// The function that Lambda calls to begin executing your function.
+	Handler *string `type:"string"`
+
+	// The KMS key that's used to encrypt the function's environment variables.
+	// This key is only returned if you've configured a customer managed CMK.
+	KmsKeyArn *string `type:"string"`
+
+	// The date and time that the function was last updated, in ISO-8601 format
+	// (YYYY-MM-DDThh:mm:ss.sTZD).
+	LastModified *string `type:"string"`
+
+	// The function's layers.
+	Layers []*AwsLambdaFunctionLayer `type:"list"`
+
+	// For Lambda@Edge functions, the ARN of the master function.
+	MasterArn *string `type:"string"`
+
+	// The memory that's allocated to the function.
+	MemorySize *int64 `type:"integer"`
+
+	// The latest updated revision of the function or alias.
+	RevisionId *string `type:"string"`
+
+	// The function's execution role.
+	Role *string `type:"string"`
+
+	// The runtime environment for the Lambda function.
+	Runtime *string `type:"string"`
+
+	// The amount of time that Lambda allows a function to run before stopping it.
+	Timeout *int64 `type:"integer"`
+
+	// The function's AWS X-Ray tracing configuration.
+	TracingConfig *AwsLambdaFunctionTracingConfig `type:"structure"`
+
+	// The version of the Lambda function.
+	Version *string `type:"string"`
+
+	// The function's networking configuration.
+	VpcConfig *AwsLambdaFunctionVpcConfig `type:"structure"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionDetails) GoString() string {
+	return s.String()
+}
+
+// SetCode sets the Code field's value.
+func (s *AwsLambdaFunctionDetails) SetCode(v *AwsLambdaFunctionCode) *AwsLambdaFunctionDetails {
+	s.Code = v
+	return s
+}
+
+// SetCodeSha256 sets the CodeSha256 field's value.
+func (s *AwsLambdaFunctionDetails) SetCodeSha256(v string) *AwsLambdaFunctionDetails {
+	s.CodeSha256 = &v
+	return s
+}
+
+// SetDeadLetterConfig sets the DeadLetterConfig field's value.
+func (s *AwsLambdaFunctionDetails) SetDeadLetterConfig(v *AwsLambdaFunctionDeadLetterConfig) *AwsLambdaFunctionDetails {
+	s.DeadLetterConfig = v
+	return s
+}
+
+// SetEnvironment sets the Environment field's value.
+func (s *AwsLambdaFunctionDetails) SetEnvironment(v *AwsLambdaFunctionEnvironment) *AwsLambdaFunctionDetails {
+	s.Environment = v
+	return s
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *AwsLambdaFunctionDetails) SetFunctionName(v string) *AwsLambdaFunctionDetails {
+	s.FunctionName = &v
+	return s
+}
+
+// SetHandler sets the Handler field's value.
+func (s *AwsLambdaFunctionDetails) SetHandler(v string) *AwsLambdaFunctionDetails {
+	s.Handler = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *AwsLambdaFunctionDetails) SetKmsKeyArn(v string) *AwsLambdaFunctionDetails {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *AwsLambdaFunctionDetails) SetLastModified(v string) *AwsLambdaFunctionDetails {
+	s.LastModified = &v
+	return s
+}
+
+// SetLayers sets the Layers field's value.
+func (s *AwsLambdaFunctionDetails) SetLayers(v []*AwsLambdaFunctionLayer) *AwsLambdaFunctionDetails {
+	s.Layers = v
+	return s
+}
+
+// SetMasterArn sets the MasterArn field's value.
+func (s *AwsLambdaFunctionDetails) SetMasterArn(v string) *AwsLambdaFunctionDetails {
+	s.MasterArn = &v
+	return s
+}
+
+// SetMemorySize sets the MemorySize field's value.
+func (s *AwsLambdaFunctionDetails) SetMemorySize(v int64) *AwsLambdaFunctionDetails {
+	s.MemorySize = &v
+	return s
+}
+
+// SetRevisionId sets the RevisionId field's value.
+func (s *AwsLambdaFunctionDetails) SetRevisionId(v string) *AwsLambdaFunctionDetails {
+	s.RevisionId = &v
+	return s
+}
+
+// SetRole sets the Role field's value.
+func (s *AwsLambdaFunctionDetails) SetRole(v string) *AwsLambdaFunctionDetails {
+	s.Role = &v
+	return s
+}
+
+// SetRuntime sets the Runtime field's value.
+func (s *AwsLambdaFunctionDetails) SetRuntime(v string) *AwsLambdaFunctionDetails {
+	s.Runtime = &v
+	return s
+}
+
+// SetTimeout sets the Timeout field's value.
+func (s *AwsLambdaFunctionDetails) SetTimeout(v int64) *AwsLambdaFunctionDetails {
+	s.Timeout = &v
+	return s
+}
+
+// SetTracingConfig sets the TracingConfig field's value.
+func (s *AwsLambdaFunctionDetails) SetTracingConfig(v *AwsLambdaFunctionTracingConfig) *AwsLambdaFunctionDetails {
+	s.TracingConfig = v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *AwsLambdaFunctionDetails) SetVersion(v string) *AwsLambdaFunctionDetails {
+	s.Version = &v
+	return s
+}
+
+// SetVpcConfig sets the VpcConfig field's value.
+func (s *AwsLambdaFunctionDetails) SetVpcConfig(v *AwsLambdaFunctionVpcConfig) *AwsLambdaFunctionDetails {
+	s.VpcConfig = v
+	return s
+}
+
+// A function's environment variable settings.
+type AwsLambdaFunctionEnvironment struct {
+	_ struct{} `type:"structure"`
+
+	// An AwsLambdaFunctionEnvironmentError object.
+	Error *AwsLambdaFunctionEnvironmentError `type:"structure"`
+
+	// Environment variable key-value pairs.
+	Variables map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionEnvironment) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionEnvironment) GoString() string {
+	return s.String()
+}
+
+// SetError sets the Error field's value.
+func (s *AwsLambdaFunctionEnvironment) SetError(v *AwsLambdaFunctionEnvironmentError) *AwsLambdaFunctionEnvironment {
+	s.Error = v
+	return s
+}
+
+// SetVariables sets the Variables field's value.
+func (s *AwsLambdaFunctionEnvironment) SetVariables(v map[string]*string) *AwsLambdaFunctionEnvironment {
+	s.Variables = v
+	return s
+}
+
+// Error messages for environment variables that couldn't be applied.
+type AwsLambdaFunctionEnvironmentError struct {
+	_ struct{} `type:"structure"`
+
+	// The error code.
+	ErrorCode *string `type:"string"`
+
+	// The error message.
+	Message *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionEnvironmentError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionEnvironmentError) GoString() string {
+	return s.String()
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *AwsLambdaFunctionEnvironmentError) SetErrorCode(v string) *AwsLambdaFunctionEnvironmentError {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetMessage sets the Message field's value.
+func (s *AwsLambdaFunctionEnvironmentError) SetMessage(v string) *AwsLambdaFunctionEnvironmentError {
+	s.Message = &v
+	return s
+}
+
+// An AWS Lambda layer.
+type AwsLambdaFunctionLayer struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the function layer.
+	Arn *string `type:"string"`
+
+	// The size of the layer archive in bytes.
+	CodeSize *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionLayer) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionLayer) GoString() string {
+	return s.String()
+}
+
+// SetArn sets the Arn field's value.
+func (s *AwsLambdaFunctionLayer) SetArn(v string) *AwsLambdaFunctionLayer {
+	s.Arn = &v
+	return s
+}
+
+// SetCodeSize sets the CodeSize field's value.
+func (s *AwsLambdaFunctionLayer) SetCodeSize(v int64) *AwsLambdaFunctionLayer {
+	s.CodeSize = &v
+	return s
+}
+
+// The function's AWS X-Ray tracing configuration.
+type AwsLambdaFunctionTracingConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The tracing mode.
+	Mode *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionTracingConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionTracingConfig) GoString() string {
+	return s.String()
+}
+
+// SetMode sets the Mode field's value.
+func (s *AwsLambdaFunctionTracingConfig) SetMode(v string) *AwsLambdaFunctionTracingConfig {
+	s.Mode = &v
+	return s
+}
+
+// The VPC security groups and subnets that are attached to a Lambda function.
+// For more information, see VPC Settings.
+type AwsLambdaFunctionVpcConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A list of VPC security groups IDs.
+	SecurityGroupIds []*string `type:"list"`
+
+	// A list of VPC subnet IDs.
+	SubnetIds []*string `type:"list"`
+
+	// The ID of the VPC.
+	VpcId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsLambdaFunctionVpcConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsLambdaFunctionVpcConfig) GoString() string {
+	return s.String()
+}
+
+// SetSecurityGroupIds sets the SecurityGroupIds field's value.
+func (s *AwsLambdaFunctionVpcConfig) SetSecurityGroupIds(v []*string) *AwsLambdaFunctionVpcConfig {
+	s.SecurityGroupIds = v
+	return s
+}
+
+// SetSubnetIds sets the SubnetIds field's value.
+func (s *AwsLambdaFunctionVpcConfig) SetSubnetIds(v []*string) *AwsLambdaFunctionVpcConfig {
+	s.SubnetIds = v
+	return s
+}
+
+// SetVpcId sets the VpcId field's value.
+func (s *AwsLambdaFunctionVpcConfig) SetVpcId(v string) *AwsLambdaFunctionVpcConfig {
+	s.VpcId = &v
 	return s
 }
 
@@ -5376,6 +6331,146 @@ func (s *AwsSecurityFindingFilters) SetWorkflowState(v []*StringFilter) *AwsSecu
 	return s
 }
 
+// A wrapper type for the topic's Amazon Resource Name (ARN).
+type AwsSnsTopicDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of an AWS-managed customer master key (CMK) for Amazon SNS or a custom
+	// CMK.
+	KmsMasterKeyId *string `type:"string"`
+
+	// The subscription's owner.
+	Owner *string `type:"string"`
+
+	// Subscription is an embedded property that describes the subscription endpoints
+	// of an Amazon SNS topic.
+	Subscription []*AwsSnsTopicSubscription `type:"list"`
+
+	// The name of the topic.
+	TopicName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsSnsTopicDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsSnsTopicDetails) GoString() string {
+	return s.String()
+}
+
+// SetKmsMasterKeyId sets the KmsMasterKeyId field's value.
+func (s *AwsSnsTopicDetails) SetKmsMasterKeyId(v string) *AwsSnsTopicDetails {
+	s.KmsMasterKeyId = &v
+	return s
+}
+
+// SetOwner sets the Owner field's value.
+func (s *AwsSnsTopicDetails) SetOwner(v string) *AwsSnsTopicDetails {
+	s.Owner = &v
+	return s
+}
+
+// SetSubscription sets the Subscription field's value.
+func (s *AwsSnsTopicDetails) SetSubscription(v []*AwsSnsTopicSubscription) *AwsSnsTopicDetails {
+	s.Subscription = v
+	return s
+}
+
+// SetTopicName sets the TopicName field's value.
+func (s *AwsSnsTopicDetails) SetTopicName(v string) *AwsSnsTopicDetails {
+	s.TopicName = &v
+	return s
+}
+
+// A wrapper type for the attributes of an Amazon SNS subscription.
+type AwsSnsTopicSubscription struct {
+	_ struct{} `type:"structure"`
+
+	// The subscription's endpoint (format depends on the protocol).
+	Endpoint *string `type:"string"`
+
+	// The subscription's protocol.
+	Protocol *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsSnsTopicSubscription) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsSnsTopicSubscription) GoString() string {
+	return s.String()
+}
+
+// SetEndpoint sets the Endpoint field's value.
+func (s *AwsSnsTopicSubscription) SetEndpoint(v string) *AwsSnsTopicSubscription {
+	s.Endpoint = &v
+	return s
+}
+
+// SetProtocol sets the Protocol field's value.
+func (s *AwsSnsTopicSubscription) SetProtocol(v string) *AwsSnsTopicSubscription {
+	s.Protocol = &v
+	return s
+}
+
+// Data about a queue.
+type AwsSqsQueueDetails struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the dead-letter queue to which Amazon SQS
+	// moves messages after the value of maxReceiveCount is exceeded.
+	DeadLetterTargetArn *string `type:"string"`
+
+	// The length of time, in seconds, for which Amazon SQS can reuse a data key
+	// to encrypt or decrypt messages before calling AWS KMS again.
+	KmsDataKeyReusePeriodSeconds *int64 `type:"integer"`
+
+	// The ID of an AWS-managed customer master key (CMK) for Amazon SQS or a custom
+	// CMK.
+	KmsMasterKeyId *string `type:"string"`
+
+	// The name of the new queue.
+	QueueName *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AwsSqsQueueDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsSqsQueueDetails) GoString() string {
+	return s.String()
+}
+
+// SetDeadLetterTargetArn sets the DeadLetterTargetArn field's value.
+func (s *AwsSqsQueueDetails) SetDeadLetterTargetArn(v string) *AwsSqsQueueDetails {
+	s.DeadLetterTargetArn = &v
+	return s
+}
+
+// SetKmsDataKeyReusePeriodSeconds sets the KmsDataKeyReusePeriodSeconds field's value.
+func (s *AwsSqsQueueDetails) SetKmsDataKeyReusePeriodSeconds(v int64) *AwsSqsQueueDetails {
+	s.KmsDataKeyReusePeriodSeconds = &v
+	return s
+}
+
+// SetKmsMasterKeyId sets the KmsMasterKeyId field's value.
+func (s *AwsSqsQueueDetails) SetKmsMasterKeyId(v string) *AwsSqsQueueDetails {
+	s.KmsMasterKeyId = &v
+	return s
+}
+
+// SetQueueName sets the QueueName field's value.
+func (s *AwsSqsQueueDetails) SetQueueName(v string) *AwsSqsQueueDetails {
+	s.QueueName = &v
+	return s
+}
+
 type BatchDisableStandardsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5523,6 +6618,7 @@ type BatchImportFindingsInput struct {
 
 	// A list of findings to import. To successfully import a finding, it must follow
 	// the AWS Security Finding Format (https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-findings-format.html).
+	// Maximum of 100 findings per request.
 	//
 	// Findings is a required field
 	Findings []*AwsSecurityFinding `type:"list" required:"true"`
@@ -5615,6 +6711,14 @@ func (s *BatchImportFindingsOutput) SetSuccessCount(v int64) *BatchImportFinding
 // Exclusive to findings that are generated as the result of a check run against
 // a specific rule in a supported standard (for example, CIS AWS Foundations).
 // Contains compliance-related finding details.
+//
+// Values include the following:
+//
+//    * Allowed values are the following: PASSED - Compliance check passed for
+//    all evaluated resources. WARNING - Some information is missing or this
+//    check is not supported given your configuration. FAILED - Compliance check
+//    failed for at least one evaluated resource. NOT_AVAILABLE - Check could
+//    not be performed due to a service outage or API error.
 type Compliance struct {
 	_ struct{} `type:"structure"`
 
@@ -7945,6 +9049,41 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 	return s
 }
 
+// Information about the state of the load balancer.
+type LoadBalancerState struct {
+	_ struct{} `type:"structure"`
+
+	// The state code. The initial state of the load balancer is provisioning. After
+	// the load balancer is fully set up and ready to route traffic, its state is
+	// active. If the load balancer could not be set up, its state is failed.
+	Code *string `type:"string"`
+
+	// A description of the state.
+	Reason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s LoadBalancerState) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoadBalancerState) GoString() string {
+	return s.String()
+}
+
+// SetCode sets the Code field's value.
+func (s *LoadBalancerState) SetCode(v string) *LoadBalancerState {
+	s.Code = &v
+	return s
+}
+
+// SetReason sets the Reason field's value.
+func (s *LoadBalancerState) SetReason(v string) *LoadBalancerState {
+	s.Reason = &v
+	return s
+}
+
 // A list of malware related to a finding.
 type Malware struct {
 	_ struct{} `type:"structure"`
@@ -8724,6 +9863,11 @@ func (s *Resource) Validate() error {
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
+	if s.Details != nil {
+		if err := s.Details.Validate(); err != nil {
+			invalidParams.AddNested("Details", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8771,14 +9915,35 @@ func (s *Resource) SetType(v string) *Resource {
 type ResourceDetails struct {
 	_ struct{} `type:"structure"`
 
+	// Details about a CloudFront distribution.
+	AwsCloudFrontDistribution *AwsCloudFrontDistributionDetails `type:"structure"`
+
 	// Details about an Amazon EC2 instance related to a finding.
 	AwsEc2Instance *AwsEc2InstanceDetails `type:"structure"`
+
+	// Details about a load balancer.
+	AwsElbv2LoadBalancer *AwsElbv2LoadBalancerDetails `type:"structure"`
 
 	// Details about an IAM access key related to a finding.
 	AwsIamAccessKey *AwsIamAccessKeyDetails `type:"structure"`
 
+	// Details about an IAM role.
+	AwsIamRole *AwsIamRoleDetails `type:"structure"`
+
+	// Details about a KMS key.
+	AwsKmsKey *AwsKmsKeyDetails `type:"structure"`
+
+	// Details about a Lambda function.
+	AwsLambdaFunction *AwsLambdaFunctionDetails `type:"structure"`
+
 	// Details about an Amazon S3 Bucket related to a finding.
 	AwsS3Bucket *AwsS3BucketDetails `type:"structure"`
+
+	// Details about an SNS topic.
+	AwsSnsTopic *AwsSnsTopicDetails `type:"structure"`
+
+	// Details about an SQS queue.
+	AwsSqsQueue *AwsSqsQueueDetails `type:"structure"`
 
 	// Details about a container resource related to a finding.
 	Container *ContainerDetails `type:"structure"`
@@ -8797,9 +9962,36 @@ func (s ResourceDetails) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDetails) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDetails"}
+	if s.AwsIamRole != nil {
+		if err := s.AwsIamRole.Validate(); err != nil {
+			invalidParams.AddNested("AwsIamRole", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAwsCloudFrontDistribution sets the AwsCloudFrontDistribution field's value.
+func (s *ResourceDetails) SetAwsCloudFrontDistribution(v *AwsCloudFrontDistributionDetails) *ResourceDetails {
+	s.AwsCloudFrontDistribution = v
+	return s
+}
+
 // SetAwsEc2Instance sets the AwsEc2Instance field's value.
 func (s *ResourceDetails) SetAwsEc2Instance(v *AwsEc2InstanceDetails) *ResourceDetails {
 	s.AwsEc2Instance = v
+	return s
+}
+
+// SetAwsElbv2LoadBalancer sets the AwsElbv2LoadBalancer field's value.
+func (s *ResourceDetails) SetAwsElbv2LoadBalancer(v *AwsElbv2LoadBalancerDetails) *ResourceDetails {
+	s.AwsElbv2LoadBalancer = v
 	return s
 }
 
@@ -8809,9 +10001,39 @@ func (s *ResourceDetails) SetAwsIamAccessKey(v *AwsIamAccessKeyDetails) *Resourc
 	return s
 }
 
+// SetAwsIamRole sets the AwsIamRole field's value.
+func (s *ResourceDetails) SetAwsIamRole(v *AwsIamRoleDetails) *ResourceDetails {
+	s.AwsIamRole = v
+	return s
+}
+
+// SetAwsKmsKey sets the AwsKmsKey field's value.
+func (s *ResourceDetails) SetAwsKmsKey(v *AwsKmsKeyDetails) *ResourceDetails {
+	s.AwsKmsKey = v
+	return s
+}
+
+// SetAwsLambdaFunction sets the AwsLambdaFunction field's value.
+func (s *ResourceDetails) SetAwsLambdaFunction(v *AwsLambdaFunctionDetails) *ResourceDetails {
+	s.AwsLambdaFunction = v
+	return s
+}
+
 // SetAwsS3Bucket sets the AwsS3Bucket field's value.
 func (s *ResourceDetails) SetAwsS3Bucket(v *AwsS3BucketDetails) *ResourceDetails {
 	s.AwsS3Bucket = v
+	return s
+}
+
+// SetAwsSnsTopic sets the AwsSnsTopic field's value.
+func (s *ResourceDetails) SetAwsSnsTopic(v *AwsSnsTopicDetails) *ResourceDetails {
+	s.AwsSnsTopic = v
+	return s
+}
+
+// SetAwsSqsQueue sets the AwsSqsQueue field's value.
+func (s *ResourceDetails) SetAwsSqsQueue(v *AwsSqsQueueDetails) *ResourceDetails {
+	s.AwsSqsQueue = v
 	return s
 }
 
