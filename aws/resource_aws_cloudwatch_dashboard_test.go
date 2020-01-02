@@ -77,6 +77,7 @@ func TestAccAWSCloudWatchDashboard_update(t *testing.T) {
 
 func TestAccAWSCloudWatchDashboard_updateName(t *testing.T) {
 	var dashboard cloudwatch.GetDashboardOutput
+	resourceName := "aws_cloudwatch_dashboard.test"
 	rInt := acctest.RandInt()
 	rInt2 := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
@@ -87,17 +88,17 @@ func TestAccAWSCloudWatchDashboard_updateName(t *testing.T) {
 			{
 				Config: testAccAWSCloudWatchDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected("aws_cloudwatch_dashboard.foobar", basicWidget),
-					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
+					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
+					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
 				),
 			},
 			{
 				Config: testAccAWSCloudWatchDashboardConfig(rInt2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
-					testAccCloudWatchCheckDashboardBodyIsExpected("aws_cloudwatch_dashboard.foobar", basicWidget),
-					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt2)),
+					testAccCheckCloudWatchDashboardExists(resourceName, &dashboard),
+					testAccCloudWatchCheckDashboardBodyIsExpected(resourceName, basicWidget),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_name", testAccAWSCloudWatchDashboardName(rInt2)),
 					testAccCheckAWSCloudWatchDashboardDestroyPrevious(testAccAWSCloudWatchDashboardName(rInt)),
 				),
 			},
