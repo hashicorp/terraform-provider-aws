@@ -95,7 +95,7 @@ func TestAccAWSMskCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.2.1"),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "zookeeper_connect_string", regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+,\d+\.\d+\.\d+\.\d+:\d+$`)),
+					resource.TestMatchResourceAttr(resourceName, "zookeeper_connect_string", regexp.MustCompile(`^(([-\w]+\.){1,}[\w]+:\d+,){2,}([-\w]+\.){1,}[\w]+:\d+$`)),
 				),
 			},
 			{
@@ -670,6 +670,12 @@ resource "aws_msk_cluster" "test" {
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
+
   broker_node_group_info {
     client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
     ebs_volume_size = 10
@@ -686,6 +692,12 @@ resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
 
   broker_node_group_info {
     client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
@@ -753,6 +765,12 @@ resource "aws_msk_cluster" "test" {
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
+
   broker_node_group_info {
     client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
     ebs_volume_size = 10
@@ -783,6 +801,12 @@ resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
 
   broker_node_group_info {
     client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
@@ -823,6 +847,9 @@ resource "aws_msk_cluster" "test" {
 
   encryption_info {
     encryption_at_rest_kms_key_arn = "${aws_kms_key.example_key.arn}"
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
   }
 }
 `, rName)
@@ -868,6 +895,7 @@ resource "aws_msk_cluster" "test" {
 
   encryption_info {
     encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
       in_cluster = %[2]t
     }
   }
@@ -965,6 +993,12 @@ resource "aws_msk_cluster" "test" {
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
+
   broker_node_group_info {
     client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
     ebs_volume_size = 10
@@ -985,6 +1019,12 @@ resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
   kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "TLS_PLAINTEXT"
+    }
+  }
 
   broker_node_group_info {
     client_subnets  = ["${aws_subnet.example_subnet_az1.id}", "${aws_subnet.example_subnet_az2.id}", "${aws_subnet.example_subnet_az3.id}"]
