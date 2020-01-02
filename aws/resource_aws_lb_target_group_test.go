@@ -128,7 +128,7 @@ func TestAccAWSLBTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", "TestAccAWSLBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_basic"),
 				),
 			},
 		},
@@ -159,7 +159,7 @@ func TestAccAWSLBTargetGroup_basicUdp(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.port", "514"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.protocol", "TCP"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", "TestAccAWSLBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_basic"),
 				),
 			},
 		},
@@ -423,7 +423,7 @@ func TestAccAWSLBTargetGroupBackwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", "TestAccAWSLBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_basic"),
 				),
 			},
 		},
@@ -602,7 +602,7 @@ func TestAccAWSLBTargetGroup_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBTargetGroupExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.TestName", "TestAccAWSLBTargetGroup_basic"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "TestAccAWSLBTargetGroup_basic"),
 				),
 			},
 			{
@@ -1117,7 +1117,7 @@ resource "aws_lb_target_group" "test" {
     unhealthy_threshold = 3
   }
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name ="TestAccAWSLBTargetGroup_application_LB_defaults"
   }
 }
 
@@ -1146,7 +1146,7 @@ resource "aws_lb_target_group" "test" {
   }
 
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_application_LB_defaults"
+    Name ="TestAccAWSLBTargetGroup_application_LB_defaults"
   }
 }
 
@@ -1186,7 +1186,7 @@ func testAccAWSLBTargetGroupConfig_basic(targetGroupName string) string {
   }
 
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_basic"
+    Name ="TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1212,7 +1212,7 @@ func testAccAWSLBTargetGroupConfig_basicUdp(targetGroupName string) string {
   }
 
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_basic"
+    Name ="TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1259,7 +1259,7 @@ func testAccAWSLBTargetGroupConfigBackwardsCompatibility(targetGroupName string)
   }
 
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_basic"
+    Name ="TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1310,7 +1310,7 @@ func testAccAWSLBTargetGroupConfig_updatedPort(targetGroupName string) string {
   }
 
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_basic"
+    Name ="TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1349,7 +1349,7 @@ func testAccAWSLBTargetGroupConfig_updatedProtocol(targetGroupName string) strin
   }
 
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_basic"
+    Name ="TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1396,7 +1396,7 @@ func testAccAWSLBTargetGroupConfig_updatedVpc(targetGroupName string) string {
   }
 
   tags = {
-    TestName ="TestAccAWSLBTargetGroup_basic"
+    Name ="TestAccAWSLBTargetGroup_basic"
   }
 }
 
@@ -1509,7 +1509,7 @@ resource "aws_lb_target_group" "test" {
   }
 
   tags = {
-    TestName ="tf-acc-test-lb-target-group-protocol-tls"
+    Name ="tf-acc-test-lb-target-group-protocol-tls"
   }
 }
 `, targetGroupName)
@@ -1533,7 +1533,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP(targetGroupName string) string {
   }
 
   tags = {
-    TestName ="TestAcc_networkLB_TargetGroup"
+    Name ="TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1565,7 +1565,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP_withProxyProtocol(targetGroupName str
   }
 
   tags = {
-    TestName ="TestAcc_networkLB_TargetGroup"
+    Name ="TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1596,7 +1596,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPInvalidThreshold(targetGroupName strin
   }
 
   tags = {
-    TestName ="TestAcc_networkLB_TargetGroup"
+    Name ="TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1627,7 +1627,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPThresholdUpdated(targetGroupName strin
   }
 
   tags = {
-    TestName ="TestAcc_networkLB_TargetGroup"
+    Name ="TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1658,7 +1658,7 @@ func testAccAWSLBTargetGroupConfig_typeTCPIntervalUpdated(targetGroupName string
   }
 
   tags = {
-    TestName ="TestAcc_networkLB_TargetGroup"
+    Name ="TestAcc_networkLB_TargetGroup"
   }
 }
 
@@ -1690,7 +1690,7 @@ func testAccAWSLBTargetGroupConfig_typeTCP_HTTPHealthCheck(targetGroupName, path
   }
 
   tags = {
-    TestName ="TestAcc_networkLB_HTTPHealthCheck"
+    Name ="TestAcc_networkLB_HTTPHealthCheck"
   }
 }
 
