@@ -277,7 +277,7 @@ func TestAccAWSCloudWatchEventRule_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
+func TestAccAWSCloudWatchEventRule_IsEnabled(t *testing.T) {
 	var rule events.DescribeRuleOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_cloudwatch_event_rule.test"
@@ -288,21 +288,7 @@ func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudWatchEventRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudWatchEventRuleConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				Config:            testAccAWSCloudWatchEventRuleConfigDisabled(rName, true),
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName, false),
+				Config: testAccAWSCloudWatchEventRuleConfigIsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
@@ -310,11 +296,24 @@ func TestAccAWSCloudWatchEventRule_enable(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSCloudWatchEventRuleConfigDisabled(rName, true),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfigIsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					testAccCheckCloudWatchEventRuleEnabled(resourceName, "ENABLED"),
+				),
+			},
+			{
+				Config: testAccAWSCloudWatchEventRuleConfigIsEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					testAccCheckCloudWatchEventRuleEnabled(resourceName, "DISABLED"),
 				),
 			},
 		},
@@ -424,7 +423,7 @@ resource "aws_cloudwatch_event_rule" "test" {
 `, name, description)
 }
 
-func testAccAWSCloudWatchEventRuleConfigDisabled(name string, enabled bool) string {
+func testAccAWSCloudWatchEventRuleConfigIsEnabled(name string, enabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_rule" "test" {
 	name = "%s"
