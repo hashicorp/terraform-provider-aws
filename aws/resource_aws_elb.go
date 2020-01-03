@@ -332,7 +332,6 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetPartial("security_groups")
 	d.SetPartial("subnets")
 
-	//d.Set("tags", tagsToMapELB(tags))
 	if err := d.Set("tags", keyvaluetags.ElbKeyValueTags(tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -451,11 +450,10 @@ func flattenAwsELbResource(d *schema.ResourceData, ec2conn *ec2.EC2, elbconn *el
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	tags, err := keyvaluetags.ElbListTags(elbconn, arn)
+	tags, err := keyvaluetags.ElbListTags(elbconn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ELB (%s): %s", arn, err)
+		return fmt.Errorf("error listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
