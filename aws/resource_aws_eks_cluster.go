@@ -435,13 +435,18 @@ func expandEksVpcConfigRequest(l []interface{}) *eks.VpcConfigRequest {
 
 	m := l[0].(map[string]interface{})
 
-	return &eks.VpcConfigRequest{
+	vpcConfigRequest := &eks.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
 		SecurityGroupIds:      expandStringSet(m["security_group_ids"].(*schema.Set)),
 		SubnetIds:             expandStringSet(m["subnet_ids"].(*schema.Set)),
-		PublicAccessCidrs:     expandStringSet(m["public_access_cidrs"].(*schema.Set)),
 	}
+
+	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
+		vpcConfigRequest.PublicAccessCidrs = expandStringSet(v)
+	}
+
+	return vpcConfigRequest
 }
 
 func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
@@ -451,11 +456,16 @@ func expandEksVpcConfigUpdateRequest(l []interface{}) *eks.VpcConfigRequest {
 
 	m := l[0].(map[string]interface{})
 
-	return &eks.VpcConfigRequest{
+	vpcConfigRequest := &eks.VpcConfigRequest{
 		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
 		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
-		PublicAccessCidrs:     expandStringSet(m["public_access_cidrs"].(*schema.Set)),
 	}
+
+	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
+		vpcConfigRequest.PublicAccessCidrs = expandStringSet(v)
+	}
+
+	return vpcConfigRequest
 }
 
 func expandEksLoggingTypes(vEnabledLogTypes *schema.Set) *eks.Logging {
