@@ -1029,7 +1029,7 @@ func (c *RDS) CopyDBSnapshotRequest(input *CopyDBSnapshotInput) (req *request.Re
 // AWS Region where you call the CopyDBSnapshot action is the destination AWS
 // Region for the DB snapshot copy.
 //
-// For more information about copying snapshots, see Copying a DB Snapshot (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CopyDBSnapshot.html)
+// For more information about copying snapshots, see Copying a DB Snapshot (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_CopySnapshot.html#USER_CopyDBSnapshot)
 // in the Amazon RDS User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -21853,7 +21853,7 @@ type DBProxyTarget struct {
 	TargetArn *string `type:"string"`
 
 	// The DB cluster identifier when the target represents an Aurora DB cluster.
-	// This field is blank when the target represents an
+	// This field is blank when the target represents an RDS DB instance.
 	TrackedClusterId *string `type:"string"`
 
 	// Specifies the kind of database, such as an RDS DB instance or an Aurora DB
@@ -31221,6 +31221,27 @@ type ModifyDBInstanceInput struct {
 	// Indicates the certificate that needs to be associated with the instance.
 	CACertificateIdentifier *string `type:"string"`
 
+	// A value that indicates whether the DB instance is restarted when you rotate
+	// your SSL/TLS certificate.
+	//
+	// By default, the DB instance is restarted when you rotate your SSL/TLS certificate.
+	// The certificate is not updated until the DB instance is restarted.
+	//
+	// Set this parameter only if you are not using SSL/TLS to connect to the DB
+	// instance.
+	//
+	// If you are using SSL/TLS to connect to the DB instance, follow the appropriate
+	// instructions for your DB engine to rotate your SSL/TLS certificate:
+	//
+	//    * For more information about rotating your SSL/TLS certificate for RDS
+	//    DB engines, see Rotating Your SSL/TLS Certificate. (https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+	//    in the Amazon RDS User Guide.
+	//
+	//    * For more information about rotating your SSL/TLS certificate for Aurora
+	//    DB engines, see Rotating Your SSL/TLS Certificate (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/UsingWithRDS.SSL-certificate-rotation.html)
+	//    in the Amazon Aurora User Guide.
+	CertificateRotationRestart *bool `type:"boolean"`
+
 	// The configuration setting for the log types to be enabled for export to CloudWatch
 	// Logs for a specific DB instance.
 	//
@@ -31719,6 +31740,12 @@ func (s *ModifyDBInstanceInput) SetBackupRetentionPeriod(v int64) *ModifyDBInsta
 // SetCACertificateIdentifier sets the CACertificateIdentifier field's value.
 func (s *ModifyDBInstanceInput) SetCACertificateIdentifier(v string) *ModifyDBInstanceInput {
 	s.CACertificateIdentifier = &v
+	return s
+}
+
+// SetCertificateRotationRestart sets the CertificateRotationRestart field's value.
+func (s *ModifyDBInstanceInput) SetCertificateRotationRestart(v bool) *ModifyDBInstanceInput {
+	s.CertificateRotationRestart = &v
 	return s
 }
 
