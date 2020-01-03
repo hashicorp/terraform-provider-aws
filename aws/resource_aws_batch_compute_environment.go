@@ -49,6 +49,15 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"allocation_strategy": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								batch.CRAllocationStrategyBestFit,
+								batch.CRAllocationStrategyBestFitProgressive,
+								batch.CRAllocationStrategySpotCapacityOptimized}, true),
+						},
 						"bid_percentage": {
 							Type:     schema.TypeInt,
 							Optional: true,
@@ -249,6 +258,9 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 			Type:             aws.String(computeResourceType),
 		}
 
+		if v, ok := computeResource["allocation_strategy"]; ok {
+			input.ComputeResources.AllocationStrategy = aws.String(v.(string))
+		}
 		if v, ok := computeResource["bid_percentage"]; ok {
 			input.ComputeResources.BidPercentage = aws.Int64(int64(v.(int)))
 		}
@@ -350,6 +362,7 @@ func flattenBatchComputeResources(computeResource *batch.ComputeResource) []map[
 	result := make([]map[string]interface{}, 0)
 	m := make(map[string]interface{})
 
+	m["allocation_strategy"] = aws.StringValue(computeResource.AllocationStrategy)
 	m["bid_percentage"] = int(aws.Int64Value(computeResource.BidPercentage))
 	m["desired_vcpus"] = int(aws.Int64Value(computeResource.DesiredvCpus))
 	m["ec2_key_pair"] = aws.StringValue(computeResource.Ec2KeyPair)
