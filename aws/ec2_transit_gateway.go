@@ -291,6 +291,7 @@ func ec2DescribeTransitGatewayMulticastDomain(conn *ec2.EC2, domainID string) (*
 	}
 
 	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{
+		// TODO: redundant filter?
 		Filters: []*ec2.Filter{
 			{
 				Name:   aws.String("transit-gateway-multicast-domain-id"),
@@ -310,6 +311,41 @@ func ec2DescribeTransitGatewayMulticastDomain(conn *ec2.EC2, domainID string) (*
 	}
 
 	return output.TransitGatewayMulticastDomains[0], nil
+}
+
+func ec2GetTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, domainID string) ([]*ec2.TransitGatewayMulticastDomainAssociation, error) {
+	if conn == nil {
+		return nil, nil
+	}
+
+	input := &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
+		TransitGatewayMulticastDomainId: aws.String(domainID),
+	}
+
+	var associations []*ec2.TransitGatewayMulticastDomainAssociation
+	log.Printf("[DEBUG] Reading EC2 Transit Gateway Multicast Domain Associations: %s", input)
+	for {
+		output, err := conn.GetTransitGatewayMulticastDomainAssociations(input)
+		if err != nil {
+			return nil, err
+		}
+
+		if output == nil {
+			return nil, nil
+		}
+
+		for _, association := range output.MulticastDomainAssociations {
+			if association != nil {
+				associations = append(associations, association)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+	return associations, nil
 }
 
 func ec2TransitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
@@ -485,7 +521,6 @@ func ec2TransitGatewayVpcAttachmentRefreshFunc(conn *ec2.EC2, transitGatewayAtta
 func ec2TransitGatewayMulticastDomainRefreshFunc(conn *ec2.EC2, domainID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		multicastDomain, err := ec2DescribeTransitGatewayMulticastDomain(conn, domainID)
-
 		if isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
 			return nil, ec2.TransitGatewayMulticastDomainStateDeleted, nil
 		}
@@ -499,6 +534,70 @@ func ec2TransitGatewayMulticastDomainRefreshFunc(conn *ec2.EC2, domainID string)
 		}
 
 		return multicastDomain, aws.StringValue(multicastDomain.State), nil
+	}
+}
+
+func ec2TransitGatewayMulticastDomainAssociationRefreshFunc(conn *ec2.EC2, domainID string, subnetIDs []*string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		associations, err := ec2GetTransitGatewayMulticastDomainAssociations(conn, domainID)
+		if err != nil {
+			return nil, "", fmt.Errorf("error reading EC2 Transit Gateway Multicast Domain associations: %s", err)
+		}
+
+		subnetStates := make(map[string]string)
+		for _, subnetID := range subnetIDs {
+			subnetStates[aws.StringValue(subnetID)] = ""
+		}
+
+		for _, association := range associations {
+			if association == nil {
+				continue
+			}
+			subnet := association.Subnet
+			subnetID := aws.StringValue(subnet.SubnetId)
+			if _, exists := subnetStates[subnetID]; exists {
+				subnetStates[subnetID] = aws.StringValue(subnet.State)
+				continue
+			}
+		}
+
+		for subnetID, subnetState := range subnetStates {
+			if subnetState == "" {
+				// Not found, mark as functionally disassociated
+				subnetStates[subnetID] = ec2.AssociationStatusCodeDisassociated
+			}
+		}
+
+		log.Printf(
+			"[DEBUG] Current EC2 Transit Gateway Multicast Domain (%s) states:\n\t%s", domainID, subnetStates)
+
+		// Note: Since we are potentially associating/disassociating multiple subnets here, we will have this refresh
+		// function only return "associated" once all of the subnets are associated or "disassociated" once all
+		// disassociated
+		// if we encounter anything else, return immediately
+		// if we encounter mixed "disassociated" and "associated", raise an error
+		compoundState := ""
+		for _, state := range subnetStates {
+			if compoundState == "" {
+				compoundState = state
+				continue
+			}
+			switch state {
+			case ec2.AssociationStatusCodeAssociationFailed:
+			case ec2.AssociationStatusCodeDisassociating:
+			case ec2.AssociationStatusCodeAssociating:
+				return associations, state, nil
+			case ec2.AssociationStatusCodeDisassociated:
+			case ec2.AssociationStatusCodeAssociated:
+				if compoundState != state {
+					return nil, "", fmt.Errorf("received conflicting association states")
+				}
+			default:
+				return nil, "", fmt.Errorf("unhandled association state: %s", state)
+			}
+		}
+
+		return associations, compoundState, nil
 	}
 }
 
@@ -755,7 +854,7 @@ func waitForEc2TransitGatewayMulticastDomainCreation(conn *ec2.EC2, domainID str
 	return err
 }
 
-func waitForEc2TransitGatewayMulticastDomainDeletion(conn *ec2.EC2, transitGatewayID string, domainID string) error {
+func waitForEc2TransitGatewayMulticastDomainDeletion(conn *ec2.EC2, domainID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayMulticastDomainStateAvailable,
@@ -768,6 +867,42 @@ func waitForEc2TransitGatewayMulticastDomainDeletion(conn *ec2.EC2, transitGatew
 	}
 
 	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Multicast Domain (%s) deletion", domainID)
+	_, err := stateConf.WaitForState()
+
+	if isResourceNotFoundError(err) {
+		return nil
+	}
+
+	return err
+}
+
+func waitForEc2TransitGatewayMulticastDomainAssociation(conn *ec2.EC2, domainID string, subnetIDs []*string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AssociationStatusCodeAssociating},
+		Target:  []string{ec2.AssociationStatusCodeAssociated},
+		Refresh: ec2TransitGatewayMulticastDomainAssociationRefreshFunc(conn, domainID, subnetIDs),
+		Timeout: 10 * time.Minute,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Multicast Domain associations")
+	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForEc2TransitGatewayMulticastDomainDisassociation(conn *ec2.EC2, domainID string, subnetIDs []*string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			ec2.AssociationStatusCodeAssociated,
+			ec2.AssociationStatusCodeDisassociating,
+		},
+		Target:         []string{ec2.AssociationStatusCodeDisassociated},
+		Refresh:        ec2TransitGatewayMulticastDomainAssociationRefreshFunc(conn, domainID, subnetIDs),
+		Timeout:        10 * time.Minute,
+		NotFoundChecks: 1,
+	}
+
+	log.Printf("[DEBUG] Waiting for EC2 Transit Gateway Multicast Domain dissasociation(s)")
 	_, err := stateConf.WaitForState()
 
 	if isResourceNotFoundError(err) {
