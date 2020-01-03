@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_launch_configuration: Add `arn` attribute [GH-11416]
 * resource/aws_cloudformation_stack: Prevent difference with `Transform` templates showing processed template (support SAM templates) [GH-9006]
 * resource/aws_db_instance: Remove `identifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
+* resource/aws_ecs_service: Add plan time validation for `launch_type`, `load_balancer` configuration block `target_group_arn` and `container_port`, and `placement_constraints` configuration block `type` arguments [GH-11423]
 * resource/aws_launch_configuration: Add `arn` attribute [GH-11416]
 * resource/aws_lb: Add plan-time validation for `ip_address_type` and `load_balancer_type` arguments [GH-11419]
 * resource/aws_rds_cluster_instance: Allow updating `ca_cert_identifier` for `aws_rds_cluster_instance` [GH-10954]
@@ -14,6 +15,7 @@ BUG FIXES:
 * provider: Allow `aws` account ID in ARN validation (support ARNs such as AWS Managed IAM Policies) [GH-11450]
 * resource/aws_appautoscaling_policy: Prevent potential state removal of resource immediately after creation due to eventual consistency [GH-11222]
 * resource/aws_cloudwatch_dashboard: Trigger resource recreation on `dashboard_name` updates (prevent dangling resource) [GH-9784]
+* resource/aws_ecs_service: Automatically retry IAM Service Linked Role assume role error on creation due to asynchronous creation of role on first usage and IAM eventual consistency [GH-11423]
 * resource/aws_opsworks_stack: Ensure `tags` are refreshed in Terraform state during read for drift detection [GH-11373]
 
 ## 2.43.0 (December 19, 2019)
