@@ -386,6 +386,14 @@ func TestAccAWSEksCluster_VpcConfig_PublicAccessCidrs(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAWSEksClusterConfig_VpcConfig_PublicAccessCidrs(rName, `["4.3.2.1/32", "8.7.6.5/32"]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksClusterExists(resourceName, &cluster1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.public_access_cidrs.#", "2"),
+				),
+			},
 		},
 	})
 }
