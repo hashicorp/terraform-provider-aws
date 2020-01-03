@@ -327,8 +327,14 @@ func TestValidateArn(t *testing.T) {
 		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // CloudWatch Rule
 		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction",                  // Lambda function
 		"arn:aws:lambda:eu-west-1:319201112229:function:myCustomFunction:Qualifier",        // Lambda func qualifier
-		"arn:aws-us-gov:s3:::corp_bucket/object.png",                                       // GovCloud ARN
-		"arn:aws-us-gov:kms:us-gov-west-1:123456789012:key/some-uuid-abc123",               // GovCloud KMS ARN
+		"arn:aws-cn:ec2:cn-north-1:123456789012:instance/i-12345678",                       // China EC2 ARN
+		"arn:aws-cn:s3:::bucket/object",                                                    // China S3 ARN
+		"arn:aws-iso:ec2:us-iso-east-1:123456789012:instance/i-12345678",                   // C2S EC2 ARN
+		"arn:aws-iso:s3:::bucket/object",                                                   // C2S S3 ARN
+		"arn:aws-iso-b:ec2:us-isob-east-1:123456789012:instance/i-12345678",                // SC2S EC2 ARN
+		"arn:aws-iso-b:s3:::bucket/object",                                                 // SC2S S3 ARN
+		"arn:aws-us-gov:ec2:us-gov-west-1:123456789012:instance/i-12345678",                // GovCloud EC2 ARN
+		"arn:aws-us-gov:s3:::bucket/object",                                                // GovCloud S3 ARN
 	}
 	for _, v := range validNames {
 		_, errors := validateArn(v, "arn")
