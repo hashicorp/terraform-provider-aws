@@ -57,6 +57,7 @@ var serviceNames = []string{
 	"eks",
 	"elasticache",
 	"elasticsearchservice",
+	"elb",
 	"elbv2",
 	"emr",
 	"firehose",
@@ -264,6 +265,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "elasticsearchservice":
 		return "AddTags"
+	case "elb":
+		return "AddTags"
 	case "elbv2":
 		return "AddTags"
 	case "emr":
@@ -336,6 +339,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
+	case "elb":
+		return "LoadBalancerNames"
 	case "elbv2":
 		return "ResourceArns"
 	case "emr":
@@ -400,6 +405,8 @@ func ServiceTagInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "ec2":
 		return "yes"
+	case "elb":
+		return "yes"
 	case "elbv2":
 		return "yes"
 	default:
@@ -463,6 +470,8 @@ func ServiceUntagFunction(serviceName string) string {
 	case "elasticache":
 		return "RemoveTagsFromResource"
 	case "elasticsearchservice":
+		return "RemoveTags"
+	case "elb":
 		return "RemoveTags"
 	case "elbv2":
 		return "RemoveTags"
@@ -533,6 +542,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 	case "datasync":
 		return "Keys"
 	case "ec2":
+		return "Tags"
+	case "elb":
 		return "Tags"
 	case "glue":
 		return "TagsToRemove"
