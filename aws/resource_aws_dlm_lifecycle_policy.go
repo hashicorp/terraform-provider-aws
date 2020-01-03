@@ -106,8 +106,26 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"count": {
 													Type:         schema.TypeInt,
-													Required:     true,
+													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.IntBetween(1, 1000),
+												},
+												"interval": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												"interval_unit": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														dlm.RetentionIntervalUnitValuesDays,
+														dlm.RetentionIntervalUnitValuesWeeks,
+														dlm.RetentionIntervalUnitValuesMonths,
+														dlm.RetentionIntervalUnitValuesYears,
+													}, false),
 												},
 											},
 										},
@@ -347,6 +365,7 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	}
 
 	result := make(map[string]interface{})
+
 	result["interval"] = aws.Int64Value(createRule.Interval)
 	result["interval_unit"] = aws.StringValue(createRule.IntervalUnit)
 	result["times"] = flattenStringList(createRule.Times)
@@ -359,14 +378,36 @@ func expandDlmRetainRule(cfg []interface{}) *dlm.RetainRule {
 		return nil
 	}
 	m := cfg[0].(map[string]interface{})
-	return &dlm.RetainRule{
-		Count: aws.Int64(int64(m["count"].(int))),
+
+	retainRule := &dlm.RetainRule{}
+
+	if v, _ := m["count"]; v != 0 {
+		retainRule.Count = aws.Int64(int64(v.(int)))
 	}
+
+	if v, _ := m["interval"]; v != 0 {
+		retainRule.Interval = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := m["interval_unit"]; ok {
+		retainRule.IntervalUnit = aws.String(v.(string))
+	}
+
+	return retainRule
+	/*
+		return &dlm.RetainRule{
+			Count:        aws.Int64(int64(m["count"].(int))),
+			Interval:     aws.Int64(int64(m["interval"].(int))),
+			IntervalUnit: aws.String(string(m["interval_unit"].(string))),
+		}
+	*/
 }
 
 func flattenDlmRetainRule(retainRule *dlm.RetainRule) []map[string]interface{} {
 	result := make(map[string]interface{})
 	result["count"] = aws.Int64Value(retainRule.Count)
+	result["interval"] = aws.Int64Value(retainRule.Interval)
+	result["interval_unit"] = aws.StringValue(retainRule.IntervalUnit)
 
 	return []map[string]interface{}{result}
 }

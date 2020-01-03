@@ -81,7 +81,9 @@ resource "aws_dlm_lifecycle_policy" "example" {
       }
 
       retain_rule {
-        count = 14
+        count         = 14
+        interval      = 15
+        interval_unit = "WEEKS"
       }
 
       tags_to_add = {
@@ -132,7 +134,11 @@ The following arguments are supported:
 
 #### Retain Rule arguments
 
-* `count` - (Required) How many snapshots to keep. Must be an integer between 1 and 1000.
+Note: One of either `count` or `interval`/`interval_unit` must be specified.
+
+* `count` - (Optional) How many snapshots to keep. Must be an integer between 1 and 1000. 
+* `interval` - (Optional) The amount of time to retain each snapshot. The maximum is 100 years or that equivalent in months (1200), weeks (5200), and days (36500).
+* `interval_unit` - (Optional) The unit of time for time-based retention.
 
 ## Attributes Reference
 
