@@ -58,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -1962,6 +1963,50 @@ func KafkaUpdateTags(conn *kafka.Kafka, identifier string, oldTagsMap interface{
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// KinesisUpdateTags updates kinesis service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisUpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		chunks := removedTags.Chunks(10)
+
+		for _, chunk := range chunks {
+			input := &kinesis.RemoveTagsFromStreamInput{
+				StreamName: aws.String(identifier),
+				TagKeys:    aws.StringSlice(chunk.Keys()),
+			}
+
+			_, err := conn.RemoveTagsFromStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			}
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		chunks := updatedTags.Chunks(10)
+
+		for _, chunk := range chunks {
+			input := &kinesis.AddTagsToStreamInput{
+				StreamName: aws.String(identifier),
+				Tags:       aws.StringMap(chunk.IgnoreAws().Map()),
+			}
+
+			_, err := conn.AddTagsToStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			}
 		}
 	}
 

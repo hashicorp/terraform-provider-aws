@@ -66,6 +66,7 @@ var serviceNames = []string{
 	"iotanalytics",
 	"iotevents",
 	"kafka",
+	"kinesis",
 	"kinesisanalytics",
 	"kinesisanalyticsv2",
 	"kms",
@@ -226,6 +227,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "ListTagsForDeliveryStream"
 	case "glue":
 		return "GetTags"
+	case "kinesis":
+		return "ListTagsForStream"
 	case "kms":
 		return "ListResourceTags"
 	case "lambda":
@@ -290,6 +293,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "DeliveryStreamName"
 	case "fsx":
 		return "ResourceARN"
+	case "kinesis":
+		return "StreamName"
 	case "kinesisanalytics":
 		return "ResourceARN"
 	case "kinesisanalyticsv2":
