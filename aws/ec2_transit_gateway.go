@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -291,7 +292,7 @@ func ec2DescribeTransitGatewayMulticastDomain(conn *ec2.EC2, domainID string) (*
 	}
 
 	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{
-		// TODO: redundant filter?
+		// Note: one or more filters required
 		Filters: []*ec2.Filter{
 			{
 				Name:   aws.String("transit-gateway-multicast-domain-id"),
@@ -314,7 +315,7 @@ func ec2DescribeTransitGatewayMulticastDomain(conn *ec2.EC2, domainID string) (*
 }
 
 func ec2GetTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, domainID string) ([]*ec2.TransitGatewayMulticastDomainAssociation, error) {
-	if conn == nil {
+	if conn == nil || domainID == "" {
 		return nil, nil
 	}
 
@@ -323,7 +324,7 @@ func ec2GetTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, domainID str
 	}
 
 	var associations []*ec2.TransitGatewayMulticastDomainAssociation
-	log.Printf("[DEBUG] Reading EC2 Transit Gateway Multicast Domain Associations: %s", input)
+	log.Printf("[DEBUG] Reading EC2 Transit Gateway Multicast Domain (%s) Associations: %s", domainID, input)
 	for {
 		output, err := conn.GetTransitGatewayMulticastDomainAssociations(input)
 		if err != nil {
@@ -335,9 +336,7 @@ func ec2GetTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, domainID str
 		}
 
 		for _, association := range output.MulticastDomainAssociations {
-			if association != nil {
-				associations = append(associations, association)
-			}
+			associations = append(associations, association)
 		}
 
 		if aws.StringValue(output.NextToken) == "" {
@@ -345,7 +344,48 @@ func ec2GetTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, domainID str
 		}
 		input.NextToken = output.NextToken
 	}
+
 	return associations, nil
+}
+
+func ec2GetTransitGatewayMulticastDomainGroups(conn *ec2.EC2, domainID string, member bool) ([]*ec2.TransitGatewayMulticastGroup, error) {
+	if conn == nil || domainID == "" {
+		return nil, nil
+	}
+
+	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("is-group-member"),
+				Values: []*string{aws.String(strconv.FormatBool(member))},
+			},
+		},
+		TransitGatewayMulticastDomainId: aws.String(domainID),
+	}
+
+	var groups []*ec2.TransitGatewayMulticastGroup
+	log.Printf("[DEBUG] Reading EC2 Transit Gateway Multicast Domain (%s) groups: %s", domainID, input)
+	for {
+		output, err := conn.SearchTransitGatewayMulticastGroups(input)
+		if err != nil {
+			return nil, err
+		}
+
+		if output == nil {
+			return nil, nil
+		}
+
+		for _, group := range output.MulticastGroups {
+			groups = append(groups, group)
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return groups, nil
 }
 
 func ec2TransitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
