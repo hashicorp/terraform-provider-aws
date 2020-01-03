@@ -1498,46 +1498,6 @@ resource "aws_vpc" "test" {
 }`, targetGroupName)
 }
 
-func testAccAWSLBTargetGroupConfig_updateTags(targetGroupName string) string {
-	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
-  name = "%s"
-  port = 443
-  protocol = "HTTPS"
-  vpc_id = "${aws_vpc.test.id}"
-
-  deregistration_delay = 200
-
-  stickiness {
-    type = "lb_cookie"
-    cookie_duration = 10000
-  }
-
-  health_check {
-    path = "/health"
-    interval = 60
-    port = 8081
-    protocol = "HTTP"
-    timeout = 3
-    healthy_threshold = 3
-    unhealthy_threshold = 3
-    matcher = "200-299"
-  }
-
-  tags = {
-    Environment = "Production"
-    Type = "ALB Target Group"
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-target-group-update-tags"
-  }
-}`, targetGroupName)
-}
-
 func testAccAWSLBTargetGroupConfig_updateHealthCheck(targetGroupName string) string {
 	return fmt.Sprintf(`resource "aws_lb_target_group" "test" {
   name = "%s"
