@@ -14,7 +14,7 @@ For information about AWS Batch, see [What is AWS Batch?][1] .
 For information about compute environment, see [Compute Environments][2] .
 
 ~> **Note:** To prevent a race condition during environment deletion, make sure to set `depends_on` to the related `aws_iam_role_policy_attachment`;
-   otherwise, the policy may be destroyed too soon and the compute environment will then get stuck in the `DELETING` state, see [Troubleshooting AWS Batch][3] .
+otherwise, the policy may be destroyed too soon and the compute environment will then get stuck in the `DELETING` state, see [Troubleshooting AWS Batch][3] .
 
 ## Example Usage
 
@@ -124,7 +124,8 @@ resource "aws_batch_compute_environment" "sample" {
 
 ## Argument Reference
 
-* `compute_environment_name` - (Required) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed.
+* `compute_environment_name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
+* `compute_environment_name_prefix` - (Optional, Forces new resource) Creates a unique compute environment name beginning with the specified prefix. Conflicts with `compute_environment_name`.
 * `compute_resources` - (Optional) Details of the compute resources managed by the compute environment. This parameter is required for managed compute environments. See details below.
 * `service_role` - (Required) The full Amazon Resource Name (ARN) of the IAM role that allows AWS Batch to make calls to other AWS services on your behalf.
 * `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.

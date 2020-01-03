@@ -28,10 +28,19 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateBatchName,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"compute_environment_name_prefix"},
+				ValidateFunc:  validateBatchName,
+			},
+			"compute_environment_name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"compute_environment_name"},
+				ValidateFunc:  validateBatchPrefix,
 			},
 			"compute_resources": {
 				Type:     schema.TypeList,
@@ -179,7 +188,16 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
 
-	computeEnvironmentName := d.Get("compute_environment_name").(string)
+	// Build the compute environment name.
+	var computeEnvironmentName string
+	if v, ok := d.GetOk("compute_environment_name"); ok {
+		computeEnvironmentName = v.(string)
+	} else if v, ok := d.GetOk("compute_environment_name_prefix"); ok {
+		computeEnvironmentName = resource.PrefixedUniqueId(v.(string))
+	} else {
+		computeEnvironmentName = resource.UniqueId()
+	}
+	d.Set("compute_environment_name", computeEnvironmentName)
 
 	serviceRole := d.Get("service_role").(string)
 	computeEnvironmentType := d.Get("type").(string)

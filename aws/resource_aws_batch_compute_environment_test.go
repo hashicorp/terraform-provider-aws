@@ -81,6 +81,27 @@ func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	})
 }
 
+func TestAccAWSBatchComputeEnvironment_createWithNamePrefix(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigNamePrefix(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestMatchResourceAttr(
+						"aws_batch_compute_environment.ec2", "compute_environment_name", regexp.MustCompile("^tf_acc_test"),
+					),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchComputeEnvironment_createEc2WithTags(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_batch_compute_environment.ec2"
@@ -594,6 +615,32 @@ resource "aws_batch_compute_environment" "ec2" {
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
 `, rInt)
+}
+
+func testAccAWSBatchComputeEnvironmentConfigNamePrefix(rInt int) string {
+	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + `
+resource "aws_batch_compute_environment" "ec2" {
+  compute_environment_name_prefix = "tf_acc_test"
+  compute_resources {
+    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
+    instance_type = [
+      "c4.large",
+    ]
+    max_vcpus = 16
+    min_vcpus = 0
+    security_group_ids = [
+      "${aws_security_group.test_acc.id}"
+    ]
+    subnets = [
+      "${aws_subnet.test_acc.id}"
+    ]
+    type = "EC2"
+  }
+  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
+  type = "MANAGED"
+  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
+}
+`
 }
 
 func testAccAWSBatchComputeEnvironmentConfigEC2WithTags(rInt int) string {

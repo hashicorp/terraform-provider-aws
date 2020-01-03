@@ -2226,6 +2226,29 @@ func TestValidateBatchName(t *testing.T) {
 	}
 }
 
+func TestValidateBatchPrefix(t *testing.T) {
+	validPrefixes := []string{
+		strings.Repeat("W", 102), // <= 102
+	}
+	for _, v := range validPrefixes {
+		_, errors := validateBatchPrefix(v, "prefix")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Batch prefix: %q", v, errors)
+		}
+	}
+
+	invalidPrefixes := []string{
+		"s@mple",
+		strings.Repeat("W", 103), // >= 103
+	}
+	for _, v := range invalidPrefixes {
+		_, errors := validateBatchPrefix(v, "prefix")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid Batch prefix: %q", v, errors)
+		}
+	}
+}
+
 func TestValidateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 	cases := []struct {
 		AmbiguousRoleResolution interface{}
