@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_launch_configuration: Add `arn` attribute [GH-11416]
 * resource/aws_batch_compute_environment: Add `compute_environment_name_prefix` argument and make `compute_enviroment_name` argument optional (support full name generation) [GH-10682]
+* resource/aws_batch_compute_environment: Add `compute_resources` configuration block `allocation_strategy` argument [GH-10894]
 * resource/aws_cloudformation_stack: Prevent difference with `Transform` templates showing processed template (support SAM templates) [GH-9006]
 * resource/aws_db_instance: Remove `identifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
 * resource/aws_ecs_service: Add plan time validation for `launch_type`, `load_balancer` configuration block `target_group_arn` and `container_port`, and `placement_constraints` configuration block `type` arguments [GH-11423]
