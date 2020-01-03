@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsBatchComputeEnvironment() *schema.Resource {
@@ -246,7 +247,7 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 			input.ComputeResources.SpotIamFleetRole = aws.String(v.(string))
 		}
 		if v, ok := computeResource["tags"]; ok {
-			input.ComputeResources.Tags = tagsFromMapGeneric(v.(map[string]interface{}))
+			input.ComputeResources.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().BatchTags()
 		}
 
 		if raw, ok := computeResource["launch_template"]; ok && len(raw.([]interface{})) > 0 {
@@ -342,7 +343,7 @@ func flattenBatchComputeResources(computeResource *batch.ComputeResource) []map[
 	m["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.SecurityGroupIds))
 	m["spot_iam_fleet_role"] = aws.StringValue(computeResource.SpotIamFleetRole)
 	m["subnets"] = schema.NewSet(schema.HashString, flattenStringList(computeResource.Subnets))
-	m["tags"] = tagsToMapGeneric(computeResource.Tags)
+	m["tags"] = keyvaluetags.BatchKeyValueTags(computeResource.Tags).IgnoreAws().Map()
 	m["type"] = aws.StringValue(computeResource.Type)
 
 	if launchTemplate := computeResource.LaunchTemplate; launchTemplate != nil {
