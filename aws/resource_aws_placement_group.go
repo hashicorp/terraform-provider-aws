@@ -119,6 +119,12 @@ func resourceAwsPlacementGroupRead(d *schema.ResourceData, meta interface{}) err
 	}
 	out, err := conn.DescribePlacementGroups(&input)
 	if err != nil {
+		if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+			log.Printf("[WARN] Placement Group %s not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+
 		return err
 	}
 	pg := out.PlacementGroups[0]

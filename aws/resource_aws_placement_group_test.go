@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccAWSPlacementGroup_basic(t *testing.T) {
+	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -24,7 +25,7 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 			{
 				Config: testAccAWSPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName),
+					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
 				),
@@ -39,6 +40,7 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 }
 
 func TestAccAWSPlacementGroup_tags(t *testing.T) {
+	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -50,7 +52,7 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 			{
 				Config: testAccAWSPlacementGroupConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName),
+					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -63,7 +65,7 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 			{
 				Config: testAccAWSPlacementGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName),
+					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -72,7 +74,7 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 			{
 				Config: testAccAWSPlacementGroupConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName),
+					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
@@ -81,6 +83,7 @@ func TestAccAWSPlacementGroup_tags(t *testing.T) {
 }
 
 func TestAccAWSPlacementGroup_disappears(t *testing.T) {
+	var pg ec2.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -92,8 +95,8 @@ func TestAccAWSPlacementGroup_disappears(t *testing.T) {
 			{
 				Config: testAccAWSPlacementGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSPlacementGroupExists(resourceName),
-					testAccCheckAWSPlacementGroupDisappears(resourceName),
+					testAccCheckAWSPlacementGroupExists(resourceName, &pg),
+					testAccCheckAWSPlacementGroupDisappears(&pg),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,32 +129,17 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSPlacementGroupDisappears(n string) resource.TestCheckFunc {
+func testAccCheckAWSPlacementGroupDisappears(pg *ec2.PlacementGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Placement Group ID is set")
-		}
-
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		req := &ec2.DeletePlacementGroupInput{GroupName: aws.String(rs.Primary.ID)}
+		req := &ec2.DeletePlacementGroupInput{GroupName: pg.GroupName}
 		_, err := conn.DeletePlacementGroup(req)
 
-		if err != nil {
-			if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
-				return nil
-			}
-			return err
-		}
-		return nil
+		return err
 	}
 }
 
-func testAccCheckAWSPlacementGroupExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSPlacementGroupExists(n string, pg *ec2.PlacementGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -163,13 +151,16 @@ func testAccCheckAWSPlacementGroupExists(n string) resource.TestCheckFunc {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, err := conn.DescribePlacementGroups(&ec2.DescribePlacementGroupsInput{
+		resp, err := conn.DescribePlacementGroups(&ec2.DescribePlacementGroupsInput{
 			GroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
 
 		if err != nil {
 			return fmt.Errorf("Placement Group error: %v", err)
 		}
+
+		*pg = *resp.PlacementGroups[0]
+
 		return nil
 	}
 }
