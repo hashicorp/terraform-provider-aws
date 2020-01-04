@@ -131,6 +131,7 @@ func main() {
 		"UntagFunction":                   ServiceUntagFunction,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
 		"UntagInputTagsField":             ServiceUntagInputTagsField,
+		"UntagInputKeysType":              ServiceUntagInputRequiresKeyType,
 	}
 
 	tmpl, err := template.New("updatetags").Funcs(templateFuncMap).Parse(templateBody)
@@ -200,7 +201,11 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
 			{{- if . | UntagInputRequiresTagType }}
+			{{- if . | UntagInputKeysType }}
+			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Keys(),
+			{{- else }}
 			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{- end }}
 			{{- else }}
 			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.Keys()),
 			{{- end }}
@@ -519,6 +524,8 @@ func ServiceUntagInputRequiresTagType(serviceName string) string {
 		return "yes"
 	case "ec2":
 		return "yes"
+	case "elb":
+		return "yes"
 	default:
 		return ""
 	}
@@ -553,5 +560,15 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "RemoveTagKeys"
 	default:
 		return "TagKeys"
+	}
+}
+
+// ServiceUntagInputRequiresKeyType determines if a special type for the untagging function tag key field is needed.
+func ServiceUntagInputRequiresKeyType(serviceName string) string {
+	switch serviceName {
+	case "elb":
+		return "yes"
+	default:
+		return ""
 	}
 }
