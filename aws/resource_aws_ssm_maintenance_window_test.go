@@ -46,6 +46,41 @@ func TestAccAWSSSMMaintenanceWindow_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindow_description(t *testing.T) {
+	var winId ssm.MaintenanceWindowIdentity
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigDescription(rName, "foo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "foo"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowConfigDescription(rName, "bar"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowExists(resourceName, &winId),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "bar"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMMaintenanceWindow_tags(t *testing.T) {
 	var winId ssm.MaintenanceWindowIdentity
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -494,6 +529,18 @@ resource "aws_ssm_maintenance_window" "test" {
   schedule = "cron(0 16 ? * TUE *)"
 }
 `, rName)
+}
+
+func testAccAWSSSMMaintenanceWindowConfigDescription(rName, desc string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_maintenance_window" "test" {
+  cutoff      = 1
+  duration    = 3
+  name        = %[1]q
+  description = %[2]q
+  schedule    = "cron(0 16 ? * TUE *)"
+}
+`, rName, desc)
 }
 
 func testAccAWSSSMMaintenanceWindowConfigTags1(rName, tagKey1, tagValue1 string) string {

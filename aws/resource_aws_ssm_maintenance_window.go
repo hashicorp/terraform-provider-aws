@@ -69,6 +69,10 @@ func resourceAwsSsmMaintenanceWindow() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -98,6 +102,10 @@ func resourceAwsSsmMaintenanceWindowCreate(d *schema.ResourceData, meta interfac
 
 	if v, ok := d.GetOk("start_date"); ok {
 		params.StartDate = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	resp, err := ssmconn.CreateMaintenanceWindow(params)
@@ -150,6 +158,10 @@ func resourceAwsSsmMaintenanceWindowUpdate(d *schema.ResourceData, meta interfac
 		params.StartDate = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
+	}
+
 	_, err := ssmconn.UpdateMaintenanceWindow(params)
 	if err != nil {
 		if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
@@ -197,6 +209,7 @@ func resourceAwsSsmMaintenanceWindowRead(d *schema.ResourceData, meta interface{
 	d.Set("schedule_timezone", resp.ScheduleTimezone)
 	d.Set("schedule", resp.Schedule)
 	d.Set("start_date", resp.StartDate)
+	d.Set("description", resp.Description)
 
 	tags, err := keyvaluetags.SsmListTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingMaintenanceWindow)
 
