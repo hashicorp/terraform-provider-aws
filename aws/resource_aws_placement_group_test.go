@@ -38,6 +38,69 @@ func TestAccAWSPlacementGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSPlacementGroup_tags(t *testing.T) {
+	resourceName := "aws_placement_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPlacementGroupConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSPlacementGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSPlacementGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
+			},
+		},
+	})
+}
+
+func TestAccAWSPlacementGroup_disappears(t *testing.T) {
+	resourceName := "aws_placement_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPlacementGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPlacementGroupConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPlacementGroupExists(resourceName),
+					testAccCheckAWSPlacementGroupDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -61,6 +124,26 @@ func testAccCheckAWSPlacementGroupDestroy(s *terraform.State) error {
 		return fmt.Errorf("still exists")
 	}
 	return nil
+}
+
+func testAccCheckAWSPlacementGroupDisappears(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Placement Group ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		req := &ec2.DeletePlacementGroupInput{GroupName: aws.String(rs.Primary.ID)}
+		if _, err := conn.DeletePlacementGroup(req); err != nil {
+			return err
+		}
+		return nil
+	}
 }
 
 func testAccCheckAWSPlacementGroupExists(n string) resource.TestCheckFunc {
@@ -93,4 +176,31 @@ resource "aws_placement_group" "test" {
   strategy = "cluster"
 }
 `, rName)
+}
+
+func testAccAWSPlacementGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSPlacementGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "cluster"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
