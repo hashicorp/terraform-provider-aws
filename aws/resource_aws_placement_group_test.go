@@ -139,7 +139,12 @@ func testAccCheckAWSPlacementGroupDisappears(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		req := &ec2.DeletePlacementGroupInput{GroupName: aws.String(rs.Primary.ID)}
-		if _, err := conn.DeletePlacementGroup(req); err != nil {
+		_, err := conn.DeletePlacementGroup(req)
+
+		if err != nil {
+			if isAWSErr(err, "InvalidPlacementGroup.Unknown", "") {
+				return nil
+			}
 			return err
 		}
 		return nil
