@@ -64,5 +64,5 @@ In addition to all arguments above, the following attributes are exported:
 AWS WAF Regional XSS Match can be imported using the `id`, e.g.
 
 ```sh
-$ terraform import xss_match_set.set 12345abcde
+$ terraform import aws_wafregional_xss_match_set.example 12345abcde
 ```
