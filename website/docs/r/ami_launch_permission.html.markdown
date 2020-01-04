@@ -31,3 +31,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
   * `id` - A combination of "`image_id`-`account_id`".
+
+
+## Import
+
+AWS AMI Launch Permission can be imported using the `ACCOUNT-ID/IMAGE-ID`, e.g.
+
+```sh
+$ terraform import aws_ami_launch_permission.perm 12345abcde/example
+```
