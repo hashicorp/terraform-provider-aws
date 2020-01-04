@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_launch_configuration: Add `arn` attribute [GH-11416]
 * resource/aws_lb: Add plan-time validation for `ip_address_type` and `load_balancer_type` arguments [GH-11419]
 * resource/aws_rds_cluster_instance: Allow updating `ca_cert_identifier` for `aws_rds_cluster_instance` [GH-10954]
+* resource/aws_wafregional_xss_match_set: Support resource import [GH-11432]
 
 BUG FIXES:
 
