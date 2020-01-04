@@ -321,6 +321,7 @@ func TestValidateArn(t *testing.T) {
 	validNames := []string{
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // Beanstalk
 		"arn:aws:iam::123456789012:user/David",                                             // IAM User
+		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // Managed IAM policy
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // RDS
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // S3 object
 		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // CloudWatch Rule
@@ -2221,6 +2222,29 @@ func TestValidateBatchName(t *testing.T) {
 		_, errors := validateBatchName(v, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be a invalid Batch name: %q", v, errors)
+		}
+	}
+}
+
+func TestValidateBatchPrefix(t *testing.T) {
+	validPrefixes := []string{
+		strings.Repeat("W", 102), // <= 102
+	}
+	for _, v := range validPrefixes {
+		_, errors := validateBatchPrefix(v, "prefix")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid Batch prefix: %q", v, errors)
+		}
+	}
+
+	invalidPrefixes := []string{
+		"s@mple",
+		strings.Repeat("W", 103), // >= 103
+	}
+	for _, v := range invalidPrefixes {
+		_, errors := validateBatchPrefix(v, "prefix")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be a invalid Batch prefix: %q", v, errors)
 		}
 	}
 }

@@ -82,6 +82,7 @@ func TestAccAWSLambdaFunction_basic(t *testing.T) {
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "lambda", regexp.MustCompile(`function.+`)),
 					resource.TestMatchResourceAttr(resourceName, "invoke_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:apigateway:[^:]+:lambda:path/2015-03-31/functions/arn:[^:]+:lambda:[^:]+:[^:]+:function:%s/invocations$", funcName))),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
@@ -344,7 +345,6 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_encrypted_env_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_encrypted_env_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_encrypted_env_%s", rString)
-	keyRegex := regexp.MustCompile(`^arn:aws[\w-]*:kms:`)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -359,7 +359,7 @@ func TestAccAWSLambdaFunction_encryptedEnvVariables(t *testing.T) {
 					testAccCheckAwsLambdaFunctionName(&conf, funcName),
 					testAccCheckAwsLambdaFunctionArnHasSuffix(&conf, ":"+funcName),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.variables.foo", "bar"),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_arn", keyRegex),
+					testAccMatchResourceAttrRegionalARN(resourceName, "kms_key_arn", "kms", regexp.MustCompile(`key/.+`)),
 				),
 			},
 			{

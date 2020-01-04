@@ -21,7 +21,7 @@ func TestAccAWSEksFargateProfile_basic(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func TestAccAWSEksFargateProfile_Selector_Labels(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func TestAccAWSEksFargateProfile_Tags(t *testing.T) {
 	resourceName := "aws_eks_fargate_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
 		Steps: []resource.TestStep{
@@ -239,6 +239,45 @@ func testAccCheckAWSEksFargateProfileDisappears(fargateProfile *eks.FargateProfi
 
 		return waitForEksFargateProfileDeletion(conn, aws.StringValue(fargateProfile.ClusterName), aws.StringValue(fargateProfile.FargateProfileName), 10*time.Minute)
 	}
+}
+
+func testAccPreCheckAWSEksFargateProfile(t *testing.T) {
+	// Most PreCheck functions try to use a list or describe API call to
+	// determine service or functionality availability, however
+	// ListFargateProfiles requires a valid ClusterName and does not indicate
+	// that the functionality is unavailable in a region. The create API call
+	// fails with same "ResourceNotFoundException: No cluster found" before
+	// returning the definitive "InvalidRequestException: CreateFargateProfile
+	// is not supported for region" error. We do not want to wait 20 minutes to
+	// create and destroy an EKS Cluster just to find the real error, instead
+	// we take the least desirable approach of hardcoding allowed regions.
+	allowedRegions := []string{
+		"ap-northeast-1",
+		"eu-west-1",
+		"us-east-1",
+		"us-east-2",
+	}
+	region := testAccProvider.Meta().(*AWSClient).region
+
+	for _, allowedRegion := range allowedRegions {
+		if region == allowedRegion {
+			return
+		}
+	}
+
+	message := fmt.Sprintf(`Test provider region (%s) not found in allowed EKS Fargate regions: %v
+
+The allowed regions are hardcoded in the acceptance testing since dynamically determining the
+functionality requires creating and destroying a real EKS Cluster, which is a lengthy process.
+If this check is out of date, please create an issue in the Terraform AWS Provider
+repository (https://github.com/terraform-providers/terraform-provider-aws) or submit a PR to update the
+check itself (testAccPreCheckAWSEksFargateProfile).
+
+For the most up to date supported region information, see the EKS User Guide:
+https://docs.aws.amazon.com/eks/latest/userguide/fargate.html
+`, region, allowedRegions)
+
+	t.Skipf("skipping acceptance testing:\n\n%s", message)
 }
 
 func testAccAWSEksFargateProfileConfigBase(rName string) string {

@@ -53,6 +53,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -918,6 +919,23 @@ func KafkaListTags(conn *kafka.Kafka, identifier string) (KeyValueTags, error) {
 	}
 
 	return KafkaKeyValueTags(output.Tags), nil
+}
+
+// KinesisListTags lists kinesis service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisListTags(conn *kinesis.Kinesis, identifier string) (KeyValueTags, error) {
+	input := &kinesis.ListTagsForStreamInput{
+		StreamName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisKeyValueTags(output.Tags), nil
 }
 
 // KinesisanalyticsListTags lists kinesisanalytics service tags.

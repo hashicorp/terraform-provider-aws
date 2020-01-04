@@ -46,6 +46,7 @@ depscheck:
 
 docscheck:
 	@tfproviderdocs check \
+		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-require-resource-subcategory
 
 lint:

@@ -200,27 +200,25 @@ func (c *EKS) CreateFargateProfileRequest(input *CreateFargateProfileInput) (req
 // CreateFargateProfile API operation for Amazon Elastic Kubernetes Service.
 //
 // Creates an AWS Fargate profile for your Amazon EKS cluster. You must have
-// at least one Fargate profile in a cluster to be able to schedule pods on
-// Fargate infrastructure.
+// at least one Fargate profile in a cluster to be able to run pods on Fargate.
 //
 // The Fargate profile allows an administrator to declare which pods run on
-// Fargate infrastructure and specify which pods run on which Fargate profile.
-// This declaration is done through the profile’s selectors. Each profile
-// can have up to five selectors that contain a namespace and labels. A namespace
-// is required for every selector. The label field consists of multiple optional
-// key-value pairs. Pods that match the selectors are scheduled on Fargate infrastructure.
-// If a to-be-scheduled pod matches any of the selectors in the Fargate profile,
-// then that pod is scheduled on Fargate infrastructure.
+// Fargate and specify which pods run on which Fargate profile. This declaration
+// is done through the profile’s selectors. Each profile can have up to five
+// selectors that contain a namespace and labels. A namespace is required for
+// every selector. The label field consists of multiple optional key-value pairs.
+// Pods that match the selectors are scheduled on Fargate. If a to-be-scheduled
+// pod matches any of the selectors in the Fargate profile, then that pod is
+// run on Fargate.
 //
 // When you create a Fargate profile, you must specify a pod execution role
 // to use with the pods that are scheduled with the profile. This role is added
 // to the cluster's Kubernetes Role Based Access Control (https://kubernetes.io/docs/admin/authorization/rbac/)
 // (RBAC) for authorization so that the kubelet that is running on the Fargate
-// infrastructure can register with your Amazon EKS cluster. This role is what
-// allows Fargate infrastructure to appear in your cluster as nodes. The pod
-// execution role also provides IAM permissions to the Fargate infrastructure
-// to allow read access to Amazon ECR image repositories. For more information,
-// see Pod Execution Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
+// infrastructure can register with your Amazon EKS cluster so that it can appear
+// in your cluster as a node. The pod execution role also provides IAM permissions
+// to the Fargate infrastructure to allow read access to Amazon ECR image repositories.
+// For more information, see Pod Execution Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
 // in the Amazon EKS User Guide.
 //
 // Fargate profiles are immutable. However, you can create a new updated profile
@@ -550,11 +548,11 @@ func (c *EKS) DeleteFargateProfileRequest(input *DeleteFargateProfileInput) (req
 //
 // Deletes an AWS Fargate profile.
 //
-// When you delete a Fargate profile, any pods that were scheduled onto Fargate
-// infrastructure with the profile are deleted. If those pods match another
-// Fargate profile, then they are scheduled on Fargate infrastructure with that
-// profile. If they no longer match any Fargate profiles, then they are not
-// scheduled on Fargate infrastructure.
+// When you delete a Fargate profile, any pods running on Fargate that were
+// created with the profile are deleted. If those pods match another Fargate
+// profile, then they are scheduled on Fargate with that profile. If they no
+// longer match any Fargate profiles, then they are not scheduled on Fargate
+// and they may remain in a pending state.
 //
 // Only one Fargate profile in a cluster can be in the DELETING status at a
 // time. You must wait for a Fargate profile to finish deleting before you can
@@ -2809,9 +2807,9 @@ type CreateFargateProfileInput struct {
 	// for a namespace. You may specify up to five selectors in a Fargate profile.
 	Selectors []*FargateProfileSelector `locationName:"selectors" type:"list"`
 
-	// The IDs of subnets to launch Fargate pods into. At this time, Fargate pods
-	// are not assigned public IP addresses, so only private subnets (with no direct
-	// route to an Internet Gateway) are accepted for this parameter.
+	// The IDs of subnets to launch your pods into. At this time, pods running on
+	// Fargate are not assigned public IP addresses, so only private subnets (with
+	// no direct route to an Internet Gateway) are accepted for this parameter.
 	Subnets []*string `locationName:"subnets" type:"list"`
 
 	// The metadata to apply to the Fargate profile to assist with categorization
@@ -3775,8 +3773,8 @@ type FargateProfile struct {
 
 	// The Amazon Resource Name (ARN) of the pod execution role to use for pods
 	// that match the selectors in the Fargate profile. For more information, see
-	// Pod Execution Role (eks/latest/userguide/pod-execution-role.html) in the
-	// Amazon EKS User Guide.
+	// Pod Execution Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
+	// in the Amazon EKS User Guide.
 	PodExecutionRoleArn *string `locationName:"podExecutionRoleArn" type:"string"`
 
 	// The selectors to match for pods to use this Fargate profile.
@@ -3785,7 +3783,7 @@ type FargateProfile struct {
 	// The current status of the Fargate profile.
 	Status *string `locationName:"status" type:"string" enum:"FargateProfileStatus"`
 
-	// The IDs of subnets to launch Fargate pods into.
+	// The IDs of subnets to launch pods into.
 	Subnets []*string `locationName:"subnets" type:"list"`
 
 	// The metadata applied to the Fargate profile to assist with categorization
@@ -5682,19 +5680,32 @@ type VpcConfigRequest struct {
 	// API server endpoint. If you enable private access, Kubernetes API requests
 	// from within your cluster's VPC use the private VPC endpoint. The default
 	// value for this parameter is false, which disables private access for your
-	// Kubernetes API server. For more information, see Amazon EKS Cluster Endpoint
-	// Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// Kubernetes API server. If you disable private access and you have worker
+	// nodes or AWS Fargate pods in the cluster, then ensure that publicAccessCidrs
+	// includes the necessary CIDR blocks for communication with the worker nodes
+	// or Fargate pods. For more information, see Amazon EKS Cluster Endpoint Access
+	// Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
 	// in the Amazon EKS User Guide .
 	EndpointPrivateAccess *bool `locationName:"endpointPrivateAccess" type:"boolean"`
 
-	// Set this value to false to disable public access for your cluster's Kubernetes
+	// Set this value to false to disable public access to your cluster's Kubernetes
 	// API server endpoint. If you disable public access, your cluster's Kubernetes
-	// API server can receive only requests from within the cluster VPC. The default
+	// API server can only receive requests from within the cluster VPC. The default
 	// value for this parameter is true, which enables public access for your Kubernetes
 	// API server. For more information, see Amazon EKS Cluster Endpoint Access
 	// Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
 	// in the Amazon EKS User Guide .
 	EndpointPublicAccess *bool `locationName:"endpointPublicAccess" type:"boolean"`
+
+	// The CIDR blocks that are allowed access to your cluster's public Kubernetes
+	// API server endpoint. Communication to the endpoint from addresses outside
+	// of the CIDR blocks that you specify is denied. The default value is 0.0.0.0/0.
+	// If you've disabled private endpoint access and you have worker nodes or AWS
+	// Fargate pods in the cluster, then ensure that you specify the necessary CIDR
+	// blocks. For more information, see Amazon EKS Cluster Endpoint Access Control
+	// (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// in the Amazon EKS User Guide .
+	PublicAccessCidrs []*string `locationName:"publicAccessCidrs" type:"list"`
 
 	// Specify one or more security groups for the cross-account elastic network
 	// interfaces that Amazon EKS creates to use to allow communication between
@@ -5730,6 +5741,12 @@ func (s *VpcConfigRequest) SetEndpointPublicAccess(v bool) *VpcConfigRequest {
 	return s
 }
 
+// SetPublicAccessCidrs sets the PublicAccessCidrs field's value.
+func (s *VpcConfigRequest) SetPublicAccessCidrs(v []*string) *VpcConfigRequest {
+	s.PublicAccessCidrs = v
+	return s
+}
+
 // SetSecurityGroupIds sets the SecurityGroupIds field's value.
 func (s *VpcConfigRequest) SetSecurityGroupIds(v []*string) *VpcConfigRequest {
 	s.SecurityGroupIds = v
@@ -5754,14 +5771,28 @@ type VpcConfigResponse struct {
 	// This parameter indicates whether the Amazon EKS private API server endpoint
 	// is enabled. If the Amazon EKS private API server endpoint is enabled, Kubernetes
 	// API requests that originate from within your cluster's VPC use the private
-	// VPC endpoint instead of traversing the internet.
+	// VPC endpoint instead of traversing the internet. If this value is disabled
+	// and you have worker nodes or AWS Fargate pods in the cluster, then ensure
+	// that publicAccessCidrs includes the necessary CIDR blocks for communication
+	// with the worker nodes or Fargate pods. For more information, see Amazon EKS
+	// Cluster Endpoint Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// in the Amazon EKS User Guide .
 	EndpointPrivateAccess *bool `locationName:"endpointPrivateAccess" type:"boolean"`
 
 	// This parameter indicates whether the Amazon EKS public API server endpoint
 	// is enabled. If the Amazon EKS public API server endpoint is disabled, your
-	// cluster's Kubernetes API server can receive only requests that originate
+	// cluster's Kubernetes API server can only receive requests that originate
 	// from within the cluster VPC.
 	EndpointPublicAccess *bool `locationName:"endpointPublicAccess" type:"boolean"`
+
+	// The CIDR blocks that are allowed access to your cluster's public Kubernetes
+	// API server endpoint. Communication to the endpoint from addresses outside
+	// of the listed CIDR blocks is denied. The default value is 0.0.0.0/0. If you've
+	// disabled private endpoint access and you have worker nodes or AWS Fargate
+	// pods in the cluster, then ensure that the necessary CIDR blocks are listed.
+	// For more information, see Amazon EKS Cluster Endpoint Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// in the Amazon EKS User Guide .
+	PublicAccessCidrs []*string `locationName:"publicAccessCidrs" type:"list"`
 
 	// The security groups associated with the cross-account elastic network interfaces
 	// that are used to allow communication between your worker nodes and the Kubernetes
@@ -5800,6 +5831,12 @@ func (s *VpcConfigResponse) SetEndpointPrivateAccess(v bool) *VpcConfigResponse 
 // SetEndpointPublicAccess sets the EndpointPublicAccess field's value.
 func (s *VpcConfigResponse) SetEndpointPublicAccess(v bool) *VpcConfigResponse {
 	s.EndpointPublicAccess = &v
+	return s
+}
+
+// SetPublicAccessCidrs sets the PublicAccessCidrs field's value.
+func (s *VpcConfigResponse) SetPublicAccessCidrs(v []*string) *VpcConfigResponse {
+	s.PublicAccessCidrs = v
 	return s
 }
 
@@ -6009,6 +6046,9 @@ const (
 
 	// UpdateParamTypeReleaseVersion is a UpdateParamType enum value
 	UpdateParamTypeReleaseVersion = "ReleaseVersion"
+
+	// UpdateParamTypePublicAccessCidrs is a UpdateParamType enum value
+	UpdateParamTypePublicAccessCidrs = "PublicAccessCidrs"
 )
 
 const (

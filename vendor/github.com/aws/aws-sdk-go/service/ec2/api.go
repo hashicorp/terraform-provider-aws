@@ -971,6 +971,9 @@ func (c *EC2) AssociateAddressRequest(input *AssociateAddressInput) (req *reques
 // an Elastic IP address with an instance or network interface that has an existing
 // Elastic IP address.
 //
+// You cannot associate an Elastic IP address with an interface in a different
+// network border group.
+//
 // This is an idempotent operation. If you perform the operation more than once,
 // Amazon EC2 doesn't return an error, and you may be charged for each time
 // the Elastic IP address is remapped to the same instance. For more information,
@@ -28697,9 +28700,10 @@ func (c *EC2) ModifyEbsDefaultKmsKeyIdRequest(input *ModifyEbsDefaultKmsKeyIdInp
 // for your account in this Region.
 //
 // AWS creates a unique AWS managed CMK in each Region for use with encryption
-// by default. If you change the default CMK to a customer managed CMK, it is
-// used instead of the AWS managed CMK. To reset the default CMK to the AWS
-// managed CMK for EBS, use ResetEbsDefaultKmsKeyId.
+// by default. If you change the default CMK to a symmetric customer managed
+// CMK, it is used instead of the AWS managed CMK. To reset the default CMK
+// to the AWS managed CMK for EBS, use ResetEbsDefaultKmsKeyId. Amazon EBS does
+// not support asymmetric CMKs.
 //
 // If you delete or disable the customer managed CMK that you specified for
 // use with encryption by default, your instances will fail to launch.
@@ -42392,11 +42396,11 @@ type CopyImageInput struct {
 	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `locationName:"encrypted" type:"boolean"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use when creating the encrypted volume. This parameter is only
-	// required if you want to use a non-default CMK; if this parameter is not specified,
-	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
-	// flag must also be set.
+	// An identifier for the symmetric AWS Key Management Service (AWS KMS) customer
+	// master key (CMK) to use when creating the encrypted volume. This parameter
+	// is only required if you want to use a non-default CMK; if this parameter
+	// is not specified, the default CMK for EBS is used. If a KmsKeyId is specified,
+	// the Encrypted flag must also be set.
 	//
 	// To specify a CMK, use its key ID, Amazon Resource Name (ARN), alias name,
 	// or alias ARN. When using an alias name, prefix it with "alias/". For example:
@@ -42415,6 +42419,8 @@ type CopyImageInput struct {
 	//
 	// The specified CMK must exist in the Region that the snapshot is being copied
 	// to.
+	//
+	// Amazon EBS does not support asymmetric CMKs.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// The name of the new AMI in the destination Region.
@@ -44808,6 +44814,9 @@ type CreateKeyPairOutput struct {
 
 	// The name of the key pair.
 	KeyName *string `locationName:"keyName" type:"string"`
+
+	// The ID of the key pair.
+	KeyPairId *string `locationName:"keyPairId" type:"string"`
 }
 
 // String returns the string representation
@@ -44835,6 +44844,12 @@ func (s *CreateKeyPairOutput) SetKeyMaterial(v string) *CreateKeyPairOutput {
 // SetKeyName sets the KeyName field's value.
 func (s *CreateKeyPairOutput) SetKeyName(v string) *CreateKeyPairOutput {
 	s.KeyName = &v
+	return s
+}
+
+// SetKeyPairId sets the KeyPairId field's value.
+func (s *CreateKeyPairOutput) SetKeyPairId(v string) *CreateKeyPairOutput {
+	s.KeyPairId = &v
 	return s
 }
 
@@ -53430,6 +53445,8 @@ type DescribeAddressesInput struct {
 	//    * instance-id - The ID of the instance the address is associated with,
 	//    if any.
 	//
+	//    * network-border-group - The location from where the IP address is advertised.
+	//
 	//    * network-interface-id - [EC2-VPC] The ID of the network interface that
 	//    the address is associated with, if any.
 	//
@@ -55432,6 +55449,8 @@ type DescribeExportTasksInput struct {
 
 	// The export task IDs.
 	ExportTaskIds []*string `locationName:"exportTaskId" locationNameList:"ExportTaskId" type:"list"`
+
+	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 }
 
 // String returns the string representation
@@ -55447,6 +55466,12 @@ func (s DescribeExportTasksInput) GoString() string {
 // SetExportTaskIds sets the ExportTaskIds field's value.
 func (s *DescribeExportTasksInput) SetExportTaskIds(v []*string) *DescribeExportTasksInput {
 	s.ExportTaskIds = v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeExportTasksInput) SetFilters(v []*Filter) *DescribeExportTasksInput {
+	s.Filters = v
 	return s
 }
 
@@ -58923,6 +58948,9 @@ type DescribeKeyPairsInput struct {
 	//
 	// Default: Describes all your key pairs.
 	KeyNames []*string `locationName:"KeyName" locationNameList:"KeyName" type:"list"`
+
+	// The IDs of the key pairs.
+	KeyPairIds []*string `locationName:"KeyPairId" locationNameList:"KeyPairId" type:"list"`
 }
 
 // String returns the string representation
@@ -58950,6 +58978,12 @@ func (s *DescribeKeyPairsInput) SetFilters(v []*Filter) *DescribeKeyPairsInput {
 // SetKeyNames sets the KeyNames field's value.
 func (s *DescribeKeyPairsInput) SetKeyNames(v []*string) *DescribeKeyPairsInput {
 	s.KeyNames = v
+	return s
+}
+
+// SetKeyPairIds sets the KeyPairIds field's value.
+func (s *DescribeKeyPairsInput) SetKeyPairIds(v []*string) *DescribeKeyPairsInput {
+	s.KeyPairIds = v
 	return s
 }
 
@@ -60670,7 +60704,8 @@ type DescribeNetworkInterfacesInput struct {
 
 	// The maximum number of items to return for this request. The request returns
 	// a token that you can specify in a subsequent call to get the next set of
-	// results.
+	// results. You cannot specify this parameter and the network interface IDs
+	// parameter in the same request.
 	MaxResults *int64 `min:"5" type:"integer"`
 
 	// One or more network interface IDs.
@@ -60788,6 +60823,9 @@ type DescribePlacementGroupsInput struct {
 	//    * strategy - The strategy of the placement group (cluster | spread | partition).
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
+	// The IDs of the placement groups.
+	GroupIds []*string `locationName:"GroupId" locationNameList:"GroupId" type:"list"`
+
 	// The names of the placement groups.
 	//
 	// Default: Describes all your placement groups, or only those otherwise specified.
@@ -60813,6 +60851,12 @@ func (s *DescribePlacementGroupsInput) SetDryRun(v bool) *DescribePlacementGroup
 // SetFilters sets the Filters field's value.
 func (s *DescribePlacementGroupsInput) SetFilters(v []*Filter) *DescribePlacementGroupsInput {
 	s.Filters = v
+	return s
+}
+
+// SetGroupIds sets the GroupIds field's value.
+func (s *DescribePlacementGroupsInput) SetGroupIds(v []*string) *DescribePlacementGroupsInput {
+	s.GroupIds = v
 	return s
 }
 
@@ -69489,7 +69533,10 @@ func (s *ElasticGpuHealth) SetStatus(v string) *ElasticGpuHealth {
 type ElasticGpuSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The type of Elastic Graphics accelerator.
+	// The type of Elastic Graphics accelerator. For more information about the
+	// values to specify for Type, see Elastic Graphics Basics (https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/elastic-graphics.html#elastic-graphics-basics),
+	// specifically the Elastic Graphics accelerator column, in the Amazon Elastic
+	// Compute Cloud User Guide for Windows Instances.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true"`
@@ -69630,9 +69677,9 @@ func (s *ElasticGpus) SetTags(v []*Tag) *ElasticGpus {
 type ElasticInferenceAccelerator struct {
 	_ struct{} `type:"structure"`
 
-	// The number of elastic inference accelerators of given type to be attached
-	// to the instance. Only positive values allowed. If not specified defaults
-	// to 1.
+	// The number of elastic inference accelerators to attach to the instance.
+	//
+	// Default: 1
 	Count *int64 `min:"1" type:"integer"`
 
 	// The type of elastic inference accelerator. The possible values are eia1.medium,
@@ -71011,6 +71058,8 @@ type ExportTask struct {
 
 	// The status message related to the export task.
 	StatusMessage *string `locationName:"statusMessage" type:"string"`
+
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -71056,6 +71105,12 @@ func (s *ExportTask) SetState(v string) *ExportTask {
 // SetStatusMessage sets the StatusMessage field's value.
 func (s *ExportTask) SetStatusMessage(v string) *ExportTask {
 	s.StatusMessage = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ExportTask) SetTags(v []*Tag) *ExportTask {
+	s.Tags = v
 	return s
 }
 
@@ -75604,11 +75659,11 @@ type ImportImageInput struct {
 	// Valid values: xen
 	Hypervisor *string `type:"string"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use when creating the encrypted AMI. This parameter is only
-	// required if you want to use a non-default CMK; if this parameter is not specified,
-	// the default CMK for EBS is used. If a KmsKeyId is specified, the Encrypted
-	// flag must also be set.
+	// An identifier for the symmetric AWS Key Management Service (AWS KMS) customer
+	// master key (CMK) to use when creating the encrypted AMI. This parameter is
+	// only required if you want to use a non-default CMK; if this parameter is
+	// not specified, the default CMK for EBS is used. If a KmsKeyId is specified,
+	// the Encrypted flag must also be set.
 	//
 	// The CMK identifier may be provided in any of the following formats:
 	//
@@ -75631,6 +75686,8 @@ type ImportImageInput struct {
 	// will eventually report failure.
 	//
 	// The specified CMK must exist in the Region that the AMI is being copied to.
+	//
+	// Amazon EBS does not support asymmetric CMKs.
 	KmsKeyId *string `type:"string"`
 
 	// The ARNs of the license configurations.
@@ -75770,7 +75827,7 @@ func (s *ImportImageLicenseConfigurationRequest) SetLicenseConfigurationArn(v st
 	return s
 }
 
-// The response information of license configurations.
+// The response information for license configurations.
 type ImportImageLicenseConfigurationResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -75815,8 +75872,8 @@ type ImportImageOutput struct {
 	// The task ID of the import image task.
 	ImportTaskId *string `locationName:"importTaskId" type:"string"`
 
-	// The identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) that was used to create the encrypted AMI.
+	// The identifier for the symmetric AWS Key Management Service (AWS KMS) customer
+	// master key (CMK) that was used to create the encrypted AMI.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
 	// The ARNs of the license configurations.
@@ -75965,7 +76022,8 @@ type ImportImageTask struct {
 	// key (CMK) that was used to create the encrypted image.
 	KmsKeyId *string `locationName:"kmsKeyId" type:"string"`
 
-	// The ARNs of the license configurations associated to the import image task.
+	// The ARNs of the license configurations that are associated with the import
+	// image task.
 	LicenseSpecifications []*ImportImageLicenseConfigurationResponse `locationName:"licenseSpecifications" locationNameList:"item" type:"list"`
 
 	// The license type of the virtual machine.
@@ -75985,6 +76043,9 @@ type ImportImageTask struct {
 
 	// A descriptive status message for the import image task.
 	StatusMessage *string `locationName:"statusMessage" type:"string"`
+
+	// Any tags applied to the import image task.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -76078,6 +76139,12 @@ func (s *ImportImageTask) SetStatus(v string) *ImportImageTask {
 // SetStatusMessage sets the StatusMessage field's value.
 func (s *ImportImageTask) SetStatusMessage(v string) *ImportImageTask {
 	s.StatusMessage = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ImportImageTask) SetTags(v []*Tag) *ImportImageTask {
+	s.Tags = v
 	return s
 }
 
@@ -76564,10 +76631,10 @@ type ImportSnapshotInput struct {
 	// in the Amazon Elastic Compute Cloud User Guide.
 	Encrypted *bool `type:"boolean"`
 
-	// An identifier for the AWS Key Management Service (AWS KMS) customer master
-	// key (CMK) to use when creating the encrypted snapshot. This parameter is
-	// only required if you want to use a non-default CMK; if this parameter is
-	// not specified, the default CMK for EBS is used. If a KmsKeyId is specified,
+	// An identifier for the symmetric AWS Key Management Service (AWS KMS) customer
+	// master key (CMK) to use when creating the encrypted snapshot. This parameter
+	// is only required if you want to use a non-default CMK; if this parameter
+	// is not specified, the default CMK for EBS is used. If a KmsKeyId is specified,
 	// the Encrypted flag must also be set.
 	//
 	// The CMK identifier may be provided in any of the following formats:
@@ -76592,6 +76659,8 @@ type ImportSnapshotInput struct {
 	//
 	// The specified CMK must exist in the Region that the snapshot is being copied
 	// to.
+	//
+	// Amazon EBS does not support asymmetric CMKs.
 	KmsKeyId *string `type:"string"`
 
 	// The name of the role to use when not using the default role, 'vmimport'.
@@ -76709,6 +76778,9 @@ type ImportSnapshotTask struct {
 
 	// Describes an import snapshot task.
 	SnapshotTaskDetail *SnapshotTaskDetail `locationName:"snapshotTaskDetail" type:"structure"`
+
+	// Any tags applied to the import snapshot task.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -76736,6 +76808,12 @@ func (s *ImportSnapshotTask) SetImportTaskId(v string) *ImportSnapshotTask {
 // SetSnapshotTaskDetail sets the SnapshotTaskDetail field's value.
 func (s *ImportSnapshotTask) SetSnapshotTaskDetail(v *SnapshotTaskDetail) *ImportSnapshotTask {
 	s.SnapshotTaskDetail = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ImportSnapshotTask) SetTags(v []*Tag) *ImportSnapshotTask {
+	s.Tags = v
 	return s
 }
 
@@ -78943,8 +79021,8 @@ type InstanceTypeInfo struct {
 	// Describes the processor.
 	ProcessorInfo *ProcessorInfo `locationName:"processorInfo" type:"structure"`
 
-	// Indicates the supported root devices.
-	SupportedRootDevices []*string `locationName:"supportedRootDevices" locationNameList:"item" type:"list"`
+	// Indicates the supported root device types.
+	SupportedRootDeviceTypes []*string `locationName:"supportedRootDeviceTypes" locationNameList:"item" type:"list"`
 
 	// Indicates whether the instance type is offered for spot or On-Demand.
 	SupportedUsageClasses []*string `locationName:"supportedUsageClasses" locationNameList:"item" type:"list"`
@@ -79077,9 +79155,9 @@ func (s *InstanceTypeInfo) SetProcessorInfo(v *ProcessorInfo) *InstanceTypeInfo 
 	return s
 }
 
-// SetSupportedRootDevices sets the SupportedRootDevices field's value.
-func (s *InstanceTypeInfo) SetSupportedRootDevices(v []*string) *InstanceTypeInfo {
-	s.SupportedRootDevices = v
+// SetSupportedRootDeviceTypes sets the SupportedRootDeviceTypes field's value.
+func (s *InstanceTypeInfo) SetSupportedRootDeviceTypes(v []*string) *InstanceTypeInfo {
+	s.SupportedRootDeviceTypes = v
 	return s
 }
 
@@ -79363,7 +79441,7 @@ type IpRange struct {
 	// range.
 	//
 	// Constraints: Up to 255 characters in length. Allowed characters are a-z,
-	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=;{}!$*
+	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=&;{}!$*
 	Description *string `locationName:"description" type:"string"`
 }
 
@@ -79425,7 +79503,7 @@ type Ipv6Range struct {
 	// range.
 	//
 	// Constraints: Up to 255 characters in length. Allowed characters are a-z,
-	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=;{}!$*
+	// A-Z, 0-9, spaces, and ._-:/()#,@[]+=&;{}!$*
 	Description *string `locationName:"description" type:"string"`
 }
 
@@ -79463,6 +79541,12 @@ type KeyPairInfo struct {
 
 	// The name of the key pair.
 	KeyName *string `locationName:"keyName" type:"string"`
+
+	// The ID of the key pair.
+	KeyPairId *string `locationName:"keyPairId" type:"string"`
+
+	// Any tags applied to the key pair.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -79484,6 +79568,18 @@ func (s *KeyPairInfo) SetKeyFingerprint(v string) *KeyPairInfo {
 // SetKeyName sets the KeyName field's value.
 func (s *KeyPairInfo) SetKeyName(v string) *KeyPairInfo {
 	s.KeyName = &v
+	return s
+}
+
+// SetKeyPairId sets the KeyPairId field's value.
+func (s *KeyPairInfo) SetKeyPairId(v string) *KeyPairInfo {
+	s.KeyPairId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *KeyPairInfo) SetTags(v []*Tag) *KeyPairInfo {
+	s.Tags = v
 	return s
 }
 
@@ -80238,7 +80334,8 @@ type LaunchTemplateEbsBlockDeviceRequest struct {
 	// it is not used in requests to create gp2, st1, sc1, or standard volumes.
 	Iops *int64 `type:"integer"`
 
-	// The ARN of the AWS Key Management Service (AWS KMS) CMK used for encryption.
+	// The ARN of the symmetric AWS Key Management Service (AWS KMS) CMK used for
+	// encryption.
 	KmsKeyId *string `type:"string"`
 
 	// The ID of the snapshot.
@@ -80310,9 +80407,9 @@ func (s *LaunchTemplateEbsBlockDeviceRequest) SetVolumeType(v string) *LaunchTem
 type LaunchTemplateElasticInferenceAccelerator struct {
 	_ struct{} `type:"structure"`
 
-	// The number of elastic inference accelerators of given type to be attached
-	// to the instance. Only positive values allowed. If not specified defaults
-	// to 1.
+	// The number of elastic inference accelerators to attach to the instance.
+	//
+	// Default: 1
 	Count *int64 `min:"1" type:"integer"`
 
 	// The type of elastic inference accelerator. The possible values are eia1.medium,
@@ -80364,9 +80461,9 @@ func (s *LaunchTemplateElasticInferenceAccelerator) SetType(v string) *LaunchTem
 type LaunchTemplateElasticInferenceAcceleratorResponse struct {
 	_ struct{} `type:"structure"`
 
-	// The number of elastic inference accelerators of given type to be attached
-	// to the instance. Only positive values allowed. If not specified defaults
-	// to 1.
+	// The number of elastic inference accelerators to attach to the instance.
+	//
+	// Default: 1
 	Count *int64 `locationName:"count" type:"integer"`
 
 	// The type of elastic inference accelerator. The possible values are eia1.medium,
@@ -82514,6 +82611,8 @@ type ModifyEbsDefaultKmsKeyIdInput struct {
 	// AWS authenticates the CMK asynchronously. Therefore, if you specify an ID,
 	// alias, or ARN that is not valid, the action can appear to complete, but eventually
 	// fails.
+	//
+	// Amazon EBS does not support asymmetric CMKs.
 	//
 	// KmsKeyId is a required field
 	KmsKeyId *string `type:"string" required:"true"`
@@ -85019,6 +85118,8 @@ type ModifyTransitGatewayVpcAttachmentInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// The new VPC attachment options.
+	//
+	// You cannot modify the IPv6 options.
 	Options *ModifyTransitGatewayVpcAttachmentRequestOptions `type:"structure"`
 
 	// The IDs of one or more subnets to remove.
@@ -87847,7 +87948,7 @@ type OnDemandOptions struct {
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"FleetOnDemandAllocationStrategy"`
 
 	// The strategy for using unused Capacity Reservations for fulfilling On-Demand
-	// capacity. Only available for fleets of type instant.
+	// capacity. Supported only for fleets of type instant.
 	CapacityReservationOptions *CapacityReservationOptions `locationName:"capacityReservationOptions" type:"structure"`
 
 	// The maximum amount per hour for On-Demand Instances that you're willing to
@@ -87859,11 +87960,11 @@ type OnDemandOptions struct {
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
 
 	// Indicates that the fleet launches all On-Demand Instances into a single Availability
-	// Zone.
+	// Zone. Supported only for fleets of type instant.
 	SingleAvailabilityZone *bool `locationName:"singleAvailabilityZone" type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all On-Demand
-	// Instances in the fleet.
+	// Instances in the fleet. Supported only for fleets of type instant.
 	SingleInstanceType *bool `locationName:"singleInstanceType" type:"boolean"`
 }
 
@@ -87926,7 +88027,7 @@ type OnDemandOptionsRequest struct {
 	AllocationStrategy *string `type:"string" enum:"FleetOnDemandAllocationStrategy"`
 
 	// The strategy for using unused Capacity Reservations for fulfilling On-Demand
-	// capacity. Only available for fleets of type instant.
+	// capacity. Supported only for fleets of type instant.
 	CapacityReservationOptions *CapacityReservationOptionsRequest `type:"structure"`
 
 	// The maximum amount per hour for On-Demand Instances that you're willing to
@@ -87938,11 +88039,11 @@ type OnDemandOptionsRequest struct {
 	MinTargetCapacity *int64 `type:"integer"`
 
 	// Indicates that the fleet launches all On-Demand Instances into a single Availability
-	// Zone.
+	// Zone. Supported only for fleets of type instant.
 	SingleAvailabilityZone *bool `type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all On-Demand
-	// Instances in the fleet.
+	// Instances in the fleet. Supported only for fleets of type instant.
 	SingleInstanceType *bool `type:"boolean"`
 }
 
@@ -88600,6 +88701,9 @@ func (s *Placement) SetTenancy(v string) *Placement {
 type PlacementGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ID of the placement group.
+	GroupId *string `locationName:"groupId" type:"string"`
+
 	// The name of the placement group.
 	GroupName *string `locationName:"groupName" type:"string"`
 
@@ -88611,6 +88715,9 @@ type PlacementGroup struct {
 
 	// The placement strategy.
 	Strategy *string `locationName:"strategy" type:"string" enum:"PlacementStrategy"`
+
+	// Any tags applied to the placement group.
+	Tags []*Tag `locationName:"tagSet" locationNameList:"item" type:"list"`
 }
 
 // String returns the string representation
@@ -88621,6 +88728,12 @@ func (s PlacementGroup) String() string {
 // GoString returns the string representation
 func (s PlacementGroup) GoString() string {
 	return s.String()
+}
+
+// SetGroupId sets the GroupId field's value.
+func (s *PlacementGroup) SetGroupId(v string) *PlacementGroup {
+	s.GroupId = &v
+	return s
 }
 
 // SetGroupName sets the GroupName field's value.
@@ -88644,6 +88757,12 @@ func (s *PlacementGroup) SetState(v string) *PlacementGroup {
 // SetStrategy sets the Strategy field's value.
 func (s *PlacementGroup) SetStrategy(v string) *PlacementGroup {
 	s.Strategy = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PlacementGroup) SetTags(v []*Tag) *PlacementGroup {
+	s.Tags = v
 	return s
 }
 
@@ -99152,11 +99271,11 @@ type SpotOptions struct {
 	MinTargetCapacity *int64 `locationName:"minTargetCapacity" type:"integer"`
 
 	// Indicates that the fleet launches all Spot Instances into a single Availability
-	// Zone.
+	// Zone. Supported only for fleets of type instant.
 	SingleAvailabilityZone *bool `locationName:"singleAvailabilityZone" type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all Spot Instances
-	// in the fleet.
+	// in the fleet. Supported only for fleets of type instant.
 	SingleInstanceType *bool `locationName:"singleInstanceType" type:"boolean"`
 }
 
@@ -99248,11 +99367,11 @@ type SpotOptionsRequest struct {
 	MinTargetCapacity *int64 `type:"integer"`
 
 	// Indicates that the fleet launches all Spot Instances into a single Availability
-	// Zone.
+	// Zone. Supported only for fleets of type instant.
 	SingleAvailabilityZone *bool `type:"boolean"`
 
 	// Indicates that the fleet uses a single instance type to launch all Spot Instances
-	// in the fleet.
+	// in the fleet. Supported only for fleets of type instant.
 	SingleInstanceType *bool `type:"boolean"`
 }
 
@@ -100276,9 +100395,10 @@ type TagSpecification struct {
 
 	// The type of resource to tag. Currently, the resource types that support tagging
 	// on creation are: capacity-reservation | client-vpn-endpoint | dedicated-host
-	// | fleet | fpga-image | instance | launch-template | snapshot | traffic-mirror-filter
-	// | traffic-mirror-session | traffic-mirror-target | transit-gateway | transit-gateway-attachment
-	// | transit-gateway-route-table | volume.
+	// | fleet | fpga-image | instance | key-pair | launch-template | placement-group
+	// | snapshot | traffic-mirror-filter | traffic-mirror-session | traffic-mirror-target
+	// | transit-gateway | transit-gateway-attachment | transit-gateway-route-table
+	// | volume.
 	//
 	// To tag a resource after it has been created, see CreateTags (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTags.html).
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
@@ -108293,6 +108413,9 @@ const (
 	// ResourceTypeInternetGateway is a ResourceType enum value
 	ResourceTypeInternetGateway = "internet-gateway"
 
+	// ResourceTypeKeyPair is a ResourceType enum value
+	ResourceTypeKeyPair = "key-pair"
+
 	// ResourceTypeLaunchTemplate is a ResourceType enum value
 	ResourceTypeLaunchTemplate = "launch-template"
 
@@ -108304,6 +108427,9 @@ const (
 
 	// ResourceTypeNetworkInterface is a ResourceType enum value
 	ResourceTypeNetworkInterface = "network-interface"
+
+	// ResourceTypePlacementGroup is a ResourceType enum value
+	ResourceTypePlacementGroup = "placement-group"
 
 	// ResourceTypeReservedInstances is a ResourceType enum value
 	ResourceTypeReservedInstances = "reserved-instances"

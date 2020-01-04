@@ -8519,7 +8519,7 @@ func (c *Redshift) ResizeClusterRequest(input *ResizeClusterInput) (req *request
 // Elastic resize operations have the following restrictions:
 //
 //    * You can only resize clusters of the following types: dc2.large dc2.8xlarge
-//    ds2.xlarge ds2.8xlarge
+//    ds2.xlarge ds2.8xlarge ra3.16xlarge
 //
 //    * The type of nodes that you add must match the node type for the cluster.
 //
@@ -11431,8 +11431,8 @@ type CreateClusterInput struct {
 	// types, go to Working with Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#how-many-nodes)
 	// in the Amazon Redshift Cluster Management Guide.
 	//
-	// Valid Values: ds2.xlarge | ds2.8xlarge | ds2.xlarge | ds2.8xlarge | dc1.large
-	// | dc1.8xlarge | dc2.large | dc2.8xlarge
+	// Valid Values: ds2.xlarge | ds2.8xlarge | dc1.large | dc1.8xlarge | dc2.large
+	// | dc2.8xlarge | ra3.16xlarge
 	//
 	// NodeType is a required field
 	NodeType *string `type:"string" required:"true"`
@@ -18935,7 +18935,7 @@ type ModifyClusterInput struct {
 	// the progress of the resize request.
 	//
 	// Valid Values: ds2.xlarge | ds2.8xlarge | dc1.large | dc1.8xlarge | dc2.large
-	// | dc2.8xlarge
+	// | dc2.8xlarge | ra3.16xlarge
 	NodeType *string `type:"string"`
 
 	// The new number of nodes of the cluster. If you specify a new number of nodes,
