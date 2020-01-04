@@ -186,6 +186,27 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	})
 }
 
+func TestAccAWSKeyPair_disappears(t *testing.T) {
+	var keyPair ec2.KeyPairInfo
+	resourceName := "aws_key_pair.a_key_pair"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSKeyPairDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSKeyPairConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckAWSKeyPairDisappears(&keyPair),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 	ec2conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -216,6 +237,21 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSKeyPairDisappears(keyPair *ec2.KeyPairInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		req := &ec2.DeleteKeyPairInput{
+			KeyName: keyPair.KeyName,
+		}
+		if _, err := conn.DeleteKeyPair(req); err != nil {
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSKeyPairFingerprint(conf *ec2.KeyPairInfo, expectedFingerprint string) resource.TestCheckFunc {
