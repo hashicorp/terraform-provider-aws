@@ -420,6 +420,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "DeliveryStreamName"
 	case "fsx":
 		return "ResourceARN"
+	case "gamelift":
+		return "ResourceARN"
 	case "kinesis":
 		return "StreamName"
 	case "kinesisanalytics":
