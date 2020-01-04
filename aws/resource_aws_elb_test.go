@@ -1391,30 +1391,6 @@ resource "aws_elb" "test" {
 }
 `
 
-const testAccAWSELBConfig_TagUpdate = `
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-
-  listener {
-    instance_port = 8000
-    instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
-  }
-
-	tags = {
-		test = "test"
-		new = "type"
-	}
-
-  cross_zone_load_balancing = true
-}
-`
-
 const testAccAWSELBConfigNewInstance = `
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
