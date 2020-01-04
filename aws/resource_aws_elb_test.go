@@ -320,7 +320,6 @@ func TestAccAWSELB_availabilityZones(t *testing.T) {
 
 func TestAccAWSELB_tags(t *testing.T) {
 	var conf elb.LoadBalancerDescription
-	var td elb.TagDescription
 	resourceName := "aws_elb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
