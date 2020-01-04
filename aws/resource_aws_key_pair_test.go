@@ -330,7 +330,7 @@ resource "aws_key_pair" "a_key_pair" {
 
   tags = {
     %[1]q = %[2]q
-	%[3]q = %[4]q
+    %[3]q = %[4]q
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
