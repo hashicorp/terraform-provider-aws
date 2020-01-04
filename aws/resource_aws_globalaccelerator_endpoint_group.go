@@ -87,6 +87,10 @@ func resourceAwsGlobalAcceleratorEndpointGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"client_ip_preservation_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -213,6 +217,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupExpandEndpointConfigurations(confi
 
 		m.EndpointId = aws.String(configuration["endpoint_id"].(string))
 		m.Weight = aws.Int64(int64(configuration["weight"].(int)))
+		m.ClientIPPreservationEnabled = aws.Bool(configuration["client_ip_preservation_enabled"].(bool))
 
 		out[i] = &m
 	}
@@ -229,6 +234,7 @@ func resourceAwsGlobalAcceleratorEndpointGroupFlattenEndpointDescriptions(config
 
 		m["endpoint_id"] = aws.StringValue(configuration.EndpointId)
 		m["weight"] = aws.Int64Value(configuration.Weight)
+		m["client_ip_preservation_enabled"] = aws.BoolValue(configuration.ClientIPPreservationEnabled)
 
 		out[i] = m
 	}
