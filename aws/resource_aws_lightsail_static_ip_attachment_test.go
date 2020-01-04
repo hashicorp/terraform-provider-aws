@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
@@ -28,6 +28,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 				Config: testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailStaticIpAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
+					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", "ip_address"),
 				),
 			},
 		},
@@ -135,8 +136,8 @@ func testAccCheckAWSLightsailStaticIpAttachmentDestroy(s *terraform.State) error
 
 func testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 resource "aws_lightsail_static_ip_attachment" "test" {
@@ -150,8 +151,8 @@ resource "aws_lightsail_static_ip" "test" {
 
 resource "aws_lightsail_instance" "test" {
   name              = "%s"
-  availability_zone = "us-east-1b"
-  blueprint_id      = "wordpress_4_6_1"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  blueprint_id      = "amazon_linux"
   bundle_id         = "micro_1_0"
   key_pair_name     = "${aws_lightsail_key_pair.test.name}"
 }

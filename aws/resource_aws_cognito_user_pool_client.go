@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoUserPoolClient() *schema.Resource {
@@ -267,6 +267,10 @@ func resourceAwsCognitoUserPoolClientUpdate(d *schema.ResourceData, meta interfa
 	params := &cognitoidentityprovider.UpdateUserPoolClientInput{
 		ClientId:   aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		params.ClientName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("explicit_auth_flows"); ok {

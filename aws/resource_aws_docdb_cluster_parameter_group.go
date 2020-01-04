@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const docdbClusterParameterGroupMaxParamsBulkEdit = 20
@@ -266,7 +266,7 @@ func waitForDocDBClusterParameterGroupDeletion(conn *docdb.DocDB, name string) e
 		DBClusterParameterGroupName: aws.String(name),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeDBClusterParameterGroups(params)
 
 		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
@@ -279,4 +279,14 @@ func waitForDocDBClusterParameterGroupDeletion(conn *docdb.DocDB, name string) e
 
 		return resource.RetryableError(fmt.Errorf("DocDB Parameter Group (%s) still exists", name))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeDBClusterParameterGroups(params)
+		if isAWSErr(err, docdb.ErrCodeDBParameterGroupNotFoundFault, "") {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting DocDB cluster parameter group: %s", err)
+	}
+	return nil
 }

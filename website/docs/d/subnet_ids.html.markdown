@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet_ids"
-sidebar_current: "docs-aws-datasource-subnet-ids"
 description: |-
     Provides a list of subnet Ids for a VPC
 ---
@@ -27,7 +27,7 @@ data "aws_subnet" "example" {
 }
 
 output "subnet_cidr_blocks" {
-  value = ["${data.aws_subnet.example.*.cidr_block}"]
+  value = "${data.aws_subnet.example.*.cidr_block}"
 }
 ```
 
@@ -82,4 +82,4 @@ data "aws_subnet_ids" "selected" {
 
 ## Attributes Reference
 
-* `ids` - A list of all the subnet ids found. This data source will fail if none are found.
+* `ids` - A set of all the subnet ids found. This data source will fail if none are found.

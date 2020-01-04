@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeBuild"
 layout: "aws"
 page_title: "AWS: aws_codebuild_webhook"
-sidebar_current: "docs-aws-resource-codebuild-webhook"
 description: |-
   Provides a CodeBuild Webhook resource.
 ---
@@ -79,7 +79,7 @@ The following arguments are supported:
 `filter` supports the following:
 
 * `type` - (Required) The webhook filter group's type. Valid values for this parameter are: `EVENT`, `BASE_REF`, `HEAD_REF`, `ACTOR_ACCOUNT_ID`, `FILE_PATH`. At least one filter group must specify `EVENT` as its type.
-* `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_REOPENED` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
+* `pattern` - (Required) For a filter that uses `EVENT` type, a comma-separated string that specifies one event: `PUSH`, `PULL_REQUEST_CREATED`, `PULL_REQUEST_UPDATED`, `PULL_REQUEST_REOPENED`. `PULL_REQUEST_MERGED` works with GitHub & GitHub Enterprise only. For a filter that uses any of the other filter types, a regular expression.
 * `exclude_matched_pattern` - (Optional) If set to `true`, the specified filter does *not* trigger a build. Defaults to `false`.
 
 ## Attributes Reference

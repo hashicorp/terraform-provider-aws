@@ -1,7 +1,7 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_resource_group"
-sidebar_current: "docs-aws-resource-inspector-resource-group"
 description: |-
   Provides a Inspector resource group.
 ---

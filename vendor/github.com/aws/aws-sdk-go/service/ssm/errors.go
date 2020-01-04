@@ -105,7 +105,7 @@ const (
 	// ErrCodeDocumentLimitExceeded for service response error code
 	// "DocumentLimitExceeded".
 	//
-	// You can have at most 200 active Systems Manager documents.
+	// You can have at most 500 active Systems Manager documents.
 	ErrCodeDocumentLimitExceeded = "DocumentLimitExceeded"
 
 	// ErrCodeDocumentPermissionLimit for service response error code
@@ -129,8 +129,9 @@ const (
 	// Error returned when the ID specified for a resource, such as a maintenance
 	// window or Patch baseline, doesn't exist.
 	//
-	// For information about resource limits in Systems Manager, see AWS Systems
-	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+	// For information about resource quotas in Systems Manager, see Systems Manager
+	// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+	// in the AWS General Reference.
 	ErrCodeDoesNotExistException = "DoesNotExistException"
 
 	// ErrCodeDuplicateDocumentContent for service response error code
@@ -156,7 +157,7 @@ const (
 	// ErrCodeFeatureNotAvailableException for service response error code
 	// "FeatureNotAvailableException".
 	//
-	// You attempted to register a LAMBDA or STEP_FUNCTION task in a region where
+	// You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
 	// the corresponding service is not available.
 	ErrCodeFeatureNotAvailableException = "FeatureNotAvailableException"
 
@@ -301,6 +302,13 @@ const (
 	// The version of the document schema is not supported.
 	ErrCodeInvalidDocumentSchemaVersion = "InvalidDocumentSchemaVersion"
 
+	// ErrCodeInvalidDocumentType for service response error code
+	// "InvalidDocumentType".
+	//
+	// The document type is not valid. Valid document types are described in the
+	// DocumentType property.
+	ErrCodeInvalidDocumentType = "InvalidDocumentType"
+
 	// ErrCodeInvalidDocumentVersion for service response error code
 	// "InvalidDocumentVersion".
 	//
@@ -340,12 +348,9 @@ const (
 	//
 	// You do not have permission to access the instance.
 	//
-	// SSM Agent is not running. On managed instances and Linux instances, verify
-	// that the SSM Agent is running. On EC2 Windows instances, verify that the
-	// EC2Config service is running.
+	// SSM Agent is not running. Verify that SSM Agent is running.
 	//
-	// SSM Agent or EC2Config service is not registered to the SSM endpoint. Try
-	// reinstalling SSM Agent or EC2Config service.
+	// SSM Agent is not registered with the SSM endpoint. Try reinstalling SSM Agent.
 	//
 	// The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 	// Stopping. Invalid states are: Shutting-down and Terminated.
@@ -550,8 +555,8 @@ const (
 	// ErrCodeOpsItemLimitExceededException for service response error code
 	// "OpsItemLimitExceededException".
 	//
-	// The request caused OpsItems to exceed one or more limits. For information
-	// about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+	// The request caused OpsItems to exceed one or more quotas. For information
+	// about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 	ErrCodeOpsItemLimitExceededException = "OpsItemLimitExceededException"
 
 	// ErrCodeOpsItemNotFoundException for service response error code
@@ -617,6 +622,13 @@ const (
 	// A sync configuration with the same name already exists.
 	ErrCodeResourceDataSyncAlreadyExistsException = "ResourceDataSyncAlreadyExistsException"
 
+	// ErrCodeResourceDataSyncConflictException for service response error code
+	// "ResourceDataSyncConflictException".
+	//
+	// Another UpdateResourceDataSync request is being processed. Wait a few minutes
+	// and try again.
+	ErrCodeResourceDataSyncConflictException = "ResourceDataSyncConflictException"
+
 	// ErrCodeResourceDataSyncCountExceededException for service response error code
 	// "ResourceDataSyncCountExceededException".
 	//
@@ -645,11 +657,12 @@ const (
 	// ErrCodeResourceLimitExceededException for service response error code
 	// "ResourceLimitExceededException".
 	//
-	// Error returned when the caller has exceeded the default resource limits.
+	// Error returned when the caller has exceeded the default resource quotas.
 	// For example, too many maintenance windows or patch baselines have been created.
 	//
-	// For information about resource limits in Systems Manager, see AWS Systems
-	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+	// For information about resource quotas in Systems Manager, see Systems Manager
+	// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+	// in the AWS General Reference.
 	ErrCodeResourceLimitExceededException = "ResourceLimitExceededException"
 
 	// ErrCodeServiceSettingNotFound for service response error code
@@ -706,6 +719,13 @@ const (
 	//
 	// The size of inventory data has exceeded the total size limit for the resource.
 	ErrCodeTotalSizeLimitExceededException = "TotalSizeLimitExceededException"
+
+	// ErrCodeUnsupportedCalendarException for service response error code
+	// "UnsupportedCalendarException".
+	//
+	// The calendar entry contained in the specified Systems Manager document is
+	// not supported.
+	ErrCodeUnsupportedCalendarException = "UnsupportedCalendarException"
 
 	// ErrCodeUnsupportedFeatureRequiredException for service response error code
 	// "UnsupportedFeatureRequiredException".

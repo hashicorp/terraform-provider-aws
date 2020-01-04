@@ -1,7 +1,7 @@
 ---
+subcategory: "Database Migration Service (DMS)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_instance"
-sidebar_current: "docs-aws-resource-dms-replication-instance"
 description: |-
   Provides a DMS (Data Migration Service) replication instance resource.
 ---
@@ -67,7 +67,7 @@ resource "aws_dms_replication_instance" "test" {
   apply_immediately            = true
   auto_minor_version_upgrade   = true
   availability_zone            = "us-west-2c"
-  engine_version               = "1.9.0"
+  engine_version               = "3.1.4"
   kms_key_arn                  = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
   multi_az                     = false
   preferred_maintenance_window = "sun:10:30-sun:14:30"

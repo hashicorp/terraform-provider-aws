@@ -9,6 +9,10 @@ default: build
 build: fmtcheck
 	go install
 
+gen:
+	rm -f aws/internal/keyvaluetags/*_gen.go
+	go generate ./...
+
 sweep:
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	go test $(TEST) -v -sweep=$(SWEEP) $(SWEEPARGS)
@@ -17,7 +21,7 @@ test: fmtcheck
 	go test $(TEST) -timeout=30s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v -parallel 20 $(TESTARGS) -timeout 120m
+	TF_ACC=1 go test $(TEST) -v -count 1 -parallel 20 $(TESTARGS) -timeout 120m
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
@@ -30,11 +34,28 @@ fmtcheck:
 websitefmtcheck:
 	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
 
+depscheck:
+	@echo "==> Checking source code with go mod tidy..."
+	@go mod tidy
+	@git diff --exit-code -- go.mod go.sum || \
+		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+	@echo "==> Checking source code with go mod vendor..."
+	@go mod vendor
+	@git diff --compact-summary --exit-code -- vendor || \
+		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
+
+docscheck:
+	@tfproviderdocs check \
+		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
+		-require-resource-subcategory
+
 lint:
 	@echo "==> Checking source code against linters..."
-	@GOGC=30 golangci-lint run ./$(PKG_NAME)
+	@golangci-lint run ./$(PKG_NAME)/...
 	@tfproviderlint \
 		-c 1 \
+		-AT001 \
+		-AT002 \
 		-S001 \
 		-S002 \
 		-S003 \
@@ -55,6 +76,7 @@ lint:
 		./$(PKG_NAME)
 
 tools:
+	GO111MODULE=on go install github.com/bflad/tfproviderdocs
 	GO111MODULE=on go install github.com/bflad/tfproviderlint/cmd/tfproviderlint
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -85,5 +107,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test
+.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test depscheck docscheck
 

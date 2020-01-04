@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot"
-sidebar_current: "docs-aws-resource-ebs-snapshot"
 description: |-
   Provides an elastic block storage snapshot resource.
 ---
@@ -39,6 +39,13 @@ The following arguments are supported:
 * `description` - (Optional) A description of what the snapshot is.
 * `tags` - (Optional) A mapping of tags to assign to the snapshot
 
+### Timeouts
+
+`aws_ebs_snapshot` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating the ebs snapshot
+- `delete` - (Default `10 minutes`) Used for deleting the ebs snapshot
 
 ## Attributes Reference
 

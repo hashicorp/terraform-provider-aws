@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailKeyPair_imported(t *testing.T) {
+func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 	var conf lightsail.KeyPair
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
@@ -169,10 +169,6 @@ func testAccCheckAWSLightsailKeyPairDestroy(s *terraform.State) error {
 
 func testAccAWSLightsailKeyPairConfig_basic(lightsailName string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
 }
@@ -181,10 +177,6 @@ resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
 
 func testAccAWSLightsailKeyPairConfig_imported(lightsailName, key string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
 
@@ -195,10 +187,6 @@ resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
 
 func testAccAWSLightsailKeyPairConfig_encrypted(lightsailName, key string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
 
@@ -211,10 +199,6 @@ EOF
 
 func testAccAWSLightsailKeyPairConfig_prefixed() string {
 	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_omit" {}
 
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test_prefixed" {

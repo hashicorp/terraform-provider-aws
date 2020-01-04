@@ -59,7 +59,7 @@ func (c *FMS) AssociateAdminAccountRequest(input *AssociateAdminAccountInput) (r
 // AssociateAdminAccount API operation for Firewall Management Service.
 //
 // Sets the AWS Firewall Manager administrator account. AWS Firewall Manager
-// must be associated with the master account your AWS organization or associated
+// must be associated with the master account of your AWS organization or associated
 // with a member account that has the appropriate permissions. If the account
 // ID that you submit is not an AWS Organizations master account, AWS Firewall
 // Manager will set the appropriate permissions for the given member account.
@@ -339,7 +339,7 @@ func (c *FMS) DisassociateAdminAccountRequest(input *DisassociateAdminAccountInp
 //
 // Disassociates the account that has been set as the AWS Firewall Manager administrator
 // account. To set a different account as the administrator account, you must
-// submit an AssociateAdminAccount request .
+// submit an AssociateAdminAccount request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -518,8 +518,11 @@ func (c *FMS) GetComplianceDetailRequest(input *GetComplianceDetailInput) (req *
 //
 // Returns detailed compliance information about the specified member account.
 // Details include resources that are in and out of compliance with the specified
-// policy. Resources are considered non-compliant if the specified policy has
-// not been applied to them.
+// policy. Resources are considered noncompliant for AWS WAF and Shield Advanced
+// policies if the specified policy has not been applied to them. Resources
+// are considered noncompliant for security group policies if they are in scope
+// of the policy, they violate one or more of the policy rules, and remediation
+// is disabled or not possible.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -602,8 +605,8 @@ func (c *FMS) GetNotificationChannelRequest(input *GetNotificationChannelInput) 
 
 // GetNotificationChannel API operation for Firewall Management Service.
 //
-// Returns information about the Amazon Simple Notification Service (SNS) topic
-// that is used to record AWS Firewall Manager SNS logs.
+// Information about the Amazon Simple Notification Service (SNS) topic that
+// is used to record AWS Firewall Manager SNS logs.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -783,7 +786,8 @@ func (c *FMS) GetProtectionStatusRequest(input *GetProtectionStatusInput) (req *
 // GetProtectionStatus API operation for Firewall Management Service.
 //
 // If you created a Shield Advanced policy, returns policy-level attack summary
-// information in the event of a potential DDoS attack.
+// information in the event of a potential DDoS attack. Other policy types are
+// currently unsupported.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -959,10 +963,12 @@ func (c *FMS) ListComplianceStatusPagesWithContext(ctx aws.Context, input *ListC
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListComplianceStatusOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListComplianceStatusOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1102,10 +1108,12 @@ func (c *FMS) ListMemberAccountsPagesWithContext(ctx aws.Context, input *ListMem
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1252,10 +1260,12 @@ func (c *FMS) ListPoliciesPagesWithContext(ctx aws.Context, input *ListPoliciesI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPoliciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1395,16 +1405,23 @@ func (c *FMS) PutPolicyRequest(input *PutPolicyInput) (req *request.Request, out
 //
 // Creates an AWS Firewall Manager policy.
 //
-// Firewall Manager provides two types of policies: A Shield Advanced policy,
-// which applies Shield Advanced protection to specified accounts and resources,
-// or a WAF policy, which contains a rule group and defines which resources
-// are to be protected by that rule group. A policy is specific to either WAF
-// or Shield Advanced. If you want to enforce both WAF rules and Shield Advanced
-// protection across accounts, you can create multiple policies. You can create
-// one or more policies for WAF rules, and one or more policies for Shield Advanced.
+// Firewall Manager provides the following types of policies:
+//
+//    * A Shield Advanced policy, which applies Shield Advanced protection to
+//    specified accounts and resources
+//
+//    * An AWS WAF policy, which contains a rule group and defines which resources
+//    are to be protected by that rule group
+//
+//    * A security group policy, which manages VPC security groups across your
+//    AWS organization.
+//
+// Each policy is specific to one of the three types. If you want to enforce
+// more than one policy type across accounts, you can create multiple policies.
+// You can create multiple policies for each type.
 //
 // You must be subscribed to Shield Advanced to create a Shield Advanced policy.
-// For more information on subscribing to Shield Advanced, see CreateSubscription
+// For more information about subscribing to Shield Advanced, see CreateSubscription
 // (https://docs.aws.amazon.com/waf/latest/DDOSAPIReference/API_CreateSubscription.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1526,8 +1543,8 @@ type ComplianceViolator struct {
 	// The resource ID.
 	ResourceId *string `min:"1" type:"string"`
 
-	// The resource type. This is in the format shown in AWS Resource Types Reference
-	// (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
+	// The resource type. This is in the format shown in the AWS Resource Types
+	// Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
 	// For example: AWS::ElasticLoadBalancingV2::LoadBalancer or AWS::CloudFront::Distribution.
 	ResourceType *string `min:"1" type:"string"`
 
@@ -1594,21 +1611,31 @@ func (s DeleteNotificationChannelOutput) GoString() string {
 type DeletePolicyInput struct {
 	_ struct{} `type:"structure"`
 
-	// If True, the request will also perform a clean-up process that will:
+	// If True, the request performs cleanup according to the policy type.
 	//
-	//    * Delete rule groups created by AWS Firewall Manager
+	// For AWS WAF and Shield Advanced policies, the cleanup does the following:
 	//
-	//    * Remove web ACLs from in-scope resources
+	//    * Deletes rule groups created by AWS Firewall Manager
 	//
-	//    * Delete web ACLs that contain no rules or rule groups
+	//    * Removes web ACLs from in-scope resources
 	//
-	// After the cleanup, in-scope resources will no longer be protected by web
-	// ACLs in this policy. Protection of out-of-scope resources will remain unchanged.
-	// Scope is determined by tags and accounts associated with the policy. When
-	// creating the policy, if you specified that only resources in specific accounts
-	// or with specific tags be protected by the policy, those resources are in-scope.
-	// All others are out of scope. If you did not specify tags or accounts, all
-	// resources are in-scope.
+	//    * Deletes web ACLs that contain no rules or rule groups
+	//
+	// For security group policies, the cleanup does the following for each security
+	// group in the policy:
+	//
+	//    * Disassociates the security group from in-scope resources
+	//
+	//    * Deletes the security group if it was created through Firewall Manager
+	//    and if it's no longer associated with any resources through another policy
+	//
+	// After the cleanup, in-scope resources are no longer protected by web ACLs
+	// in this policy. Protection of out-of-scope resources remains unchanged. Scope
+	// is determined by tags that you create and accounts that you associate with
+	// the policy. When creating the policy, if you specify that only resources
+	// in specific accounts or with specific tags are in scope of the policy, those
+	// accounts and resources are handled by the policy. All others are out of scope.
+	// If you don't specify tags or accounts, all resources are in scope.
 	DeleteAllPolicyResources *bool `type:"boolean"`
 
 	// The ID of the policy that you want to delete. PolicyId is returned by PutPolicy
@@ -1699,20 +1726,23 @@ func (s DisassociateAdminAccountOutput) GoString() string {
 }
 
 // Describes the compliance status for the account. An account is considered
-// non-compliant if it includes resources that are not protected by the specified
-// policy.
+// noncompliant if it includes resources that are not protected by the specified
+// policy or that don't comply with the policy.
 type EvaluationResult struct {
 	_ struct{} `type:"structure"`
 
 	// Describes an AWS account's compliance with the AWS Firewall Manager policy.
 	ComplianceStatus *string `type:"string" enum:"PolicyComplianceStatusType"`
 
-	// Indicates that over 100 resources are non-compliant with the AWS Firewall
+	// Indicates that over 100 resources are noncompliant with the AWS Firewall
 	// Manager policy.
 	EvaluationLimitExceeded *bool `type:"boolean"`
 
-	// Number of resources that are non-compliant with the specified policy. A resource
-	// is considered non-compliant if it is not associated with the specified policy.
+	// The number of resources that are noncompliant with the specified policy.
+	// For AWS WAF and Shield Advanced policies, a resource is considered noncompliant
+	// if it is not associated with the policy. For security group policies, a resource
+	// is considered noncompliant if it doesn't comply with the rules of the policy
+	// and remediation is disabled or not possible.
 	ViolatorCount *int64 `type:"long"`
 }
 
@@ -1997,7 +2027,7 @@ type GetProtectionStatusInput struct {
 	_ struct{} `type:"structure"`
 
 	// The end of the time period to query for the attacks. This is a timestamp
-	// type. The sample request above indicates a number type because the default
+	// type. The request syntax listing indicates a number type because the default
 	// used by AWS Firewall Manager is Unix time in seconds. However, any valid
 	// timestamp format is allowed.
 	EndTime *time.Time `type:"timestamp"`
@@ -2014,8 +2044,8 @@ type GetProtectionStatusInput struct {
 
 	// If you specify a value for MaxResults and you have more objects than the
 	// number that you specify for MaxResults, AWS Firewall Manager returns a NextToken
-	// value in the response that allows you to list another group of objects. For
-	// the second and subsequent GetProtectionStatus requests, specify the value
+	// value in the response, which you can use to retrieve another group of objects.
+	// For the second and subsequent GetProtectionStatus requests, specify the value
 	// of NextToken from the previous response to get information about another
 	// batch of objects.
 	NextToken *string `min:"1" type:"string"`
@@ -2026,7 +2056,7 @@ type GetProtectionStatusInput struct {
 	PolicyId *string `min:"36" type:"string" required:"true"`
 
 	// The start of the time period to query for the attacks. This is a timestamp
-	// type. The sample request above indicates a number type because the default
+	// type. The request syntax listing indicates a number type because the default
 	// used by AWS Firewall Manager is Unix time in seconds. However, any valid
 	// timestamp format is allowed.
 	StartTime *time.Time `type:"timestamp"`
@@ -2121,8 +2151,7 @@ type GetProtectionStatusOutput struct {
 	//
 	//    * End time of the attack (ongoing attacks will not have an end time)
 	//
-	// The details are in JSON format. An example is shown in the Examples section
-	// below.
+	// The details are in JSON format.
 	Data *string `type:"string"`
 
 	// If you have more objects than the number that you specified for MaxResults
@@ -2482,9 +2511,9 @@ type Policy struct {
 	ExcludeMap map[string][]*string `type:"map"`
 
 	// If set to True, resources with the tags that are specified in the ResourceTag
-	// array are not protected by the policy. If set to False, and the ResourceTag
-	// array is not null, only resources with the specified tags are associated
-	// with the policy.
+	// array are not in scope of the policy. If set to False, and the ResourceTag
+	// array is not null, only resources with the specified tags are in scope of
+	// the policy.
 	//
 	// ExcludeResourceTags is a required field
 	ExcludeResourceTags *bool `type:"boolean" required:"true"`
@@ -2520,9 +2549,14 @@ type Policy struct {
 	// An array of ResourceTag objects.
 	ResourceTags []*ResourceTag `type:"list"`
 
-	// The type of resource to protect with the policy. This is in the format shown
-	// in AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
-	// For example: AWS::ElasticLoadBalancingV2::LoadBalancer or AWS::CloudFront::Distribution.
+	// The type of resource protected by or in scope of the policy. This is in the
+	// format shown in the AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
+	// For AWS WAF and Shield Advanced, examples include AWS::ElasticLoadBalancingV2::LoadBalancer
+	// and AWS::CloudFront::Distribution. For a security group common policy, valid
+	// values are AWS::EC2::NetworkInterface and AWS::EC2::Instance. For a security
+	// group content audit policy, valid values are AWS::EC2::SecurityGroup, AWS::EC2::NetworkInterface,
+	// and AWS::EC2::Instance. For a security group usage audit policy, the value
+	// is AWS::EC2::SecurityGroup.
 	//
 	// ResourceType is a required field
 	ResourceType *string `min:"1" type:"string" required:"true"`
@@ -2664,24 +2698,24 @@ func (s *Policy) SetSecurityServicePolicyData(v *SecurityServicePolicyData) *Pol
 	return s
 }
 
-// Describes the non-compliant resources in a member account for a specific
-// AWS Firewall Manager policy. A maximum of 100 entries are displayed. If more
-// than 100 resources are non-compliant, EvaluationLimitExceeded is set to True.
+// Describes the noncompliant resources in a member account for a specific AWS
+// Firewall Manager policy. A maximum of 100 entries are displayed. If more
+// than 100 resources are noncompliant, EvaluationLimitExceeded is set to True.
 type PolicyComplianceDetail struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates if over 100 resources are non-compliant with the AWS Firewall Manager
+	// Indicates if over 100 resources are noncompliant with the AWS Firewall Manager
 	// policy.
 	EvaluationLimitExceeded *bool `type:"boolean"`
 
-	// A time stamp that indicates when the returned information should be considered
-	// out-of-date.
+	// A timestamp that indicates when the returned information should be considered
+	// out of date.
 	ExpiredAt *time.Time `type:"timestamp"`
 
 	// Details about problems with dependent services, such as AWS WAF or AWS Config,
-	// that are causing a resource to be non-compliant. The details include the
-	// name of the dependent service and the error message received that indicates
-	// the problem with the service.
+	// that are causing a resource to be noncompliant. The details include the name
+	// of the dependent service and the error message received that indicates the
+	// problem with the service.
 	IssueInfoMap map[string]*string `type:"map"`
 
 	// The AWS account ID.
@@ -2693,7 +2727,8 @@ type PolicyComplianceDetail struct {
 	// The AWS account that created the AWS Firewall Manager policy.
 	PolicyOwner *string `min:"1" type:"string"`
 
-	// An array of resources that are not protected by the policy.
+	// An array of resources that aren't protected by the AWS WAF or Shield Advanced
+	// policy or that aren't in compliance with the security group policy.
 	Violators []*ComplianceViolator `type:"list"`
 }
 
@@ -2750,8 +2785,9 @@ func (s *PolicyComplianceDetail) SetViolators(v []*ComplianceViolator) *PolicyCo
 }
 
 // Indicates whether the account is compliant with the specified policy. An
-// account is considered non-compliant if it includes resources that are not
-// protected by the policy.
+// account is considered noncompliant if it includes resources that are not
+// protected by the policy, for AWS WAF and Shield Advanced policies, or that
+// are noncompliant with the policy, for security group policies.
 type PolicyComplianceStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -2759,12 +2795,12 @@ type PolicyComplianceStatus struct {
 	EvaluationResults []*EvaluationResult `type:"list"`
 
 	// Details about problems with dependent services, such as AWS WAF or AWS Config,
-	// that are causing a resource to be non-compliant. The details include the
-	// name of the dependent service and the error message received that indicates
-	// the problem with the service.
+	// that are causing a resource to be noncompliant. The details include the name
+	// of the dependent service and the error message received that indicates the
+	// problem with the service.
 	IssueInfoMap map[string]*string `type:"map"`
 
-	// Time stamp of the last update to the EvaluationResult objects.
+	// Timestamp of the last update to the EvaluationResult objects.
 	LastUpdated *time.Time `type:"timestamp"`
 
 	// The member account ID.
@@ -2848,14 +2884,19 @@ type PolicySummary struct {
 	// Indicates if the policy should be automatically applied to new resources.
 	RemediationEnabled *bool `type:"boolean"`
 
-	// The type of resource to protect with the policy. This is in the format shown
-	// in AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
-	// For example: AWS::ElasticLoadBalancingV2::LoadBalancer or AWS::CloudFront::Distribution.
+	// The type of resource protected by or in scope of the policy. This is in the
+	// format shown in the AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
+	// For AWS WAF and Shield Advanced, examples include AWS::ElasticLoadBalancingV2::LoadBalancer
+	// and AWS::CloudFront::Distribution. For a security group common policy, valid
+	// values are AWS::EC2::NetworkInterface and AWS::EC2::Instance. For a security
+	// group content audit policy, valid values are AWS::EC2::SecurityGroup, AWS::EC2::NetworkInterface,
+	// and AWS::EC2::Instance. For a security group usage audit policy, the value
+	// is AWS::EC2::SecurityGroup.
 	ResourceType *string `min:"1" type:"string"`
 
 	// The service that the policy is using to protect the resources. This specifies
-	// the type of policy that is created, either a WAF policy or Shield Advanced
-	// policy.
+	// the type of policy that is created, either an AWS WAF policy, a Shield Advanced
+	// policy, or a security group policy.
 	SecurityServiceType *string `type:"string" enum:"SecurityServiceType"`
 }
 
@@ -3055,13 +3096,13 @@ func (s *PutPolicyOutput) SetPolicyArn(v string) *PutPolicyOutput {
 }
 
 // The resource tags that AWS Firewall Manager uses to determine if a particular
-// resource should be included or excluded from protection by the AWS Firewall
-// Manager policy. Tags enable you to categorize your AWS resources in different
-// ways, for example, by purpose, owner, or environment. Each tag consists of
-// a key and an optional value, both of which you define. Tags are combined
-// with an "OR." That is, if you add more than one tag, if any of the tags matches,
-// the resource is considered a match for the include or exclude. Working with
-// Tag Editor (https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/tag-editor.html).
+// resource should be included or excluded from the AWS Firewall Manager policy.
+// Tags enable you to categorize your AWS resources in different ways, for example,
+// by purpose, owner, or environment. Each tag consists of a key and an optional
+// value. Firewall Manager combines the tags with "AND" so that, if you add
+// more than one tag to a policy scope, a resource must have all the specified
+// tags to be included or excluded. For more information, see Working with Tag
+// Editor (https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/tag-editor.html).
 type ResourceTag struct {
 	_ struct{} `type:"structure"`
 
@@ -3116,19 +3157,34 @@ func (s *ResourceTag) SetValue(v string) *ResourceTag {
 type SecurityServicePolicyData struct {
 	_ struct{} `type:"structure"`
 
-	// Details about the service. This contains WAF data in JSON format, as shown
-	// in the following example:
+	// Details about the service that are specific to the service type, in JSON
+	// format. For service type SHIELD_ADVANCED, this is an empty string.
 	//
-	// ManagedServiceData": "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\": \"12345678-1bcd-9012-efga-0987654321ab\",
-	// \"overrideAction\" : {\"type\": \"COUNT\"}}], \"defaultAction\": {\"type\":
-	// \"BLOCK\"}}
+	//    * Example: WAF ManagedServiceData": "{\"type\": \"WAF\", \"ruleGroups\":
+	//    [{\"id\": \"12345678-1bcd-9012-efga-0987654321ab\", \"overrideAction\"
+	//    : {\"type\": \"COUNT\"}}], \"defaultAction\": {\"type\": \"BLOCK\"}}
 	//
-	// If this is a Shield Advanced policy, this string will be empty.
+	//    * Example: SECURITY_GROUPS_COMMON "SecurityServicePolicyData":{"Type":"SECURITY_GROUPS_COMMON","ManagedServiceData":"{\"type\":\"SECURITY_GROUPS_COMMON\",\"revertManualSecurityGroupChanges\":false,\"exclusiveResourceSecurityGroupManagement\":false,\"securityGroups\":[{\"id\":\"
+	//    sg-000e55995d61a06bd\"}]}"},"RemediationEnabled":false,"ResourceType":"AWS::EC2::NetworkInterface"}
+	//
+	//    * Example: SECURITY_GROUPS_CONTENT_AUDIT "SecurityServicePolicyData":{"Type":"SECURITY_GROUPS_CONTENT_AUDIT","ManagedServiceData":"{\"type\":\"SECURITY_GROUPS_CONTENT_AUDIT\",\"securityGroups\":[{\"id\":\"
+	//    sg-000e55995d61a06bd \"}],\"securityGroupAction\":{\"type\":\"ALLOW\"}}"},"RemediationEnabled":false,"ResourceType":"AWS::EC2::NetworkInterface"}
+	//    The security group action for content audit can be ALLOW or DENY. For
+	//    ALLOW, all in-scope security group rules must be within the allowed range
+	//    of the policy's security group rules. For DENY, all in-scope security
+	//    group rules must not contain a value or a range that matches a rule value
+	//    or range in the policy security group.
+	//
+	//    * Example: SECURITY_GROUPS_USAGE_AUDIT "SecurityServicePolicyData":{"Type":"SECURITY_GROUPS_USAGE_AUDIT","ManagedServiceData":"{\"type\":\"SECURITY_GROUPS_USAGE_AUDIT\",\"deleteUnusedSecurityGroups\":true,\"coalesceRedundantSecurityGroups\":true}"},"RemediationEnabled":false,"Resou
+	//    rceType":"AWS::EC2::SecurityGroup"}
 	ManagedServiceData *string `min:"1" type:"string"`
 
 	// The service that the policy is using to protect the resources. This specifies
-	// the type of policy that is created, either a WAF policy or Shield Advanced
-	// policy.
+	// the type of policy that is created, either an AWS WAF policy, a Shield Advanced
+	// policy, or a security group policy. For security group policies, Firewall
+	// Manager supports one security group for each common policy and for each content
+	// audit policy. This is an adjustable limit that you can increase by contacting
+	// AWS Support.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"SecurityServiceType"`
@@ -3203,6 +3259,9 @@ const (
 
 	// DependentServiceNameAwsshieldAdvanced is a DependentServiceName enum value
 	DependentServiceNameAwsshieldAdvanced = "AWSSHIELD_ADVANCED"
+
+	// DependentServiceNameAwsvpc is a DependentServiceName enum value
+	DependentServiceNameAwsvpc = "AWSVPC"
 )
 
 const (
@@ -3219,6 +3278,15 @@ const (
 
 	// SecurityServiceTypeShieldAdvanced is a SecurityServiceType enum value
 	SecurityServiceTypeShieldAdvanced = "SHIELD_ADVANCED"
+
+	// SecurityServiceTypeSecurityGroupsCommon is a SecurityServiceType enum value
+	SecurityServiceTypeSecurityGroupsCommon = "SECURITY_GROUPS_COMMON"
+
+	// SecurityServiceTypeSecurityGroupsContentAudit is a SecurityServiceType enum value
+	SecurityServiceTypeSecurityGroupsContentAudit = "SECURITY_GROUPS_CONTENT_AUDIT"
+
+	// SecurityServiceTypeSecurityGroupsUsageAudit is a SecurityServiceType enum value
+	SecurityServiceTypeSecurityGroupsUsageAudit = "SECURITY_GROUPS_USAGE_AUDIT"
 )
 
 const (
@@ -3233,4 +3301,19 @@ const (
 
 	// ViolationReasonResourceMissingShieldProtection is a ViolationReason enum value
 	ViolationReasonResourceMissingShieldProtection = "RESOURCE_MISSING_SHIELD_PROTECTION"
+
+	// ViolationReasonResourceMissingWebAclOrShieldProtection is a ViolationReason enum value
+	ViolationReasonResourceMissingWebAclOrShieldProtection = "RESOURCE_MISSING_WEB_ACL_OR_SHIELD_PROTECTION"
+
+	// ViolationReasonResourceMissingSecurityGroup is a ViolationReason enum value
+	ViolationReasonResourceMissingSecurityGroup = "RESOURCE_MISSING_SECURITY_GROUP"
+
+	// ViolationReasonResourceViolatesAuditSecurityGroup is a ViolationReason enum value
+	ViolationReasonResourceViolatesAuditSecurityGroup = "RESOURCE_VIOLATES_AUDIT_SECURITY_GROUP"
+
+	// ViolationReasonSecurityGroupUnused is a ViolationReason enum value
+	ViolationReasonSecurityGroupUnused = "SECURITY_GROUP_UNUSED"
+
+	// ViolationReasonSecurityGroupRedundant is a ViolationReason enum value
+	ViolationReasonSecurityGroupRedundant = "SECURITY_GROUP_REDUNDANT"
 )

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafByteMatchSet() *schema.Resource {
@@ -16,6 +16,9 @@ func resourceAwsWafByteMatchSet() *schema.Resource {
 		Read:   resourceAwsWafByteMatchSetRead,
 		Update: resourceAwsWafByteMatchSetUpdate,
 		Delete: resourceAwsWafByteMatchSetDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {

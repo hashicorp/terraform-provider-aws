@@ -1,7 +1,7 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket"
-sidebar_current: "docs-aws-datasource-s3-bucket"
 description: |-
     Provides details about a specific S3 bucket
 ---

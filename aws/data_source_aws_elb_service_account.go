@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy
@@ -24,6 +24,7 @@ var elbAccountIdPerRegionMap = map[string]string{
 	"eu-west-1":      "156460612806",
 	"eu-west-2":      "652711504416",
 	"eu-west-3":      "009996457667",
+	"me-south-1":     "076674570225",
 	"sa-east-1":      "507241528517",
 	"us-east-1":      "127311923021",
 	"us-east-2":      "033677994240",

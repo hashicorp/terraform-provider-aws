@@ -54,8 +54,8 @@ const (
 	//
 	// Discovery failed to get a record from the streaming source because of the
 	// Amazon Kinesis Streams ProvisionedThroughputExceededException. For more information,
-	// see GetRecords (kinesis/latest/APIReference/API_GetRecords.html) in the Amazon
-	// Kinesis Streams API Reference.
+	// see GetRecords (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
+	// in the Amazon Kinesis Streams API Reference.
 	ErrCodeResourceProvisionedThroughputExceededException = "ResourceProvisionedThroughputExceededException"
 
 	// ErrCodeServiceUnavailableException for service response error code

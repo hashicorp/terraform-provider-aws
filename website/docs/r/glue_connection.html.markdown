@@ -1,7 +1,7 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_connection"
-sidebar_current: "docs-aws-resource-glue-connection"
 description: |-
   Provides an Glue Connection resource.
 ---

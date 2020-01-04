@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_router"
-sidebar_current: "docs-aws-resource-appmesh-virtual-router"
 description: |-
   Provides an AWS App Mesh virtual router resource.
 ---
@@ -47,6 +47,7 @@ The following arguments are supported:
 * `name` - (Required) The name to use for the virtual router.
 * `mesh_name` - (Required) The name of the service mesh in which to create the virtual router.
 * `spec` - (Required) The virtual router specification to apply.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
 
 The `spec` object supports the following:
 

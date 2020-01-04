@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCodePipeline() *schema.Resource {
@@ -185,6 +185,9 @@ func resourceAwsCodePipelineCreate(d *schema.ResourceData, meta interface{}) err
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreatePipeline(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating CodePipeline: %s", err)
 	}

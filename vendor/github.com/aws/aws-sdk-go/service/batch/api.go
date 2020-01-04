@@ -611,6 +611,12 @@ func (c *Batch) DescribeComputeEnvironmentsRequest(input *DescribeComputeEnviron
 		Name:       opDescribeComputeEnvironments,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/describecomputeenvironments",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -668,6 +674,58 @@ func (c *Batch) DescribeComputeEnvironmentsWithContext(ctx aws.Context, input *D
 	return out, req.Send()
 }
 
+// DescribeComputeEnvironmentsPages iterates over the pages of a DescribeComputeEnvironments operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeComputeEnvironments method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeComputeEnvironments operation.
+//    pageNum := 0
+//    err := client.DescribeComputeEnvironmentsPages(params,
+//        func(page *batch.DescribeComputeEnvironmentsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) DescribeComputeEnvironmentsPages(input *DescribeComputeEnvironmentsInput, fn func(*DescribeComputeEnvironmentsOutput, bool) bool) error {
+	return c.DescribeComputeEnvironmentsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeComputeEnvironmentsPagesWithContext same as DescribeComputeEnvironmentsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) DescribeComputeEnvironmentsPagesWithContext(ctx aws.Context, input *DescribeComputeEnvironmentsInput, fn func(*DescribeComputeEnvironmentsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeComputeEnvironmentsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeComputeEnvironmentsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeComputeEnvironmentsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeJobDefinitions = "DescribeJobDefinitions"
 
 // DescribeJobDefinitionsRequest generates a "aws/request.Request" representing the
@@ -699,6 +757,12 @@ func (c *Batch) DescribeJobDefinitionsRequest(input *DescribeJobDefinitionsInput
 		Name:       opDescribeJobDefinitions,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/describejobdefinitions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -753,6 +817,58 @@ func (c *Batch) DescribeJobDefinitionsWithContext(ctx aws.Context, input *Descri
 	return out, req.Send()
 }
 
+// DescribeJobDefinitionsPages iterates over the pages of a DescribeJobDefinitions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeJobDefinitions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeJobDefinitions operation.
+//    pageNum := 0
+//    err := client.DescribeJobDefinitionsPages(params,
+//        func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) DescribeJobDefinitionsPages(input *DescribeJobDefinitionsInput, fn func(*DescribeJobDefinitionsOutput, bool) bool) error {
+	return c.DescribeJobDefinitionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeJobDefinitionsPagesWithContext same as DescribeJobDefinitionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) DescribeJobDefinitionsPagesWithContext(ctx aws.Context, input *DescribeJobDefinitionsInput, fn func(*DescribeJobDefinitionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeJobDefinitionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeJobDefinitionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeJobDefinitionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opDescribeJobQueues = "DescribeJobQueues"
 
 // DescribeJobQueuesRequest generates a "aws/request.Request" representing the
@@ -784,6 +900,12 @@ func (c *Batch) DescribeJobQueuesRequest(input *DescribeJobQueuesInput) (req *re
 		Name:       opDescribeJobQueues,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/describejobqueues",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -835,6 +957,58 @@ func (c *Batch) DescribeJobQueuesWithContext(ctx aws.Context, input *DescribeJob
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// DescribeJobQueuesPages iterates over the pages of a DescribeJobQueues operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeJobQueues method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeJobQueues operation.
+//    pageNum := 0
+//    err := client.DescribeJobQueuesPages(params,
+//        func(page *batch.DescribeJobQueuesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) DescribeJobQueuesPages(input *DescribeJobQueuesInput, fn func(*DescribeJobQueuesOutput, bool) bool) error {
+	return c.DescribeJobQueuesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeJobQueuesPagesWithContext same as DescribeJobQueuesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) DescribeJobQueuesPagesWithContext(ctx aws.Context, input *DescribeJobQueuesInput, fn func(*DescribeJobQueuesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeJobQueuesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeJobQueuesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeJobQueuesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeJobs = "DescribeJobs"
@@ -952,6 +1126,12 @@ func (c *Batch) ListJobsRequest(input *ListJobsInput) (req *request.Request, out
 		Name:       opListJobs,
 		HTTPMethod: "POST",
 		HTTPPath:   "/v1/listjobs",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -1014,6 +1194,58 @@ func (c *Batch) ListJobsWithContext(ctx aws.Context, input *ListJobsInput, opts 
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListJobsPages iterates over the pages of a ListJobs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListJobs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListJobs operation.
+//    pageNum := 0
+//    err := client.ListJobsPages(params,
+//        func(page *batch.ListJobsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Batch) ListJobsPages(input *ListJobsInput, fn func(*ListJobsOutput, bool) bool) error {
+	return c.ListJobsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListJobsPagesWithContext same as ListJobsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Batch) ListJobsPagesWithContext(ctx aws.Context, input *ListJobsInput, fn func(*ListJobsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListJobsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListJobsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListJobsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opRegisterJobDefinition = "RegisterJobDefinition"
@@ -1917,19 +2149,35 @@ func (s *ComputeEnvironmentOrder) SetOrder(v int64) *ComputeEnvironmentOrder {
 type ComputeResource struct {
 	_ struct{} `type:"structure"`
 
+	// The allocation strategy to use for the compute resource in case not enough
+	// instances of the best fitting instance type can be allocated. This could
+	// be due to availability of the instance type in the region or Amazon EC2 service
+	// limits (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html).
+	// If this is not specified, the default is BEST_FIT, which will use only the
+	// best fitting instance type, waiting for additional capacity if it's not available.
+	// This allocation strategy keeps costs lower but can limit scaling. BEST_FIT_PROGRESSIVE
+	// will select an additional instance type that is large enough to meet the
+	// requirements of the jobs in the queue, with a preference for an instance
+	// type with a lower cost. SPOT_CAPACITY_OPTIMIZED is only available for Spot
+	// Instance compute resources and will select an additional instance type that
+	// is large enough to meet the requirements of the jobs in the queue, with a
+	// preference for an instance type that is less likely to be interrupted.
+	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"CRAllocationStrategy"`
+
 	// The maximum percentage that a Spot Instance price can be when compared with
 	// the On-Demand price for that instance type before instances are launched.
 	// For example, if your maximum percentage is 20%, then the Spot price must
-	// be below 20% of the current On-Demand price for that EC2 instance. You always
-	// pay the lowest (market) price and never more than your maximum percentage.
-	// If you leave this field empty, the default value is 100% of the On-Demand
-	// price.
+	// be below 20% of the current On-Demand price for that Amazon EC2 instance.
+	// You always pay the lowest (market) price and never more than your maximum
+	// percentage. If you leave this field empty, the default value is 100% of the
+	// On-Demand price.
 	BidPercentage *int64 `locationName:"bidPercentage" type:"integer"`
 
-	// The desired number of EC2 vCPUS in the compute environment.
+	// The desired number of Amazon EC2 vCPUS in the compute environment.
 	DesiredvCpus *int64 `locationName:"desiredvCpus" type:"integer"`
 
-	// The EC2 key pair that is used for instances launched in the compute environment.
+	// The Amazon EC2 key pair that is used for instances launched in the compute
+	// environment.
 	Ec2KeyPair *string `locationName:"ec2KeyPair" type:"string"`
 
 	// The Amazon Machine Image (AMI) ID used for instances launched in the compute
@@ -1946,8 +2194,8 @@ type ComputeResource struct {
 	InstanceRole *string `locationName:"instanceRole" type:"string" required:"true"`
 
 	// The instances types that may be launched. You can specify instance families
-	// to launch any instance type within those families (for example, c4 or p3),
-	// or you can specify specific sizes within a family (such as c4.8xlarge). You
+	// to launch any instance type within those families (for example, c5 or p3),
+	// or you can specify specific sizes within a family (such as c5.8xlarge). You
 	// can also choose optimal to pick instance types (from the C, M, and R instance
 	// families) on the fly that match the demand of your job queues.
 	//
@@ -1962,13 +2210,13 @@ type ComputeResource struct {
 	// in the AWS Batch User Guide.
 	LaunchTemplate *LaunchTemplateSpecification `locationName:"launchTemplate" type:"structure"`
 
-	// The maximum number of EC2 vCPUs that an environment can reach.
+	// The maximum number of Amazon EC2 vCPUs that an environment can reach.
 	//
 	// MaxvCpus is a required field
 	MaxvCpus *int64 `locationName:"maxvCpus" type:"integer" required:"true"`
 
-	// The minimum number of EC2 vCPUs that an environment should maintain (even
-	// if the compute environment is DISABLED).
+	// The minimum number of Amazon EC2 vCPUs that an environment should maintain
+	// (even if the compute environment is DISABLED).
 	//
 	// MinvCpus is a required field
 	MinvCpus *int64 `locationName:"minvCpus" type:"integer" required:"true"`
@@ -1982,8 +2230,11 @@ type ComputeResource struct {
 	// in the Amazon EC2 User Guide for Linux Instances.
 	PlacementGroup *string `locationName:"placementGroup" type:"string"`
 
-	// The EC2 security group that is associated with instances launched in the
-	// compute environment.
+	// The Amazon EC2 security groups associated with instances launched in the
+	// compute environment. One or more security groups must be specified, either
+	// in securityGroupIds or using a launch template referenced in launchTemplate.
+	// If security groups are specified using both securityGroupIds and launchTemplate,
+	// the values in securityGroupIds will be used.
 	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied
@@ -1992,7 +2243,9 @@ type ComputeResource struct {
 	// in the AWS Batch User Guide.
 	SpotIamFleetRole *string `locationName:"spotIamFleetRole" type:"string"`
 
-	// The VPC subnets into which the compute resources are launched.
+	// The VPC subnets into which the compute resources are launched. For more information,
+	// see VPCs and Subnets (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
+	// in the Amazon VPC User Guide.
 	//
 	// Subnets is a required field
 	Subnets []*string `locationName:"subnets" type:"list" required:"true"`
@@ -2045,6 +2298,12 @@ func (s *ComputeResource) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAllocationStrategy sets the AllocationStrategy field's value.
+func (s *ComputeResource) SetAllocationStrategy(v string) *ComputeResource {
+	s.AllocationStrategy = &v
+	return s
 }
 
 // SetBidPercentage sets the BidPercentage field's value.
@@ -2142,13 +2401,13 @@ func (s *ComputeResource) SetType(v string) *ComputeResource {
 type ComputeResourceUpdate struct {
 	_ struct{} `type:"structure"`
 
-	// The desired number of EC2 vCPUS in the compute environment.
+	// The desired number of Amazon EC2 vCPUS in the compute environment.
 	DesiredvCpus *int64 `locationName:"desiredvCpus" type:"integer"`
 
-	// The maximum number of EC2 vCPUs that an environment can reach.
+	// The maximum number of Amazon EC2 vCPUs that an environment can reach.
 	MaxvCpus *int64 `locationName:"maxvCpus" type:"integer"`
 
-	// The minimum number of EC2 vCPUs that an environment should maintain.
+	// The minimum number of Amazon EC2 vCPUs that an environment should maintain.
 	MinvCpus *int64 `locationName:"minvCpus" type:"integer"`
 }
 
@@ -2209,6 +2468,10 @@ type ContainerDetail struct {
 
 	// The Amazon Resource Name (ARN) associated with the job upon execution.
 	JobRoleArn *string `locationName:"jobRoleArn" type:"string"`
+
+	// Linux-specific modifications that are applied to the container, such as details
+	// for device mappings.
+	LinuxParameters *LinuxParameters `locationName:"linuxParameters" type:"structure"`
 
 	// The name of the CloudWatch Logs log stream associated with the container.
 	// The log group for AWS Batch jobs is /aws/batch/job. Each container attempt
@@ -2307,6 +2570,12 @@ func (s *ContainerDetail) SetInstanceType(v string) *ContainerDetail {
 // SetJobRoleArn sets the JobRoleArn field's value.
 func (s *ContainerDetail) SetJobRoleArn(v string) *ContainerDetail {
 	s.JobRoleArn = &v
+	return s
+}
+
+// SetLinuxParameters sets the LinuxParameters field's value.
+func (s *ContainerDetail) SetLinuxParameters(v *LinuxParameters) *ContainerDetail {
+	s.LinuxParameters = v
 	return s
 }
 
@@ -2544,6 +2813,10 @@ type ContainerProperties struct {
 	// for AWS permissions.
 	JobRoleArn *string `locationName:"jobRoleArn" type:"string"`
 
+	// Linux-specific modifications that are applied to the container, such as details
+	// for device mappings.
+	LinuxParameters *LinuxParameters `locationName:"linuxParameters" type:"structure"`
+
 	// The hard limit (in MiB) of memory to present to the container. If your container
 	// attempts to exceed the memory specified here, the container is killed. This
 	// parameter maps to Memory in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
@@ -2618,6 +2891,11 @@ func (s ContainerProperties) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ContainerProperties) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ContainerProperties"}
+	if s.LinuxParameters != nil {
+		if err := s.LinuxParameters.Validate(); err != nil {
+			invalidParams.AddNested("LinuxParameters", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ResourceRequirements != nil {
 		for i, v := range s.ResourceRequirements {
 			if v == nil {
@@ -2672,6 +2950,12 @@ func (s *ContainerProperties) SetInstanceType(v string) *ContainerProperties {
 // SetJobRoleArn sets the JobRoleArn field's value.
 func (s *ContainerProperties) SetJobRoleArn(v string) *ContainerProperties {
 	s.JobRoleArn = &v
+	return s
+}
+
+// SetLinuxParameters sets the LinuxParameters field's value.
+func (s *ContainerProperties) SetLinuxParameters(v *LinuxParameters) *ContainerProperties {
+	s.LinuxParameters = v
 	return s
 }
 
@@ -3540,6 +3824,65 @@ func (s *DescribeJobsOutput) SetJobs(v []*JobDetail) *DescribeJobsOutput {
 	return s
 }
 
+// An object representing a container instance host device.
+type Device struct {
+	_ struct{} `type:"structure"`
+
+	// The path inside the container at which to expose the host device. By default
+	// the hostPath value is used.
+	ContainerPath *string `locationName:"containerPath" type:"string"`
+
+	// The path for the device on the host container instance.
+	//
+	// HostPath is a required field
+	HostPath *string `locationName:"hostPath" type:"string" required:"true"`
+
+	// The explicit permissions to provide to the container for the device. By default,
+	// the container has permissions for read, write, and mknod for the device.
+	Permissions []*string `locationName:"permissions" type:"list"`
+}
+
+// String returns the string representation
+func (s Device) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Device) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Device) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Device"}
+	if s.HostPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("HostPath"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContainerPath sets the ContainerPath field's value.
+func (s *Device) SetContainerPath(v string) *Device {
+	s.ContainerPath = &v
+	return s
+}
+
+// SetHostPath sets the HostPath field's value.
+func (s *Device) SetHostPath(v string) *Device {
+	s.HostPath = &v
+	return s
+}
+
+// SetPermissions sets the Permissions field's value.
+func (s *Device) SetPermissions(v []*string) *Device {
+	s.Permissions = v
+	return s
+}
+
 // Determine whether your data volume persists on the host container instance
 // and where it is stored. If this parameter is empty, then the Docker daemon
 // assigns a host path for your data volume, but the data is not guaranteed
@@ -4242,6 +4585,54 @@ func (s *LaunchTemplateSpecification) SetLaunchTemplateName(v string) *LaunchTem
 // SetVersion sets the Version field's value.
 func (s *LaunchTemplateSpecification) SetVersion(v string) *LaunchTemplateSpecification {
 	s.Version = &v
+	return s
+}
+
+// Linux-specific modifications that are applied to the container, such as details
+// for device mappings.
+type LinuxParameters struct {
+	_ struct{} `type:"structure"`
+
+	// Any host devices to expose to the container. This parameter maps to Devices
+	// in the Create a container (https://docs.docker.com/engine/api/v1.23/#create-a-container)
+	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.23/)
+	// and the --device option to docker run (https://docs.docker.com/engine/reference/run/).
+	Devices []*Device `locationName:"devices" type:"list"`
+}
+
+// String returns the string representation
+func (s LinuxParameters) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LinuxParameters) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LinuxParameters) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LinuxParameters"}
+	if s.Devices != nil {
+		for i, v := range s.Devices {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Devices", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDevices sets the Devices field's value.
+func (s *LinuxParameters) SetDevices(v []*Device) *LinuxParameters {
+	s.Devices = v
 	return s
 }
 
@@ -5706,11 +6097,33 @@ const (
 )
 
 const (
+	// CRAllocationStrategyBestFit is a CRAllocationStrategy enum value
+	CRAllocationStrategyBestFit = "BEST_FIT"
+
+	// CRAllocationStrategyBestFitProgressive is a CRAllocationStrategy enum value
+	CRAllocationStrategyBestFitProgressive = "BEST_FIT_PROGRESSIVE"
+
+	// CRAllocationStrategySpotCapacityOptimized is a CRAllocationStrategy enum value
+	CRAllocationStrategySpotCapacityOptimized = "SPOT_CAPACITY_OPTIMIZED"
+)
+
+const (
 	// CRTypeEc2 is a CRType enum value
 	CRTypeEc2 = "EC2"
 
 	// CRTypeSpot is a CRType enum value
 	CRTypeSpot = "SPOT"
+)
+
+const (
+	// DeviceCgroupPermissionRead is a DeviceCgroupPermission enum value
+	DeviceCgroupPermissionRead = "READ"
+
+	// DeviceCgroupPermissionWrite is a DeviceCgroupPermission enum value
+	DeviceCgroupPermissionWrite = "WRITE"
+
+	// DeviceCgroupPermissionMknod is a DeviceCgroupPermission enum value
+	DeviceCgroupPermissionMknod = "MKNOD"
 )
 
 const (

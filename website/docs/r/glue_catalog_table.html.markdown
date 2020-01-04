@@ -1,7 +1,7 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_catalog_table"
-sidebar_current: "docs-aws-resource-glue-catalog-table"
 description: |-
   Provides a Glue Catalog Table.
 ---
@@ -124,7 +124,7 @@ The following arguments are supported:
 * `parameters` - (Optional) A map of initialization parameters for the SerDe, in key-value form.
 * `serialization_library` - (Optional) Usually the class that implements the SerDe. An example is: org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe.
 
-##### sort_column
+##### sort_columns
 
 * `column` - (Required) The name of the column.
 * `sort_order` - (Required) Indicates that the column is sorted in ascending order (== 1), or in descending order (==0).

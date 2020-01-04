@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
@@ -17,6 +17,9 @@ func resourceAwsWafRegionalWebAclAssociation() *schema.Resource {
 		Create: resourceAwsWafRegionalWebAclAssociationCreate,
 		Read:   resourceAwsWafRegionalWebAclAssociationRead,
 		Delete: resourceAwsWafRegionalWebAclAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"web_acl_id": {
@@ -59,8 +62,11 @@ func resourceAwsWafRegionalWebAclAssociationCreate(d *schema.ResourceData, meta 
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AssociateWebACL(params)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating WAF Regional Web ACL association: %s", err)
 	}
 
 	// Store association id
@@ -91,7 +97,9 @@ func resourceAwsWafRegionalWebAclAssociationRead(d *schema.ResourceData, meta in
 	}
 
 	if output == nil || output.WebACLSummary == nil {
-		return fmt.Errorf("error getting WAF Regional Web ACL for resource (%s): empty response", resourceArn)
+		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
+		d.SetId("")
+		return nil
 	}
 
 	d.Set("resource_arn", resourceArn)

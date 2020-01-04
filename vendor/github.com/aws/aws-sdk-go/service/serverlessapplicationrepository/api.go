@@ -906,10 +906,12 @@ func (c *ServerlessApplicationRepository) ListApplicationDependenciesPagesWithCo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationDependenciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationDependenciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1056,10 +1058,12 @@ func (c *ServerlessApplicationRepository) ListApplicationVersionsPagesWithContex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1202,10 +1206,12 @@ func (c *ServerlessApplicationRepository) ListApplicationsPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListApplicationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListApplicationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1624,6 +1630,8 @@ type CreateApplicationOutput struct {
 
 	HomePageUrl *string `locationName:"homePageUrl" type:"string"`
 
+	IsVerifiedAuthor *bool `locationName:"isVerifiedAuthor" type:"boolean"`
+
 	Labels []*string `locationName:"labels" type:"list"`
 
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
@@ -1633,6 +1641,8 @@ type CreateApplicationOutput struct {
 	ReadmeUrl *string `locationName:"readmeUrl" type:"string"`
 
 	SpdxLicenseId *string `locationName:"spdxLicenseId" type:"string"`
+
+	VerifiedAuthorUrl *string `locationName:"verifiedAuthorUrl" type:"string"`
 
 	// Application version details.
 	Version *Version `locationName:"version" type:"structure"`
@@ -1678,6 +1688,12 @@ func (s *CreateApplicationOutput) SetHomePageUrl(v string) *CreateApplicationOut
 	return s
 }
 
+// SetIsVerifiedAuthor sets the IsVerifiedAuthor field's value.
+func (s *CreateApplicationOutput) SetIsVerifiedAuthor(v bool) *CreateApplicationOutput {
+	s.IsVerifiedAuthor = &v
+	return s
+}
+
 // SetLabels sets the Labels field's value.
 func (s *CreateApplicationOutput) SetLabels(v []*string) *CreateApplicationOutput {
 	s.Labels = v
@@ -1705,6 +1721,12 @@ func (s *CreateApplicationOutput) SetReadmeUrl(v string) *CreateApplicationOutpu
 // SetSpdxLicenseId sets the SpdxLicenseId field's value.
 func (s *CreateApplicationOutput) SetSpdxLicenseId(v string) *CreateApplicationOutput {
 	s.SpdxLicenseId = &v
+	return s
+}
+
+// SetVerifiedAuthorUrl sets the VerifiedAuthorUrl field's value.
+func (s *CreateApplicationOutput) SetVerifiedAuthorUrl(v string) *CreateApplicationOutput {
+	s.VerifiedAuthorUrl = &v
 	return s
 }
 
@@ -2485,6 +2507,8 @@ type GetApplicationOutput struct {
 
 	HomePageUrl *string `locationName:"homePageUrl" type:"string"`
 
+	IsVerifiedAuthor *bool `locationName:"isVerifiedAuthor" type:"boolean"`
+
 	Labels []*string `locationName:"labels" type:"list"`
 
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
@@ -2494,6 +2518,8 @@ type GetApplicationOutput struct {
 	ReadmeUrl *string `locationName:"readmeUrl" type:"string"`
 
 	SpdxLicenseId *string `locationName:"spdxLicenseId" type:"string"`
+
+	VerifiedAuthorUrl *string `locationName:"verifiedAuthorUrl" type:"string"`
 
 	// Application version details.
 	Version *Version `locationName:"version" type:"structure"`
@@ -2539,6 +2565,12 @@ func (s *GetApplicationOutput) SetHomePageUrl(v string) *GetApplicationOutput {
 	return s
 }
 
+// SetIsVerifiedAuthor sets the IsVerifiedAuthor field's value.
+func (s *GetApplicationOutput) SetIsVerifiedAuthor(v bool) *GetApplicationOutput {
+	s.IsVerifiedAuthor = &v
+	return s
+}
+
 // SetLabels sets the Labels field's value.
 func (s *GetApplicationOutput) SetLabels(v []*string) *GetApplicationOutput {
 	s.Labels = v
@@ -2566,6 +2598,12 @@ func (s *GetApplicationOutput) SetReadmeUrl(v string) *GetApplicationOutput {
 // SetSpdxLicenseId sets the SpdxLicenseId field's value.
 func (s *GetApplicationOutput) SetSpdxLicenseId(v string) *GetApplicationOutput {
 	s.SpdxLicenseId = &v
+	return s
+}
+
+// SetVerifiedAuthorUrl sets the VerifiedAuthorUrl field's value.
+func (s *GetApplicationOutput) SetVerifiedAuthorUrl(v string) *GetApplicationOutput {
+	s.VerifiedAuthorUrl = &v
 	return s
 }
 
@@ -3526,6 +3564,8 @@ type UpdateApplicationOutput struct {
 
 	HomePageUrl *string `locationName:"homePageUrl" type:"string"`
 
+	IsVerifiedAuthor *bool `locationName:"isVerifiedAuthor" type:"boolean"`
+
 	Labels []*string `locationName:"labels" type:"list"`
 
 	LicenseUrl *string `locationName:"licenseUrl" type:"string"`
@@ -3535,6 +3575,8 @@ type UpdateApplicationOutput struct {
 	ReadmeUrl *string `locationName:"readmeUrl" type:"string"`
 
 	SpdxLicenseId *string `locationName:"spdxLicenseId" type:"string"`
+
+	VerifiedAuthorUrl *string `locationName:"verifiedAuthorUrl" type:"string"`
 
 	// Application version details.
 	Version *Version `locationName:"version" type:"structure"`
@@ -3580,6 +3622,12 @@ func (s *UpdateApplicationOutput) SetHomePageUrl(v string) *UpdateApplicationOut
 	return s
 }
 
+// SetIsVerifiedAuthor sets the IsVerifiedAuthor field's value.
+func (s *UpdateApplicationOutput) SetIsVerifiedAuthor(v bool) *UpdateApplicationOutput {
+	s.IsVerifiedAuthor = &v
+	return s
+}
+
 // SetLabels sets the Labels field's value.
 func (s *UpdateApplicationOutput) SetLabels(v []*string) *UpdateApplicationOutput {
 	s.Labels = v
@@ -3607,6 +3655,12 @@ func (s *UpdateApplicationOutput) SetReadmeUrl(v string) *UpdateApplicationOutpu
 // SetSpdxLicenseId sets the SpdxLicenseId field's value.
 func (s *UpdateApplicationOutput) SetSpdxLicenseId(v string) *UpdateApplicationOutput {
 	s.SpdxLicenseId = &v
+	return s
+}
+
+// SetVerifiedAuthorUrl sets the VerifiedAuthorUrl field's value.
+func (s *UpdateApplicationOutput) SetVerifiedAuthorUrl(v string) *UpdateApplicationOutput {
+	s.VerifiedAuthorUrl = &v
 	return s
 }
 

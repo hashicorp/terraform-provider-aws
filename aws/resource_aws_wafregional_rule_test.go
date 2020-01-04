@@ -3,15 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -119,6 +120,8 @@ func testSweepWafRegionalRules(region string) error {
 func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule.wafrule"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -127,13 +130,60 @@ func TestAccAWSWafRegionalRule_basic(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &v),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "name", wafRuleName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "predicate.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "metric_name", wafRuleName),
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`rule/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRegionalRule_tags(t *testing.T) {
+	var v waf.Rule
+	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule.wafrule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalRuleConfigTags1(wafRuleName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSWafRegionalRuleConfigTags2(wafRuleName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSWafRegionalRuleConfigTags1(wafRuleName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -144,6 +194,7 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 	var before, after waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -153,26 +204,25 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &before),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "name", wafRuleName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "predicate.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "metric_name", wafRuleName),
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRuleConfigChangeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &after),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "name", wafRuleNewName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "predicate.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "metric_name", wafRuleNewName),
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -181,6 +231,8 @@ func TestAccAWSWafRegionalRule_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule.wafrule"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -189,7 +241,7 @@ func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRuleConfig(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &v),
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &v),
 					testAccCheckAWSWafRegionalRuleDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
@@ -201,6 +253,8 @@ func TestAccAWSWafRegionalRule_disappears(t *testing.T) {
 func TestAccAWSWafRegionalRule_noPredicates(t *testing.T) {
 	var v waf.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule.wafrule"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -209,12 +263,15 @@ func TestAccAWSWafRegionalRule_noPredicates(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRule_noPredicates(wafRuleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &v),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "name", wafRuleName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule.wafrule", "predicate.#", "0"),
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -227,6 +284,7 @@ func TestAccAWSWafRegionalRule_changePredicates(t *testing.T) {
 	var before, after waf.Rule
 	var idx int
 	ruleName := fmt.Sprintf("wafrule%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule.wafrule"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -237,28 +295,33 @@ func TestAccAWSWafRegionalRule_changePredicates(t *testing.T) {
 				Config: testAccAWSWafRegionalRuleConfig(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &ipset),
-					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &before),
-					resource.TestCheckResourceAttr("aws_wafregional_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_wafregional_rule.wafrule", "predicate.#", "1"),
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					computeWafRegionalRulePredicate(&ipset.IPSetId, false, "IPMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule.wafrule", "predicate.%d.negated", &idx, "false"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule.wafrule", "predicate.%d.type", &idx, "IPMatch"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.negated", &idx, "false"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.type", &idx, "IPMatch"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRule_changePredicates(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRegionalXssMatchSetExists("aws_wafregional_xss_match_set.xss_match_set", &xssMatchSet),
-					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.wafrule", &after),
-					resource.TestCheckResourceAttr("aws_wafregional_rule.wafrule", "name", ruleName),
-					resource.TestCheckResourceAttr("aws_wafregional_rule.wafrule", "predicate.#", "2"),
+					testAccCheckAWSWafRegionalRuleExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "2"),
 					computeWafRegionalRulePredicate(&xssMatchSet.XssMatchSetId, true, "XssMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule.wafrule", "predicate.%d.negated", &idx, "true"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule.wafrule", "predicate.%d.type", &idx, "XssMatch"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.negated", &idx, "true"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.type", &idx, "XssMatch"),
 					computeWafRegionalRulePredicate(&ipset.IPSetId, true, "IPMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule.wafrule", "predicate.%d.negated", &idx, "true"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule.wafrule", "predicate.%d.type", &idx, "IPMatch"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.negated", &idx, "true"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.type", &idx, "IPMatch"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -386,7 +449,7 @@ func testAccCheckAWSWafRegionalRuleExists(n string, v *waf.Rule) resource.TestCh
 func testAccAWSWafRegionalRuleConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptor {
     type  = "IPV4"
@@ -395,8 +458,8 @@ resource "aws_wafregional_ipset" "ipset" {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
@@ -404,13 +467,70 @@ resource "aws_wafregional_rule" "wafrule" {
     type    = "IPMatch"
   }
 }
-`, name, name, name)
+`, name)
+}
+
+func testAccAWSWafRegionalRuleConfigTags1(name, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
+  name = %[1]q
+
+  ip_set_descriptor {
+    type  = "IPV4"
+    value = "192.0.7.0/24"
+  }
+}
+
+resource "aws_wafregional_rule" "wafrule" {
+  name        = %[1]q
+  metric_name = %[1]q
+
+  predicate {
+    data_id = "${aws_wafregional_ipset.ipset.id}"
+    negated = false
+    type    = "IPMatch"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, name, tagKey1, tagValue1)
+}
+
+func testAccAWSWafRegionalRuleConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
+  name = %[1]q
+
+  ip_set_descriptor {
+    type  = "IPV4"
+    value = "192.0.7.0/24"
+  }
+}
+
+resource "aws_wafregional_rule" "wafrule" {
+  name        = %[1]q
+  metric_name = %[1]q
+
+  predicate {
+    data_id = "${aws_wafregional_ipset.ipset.id}"
+    negated = false
+    type    = "IPMatch"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSWafRegionalRuleConfigChangeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptor {
     type  = "IPV4"
@@ -419,8 +539,8 @@ resource "aws_wafregional_ipset" "ipset" {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicate {
     data_id = "${aws_wafregional_ipset.ipset.id}"
@@ -428,22 +548,22 @@ resource "aws_wafregional_rule" "wafrule" {
     type    = "IPMatch"
   }
 }
-`, name, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalRule_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 }
-`, name, name)
+`, name)
 }
 
 func testAccAWSWafRegionalRule_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptor {
     type  = "IPV4"
@@ -452,7 +572,7 @@ resource "aws_wafregional_ipset" "ipset" {
 }
 
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
-  name = "%s"
+  name = %[1]q
 
   xss_match_tuple {
     text_transformation = "NONE"
@@ -464,8 +584,8 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 }
 
 resource "aws_wafregional_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
 
   predicate {
     data_id = "${aws_wafregional_xss_match_set.xss_match_set.id}"
@@ -479,5 +599,5 @@ resource "aws_wafregional_rule" "wafrule" {
     type    = "IPMatch"
   }
 }
-`, name, name, name, name)
+`, name)
 }

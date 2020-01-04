@@ -6,11 +6,10 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
@@ -32,6 +31,11 @@ func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      "aws_iam_group_policy.foo",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccIAMGroupPolicyConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMGroupPolicyExists(
@@ -41,6 +45,11 @@ func TestAccAWSIAMGroupPolicy_basic(t *testing.T) {
 					),
 					testAccCheckAWSIAMGroupPolicyNameChanged(&groupPolicy1, &groupPolicy2),
 				),
+			},
+			{
+				ResourceName:      "aws_iam_group_policy.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -101,6 +110,12 @@ func TestAccAWSIAMGroupPolicy_namePrefix(t *testing.T) {
 					testAccCheckAWSIAMGroupPolicyNameMatches(&groupPolicy1, &groupPolicy2),
 				),
 			},
+			{
+				ResourceName:            "aws_iam_group_policy.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"name_prefix"},
+			},
 		},
 	})
 }
@@ -135,6 +150,11 @@ func TestAccAWSIAMGroupPolicy_generatedName(t *testing.T) {
 					testAccCheckAWSIAMGroupPolicyNameMatches(&groupPolicy1, &groupPolicy2),
 				),
 			},
+			{
+				ResourceName:      "aws_iam_group_policy.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -147,23 +167,28 @@ func testAccCheckIAMGroupPolicyDestroy(s *terraform.State) error {
 			continue
 		}
 
-		group, name := resourceAwsIamGroupPolicyParseId(rs.Primary.ID)
+		group, name, err := resourceAwsIamGroupPolicyParseId(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		request := &iam.GetGroupPolicyInput{
 			PolicyName: aws.String(name),
 			GroupName:  aws.String(group),
 		}
 
-		_, err := conn.GetGroupPolicy(request)
+		getResp, err := conn.GetGroupPolicy(request)
 		if err != nil {
-			// Verify the error is what we want
-			if ae, ok := err.(awserr.Error); ok && ae.Code() == "NoSuchEntity" {
+			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+				// none found, that's good
 				continue
 			}
-			return err
+			return fmt.Errorf("Error reading IAM policy %s from group %s: %s", name, group, err)
 		}
 
-		return fmt.Errorf("still exists")
+		if getResp != nil {
+			return fmt.Errorf("Found IAM group policy, expected none: %s", getResp)
+		}
 	}
 
 	return nil
@@ -203,7 +228,11 @@ func testAccCheckIAMGroupPolicyExists(
 		}
 
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-		group, name := resourceAwsIamGroupPolicyParseId(policy.Primary.ID)
+		group, name, err := resourceAwsIamGroupPolicyParseId(policy.Primary.ID)
+		if err != nil {
+			return err
+		}
+
 		output, err := iamconn.GetGroupPolicy(&iam.GetGroupPolicyInput{
 			GroupName:  aws.String(group),
 			PolicyName: aws.String(name),

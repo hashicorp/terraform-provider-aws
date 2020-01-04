@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_vpc"
-sidebar_current: "docs-aws-resource-default-vpc"
 description: |-
   Manage the default VPC resource.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_node"
-sidebar_current: "docs-aws-resource-appmesh-virtual-node"
 description: |-
   Provides an AWS App Mesh virtual node resource.
 ---
@@ -47,6 +47,45 @@ resource "aws_appmesh_virtual_node" "serviceb1" {
     service_discovery {
       dns {
         hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+```
+
+### AWS Cloud Map Service Discovery
+
+```hcl
+resource "aws_service_discovery_http_namespace" "example" {
+  name = "example-ns"
+}
+
+resource "aws_appmesh_virtual_node" "serviceb1" {
+  name      = "serviceBv1"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+
+    service_discovery {
+      aws_cloud_map {
+        attributes = {
+          stack = "blue"
+        }
+
+        service_name   = "serviceb1"
+        namespace_name = "${aws_service_discovery_http_namespace.example.name}"
       }
     }
   }
@@ -173,7 +212,15 @@ The `file` object supports the following:
 
 The `service_discovery` object supports the following:
 
-* `dns` - (Required) Specifies the DNS service name for the virtual node.
+* `aws_cloud_map` - (Optional) Specifies any AWS Cloud Map information for the virtual node.
+* `dns` - (Optional) Specifies the DNS service name for the virtual node.
+
+The `aws_cloud_map` object supports the following:
+
+* `attributes` - (Optional) A string map that contains attributes with values that you can use to filter instances by any custom attribute that you specified when you registered the instance. Only instances that match all of the specified key/value pairs will be returned.
+* `namespace_name` - (Required) The name of the AWS Cloud Map namespace to use.
+Use the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) resource to configure a Cloud Map namespace.
+* `service_name` - (Required) The name of the AWS Cloud Map service to use. Use the [`aws_service_discovery_service`](/docs/providers/aws/r/service_discovery_service.html) resource to configure a Cloud Map service.
 
 The `dns` object supports the following:
 

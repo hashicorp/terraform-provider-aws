@@ -8,14 +8,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
@@ -40,6 +40,11 @@ func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_wafregional_ipset.ipset", "arn",
 						regexp.MustCompile(`^arn:[\w-]+:waf-regional:[^:]+:\d{12}:ipset/.+$`)),
 				),
+			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -99,6 +104,11 @@ func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -140,6 +150,11 @@ func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.115741513.value", "192.0.8.0/24"),
 				),
 			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -180,6 +195,11 @@ func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "2048"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -202,6 +222,11 @@ func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "0"),
 				),
+			},
+			{
+				ResourceName:      "aws_wafregional_ipset.ipset",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

@@ -28,6 +28,13 @@ const (
 	// Cannot set a CloudWatch Logs delivery for this region.
 	ErrCodeCloudWatchLogsDeliveryUnavailableException = "CloudWatchLogsDeliveryUnavailableException"
 
+	// ErrCodeInsightNotEnabledException for service response error code
+	// "InsightNotEnabledException".
+	//
+	// If you run GetInsightSelectors on a trail that does not have Insights events
+	// enabled, the operation throws the exception InsightNotEnabledException.
+	ErrCodeInsightNotEnabledException = "InsightNotEnabledException"
+
 	// ErrCodeInsufficientDependencyServiceAccessPermissionException for service response error code
 	// "InsufficientDependencyServiceAccessPermissionException".
 	//
@@ -68,6 +75,13 @@ const (
 	// This exception is thrown when the provided role is not valid.
 	ErrCodeInvalidCloudWatchLogsRoleArnException = "InvalidCloudWatchLogsRoleArnException"
 
+	// ErrCodeInvalidEventCategoryException for service response error code
+	// "InvalidEventCategoryException".
+	//
+	// Occurs if an event category that is not valid is specified as a value of
+	// EventCategory.
+	ErrCodeInvalidEventCategoryException = "InvalidEventCategoryException"
+
 	// ErrCodeInvalidEventSelectorsException for service response error code
 	// "InvalidEventSelectorsException".
 	//
@@ -98,6 +112,14 @@ const (
 	// This exception is thrown when an operation is called on a trail from a region
 	// other than the region in which the trail was created.
 	ErrCodeInvalidHomeRegionException = "InvalidHomeRegionException"
+
+	// ErrCodeInvalidInsightSelectorsException for service response error code
+	// "InvalidInsightSelectorsException".
+	//
+	// The formatting or syntax of the InsightSelectors JSON statement in your PutInsightSelectors
+	// or GetInsightSelectors request is not valid, or the specified insight type
+	// in the InsightSelectors statement is not a valid insight type.
+	ErrCodeInvalidInsightSelectorsException = "InvalidInsightSelectorsException"
 
 	// ErrCodeInvalidKmsKeyIdException for service response error code
 	// "InvalidKmsKeyIdException".
@@ -152,8 +174,8 @@ const (
 	// ErrCodeInvalidTagParameterException for service response error code
 	// "InvalidTagParameterException".
 	//
-	// This exception is thrown when the key or value specified for the tag does
-	// not match the regular expression ^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-@]*)$.
+	// This exception is thrown when the specified tag key or values are not valid.
+	// It can also occur if there are duplicate tags or too many tags on the resource.
 	ErrCodeInvalidTagParameterException = "InvalidTagParameterException"
 
 	// ErrCodeInvalidTimeRangeException for service response error code
@@ -198,7 +220,7 @@ const (
 	// ErrCodeKmsKeyDisabledException for service response error code
 	// "KmsKeyDisabledException".
 	//
-	// This exception is deprecated.
+	// This exception is no longer in use.
 	ErrCodeKmsKeyDisabledException = "KmsKeyDisabledException"
 
 	// ErrCodeKmsKeyNotFoundException for service response error code
@@ -287,7 +309,7 @@ const (
 	// ErrCodeTrailNotProvidedException for service response error code
 	// "TrailNotProvidedException".
 	//
-	// This exception is deprecated.
+	// This exception is no longer in use.
 	ErrCodeTrailNotProvidedException = "TrailNotProvidedException"
 
 	// ErrCodeUnsupportedOperationException for service response error code

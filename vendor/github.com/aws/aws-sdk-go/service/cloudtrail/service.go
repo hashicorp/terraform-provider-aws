@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "cloudtrail" // Name of service.
 	EndpointsID = ServiceName  // ID to lookup a service endpoint with.
-	ServiceID   = "CloudTrail" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "CloudTrail" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the CloudTrail client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a CloudTrail client from just a session.
 //     svc := cloudtrail.New(mySession)
 //
@@ -46,11 +48,11 @@ const (
 //     svc := cloudtrail.New(mySession, aws.NewConfig().WithRegion("us-west-2"))
 func New(p client.ConfigProvider, cfgs ...*aws.Config) *CloudTrail {
 	c := p.ClientConfig(EndpointsID, cfgs...)
-	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
+	return newClient(*c.Config, c.Handlers, c.PartitionID, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
-func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *CloudTrail {
+func newClient(cfg aws.Config, handlers request.Handlers, partitionID, endpoint, signingRegion, signingName string) *CloudTrail {
 	svc := &CloudTrail{
 		Client: client.New(
 			cfg,
@@ -59,6 +61,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
+				PartitionID:   partitionID,
 				Endpoint:      endpoint,
 				APIVersion:    "2013-11-01",
 				JSONVersion:   "1.1",

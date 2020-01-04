@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEcsTaskDefinition_basic(t *testing.T) {
@@ -161,8 +161,6 @@ func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttr(
 						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.scope", "task"),
-					resource.TestCheckResourceAttr(
-						"aws_ecs_task_definition.sleep", "volume.584193650.docker_volume_configuration.0.driver", "local"),
 				),
 			},
 		},

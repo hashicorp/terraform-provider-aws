@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestLambdaPermissionUnmarshalling(t *testing.T) {
@@ -188,6 +188,12 @@ func TestAccAWSLambdaPermission_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.allow_cloudwatch", "event_source_token", "test-event-source-token"),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.allow_cloudwatch",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.allow_cloudwatch"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -231,12 +237,19 @@ func TestAccAWSLambdaPermission_withRawFunctionName(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_raw_func_name", "function_name", funcArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.with_raw_func_name",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.with_raw_func_name"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 	var statement LambdaPolicyStatement
+
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	endsWithFuncName := regexp.MustCompile(":function:lambda_function_name_perm$")
 	startsWithPrefix := regexp.MustCompile("^AllowExecutionWithStatementIdPrefix-")
@@ -255,6 +268,13 @@ func TestAccAWSLambdaPermission_withStatementIdPrefix(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_statement_id_prefix", "statement_id", startsWithPrefix),
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_statement_id_prefix", "function_name", endsWithFuncName),
 				),
+			},
+			{
+				ResourceName:            "aws_lambda_permission.with_statement_id_prefix",
+				ImportState:             true,
+				ImportStateIdFunc:       testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.with_statement_id_prefix"),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"statement_id_prefix"},
 			},
 		},
 	})
@@ -284,6 +304,12 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_qualifier", "function_name", funcArnRe),
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_qualifier", "qualifier", aliasName),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.with_qualifier",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.with_qualifier"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -346,6 +372,18 @@ func TestAccAWSLambdaPermission_multiplePerms(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.third", "function_name", funcArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.first",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.first"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_lambda_permission.sec0nd",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.sec0nd"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -375,6 +413,12 @@ func TestAccAWSLambdaPermission_withS3(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.with_s3", "source_arn",
 						fmt.Sprintf("arn:aws:s3:::%s", bucketName)),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.with_s3",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.with_s3"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -407,6 +451,12 @@ func TestAccAWSLambdaPermission_withSNS(t *testing.T) {
 					resource.TestMatchResourceAttr("aws_lambda_permission.with_sns", "source_arn", topicArnRe),
 				),
 			},
+			{
+				ResourceName:      "aws_lambda_permission.with_sns",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.with_sns"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -434,6 +484,12 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_lambda_permission.iam_role", "statement_id", "AllowExecutionFromIAMRole"),
 					resource.TestMatchResourceAttr("aws_lambda_permission.iam_role", "function_name", funcArnRe),
 				),
+			},
+			{
+				ResourceName:      "aws_lambda_permission.iam_role",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSCLambdaPermissionImportStateIdFunc("aws_lambda_permission.iam_role"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -566,6 +622,20 @@ func lambdaPermissionExists(rs *terraform.ResourceState, conn *lambda.Lambda) (*
 	}
 
 	return findLambdaPolicyStatementById(&policy, rs.Primary.ID)
+}
+
+func testAccAWSCLambdaPermissionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if v, ok := rs.Primary.Attributes["qualifier"]; ok && v != "" {
+			return fmt.Sprintf("%s:%s/%s", rs.Primary.Attributes["function_name"], v, rs.Primary.Attributes["statement_id"]), nil
+		}
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes["statement_id"]), nil
+	}
 }
 
 func testAccAWSLambdaPermissionConfig(funcName, roleName string) string {

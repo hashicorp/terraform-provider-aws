@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSIAMPolicyAttachment_basic(t *testing.T) {
@@ -71,6 +71,99 @@ func TestAccAWSIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 				Config: testAccAWSPolicyPaginatedAttachConfig(userNamePrefix, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSPolicyAttachmentExists("aws_iam_policy_attachment.test-paginated-attach", 101, &out),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMPolicyAttachment_Groups_RenamedGroup(t *testing.T) {
+	var out iam.ListEntitiesForPolicyOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	groupName1 := fmt.Sprintf("%s-1", rName)
+	groupName2 := fmt.Sprintf("%s-2", rName)
+	resourceName := "aws_iam_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIamPolicyAttachmentConfigGroupsRenamedGroup(rName, groupName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{}, []string{}, []string{groupName1}, &out),
+				),
+			},
+			{
+				Config: testAccAWSIamPolicyAttachmentConfigGroupsRenamedGroup(rName, groupName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{}, []string{}, []string{groupName2}, &out),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMPolicyAttachment_Roles_RenamedRole(t *testing.T) {
+	var out iam.ListEntitiesForPolicyOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	roleName1 := fmt.Sprintf("%s-1", rName)
+	roleName2 := fmt.Sprintf("%s-2", rName)
+	resourceName := "aws_iam_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIamPolicyAttachmentConfigRolesRenamedRole(rName, roleName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{}, []string{roleName1}, []string{}, &out),
+				),
+			},
+			{
+				Config: testAccAWSIamPolicyAttachmentConfigRolesRenamedRole(rName, roleName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{}, []string{roleName2}, []string{}, &out),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSIAMPolicyAttachment_Users_RenamedUser(t *testing.T) {
+	var out iam.ListEntitiesForPolicyOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	userName1 := fmt.Sprintf("%s-1", rName)
+	userName2 := fmt.Sprintf("%s-2", rName)
+	resourceName := "aws_iam_policy_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSPolicyAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIamPolicyAttachmentConfigUsersRenamedUser(rName, userName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{userName1}, []string{}, []string{}, &out),
+				),
+			},
+			{
+				Config: testAccAWSIamPolicyAttachmentConfigUsersRenamedUser(rName, userName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckAWSPolicyAttachmentAttributes([]string{userName2}, []string{}, []string{}, &out),
 				),
 			},
 		},
@@ -482,4 +575,115 @@ resource "aws_iam_policy_attachment" "test-paginated-attach" {
   ]
 }
 `, userNamePrefix, policyName, attachmentName)
+}
+
+func testAccAWSIamPolicyAttachmentConfigGroupsRenamedGroup(rName, groupName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "*",
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_group" "test" {
+  name = %[2]q
+}
+
+resource "aws_iam_policy_attachment" "test" {
+  groups     = ["${aws_iam_group.test.name}"]
+  name       = %[1]q
+  policy_arn = "${aws_iam_policy.test.arn}"
+}
+`, rName, groupName)
+}
+
+func testAccAWSIamPolicyAttachmentConfigRolesRenamedRole(rName, roleName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "*",
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "test" {
+  force_detach_policies = true
+  name                  = %[2]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ec2.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy_attachment" "test" {
+  name       = %[1]q
+  policy_arn = "${aws_iam_policy.test.arn}"
+  roles      = ["${aws_iam_role.test.name}"]
+}
+`, rName, roleName)
+}
+
+func testAccAWSIamPolicyAttachmentConfigUsersRenamedUser(rName, userName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "*",
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_user" "test" {
+  force_destroy = true
+  name          = %[2]q
+}
+
+resource "aws_iam_policy_attachment" "test" {
+  name       = %[1]q
+  policy_arn = "${aws_iam_policy.test.arn}"
+  users      = ["${aws_iam_user.test.name}"]
+}
+`, rName, userName)
 }

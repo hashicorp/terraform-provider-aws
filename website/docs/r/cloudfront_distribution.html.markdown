@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFront"
 layout: "aws"
 page_title: "AWS: aws_cloudfront_distribution"
-sidebar_current: "docs-aws-resource-cloudfront-distribution"
 description: |-
   Provides a CloudFront web distribution resource.
 ---
@@ -232,7 +232,7 @@ of several sub-resources - these resources are laid out below.
   * `origin` (Required) - One or more [origins](#origin-arguments) for this
     distribution (multiples allowed).
 
-  * `origin_group` (Required) - One or more [origin_group](#origin-group-arguments) for this
+  * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this
   distribution (multiples allowed).  
 
   * `price_class` (Optional) - The price class for this distribution. One of

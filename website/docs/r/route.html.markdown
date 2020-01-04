@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_route"
-sidebar_current: "docs-aws-resource-route|"
 description: |-
   Provides a resource to create a routing entry in a VPC routing table.
 ---

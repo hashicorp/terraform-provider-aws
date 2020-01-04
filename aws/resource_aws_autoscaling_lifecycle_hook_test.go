@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
@@ -28,6 +28,12 @@ func TestAccAWSAutoscalingLifecycleHook_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "heartbeat_timeout", "2000"),
 					resource.TestCheckResourceAttr("aws_autoscaling_lifecycle_hook.foobar", "lifecycle_transition", "autoscaling:EC2_INSTANCE_LAUNCHING"),
 				),
+			},
+			{
+				ResourceName:      "aws_autoscaling_lifecycle_hook.foobar",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAutoscalingLifecycleHookImportStateIdFunc("aws_autoscaling_lifecycle_hook.foobar"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -105,6 +111,17 @@ func testAccCheckAWSAutoscalingLifecycleHookDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccAWSAutoscalingLifecycleHookImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.Attributes["name"]), nil
+	}
 }
 
 func testAccAWSAutoscalingLifecycleHookConfig(name string) string {

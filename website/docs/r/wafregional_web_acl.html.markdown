@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl"
-sidebar_current: "docs-aws-resource-wafregional-web-acl"
 description: |-
   Provides a AWS WAF Regional web access control group (ACL) resource for use with ALB.
 ---
@@ -112,6 +112,7 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the web ACL.
 * `logging_configuration` - (Optional) Configuration block to enable WAF logging. Detailed below.
 * `rule` - (Optional) Set of configuration blocks containing rules for the web ACL. Detailed below.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ### `default_action` Configuration Block
 
@@ -154,3 +155,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name (ARN) of the WAF Regional WebACL.
 * `id` - The ID of the WAF Regional WebACL.
+
+## Import
+
+WAF Regional Web ACL can be imported using the id, e.g.
+
+```
+$ terraform import aws_wafregional_web_acl.wafacl a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

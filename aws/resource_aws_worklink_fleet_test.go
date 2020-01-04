@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/worklink"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSWorkLinkFleet_Basic(t *testing.T) {
-	suffix := randomString(20)
+	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,7 +42,7 @@ func TestAccAWSWorkLinkFleet_Basic(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
-	suffix := randomString(20)
+	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,7 +74,7 @@ func TestAccAWSWorkLinkFleet_DisplayName(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
-	suffix := randomString(20)
+	suffix := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,7 +106,7 @@ func TestAccAWSWorkLinkFleet_OptimizeForEndUserLocation(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
-	rName := randomString(20)
+	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,7 +131,7 @@ func TestAccAWSWorkLinkFleet_AuditStreamArn(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
-	rName := randomString(20)
+	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -172,7 +173,7 @@ func TestAccAWSWorkLinkFleet_Network(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
-	rName := randomString(20)
+	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/worklink-device-ca-certificate.pem"
 
@@ -205,7 +206,7 @@ func TestAccAWSWorkLinkFleet_DeviceCaCertificate(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
-	rName := randomString(20)
+	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 	fName := "test-fixtures/saml-metadata.xml"
 
@@ -236,7 +237,7 @@ func TestAccAWSWorkLinkFleet_IdentityProvider(t *testing.T) {
 }
 
 func TestAccAWSWorkLinkFleet_Disappears(t *testing.T) {
-	rName := randomString(20)
+	rName := acctest.RandStringFromCharSet(20, acctest.CharSetAlpha)
 	resourceName := "aws_worklink_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -342,7 +343,9 @@ func testAccCheckAWSWorkLinkFleetExists(n string) resource.TestCheckFunc {
 func testAccPreCheckAWSWorkLink(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).worklinkconn
 
-	input := &worklink.ListFleetsInput{}
+	input := &worklink.ListFleetsInput{
+		MaxResults: aws.Int64(1),
+	}
 
 	_, err := conn.ListFleets(input)
 

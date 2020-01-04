@@ -1,7 +1,7 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_function"
-sidebar_current: "docs-aws-datasource-lambda-function"
 description: |-
   Provides a Lambda Function data source.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_delegation_set"
-sidebar_current: "docs-aws-resource-route53-delegation-set"
 description: |-
   Provides a Route53 Delegation Set resource.
 ---

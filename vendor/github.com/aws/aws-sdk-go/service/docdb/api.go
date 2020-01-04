@@ -160,6 +160,12 @@ func (c *DocDB) ApplyPendingMaintenanceActionRequest(input *ApplyPendingMaintena
 //   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
 //   The specified resource ID was not found.
 //
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The DB cluster isn't in a valid state.
+//
+//   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
+//   The specified DB instance isn't in the available state.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/ApplyPendingMaintenanceAction
 func (c *DocDB) ApplyPendingMaintenanceAction(input *ApplyPendingMaintenanceActionInput) (*ApplyPendingMaintenanceActionOutput, error) {
 	req, out := c.ApplyPendingMaintenanceActionRequest(input)
@@ -1360,6 +1366,86 @@ func (c *DocDB) DeleteDBSubnetGroupWithContext(ctx aws.Context, input *DeleteDBS
 	return out, req.Send()
 }
 
+const opDescribeCertificates = "DescribeCertificates"
+
+// DescribeCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeCertificates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeCertificates for more information on using the DescribeCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeCertificatesRequest method.
+//    req, resp := client.DescribeCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/DescribeCertificates
+func (c *DocDB) DescribeCertificatesRequest(input *DescribeCertificatesInput) (req *request.Request, output *DescribeCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeCertificatesInput{}
+	}
+
+	output = &DescribeCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeCertificates API operation for Amazon DocumentDB with MongoDB compatibility.
+//
+// Returns a list of certificate authority (CA) certificates provided by Amazon
+// RDS for this AWS account.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DocumentDB with MongoDB compatibility's
+// API operation DescribeCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeCertificateNotFoundFault "CertificateNotFound"
+//   CertificateIdentifier doesn't refer to an existing certificate.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/DescribeCertificates
+func (c *DocDB) DescribeCertificates(input *DescribeCertificatesInput) (*DescribeCertificatesOutput, error) {
+	req, out := c.DescribeCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeCertificatesWithContext is the same as DescribeCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) DescribeCertificatesWithContext(ctx aws.Context, input *DescribeCertificatesInput, opts ...request.Option) (*DescribeCertificatesOutput, error) {
+	req, out := c.DescribeCertificatesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeDBClusterParameterGroups = "DescribeDBClusterParameterGroups"
 
 // DescribeDBClusterParameterGroupsRequest generates a "aws/request.Request" representing the
@@ -1816,10 +1902,12 @@ func (c *DocDB) DescribeDBClustersPagesWithContext(ctx aws.Context, input *Descr
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBClustersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBClustersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1946,10 +2034,12 @@ func (c *DocDB) DescribeDBEngineVersionsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBEngineVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBEngineVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2082,10 +2172,12 @@ func (c *DocDB) DescribeDBInstancesPagesWithContext(ctx aws.Context, input *Desc
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2218,10 +2310,12 @@ func (c *DocDB) DescribeDBSubnetGroupsPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDBSubnetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDBSubnetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2502,10 +2596,12 @@ func (c *DocDB) DescribeEventsPagesWithContext(ctx aws.Context, input *DescribeE
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2632,10 +2728,12 @@ func (c *DocDB) DescribeOrderableDBInstanceOptionsPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeOrderableDBInstanceOptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOrderableDBInstanceOptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3967,6 +4065,180 @@ func (c *DocDB) RestoreDBClusterToPointInTimeWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opStartDBCluster = "StartDBCluster"
+
+// StartDBClusterRequest generates a "aws/request.Request" representing the
+// client's request for the StartDBCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartDBCluster for more information on using the StartDBCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartDBClusterRequest method.
+//    req, resp := client.StartDBClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/StartDBCluster
+func (c *DocDB) StartDBClusterRequest(input *StartDBClusterInput) (req *request.Request, output *StartDBClusterOutput) {
+	op := &request.Operation{
+		Name:       opStartDBCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartDBClusterInput{}
+	}
+
+	output = &StartDBClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartDBCluster API operation for Amazon DocumentDB with MongoDB compatibility.
+//
+// Restarts the stopped cluster that is specified by DBClusterIdentifier. For
+// more information, see Stopping and Starting an Amazon DocumentDB Cluster
+// (https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-stop-start.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DocumentDB with MongoDB compatibility's
+// API operation StartDBCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
+//   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The DB cluster isn't in a valid state.
+//
+//   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
+//   The specified DB instance isn't in the available state.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/StartDBCluster
+func (c *DocDB) StartDBCluster(input *StartDBClusterInput) (*StartDBClusterOutput, error) {
+	req, out := c.StartDBClusterRequest(input)
+	return out, req.Send()
+}
+
+// StartDBClusterWithContext is the same as StartDBCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartDBCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) StartDBClusterWithContext(ctx aws.Context, input *StartDBClusterInput, opts ...request.Option) (*StartDBClusterOutput, error) {
+	req, out := c.StartDBClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStopDBCluster = "StopDBCluster"
+
+// StopDBClusterRequest generates a "aws/request.Request" representing the
+// client's request for the StopDBCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopDBCluster for more information on using the StopDBCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopDBClusterRequest method.
+//    req, resp := client.StopDBClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/StopDBCluster
+func (c *DocDB) StopDBClusterRequest(input *StopDBClusterInput) (req *request.Request, output *StopDBClusterOutput) {
+	op := &request.Operation{
+		Name:       opStopDBCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopDBClusterInput{}
+	}
+
+	output = &StopDBClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StopDBCluster API operation for Amazon DocumentDB with MongoDB compatibility.
+//
+// Stops the running cluster that is specified by DBClusterIdentifier. The cluster
+// must be in the available state. For more information, see Stopping and Starting
+// an Amazon DocumentDB Cluster (https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-stop-start.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon DocumentDB with MongoDB compatibility's
+// API operation StopDBCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
+//   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//
+//   * ErrCodeInvalidDBClusterStateFault "InvalidDBClusterStateFault"
+//   The DB cluster isn't in a valid state.
+//
+//   * ErrCodeInvalidDBInstanceStateFault "InvalidDBInstanceState"
+//   The specified DB instance isn't in the available state.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/docdb-2014-10-31/StopDBCluster
+func (c *DocDB) StopDBCluster(input *StopDBClusterInput) (*StopDBClusterOutput, error) {
+	req, out := c.StopDBClusterRequest(input)
+	return out, req.Send()
+}
+
+// StopDBClusterWithContext is the same as StopDBCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopDBCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DocDB) StopDBClusterWithContext(ctx aws.Context, input *StopDBClusterInput, opts ...request.Option) (*StopDBClusterOutput, error) {
+	req, out := c.StopDBClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Represents the input to AddTagsToResource.
 type AddTagsToResourceInput struct {
 	_ struct{} `type:"structure"`
@@ -4159,6 +4431,85 @@ func (s AvailabilityZone) GoString() string {
 // SetName sets the Name field's value.
 func (s *AvailabilityZone) SetName(v string) *AvailabilityZone {
 	s.Name = &v
+	return s
+}
+
+// A certificate authority (CA) certificate for an AWS account.
+type Certificate struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) for the certificate.
+	//
+	// Example: arn:aws:rds:us-east-1::cert:rds-ca-2019
+	CertificateArn *string `type:"string"`
+
+	// The unique key that identifies a certificate.
+	//
+	// Example: rds-ca-2019
+	CertificateIdentifier *string `type:"string"`
+
+	// The type of the certificate.
+	//
+	// Example: CA
+	CertificateType *string `type:"string"`
+
+	// The thumbprint of the certificate.
+	Thumbprint *string `type:"string"`
+
+	// The starting date-time from which the certificate is valid.
+	//
+	// Example: 2019-07-31T17:57:09Z
+	ValidFrom *time.Time `type:"timestamp"`
+
+	// The date-time after which the certificate is no longer valid.
+	//
+	// Example: 2024-07-31T17:57:09Z
+	ValidTill *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s Certificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Certificate) GoString() string {
+	return s.String()
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *Certificate) SetCertificateArn(v string) *Certificate {
+	s.CertificateArn = &v
+	return s
+}
+
+// SetCertificateIdentifier sets the CertificateIdentifier field's value.
+func (s *Certificate) SetCertificateIdentifier(v string) *Certificate {
+	s.CertificateIdentifier = &v
+	return s
+}
+
+// SetCertificateType sets the CertificateType field's value.
+func (s *Certificate) SetCertificateType(v string) *Certificate {
+	s.CertificateType = &v
+	return s
+}
+
+// SetThumbprint sets the Thumbprint field's value.
+func (s *Certificate) SetThumbprint(v string) *Certificate {
+	s.Thumbprint = &v
+	return s
+}
+
+// SetValidFrom sets the ValidFrom field's value.
+func (s *Certificate) SetValidFrom(v time.Time) *Certificate {
+	s.ValidFrom = &v
+	return s
+}
+
+// SetValidTill sets the ValidTill field's value.
+func (s *Certificate) SetValidTill(v time.Time) *Certificate {
+	s.ValidTill = &v
 	return s
 }
 
@@ -4551,6 +4902,12 @@ type CreateDBClusterInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// Specifies whether this cluster can be deleted. If DeletionProtection is enabled,
+	// the cluster cannot be deleted unless it is modified and DeletionProtection
+	// is disabled. DeletionProtection protects clusters from being accidentally
+	// deleted.
+	DeletionProtection *bool `type:"boolean"`
+
 	// A list of log types that need to be enabled for exporting to Amazon CloudWatch
 	// Logs.
 	EnableCloudwatchLogsExports []*string `type:"list"`
@@ -4591,21 +4948,26 @@ type CreateDBClusterInput struct {
 	KmsKeyId *string `type:"string"`
 
 	// The password for the master database user. This password can contain any
-	// printable ASCII character except "/", """, or "@".
+	// printable ASCII character except forward slash (/), double quote ("), or
+	// the "at" symbol (@).
 	//
-	// Constraints: Must contain from 8 to 41 characters.
-	MasterUserPassword *string `type:"string"`
+	// Constraints: Must contain from 8 to 100 characters.
+	//
+	// MasterUserPassword is a required field
+	MasterUserPassword *string `type:"string" required:"true"`
 
 	// The name of the master user for the DB cluster.
 	//
 	// Constraints:
 	//
-	//    * Must be from 1 to 16 letters or numbers.
+	//    * Must be from 1 to 63 letters or numbers.
 	//
 	//    * The first character must be a letter.
 	//
 	//    * Cannot be a reserved word for the chosen database engine.
-	MasterUsername *string `type:"string"`
+	//
+	// MasterUsername is a required field
+	MasterUsername *string `type:"string" required:"true"`
 
 	// The port number on which the instances in the DB cluster accept connections.
 	Port *int64 `type:"integer"`
@@ -4669,6 +5031,12 @@ func (s *CreateDBClusterInput) Validate() error {
 	if s.Engine == nil {
 		invalidParams.Add(request.NewErrParamRequired("Engine"))
 	}
+	if s.MasterUserPassword == nil {
+		invalidParams.Add(request.NewErrParamRequired("MasterUserPassword"))
+	}
+	if s.MasterUsername == nil {
+		invalidParams.Add(request.NewErrParamRequired("MasterUsername"))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4703,6 +5071,12 @@ func (s *CreateDBClusterInput) SetDBClusterParameterGroupName(v string) *CreateD
 // SetDBSubnetGroupName sets the DBSubnetGroupName field's value.
 func (s *CreateDBClusterInput) SetDBSubnetGroupName(v string) *CreateDBClusterInput {
 	s.DBSubnetGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *CreateDBClusterInput) SetDeletionProtection(v bool) *CreateDBClusterInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -5036,7 +5410,7 @@ type CreateDBInstanceInput struct {
 	// DBClusterIdentifier is a required field
 	DBClusterIdentifier *string `type:"string" required:"true"`
 
-	// The compute and memory capacity of the DB instance; for example, db.m4.large.
+	// The compute and memory capacity of the DB instance; for example, db.r5.large.
 	//
 	// DBInstanceClass is a required field
 	DBInstanceClass *string `type:"string" required:"true"`
@@ -5085,7 +5459,8 @@ type CreateDBInstanceInput struct {
 	// Valid values: 0-15
 	PromotionTier *int64 `type:"integer"`
 
-	// The tags to be assigned to the DB instance.
+	// The tags to be assigned to the DB instance. You can assign up to 10 tags
+	// to an instance.
 	Tags []*Tag `locationNameList:"Tag" type:"list"`
 }
 
@@ -5345,6 +5720,12 @@ type DBCluster struct {
 	// cluster is accessed.
 	DbClusterResourceId *string `type:"string"`
 
+	// Specifies whether this cluster can be deleted. If DeletionProtection is enabled,
+	// the cluster cannot be deleted unless it is modified and DeletionProtection
+	// is disabled. DeletionProtection protects clusters from being accidentally
+	// deleted.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The earliest time to which a database can be restored with point-in-time
 	// restore.
 	EarliestRestorableTime *time.Time `type:"timestamp"`
@@ -5485,6 +5866,12 @@ func (s *DBCluster) SetDBSubnetGroup(v string) *DBCluster {
 // SetDbClusterResourceId sets the DbClusterResourceId field's value.
 func (s *DBCluster) SetDbClusterResourceId(v string) *DBCluster {
 	s.DbClusterResourceId = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *DBCluster) SetDeletionProtection(v bool) *DBCluster {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -6107,6 +6494,9 @@ type DBInstance struct {
 	// Specifies the number of days for which automatic DB snapshots are retained.
 	BackupRetentionPeriod *int64 `type:"integer"`
 
+	// The identifier of the CA certificate for this DB instance.
+	CACertificateIdentifier *string `type:"string"`
+
 	// Contains the name of the DB cluster that the DB instance is a member of if
 	// the DB instance is a member of a DB cluster.
 	DBClusterIdentifier *string `type:"string"`
@@ -6174,17 +6564,15 @@ type DBInstance struct {
 	// instance.
 	PromotionTier *int64 `type:"integer"`
 
-	// Specifies the availability options for the DB instance. A value of true specifies
-	// an internet-facing instance with a publicly resolvable DNS name, which resolves
-	// to a public IP address. A value of false specifies an internal instance with
-	// a DNS name that resolves to a private IP address.
+	// Not supported. Amazon DocumentDB does not currently support public endpoints.
+	// The value of PubliclyAccessible is always false.
 	PubliclyAccessible *bool `type:"boolean"`
 
 	// The status of a read replica. If the instance is not a read replica, this
 	// is blank.
 	StatusInfos []*DBInstanceStatusInfo `locationNameList:"DBInstanceStatusInfo" type:"list"`
 
-	// Specifies whether the DB instance is encrypted.
+	// Specifies whether or not the DB instance is encrypted.
 	StorageEncrypted *bool `type:"boolean"`
 
 	// Provides a list of VPC security group elements that the DB instance belongs
@@ -6217,6 +6605,12 @@ func (s *DBInstance) SetAvailabilityZone(v string) *DBInstance {
 // SetBackupRetentionPeriod sets the BackupRetentionPeriod field's value.
 func (s *DBInstance) SetBackupRetentionPeriod(v int64) *DBInstance {
 	s.BackupRetentionPeriod = &v
+	return s
+}
+
+// SetCACertificateIdentifier sets the CACertificateIdentifier field's value.
+func (s *DBInstance) SetCACertificateIdentifier(v string) *DBInstance {
+	s.CACertificateIdentifier = &v
 	return s
 }
 
@@ -6410,7 +6804,7 @@ func (s *DBInstanceStatusInfo) SetStatusType(v string) *DBInstanceStatusInfo {
 type DBSubnetGroup struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Identifier (ARN) for the DB subnet group.
+	// The Amazon Resource Name (ARN) for the DB subnet group.
 	DBSubnetGroupArn *string `type:"string"`
 
 	// Provides the description of the DB subnet group.
@@ -6831,6 +7225,130 @@ func (s DeleteDBSubnetGroupOutput) String() string {
 // GoString returns the string representation
 func (s DeleteDBSubnetGroupOutput) GoString() string {
 	return s.String()
+}
+
+type DescribeCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The user-supplied certificate identifier. If this parameter is specified,
+	// information for only the specified certificate is returned. If this parameter
+	// is omitted, a list of up to MaxRecords certificates is returned. This parameter
+	// is not case sensitive.
+	//
+	// Constraints
+	//
+	//    * Must match an existing CertificateIdentifier.
+	CertificateIdentifier *string `type:"string"`
+
+	// This parameter is not currently supported.
+	Filters []*Filter `locationNameList:"Filter" type:"list"`
+
+	// An optional pagination token provided by a previous DescribeCertificates
+	// request. If this parameter is specified, the response includes only records
+	// beyond the marker, up to the value specified by MaxRecords.
+	Marker *string `type:"string"`
+
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a pagination token called a marker
+	// is included in the response so that the remaining results can be retrieved.
+	//
+	// Default: 100
+	//
+	// Constraints:
+	//
+	//    * Minimum: 20
+	//
+	//    * Maximum: 100
+	MaxRecords *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s DescribeCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeCertificatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeCertificatesInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateIdentifier sets the CertificateIdentifier field's value.
+func (s *DescribeCertificatesInput) SetCertificateIdentifier(v string) *DescribeCertificatesInput {
+	s.CertificateIdentifier = &v
+	return s
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeCertificatesInput) SetFilters(v []*Filter) *DescribeCertificatesInput {
+	s.Filters = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeCertificatesInput) SetMarker(v string) *DescribeCertificatesInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeCertificatesInput) SetMaxRecords(v int64) *DescribeCertificatesInput {
+	s.MaxRecords = &v
+	return s
+}
+
+type DescribeCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of certificates for this AWS account.
+	Certificates []*Certificate `locationNameList:"Certificate" type:"list"`
+
+	// An optional pagination token provided if the number of records retrieved
+	// is greater than MaxRecords. If this parameter is specified, the marker specifies
+	// the next record in the list. Including the value of Marker in the next call
+	// to DescribeCertificates results in the next page of certificates.
+	Marker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCertificatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificates sets the Certificates field's value.
+func (s *DescribeCertificatesOutput) SetCertificates(v []*Certificate) *DescribeCertificatesOutput {
+	s.Certificates = v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *DescribeCertificatesOutput) SetMarker(v string) *DescribeCertificatesOutput {
+	s.Marker = &v
+	return s
 }
 
 // Represents the input to DescribeDBClusterParameterGroups.
@@ -8982,15 +9500,22 @@ type ModifyDBClusterInput struct {
 	// The name of the DB cluster parameter group to use for the DB cluster.
 	DBClusterParameterGroupName *string `type:"string"`
 
+	// Specifies whether this cluster can be deleted. If DeletionProtection is enabled,
+	// the cluster cannot be deleted unless it is modified and DeletionProtection
+	// is disabled. DeletionProtection protects clusters from being accidentally
+	// deleted.
+	DeletionProtection *bool `type:"boolean"`
+
 	// The version number of the database engine to which you want to upgrade. Changing
 	// this parameter results in an outage. The change is applied during the next
 	// maintenance window unless the ApplyImmediately parameter is set to true.
 	EngineVersion *string `type:"string"`
 
-	// The new password for the master database user. This password can contain
-	// any printable ASCII character except "/", """, or "@".
+	// The password for the master database user. This password can contain any
+	// printable ASCII character except forward slash (/), double quote ("), or
+	// the "at" symbol (@).
 	//
-	// Constraints: Must contain from 8 to 41 characters.
+	// Constraints: Must contain from 8 to 100 characters.
 	MasterUserPassword *string `type:"string"`
 
 	// The new DB cluster identifier for the DB cluster when renaming a DB cluster.
@@ -9099,6 +9624,12 @@ func (s *ModifyDBClusterInput) SetDBClusterIdentifier(v string) *ModifyDBCluster
 // SetDBClusterParameterGroupName sets the DBClusterParameterGroupName field's value.
 func (s *ModifyDBClusterInput) SetDBClusterParameterGroupName(v string) *ModifyDBClusterInput {
 	s.DBClusterParameterGroupName = &v
+	return s
+}
+
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *ModifyDBClusterInput) SetDeletionProtection(v bool) *ModifyDBClusterInput {
+	s.DeletionProtection = &v
 	return s
 }
 
@@ -9390,7 +9921,10 @@ type ModifyDBInstanceInput struct {
 	// and Amazon DocumentDB has enabled automatic patching for that engine version.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
-	// The new compute and memory capacity of the DB instance; for example, db.m4.large.
+	// Indicates the certificate that needs to be associated with the instance.
+	CACertificateIdentifier *string `type:"string"`
+
+	// The new compute and memory capacity of the DB instance; for example, db.r5.large.
 	// Not all DB instance classes are available in all AWS Regions.
 	//
 	// If you modify the DB instance class, an outage occurs during the change.
@@ -9486,6 +10020,12 @@ func (s *ModifyDBInstanceInput) SetApplyImmediately(v bool) *ModifyDBInstanceInp
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
 func (s *ModifyDBInstanceInput) SetAutoMinorVersionUpgrade(v bool) *ModifyDBInstanceInput {
 	s.AutoMinorVersionUpgrade = &v
+	return s
+}
+
+// SetCACertificateIdentifier sets the CACertificateIdentifier field's value.
+func (s *ModifyDBInstanceInput) SetCACertificateIdentifier(v string) *ModifyDBInstanceInput {
+	s.CACertificateIdentifier = &v
 	return s
 }
 
@@ -10379,6 +10919,12 @@ type RestoreDBClusterFromSnapshotInput struct {
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
 
+	// Specifies whether this cluster can be deleted. If DeletionProtection is enabled,
+	// the cluster cannot be deleted unless it is modified and DeletionProtection
+	// is disabled. DeletionProtection protects clusters from being accidentally
+	// deleted.
+	DeletionProtection *bool `type:"boolean"`
+
 	// A list of log types that must be enabled for exporting to Amazon CloudWatch
 	// Logs.
 	EnableCloudwatchLogsExports []*string `type:"list"`
@@ -10490,6 +11036,12 @@ func (s *RestoreDBClusterFromSnapshotInput) SetDBSubnetGroupName(v string) *Rest
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterFromSnapshotInput) SetDeletionProtection(v bool) *RestoreDBClusterFromSnapshotInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBClusterFromSnapshotInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterFromSnapshotInput {
 	s.EnableCloudwatchLogsExports = v
@@ -10584,6 +11136,12 @@ type RestoreDBClusterToPointInTimeInput struct {
 	//
 	// Example: mySubnetgroup
 	DBSubnetGroupName *string `type:"string"`
+
+	// Specifies whether this cluster can be deleted. If DeletionProtection is enabled,
+	// the cluster cannot be deleted unless it is modified and DeletionProtection
+	// is disabled. DeletionProtection protects clusters from being accidentally
+	// deleted.
+	DeletionProtection *bool `type:"boolean"`
 
 	// A list of log types that must be enabled for exporting to Amazon CloudWatch
 	// Logs.
@@ -10702,6 +11260,12 @@ func (s *RestoreDBClusterToPointInTimeInput) SetDBSubnetGroupName(v string) *Res
 	return s
 }
 
+// SetDeletionProtection sets the DeletionProtection field's value.
+func (s *RestoreDBClusterToPointInTimeInput) SetDeletionProtection(v bool) *RestoreDBClusterToPointInTimeInput {
+	s.DeletionProtection = &v
+	return s
+}
+
 // SetEnableCloudwatchLogsExports sets the EnableCloudwatchLogsExports field's value.
 func (s *RestoreDBClusterToPointInTimeInput) SetEnableCloudwatchLogsExports(v []*string) *RestoreDBClusterToPointInTimeInput {
 	s.EnableCloudwatchLogsExports = v
@@ -10769,6 +11333,128 @@ func (s RestoreDBClusterToPointInTimeOutput) GoString() string {
 
 // SetDBCluster sets the DBCluster field's value.
 func (s *RestoreDBClusterToPointInTimeOutput) SetDBCluster(v *DBCluster) *RestoreDBClusterToPointInTimeOutput {
+	s.DBCluster = v
+	return s
+}
+
+type StartDBClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the cluster to restart. Example: docdb-2019-05-28-15-24-52
+	//
+	// DBClusterIdentifier is a required field
+	DBClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartDBClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartDBClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartDBClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartDBClusterInput"}
+	if s.DBClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("DBClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
+func (s *StartDBClusterInput) SetDBClusterIdentifier(v string) *StartDBClusterInput {
+	s.DBClusterIdentifier = &v
+	return s
+}
+
+type StartDBClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Detailed information about a DB cluster.
+	DBCluster *DBCluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s StartDBClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartDBClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetDBCluster sets the DBCluster field's value.
+func (s *StartDBClusterOutput) SetDBCluster(v *DBCluster) *StartDBClusterOutput {
+	s.DBCluster = v
+	return s
+}
+
+type StopDBClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the cluster to stop. Example: docdb-2019-05-28-15-24-52
+	//
+	// DBClusterIdentifier is a required field
+	DBClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopDBClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopDBClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopDBClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopDBClusterInput"}
+	if s.DBClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("DBClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDBClusterIdentifier sets the DBClusterIdentifier field's value.
+func (s *StopDBClusterInput) SetDBClusterIdentifier(v string) *StopDBClusterInput {
+	s.DBClusterIdentifier = &v
+	return s
+}
+
+type StopDBClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Detailed information about a DB cluster.
+	DBCluster *DBCluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopDBClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopDBClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetDBCluster sets the DBCluster field's value.
+func (s *StopDBClusterOutput) SetDBCluster(v *DBCluster) *StopDBClusterOutput {
 	s.DBCluster = v
 	return s
 }

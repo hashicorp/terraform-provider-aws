@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -76,7 +76,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Cached(t *testing.T) {
 				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_Cached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:storagegateway:[^:]+:[^:]+:gateway/sgw-.+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
@@ -111,7 +111,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_FileS3(t *testing.T) {
 				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_FileS3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:storagegateway:[^:]+:[^:]+:gateway/sgw-.+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
@@ -146,7 +146,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Stored(t *testing.T) {
 				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_Stored(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:storagegateway:[^:]+:[^:]+:gateway/sgw-.+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
@@ -181,7 +181,7 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Vtl(t *testing.T) {
 				Config: testAccAWSStorageGatewayGatewayConfig_GatewayType_Vtl(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:storagegateway:[^:]+:[^:]+:gateway/sgw-.+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "gateway_id"),
 					resource.TestCheckResourceAttr(resourceName, "gateway_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "gateway_timezone", "GMT"),
@@ -197,6 +197,52 @@ func TestAccAWSStorageGatewayGateway_GatewayType_Vtl(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+		},
+	})
+}
+
+func TestAccAWSStorageGatewayGateway_tags(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`gateway/sgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSStorageGatewayGatewayConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -391,6 +437,12 @@ func testAccCheckAWSStorageGatewayGatewayExists(resourceName string, gateway *st
 // and security group, suitable for Storage Gateway EC2 instances of any type
 func testAccAWSStorageGateway_VPCBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # Error launching source instance: Unsupported: Your requested instance type (m4.xlarge) is not supported in your requested Availability Zone (us-west-2d).
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -400,8 +452,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
     Name = %q
@@ -577,7 +630,11 @@ resource "aws_storagegateway_gateway" "test" {
 
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  # Error launching source instance: Unsupported: Your requested instance type (m4.xlarge) is not supported in your requested Availability Zone (us-west-2d).
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -655,7 +712,7 @@ resource "aws_directory_service_directory" "test" {
   size     = "Small"
 
   vpc_settings {
-    subnet_ids = ["${aws_subnet.test.*.id}"]
+    subnet_ids = aws_subnet.test[*].id
     vpc_id     = "${aws_vpc.test.id}"
   }
 
@@ -666,7 +723,7 @@ resource "aws_directory_service_directory" "test" {
 
 resource "aws_vpc_dhcp_options" "test" {
   domain_name         = "${aws_directory_service_directory.test.name}"
-  domain_name_servers = ["${aws_directory_service_directory.test.dns_ip_addresses}"]
+  domain_name_servers = aws_directory_service_directory.test.dns_ip_addresses
 
   tags = {
     Name = %q
@@ -729,4 +786,35 @@ resource "aws_storagegateway_gateway" "test" {
   smb_guest_password = %q
 }
 `, rName, smbGuestPassword)
+}
+
+func testAccAWSStorageGatewayGatewayConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_name       = %q
+  gateway_timezone   = "GMT"
+  gateway_type       = "CACHED"
+
+  tags = {
+	%q = %q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSStorageGatewayGatewayConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address = "${aws_instance.test.public_ip}"
+  gateway_name       = %q
+  gateway_timezone   = "GMT"
+  gateway_type       = "CACHED"
+
+  tags = {
+	%q = %q
+	%q = %q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

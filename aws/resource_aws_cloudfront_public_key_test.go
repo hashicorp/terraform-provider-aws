@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
@@ -25,9 +25,7 @@ func TestAccAWSCloudFrontPublicKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontPublicKeyExistence("aws_cloudfront_public_key.example"),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "comment", "test key"),
-					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example",
-						"caller_reference",
-						regexp.MustCompile("^20[0-9]{2}.*")),
+					resource.TestMatchResourceAttr("aws_cloudfront_public_key.example", "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
 					resource.TestCheckResourceAttr("aws_cloudfront_public_key.example", "name", fmt.Sprintf("tf-acc-test-%d", rInt)),
 				),
 			},

@@ -3,14 +3,16 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDaxCluster() *schema.Resource {
@@ -41,8 +43,13 @@ func resourceAwsDaxCluster() *schema.Resource {
 				StateFunc: func(val interface{}) string {
 					return strings.ToLower(val.(string))
 				},
-				// DAX follows the same naming convention as ElastiCache clusters
-				ValidateFunc: validateElastiCacheClusterId,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 20),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+					validateStringNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validateStringNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+				),
 			},
 			"iam_role_arn": {
 				Type:         schema.TypeString,
@@ -229,6 +236,9 @@ func resourceAwsDaxClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreateCluster(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating DAX cluster: %s", err)
 	}
@@ -486,8 +496,11 @@ func resourceAwsDaxClusterDelete(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCluster(req)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error deleting DAX cluster: %s", err)
 	}
 
 	log.Printf("[DEBUG] Waiting for deletion: %v", d.Id())

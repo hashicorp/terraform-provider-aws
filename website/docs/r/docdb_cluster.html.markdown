@@ -1,7 +1,7 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb"
-sidebar_current: "docs-aws-resource-docdb-cluster"
 description: |-
   Manages a DocDB Aurora Cluster
 ---
@@ -85,7 +85,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The DocDB Cluster Identifier
 * `maintenance_window` - The instance maintenance window
 * `reader_endpoint` - A read-only endpoint for the DocDB cluster, automatically load-balanced across replicas
-* `status` - The DocDB instance status
 
 ## Timeouts
 

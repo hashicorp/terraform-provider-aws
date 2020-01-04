@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsBackupSelection_basic(t *testing.T) {
@@ -304,6 +304,17 @@ resource "aws_backup_selection" "test" {
 
 func testAccBackupSelectionConfigWithResources(rInt int) string {
 	return testAccBackupSelectionConfigBase(rInt) + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+resource "aws_ebs_volume" "test" {
+  count = 2
+
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size              = 1
+}
+
 resource "aws_backup_selection" "test" {
   plan_id      = "${aws_backup_plan.test.id}"
 
@@ -317,8 +328,8 @@ resource "aws_backup_selection" "test" {
   }
 
   resources = [
-    "arn:${data.aws_partition.current.partition}:elasticfilesystem:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:file-system/",
-    "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:volume/"
+    "${aws_ebs_volume.test.0.arn}",
+    "${aws_ebs_volume.test.1.arn}",
   ]
 }
 `, rInt)

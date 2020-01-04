@@ -1,7 +1,7 @@
 ---
+subcategory: "Step Function (SFN)"
 layout: "aws"
 page_title: "AWS: aws_sfn_activity"
-sidebar_current: "docs-aws-resource-sfn-activity"
 description: |-
   Provides a Step Function Activity resource.
 ---

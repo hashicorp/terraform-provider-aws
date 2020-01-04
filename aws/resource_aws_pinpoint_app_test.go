@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSPinpointApp_basic(t *testing.T) {
@@ -136,6 +137,54 @@ func TestAccAWSPinpointApp_QuietTime(t *testing.T) {
 	})
 }
 
+func TestAccAWSPinpointApp_Tags(t *testing.T) {
+	oldDefaultRegion := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldDefaultRegion)
+
+	var application pinpoint.ApplicationResponse
+	resourceName := "aws_pinpoint_app.test_app"
+	shareName := fmt.Sprintf("tf-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsRamResourceShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSPinpointAppConfig_Tag1(shareName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSPinpointAppConfig_Tag2(shareName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSPinpointAppConfig_Tag1(shareName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSPinpointAppExists(resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSPinpointAppExists(n string, application *pinpoint.ApplicationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -193,7 +242,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "lambdapinpoint.handler"
-  runtime       = "nodejs6.10"
+  runtime       = "nodejs8.10"
   publish       = true
 }
 
@@ -260,6 +309,35 @@ resource "aws_pinpoint_app" "test_app" {
     }
 }
 `
+
+func testAccAWSPinpointAppConfig_Tag1(shareName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+	region = "us-east-1"
+}
+resource "aws_pinpoint_app" "test_app" {
+	name = %q
+	tags = {
+		%q = %q
+	}
+}
+`, shareName, tagKey1, tagValue1)
+}
+
+func testAccAWSPinpointAppConfig_Tag2(shareName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+provider "aws" {
+	region = "us-east-1"
+}
+resource "aws_pinpoint_app" "test_app" {
+	name = %q
+	tags = {
+		%q = %q
+		%q = %q
+	}
+}
+`, shareName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 func testAccCheckAWSPinpointAppDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).pinpointconn

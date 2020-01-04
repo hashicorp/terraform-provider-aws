@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsOrganizationsPolicy() *schema.Resource {
@@ -85,6 +85,9 @@ func resourceAwsOrganizationsPolicyCreate(d *schema.ResourceData, meta interface
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.CreatePolicy(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Organizations Policy: %s", err)

@@ -10,9 +10,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -227,6 +227,61 @@ func TestAccAWSEcsService_withUnnormalizedPlacementStrategy(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withCapacityProviderStrategy(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
+	providerName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+				),
+			},
+			{
+				Config: testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 10, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withMultipleCapacityProviderStrategies(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-mcps-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-mcps-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-mcps-%s", rString)
+	sgName := fmt.Sprintf("tf-acc-sg-svc-w-mcps-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithMultipleCapacityProviderStrategies(clusterName, tdName, svcName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.mongo", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.mongo", "capacity_provider_strategy.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withFamilyAndRevision(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -267,11 +322,6 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-rc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-rc-%s", rString)
 
-	originalRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + clusterName + "$")
-	modifiedRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -281,8 +331,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", originalRegexp),
+					resource.TestCheckResourceAttrPair("aws_ecs_service.ghost", "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 
@@ -290,8 +339,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(uClusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", modifiedRegexp),
+					resource.TestCheckResourceAttrPair("aws_ecs_service.ghost", "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 		},
@@ -545,6 +593,30 @@ func TestAccAWSEcsService_withAlb(t *testing.T) {
 	})
 }
 
+func TestAccAWSEcsService_withMultipleTargetGroups(t *testing.T) {
+	var service ecs.Service
+	rString := acctest.RandString(8)
+
+	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-alb-%s", rString)
+	tdName := fmt.Sprintf("tf-acc-td-svc-w-alb-%s", rString)
+	lbName := fmt.Sprintf("tf-acc-lb-svc-w-alb-%s", rString)
+	svcName := fmt.Sprintf("tf-acc-svc-w-alb-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, lbName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists("aws_ecs_service.with_alb", &service),
+					resource.TestCheckResourceAttr("aws_ecs_service.with_alb", "load_balancer.#", "2"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 	var service ecs.Service
 	rString := acctest.RandString(8)
@@ -1210,6 +1282,127 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 `, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName string, weight, base int) string {
+	return testAccAWSEcsCapacityProviderConfigBase(providerName) + fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name = %q
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
+  }
+}
+
+resource "aws_ecs_cluster" "default" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family = "%s"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "mongo" {
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.default.id}"
+  task_definition = "${aws_ecs_task_definition.mongo.arn}"
+  desired_count   = 1
+
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.test.name
+    weight = %d
+    base   = %d
+  }
+}
+`, providerName, clusterName, tdName, svcName, weight, base)
+}
+
+func testAccAWSEcsServiceWithMultipleCapacityProviderStrategies(clusterName, tdName, svcName, sgName string) string {
+	return testAccAWSEcsClusterCapacityProviders(clusterName) + fmt.Sprintf(`
+resource "aws_ecs_service" "mongo" {
+  name            = "%s"
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.mongo.arn
+  desired_count   = 1
+  
+  network_configuration {
+    security_groups  = [aws_security_group.allow_all.id]
+    subnets          = [aws_subnet.main.id]
+    assign_public_ip = false
+  }
+
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    weight            = 1
+  }
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
+    weight            = 1
+  }
+}
+
+resource "aws_ecs_task_definition" "mongo" {
+  family                   = "%s"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 512,
+    "name": "mongodb",
+    "networkMode": "awsvpc"
+  }
+]
+DEFINITION
+}
+
+resource "aws_security_group" "allow_all" {
+  name        = "%s"
+  description = "Allow all inbound traffic"
+  vpc_id      = "${aws_vpc.main.id}"
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 80
+    to_port     = 8000
+    cidr_blocks = ["${aws_vpc.main.cidr_block}"]
+  }
+}
+
+resource "aws_subnet" "main" {
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, 1)}"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
+  }
+}
+`, tdName, svcName, sgName)
 }
 
 func testAccAWSEcsServiceWithPlacementStrategy(clusterName, tdName, svcName string) string {
@@ -2268,6 +2461,126 @@ resource "aws_ecs_service" "with_alb" {
 `, clusterName, tdName, roleName, policyName, lbName, svcName)
 }
 
+func testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, lbName, svcName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-ecs-service-with-alb"
+  }
+}
+
+resource "aws_subnet" "main" {
+  count             = 2
+  cidr_block        = "${cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)}"
+  availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
+  vpc_id            = "${aws_vpc.main.id}"
+
+  tags = {
+    Name = "tf-acc-ecs-service-with-alb"
+  }
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "%s"
+}
+
+resource "aws_ecs_task_definition" "with_lb_changes" {
+  family = "%s"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 256,
+    "essential": true,
+    "image": "ghost:latest",
+    "memory": 512,
+    "name": "ghost",
+    "portMappings": [
+      {
+        "containerPort": 2368,
+        "hostPort": 2368
+      },
+      {
+        "containerPort": 4501,
+        "hostPort": 4501
+      }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = "${aws_lb.main.name}1"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb_target_group" "static" {
+  name     = "${aws_lb.main.name}2"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.main.id}"
+}
+
+resource "aws_lb" "main" {
+  name     = "%s"
+  internal = true
+  subnets  = ["${aws_subnet.main.*.id[0]}", "${aws_subnet.main.*.id[1]}"]
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = "${aws_lb.main.id}"
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = "${aws_lb_listener.front_end.arn}"
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.static.arn}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/static/*"]
+  }
+}
+
+resource "aws_ecs_service" "with_alb" {
+  name            = "%s"
+  cluster         = "${aws_ecs_cluster.main.id}"
+  task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
+  desired_count   = 1
+
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.test.id}"
+    container_name   = "ghost"
+    container_port   = "2368"
+  }
+
+  load_balancer {
+    target_group_arn = "${aws_lb_target_group.static.id}"
+    container_name   = "ghost"
+    container_port   = "4501"
+  }
+}
+`, clusterName, tdName, lbName, svcName)
+}
+
 func testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string) string {
 	return tpl_testAccAWSEcsServiceWithNetworkConfiguration(
 		sg1Name, sg2Name, clusterName, tdName, svcName,
@@ -2367,6 +2680,10 @@ data "aws_availability_zones" "test" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2374,6 +2691,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -2453,6 +2774,10 @@ data "aws_availability_zones" "test" {}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg-cont"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2460,6 +2785,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {

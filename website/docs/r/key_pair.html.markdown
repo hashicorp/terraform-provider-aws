@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_key_pair"
-sidebar_current: "docs-aws-resource-key-pair"
 description: |-
   Provides a Key Pair resource. Currently this supports importing an existing key pair but not creating a new key pair.
 ---

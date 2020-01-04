@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
@@ -299,11 +299,19 @@ func testAccDataSourceAWSLambdaFunctionConfigVPC(rName string) string {
 	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+	Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
+
+  tags = {
+	Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "test" {

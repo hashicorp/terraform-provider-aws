@@ -3,14 +3,15 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -66,6 +67,7 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -76,14 +78,70 @@ func TestAccAWSWafRegionalRuleGroup_basic(t *testing.T) {
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),
-					testAccCheckAWSWafRegionalRuleGroupExists("aws_wafregional_rule_group.test", &group),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "name", groupName),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "activated_rule.#", "1"),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "metric_name", groupName),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &group),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile(`rulegroup/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", groupName),
 					computeWafActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.action.0.type", &idx, "COUNT"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.priority", &idx, "50"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.type", &idx, waf.WafRuleTypeRegular),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.action.0.type", &idx, "COUNT"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.priority", &idx, "50"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.type", &idx, waf.WafRuleTypeRegular),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRegionalRuleGroup_tags(t *testing.T) {
+	var rule waf.Rule
+	var group waf.RuleGroup
+
+	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalRuleGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalRuleGroupConfigTags1(ruleName, groupName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSWafRegionalRuleGroupConfigTags2(ruleName, groupName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSWafRegionalRuleGroupConfigTags1(ruleName, groupName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -96,6 +154,7 @@ func TestAccAWSWafRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	newGroupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -105,20 +164,25 @@ func TestAccAWSWafRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleGroupExists("aws_wafregional_rule_group.test", &before),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "name", groupName),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "activated_rule.#", "1"),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "metric_name", groupName),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", groupName),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, newGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleGroupExists("aws_wafregional_rule_group.test", &after),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "name", newGroupName),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "activated_rule.#", "1"),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "metric_name", newGroupName),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", newGroupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_name", newGroupName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -128,6 +192,7 @@ func TestAccAWSWafRegionalRuleGroup_disappears(t *testing.T) {
 	var group waf.RuleGroup
 	ruleName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -137,7 +202,7 @@ func TestAccAWSWafRegionalRuleGroup_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleGroupExists("aws_wafregional_rule_group.test", &group),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &group),
 					testAccCheckAWSWafRegionalRuleGroupDisappears(&group),
 				),
 				ExpectNonEmptyPlan: true,
@@ -155,6 +220,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 	ruleName1 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	ruleName2 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
 	ruleName3 := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -165,40 +231,45 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 				Config: testAccAWSWafRegionalRuleGroupConfig(ruleName1, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule0),
-					testAccCheckAWSWafRegionalRuleGroupExists("aws_wafregional_rule_group.test", &groupBefore),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "name", groupName),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "activated_rule.#", "1"),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &groupBefore),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
 					computeWafActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.action.0.type", &idx0, "COUNT"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.priority", &idx0, "50"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.type", &idx0, waf.WafRuleTypeRegular),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.action.0.type", &idx0, "COUNT"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.priority", &idx0, "50"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.type", &idx0, waf.WafRuleTypeRegular),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "name", groupName),
-					resource.TestCheckResourceAttr("aws_wafregional_rule_group.test", "activated_rule.#", "3"),
-					testAccCheckAWSWafRegionalRuleGroupExists("aws_wafregional_rule_group.test", &groupAfter),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "3"),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &groupAfter),
 
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test", &rule1),
 					computeWafActivatedRuleWithRuleId(&rule1, "BLOCK", 10, &idx1),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.action.0.type", &idx1, "BLOCK"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.priority", &idx1, "10"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.type", &idx1, waf.WafRuleTypeRegular),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.action.0.type", &idx1, "BLOCK"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.priority", &idx1, "10"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.type", &idx1, waf.WafRuleTypeRegular),
 
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test2", &rule2),
 					computeWafActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.action.0.type", &idx2, "COUNT"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.priority", &idx2, "1"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.type", &idx2, waf.WafRuleTypeRegular),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.action.0.type", &idx2, "COUNT"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.priority", &idx2, "1"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.type", &idx2, waf.WafRuleTypeRegular),
 
 					testAccCheckAWSWafRegionalRuleExists("aws_wafregional_rule.test3", &rule3),
 					computeWafActivatedRuleWithRuleId(&rule3, "BLOCK", 15, &idx3),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.action.0.type", &idx3, "BLOCK"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.priority", &idx3, "15"),
-					testCheckResourceAttrWithIndexesAddr("aws_wafregional_rule_group.test", "activated_rule.%d.type", &idx3, waf.WafRuleTypeRegular),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.action.0.type", &idx3, "BLOCK"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.priority", &idx3, "15"),
+					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.type", &idx3, waf.WafRuleTypeRegular),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -207,6 +278,7 @@ func TestAccAWSWafRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 func TestAccAWSWafRegionalRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("tfacc%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -216,11 +288,9 @@ func TestAccAWSWafRegionalRuleGroup_noActivatedRules(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalRuleGroupConfig_noActivatedRules(groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalRuleGroupExists("aws_wafregional_rule_group.test", &group),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule_group.test", "name", groupName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_rule_group.test", "activated_rule.#", "0"),
+					testAccCheckAWSWafRegionalRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
 				),
 			},
 		},
@@ -351,6 +421,61 @@ resource "aws_wafregional_rule_group" "test" {
   }
 }
 `, ruleName, groupName)
+}
+
+func testAccAWSWafRegionalRuleGroupConfigTags1(ruleName, groupName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_rule" "test" {
+  name        = %[1]q
+  metric_name = %[1]q
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  name        = %[2]q
+  metric_name = %[2]q
+
+  activated_rule {
+    action {
+      type = "COUNT"
+    }
+
+    priority = 50
+    rule_id  = "${aws_wafregional_rule.test.id}"
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, ruleName, groupName, tagKey1, tagValue1)
+}
+
+func testAccAWSWafRegionalRuleGroupConfigTags2(ruleName, groupName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_rule" "test" {
+  name        = %[1]q
+  metric_name = %[1]q
+}
+
+resource "aws_wafregional_rule_group" "test" {
+  name        = %[2]q
+  metric_name = %[2]q
+
+  activated_rule {
+    action {
+      type = "COUNT"
+    }
+
+    priority = 50
+    rule_id  = "${aws_wafregional_rule.test.id}"
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, ruleName, groupName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSWafRegionalRuleGroupConfig_changeActivatedRules(ruleName1, ruleName2, ruleName3, groupName string) string {

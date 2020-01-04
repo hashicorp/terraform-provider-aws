@@ -1,7 +1,7 @@
 ---
+subcategory: "CodePipeline"
 layout: "aws"
 page_title: "AWS: aws_codepipeline_webhook"
-sidebar_current: "docs-aws-resource-codepipeline-webhook"
 description: |-
   Provides a CodePipeline Webhook
 ---

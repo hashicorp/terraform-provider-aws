@@ -3,6 +3,7 @@
 package kinesisvideo
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +12,105 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
+
+const opCreateSignalingChannel = "CreateSignalingChannel"
+
+// CreateSignalingChannelRequest generates a "aws/request.Request" representing the
+// client's request for the CreateSignalingChannel operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateSignalingChannel for more information on using the CreateSignalingChannel
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateSignalingChannelRequest method.
+//    req, resp := client.CreateSignalingChannelRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/CreateSignalingChannel
+func (c *KinesisVideo) CreateSignalingChannelRequest(input *CreateSignalingChannelInput) (req *request.Request, output *CreateSignalingChannelOutput) {
+	op := &request.Operation{
+		Name:       opCreateSignalingChannel,
+		HTTPMethod: "POST",
+		HTTPPath:   "/createSignalingChannel",
+	}
+
+	if input == nil {
+		input = &CreateSignalingChannelInput{}
+	}
+
+	output = &CreateSignalingChannelOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateSignalingChannel API operation for Amazon Kinesis Video Streams.
+//
+// Creates a signaling channel.
+//
+// CreateSignalingChannel is an asynchronous operation.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation CreateSignalingChannel for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeAccountChannelLimitExceededException "AccountChannelLimitExceededException"
+//   You have reached the maximum limit of active signaling channels for this
+//   AWS account in this region.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The stream is currently not available for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+//   * ErrCodeTagsPerResourceExceededLimitException "TagsPerResourceExceededLimitException"
+//   You have exceeded the limit of tags that you can associate with the resource.
+//   Kinesis video streams support up to 50 tags.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/CreateSignalingChannel
+func (c *KinesisVideo) CreateSignalingChannel(input *CreateSignalingChannelInput) (*CreateSignalingChannelOutput, error) {
+	req, out := c.CreateSignalingChannelRequest(input)
+	return out, req.Send()
+}
+
+// CreateSignalingChannelWithContext is the same as CreateSignalingChannel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateSignalingChannel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) CreateSignalingChannelWithContext(ctx aws.Context, input *CreateSignalingChannelInput, opts ...request.Option) (*CreateSignalingChannelOutput, error) {
+	req, out := c.CreateSignalingChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
 
 const opCreateStream = "CreateStream"
 
@@ -121,6 +221,103 @@ func (c *KinesisVideo) CreateStreamWithContext(ctx aws.Context, input *CreateStr
 	return out, req.Send()
 }
 
+const opDeleteSignalingChannel = "DeleteSignalingChannel"
+
+// DeleteSignalingChannelRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteSignalingChannel operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteSignalingChannel for more information on using the DeleteSignalingChannel
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteSignalingChannelRequest method.
+//    req, resp := client.DeleteSignalingChannelRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DeleteSignalingChannel
+func (c *KinesisVideo) DeleteSignalingChannelRequest(input *DeleteSignalingChannelInput) (req *request.Request, output *DeleteSignalingChannelOutput) {
+	op := &request.Operation{
+		Name:       opDeleteSignalingChannel,
+		HTTPMethod: "POST",
+		HTTPPath:   "/deleteSignalingChannel",
+	}
+
+	if input == nil {
+		input = &DeleteSignalingChannelInput{}
+	}
+
+	output = &DeleteSignalingChannelOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteSignalingChannel API operation for Amazon Kinesis Video Streams.
+//
+// Deletes a specified signaling channel. DeleteSignalingChannel is an asynchronous
+// operation. If you don't specify the channel's current version, the most recent
+// version is deleted.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation DeleteSignalingChannel for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Amazon Kinesis Video Streams can't find the stream that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   The stream version that you specified is not the latest version. To get the
+//   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
+//   API.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DeleteSignalingChannel
+func (c *KinesisVideo) DeleteSignalingChannel(input *DeleteSignalingChannelInput) (*DeleteSignalingChannelOutput, error) {
+	req, out := c.DeleteSignalingChannelRequest(input)
+	return out, req.Send()
+}
+
+// DeleteSignalingChannelWithContext is the same as DeleteSignalingChannel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteSignalingChannel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) DeleteSignalingChannelWithContext(ctx aws.Context, input *DeleteSignalingChannelInput, opts ...request.Option) (*DeleteSignalingChannelOutput, error) {
+	req, out := c.DeleteSignalingChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteStream = "DeleteStream"
 
 // DeleteStreamRequest generates a "aws/request.Request" representing the
@@ -222,6 +419,96 @@ func (c *KinesisVideo) DeleteStream(input *DeleteStreamInput) (*DeleteStreamOutp
 // for more information on using Contexts.
 func (c *KinesisVideo) DeleteStreamWithContext(ctx aws.Context, input *DeleteStreamInput, opts ...request.Option) (*DeleteStreamOutput, error) {
 	req, out := c.DeleteStreamRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeSignalingChannel = "DescribeSignalingChannel"
+
+// DescribeSignalingChannelRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeSignalingChannel operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeSignalingChannel for more information on using the DescribeSignalingChannel
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeSignalingChannelRequest method.
+//    req, resp := client.DescribeSignalingChannelRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeSignalingChannel
+func (c *KinesisVideo) DescribeSignalingChannelRequest(input *DescribeSignalingChannelInput) (req *request.Request, output *DescribeSignalingChannelOutput) {
+	op := &request.Operation{
+		Name:       opDescribeSignalingChannel,
+		HTTPMethod: "POST",
+		HTTPPath:   "/describeSignalingChannel",
+	}
+
+	if input == nil {
+		input = &DescribeSignalingChannelInput{}
+	}
+
+	output = &DescribeSignalingChannelOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeSignalingChannel API operation for Amazon Kinesis Video Streams.
+//
+// Returns the most current information about the signaling channel. You must
+// specify either the name or the ARN of the channel that you want to describe.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation DescribeSignalingChannel for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Amazon Kinesis Video Streams can't find the stream that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DescribeSignalingChannel
+func (c *KinesisVideo) DescribeSignalingChannel(input *DescribeSignalingChannelInput) (*DescribeSignalingChannelOutput, error) {
+	req, out := c.DescribeSignalingChannelRequest(input)
+	return out, req.Send()
+}
+
+// DescribeSignalingChannelWithContext is the same as DescribeSignalingChannel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeSignalingChannel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) DescribeSignalingChannelWithContext(ctx aws.Context, input *DescribeSignalingChannelInput, opts ...request.Option) (*DescribeSignalingChannelOutput, error) {
+	req, out := c.DescribeSignalingChannelRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -414,6 +701,256 @@ func (c *KinesisVideo) GetDataEndpointWithContext(ctx aws.Context, input *GetDat
 	return out, req.Send()
 }
 
+const opGetSignalingChannelEndpoint = "GetSignalingChannelEndpoint"
+
+// GetSignalingChannelEndpointRequest generates a "aws/request.Request" representing the
+// client's request for the GetSignalingChannelEndpoint operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetSignalingChannelEndpoint for more information on using the GetSignalingChannelEndpoint
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetSignalingChannelEndpointRequest method.
+//    req, resp := client.GetSignalingChannelEndpointRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/GetSignalingChannelEndpoint
+func (c *KinesisVideo) GetSignalingChannelEndpointRequest(input *GetSignalingChannelEndpointInput) (req *request.Request, output *GetSignalingChannelEndpointOutput) {
+	op := &request.Operation{
+		Name:       opGetSignalingChannelEndpoint,
+		HTTPMethod: "POST",
+		HTTPPath:   "/getSignalingChannelEndpoint",
+	}
+
+	if input == nil {
+		input = &GetSignalingChannelEndpointInput{}
+	}
+
+	output = &GetSignalingChannelEndpointOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetSignalingChannelEndpoint API operation for Amazon Kinesis Video Streams.
+//
+// Provides an endpoint for the specified signaling channel to send and receive
+// messages. This API uses the SingleMasterChannelEndpointConfiguration input
+// parameter, which consists of the Protocols and Role properties.
+//
+// Protocols is used to determine the communication mechanism. For example,
+// specifying WSS as the protocol, results in this API producing a secure websocket
+// endpoint, and specifying HTTPS as the protocol, results in this API generating
+// an HTTPS endpoint.
+//
+// Role determines the messaging permissions. A MASTER role results in this
+// API generating an endpoint that a client can use to communicate with any
+// of the viewers on the channel. A VIEWER role results in this API generating
+// an endpoint that a client can use to communicate only with a MASTER.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation GetSignalingChannelEndpoint for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Amazon Kinesis Video Streams can't find the stream that you specified.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The stream is currently not available for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/GetSignalingChannelEndpoint
+func (c *KinesisVideo) GetSignalingChannelEndpoint(input *GetSignalingChannelEndpointInput) (*GetSignalingChannelEndpointOutput, error) {
+	req, out := c.GetSignalingChannelEndpointRequest(input)
+	return out, req.Send()
+}
+
+// GetSignalingChannelEndpointWithContext is the same as GetSignalingChannelEndpoint with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetSignalingChannelEndpoint for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) GetSignalingChannelEndpointWithContext(ctx aws.Context, input *GetSignalingChannelEndpointInput, opts ...request.Option) (*GetSignalingChannelEndpointOutput, error) {
+	req, out := c.GetSignalingChannelEndpointRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListSignalingChannels = "ListSignalingChannels"
+
+// ListSignalingChannelsRequest generates a "aws/request.Request" representing the
+// client's request for the ListSignalingChannels operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListSignalingChannels for more information on using the ListSignalingChannels
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListSignalingChannelsRequest method.
+//    req, resp := client.ListSignalingChannelsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListSignalingChannels
+func (c *KinesisVideo) ListSignalingChannelsRequest(input *ListSignalingChannelsInput) (req *request.Request, output *ListSignalingChannelsOutput) {
+	op := &request.Operation{
+		Name:       opListSignalingChannels,
+		HTTPMethod: "POST",
+		HTTPPath:   "/listSignalingChannels",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListSignalingChannelsInput{}
+	}
+
+	output = &ListSignalingChannelsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListSignalingChannels API operation for Amazon Kinesis Video Streams.
+//
+// Returns an array of ChannelInfo objects. Each object describes a signaling
+// channel. To retrieve only those channels that satisfy a specific condition,
+// you can specify a ChannelNameCondition.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation ListSignalingChannels for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListSignalingChannels
+func (c *KinesisVideo) ListSignalingChannels(input *ListSignalingChannelsInput) (*ListSignalingChannelsOutput, error) {
+	req, out := c.ListSignalingChannelsRequest(input)
+	return out, req.Send()
+}
+
+// ListSignalingChannelsWithContext is the same as ListSignalingChannels with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListSignalingChannels for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) ListSignalingChannelsWithContext(ctx aws.Context, input *ListSignalingChannelsInput, opts ...request.Option) (*ListSignalingChannelsOutput, error) {
+	req, out := c.ListSignalingChannelsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListSignalingChannelsPages iterates over the pages of a ListSignalingChannels operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListSignalingChannels method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListSignalingChannels operation.
+//    pageNum := 0
+//    err := client.ListSignalingChannelsPages(params,
+//        func(page *kinesisvideo.ListSignalingChannelsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *KinesisVideo) ListSignalingChannelsPages(input *ListSignalingChannelsInput, fn func(*ListSignalingChannelsOutput, bool) bool) error {
+	return c.ListSignalingChannelsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListSignalingChannelsPagesWithContext same as ListSignalingChannelsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) ListSignalingChannelsPagesWithContext(ctx aws.Context, input *ListSignalingChannelsInput, fn func(*ListSignalingChannelsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListSignalingChannelsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListSignalingChannelsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListSignalingChannelsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListStreams = "ListStreams"
 
 // ListStreamsRequest generates a "aws/request.Request" representing the
@@ -445,6 +982,12 @@ func (c *KinesisVideo) ListStreamsRequest(input *ListStreamsInput) (req *request
 		Name:       opListStreams,
 		HTTPMethod: "POST",
 		HTTPPath:   "/listStreams",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -494,6 +1037,147 @@ func (c *KinesisVideo) ListStreams(input *ListStreamsInput) (*ListStreamsOutput,
 // for more information on using Contexts.
 func (c *KinesisVideo) ListStreamsWithContext(ctx aws.Context, input *ListStreamsInput, opts ...request.Option) (*ListStreamsOutput, error) {
 	req, out := c.ListStreamsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListStreamsPages iterates over the pages of a ListStreams operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListStreams method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListStreams operation.
+//    pageNum := 0
+//    err := client.ListStreamsPages(params,
+//        func(page *kinesisvideo.ListStreamsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *KinesisVideo) ListStreamsPages(input *ListStreamsInput, fn func(*ListStreamsOutput, bool) bool) error {
+	return c.ListStreamsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListStreamsPagesWithContext same as ListStreamsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) ListStreamsPagesWithContext(ctx aws.Context, input *ListStreamsInput, fn func(*ListStreamsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListStreamsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListStreamsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListStreamsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListTagsForResource
+func (c *KinesisVideo) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/ListTagsForResource",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon Kinesis Video Streams.
+//
+// Returns a list of tags associated with the specified signaling channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Amazon Kinesis Video Streams can't find the stream that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/ListTagsForResource
+func (c *KinesisVideo) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -588,6 +1272,105 @@ func (c *KinesisVideo) ListTagsForStream(input *ListTagsForStreamInput) (*ListTa
 // for more information on using Contexts.
 func (c *KinesisVideo) ListTagsForStreamWithContext(ctx aws.Context, input *ListTagsForStreamInput, opts ...request.Option) (*ListTagsForStreamOutput, error) {
 	req, out := c.ListTagsForStreamRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/TagResource
+func (c *KinesisVideo) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/TagResource",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon Kinesis Video Streams.
+//
+// Adds one or more tags to a signaling channel. A tag is a key-value pair (the
+// value is optional) that you can define and assign to AWS resources. If you
+// specify a tag that already exists, the tag value is replaced with the value
+// that you specify in the request. For more information, see Using Cost Allocation
+// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
+// in the AWS Billing and Cost Management User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Amazon Kinesis Video Streams can't find the stream that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+//   * ErrCodeTagsPerResourceExceededLimitException "TagsPerResourceExceededLimitException"
+//   You have exceeded the limit of tags that you can associate with the resource.
+//   Kinesis video streams support up to 50 tags.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/TagResource
+func (c *KinesisVideo) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -696,6 +1479,98 @@ func (c *KinesisVideo) TagStream(input *TagStreamInput) (*TagStreamOutput, error
 // for more information on using Contexts.
 func (c *KinesisVideo) TagStreamWithContext(ctx aws.Context, input *TagStreamInput, opts ...request.Option) (*TagStreamOutput, error) {
 	req, out := c.TagStreamRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UntagResource
+func (c *KinesisVideo) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/UntagResource",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon Kinesis Video Streams.
+//
+// Removes one or more tags from a signaling channel. In the request, specify
+// only a tag key or keys; don't specify the value. If you specify a tag key
+// that does not exist, it's ignored.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Amazon Kinesis Video Streams can't find the stream that you specified.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UntagResource
+func (c *KinesisVideo) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -916,6 +1791,110 @@ func (c *KinesisVideo) UpdateDataRetentionWithContext(ctx aws.Context, input *Up
 	return out, req.Send()
 }
 
+const opUpdateSignalingChannel = "UpdateSignalingChannel"
+
+// UpdateSignalingChannelRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateSignalingChannel operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateSignalingChannel for more information on using the UpdateSignalingChannel
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateSignalingChannelRequest method.
+//    req, resp := client.UpdateSignalingChannelRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UpdateSignalingChannel
+func (c *KinesisVideo) UpdateSignalingChannelRequest(input *UpdateSignalingChannelInput) (req *request.Request, output *UpdateSignalingChannelOutput) {
+	op := &request.Operation{
+		Name:       opUpdateSignalingChannel,
+		HTTPMethod: "POST",
+		HTTPPath:   "/updateSignalingChannel",
+	}
+
+	if input == nil {
+		input = &UpdateSignalingChannelInput{}
+	}
+
+	output = &UpdateSignalingChannelOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateSignalingChannel API operation for Amazon Kinesis Video Streams.
+//
+// Updates the existing signaling channel. This is an asynchronous operation
+// and takes time to complete.
+//
+// If the MessageTtlSeconds value is updated (either increased or reduced),
+// then it only applies to new messages sent via this channel after it's been
+// updated. Existing messages are still expire as per the previous MessageTtlSeconds
+// value.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Kinesis Video Streams's
+// API operation UpdateSignalingChannel for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   The value for this input parameter is invalid.
+//
+//   * ErrCodeClientLimitExceededException "ClientLimitExceededException"
+//   Kinesis Video Streams has throttled the request because you have exceeded
+//   the limit of allowed client calls. Try making the call later.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   Amazon Kinesis Video Streams can't find the stream that you specified.
+//
+//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   The stream is currently not available for this operation.
+//
+//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   You do not have required permissions to perform this operation.
+//
+//   * ErrCodeVersionMismatchException "VersionMismatchException"
+//   The stream version that you specified is not the latest version. To get the
+//   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
+//   API.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/UpdateSignalingChannel
+func (c *KinesisVideo) UpdateSignalingChannel(input *UpdateSignalingChannelInput) (*UpdateSignalingChannelOutput, error) {
+	req, out := c.UpdateSignalingChannelRequest(input)
+	return out, req.Send()
+}
+
+// UpdateSignalingChannelWithContext is the same as UpdateSignalingChannel with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateSignalingChannel for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *KinesisVideo) UpdateSignalingChannelWithContext(ctx aws.Context, input *UpdateSignalingChannelInput, opts ...request.Option) (*UpdateSignalingChannelOutput, error) {
+	req, out := c.UpdateSignalingChannelRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateStream = "UpdateStream"
 
 // UpdateStreamRequest generates a "aws/request.Request" representing the
@@ -1025,6 +2004,242 @@ func (c *KinesisVideo) UpdateStreamWithContext(ctx aws.Context, input *UpdateStr
 	return out, req.Send()
 }
 
+// A structure that encapsulates a signaling channel's metadata and properties.
+type ChannelInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signaling channel.
+	ChannelARN *string `min:"1" type:"string"`
+
+	// The name of the signaling channel.
+	ChannelName *string `min:"1" type:"string"`
+
+	// Current status of the signaling channel.
+	ChannelStatus *string `type:"string" enum:"Status"`
+
+	// The type of the signaling channel.
+	ChannelType *string `type:"string" enum:"ChannelType"`
+
+	// The time at which the signaling channel was created.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// A structure that contains the configuration for the SINGLE_MASTER channel
+	// type.
+	SingleMasterConfiguration *SingleMasterConfiguration `type:"structure"`
+
+	// The current version of the signaling channel.
+	Version *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ChannelInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ChannelInfo) GoString() string {
+	return s.String()
+}
+
+// SetChannelARN sets the ChannelARN field's value.
+func (s *ChannelInfo) SetChannelARN(v string) *ChannelInfo {
+	s.ChannelARN = &v
+	return s
+}
+
+// SetChannelName sets the ChannelName field's value.
+func (s *ChannelInfo) SetChannelName(v string) *ChannelInfo {
+	s.ChannelName = &v
+	return s
+}
+
+// SetChannelStatus sets the ChannelStatus field's value.
+func (s *ChannelInfo) SetChannelStatus(v string) *ChannelInfo {
+	s.ChannelStatus = &v
+	return s
+}
+
+// SetChannelType sets the ChannelType field's value.
+func (s *ChannelInfo) SetChannelType(v string) *ChannelInfo {
+	s.ChannelType = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *ChannelInfo) SetCreationTime(v time.Time) *ChannelInfo {
+	s.CreationTime = &v
+	return s
+}
+
+// SetSingleMasterConfiguration sets the SingleMasterConfiguration field's value.
+func (s *ChannelInfo) SetSingleMasterConfiguration(v *SingleMasterConfiguration) *ChannelInfo {
+	s.SingleMasterConfiguration = v
+	return s
+}
+
+// SetVersion sets the Version field's value.
+func (s *ChannelInfo) SetVersion(v string) *ChannelInfo {
+	s.Version = &v
+	return s
+}
+
+// An optional input parameter for the ListSignalingChannels API. When this
+// parameter is specified while invoking ListSignalingChannels, the API returns
+// only the channels that satisfy a condition specified in ChannelNameCondition.
+type ChannelNameCondition struct {
+	_ struct{} `type:"structure"`
+
+	// A comparison operator. Currently, you can only specify the BEGINS_WITH operator,
+	// which finds signaling channels whose names begin with a given prefix.
+	ComparisonOperator *string `type:"string" enum:"ComparisonOperator"`
+
+	// A value to compare.
+	ComparisonValue *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ChannelNameCondition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ChannelNameCondition) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ChannelNameCondition) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ChannelNameCondition"}
+	if s.ComparisonValue != nil && len(*s.ComparisonValue) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ComparisonValue", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetComparisonOperator sets the ComparisonOperator field's value.
+func (s *ChannelNameCondition) SetComparisonOperator(v string) *ChannelNameCondition {
+	s.ComparisonOperator = &v
+	return s
+}
+
+// SetComparisonValue sets the ComparisonValue field's value.
+func (s *ChannelNameCondition) SetComparisonValue(v string) *ChannelNameCondition {
+	s.ComparisonValue = &v
+	return s
+}
+
+type CreateSignalingChannelInput struct {
+	_ struct{} `type:"structure"`
+
+	// A name for the signaling channel that you are creating. It must be unique
+	// for each account and region.
+	//
+	// ChannelName is a required field
+	ChannelName *string `min:"1" type:"string" required:"true"`
+
+	// A type of the signaling channel that you are creating. Currently, SINGLE_MASTER
+	// is the only supported channel type.
+	ChannelType *string `type:"string" enum:"ChannelType"`
+
+	// A structure containing the configuration for the SINGLE_MASTER channel type.
+	SingleMasterConfiguration *SingleMasterConfiguration `type:"structure"`
+
+	// A set of tags (key/value pairs) that you want to associate with this channel.
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s CreateSignalingChannelInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSignalingChannelInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateSignalingChannelInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateSignalingChannelInput"}
+	if s.ChannelName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelName"))
+	}
+	if s.ChannelName != nil && len(*s.ChannelName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelName", 1))
+	}
+	if s.SingleMasterConfiguration != nil {
+		if err := s.SingleMasterConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("SingleMasterConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelName sets the ChannelName field's value.
+func (s *CreateSignalingChannelInput) SetChannelName(v string) *CreateSignalingChannelInput {
+	s.ChannelName = &v
+	return s
+}
+
+// SetChannelType sets the ChannelType field's value.
+func (s *CreateSignalingChannelInput) SetChannelType(v string) *CreateSignalingChannelInput {
+	s.ChannelType = &v
+	return s
+}
+
+// SetSingleMasterConfiguration sets the SingleMasterConfiguration field's value.
+func (s *CreateSignalingChannelInput) SetSingleMasterConfiguration(v *SingleMasterConfiguration) *CreateSignalingChannelInput {
+	s.SingleMasterConfiguration = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateSignalingChannelInput) SetTags(v []*Tag) *CreateSignalingChannelInput {
+	s.Tags = v
+	return s
+}
+
+type CreateSignalingChannelOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the created channel.
+	ChannelARN *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CreateSignalingChannelOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateSignalingChannelOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannelARN sets the ChannelARN field's value.
+func (s *CreateSignalingChannelOutput) SetChannelARN(v string) *CreateSignalingChannelOutput {
+	s.ChannelARN = &v
+	return s
+}
+
 type CreateStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1059,6 +2274,8 @@ type CreateStreamInput struct {
 	// Types (http://www.iana.org/assignments/media-types/media-types.xhtml). If
 	// you choose to specify the MediaType, see Naming Requirements (https://tools.ietf.org/html/rfc6838#section-4.2)
 	// for guidelines.
+	//
+	// Example valid values include "video/h264" and "video/h264,audio/aac".
 	//
 	// This parameter is optional; the default value is null (or empty in JSON).
 	MediaType *string `min:"1" type:"string"`
@@ -1173,6 +2390,75 @@ func (s *CreateStreamOutput) SetStreamARN(v string) *CreateStreamOutput {
 	return s
 }
 
+type DeleteSignalingChannelInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signaling channel that you want to delete.
+	//
+	// ChannelARN is a required field
+	ChannelARN *string `min:"1" type:"string" required:"true"`
+
+	// The current version of the signaling channel that you want to delete. You
+	// can obtain the current version by invoking the DescribeSignalingChannel or
+	// ListSignalingChannels APIs.
+	CurrentVersion *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteSignalingChannelInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSignalingChannelInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteSignalingChannelInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteSignalingChannelInput"}
+	if s.ChannelARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelARN"))
+	}
+	if s.ChannelARN != nil && len(*s.ChannelARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelARN", 1))
+	}
+	if s.CurrentVersion != nil && len(*s.CurrentVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CurrentVersion", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelARN sets the ChannelARN field's value.
+func (s *DeleteSignalingChannelInput) SetChannelARN(v string) *DeleteSignalingChannelInput {
+	s.ChannelARN = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *DeleteSignalingChannelInput) SetCurrentVersion(v string) *DeleteSignalingChannelInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+type DeleteSignalingChannelOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteSignalingChannelOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteSignalingChannelOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1243,6 +2529,78 @@ func (s DeleteStreamOutput) String() string {
 // GoString returns the string representation
 func (s DeleteStreamOutput) GoString() string {
 	return s.String()
+}
+
+type DescribeSignalingChannelInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signaling channel that you want to describe.
+	ChannelARN *string `min:"1" type:"string"`
+
+	// The name of the signaling channel that you want to describe.
+	ChannelName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeSignalingChannelInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSignalingChannelInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeSignalingChannelInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeSignalingChannelInput"}
+	if s.ChannelARN != nil && len(*s.ChannelARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelARN", 1))
+	}
+	if s.ChannelName != nil && len(*s.ChannelName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelARN sets the ChannelARN field's value.
+func (s *DescribeSignalingChannelInput) SetChannelARN(v string) *DescribeSignalingChannelInput {
+	s.ChannelARN = &v
+	return s
+}
+
+// SetChannelName sets the ChannelName field's value.
+func (s *DescribeSignalingChannelInput) SetChannelName(v string) *DescribeSignalingChannelInput {
+	s.ChannelName = &v
+	return s
+}
+
+type DescribeSignalingChannelOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A structure that encapsulates the specified signaling channel's metadata
+	// and properties.
+	ChannelInfo *ChannelInfo `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeSignalingChannelOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeSignalingChannelOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannelInfo sets the ChannelInfo field's value.
+func (s *DescribeSignalingChannelOutput) SetChannelInfo(v *ChannelInfo) *DescribeSignalingChannelOutput {
+	s.ChannelInfo = v
+	return s
 }
 
 type DescribeStreamInput struct {
@@ -1404,6 +2762,180 @@ func (s *GetDataEndpointOutput) SetDataEndpoint(v string) *GetDataEndpointOutput
 	return s
 }
 
+type GetSignalingChannelEndpointInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signalling channel for which you want to get an endpoint.
+	//
+	// ChannelARN is a required field
+	ChannelARN *string `min:"1" type:"string" required:"true"`
+
+	// A structure containing the endpoint configuration for the SINGLE_MASTER channel
+	// type.
+	SingleMasterChannelEndpointConfiguration *SingleMasterChannelEndpointConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s GetSignalingChannelEndpointInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSignalingChannelEndpointInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetSignalingChannelEndpointInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetSignalingChannelEndpointInput"}
+	if s.ChannelARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelARN"))
+	}
+	if s.ChannelARN != nil && len(*s.ChannelARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelARN", 1))
+	}
+	if s.SingleMasterChannelEndpointConfiguration != nil {
+		if err := s.SingleMasterChannelEndpointConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("SingleMasterChannelEndpointConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelARN sets the ChannelARN field's value.
+func (s *GetSignalingChannelEndpointInput) SetChannelARN(v string) *GetSignalingChannelEndpointInput {
+	s.ChannelARN = &v
+	return s
+}
+
+// SetSingleMasterChannelEndpointConfiguration sets the SingleMasterChannelEndpointConfiguration field's value.
+func (s *GetSignalingChannelEndpointInput) SetSingleMasterChannelEndpointConfiguration(v *SingleMasterChannelEndpointConfiguration) *GetSignalingChannelEndpointInput {
+	s.SingleMasterChannelEndpointConfiguration = v
+	return s
+}
+
+type GetSignalingChannelEndpointOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of endpoints for the specified signaling channel.
+	ResourceEndpointList []*ResourceEndpointListItem `type:"list"`
+}
+
+// String returns the string representation
+func (s GetSignalingChannelEndpointOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetSignalingChannelEndpointOutput) GoString() string {
+	return s.String()
+}
+
+// SetResourceEndpointList sets the ResourceEndpointList field's value.
+func (s *GetSignalingChannelEndpointOutput) SetResourceEndpointList(v []*ResourceEndpointListItem) *GetSignalingChannelEndpointOutput {
+	s.ResourceEndpointList = v
+	return s
+}
+
+type ListSignalingChannelsInput struct {
+	_ struct{} `type:"structure"`
+
+	// Optional: Returns only the channels that satisfy a specific condition.
+	ChannelNameCondition *ChannelNameCondition `type:"structure"`
+
+	// The maximum number of channels to return in the response. The default is
+	// 500.
+	MaxResults *int64 `min:"1" type:"integer"`
+
+	// If you specify this parameter, when the result of a ListSignalingChannels
+	// operation is truncated, the call returns the NextToken in the response. To
+	// get another batch of channels, provide this token in your next request.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListSignalingChannelsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSignalingChannelsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListSignalingChannelsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListSignalingChannelsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.ChannelNameCondition != nil {
+		if err := s.ChannelNameCondition.Validate(); err != nil {
+			invalidParams.AddNested("ChannelNameCondition", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelNameCondition sets the ChannelNameCondition field's value.
+func (s *ListSignalingChannelsInput) SetChannelNameCondition(v *ChannelNameCondition) *ListSignalingChannelsInput {
+	s.ChannelNameCondition = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListSignalingChannelsInput) SetMaxResults(v int64) *ListSignalingChannelsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListSignalingChannelsInput) SetNextToken(v string) *ListSignalingChannelsInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListSignalingChannelsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// An array of ChannelInfo objects.
+	ChannelInfoList []*ChannelInfo `type:"list"`
+
+	// If the response is truncated, the call returns this element with a token.
+	// To get the next batch of streams, use this token in your next request.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListSignalingChannelsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListSignalingChannelsOutput) GoString() string {
+	return s.String()
+}
+
+// SetChannelInfoList sets the ChannelInfoList field's value.
+func (s *ListSignalingChannelsOutput) SetChannelInfoList(v []*ChannelInfo) *ListSignalingChannelsOutput {
+	s.ChannelInfoList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListSignalingChannelsOutput) SetNextToken(v string) *ListSignalingChannelsOutput {
+	s.NextToken = &v
+	return s
+}
+
 type ListStreamsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1499,6 +3031,92 @@ func (s *ListStreamsOutput) SetStreamInfoList(v []*StreamInfo) *ListStreamsOutpu
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// If you specify this parameter and the result of a ListTagsForResource call
+	// is truncated, the response includes a token that you can use in the next
+	// request to fetch the next batch of tags.
+	NextToken *string `type:"string"`
+
+	// The ARN of the signaling channel for which you want to list tags.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTagsForResourceInput) SetNextToken(v string) *ListTagsForResourceInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *ListTagsForResourceInput) SetResourceARN(v string) *ListTagsForResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// If you specify this parameter and the result of a ListTagsForResource call
+	// is truncated, the response includes a token that you can use in the next
+	// request to fetch the next set of tags.
+	NextToken *string `type:"string"`
+
+	// A map of tag keys and values associated with the specified signaling channel.
+	Tags map[string]*string `min:"1" type:"map"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTagsForResourceOutput) SetNextToken(v string) *ListTagsForResourceOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
+}
+
 type ListTagsForStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1589,6 +3207,135 @@ func (s *ListTagsForStreamOutput) SetNextToken(v string) *ListTagsForStreamOutpu
 // SetTags sets the Tags field's value.
 func (s *ListTagsForStreamOutput) SetTags(v map[string]*string) *ListTagsForStreamOutput {
 	s.Tags = v
+	return s
+}
+
+// An object that describes the endpoint of the signaling channel returned by
+// the GetSignalingChannelEndpoint API.
+type ResourceEndpointListItem struct {
+	_ struct{} `type:"structure"`
+
+	// The protocol of the signaling channel returned by the GetSignalingChannelEndpoint
+	// API.
+	Protocol *string `type:"string" enum:"ChannelProtocol"`
+
+	// The endpoint of the signaling channel returned by the GetSignalingChannelEndpoint
+	// API.
+	ResourceEndpoint *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceEndpointListItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceEndpointListItem) GoString() string {
+	return s.String()
+}
+
+// SetProtocol sets the Protocol field's value.
+func (s *ResourceEndpointListItem) SetProtocol(v string) *ResourceEndpointListItem {
+	s.Protocol = &v
+	return s
+}
+
+// SetResourceEndpoint sets the ResourceEndpoint field's value.
+func (s *ResourceEndpointListItem) SetResourceEndpoint(v string) *ResourceEndpointListItem {
+	s.ResourceEndpoint = &v
+	return s
+}
+
+// An object that contains the endpoint configuration for the SINGLE_MASTER
+// channel type.
+type SingleMasterChannelEndpointConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// This property is used to determine the nature of communication over this
+	// SINGLE_MASTER signaling channel. If WSS is specified, this API returns a
+	// websocket endpoint. If HTTPS is specified, this API returns an HTTPS endpoint.
+	Protocols []*string `min:"1" type:"list"`
+
+	// This property is used to determine messaging permissions in this SINGLE_MASTER
+	// signaling channel. If MASTER is specified, this API returns an endpoint that
+	// a client can use to receive offers from and send answers to any of the viewers
+	// on this signaling channel. If VIEWER is specified, this API returns an endpoint
+	// that a client can use only to send offers to another MASTER client on this
+	// signaling channel.
+	Role *string `type:"string" enum:"ChannelRole"`
+}
+
+// String returns the string representation
+func (s SingleMasterChannelEndpointConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SingleMasterChannelEndpointConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SingleMasterChannelEndpointConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SingleMasterChannelEndpointConfiguration"}
+	if s.Protocols != nil && len(s.Protocols) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Protocols", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetProtocols sets the Protocols field's value.
+func (s *SingleMasterChannelEndpointConfiguration) SetProtocols(v []*string) *SingleMasterChannelEndpointConfiguration {
+	s.Protocols = v
+	return s
+}
+
+// SetRole sets the Role field's value.
+func (s *SingleMasterChannelEndpointConfiguration) SetRole(v string) *SingleMasterChannelEndpointConfiguration {
+	s.Role = &v
+	return s
+}
+
+// A structure that contains the configuration for the SINGLE_MASTER channel
+// type.
+type SingleMasterConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The period of time a signaling channel retains underlivered messages before
+	// they are discarded.
+	MessageTtlSeconds *int64 `min:"5" type:"integer"`
+}
+
+// String returns the string representation
+func (s SingleMasterConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SingleMasterConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SingleMasterConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SingleMasterConfiguration"}
+	if s.MessageTtlSeconds != nil && *s.MessageTtlSeconds < 5 {
+		invalidParams.Add(request.NewErrParamMinValue("MessageTtlSeconds", 5))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMessageTtlSeconds sets the MessageTtlSeconds field's value.
+func (s *SingleMasterConfiguration) SetMessageTtlSeconds(v int64) *SingleMasterConfiguration {
+	s.MessageTtlSeconds = &v
 	return s
 }
 
@@ -1739,6 +3486,145 @@ func (s *StreamNameCondition) SetComparisonValue(v string) *StreamNameCondition 
 	return s
 }
 
+// A key and value pair that is associated with the specified signaling channel.
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// The key of the tag that is associated with the specified signaling channel.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// The value of the tag that is associated with the specified signaling channel.
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signaling channel to which you want to add tags.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// A list of tags to associate with the specified signaling channel. Each tag
+	// is a key-value pair.
+	//
+	// Tags is a required field
+	Tags []*Tag `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *TagResourceInput) SetResourceARN(v string) *TagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*Tag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
 type TagStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1817,6 +3703,78 @@ func (s TagStreamOutput) String() string {
 
 // GoString returns the string representation
 func (s TagStreamOutput) GoString() string {
+	return s.String()
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signaling channel from which you want to remove tags.
+	//
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// A list of the keys of the tags that you want to remove.
+	//
+	// TagKeyList is a required field
+	TagKeyList []*string `min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.TagKeyList == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeyList"))
+	}
+	if s.TagKeyList != nil && len(s.TagKeyList) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TagKeyList", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *UntagResourceInput) SetResourceARN(v string) *UntagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTagKeyList sets the TagKeyList field's value.
+func (s *UntagResourceInput) SetTagKeyList(v []*string) *UntagResourceInput {
+	s.TagKeyList = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
 	return s.String()
 }
 
@@ -2013,6 +3971,93 @@ func (s UpdateDataRetentionOutput) GoString() string {
 	return s.String()
 }
 
+type UpdateSignalingChannelInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the signaling channel that you want to update.
+	//
+	// ChannelARN is a required field
+	ChannelARN *string `min:"1" type:"string" required:"true"`
+
+	// The current version of the signaling channel that you want to update.
+	//
+	// CurrentVersion is a required field
+	CurrentVersion *string `min:"1" type:"string" required:"true"`
+
+	// The structure containing the configuration for the SINGLE_MASTER type of
+	// the signaling channel that you want to update.
+	SingleMasterConfiguration *SingleMasterConfiguration `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateSignalingChannelInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSignalingChannelInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateSignalingChannelInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateSignalingChannelInput"}
+	if s.ChannelARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ChannelARN"))
+	}
+	if s.ChannelARN != nil && len(*s.ChannelARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ChannelARN", 1))
+	}
+	if s.CurrentVersion == nil {
+		invalidParams.Add(request.NewErrParamRequired("CurrentVersion"))
+	}
+	if s.CurrentVersion != nil && len(*s.CurrentVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CurrentVersion", 1))
+	}
+	if s.SingleMasterConfiguration != nil {
+		if err := s.SingleMasterConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("SingleMasterConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannelARN sets the ChannelARN field's value.
+func (s *UpdateSignalingChannelInput) SetChannelARN(v string) *UpdateSignalingChannelInput {
+	s.ChannelARN = &v
+	return s
+}
+
+// SetCurrentVersion sets the CurrentVersion field's value.
+func (s *UpdateSignalingChannelInput) SetCurrentVersion(v string) *UpdateSignalingChannelInput {
+	s.CurrentVersion = &v
+	return s
+}
+
+// SetSingleMasterConfiguration sets the SingleMasterConfiguration field's value.
+func (s *UpdateSignalingChannelInput) SetSingleMasterConfiguration(v *SingleMasterConfiguration) *UpdateSignalingChannelInput {
+	s.SingleMasterConfiguration = v
+	return s
+}
+
+type UpdateSignalingChannelOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateSignalingChannelOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSignalingChannelOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateStreamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2142,6 +4187,30 @@ const (
 
 	// APINameGetHlsStreamingSessionUrl is a APIName enum value
 	APINameGetHlsStreamingSessionUrl = "GET_HLS_STREAMING_SESSION_URL"
+
+	// APINameGetDashStreamingSessionUrl is a APIName enum value
+	APINameGetDashStreamingSessionUrl = "GET_DASH_STREAMING_SESSION_URL"
+)
+
+const (
+	// ChannelProtocolWss is a ChannelProtocol enum value
+	ChannelProtocolWss = "WSS"
+
+	// ChannelProtocolHttps is a ChannelProtocol enum value
+	ChannelProtocolHttps = "HTTPS"
+)
+
+const (
+	// ChannelRoleMaster is a ChannelRole enum value
+	ChannelRoleMaster = "MASTER"
+
+	// ChannelRoleViewer is a ChannelRole enum value
+	ChannelRoleViewer = "VIEWER"
+)
+
+const (
+	// ChannelTypeSingleMaster is a ChannelType enum value
+	ChannelTypeSingleMaster = "SINGLE_MASTER"
 )
 
 const (

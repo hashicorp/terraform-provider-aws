@@ -7,12 +7,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSCloudFrontOriginAccessIdentity_importBasic(t *testing.T) {
-	resourceName := "aws_cloudfront_origin_access_identity.origin_access_identity"
+func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
+	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
@@ -21,8 +21,21 @@ func TestAccAWSCloudFrontOriginAccessIdentity_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFrontOriginAccessIdentityConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
+					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr(resourceName,
+						"s3_canonical_user_id",
+						regexp.MustCompile("^[a-z0-9]+")),
+					resource.TestMatchResourceAttr(resourceName,
+						"cloudfront_access_identity_path",
+						regexp.MustCompile("^origin-access-identity/cloudfront/[A-Z0-9]+")),
+					resource.TestMatchResourceAttr(resourceName,
+						"iam_arn",
+						regexp.MustCompile("^arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity [A-Z0-9]+")),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -32,36 +45,9 @@ func TestAccAWSCloudFrontOriginAccessIdentity_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFrontOriginAccessIdentity_basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckCloudFrontOriginAccessIdentityDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudFrontOriginAccessIdentityConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontOriginAccessIdentityExistence("aws_cloudfront_origin_access_identity.origin_access_identity"),
-					resource.TestCheckResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity", "comment", "some comment"),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
-						"caller_reference",
-						regexp.MustCompile("^20[0-9]{2}.*")),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
-						"s3_canonical_user_id",
-						regexp.MustCompile("^[a-z0-9]+")),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
-						"cloudfront_access_identity_path",
-						regexp.MustCompile("^origin-access-identity/cloudfront/[A-Z0-9]+")),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
-						"iam_arn",
-						regexp.MustCompile("^arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity [A-Z0-9]+")),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
+	resourceName := "aws_cloudfront_origin_access_identity.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
 		Providers:    testAccProviders,
@@ -70,20 +56,23 @@ func TestAccAWSCloudFrontOriginAccessIdentity_noComment(t *testing.T) {
 			{
 				Config: testAccAWSCloudFrontOriginAccessIdentityNoCommentConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFrontOriginAccessIdentityExistence("aws_cloudfront_origin_access_identity.origin_access_identity"),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
-						"caller_reference",
-						regexp.MustCompile("^20[0-9]{2}.*")),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
+					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName),
+					resource.TestMatchResourceAttr(resourceName, "caller_reference", regexp.MustCompile(fmt.Sprintf("^%s", resource.UniqueIdPrefix))),
+					resource.TestMatchResourceAttr(resourceName,
 						"s3_canonical_user_id",
 						regexp.MustCompile("^[a-z0-9]+")),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
+					resource.TestMatchResourceAttr(resourceName,
 						"cloudfront_access_identity_path",
 						regexp.MustCompile("^origin-access-identity/cloudfront/[A-Z0-9]+")),
-					resource.TestMatchResourceAttr("aws_cloudfront_origin_access_identity.origin_access_identity",
+					resource.TestMatchResourceAttr(resourceName,
 						"iam_arn",
 						regexp.MustCompile("^arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity [A-Z0-9]+")),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -135,12 +124,12 @@ func testAccCheckCloudFrontOriginAccessIdentityExistence(r string) resource.Test
 }
 
 const testAccAWSCloudFrontOriginAccessIdentityConfig = `
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+resource "aws_cloudfront_origin_access_identity" "test" {
 	comment = "some comment"
 }
 `
 
 const testAccAWSCloudFrontOriginAccessIdentityNoCommentConfig = `
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+resource "aws_cloudfront_origin_access_identity" "test" {
 }
 `

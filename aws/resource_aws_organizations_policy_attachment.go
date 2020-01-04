@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsOrganizationsPolicyAttachment() *schema.Resource {
@@ -63,6 +63,9 @@ func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AttachPolicy(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Organizations Policy Attachment: %s", err)

@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Transcoder"
 layout: "aws"
 page_title: "AWS: aws_elastictranscoder_pipeline"
-sidebar_current: "docs-aws-resource-elastic-transcoder-pipeline"
 description: |-
   Provides an Elastic Transcoder pipeline resource.
 ---
@@ -99,5 +99,5 @@ The `thumbnail_config_permissions` object supports the following:
 Elastic Transcoder pipelines can be imported using the `id`, e.g.
 
 ```
-$ terraform import aws_elastic_transcoder_pipeline.basic_pipeline 1407981661351-cttk8b
+$ terraform import aws_elastictranscoder_pipeline.basic_pipeline 1407981661351-cttk8b
 ```

@@ -8,16 +8,20 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_dx_gateway_association", &resource.Sweeper{
 		Name: "aws_dx_gateway_association",
 		F:    testSweepDirectConnectGatewayAssociations,
+		Dependencies: []string{
+			"aws_dx_gateway_association_proposal",
+		},
 	})
 }
 
@@ -57,6 +61,11 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 
 				for _, association := range associationOutput.DirectConnectGatewayAssociations {
 					gatewayID := aws.StringValue(association.AssociatedGateway.Id)
+
+					if aws.StringValue(association.AssociatedGateway.Region) != region {
+						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association (%s) in different home region: %s", directConnectGatewayID, gatewayID, aws.StringValue(association.AssociatedGateway.Region))
+						continue
+					}
 
 					if aws.StringValue(association.AssociationState) != directconnect.GatewayAssociationStateAssociated {
 						log.Printf("[INFO] Skipping Direct Connect Gateway (%s) Association in non-available (%s) state: %s", directConnectGatewayID, aws.StringValue(association.AssociationState), gatewayID)
@@ -98,6 +107,77 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 		gatewayInput.NextToken = gatewayOutput.NextToken
 	}
 
+	// Handle cross-account EC2 Transit Gateway associations.
+	// Direct Connect does not provide an easy lookup method for
+	// these within the service itself so they can only be found
+	// via AssociatedGatewayId of the EC2 Transit Gateway since the
+	// DirectConnectGatewayId lives in the other account.
+	ec2conn := client.(*AWSClient).ec2conn
+
+	err = ec2conn.DescribeTransitGatewaysPages(&ec2.DescribeTransitGatewaysInput{}, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, transitGateway := range page.TransitGateways {
+			if aws.StringValue(transitGateway.State) == ec2.TransitGatewayStateDeleted {
+				continue
+			}
+
+			associationInput := &directconnect.DescribeDirectConnectGatewayAssociationsInput{
+				AssociatedGatewayId: transitGateway.TransitGatewayId,
+			}
+			transitGatewayID := aws.StringValue(transitGateway.TransitGatewayId)
+
+			associationOutput, err := conn.DescribeDirectConnectGatewayAssociations(associationInput)
+
+			if err != nil {
+				log.Printf("[ERROR] error retrieving EC2 Transit Gateway (%s) Direct Connect Gateway Associations: %s", transitGatewayID, err)
+				continue
+			}
+
+			for _, association := range associationOutput.DirectConnectGatewayAssociations {
+				associationID := aws.StringValue(association.AssociationId)
+
+				if aws.StringValue(association.AssociationState) != directconnect.GatewayAssociationStateAssociated {
+					log.Printf("[INFO] Skipping EC2 Transit Gateway (%s) Direct Connect Gateway Association (%s) in non-available state: %s", transitGatewayID, associationID, aws.StringValue(association.AssociationState))
+					continue
+				}
+
+				input := &directconnect.DeleteDirectConnectGatewayAssociationInput{
+					AssociationId: association.AssociationId,
+				}
+
+				log.Printf("[INFO] Deleting EC2 Transit Gateway (%s) Direct Connect Gateway Association: %s", transitGatewayID, associationID)
+				_, err := conn.DeleteDirectConnectGatewayAssociation(input)
+
+				if isAWSErr(err, directconnect.ErrCodeClientException, "No association exists") {
+					continue
+				}
+
+				if err != nil {
+					log.Printf("[ERROR] error deleting EC2 Transit Gateway (%s) Direct Connect Gateway Association (%s): %s", transitGatewayID, associationID, err)
+					continue
+				}
+
+				if err := waitForDirectConnectGatewayAssociationDeletion(conn, associationID, 30*time.Minute); err != nil {
+					log.Printf("[ERROR] error waiting for EC2 Transit Gateway (%s) Direct Connect Gateway Association (%s) to be deleted: %s", transitGatewayID, associationID, err)
+				}
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Direct Connect Gateway Association sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving EC2 Transit Gateways: %s", err)
+	}
+
 	return nil
 }
 
@@ -126,6 +206,7 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.1216997074", "10.255.255.0/28"),
+					testAccCheckAwsDxGatewayAssociationStateUpgradeV0(resourceName),
 				),
 			},
 		},
@@ -436,6 +517,35 @@ func testAccCheckAwsDxGatewayAssociationExists(name string) resource.TestCheckFu
 		}
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
+		}
+
+		return nil
+	}
+}
+
+// Perform check in acceptance testing as this StateUpgrader requires an API call
+func testAccCheckAwsDxGatewayAssociationStateUpgradeV0(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		rawState := map[string]interface{}{
+			"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
+			"vpn_gateway_id": rs.Primary.Attributes["vpn_gateway_id"],
+		}
+
+		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(rawState, testAccProvider.Meta())
+		if err != nil {
+			return err
+		}
+
+		if got, want := updatedRawState["dx_gateway_association_id"], rs.Primary.Attributes["dx_gateway_association_id"]; got != want {
+			return fmt.Errorf("Invalid dx_gateway_association_id attribute in migrated state. Expected %s, got %s", want, got)
 		}
 
 		return nil

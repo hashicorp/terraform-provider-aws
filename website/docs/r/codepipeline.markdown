@@ -1,7 +1,7 @@
 ---
+subcategory: "CodePipeline"
 layout: "aws"
 page_title: "AWS: aws_codepipeline"
-sidebar_current: "docs-aws-resource-codepipeline"
 description: |-
   Provides a CodePipeline
 ---
@@ -52,7 +52,8 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
       "Action": [
         "s3:GetObject",
         "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
+        "s3:GetBucketVersioning",
+        "s3:PutObject"
       ],
       "Resource": [
         "${aws_s3_bucket.codepipeline_bucket.arn}",
@@ -138,7 +139,7 @@ resource "aws_codepipeline" "codepipeline" {
       input_artifacts = ["build_output"]
       version         = "1"
 
-      configuration {
+      configuration = {
         ActionMode     = "REPLACE_ON_FAILURE"
         Capabilities   = "CAPABILITY_AUTO_EXPAND,CAPABILITY_IAM"
         OutputFileName = "CreateStackOutput.json"

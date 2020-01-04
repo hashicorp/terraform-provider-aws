@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway_vpn_attachment"
-sidebar_current: "docs-aws-datasource-ec2-transit-gateway-vpn-attachment"
 description: |-
   Get information on an EC2 Transit Gateway VPN Attachment
 ---
