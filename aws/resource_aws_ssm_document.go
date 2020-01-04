@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -172,6 +173,10 @@ func resourceAwsSsmDocument() *schema.Resource {
 				},
 			},
 			"tags": tagsSchema(),
+			"target_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -194,6 +199,10 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("attachments_source"); ok {
 		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("target_type"); ok {
+		docInput.TargetType = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
@@ -335,6 +344,10 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
+	if err := d.Set("target_type", doc.TargetType); err != nil {
+		return fmt.Errorf("error setting target type: %s", err)
+	}
+
 	return nil
 }
 
@@ -357,7 +370,10 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 		log.Printf("[DEBUG] Not setting document permissions on %q", d.Id())
 	}
 
-	if !d.HasChange("content") {
+	// update for schema version 1.x is not allowed
+	isSchemaVersion1, _ := regexp.MatchString("^1[.][0-9]$", d.Get("schema_version").(string))
+
+	if !d.HasChange("content") && isSchemaVersion1 {
 		return nil
 	}
 
@@ -629,6 +645,10 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		DocumentVersion: aws.String(d.Get("default_version").(string)),
 	}
 
+	if v, ok := d.GetOk("target_type"); ok {
+		updateDocInput.TargetType = aws.String(v.(string))
+	}
+
 	if d.HasChange("attachments_source") {
 		updateDocInput.Attachments = expandSsmAttachmentsSources(d.Get("attachments_source").([]interface{}))
 	}
@@ -638,7 +658,7 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 	updated, err := ssmconn.UpdateDocument(updateDocInput)
 
-	if isAWSErr(err, "DuplicateDocumentContent", "") {
+	if isAWSErr(err, ssm.ErrCodeDuplicateDocumentContent, "") {
 		log.Printf("[DEBUG] Content is a duplicate of the latest version so update is not necessary: %s", d.Id())
 		log.Printf("[INFO] Updating the default version to the latest version %s: %s", newDefaultVersion, d.Id())
 

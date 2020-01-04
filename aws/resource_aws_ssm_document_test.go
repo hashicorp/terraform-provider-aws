@@ -40,6 +40,37 @@ func TestAccAWSSSMDocument_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_target_type(t *testing.T) {
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_document.foo"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfigTargetType(name, "/"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfigTargetType(name, "/AWS::EC2::Instance"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "/AWS::EC2::Instance"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_update(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.foo"
@@ -520,6 +551,37 @@ resource "aws_ssm_document" "foo" {
 DOC
 }
 `, rName)
+}
+
+func testAccAWSSSMDocumentBasicConfigTargetType(rName, typ string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "foo" {
+  name          = "%s"
+  document_type = "Command"
+  target_type   = "%s"
+
+  content = <<DOC
+    {
+       "schemaVersion": "2.0",
+       "description": "Sample version 2.0 document v2",
+       "parameters": {
+
+       },
+       "mainSteps": [
+          {
+             "action": "aws:runPowerShellScript",
+             "name": "runPowerShellScript",
+             "inputs": {
+                "runCommand": [
+                   "Get-Process"
+                ]
+             }
+          }
+       ]
+    }
+DOC
+}
+`, rName, typ)
 }
 
 func testAccAWSSSMDocument20Config(rName string) string {
