@@ -790,11 +790,19 @@ func resourceAwsElbUpdate(d *schema.ResourceData, meta interface{}) error {
 		d.SetPartial("subnets")
 	}
 
-	if err := setTagsELB(elbconn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.ElbUpdateTags(elbconn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating ELB(%s) tags: %s", d.Id(), err)
+		}
 	}
 
-	d.SetPartial("tags")
+	//if err := setTagsELB(elbconn, d); err != nil {
+	//	return err
+	//}
+	//
+	//d.SetPartial("tags")
 	d.Partial(false)
 
 	return resourceAwsElbRead(d, meta)

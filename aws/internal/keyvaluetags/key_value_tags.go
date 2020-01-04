@@ -129,11 +129,11 @@ func (tags KeyValueTags) Keys() []string {
 }
 
 // Keys returns tag keys.
-func (tags KeyValueTags) ElbKeys() []elb.TagKeyOnly {
-	result := make([]elb.TagKeyOnly, 0, len(tags))
+func (tags KeyValueTags) ElbKeys() []*elb.TagKeyOnly {
+	result := make([]*elb.TagKeyOnly, 0, len(tags))
 
 	for k := range tags {
-		result = append(result, elb.TagKeyOnly{Key: aws.String(k)})
+		result = append(result, &elb.TagKeyOnly{Key: aws.String(k)})
 	}
 
 	return result

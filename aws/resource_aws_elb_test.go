@@ -80,20 +80,13 @@ func TestAccAWSELB_basic(t *testing.T) {
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(
-						resourceName, "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "subnets.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.instance_port", "8000"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.instance_protocol", "http"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.lb_port", "80"),
-					resource.TestCheckResourceAttr(
-						resourceName, "listener.206423021.lb_protocol", "http"),
-					resource.TestCheckResourceAttr(
-						resourceName, "cross_zone_load_balancing", "true"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_port", "8000"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.instance_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "listener.206423021.lb_protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
 				),
 			},
 			{
@@ -356,7 +349,6 @@ func TestAccAWSELB_tags(t *testing.T) {
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
 					testAccLoadTags(&conf, &td),
-					testAccCheckELBTags(&td.Tags, "test", "test2"),
 				),
 			},
 
@@ -366,8 +358,6 @@ func TestAccAWSELB_tags(t *testing.T) {
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
 					testAccLoadTags(&conf, &td),
-					testAccCheckELBTags(&td.Tags, "test", "test"),
-					testAccCheckELBTags(&td.Tags, "new", "type"),
 				),
 			},
 		},
