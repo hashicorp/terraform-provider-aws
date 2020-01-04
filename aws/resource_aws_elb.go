@@ -272,14 +272,16 @@ func resourceAwsElbCreate(d *schema.ResourceData, meta interface{}) error {
 		d.Set("name", elbName)
 	}
 
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElbTags()
+
 	// Provision the elb
 	elbOpts := &elb.CreateLoadBalancerInput{
 		LoadBalancerName: aws.String(elbName),
 		Listeners:        listeners,
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		elbOpts.Tags = keyvaluetags.New(v).IgnoreAws().ElbTags()
+	if len(tags) > 0 {
+		elbOpts.Tags = tags
 	}
 
 	if scheme, ok := d.GetOk("internal"); ok && scheme.(bool) {
