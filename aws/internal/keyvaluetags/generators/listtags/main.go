@@ -57,6 +57,7 @@ var serviceNames = []string{
 	"elbv2",
 	"firehose",
 	"fsx",
+	"gamelift",
 	"glue",
 	"guardduty",
 	"greengrass",

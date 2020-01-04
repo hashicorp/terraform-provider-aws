@@ -61,6 +61,7 @@ var serviceNames = []string{
 	"emr",
 	"firehose",
 	"fsx",
+	"gamelift",
 	"glue",
 	"guardduty",
 	"greengrass",
