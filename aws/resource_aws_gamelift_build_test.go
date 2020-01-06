@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -93,11 +94,13 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", buildName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -105,11 +108,13 @@ func TestAccAWSGameliftBuild_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftBuildExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", uBuildName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},

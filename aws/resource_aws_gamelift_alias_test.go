@@ -106,6 +106,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
 					resource.TestCheckResourceAttr(resourceName, "name", aliasName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -123,6 +124,7 @@ func TestAccAWSGameliftAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
 					resource.TestCheckResourceAttr(resourceName, "name", uAliasName),
 					resource.TestCheckResourceAttr(resourceName, "description", uDescription),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
