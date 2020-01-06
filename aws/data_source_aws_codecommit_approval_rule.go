@@ -23,10 +23,6 @@ func dataSourceAwsCodeCommitApprovalRule() *schema.Resource {
 			"content": {
 				Type:     schema.TypeString,
 				Computed: true,
-				// StateFunc: func(v interface{}) string {
-				// 	json, _ := structure.NormalizeJsonString(v.(string))
-				// 	return json
-				// },
 			},
 			"description": {
 				Type:     schema.TypeString,
