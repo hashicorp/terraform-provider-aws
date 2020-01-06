@@ -61,6 +61,7 @@ func TestAccAWSBatchJobDefinition_basic(t *testing.T) {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBatchJobDefinitionExists("aws_batch_job_definition.test", &jd),
+					resource.TestCheckResourceAttr("aws_batch_job_definition.test", "name", fmt.Sprintf("tf_acctest_batch_job_definition_%d", ri)),
 					testAccCheckBatchJobDefinitionAttributes(&jd, &compare),
 				),
 			},

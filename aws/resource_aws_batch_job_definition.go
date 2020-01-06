@@ -159,6 +159,8 @@ func resourceAwsBatchJobDefinitionRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting container_properties: %s", err)
 	}
 
+	d.Set("name", job.JobDefinitionName)
+
 	d.Set("parameters", aws.StringValueMap(job.Parameters))
 
 	if err := d.Set("retry_strategy", flattenBatchRetryStrategy(job.RetryStrategy)); err != nil {
