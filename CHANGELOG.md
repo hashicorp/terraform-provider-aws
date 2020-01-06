@@ -6,6 +6,7 @@ ENHANCEMENTS:
 * resource/aws_ami_launch_permission: Support resource import [GH-11437]
 * resource/aws_api_gateway_authorizer: Support resource import [GH-11436]
 * resource/aws_api_gateway_authorizer: Add plan time validation for `provider_arns` argument [GH-11436]
+* resource/aws_api_gateway_usage_plan_key: Support resource import [GH-11439]
 * resource/aws_batch_compute_environment: Add `compute_environment_name_prefix` argument and make `compute_enviroment_name` argument optional (support full name generation) [GH-10682]
 * resource/aws_batch_compute_environment: Add `compute_resources` configuration block `allocation_strategy` argument [GH-10894]
 * resource/aws_batch_job_queue: Support resource import [GH-11406]
@@ -21,6 +22,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * provider: Allow `aws` account ID in ARN validation (support ARNs such as AWS Managed IAM Policies) [GH-11450]
+* resource/aws_api_gateway_usage_plan_key: Ensure Terraform performs drift detection of `key_type` argument [GH-11439]
 * resource/aws_appautoscaling_policy: Prevent potential state removal of resource immediately after creation due to eventual consistency [GH-11222]
 * resource/aws_cloudwatch_dashboard: Trigger resource recreation on `dashboard_name` updates (prevent dangling resource) [GH-9784]
 * resource/aws_cloudwatch_event_rule: Improved handling of `is_enabled` argument [GH-11346]
