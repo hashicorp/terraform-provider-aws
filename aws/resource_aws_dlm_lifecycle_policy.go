@@ -107,18 +107,20 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 												"count": {
 													Type:         schema.TypeInt,
 													Optional:     true,
-													Computed:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.IntBetween(1, 1000),
 												},
 												"interval": {
 													Type:         schema.TypeInt,
 													Optional:     true,
+													ForceNew:     true,
 													Computed:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
 												"interval_unit": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 													Computed: true,
 													ValidateFunc: validation.StringInSlice([]string{
 														dlm.RetentionIntervalUnitValuesDays,
@@ -381,11 +383,11 @@ func expandDlmRetainRule(cfg []interface{}) *dlm.RetainRule {
 
 	retainRule := &dlm.RetainRule{}
 
-	if v, _ := m["count"]; v != 0 {
+	if v := m["count"]; v.(int) > 0 {
 		retainRule.Count = aws.Int64(int64(v.(int)))
 	}
 
-	if v, _ := m["interval"]; v != 0 {
+	if v := m["interval"]; v.(int) > 0 {
 		retainRule.Interval = aws.Int64(int64(v.(int)))
 	}
 
@@ -394,19 +396,17 @@ func expandDlmRetainRule(cfg []interface{}) *dlm.RetainRule {
 	}
 
 	return retainRule
-	/*
-		return &dlm.RetainRule{
-			Count:        aws.Int64(int64(m["count"].(int))),
-			Interval:     aws.Int64(int64(m["interval"].(int))),
-			IntervalUnit: aws.String(string(m["interval_unit"].(string))),
-		}
-	*/
 }
 
 func flattenDlmRetainRule(retainRule *dlm.RetainRule) []map[string]interface{} {
 	result := make(map[string]interface{})
-	result["count"] = aws.Int64Value(retainRule.Count)
-	result["interval"] = aws.Int64Value(retainRule.Interval)
+
+	if aws.Int64Value(retainRule.Count) > int64(0) {
+		result["count"] = aws.Int64Value(retainRule.Count)
+	}
+	if aws.Int64Value(retainRule.Interval) != 0 {
+		result["interval"] = aws.Int64Value(retainRule.Interval)
+	}
 	result["interval_unit"] = aws.StringValue(retainRule.IntervalUnit)
 
 	return []map[string]interface{}{result}
