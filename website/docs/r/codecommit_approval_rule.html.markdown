@@ -38,21 +38,20 @@ EOF
 
 The following arguments are supported:
 
-* `name` - (Required) The name for the repository. This needs to be less than 100 characters.
-* `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
-* `content` - (Optional) The default branch of the repository. The branch specified here needs to exist.
+* `name` - (Required) The name for the approval rule template. This needs to be less than 100 characters.
+* `description` - (Optional) The description of the approval rule template. This needs to be less than 1000 characters
+* `content` - (Optional) The content of the approval rule template.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `approval_rule_template_id` - The ID of the repository
-* `arn` - The ARN of the repository
+* `approval_rule_template_id` - The ID of the approval rule template
 
 ## Import
 
 Codecommit approval rule templates can be imported using approval rule template name, e.g.
 
 ```
-$ terraform import aws_codecommit_approval_rule.imported ExistingApprovalRuleTemplate
+$ terraform import aws_codecommit_approval_rule.imported ExistingApprovalRuleTemplateName
 ```

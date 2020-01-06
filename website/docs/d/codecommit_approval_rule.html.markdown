@@ -6,7 +6,7 @@ description: |-
   Provides details about CodeCommit Approval Rule Templates.
 ---
 
-# Data Source: aws_codecommit_repository
+# Data Source: aws_codecommit_approval_rule
 
 The CodeCommit Approval Rule data source allows the Approval Rule Template ID, Approval Rule Name and Approval Rule Content to be retrieved for an CodeCommit Approval Rule Template.
 
