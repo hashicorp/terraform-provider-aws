@@ -214,7 +214,7 @@ func TestAccAWSGameliftAlias_fleetRouting(t *testing.T) {
 					fleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftAliasExists(resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "gamelift", regexp.MustCompile(`alias/alias-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_strategy.0.fleet_id"),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "SIMPLE"),
