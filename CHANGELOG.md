@@ -8,6 +8,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_authorizer: Add plan time validation for `provider_arns` argument [GH-11436]
 * resource/aws_batch_compute_environment: Add `compute_environment_name_prefix` argument and make `compute_enviroment_name` argument optional (support full name generation) [GH-10682]
 * resource/aws_batch_compute_environment: Add `compute_resources` configuration block `allocation_strategy` argument [GH-10894]
+* resource/aws_batch_job_queue: Support resource import [GH-11406]
 * resource/aws_cloudformation_stack: Prevent difference with `Transform` templates showing processed template (support SAM templates) [GH-9006]
 * resource/aws_cloudwatch_event_rule: Support tag-on-create [GH-11346]
 * resource/aws_db_instance: Remove `identifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
