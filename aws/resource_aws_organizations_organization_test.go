@@ -94,42 +94,52 @@ func testAccAwsOrganizationsOrganization_AwsServiceAccessPrincipals(t *testing.T
 	})
 }
 
-func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
-	var organization organizations.Organization
+func addTestStepsAwsOrganizationsOrganization_EnabledPolicyTypes(policyType string, testSteps *[]resource.TestStep) {
 	resourceName := "aws_organizations_organization.test"
+	var organization organizations.Organization
+	newSteps := *testSteps
+	
+	*testSteps = append(newSteps, []resource.TestStep{
+		{
+			Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(policyType),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+				resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+			),
+		},
+		{
+			ResourceName:      resourceName,
+			ImportState:       true,
+			ImportStateVerify: true,
+		},
+		{
+			Config: testAccAwsOrganizationsOrganizationConfig,
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+				resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
+			),
+		},
+		{
+			Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(policyType),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
+				resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+			),
+		},
+	})
+}
 
+func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {	
+	var testSteps []resource.TestStep
+
+	addTestStepsAwsOrganizationsOrganization_EnabledPolicyTypes(organizations.PolicyTypeServiceControlPolicy, &testSteps)
+	addTestStepsAwsOrganizationsOrganization_EnabledPolicyTypes(organizations.PolicyTypeTagPolicy, &testSteps)
+	
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAwsOrganizationsOrganizationConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
-				),
-			},
-			{
-				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsOrganizationsOrganizationExists(resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
-				),
-			},
-		},
+		Steps: testSteps,
 	})
 }
 
