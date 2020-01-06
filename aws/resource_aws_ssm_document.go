@@ -38,6 +38,32 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateAwsSSMName,
 			},
+			"attachments": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ssm.AttachmentsSourceKeySourceUrl,
+								ssm.AttachmentsSourceKeyS3fileUrl,
+							}, false),
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							MinItems: 1,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
 			"content": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -59,6 +85,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 					ssm.DocumentTypePolicy,
 					ssm.DocumentTypeAutomation,
 					ssm.DocumentTypeSession,
+					ssm.DocumentTypePackage,
 				}, false),
 			},
 			"schema_version": {
@@ -161,6 +188,10 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 
 	if v, ok := d.GetOk("tags"); ok {
 		docInput.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("attachments"); ok {
+		docInput.Attachments = expandAttachments(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
@@ -268,6 +299,11 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Set("status", doc.Status)
+
+	if v, ok := d.GetOk("attachments"); ok {
+		// The API doesn't currently return attachment information so it has to be set this way
+		d.Set("attachments", v)
+	}
 
 	gp, err := getDocumentPermissions(d, meta)
 
@@ -388,6 +424,31 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error waiting for SSM Document (%s) deletion: %s", d.Id(), err)
 	}
 	return nil
+}
+
+func expandAttachments(a []interface{}) []*ssm.AttachmentsSource {
+	if len(a) == 0 {
+		return nil
+	}
+
+	results := make([]*ssm.AttachmentsSource, 0)
+	for _, raw := range a {
+		at := raw.(map[string]interface{})
+		s := &ssm.AttachmentsSource{}
+		if val, ok := at["key"]; ok {
+			s.Key = aws.String(val.(string))
+		}
+		if val, ok := at["name"]; ok && val != "" {
+			s.Name = aws.String(val.(string))
+		}
+		if val, ok := at["values"]; ok {
+			s.Values = expandStringList(val.([]interface{}))
+		}
+
+		results = append(results, s)
+	}
+	return results
+
 }
 
 func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
@@ -576,6 +637,10 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		Content:         aws.String(d.Get("content").(string)),
 		DocumentFormat:  aws.String(d.Get("document_format").(string)),
 		DocumentVersion: aws.String(d.Get("default_version").(string)),
+	}
+
+	if d.HasChange("attachments") {
+		updateDocInput.Attachments = expandAttachments(d.Get("attachments").([]interface{}))
 	}
 
 	newDefaultVersion := d.Get("default_version").(string)

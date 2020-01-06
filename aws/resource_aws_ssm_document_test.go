@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"testing"
 
@@ -254,6 +255,45 @@ func TestAccAWSSSMDocument_automation(t *testing.T) {
 				ResourceName:      "aws_ssm_document.foo",
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMDocument_package(t *testing.T) {
+	name := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	rInt2 := acctest.RandInt()
+
+	source := testAccAWSS3BucketObjectCreateTempFile(t, "{anything will do }")
+	defer os.Remove(source)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.test"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.test", "document_type", "Package"),
+				),
+			},
+			{
+				ResourceName:            "aws_ssm_document.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"attachments"}, // This doesn't work because the API doesn't provide attachments info
+			},
+			{
+				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists("aws_ssm_document.test"),
+					resource.TestCheckResourceAttr(
+						"aws_ssm_document.test", "document_type", "Package"),
+				),
 			},
 		},
 	})
@@ -766,6 +806,91 @@ resource "aws_ssm_document" "foo" {
 DOC
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSSSMDocumentTypePackageConfig(rName, source string, rInt int) string {
+	return fmt.Sprintf(`
+data "aws_ami" "ssm_ami" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["*hvm-ssd/ubuntu-trusty-14.04*"]
+  }
+}
+
+resource "aws_iam_instance_profile" "ssm_profile" {
+  name = "ssm_profile-%s"
+  role = "${aws_iam_role.ssm_role.name}"
+}
+
+resource "aws_iam_role" "ssm_role" {
+  name = "ssm_role-%s"
+  path = "/"
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {
+               "Service": "ec2.amazonaws.com"
+            },
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_s3_bucket" "object_bucket" {
+	bucket = "tf-object-test-bucket-%d"
+  }
+
+  resource "aws_s3_bucket_object" "object" {
+	bucket = "${aws_s3_bucket.object_bucket.bucket}"
+	key = "test.zip"
+	source       = "%s"
+	content_type = "binary/octet-stream"
+  }
+
+resource "aws_ssm_document" "test" {
+  name          = "test_document-%s"
+  document_type = "Package"
+  attachments {
+	key = "SourceUrl"
+	values = ["s3://${aws_s3_bucket.object_bucket.bucket}/test.zip"]
+  }
+
+  content = <<DOC
+	{
+	   "description": "Systems Manager Package Document Test",
+	   "schemaVersion": "2.0",
+	   "version": "0.1",
+	   "assumeRole": "${aws_iam_role.ssm_role.arn}",
+	   "files": {
+		   "test.zip": {
+			   "checksums": {
+					"sha256": "thisistwentycharactersatleast"
+			   }
+		   }
+	   },
+	   "packages": {
+			"amazon": {
+				"_any": {
+					"x86_64": {
+						"file": "test.zip"
+					}
+				}
+			}
+		}
+	}
+DOC
+}
+`, rName, rName, rInt, source, rName)
 }
 
 func testAccAWSSSMDocumentTypeSessionConfig(rName string) string {
