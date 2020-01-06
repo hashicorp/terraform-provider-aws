@@ -818,6 +818,10 @@ func flattenStringList(list []*string) []interface{} {
 	return vs
 }
 
+func flattenStringSet(list []*string) *schema.Set {
+	return schema.NewSet(schema.HashString, flattenStringList(list))
+}
+
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
 func flattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
 	ips := make([]string, 0, len(dtos))
