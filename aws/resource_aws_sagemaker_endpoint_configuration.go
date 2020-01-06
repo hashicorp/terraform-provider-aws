@@ -93,6 +93,107 @@ func resourceAwsSagemakerEndpointConfiguration() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+
+			"data_capture_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_capture": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+
+						"initial_sampling_percentage": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(0, 100),
+						},
+
+						"destination_url": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validateSagemakerDataCaptureDestinationUrl,
+						},
+
+						"kms_key_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
+						},
+
+						"capture_options": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 2,
+							MinItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capture_mode": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice([]string{"Input", "Output"}, false),
+									},
+								},
+							},
+						},
+
+						"capture_content_type_header": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"csv_content_types": {
+										Type:     schema.TypeList,
+										MinItems: 1,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"content_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validateSagemakerCsvContentType,
+												},
+											},
+										},
+										Optional: true,
+										ForceNew: true,
+									},
+
+									"json_content_types": {
+										Type:     schema.TypeList,
+										MinItems: 1,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"content_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validateSagemakerJsonContentType,
+												},
+											},
+										},
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -118,6 +219,10 @@ func resourceAwsSagemakerEndpointConfigurationCreate(d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("tags"); ok {
 		createOpts.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SagemakerTags()
+	}
+
+	if v, ok := d.GetOk("data_capture_config"); ok {
+		createOpts.DataCaptureConfig = expandSagemakerDataCaptureConfig(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] SageMaker Endpoint Configuration create config: %#v", *createOpts)
@@ -157,6 +262,9 @@ func resourceAwsSagemakerEndpointConfigurationRead(d *schema.ResourceData, meta 
 		return err
 	}
 	if err := d.Set("kms_key_arn", endpointConfig.KmsKeyId); err != nil {
+		return err
+	}
+	if err := d.Set("data_capture_config", flattenSagemakerDataCaptureConfig(endpointConfig.DataCaptureConfig)); err != nil {
 		return err
 	}
 
@@ -254,4 +362,152 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 		result = append(result, l)
 	}
 	return result
+}
+
+func expandSagemakerDataCaptureConfig(configured []interface{}) *sagemaker.DataCaptureConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.DataCaptureConfig{
+		InitialSamplingPercentage: aws.Int64(int64(m["initial_sampling_percentage"].(int))),
+		DestinationS3Uri:          aws.String(m["destination_url"].(string)),
+		CaptureOptions:            expandSagemakerCaptureOptions(m["capture_options"].([]interface{})),
+	}
+
+	if v, ok := m["enable_capture"]; ok {
+		c.EnableCapture = aws.Bool(v.(bool))
+	}
+
+	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
+		c.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := m["capture_content_type_header"]; ok && (len(v.([]interface{})) > 0) {
+		c.CaptureContentTypeHeader = expandSagemakerCaptureContentTypeHeader(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	return c
+}
+
+func flattenSagemakerDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []map[string]interface{} {
+	if dataCaptureConfig == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{
+		//"enable_capture":              aws.BoolValue(dataCaptureConfig.EnableCapture),
+		"initial_sampling_percentage": aws.Int64Value(dataCaptureConfig.InitialSamplingPercentage),
+		"destination_url":             aws.StringValue(dataCaptureConfig.DestinationS3Uri),
+		//"kms_key_id":                  aws.StringValue(dataCaptureConfig.KmsKeyId),
+		"capture_options": flattenSagemakerCaptureOptions(dataCaptureConfig.CaptureOptions),
+		//"capture_content_type_header": flattenSagemakerCaptureContentTypeHeader(dataCaptureConfig.CaptureContentTypeHeader),
+	}
+
+	if dataCaptureConfig.EnableCapture != nil {
+		cfg["enable_capture"] = aws.BoolValue(dataCaptureConfig.EnableCapture)
+	}
+
+	if dataCaptureConfig.KmsKeyId != nil {
+		cfg["kms_key_id"] = aws.StringValue(dataCaptureConfig.KmsKeyId)
+	}
+
+	if dataCaptureConfig.CaptureContentTypeHeader != nil {
+		cfg["capture_content_type_header"] = flattenSagemakerCaptureContentTypeHeader(dataCaptureConfig.CaptureContentTypeHeader)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func expandSagemakerCaptureOptions(configured []interface{}) []*sagemaker.CaptureOption {
+	containers := make([]*sagemaker.CaptureOption, 0, len(configured))
+
+	for _, lRaw := range configured {
+		data := lRaw.(map[string]interface{})
+
+		l := &sagemaker.CaptureOption{
+			CaptureMode: aws.String(data["capture_mode"].(string)),
+		}
+		containers = append(containers, l)
+	}
+
+	return containers
+}
+
+func flattenSagemakerCaptureOptions(list []*sagemaker.CaptureOption) []map[string]interface{} {
+	containers := make([]map[string]interface{}, 0, len(list))
+
+	for _, lRaw := range list {
+		captureOption := make(map[string]interface{})
+		captureOption["capture_mode"] = aws.StringValue(lRaw.CaptureMode)
+		containers = append(containers, captureOption)
+	}
+
+	return containers
+}
+
+func expandSagemakerCaptureContentTypeHeader(m map[string]interface{}) *sagemaker.CaptureContentTypeHeader {
+	c := &sagemaker.CaptureContentTypeHeader{}
+
+	if v, ok := m["csv_content_types"]; ok && len(v.([]interface{})) > 0 {
+		contentTypes := make([]*string, 0, len(v.([]interface{})))
+
+		for _, raw := range v.([]interface{}) {
+			sRaw := raw.(map[string]interface{})["content_type"]
+			contentTypes = append(contentTypes, aws.String(sRaw.(string)))
+		}
+
+		c.CsvContentTypes = contentTypes
+	}
+
+	if v, ok := m["json_content_types"]; ok && len(v.([]interface{})) > 0 {
+		contentTypes := make([]*string, 0, len(v.([]interface{})))
+
+		for _, raw := range v.([]interface{}) {
+			sRaw := raw.(map[string]interface{})["content_type"]
+			contentTypes = append(contentTypes, aws.String(sRaw.(string)))
+		}
+
+		c.JsonContentTypes = contentTypes
+	}
+
+	return c
+}
+
+func flattenSagemakerCaptureContentTypeHeader(contentTypeHeader *sagemaker.CaptureContentTypeHeader) []map[string]interface{} {
+	if contentTypeHeader == nil {
+		return []map[string]interface{}{}
+	}
+
+	l := make(map[string]interface{})
+
+	if contentTypeHeader.CsvContentTypes != nil {
+		csvTypes := make([]map[string]interface{}, 0, len(contentTypeHeader.CsvContentTypes))
+
+		for _, csvType := range contentTypeHeader.CsvContentTypes {
+			m := map[string]interface{}{
+				"content_type": aws.StringValue(csvType),
+			}
+			csvTypes = append(csvTypes, m)
+		}
+
+		l["csv_content_types"] = csvTypes
+	}
+
+	if contentTypeHeader.JsonContentTypes != nil {
+		jsonTypes := make([]map[string]interface{}, 0, len(contentTypeHeader.JsonContentTypes))
+
+		for _, jsonType := range contentTypeHeader.JsonContentTypes {
+			m := map[string]interface{}{
+				"content_type": aws.StringValue(jsonType),
+			}
+			jsonTypes = append(jsonTypes, m)
+		}
+
+		l["json_content_types"] = jsonTypes
+	}
+
+	return []map[string]interface{}{l}
 }

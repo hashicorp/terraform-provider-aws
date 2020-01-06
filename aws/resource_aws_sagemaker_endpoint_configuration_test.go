@@ -198,6 +198,37 @@ func TestAccAWSSagemakerEndpointConfiguration_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSSagemakerEndpointConfiguration_DataCaptureConfig(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataDestinationBucketName := fmt.Sprintf("bucket-%s", rName)
+	resourceName := "aws_sagemaker_endpoint_configuration.foo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSagemakerEndpointConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSagemakerEndpointConfigurationConfig_DataCaptureConfig(rName, dataDestinationBucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSagemakerEndpointConfigurationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_url", fmt.Sprintf("s3://%s/", dataDestinationBucketName)),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.0.content_type", "application/json"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSagemakerEndpointConfigurationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
 
@@ -396,4 +427,43 @@ resource "aws_sagemaker_endpoint_configuration" "foo" {
 	}
 }
 `, rName)
+}
+
+func testAccSagemakerEndpointConfigurationConfig_DataCaptureConfig(rName string, bucket string) string {
+	return testAccSagemakerEndpointConfigurationConfig_Base(rName) + fmt.Sprintf(`
+resource "aws_s3_bucket" "foo" {
+  bucket        = %q
+  acl           = "private"
+  force_destroy = true
+}
+
+resource "aws_sagemaker_endpoint_configuration" "foo" {
+	name = %q
+
+	production_variants {
+		variant_name = "variant-1"
+		model_name = "${aws_sagemaker_model.foo.name}"
+		initial_instance_count = 2
+		instance_type = "ml.t2.medium"
+		initial_variant_weight = 1
+	}
+
+    data_capture_config {
+    	enable_capture = true
+		initial_sampling_percentage = 50
+		destination_url = "s3://${aws_s3_bucket.foo.bucket}/"
+		capture_options {
+	  		capture_mode = "Input"
+		}
+		capture_options {
+	  		capture_mode = "Output"
+		}
+		capture_content_type_header {
+	  		json_content_types {
+				content_type = "application/json"
+	  		}
+		}
+    }
+}
+`, bucket, rName)
 }

@@ -535,6 +535,48 @@ func validateSagemakerModelDataUrl(v interface{}, k string) (ws []string, errors
 	return
 }
 
+func validateSagemakerDataCaptureDestinationUrl(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a valid path: %q",
+			k, value))
+	}
+	if len(value) > 512 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 512 characters: %q", k, value))
+	}
+	return
+}
+
+func validateSagemakerCsvContentType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a valid content type: %q",
+			k, value))
+	}
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be shorter than 1 character: %q", k, value))
+	}
+	return
+}
+
+func validateSagemakerJsonContentType(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a valid content type: %q",
+			k, value))
+	}
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be shorter than 1 character: %q", k, value))
+	}
+	return
+}
+
 func validateCloudWatchDashboardName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 255 {
