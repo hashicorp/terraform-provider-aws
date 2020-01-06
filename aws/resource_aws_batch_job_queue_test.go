@@ -100,11 +100,6 @@ func TestAccAWSBatchJobQueue_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
