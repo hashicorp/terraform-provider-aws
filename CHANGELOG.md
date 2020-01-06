@@ -22,6 +22,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * provider: Allow `aws` account ID in ARN validation (support ARNs such as AWS Managed IAM Policies) [GH-11450]
+* provider: Support AWS C2S/SC2S Regional ARNs in ARN validation [GH-11471]
 * resource/aws_api_gateway_usage_plan_key: Ensure Terraform performs drift detection of `key_type` argument [GH-11439]
 * resource/aws_appautoscaling_policy: Prevent potential state removal of resource immediately after creation due to eventual consistency [GH-11222]
 * resource/aws_cloudwatch_dashboard: Trigger resource recreation on `dashboard_name` updates (prevent dangling resource) [GH-9784]
