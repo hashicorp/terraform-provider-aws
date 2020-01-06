@@ -27,6 +27,7 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMActivationExists("aws_ssm_activation.foo", &ssmActivation),
 					resource.TestCheckResourceAttrSet("aws_ssm_activation.foo", "activation_code"),
+					testAccCheckResourceAttrRfc3339("aws_ssm_activation.foo", "expiration_date"),
 					resource.TestCheckResourceAttr("aws_ssm_activation.foo", "tags.%", "1"),
 					resource.TestCheckResourceAttr("aws_ssm_activation.foo", "tags.Name", tag)),
 			},
@@ -69,7 +70,7 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 	var ssmActivation ssm.Activation
 	rName := acctest.RandString(10)
-	expirationTime := time.Now().Add(48 * time.Hour)
+	expirationTime := time.Now().Add(48 * time.Hour).UTC()
 	expirationDateS := expirationTime.Format(time.RFC3339)
 	resourceName := "aws_ssm_activation.foo"
 

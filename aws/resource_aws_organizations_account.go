@@ -225,7 +225,7 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 	d.Set("arn", account.Arn)
 	d.Set("email", account.Email)
 	d.Set("joined_method", account.JoinedMethod)
-	d.Set("joined_timestamp", account.JoinedTimestamp)
+	d.Set("joined_timestamp", aws.TimeValue(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set("name", account.Name)
 	d.Set("parent_id", parentId)
 	d.Set("status", account.Status)

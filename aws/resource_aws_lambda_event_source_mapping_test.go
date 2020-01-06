@@ -39,6 +39,7 @@ func TestAccAWSLambdaEventSourceMapping_kinesis_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 				),
 			},
 			{
@@ -133,6 +134,7 @@ func TestAccAWSLambdaEventSourceMapping_sqs_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaEventSourceMappingExists(resourceName, &conf),
 					testAccCheckAWSLambdaEventSourceMappingAttributes(&conf),
+					testAccCheckResourceAttrRfc3339(resourceName, "last_modified"),
 					resource.TestCheckNoResourceAttr(resourceName,
 						"starting_position"),
 				),
