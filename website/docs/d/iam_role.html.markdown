@@ -15,7 +15,7 @@ properties without having to hard code ARNs as input.
 ## Example Usage
 
 ```hcl
-data "aws_iam_role" "example" {
+resource "aws_iam_role" "example" {
   name = "an_example_role_name"
 }
 ```
