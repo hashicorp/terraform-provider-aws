@@ -1,7 +1,6 @@
 ---
 layout: "aws"
 page_title: "AWS: aws_kinesis_stream_consumer"
-sidebar_current: "docs-aws-resource-kinesis-stream-consumer"
 description: |-
   Provides a AWS Kinesis Stream Consumer
 ---
