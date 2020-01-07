@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_directory_service_directory` [GH-11282]
 * **New Resource:** `aws_workspaces_directory` [GH-11023]
 
 ENHANCEMENTS:
