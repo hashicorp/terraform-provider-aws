@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "QuickSight" // Name of service.
 	EndpointsID = "quicksight" // ID to lookup a service endpoint with.
-	ServiceID   = "QuickSight" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "QuickSight" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the QuickSight client with a session.

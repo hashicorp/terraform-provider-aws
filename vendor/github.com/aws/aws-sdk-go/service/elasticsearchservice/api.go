@@ -3420,9 +3420,11 @@ type DescribeElasticsearchInstanceTypeLimitsOutput struct {
 
 	// Map of Role of the Instance and Limits that are applicable. Role performed
 	// by given Instance in Elasticsearch can be one of the following:
-	//    * Data: If the given InstanceType is used as Data node
+	//    * data: If the given InstanceType is used as data node
 	//
-	//    * Master: If the given InstanceType is used as Master node
+	//    * master: If the given InstanceType is used as master node
+	//
+	//    * ultra_warm: If the given InstanceType is used as warm node
 	LimitsByRole map[string]*Limits `type:"map"`
 }
 
@@ -3807,8 +3809,18 @@ type ElasticsearchClusterConfig struct {
 	// The number of instances in the specified domain cluster.
 	InstanceCount *int64 `type:"integer"`
 
-	// The instance type for an Elasticsearch cluster.
+	// The instance type for an Elasticsearch cluster. UltraWarm instance types
+	// are not supported for data instances.
 	InstanceType *string `type:"string" enum:"ESPartitionInstanceType"`
+
+	// The number of warm nodes in the cluster.
+	WarmCount *int64 `type:"integer"`
+
+	// True to enable warm storage.
+	WarmEnabled *bool `type:"boolean"`
+
+	// The instance type for the Elasticsearch cluster's warm nodes.
+	WarmType *string `type:"string" enum:"ESWarmPartitionInstanceType"`
 
 	// Specifies the zone awareness configuration for a domain when zone awareness
 	// is enabled.
@@ -3857,6 +3869,24 @@ func (s *ElasticsearchClusterConfig) SetInstanceCount(v int64) *ElasticsearchClu
 // SetInstanceType sets the InstanceType field's value.
 func (s *ElasticsearchClusterConfig) SetInstanceType(v string) *ElasticsearchClusterConfig {
 	s.InstanceType = &v
+	return s
+}
+
+// SetWarmCount sets the WarmCount field's value.
+func (s *ElasticsearchClusterConfig) SetWarmCount(v int64) *ElasticsearchClusterConfig {
+	s.WarmCount = &v
+	return s
+}
+
+// SetWarmEnabled sets the WarmEnabled field's value.
+func (s *ElasticsearchClusterConfig) SetWarmEnabled(v bool) *ElasticsearchClusterConfig {
+	s.WarmEnabled = &v
+	return s
+}
+
+// SetWarmType sets the WarmType field's value.
+func (s *ElasticsearchClusterConfig) SetWarmType(v string) *ElasticsearchClusterConfig {
+	s.WarmType = &v
 	return s
 }
 
@@ -6722,6 +6752,12 @@ const (
 	// ESPartitionInstanceTypeC518xlargeElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeC518xlargeElasticsearch = "c5.18xlarge.elasticsearch"
 
+	// ESPartitionInstanceTypeUltrawarm1MediumElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeUltrawarm1MediumElasticsearch = "ultrawarm1.medium.elasticsearch"
+
+	// ESPartitionInstanceTypeUltrawarm1LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeUltrawarm1LargeElasticsearch = "ultrawarm1.large.elasticsearch"
+
 	// ESPartitionInstanceTypeT2MicroElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeT2MicroElasticsearch = "t2.micro.elasticsearch"
 
@@ -6814,6 +6850,14 @@ const (
 
 	// ESPartitionInstanceTypeI316xlargeElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeI316xlargeElasticsearch = "i3.16xlarge.elasticsearch"
+)
+
+const (
+	// ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch is a ESWarmPartitionInstanceType enum value
+	ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch = "ultrawarm1.medium.elasticsearch"
+
+	// ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch is a ESWarmPartitionInstanceType enum value
+	ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch = "ultrawarm1.large.elasticsearch"
 )
 
 // Type of Log File, it can be one of the following:

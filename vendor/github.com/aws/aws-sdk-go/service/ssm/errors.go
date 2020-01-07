@@ -129,8 +129,9 @@ const (
 	// Error returned when the ID specified for a resource, such as a maintenance
 	// window or Patch baseline, doesn't exist.
 	//
-	// For information about resource limits in Systems Manager, see AWS Systems
-	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+	// For information about resource quotas in Systems Manager, see Systems Manager
+	// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+	// in the AWS General Reference.
 	ErrCodeDoesNotExistException = "DoesNotExistException"
 
 	// ErrCodeDuplicateDocumentContent for service response error code
@@ -300,6 +301,13 @@ const (
 	//
 	// The version of the document schema is not supported.
 	ErrCodeInvalidDocumentSchemaVersion = "InvalidDocumentSchemaVersion"
+
+	// ErrCodeInvalidDocumentType for service response error code
+	// "InvalidDocumentType".
+	//
+	// The document type is not valid. Valid document types are described in the
+	// DocumentType property.
+	ErrCodeInvalidDocumentType = "InvalidDocumentType"
 
 	// ErrCodeInvalidDocumentVersion for service response error code
 	// "InvalidDocumentVersion".
@@ -547,8 +555,8 @@ const (
 	// ErrCodeOpsItemLimitExceededException for service response error code
 	// "OpsItemLimitExceededException".
 	//
-	// The request caused OpsItems to exceed one or more limits. For information
-	// about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+	// The request caused OpsItems to exceed one or more quotas. For information
+	// about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 	ErrCodeOpsItemLimitExceededException = "OpsItemLimitExceededException"
 
 	// ErrCodeOpsItemNotFoundException for service response error code
@@ -649,11 +657,12 @@ const (
 	// ErrCodeResourceLimitExceededException for service response error code
 	// "ResourceLimitExceededException".
 	//
-	// Error returned when the caller has exceeded the default resource limits.
+	// Error returned when the caller has exceeded the default resource quotas.
 	// For example, too many maintenance windows or patch baselines have been created.
 	//
-	// For information about resource limits in Systems Manager, see AWS Systems
-	// Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+	// For information about resource quotas in Systems Manager, see Systems Manager
+	// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+	// in the AWS General Reference.
 	ErrCodeResourceLimitExceededException = "ResourceLimitExceededException"
 
 	// ErrCodeServiceSettingNotFound for service response error code
@@ -710,6 +719,13 @@ const (
 	//
 	// The size of inventory data has exceeded the total size limit for the resource.
 	ErrCodeTotalSizeLimitExceededException = "TotalSizeLimitExceededException"
+
+	// ErrCodeUnsupportedCalendarException for service response error code
+	// "UnsupportedCalendarException".
+	//
+	// The calendar entry contained in the specified Systems Manager document is
+	// not supported.
+	ErrCodeUnsupportedCalendarException = "UnsupportedCalendarException"
 
 	// ErrCodeUnsupportedFeatureRequiredException for service response error code
 	// "UnsupportedFeatureRequiredException".

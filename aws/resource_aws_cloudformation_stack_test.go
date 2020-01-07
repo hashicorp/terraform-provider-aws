@@ -291,6 +291,32 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
+	var stack cloudformation.Stack
+	rName := fmt.Sprintf("tf-acc-test-with-transform-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFormationStackConfig_withTransform(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-transform", &stack),
+				),
+			},
+			{
+				PlanOnly: true,
+				Config:   testAccAWSCloudFormationStackConfig_withTransform(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-transform", &stack),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -742,4 +768,59 @@ resource "aws_cloudformation_stack" "test" {
   timeout_in_minutes = 1
 }
 `, rName, bucketKey, vpcCidr)
+}
+
+func testAccAWSCloudFormationStackConfig_withTransform(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack" "with-transform" {
+  name = "%[1]s"
+
+  template_body      = <<STACK
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Resources": {
+    "Api": {
+      "Type": "AWS::Serverless::Api",
+      "Properties": {
+        "StageName": "Prod",
+        "EndpointConfiguration": "REGIONAL",
+        "DefinitionBody": {
+          "swagger": "2.0",
+          "paths": {
+            "/": {
+              "get": {
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "responses": {
+                  "200": {
+                    "description": "200 response"
+                  }
+                },
+                "x-amazon-apigateway-integration": {
+                  "responses": {
+                    "default": {
+                      "statusCode": "200"
+                    }
+                  },
+                  "requestTemplates": {
+                    "application/json": "{\"statusCode\": 200}"
+                  },
+                  "passthroughBehavior": "when_no_match",
+                  "type": "mock"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+STACK
+  capabilities       = ["CAPABILITY_AUTO_EXPAND"]
+  on_failure         = "DELETE"
+  timeout_in_minutes = 10
+}
+`, rName)
 }

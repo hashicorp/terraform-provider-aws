@@ -706,10 +706,10 @@ func (c *Lightsail) CopySnapshotRequest(input *CopySnapshotInput) (req *request.
 
 // CopySnapshot API operation for Amazon Lightsail.
 //
-// Copies a manual instance or disk snapshot as another manual snapshot, or
-// copies an automatic instance or disk snapshot as a manual snapshot. This
-// operation can also be used to copy a manual or automatic snapshot of an instance
-// or a disk from one AWS Region to another in Amazon Lightsail.
+// Copies a manual snapshot of an instance or disk as another manual snapshot,
+// or copies an automatic snapshot of an instance or disk as a manual snapshot.
+// This operation can also be used to copy a manual or automatic snapshot of
+// an instance or a disk from one AWS Region to another in Amazon Lightsail.
 //
 // When copying a manual snapshot, be sure to define the source region, source
 // snapshot name, and target snapshot name parameters.
@@ -717,8 +717,6 @@ func (c *Lightsail) CopySnapshotRequest(input *CopySnapshotInput) (req *request.
 // When copying an automatic snapshot, be sure to define the source region,
 // source resource name, target snapshot name, and either the restore date or
 // the use latest restorable auto snapshot parameters.
-//
-// Database snapshots cannot be copied at this time.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2485,7 +2483,8 @@ func (c *Lightsail) DeleteAutoSnapshotRequest(input *DeleteAutoSnapshotInput) (r
 
 // DeleteAutoSnapshot API operation for Amazon Lightsail.
 //
-// Deletes an automatic snapshot for an instance or disk.
+// Deletes an automatic snapshot of an instance or disk. For more information,
+// see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4752,8 +4751,8 @@ func (c *Lightsail) GetAutoSnapshotsRequest(input *GetAutoSnapshotsInput) (req *
 
 // GetAutoSnapshots API operation for Amazon Lightsail.
 //
-// Returns the available automatic snapshots for the specified resource name.
-// For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+// Returns the available automatic snapshots for an instance or disk. For more
+// information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11242,7 +11241,7 @@ func (c *Lightsail) UpdateRelationalDatabaseParametersRequest(input *UpdateRelat
 //
 // Parameter updates don't cause outages; therefore, their application is not
 // subject to the preferred maintenance window. However, there are two ways
-// in which paramater updates are applied: dynamic or pending-reboot. Parameters
+// in which parameter updates are applied: dynamic or pending-reboot. Parameters
 // marked with a dynamic apply type are applied immediately. Parameters marked
 // with a pending-reboot apply type are applied only after the database is rebooted
 // using the reboot relational database operation.
@@ -12462,10 +12461,8 @@ func (s *CloudFormationStackRecordSourceInfo) SetResourceType(v string) *CloudFo
 type CopySnapshotInput struct {
 	_ struct{} `type:"structure"`
 
-	// The date of the automatic snapshot to copy for the new manual snapshot.
-	//
-	// Use the get auto snapshots operation to identify the dates of the available
-	// automatic snapshots.
+	// The date of the source automatic snapshot to copy. Use the get auto snapshots
+	// operation to identify the dates of the available automatic snapshots.
 	//
 	// Constraints:
 	//
@@ -12475,8 +12472,8 @@ type CopySnapshotInput struct {
 	//    auto snapshot parameter. The restore date and use latest restorable auto
 	//    snapshot parameters are mutually exclusive.
 	//
-	// Define this parameter only when copying an automatic snapshot as a manual
-	// snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * Define this parameter only when copying an automatic snapshot as a manual
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-keeping-automatic-snapshots).
 	RestoreDate *string `locationName:"restoreDate" type:"string"`
 
 	// The AWS Region where the source manual or automatic snapshot is located.
@@ -12484,32 +12481,39 @@ type CopySnapshotInput struct {
 	// SourceRegion is a required field
 	SourceRegion *string `locationName:"sourceRegion" type:"string" required:"true" enum:"RegionName"`
 
-	// The name of the source resource from which the automatic snapshot was created.
+	// The name of the source instance or disk from which the source automatic snapshot
+	// was created.
 	//
-	// Define this parameter only when copying an automatic snapshot as a manual
-	// snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	// Constraint:
+	//
+	//    * Define this parameter only when copying an automatic snapshot as a manual
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-keeping-automatic-snapshots).
 	SourceResourceName *string `locationName:"sourceResourceName" type:"string"`
 
-	// The name of the source instance or disk snapshot to be copied.
+	// The name of the source manual snapshot to copy.
 	//
-	// Define this parameter only when copying a manual snapshot as another manual
-	// snapshot.
+	// Constraint:
+	//
+	//    * Define this parameter only when copying a manual snapshot as another
+	//    manual snapshot.
 	SourceSnapshotName *string `locationName:"sourceSnapshotName" type:"string"`
 
-	// The name of the new instance or disk snapshot to be created as a copy.
+	// The name of the new manual snapshot to be created as a copy.
 	//
 	// TargetSnapshotName is a required field
 	TargetSnapshotName *string `locationName:"targetSnapshotName" type:"string" required:"true"`
 
 	// A Boolean value to indicate whether to use the latest available automatic
-	// snapshot.
+	// snapshot of the specified source instance or disk.
 	//
-	// This parameter cannot be defined together with the restore date parameter.
-	// The use latest restorable auto snapshot and restore date parameters are mutually
-	// exclusive.
+	// Constraints:
 	//
-	// Define this parameter only when copying an automatic snapshot as a manual
-	// snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * This parameter cannot be defined together with the restore date parameter.
+	//    The use latest restorable auto snapshot and restore date parameters are
+	//    mutually exclusive.
+	//
+	//    * Define this parameter only when copying an automatic snapshot as a manual
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-keeping-automatic-snapshots).
 	UseLatestRestorableAutoSnapshot *bool `locationName:"useLatestRestorableAutoSnapshot" type:"boolean"`
 }
 
@@ -12696,14 +12700,15 @@ type CreateDiskFromSnapshotInput struct {
 	// The name of the disk snapshot (e.g., my-snapshot) from which to create the
 	// new storage disk.
 	//
-	// This parameter cannot be defined together with the source disk name parameter.
-	// The disk snapshot name and source disk name parameters are mutually exclusive.
+	// Constraint:
+	//
+	//    * This parameter cannot be defined together with the source disk name
+	//    parameter. The disk snapshot name and source disk name parameters are
+	//    mutually exclusive.
 	DiskSnapshotName *string `locationName:"diskSnapshotName" type:"string"`
 
-	// The date of the automatic snapshot to use for the new disk.
-	//
-	// Use the get auto snapshots operation to identify the dates of the available
-	// automatic snapshots.
+	// The date of the automatic snapshot to use for the new disk. Use the get auto
+	// snapshots operation to identify the dates of the available automatic snapshots.
 	//
 	// Constraints:
 	//
@@ -12713,8 +12718,8 @@ type CreateDiskFromSnapshotInput struct {
 	//    auto snapshot parameter. The restore date and use latest restorable auto
 	//    snapshot parameters are mutually exclusive.
 	//
-	// Define this parameter only when creating a new disk from an automatic snapshot.
-	// For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * Define this parameter only when creating a new disk from an automatic
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 	RestoreDate *string `locationName:"restoreDate" type:"string"`
 
 	// The size of the disk in GB (e.g., 32).
@@ -12725,11 +12730,14 @@ type CreateDiskFromSnapshotInput struct {
 	// The name of the source disk from which the source automatic snapshot was
 	// created.
 	//
-	// This parameter cannot be defined together with the disk snapshot name parameter.
-	// The source disk name and disk snapshot name parameters are mutually exclusive.
+	// Constraints:
 	//
-	// Define this parameter only when creating a new disk from an automatic snapshot.
-	// For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * This parameter cannot be defined together with the disk snapshot name
+	//    parameter. The source disk name and disk snapshot name parameters are
+	//    mutually exclusive.
+	//
+	//    * Define this parameter only when creating a new disk from an automatic
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 	SourceDiskName *string `locationName:"sourceDiskName" type:"string"`
 
 	// The tag keys and optional values to add to the resource during create.
@@ -12740,12 +12748,14 @@ type CreateDiskFromSnapshotInput struct {
 	// A Boolean value to indicate whether to use the latest available automatic
 	// snapshot.
 	//
-	// This parameter cannot be defined together with the restore date parameter.
-	// The use latest restorable auto snapshot and restore date parameters are mutually
-	// exclusive.
+	// Constraints:
 	//
-	// Define this parameter only when creating a new disk from an automatic snapshot.
-	// For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * This parameter cannot be defined together with the restore date parameter.
+	//    The use latest restorable auto snapshot and restore date parameters are
+	//    mutually exclusive.
+	//
+	//    * Define this parameter only when creating a new disk from an automatic
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 	UseLatestRestorableAutoSnapshot *bool `locationName:"useLatestRestorableAutoSnapshot" type:"boolean"`
 }
 
@@ -13362,18 +13372,19 @@ type CreateInstancesFromSnapshotInput struct {
 	// Use the get instance snapshots operation to return information about your
 	// existing snapshots.
 	//
-	// This parameter cannot be defined together with the source instance name parameter.
-	// The instance snapshot name and source instance name parameters are mutually
-	// exclusive.
+	// Constraint:
+	//
+	//    * This parameter cannot be defined together with the source instance name
+	//    parameter. The instance snapshot name and source instance name parameters
+	//    are mutually exclusive.
 	InstanceSnapshotName *string `locationName:"instanceSnapshotName" type:"string"`
 
 	// The name for your key pair.
 	KeyPairName *string `locationName:"keyPairName" type:"string"`
 
-	// The date of the automatic snapshot to use for the new instance.
-	//
-	// Use the get auto snapshots operation to identify the dates of the available
-	// automatic snapshots.
+	// The date of the automatic snapshot to use for the new instance. Use the get
+	// auto snapshots operation to identify the dates of the available automatic
+	// snapshots.
 	//
 	// Constraints:
 	//
@@ -13383,19 +13394,21 @@ type CreateInstancesFromSnapshotInput struct {
 	//    auto snapshot parameter. The restore date and use latest restorable auto
 	//    snapshot parameters are mutually exclusive.
 	//
-	// Define this parameter only when creating a new instance from an automatic
-	// snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * Define this parameter only when creating a new instance from an automatic
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 	RestoreDate *string `locationName:"restoreDate" type:"string"`
 
 	// The name of the source instance from which the source automatic snapshot
 	// was created.
 	//
-	// This parameter cannot be defined together with the instance snapshot name
-	// parameter. The source instance name and instance snapshot name parameters
-	// are mutually exclusive.
+	// Constraints:
 	//
-	// Define this parameter only when creating a new instance from an automatic
-	// snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * This parameter cannot be defined together with the instance snapshot
+	//    name parameter. The source instance name and instance snapshot name parameters
+	//    are mutually exclusive.
+	//
+	//    * Define this parameter only when creating a new instance from an automatic
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 	SourceInstanceName *string `locationName:"sourceInstanceName" type:"string"`
 
 	// The tag keys and optional values to add to the resource during create.
@@ -13406,12 +13419,14 @@ type CreateInstancesFromSnapshotInput struct {
 	// A Boolean value to indicate whether to use the latest available automatic
 	// snapshot.
 	//
-	// This parameter cannot be defined together with the restore date parameter.
-	// The use latest restorable auto snapshot and restore date parameters are mutually
-	// exclusive.
+	// Constraints:
 	//
-	// Define this parameter only when creating a new instance from an automatic
-	// snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
+	//    * This parameter cannot be defined together with the restore date parameter.
+	//    The use latest restorable auto snapshot and restore date parameters are
+	//    mutually exclusive.
+	//
+	//    * Define this parameter only when creating a new instance from an automatic
+	//    snapshot. For more information, see the Lightsail Dev Guide (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-configuring-automatic-snapshots).
 	UseLatestRestorableAutoSnapshot *bool `locationName:"useLatestRestorableAutoSnapshot" type:"boolean"`
 
 	// You can create a launch script that configures a server with additional user
@@ -14617,15 +14632,15 @@ func (s *CreateRelationalDatabaseSnapshotOutput) SetOperations(v []*Operation) *
 type DeleteAutoSnapshotInput struct {
 	_ struct{} `type:"structure"`
 
-	// The date of the automatic snapshot to delete in YYYY-MM-DD format.
-	//
-	// Use the get auto snapshots operation to get the available automatic snapshots
-	// for a resource.
+	// The date of the automatic snapshot to delete in YYYY-MM-DD format. Use the
+	// get auto snapshots operation to get the available automatic snapshots for
+	// a resource.
 	//
 	// Date is a required field
 	Date *string `locationName:"date" type:"string" required:"true"`
 
-	// The name of the source resource from which to delete the automatic snapshot.
+	// The name of the source instance or disk from which to delete the automatic
+	// snapshot.
 	//
 	// ResourceName is a required field
 	ResourceName *string `locationName:"resourceName" type:"string" required:"true"`
@@ -15767,7 +15782,7 @@ type DisableAddOnInput struct {
 	// AddOnType is a required field
 	AddOnType *string `locationName:"addOnType" type:"string" required:"true" enum:"AddOnType"`
 
-	// The name of the source resource from which to disable the add-on.
+	// The name of the source resource for which to disable the add-on.
 	//
 	// ResourceName is a required field
 	ResourceName *string `locationName:"resourceName" type:"string" required:"true"`
@@ -16893,7 +16908,8 @@ func (s *GetActiveNamesOutput) SetNextPageToken(v string) *GetActiveNamesOutput 
 type GetAutoSnapshotsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the source resource from which to get automatic snapshot information.
+	// The name of the source instance or disk from which to get automatic snapshot
+	// information.
 	//
 	// ResourceName is a required field
 	ResourceName *string `locationName:"resourceName" type:"string" required:"true"`
@@ -16932,10 +16948,10 @@ type GetAutoSnapshotsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// An array of objects that describe the automatic snapshots that are available
-	// for the specified source resource.asdf
+	// for the specified source instance or disk.
 	AutoSnapshots []*AutoSnapshotDetails `locationName:"autoSnapshots" type:"list"`
 
-	// The name of the source resource for the automatic snapshots.
+	// The name of the source instance or disk for the automatic snapshots.
 	ResourceName *string `locationName:"resourceName" type:"string"`
 
 	// The resource type (e.g., Instance or Disk).
@@ -22895,6 +22911,9 @@ type RelationalDatabase struct {
 	// for the database.
 	BackupRetentionEnabled *bool `locationName:"backupRetentionEnabled" type:"boolean"`
 
+	// The certificate associated with the database.
+	CaCertificateIdentifier *string `locationName:"caCertificateIdentifier" type:"string"`
+
 	// The timestamp when the database was created. Formatted in Unix time.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
 
@@ -22997,6 +23016,12 @@ func (s *RelationalDatabase) SetArn(v string) *RelationalDatabase {
 // SetBackupRetentionEnabled sets the BackupRetentionEnabled field's value.
 func (s *RelationalDatabase) SetBackupRetentionEnabled(v bool) *RelationalDatabase {
 	s.BackupRetentionEnabled = &v
+	return s
+}
+
+// SetCaCertificateIdentifier sets the CaCertificateIdentifier field's value.
+func (s *RelationalDatabase) SetCaCertificateIdentifier(v string) *RelationalDatabase {
+	s.CaCertificateIdentifier = &v
 	return s
 }
 
@@ -24562,6 +24587,9 @@ type UpdateRelationalDatabaseInput struct {
 	// Default: false
 	ApplyImmediately *bool `locationName:"applyImmediately" type:"boolean"`
 
+	// Indicates the certificate that needs to be associated with the database.
+	CaCertificateIdentifier *string `locationName:"caCertificateIdentifier" type:"string"`
+
 	// When true, disables automated backup retention for your database.
 	//
 	// Disabling backup retention deletes all automated database backups. Before
@@ -24661,6 +24689,12 @@ func (s *UpdateRelationalDatabaseInput) Validate() error {
 // SetApplyImmediately sets the ApplyImmediately field's value.
 func (s *UpdateRelationalDatabaseInput) SetApplyImmediately(v bool) *UpdateRelationalDatabaseInput {
 	s.ApplyImmediately = &v
+	return s
+}
+
+// SetCaCertificateIdentifier sets the CaCertificateIdentifier field's value.
+func (s *UpdateRelationalDatabaseInput) SetCaCertificateIdentifier(v string) *UpdateRelationalDatabaseInput {
+	s.CaCertificateIdentifier = &v
 	return s
 }
 

@@ -71,10 +71,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
 // map[string]*string handling
+
+// AccessanalyzerTags returns accessanalyzer service tags.
+func (tags KeyValueTags) AccessanalyzerTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// AccessanalyzerKeyValueTags creates KeyValueTags from accessanalyzer service tags.
+func AccessanalyzerKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
 
 // AmplifyTags returns amplify service tags.
 func (tags KeyValueTags) AmplifyTags() map[string]*string {
@@ -186,6 +197,16 @@ func CognitoidentityproviderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// DataexchangeTags returns dataexchange service tags.
+func (tags KeyValueTags) DataexchangeTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// DataexchangeKeyValueTags creates KeyValueTags from dataexchange service tags.
+func DataexchangeKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // DlmTags returns dlm service tags.
 func (tags KeyValueTags) DlmTags() map[string]*string {
 	return aws.StringMap(tags.Map())
@@ -243,6 +264,16 @@ func (tags KeyValueTags) GuarddutyTags() map[string]*string {
 
 // GuarddutyKeyValueTags creates KeyValueTags from guardduty service tags.
 func GuarddutyKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
+// ImagebuilderTags returns imagebuilder service tags.
+func (tags KeyValueTags) ImagebuilderTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// ImagebuilderKeyValueTags creates KeyValueTags from imagebuilder service tags.
+func ImagebuilderKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
@@ -2205,6 +2236,33 @@ func (tags KeyValueTags) WafregionalTags() []*waf.Tag {
 
 // WafregionalKeyValueTags creates KeyValueTags from wafregional service tags.
 func WafregionalKeyValueTags(tags []*waf.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// Wafv2Tags returns wafv2 service tags.
+func (tags KeyValueTags) Wafv2Tags() []*wafv2.Tag {
+	result := make([]*wafv2.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &wafv2.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// Wafv2KeyValueTags creates KeyValueTags from wafv2 service tags.
+func Wafv2KeyValueTags(tags []*wafv2.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

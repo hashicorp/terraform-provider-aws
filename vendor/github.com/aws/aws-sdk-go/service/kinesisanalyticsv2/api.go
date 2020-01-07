@@ -11083,6 +11083,9 @@ const (
 
 	// RuntimeEnvironmentFlink16 is a RuntimeEnvironment enum value
 	RuntimeEnvironmentFlink16 = "FLINK-1_6"
+
+	// RuntimeEnvironmentFlink18 is a RuntimeEnvironment enum value
+	RuntimeEnvironmentFlink18 = "FLINK-1_8"
 )
 
 const (

@@ -113,7 +113,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 
 	d.SetId(*resp.Accelerator.AcceleratorArn)
 
-	err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, d.Id())
+	err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 	if err != nil {
 		return err
 	}
@@ -258,7 +258,7 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 		d.SetPartial("ip_address_type")
 		d.SetPartial("enabled")
 
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, d.Id())
+		err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 		if err != nil {
 			return err
 		}
@@ -281,7 +281,7 @@ func resourceAwsGlobalAcceleratorAcceleratorUpdate(d *schema.ResourceData, meta 
 	return resourceAwsGlobalAcceleratorAcceleratorRead(d, meta)
 }
 
-func resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string) error {
+func resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn *globalaccelerator.GlobalAccelerator, acceleratorArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
 		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
@@ -338,7 +338,7 @@ func resourceAwsGlobalAcceleratorAcceleratorDelete(d *schema.ResourceData, meta 
 			return fmt.Errorf("Error disabling Global Accelerator accelerator: %s", err)
 		}
 
-		err = resourceAwsGlobalAcceleratorAcceleratorWaitForState(conn, d.Id())
+		err = resourceAwsGlobalAcceleratorAcceleratorWaitForDeployedState(conn, d.Id())
 		if err != nil {
 			return err
 		}

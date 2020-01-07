@@ -22,6 +22,9 @@ func TestAccAWSOrganizations(t *testing.T) {
 			"basic": testAccAwsOrganizationsOrganizationalUnit_basic,
 			"Name":  testAccAwsOrganizationsOrganizationalUnit_Name,
 		},
+		"OrganizationalUnits": {
+			"DataSource": testAccDataSourceAwsOrganizationsOrganizationalUnits_basic,
+		},
 		"Policy": {
 			"basic":       testAccAwsOrganizationsPolicy_basic,
 			"concurrent":  testAccAwsOrganizationsPolicy_concurrent,

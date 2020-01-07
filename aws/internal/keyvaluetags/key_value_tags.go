@@ -178,6 +178,26 @@ func (tags KeyValueTags) Updated(newTags KeyValueTags) KeyValueTags {
 	return result
 }
 
+// Chunks returns a slice of KeyValueTags, each of the specified size.
+func (tags KeyValueTags) Chunks(size int) []KeyValueTags {
+	result := []KeyValueTags{}
+
+	i := 0
+	var chunk KeyValueTags
+	for k, v := range tags {
+		if i%size == 0 {
+			chunk = make(KeyValueTags)
+			result = append(result, chunk)
+		}
+
+		chunk[k] = v
+
+		i++
+	}
+
+	return result
+}
+
 // New creates KeyValueTags from common Terraform Provider SDK types.
 // Supports map[string]string, map[string]*string, map[string]interface{}, and []interface{}.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.

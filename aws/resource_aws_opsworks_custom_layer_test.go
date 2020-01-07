@@ -44,6 +44,7 @@ func TestAccAWSOpsworksCustomLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.encrypted", "false"),
 				),
 			},
 			{
@@ -84,6 +85,7 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.number_of_disks", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.mount_point", "/home"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.3575749636.encrypted", "false"),
 				),
 			},
 			{
@@ -108,6 +110,7 @@ func TestAccAWSOpsworksCustomLayer_noVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.size", "100"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.raid_level", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_volume.1266957920.encrypted", "true"),
 					resource.TestCheckResourceAttr(resourceName, "custom_json", `{"layer_key":"layer_value2"}`),
 				),
 			},
@@ -285,6 +288,7 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
     mount_point = "/home"
     size = 100
     raid_level = 0
+    encrypted = false
   }
 }
 
@@ -366,6 +370,7 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
     mount_point = "/home"
     size = 100
     raid_level = 0
+    encrypted = true
   }
   ebs_volume {
     type = "io1"
@@ -374,6 +379,7 @@ resource "aws_opsworks_custom_layer" "tf-acc" {
     size = 100
     raid_level = 1
     iops = 3000
+    encrypted = true
   }
   custom_json = "{\"layer_key\": \"layer_value2\"}"
 }

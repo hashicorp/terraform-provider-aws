@@ -5169,6 +5169,9 @@ type AudioOnlyHlsSettings struct {
 	// play back by default. Represented as an EXT-X-MEDIA in the HLS manifest with
 	// DEFAULT=NO, AUTOSELECT=NO
 	AudioTrackType *string `locationName:"audioTrackType" type:"string" enum:"AudioOnlyHlsTrackType"`
+
+	// Specifies the segment type.
+	SegmentType *string `locationName:"segmentType" type:"string" enum:"AudioOnlyHlsSegmentType"`
 }
 
 // String returns the string representation
@@ -5211,6 +5214,12 @@ func (s *AudioOnlyHlsSettings) SetAudioOnlyImage(v *InputLocation) *AudioOnlyHls
 // SetAudioTrackType sets the AudioTrackType field's value.
 func (s *AudioOnlyHlsSettings) SetAudioTrackType(v string) *AudioOnlyHlsSettings {
 	s.AudioTrackType = &v
+	return s
+}
+
+// SetSegmentType sets the SegmentType field's value.
+func (s *AudioOnlyHlsSettings) SetSegmentType(v string) *AudioOnlyHlsSettings {
+	s.SegmentType = &v
 	return s
 }
 
@@ -10523,6 +10532,31 @@ func (s *FixedModeScheduleActionStartSettings) SetTime(v string) *FixedModeSched
 	return s
 }
 
+// Fmp4 Hls Settings
+type Fmp4HlsSettings struct {
+	_ struct{} `type:"structure"`
+
+	// List all the audio groups that are used with the video output stream. Input
+	// all the audio GROUP-IDs that are associated to the video, separate by ','.
+	AudioRenditionSets *string `locationName:"audioRenditionSets" type:"string"`
+}
+
+// String returns the string representation
+func (s Fmp4HlsSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Fmp4HlsSettings) GoString() string {
+	return s.String()
+}
+
+// SetAudioRenditionSets sets the AudioRenditionSets field's value.
+func (s *Fmp4HlsSettings) SetAudioRenditionSets(v string) *Fmp4HlsSettings {
+	s.AudioRenditionSets = &v
+	return s
+}
+
 // Settings to specify if an action follows another.
 type FollowModeScheduleActionStartSettings struct {
 	_ struct{} `type:"structure"`
@@ -10656,6 +10690,9 @@ type FrameCaptureSettings struct {
 	//
 	// CaptureInterval is a required field
 	CaptureInterval *int64 `locationName:"captureInterval" min:"1" type:"integer" required:"true"`
+
+	// Unit for the frame capture interval.
+	CaptureIntervalUnits *string `locationName:"captureIntervalUnits" type:"string" enum:"FrameCaptureIntervalUnit"`
 }
 
 // String returns the string representation
@@ -10687,6 +10724,12 @@ func (s *FrameCaptureSettings) Validate() error {
 // SetCaptureInterval sets the CaptureInterval field's value.
 func (s *FrameCaptureSettings) SetCaptureInterval(v int64) *FrameCaptureSettings {
 	s.CaptureInterval = &v
+	return s
+}
+
+// SetCaptureIntervalUnits sets the CaptureIntervalUnits field's value.
+func (s *FrameCaptureSettings) SetCaptureIntervalUnits(v string) *FrameCaptureSettings {
+	s.CaptureIntervalUnits = &v
 	return s
 }
 
@@ -10965,7 +11008,10 @@ type H264Settings struct {
 	// video complexity. Recommended instead of QVBRif you want to maintain a specific
 	// average bitrate over the duration of the channel.CBR: Quality varies, depending
 	// on the video complexity. Recommended only if you distributeyour assets to
-	// devices that cannot handle variable bitrates.
+	// devices that cannot handle variable bitrates.Multiplex: This rate control
+	// mode is only supported (and is required) when the video is beingdelivered
+	// to a MediaLive Multiplex in which case the rate control configuration is
+	// controlledby the properties within the Multiplex Program.
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H264RateControlMode"`
 
 	// Sets the scan type of the output to progressive or top-field-first interlaced.
@@ -11920,10 +11966,22 @@ type HlsGroupSettings struct {
 	// the main .m3u8 file.
 	BaseUrlContent *string `locationName:"baseUrlContent" type:"string"`
 
+	// Optional. One value per output group.This field is required only if you are
+	// completing Base URL content A, and the downstream system has notified you
+	// that the media files for pipeline 1 of all outputs are in a location different
+	// from the media files for pipeline 0.
+	BaseUrlContent1 *string `locationName:"baseUrlContent1" type:"string"`
+
 	// A partial URI prefix that will be prepended to each output in the media .m3u8
 	// file. Can be used if base manifest is delivered from a different URL than
 	// the main .m3u8 file.
 	BaseUrlManifest *string `locationName:"baseUrlManifest" type:"string"`
+
+	// Optional. One value per output group.Complete this field only if you are
+	// completing Base URL manifest A, and the downstream system has notified you
+	// that the child manifest files for pipeline 1 of all outputs are in a location
+	// different from the child manifest files for pipeline 0.
+	BaseUrlManifest1 *string `locationName:"baseUrlManifest1" type:"string"`
 
 	// Mapping of up to 4 caption channels to caption languages. Is only meaningful
 	// if captionLanguageSetting is set to "insert".
@@ -11968,6 +12026,9 @@ type HlsGroupSettings struct {
 
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
+
+	// State of HLS ID3 Segment Tagging
+	HlsId3SegmentTagging *string `locationName:"hlsId3SegmentTagging" type:"string" enum:"HlsId3SegmentTaggingState"`
 
 	// DISABLED: Do not create an I-frame-only manifest, but do create the master
 	// and media manifests (according to the Output Selection field).STANDARD: Create
@@ -12163,9 +12224,21 @@ func (s *HlsGroupSettings) SetBaseUrlContent(v string) *HlsGroupSettings {
 	return s
 }
 
+// SetBaseUrlContent1 sets the BaseUrlContent1 field's value.
+func (s *HlsGroupSettings) SetBaseUrlContent1(v string) *HlsGroupSettings {
+	s.BaseUrlContent1 = &v
+	return s
+}
+
 // SetBaseUrlManifest sets the BaseUrlManifest field's value.
 func (s *HlsGroupSettings) SetBaseUrlManifest(v string) *HlsGroupSettings {
 	s.BaseUrlManifest = &v
+	return s
+}
+
+// SetBaseUrlManifest1 sets the BaseUrlManifest1 field's value.
+func (s *HlsGroupSettings) SetBaseUrlManifest1(v string) *HlsGroupSettings {
+	s.BaseUrlManifest1 = &v
 	return s
 }
 
@@ -12220,6 +12293,12 @@ func (s *HlsGroupSettings) SetEncryptionType(v string) *HlsGroupSettings {
 // SetHlsCdnSettings sets the HlsCdnSettings field's value.
 func (s *HlsGroupSettings) SetHlsCdnSettings(v *HlsCdnSettings) *HlsGroupSettings {
 	s.HlsCdnSettings = v
+	return s
+}
+
+// SetHlsId3SegmentTagging sets the HlsId3SegmentTagging field's value.
+func (s *HlsGroupSettings) SetHlsId3SegmentTagging(v string) *HlsGroupSettings {
+	s.HlsId3SegmentTagging = &v
 	return s
 }
 
@@ -12373,6 +12452,47 @@ func (s *HlsGroupSettings) SetTsFileMode(v string) *HlsGroupSettings {
 	return s
 }
 
+// Settings for the action to insert a user-defined ID3 tag in each HLS segment
+type HlsId3SegmentTaggingScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// ID3 tag to insert into each segment. Supports special keyword identifiers
+	// to substitute in segment-related values.\nSupported keyword identifiers:
+	// https://docs.aws.amazon.com/medialive/latest/ug/variable-data-identifiers.html
+	//
+	// Tag is a required field
+	Tag *string `locationName:"tag" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HlsId3SegmentTaggingScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HlsId3SegmentTaggingScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsId3SegmentTaggingScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsId3SegmentTaggingScheduleActionSettings"}
+	if s.Tag == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tag"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTag sets the Tag field's value.
+func (s *HlsId3SegmentTaggingScheduleActionSettings) SetTag(v string) *HlsId3SegmentTaggingScheduleActionSettings {
+	s.Tag = &v
+	return s
+}
+
 // Hls Input Settings
 type HlsInputSettings struct {
 	_ struct{} `type:"structure"`
@@ -12499,6 +12619,10 @@ func (s *HlsMediaStoreSettings) SetRestartDelay(v int64) *HlsMediaStoreSettings 
 type HlsOutputSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Only applicable when this output is referencing an H.265 video description.Specifies
+	// whether MP4 segments should be packaged as HEV1 or HVC1.
+	H265PackagingType *string `locationName:"h265PackagingType" type:"string" enum:"HlsH265PackagingType"`
+
 	// Settings regarding the underlying stream. These settings are different for
 	// audio-only outputs.
 	//
@@ -12544,6 +12668,12 @@ func (s *HlsOutputSettings) Validate() error {
 	return nil
 }
 
+// SetH265PackagingType sets the H265PackagingType field's value.
+func (s *HlsOutputSettings) SetH265PackagingType(v string) *HlsOutputSettings {
+	s.H265PackagingType = &v
+	return s
+}
+
 // SetHlsSettings sets the HlsSettings field's value.
 func (s *HlsOutputSettings) SetHlsSettings(v *HlsSettings) *HlsOutputSettings {
 	s.HlsSettings = v
@@ -12568,6 +12698,9 @@ type HlsSettings struct {
 
 	// Audio Only Hls Settings
 	AudioOnlyHlsSettings *AudioOnlyHlsSettings `locationName:"audioOnlyHlsSettings" type:"structure"`
+
+	// Fmp4 Hls Settings
+	Fmp4HlsSettings *Fmp4HlsSettings `locationName:"fmp4HlsSettings" type:"structure"`
 
 	// Standard Hls Settings
 	StandardHlsSettings *StandardHlsSettings `locationName:"standardHlsSettings" type:"structure"`
@@ -12606,6 +12739,12 @@ func (s *HlsSettings) Validate() error {
 // SetAudioOnlyHlsSettings sets the AudioOnlyHlsSettings field's value.
 func (s *HlsSettings) SetAudioOnlyHlsSettings(v *AudioOnlyHlsSettings) *HlsSettings {
 	s.AudioOnlyHlsSettings = v
+	return s
+}
+
+// SetFmp4HlsSettings sets the Fmp4HlsSettings field's value.
+func (s *HlsSettings) SetFmp4HlsSettings(v *Fmp4HlsSettings) *HlsSettings {
+	s.Fmp4HlsSettings = v
 	return s
 }
 
@@ -16586,38 +16725,6 @@ func (s *MultiplexSummary) SetTags(v map[string]*string) *MultiplexSummary {
 	return s
 }
 
-type MultiplexValidationError struct {
-	_ struct{} `type:"structure"`
-
-	// Path to the source of the error.
-	ElementPath *string `locationName:"elementPath" type:"string"`
-
-	// The error message.
-	ErrorMessage *string `locationName:"errorMessage" type:"string"`
-}
-
-// String returns the string representation
-func (s MultiplexValidationError) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s MultiplexValidationError) GoString() string {
-	return s.String()
-}
-
-// SetElementPath sets the ElementPath field's value.
-func (s *MultiplexValidationError) SetElementPath(v string) *MultiplexValidationError {
-	s.ElementPath = &v
-	return s
-}
-
-// SetErrorMessage sets the ErrorMessage field's value.
-func (s *MultiplexValidationError) SetErrorMessage(v string) *MultiplexValidationError {
-	s.ErrorMessage = &v
-	return s
-}
-
 // The video configuration for each program in a multiplex.
 type MultiplexVideoSettings struct {
 	_ struct{} `type:"structure"`
@@ -18305,6 +18412,9 @@ func (s *ScheduleAction) SetScheduleActionStartSettings(v *ScheduleActionStartSe
 type ScheduleActionSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Action to insert HLS ID3 segment tagging
+	HlsId3SegmentTaggingSettings *HlsId3SegmentTaggingScheduleActionSettings `locationName:"hlsId3SegmentTaggingSettings" type:"structure"`
+
 	// Action to insert HLS metadata
 	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
 
@@ -18343,6 +18453,11 @@ func (s ScheduleActionSettings) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ScheduleActionSettings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ScheduleActionSettings"}
+	if s.HlsId3SegmentTaggingSettings != nil {
+		if err := s.HlsId3SegmentTaggingSettings.Validate(); err != nil {
+			invalidParams.AddNested("HlsId3SegmentTaggingSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.HlsTimedMetadataSettings != nil {
 		if err := s.HlsTimedMetadataSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsTimedMetadataSettings", err.(request.ErrInvalidParams))
@@ -18383,6 +18498,12 @@ func (s *ScheduleActionSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetHlsId3SegmentTaggingSettings sets the HlsId3SegmentTaggingSettings field's value.
+func (s *ScheduleActionSettings) SetHlsId3SegmentTaggingSettings(v *HlsId3SegmentTaggingScheduleActionSettings) *ScheduleActionSettings {
+	s.HlsId3SegmentTaggingSettings = v
+	return s
 }
 
 // SetHlsTimedMetadataSettings sets the HlsTimedMetadataSettings field's value.
@@ -21166,6 +21287,36 @@ func (s *UpdateReservationOutput) SetReservation(v *Reservation) *UpdateReservat
 	return s
 }
 
+type ValidationError struct {
+	_ struct{} `type:"structure"`
+
+	ElementPath *string `locationName:"elementPath" type:"string"`
+
+	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationError) GoString() string {
+	return s.String()
+}
+
+// SetElementPath sets the ElementPath field's value.
+func (s *ValidationError) SetElementPath(v string) *ValidationError {
+	s.ElementPath = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
+	s.ErrorMessage = &v
+	return s
+}
+
 // Video Codec Settings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
@@ -21702,6 +21853,15 @@ const (
 const (
 	// AudioNormalizationAlgorithmControlCorrectAudio is a AudioNormalizationAlgorithmControl enum value
 	AudioNormalizationAlgorithmControlCorrectAudio = "CORRECT_AUDIO"
+)
+
+// Audio Only Hls Segment Type
+const (
+	// AudioOnlyHlsSegmentTypeAac is a AudioOnlyHlsSegmentType enum value
+	AudioOnlyHlsSegmentTypeAac = "AAC"
+
+	// AudioOnlyHlsSegmentTypeFmp4 is a AudioOnlyHlsSegmentType enum value
+	AudioOnlyHlsSegmentTypeFmp4 = "FMP4"
 )
 
 // Audio Only Hls Track Type
@@ -22250,6 +22410,15 @@ const (
 	FollowPointStart = "START"
 )
 
+// Frame Capture Interval Unit
+const (
+	// FrameCaptureIntervalUnitMilliseconds is a FrameCaptureIntervalUnit enum value
+	FrameCaptureIntervalUnitMilliseconds = "MILLISECONDS"
+
+	// FrameCaptureIntervalUnitSeconds is a FrameCaptureIntervalUnit enum value
+	FrameCaptureIntervalUnitSeconds = "SECONDS"
+)
+
 // Global Configuration Input End Action
 const (
 	// GlobalConfigurationInputEndActionNone is a GlobalConfigurationInputEndAction enum value
@@ -22770,6 +22939,24 @@ const (
 
 	// HlsEncryptionTypeSampleAes is a HlsEncryptionType enum value
 	HlsEncryptionTypeSampleAes = "SAMPLE_AES"
+)
+
+// Hls H265 Packaging Type
+const (
+	// HlsH265PackagingTypeHev1 is a HlsH265PackagingType enum value
+	HlsH265PackagingTypeHev1 = "HEV1"
+
+	// HlsH265PackagingTypeHvc1 is a HlsH265PackagingType enum value
+	HlsH265PackagingTypeHvc1 = "HVC1"
+)
+
+// State of HLS ID3 Segment Tagging
+const (
+	// HlsId3SegmentTaggingStateDisabled is a HlsId3SegmentTaggingState enum value
+	HlsId3SegmentTaggingStateDisabled = "DISABLED"
+
+	// HlsId3SegmentTaggingStateEnabled is a HlsId3SegmentTaggingState enum value
+	HlsId3SegmentTaggingStateEnabled = "ENABLED"
 )
 
 // Hls Iv In Manifest

@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "cognito-idp"               // Name of service.
 	EndpointsID = ServiceName                 // ID to lookup a service endpoint with.
-	ServiceID   = "Cognito Identity Provider" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Cognito Identity Provider" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the CognitoIdentityProvider client with a session.

@@ -192,6 +192,8 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //   * ErrCodeInvalidName "InvalidName"
 //   The provided name is invalid.
 //
+//   * ErrCodeInvalidLoggingConfiguration "InvalidLoggingConfiguration"
+//
 //   * ErrCodeStateMachineAlreadyExists "StateMachineAlreadyExists"
 //   A state machine with the same name but a different definition or role ARN
 //   already exists.
@@ -202,6 +204,8 @@ func (c *SFN) CreateStateMachineRequest(input *CreateStateMachineInput) (req *re
 //   * ErrCodeStateMachineLimitExceeded "StateMachineLimitExceeded"
 //   The maximum number of state machines has been reached. Existing state machines
 //   must be deleted before a new state machine can be created.
+//
+//   * ErrCodeStateMachineTypeNotSupported "StateMachineTypeNotSupported"
 //
 //   * ErrCodeTooManyTags "TooManyTags"
 //   You've exceeded the number of tags allowed for a resource. See the Limits
@@ -1209,6 +1213,8 @@ func (c *SFN) ListExecutionsRequest(input *ListExecutionsInput) (req *request.Re
 //
 //   * ErrCodeStateMachineDoesNotExist "StateMachineDoesNotExist"
 //   The specified state machine does not exist.
+//
+//   * ErrCodeStateMachineTypeNotSupported "StateMachineTypeNotSupported"
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/states-2016-11-23/ListExecutions
 func (c *SFN) ListExecutions(input *ListExecutionsInput) (*ListExecutionsOutput, error) {
@@ -2223,6 +2229,8 @@ func (c *SFN) UpdateStateMachineRequest(input *UpdateStateMachineInput) (req *re
 //   * ErrCodeInvalidDefinition "InvalidDefinition"
 //   The provided Amazon States Language definition is invalid.
 //
+//   * ErrCodeInvalidLoggingConfiguration "InvalidLoggingConfiguration"
+//
 //   * ErrCodeMissingRequiredParameter "MissingRequiredParameter"
 //   Request is missing a required parameter. This error occurs if both definition
 //   and roleArn are not specified.
@@ -2518,6 +2526,43 @@ func (s *ActivityTimedOutEventDetails) SetError(v string) *ActivityTimedOutEvent
 	return s
 }
 
+type CloudWatchLogsLogGroup struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the the CloudWatch log group to which you want your logs emitted
+	// to. The ARN must end with :*
+	LogGroupArn *string `locationName:"logGroupArn" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CloudWatchLogsLogGroup) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CloudWatchLogsLogGroup) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CloudWatchLogsLogGroup) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CloudWatchLogsLogGroup"}
+	if s.LogGroupArn != nil && len(*s.LogGroupArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("LogGroupArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLogGroupArn sets the LogGroupArn field's value.
+func (s *CloudWatchLogsLogGroup) SetLogGroupArn(v string) *CloudWatchLogsLogGroup {
+	s.LogGroupArn = &v
+	return s
+}
+
 type CreateActivityInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2646,6 +2691,9 @@ type CreateStateMachineInput struct {
 	// Definition is a required field
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
+	// Defines what execution history events are logged and where they are logged.
+	LoggingConfiguration *LoggingConfiguration `locationName:"loggingConfiguration" type:"structure"`
+
 	// The name of the state machine.
 	//
 	// A name must not contain:
@@ -2678,6 +2726,10 @@ type CreateStateMachineInput struct {
 	// Tags may only contain Unicode letters, digits, white space, or these symbols:
 	// _ . : / = + - @.
 	Tags []*Tag `locationName:"tags" type:"list"`
+
+	// Determines whether a Standard or Express state machine is created. If not
+	// set, Standard is created.
+	Type *string `locationName:"type" type:"string" enum:"StateMachineType"`
 }
 
 // String returns the string representation
@@ -2711,6 +2763,11 @@ func (s *CreateStateMachineInput) Validate() error {
 	if s.RoleArn != nil && len(*s.RoleArn) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 1))
 	}
+	if s.LoggingConfiguration != nil {
+		if err := s.LoggingConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("LoggingConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Tags != nil {
 		for i, v := range s.Tags {
 			if v == nil {
@@ -2734,6 +2791,12 @@ func (s *CreateStateMachineInput) SetDefinition(v string) *CreateStateMachineInp
 	return s
 }
 
+// SetLoggingConfiguration sets the LoggingConfiguration field's value.
+func (s *CreateStateMachineInput) SetLoggingConfiguration(v *LoggingConfiguration) *CreateStateMachineInput {
+	s.LoggingConfiguration = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *CreateStateMachineInput) SetName(v string) *CreateStateMachineInput {
 	s.Name = &v
@@ -2749,6 +2812,12 @@ func (s *CreateStateMachineInput) SetRoleArn(v string) *CreateStateMachineInput 
 // SetTags sets the Tags field's value.
 func (s *CreateStateMachineInput) SetTags(v []*Tag) *CreateStateMachineInput {
 	s.Tags = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *CreateStateMachineInput) SetType(v string) *CreateStateMachineInput {
+	s.Type = &v
 	return s
 }
 
@@ -3319,6 +3388,8 @@ type DescribeStateMachineOutput struct {
 	// Definition is a required field
 	Definition *string `locationName:"definition" min:"1" type:"string" required:"true" sensitive:"true"`
 
+	LoggingConfiguration *LoggingConfiguration `locationName:"loggingConfiguration" type:"structure"`
+
 	// The name of the state machine.
 	//
 	// A name must not contain:
@@ -3350,6 +3421,9 @@ type DescribeStateMachineOutput struct {
 
 	// The current status of the state machine.
 	Status *string `locationName:"status" type:"string" enum:"StateMachineStatus"`
+
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"StateMachineType"`
 }
 
 // String returns the string representation
@@ -3374,6 +3448,12 @@ func (s *DescribeStateMachineOutput) SetDefinition(v string) *DescribeStateMachi
 	return s
 }
 
+// SetLoggingConfiguration sets the LoggingConfiguration field's value.
+func (s *DescribeStateMachineOutput) SetLoggingConfiguration(v *LoggingConfiguration) *DescribeStateMachineOutput {
+	s.LoggingConfiguration = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *DescribeStateMachineOutput) SetName(v string) *DescribeStateMachineOutput {
 	s.Name = &v
@@ -3395,6 +3475,12 @@ func (s *DescribeStateMachineOutput) SetStateMachineArn(v string) *DescribeState
 // SetStatus sets the Status field's value.
 func (s *DescribeStateMachineOutput) SetStatus(v string) *DescribeStateMachineOutput {
 	s.Status = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DescribeStateMachineOutput) SetType(v string) *DescribeStateMachineOutput {
+	s.Type = &v
 	return s
 }
 
@@ -4771,6 +4857,109 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 	return s
 }
 
+type LogDestination struct {
+	_ struct{} `type:"structure"`
+
+	// An object describing a CloudWatch log group. For more information, see AWS::Logs::LogGroup
+	// (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-loggroup.html)
+	// in the AWS CloudFormation User Guide.
+	CloudWatchLogsLogGroup *CloudWatchLogsLogGroup `locationName:"cloudWatchLogsLogGroup" type:"structure"`
+}
+
+// String returns the string representation
+func (s LogDestination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogDestination) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LogDestination) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LogDestination"}
+	if s.CloudWatchLogsLogGroup != nil {
+		if err := s.CloudWatchLogsLogGroup.Validate(); err != nil {
+			invalidParams.AddNested("CloudWatchLogsLogGroup", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCloudWatchLogsLogGroup sets the CloudWatchLogsLogGroup field's value.
+func (s *LogDestination) SetCloudWatchLogsLogGroup(v *CloudWatchLogsLogGroup) *LogDestination {
+	s.CloudWatchLogsLogGroup = v
+	return s
+}
+
+type LoggingConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// An object that describes where your execution history events will be logged.
+	// Limited to size 1. Required, if your log level is not set to OFF.
+	Destinations []*LogDestination `locationName:"destinations" type:"list"`
+
+	// Determines whether execution history data is included in your log. When set
+	// to FALSE, data is excluded.
+	IncludeExecutionData *bool `locationName:"includeExecutionData" type:"boolean"`
+
+	// Defines which category of execution history events are logged.
+	Level *string `locationName:"level" type:"string" enum:"LogLevel"`
+}
+
+// String returns the string representation
+func (s LoggingConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LoggingConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LoggingConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LoggingConfiguration"}
+	if s.Destinations != nil {
+		for i, v := range s.Destinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Destinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestinations sets the Destinations field's value.
+func (s *LoggingConfiguration) SetDestinations(v []*LogDestination) *LoggingConfiguration {
+	s.Destinations = v
+	return s
+}
+
+// SetIncludeExecutionData sets the IncludeExecutionData field's value.
+func (s *LoggingConfiguration) SetIncludeExecutionData(v bool) *LoggingConfiguration {
+	s.IncludeExecutionData = &v
+	return s
+}
+
+// SetLevel sets the Level field's value.
+func (s *LoggingConfiguration) SetLevel(v string) *LoggingConfiguration {
+	s.Level = &v
+	return s
+}
+
 // Contains details about an iteration of a Map state.
 type MapIterationEventDetails struct {
 	_ struct{} `type:"structure"`
@@ -5261,6 +5450,9 @@ type StateMachineListItem struct {
 	//
 	// StateMachineArn is a required field
 	StateMachineArn *string `locationName:"stateMachineArn" min:"1" type:"string" required:"true"`
+
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"StateMachineType"`
 }
 
 // String returns the string representation
@@ -5288,6 +5480,12 @@ func (s *StateMachineListItem) SetName(v string) *StateMachineListItem {
 // SetStateMachineArn sets the StateMachineArn field's value.
 func (s *StateMachineListItem) SetStateMachineArn(v string) *StateMachineListItem {
 	s.StateMachineArn = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *StateMachineListItem) SetType(v string) *StateMachineListItem {
+	s.Type = &v
 	return s
 }
 
@@ -6006,6 +6204,8 @@ type UpdateStateMachineInput struct {
 	// Language (https://docs.aws.amazon.com/step-functions/latest/dg/concepts-amazon-states-language.html).
 	Definition *string `locationName:"definition" min:"1" type:"string" sensitive:"true"`
 
+	LoggingConfiguration *LoggingConfiguration `locationName:"loggingConfiguration" type:"structure"`
+
 	// The Amazon Resource Name (ARN) of the IAM role of the state machine.
 	RoleArn *string `locationName:"roleArn" min:"1" type:"string"`
 
@@ -6040,6 +6240,11 @@ func (s *UpdateStateMachineInput) Validate() error {
 	if s.StateMachineArn != nil && len(*s.StateMachineArn) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("StateMachineArn", 1))
 	}
+	if s.LoggingConfiguration != nil {
+		if err := s.LoggingConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("LoggingConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6050,6 +6255,12 @@ func (s *UpdateStateMachineInput) Validate() error {
 // SetDefinition sets the Definition field's value.
 func (s *UpdateStateMachineInput) SetDefinition(v string) *UpdateStateMachineInput {
 	s.Definition = &v
+	return s
+}
+
+// SetLoggingConfiguration sets the LoggingConfiguration field's value.
+func (s *UpdateStateMachineInput) SetLoggingConfiguration(v *LoggingConfiguration) *UpdateStateMachineInput {
+	s.LoggingConfiguration = v
 	return s
 }
 
@@ -6275,9 +6486,31 @@ const (
 )
 
 const (
+	// LogLevelAll is a LogLevel enum value
+	LogLevelAll = "ALL"
+
+	// LogLevelError is a LogLevel enum value
+	LogLevelError = "ERROR"
+
+	// LogLevelFatal is a LogLevel enum value
+	LogLevelFatal = "FATAL"
+
+	// LogLevelOff is a LogLevel enum value
+	LogLevelOff = "OFF"
+)
+
+const (
 	// StateMachineStatusActive is a StateMachineStatus enum value
 	StateMachineStatusActive = "ACTIVE"
 
 	// StateMachineStatusDeleting is a StateMachineStatus enum value
 	StateMachineStatusDeleting = "DELETING"
+)
+
+const (
+	// StateMachineTypeStandard is a StateMachineType enum value
+	StateMachineTypeStandard = "STANDARD"
+
+	// StateMachineTypeExpress is a StateMachineType enum value
+	StateMachineTypeExpress = "EXPRESS"
 )

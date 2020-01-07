@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -415,6 +416,29 @@ func TestFlattenHealthCheck(t *testing.T) {
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
+	}
+}
+
+func TestFlattenOrganizationsOrganizationalUnits(t *testing.T) {
+	input := []*organizations.OrganizationalUnit{
+		{
+			Arn:  aws.String("arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234"),
+			Id:   aws.String("ou-ab12-abcd1234"),
+			Name: aws.String("Engineering"),
+		},
+	}
+
+	expected_output := []map[string]interface{}{
+		{
+			"arn":  "arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234",
+			"id":   "ou-ab12-abcd1234",
+			"name": "Engineering",
+		},
+	}
+
+	output := flattenOrganizationsOrganizationalUnits(input)
+	if !reflect.DeepEqual(expected_output, output) {
+		t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, expected_output)
 	}
 }
 

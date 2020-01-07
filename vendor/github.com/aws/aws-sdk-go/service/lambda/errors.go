@@ -117,6 +117,12 @@ const (
 	// latest RevisionId for your resource.
 	ErrCodePreconditionFailedException = "PreconditionFailedException"
 
+	// ErrCodeProvisionedConcurrencyConfigNotFoundException for service response error code
+	// "ProvisionedConcurrencyConfigNotFoundException".
+	//
+	// The specified configuration does not exist.
+	ErrCodeProvisionedConcurrencyConfigNotFoundException = "ProvisionedConcurrencyConfigNotFoundException"
+
 	// ErrCodeRequestTooLargeException for service response error code
 	// "RequestTooLargeException".
 	//

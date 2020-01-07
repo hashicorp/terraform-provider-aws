@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "MediaConnect" // Name of service.
 	EndpointsID = "mediaconnect" // ID to lookup a service endpoint with.
-	ServiceID   = "MediaConnect" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "MediaConnect" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the MediaConnect client with a session.

@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Route53Resolver" // Name of service.
 	EndpointsID = "route53resolver" // ID to lookup a service endpoint with.
-	ServiceID   = "Route53Resolver" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Route53Resolver" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the Route53Resolver client with a session.

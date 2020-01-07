@@ -372,15 +372,20 @@ func resourceAwsIamRoleDelete(d *schema.ResourceData, meta interface{}) error {
 				return resource.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(fmt.Errorf("Error deleting IAM Role %s: %s", d.Id(), err))
+			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
 	if isResourceTimeoutError(err) {
 		_, err = iamconn.DeleteRole(deleteRoleInput)
 	}
+
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting IAM role: %s", err)
+		return fmt.Errorf("Error deleting IAM Role (%s): %s", d.Id(), err)
 	}
 	return nil
 }
@@ -389,6 +394,11 @@ func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {
 	resp, err := conn.ListInstanceProfilesForRole(&iam.ListInstanceProfilesForRoleInput{
 		RoleName: aws.String(rolename),
 	})
+
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error listing Profiles for IAM Role (%s) when trying to delete: %s", rolename, err)
 	}
@@ -402,8 +412,12 @@ func deleteAwsIamRoleInstanceProfiles(conn *iam.IAM, rolename string) error {
 
 		_, err := conn.RemoveRoleFromInstanceProfile(input)
 
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
+
 		if err != nil {
-			return fmt.Errorf("Error deleting IAM Role %s: %s", rolename, err)
+			return fmt.Errorf("Error deleting IAM Role (%s) Instance Profile (%s): %s", rolename, aws.StringValue(i.InstanceProfileName), err)
 		}
 	}
 
@@ -422,6 +436,11 @@ func deleteAwsIamRolePolicyAttachments(conn *iam.IAM, rolename string) error {
 		}
 		return !lastPage
 	})
+
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Error listing Policies for IAM Role (%s) when trying to delete: %s", rolename, err)
 	}
