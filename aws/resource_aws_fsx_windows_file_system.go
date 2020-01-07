@@ -276,7 +276,19 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if requestUpdate {
-		_, err := conn.UpdateFileSystem(input)
+		err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+			_, err := conn.UpdateFileSystem(input)
+
+			if isAWSErr(err, fsx.ErrCodeBadRequest, fmt.Sprintf("Unable to update Active Directory configuration for file system %s because there are other activities currently taking place. Please wait at least 10 minutes and try again.", d.Id())) {
+				resource.RetryableError(err)
+			}
+
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+
 		if err != nil {
 			return fmt.Errorf("error updating FSX File System (%s): %s", d.Id(), err)
 		}
