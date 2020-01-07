@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,7 +27,12 @@ func resourceAwsKinesisStreamConsumer() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
+				importParts, err := validateResourceAwsKinesisStreamConsumerImportString(d.Id())
+				if err != nil {
+					return nil, err
+				}
+				d.Set("name", importParts[0])
+				d.Set("stream_arn", importParts[1])
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -159,6 +166,31 @@ type kinesisStreamConsumerState struct {
 	streamArn         string
 	creationTimestamp int64
 	status            string
+}
+
+func validateResourceAwsKinesisStreamConsumerImportString(importStr string) ([]string, error) {
+	// example: my_consumer@arn:aws:kinesis:us-west-2:123456789012:stream/my-stream
+	importParts := strings.Split(strings.ToLower(importStr), "_")
+	errStr := "unexpected format of import string (%q), expected <consumer name>@<stream arn>: %s"
+	if len(importParts) != 2 {
+		return nil, fmt.Errorf(errStr, importStr, "invalid no. of parts")
+	}
+
+	consumerName := importParts[0]
+	streamArn := importParts[1]
+
+	consumerNameRe := regexp.MustCompile("(^[a-zA-Z0-9_.-]+$)")
+	streamArnRe := regexp.MustCompile("arn:aws.*:kinesis:.*:\\d{12}:stream/.+")
+
+	if !consumerNameRe.MatchString(consumerName) {
+		return nil, fmt.Errorf(errStr, importStr, "invalid consumer name")
+	}
+
+	if !streamArnRe.MatchString(streamArn) {
+		return nil, fmt.Errorf(errStr, importStr, "invalid stream arn")
+	}
+
+	return importParts, nil
 }
 
 func readKinesisStreamConsumerState(conn *kinesis.Kinesis, cn string, sa string) (*kinesisStreamConsumerState, error) {

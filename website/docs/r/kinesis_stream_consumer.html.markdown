@@ -57,10 +57,10 @@ AWS account and region the Stream Consumer is created in.
 - `create` - (Default `5 minutes`)  Used for Creating a Kinesis Stream Consumer
 - `delete` - (Default `120 minutes`) Used for Destroying a Kinesis Stream Consumer
 
-Kinesis Streams can be imported using the `name`, e.g.
+Kinesis Streams can be imported using the `name` and `stream_arn`, e.g.
 
 ```
-$ terraform import aws_kinesis_stream_consumer.test_stream_consumer terraform-kinesis-stream-consumer-test
+$ terraform import aws_kinesis_stream_consumer.test_stream_consumer terraform-kinesis-stream-consumer-test@arn:aws:kinesis:us-west-2:123456789012:stream/my-stream
 ```
 
 [1]: https://docs.aws.amazon.com/streams/latest/dev/building-consumers.html
