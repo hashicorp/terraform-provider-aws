@@ -132,15 +132,15 @@ func addTestStepsAwsOrganizationsOrganization_EnabledPolicyTypes(policyTypes *[]
 	return &testSteps
 }
 
-func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {	
+func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 	policyTypes := []string{organizations.PolicyTypeServiceControlPolicy, organizations.PolicyTypeTagPolicy}
 	testSteps := *addTestStepsAwsOrganizationsOrganization_EnabledPolicyTypes(&policyTypes)
-	
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsOrganizationsOrganizationDestroy,
-		Steps: testSteps,
+		Steps:        testSteps,
 	})
 }
 
