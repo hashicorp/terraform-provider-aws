@@ -968,20 +968,17 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				// If the instance is running, we can replace the instance profile association.
 				// If it is stopped, the association must be removed and the new one attached separately. (GH-8262)
-				resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-					InstanceIds: []*string{aws.String(d.Id())},
-				})
-				if err != nil {
-					if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
-						d.SetId("")
-						return nil
-					}
-					return err
-				}
-				instance := resp.Reservations[0].Instances[0]
+				instanceState := d.Get("instance_state").(string)
 
-				if instance.State != nil {
-					if *instance.State.Name == "running" {
+				if instanceState != "" {
+					if instanceState == ec2.InstanceStateNameStopped || instanceState == ec2.InstanceStateNameStopping || instanceState == ec2.InstanceStateNameShuttingDown {
+						if err := disassociateInstanceProfile(associationId, conn); err != nil {
+							return err
+						}
+						if err := associateInstanceProfile(d, conn); err != nil {
+							return err
+						}
+					} else {
 						err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 							_, err := conn.ReplaceIamInstanceProfileAssociation(input)
 							if err != nil {
@@ -997,20 +994,6 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 						}
 						if err != nil {
 							return fmt.Errorf("Error replacing instance profile association: %s", err)
-						}
-					} else if *instance.State.Name == "stopped" {
-						resp2, err := conn.DescribeIamInstanceProfileAssociations(request)
-						if err != nil {
-							return err
-						}
-						if len(resp2.IamInstanceProfileAssociations) > 0 {
-							associationId := resp2.IamInstanceProfileAssociations[0].AssociationId
-							if err := disassociateInstanceProfile(associationId, conn); err != nil {
-								return err
-							}
-							if err := associateInstanceProfile(d, conn); err != nil {
-								return err
-							}
 						}
 					}
 				}
@@ -1333,7 +1316,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 		_, err = conn.AssociateIamInstanceProfile(input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error associating instance with instance profile: %s", err)
+		return fmt.Errorf("error associating instance with instance profile: %s", err)
 	}
 	return nil
 }
@@ -1343,7 +1326,7 @@ func disassociateInstanceProfile(associationId *string, conn *ec2.EC2) error {
 		AssociationId: associationId,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error disassociating instance with instance profile: %w", err)
 	}
 	return nil
 }
