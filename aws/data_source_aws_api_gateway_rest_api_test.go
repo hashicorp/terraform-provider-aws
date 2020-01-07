@@ -11,6 +11,7 @@ import (
 
 func TestAccDataSourceAwsApiGatewayRestApi(t *testing.T) {
 	rName := acctest.RandString(8)
+	resourceName := "data.aws_api_gateway_rest_api.by_name"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -18,7 +19,9 @@ func TestAccDataSourceAwsApiGatewayRestApi(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsApiGatewayRestApiConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsApiGatewayRestApiCheck("data.aws_api_gateway_rest_api.by_name"),
+					testAccDataSourceAwsApiGatewayRestApiCheck(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "root_resource_id"),
 				),
 			},
 		},

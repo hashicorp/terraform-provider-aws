@@ -235,14 +235,7 @@ func resourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}) 
 
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 
-	execution_arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "execute-api",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  d.Id(),
-	}.String()
-	d.Set("execution_arn", execution_arn)
+	d.Set("execution_arn", resourceApiGatewayExecutionArn(d, meta))
 
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", -1)
@@ -447,4 +440,14 @@ func flattenApiGatewayEndpointConfiguration(endpointConfiguration *apigateway.En
 	}
 
 	return []interface{}{m}
+}
+
+func resourceApiGatewayExecutionArn(d *schema.ResourceData, meta interface{}) string {
+	return arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "execute-api",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  d.Id(),
+	}.String()
 }

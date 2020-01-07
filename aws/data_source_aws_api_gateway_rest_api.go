@@ -21,6 +21,10 @@ func dataSourceAwsApiGatewayRestApi() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"execution_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -54,6 +58,8 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 	match := matchedApis[0]
 
 	d.SetId(*match.Id)
+
+	d.Set("execution_arn", resourceApiGatewayExecutionArn(d, meta))
 
 	resp, err := conn.GetResources(&apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
