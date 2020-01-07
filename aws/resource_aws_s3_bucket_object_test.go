@@ -247,6 +247,48 @@ func TestAccAWSS3BucketObject_contentBase64(t *testing.T) {
 	})
 }
 
+func TestAccAWSS3BucketObject_SourceHashTrigger(t *testing.T) {
+	var obj, updated_obj s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	source := testAccAWSS3BucketObjectCreateTempFile(t, "{anything will do }")
+	rewrite_source := func(*terraform.State) error {
+		if err := ioutil.WriteFile(source, []byte("{any other thing will do }"), 0644); err != nil {
+			os.Remove(source)
+			t.Fatal(err)
+		}
+		return nil
+	}
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketObjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfig_SourceHashTrigger(rInt, source),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &obj),
+					testAccCheckAWSS3BucketObjectBody(&obj, "{anything will do }"),
+					resource.TestCheckResourceAttr(resourceName, "source_hash", "7b006ff4d70f68cc65061acf2f802e6f"),
+					rewrite_source,
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				PreConfig: func() {},
+				Config:    testAccAWSS3BucketObjectConfig_SourceHashTrigger(rInt, source),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &updated_obj),
+					testAccCheckAWSS3BucketObjectBody(&updated_obj, "{any other thing will do }"),
+					resource.TestCheckResourceAttr(resourceName, "source_hash", "77a736aa9e04d0dc96b9b30894963983"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSS3BucketObject_withContentCharacteristics(t *testing.T) {
 	var obj s3.GetObjectOutput
 	resourceName := "aws_s3_bucket_object.object"
@@ -1580,6 +1622,21 @@ resource "aws_s3_bucket_object" "object" {
   content_base64 = %[2]q
 }
 `, randInt, contentBase64)
+}
+
+func testAccAWSS3BucketObjectConfig_SourceHashTrigger(randInt int, source string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+
+resource "aws_s3_bucket_object" "object" {
+  bucket       = "${aws_s3_bucket.object_bucket.bucket}"
+  key          = "test-key"
+  source       = "%s"
+  source_hash  = "${filemd5("%s")}"
+}
+`, randInt, source, source)
 }
 
 func testAccAWSS3BucketObjectConfig_updateable(randInt int, bucketVersioning bool, source string) string {
