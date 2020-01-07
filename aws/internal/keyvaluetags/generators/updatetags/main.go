@@ -510,6 +510,8 @@ func ServiceTagInputCustomValue(serviceName string) string {
 	switch serviceName {
 	case "kinesis":
 		return "aws.StringMap(chunk.IgnoreAws().Map())"
+	case "pinpoint":
+		return "&pinpoint.TagsModel{Tags: updatedTags.IgnoreAws().PinpointTags()}"
 	default:
 		return ""
 	}

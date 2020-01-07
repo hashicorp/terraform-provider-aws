@@ -2577,7 +2577,7 @@ func PinpointUpdateTags(conn *pinpoint.Pinpoint, identifier string, oldTagsMap i
 	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
 		input := &pinpoint.TagResourceInput{
 			ResourceArn: aws.String(identifier),
-			TagsModel:   updatedTags.IgnoreAws().PinpointTags(),
+			TagsModel:   &pinpoint.TagsModel{Tags: updatedTags.IgnoreAws().PinpointTags()},
 		}
 
 		_, err := conn.TagResource(input)
