@@ -59,7 +59,7 @@ func dataSourceAwsApiGatewayRestApiRead(d *schema.ResourceData, meta interface{}
 
 	d.SetId(*match.Id)
 
-	d.Set("execution_arn", resourceApiGatewayExecutionArn(d, meta))
+	d.Set("execution_arn", resourceApiGatewayExecutionArn(*match.Id, d, meta))
 
 	resp, err := conn.GetResources(&apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Id()),
