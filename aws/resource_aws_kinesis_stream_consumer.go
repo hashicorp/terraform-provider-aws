@@ -179,8 +179,8 @@ func validateResourceAwsKinesisStreamConsumerImportString(importStr string) ([]s
 	consumerName := importParts[0]
 	streamArn := importParts[1]
 
-	consumerNameRe := regexp.MustCompile("(^[a-zA-Z0-9_.-]+$)")
-	streamArnRe := regexp.MustCompile("arn:aws.*:kinesis:.*:\\d{12}:stream/.+")
+	consumerNameRe := regexp.MustCompile(`(^[a-zA-Z0-9_.-]+$)`)
+	streamArnRe := regexp.MustCompile(`arn:aws.*:kinesis:.*:\d{12}:stream/.+`)
 
 	if !consumerNameRe.MatchString(consumerName) {
 		return nil, fmt.Errorf(errStr, importStr, "invalid consumer name")
