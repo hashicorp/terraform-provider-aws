@@ -42,6 +42,7 @@ func resourceAwsEcsTask() *schema.Resource {
 			"launch_type": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			"containers": {
 				Type:     schema.TypeList,
@@ -129,7 +130,7 @@ func resourceAwsEcsTaskRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	task := out.Tasks[0]	// DescribeTasks returns a list but we're only passing in a single task ARN
+	task := out.Tasks[0] // DescribeTasks returns a list but we're only passing in a single task ARN
 
 	d.SetId(taskArn)
 	d.Set("arn", &taskArn)
@@ -141,7 +142,7 @@ func resourceAwsEcsTaskRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("containers", flattenEcsTaskContainers(task.Containers)); err != nil {
 		return err
 	}
-	
+
 	if err := d.Set("attachments", flattenEcsTaskAttachments(task.Attachments)); err != nil {
 		return err
 	}
