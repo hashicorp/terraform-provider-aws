@@ -242,7 +242,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%s"
   role          = "${aws_iam_role.iam_for_lambda.arn}"
   handler       = "lambdapinpoint.handler"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
   publish       = true
 }
 

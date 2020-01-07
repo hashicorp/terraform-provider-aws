@@ -1139,7 +1139,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s"
   role          = "${aws_iam_role.test.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_cognito_user_pool" "test" {
@@ -1188,7 +1188,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s"
   role          = "${aws_iam_role.test.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_lambda_function" "second" {
@@ -1196,7 +1196,7 @@ resource "aws_lambda_function" "second" {
   function_name = "%[1]s_second"
   role          = "${aws_iam_role.test.arn}"
   handler       = "exports.example"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_cognito_user_pool" "test" {

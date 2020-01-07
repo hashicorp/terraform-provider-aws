@@ -537,7 +537,7 @@ resource "aws_lambda_function" "authorizer" {
   function_name    = "%s"
   role             = "${aws_iam_role.iam_for_lambda.arn}"
   handler          = "exports.example"
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs12.x"
 }
 `, apiGatewayName, apiGatewayName, apiGatewayName, lambdaName)
 }
