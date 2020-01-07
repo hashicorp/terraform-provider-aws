@@ -289,8 +289,9 @@ func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWi
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelMaintenanceWindowExecution
 func (c *SSM) CancelMaintenanceWindowExecution(input *CancelMaintenanceWindowExecutionInput) (*CancelMaintenanceWindowExecutionOutput, error) {
@@ -820,11 +821,12 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -921,8 +923,8 @@ func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Requ
 //   The OpsItem already exists.
 //
 //   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
-//   The request caused OpsItems to exceed one or more limits. For information
-//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   The request caused OpsItems to exceed one or more quotas. For information
+//   about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -1012,11 +1014,12 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //   don't match the original call to the API with the same idempotency token.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -2197,8 +2200,9 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -2287,8 +2291,9 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -3332,8 +3337,9 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeUnsupportedOperatingSystem "UnsupportedOperatingSystem"
 //   The operating systems you specified is not supported, or the operation is
@@ -4039,8 +4045,9 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4125,8 +4132,9 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4295,8 +4303,9 @@ func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanc
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowSchedule
 func (c *SSM) DescribeMaintenanceWindowSchedule(input *DescribeMaintenanceWindowScheduleInput) (*DescribeMaintenanceWindowScheduleOutput, error) {
@@ -4378,8 +4387,9 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -4464,8 +4474,9 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6202,8 +6213,9 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6288,8 +6300,9 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6375,8 +6388,9 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6461,8 +6475,9 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -6547,8 +6562,9 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -7300,8 +7316,9 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
@@ -9523,8 +9540,9 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9613,19 +9631,21 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInvalidResourceId "InvalidResourceId"
 //   The resource ID is not valid. Verify that you entered the correct ID and
 //   try again.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9714,15 +9734,17 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -9811,15 +9833,17 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
-//   Error returned when the caller has exceeded the default resource limits.
+//   Error returned when the caller has exceeded the default resource quotas.
 //   For example, too many maintenance windows or patch baselines have been created.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeFeatureNotAvailableException "FeatureNotAvailableException"
 //   You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
@@ -10106,8 +10130,9 @@ func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Requ
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -10783,8 +10808,9 @@ func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *reques
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11309,8 +11335,9 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11412,8 +11439,9 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11517,8 +11545,9 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -11712,8 +11741,8 @@ func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Requ
 //   The OpsItem already exists.
 //
 //   * ErrCodeOpsItemLimitExceededException "OpsItemLimitExceededException"
-//   The request caused OpsItems to exceed one or more limits. For information
-//   about OpsItem limits, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   The request caused OpsItems to exceed one or more quotas. For information
+//   about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * ErrCodeOpsItemInvalidParameterException "OpsItemInvalidParameterException"
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -11803,8 +11832,9 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 //   Error returned when the ID specified for a resource, such as a maintenance
 //   window or Patch baseline, doesn't exist.
 //
-//   For information about resource limits in Systems Manager, see AWS Systems
-//   Manager Limits (http://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_ssm).
+//   For information about resource quotas in Systems Manager, see Systems Manager
+//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   in the AWS General Reference.
 //
 //   * ErrCodeInternalServerError "InternalServerError"
 //   An error occurred on the server side.
@@ -13348,8 +13378,22 @@ type AttachmentsSource struct {
 	Name *string `type:"string"`
 
 	// The value of a key-value pair that identifies the location of an attachment
-	// to a document. The format is the URL of the location of a document attachment,
-	// such as the URL of an Amazon S3 bucket.
+	// to a document. The format for Value depends on the type of key you specify.
+	//
+	//    * For the key SourceUrl, the value is an S3 bucket location. For example:
+	//    "Values": [ "s3://my-bucket/my-folder" ]
+	//
+	//    * For the key S3FileUrl, the value is a file in an S3 bucket. For example:
+	//    "Values": [ "s3://my-bucket/my-folder/my-file.py" ]
+	//
+	//    * For the key AttachmentReference, the value is constructed from the name
+	//    of another SSM document in your account, a version number of that document,
+	//    and a file attached to that document version that you want to reuse. For
+	//    example: "Values": [ "MyOtherDocument/3/my-other-file.py" ] However, if
+	//    the SSM document is shared with you from another account, the full SSM
+	//    document ARN must be specified instead of the document name only. For
+	//    example: "Values": [ "arn:aws:ssm:us-east-2:111122223333:document/OtherAccountDocument/3/their-file.py"
+	//    ]
 	Values []*string `min:"1" type:"list"`
 }
 
@@ -15722,10 +15766,11 @@ type CreateAssociationInput struct {
 	// The instance ID.
 	//
 	// InstanceId has been deprecated. To specify an instance ID for an association,
-	// use the Targets parameter. If you use the parameter InstanceId, you cannot
-	// use the parameters AssociationName, DocumentVersion, MaxErrors, MaxConcurrency,
-	// OutputLocation, or ScheduleExpression. To use these parameters, you must
-	// use the Targets parameter.
+	// use the Targets parameter. Requests that include the parameter InstanceID
+	// with SSM documents that use schema version 2.0 or later will fail. In addition,
+	// if you use the parameter InstanceId, you cannot use the parameters AssociationName,
+	// DocumentVersion, MaxErrors, MaxConcurrency, OutputLocation, or ScheduleExpression.
+	// To use these parameters, you must use the Targets parameter.
 	InstanceId *string `type:"string"`
 
 	// The maximum number of targets allowed to run the association at the same
@@ -15947,8 +15992,8 @@ type CreateDocumentInput struct {
 	// Content is a required field
 	Content *string `min:"1" type:"string" required:"true"`
 
-	// Specify the document format for the request. The document format can be either
-	// JSON or YAML. JSON is the default format.
+	// Specify the document format for the request. The document format can be JSON,
+	// YAML, or TEXT. JSON is the default format.
 	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
 	// The type of document to create. Valid document types include: Command, Policy,
@@ -29169,6 +29214,9 @@ func (s *MaintenanceWindowLambdaParameters) SetQualifier(v string) *MaintenanceW
 type MaintenanceWindowRunCommandParameters struct {
 	_ struct{} `type:"structure"`
 
+	// Configuration options for sending command output to CloudWatch Logs.
+	CloudWatchOutputConfig *CloudWatchOutputConfig `type:"structure"`
+
 	// Information about the commands to run.
 	Comment *string `type:"string"`
 
@@ -29178,6 +29226,19 @@ type MaintenanceWindowRunCommandParameters struct {
 
 	// SHA-256 or SHA-1. SHA-1 hashes have been deprecated.
 	DocumentHashType *string `type:"string" enum:"DocumentHashType"`
+
+	// The SSM document version to use in the request. You can specify $DEFAULT,
+	// $LATEST, or a specific version number. If you run commands by using the AWS
+	// CLI, then you must escape the first two options by using a backslash. If
+	// you specify a version number, then you don't need to use the backslash. For
+	// example:
+	//
+	// --document-version "\$DEFAULT"
+	//
+	// --document-version "\$LATEST"
+	//
+	// --document-version "3"
+	DocumentVersion *string `type:"string"`
 
 	// Configurations for sending notifications about command status changes on
 	// a per-instance basis.
@@ -29220,11 +29281,22 @@ func (s *MaintenanceWindowRunCommandParameters) Validate() error {
 	if s.TimeoutSeconds != nil && *s.TimeoutSeconds < 30 {
 		invalidParams.Add(request.NewErrParamMinValue("TimeoutSeconds", 30))
 	}
+	if s.CloudWatchOutputConfig != nil {
+		if err := s.CloudWatchOutputConfig.Validate(); err != nil {
+			invalidParams.AddNested("CloudWatchOutputConfig", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCloudWatchOutputConfig sets the CloudWatchOutputConfig field's value.
+func (s *MaintenanceWindowRunCommandParameters) SetCloudWatchOutputConfig(v *CloudWatchOutputConfig) *MaintenanceWindowRunCommandParameters {
+	s.CloudWatchOutputConfig = v
+	return s
 }
 
 // SetComment sets the Comment field's value.
@@ -29242,6 +29314,12 @@ func (s *MaintenanceWindowRunCommandParameters) SetDocumentHash(v string) *Maint
 // SetDocumentHashType sets the DocumentHashType field's value.
 func (s *MaintenanceWindowRunCommandParameters) SetDocumentHashType(v string) *MaintenanceWindowRunCommandParameters {
 	s.DocumentHashType = &v
+	return s
+}
+
+// SetDocumentVersion sets the DocumentVersion field's value.
+func (s *MaintenanceWindowRunCommandParameters) SetDocumentVersion(v string) *MaintenanceWindowRunCommandParameters {
+	s.DocumentVersion = &v
 	return s
 }
 
@@ -34061,8 +34139,8 @@ type ResumeSessionOutput struct {
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
-	// of supported region values, see the Region column in the AWS Systems Manager
-	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// of supported region values, see the Region column in Systems Manager Service
+	// Endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
 	// in the AWS General Reference.
 	//
 	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
@@ -35081,6 +35159,19 @@ type StartAutomationExecutionInput struct {
 	// in the Automation document.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
+	// Optional metadata that you assign to a resource. You can specify a maximum
+	// of five tags for an automation. Tags enable you to categorize a resource
+	// in different ways, such as by purpose, owner, or environment. For example,
+	// you might want to tag an automation to identify an environment or operating
+	// system. In this case, you could specify the following key name/value pairs:
+	//
+	//    * Key=environment,Value=test
+	//
+	//    * Key=OS,Value=Windows
+	//
+	// To add tags to an existing patch baseline, use the AddTagsToResource action.
+	Tags []*Tag `type:"list"`
+
 	// A location is a combination of AWS Regions and/or AWS accounts where you
 	// want to run the Automation. Use this action to start an Automation in multiple
 	// Regions and multiple accounts. For more information, see Executing Automations
@@ -35133,6 +35224,16 @@ func (s *StartAutomationExecutionInput) Validate() error {
 	}
 	if s.TargetParameterName != nil && len(*s.TargetParameterName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetParameterName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 	if s.TargetLocations != nil {
 		for i, v := range s.TargetLocations {
@@ -35200,6 +35301,12 @@ func (s *StartAutomationExecutionInput) SetMode(v string) *StartAutomationExecut
 // SetParameters sets the Parameters field's value.
 func (s *StartAutomationExecutionInput) SetParameters(v map[string][]*string) *StartAutomationExecutionInput {
 	s.Parameters = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StartAutomationExecutionInput) SetTags(v []*Tag) *StartAutomationExecutionInput {
+	s.Tags = v
 	return s
 }
 
@@ -35322,8 +35429,8 @@ type StartSessionOutput struct {
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
-	// of supported region values, see the Region column in the AWS Systems Manager
-	// table of regions and endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#ssm_region)
+	// of supported region values, see the Region column in Systems Manager Service
+	// Endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
 	// in the AWS General Reference.
 	//
 	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
@@ -38278,6 +38385,9 @@ const (
 
 	// AttachmentsSourceKeyS3fileUrl is a AttachmentsSourceKey enum value
 	AttachmentsSourceKeyS3fileUrl = "S3FileUrl"
+
+	// AttachmentsSourceKeyAttachmentReference is a AttachmentsSourceKey enum value
+	AttachmentsSourceKeyAttachmentReference = "AttachmentReference"
 )
 
 const (
@@ -38304,6 +38414,9 @@ const (
 
 	// AutomationExecutionFilterKeyAutomationType is a AutomationExecutionFilterKey enum value
 	AutomationExecutionFilterKeyAutomationType = "AutomationType"
+
+	// AutomationExecutionFilterKeyTagKey is a AutomationExecutionFilterKey enum value
+	AutomationExecutionFilterKeyTagKey = "TagKey"
 )
 
 const (

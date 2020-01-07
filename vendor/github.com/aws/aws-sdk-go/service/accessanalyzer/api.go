@@ -57,7 +57,7 @@ func (c *AccessAnalyzer) CreateAnalyzerRequest(input *CreateAnalyzerInput) (req 
 
 // CreateAnalyzer API operation for Access Analyzer.
 //
-// Creates an analyzer with a zone of trust set to your account.
+// Creates an analyzer for your account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -152,7 +152,8 @@ func (c *AccessAnalyzer) CreateArchiveRuleRequest(input *CreateArchiveRuleInput)
 
 // CreateArchiveRule API operation for Access Analyzer.
 //
-// Creates an archive rule for the specified analyzer.
+// Creates an archive rule for the specified analyzer. Archive rules automatically
+// archive findings that meet the criteria you define when you create the rule.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -435,7 +436,7 @@ func (c *AccessAnalyzer) GetAnalyzedResourceRequest(input *GetAnalyzedResourceIn
 
 // GetAnalyzedResource API operation for Access Analyzer.
 //
-// Retrieves information about an analyzed resource.
+// Retrieves information about a resource that was analyzed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -805,7 +806,8 @@ func (c *AccessAnalyzer) ListAnalyzedResourcesRequest(input *ListAnalyzedResourc
 
 // ListAnalyzedResources API operation for Access Analyzer.
 //
-// Retrieves a list of resources that have been analyzed.
+// Retrieves a list of resources of the specified type that have been analyzed
+// by the specified analyzer..
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1481,7 +1483,7 @@ func (c *AccessAnalyzer) StartResourceScanRequest(input *StartResourceScanInput)
 
 // StartResourceScan API operation for Access Analyzer.
 //
-// Starts a scan of the policies applied to the specified resource.
+// Immediately starts a scan of the policies applied to the specified resource.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1757,7 +1759,7 @@ func (c *AccessAnalyzer) UpdateArchiveRuleRequest(input *UpdateArchiveRuleInput)
 
 // UpdateArchiveRule API operation for Access Analyzer.
 //
-// Updates the specified archive rule.
+// Updates the criteria and values for the specified archive rule.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1849,7 +1851,7 @@ func (c *AccessAnalyzer) UpdateFindingsRequest(input *UpdateFindingsInput) (req 
 
 // UpdateFindings API operation for Access Analyzer.
 //
-// Updates findings with the new values provided in the request.
+// Updates the status for the specified findings.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1907,12 +1909,12 @@ type AnalyzedResource struct {
 	// The time at which the resource was analyzed.
 	//
 	// AnalyzedAt is a required field
-	AnalyzedAt *time.Time `locationName:"analyzedAt" type:"timestamp" required:"true"`
+	AnalyzedAt *time.Time `locationName:"analyzedAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The time at which the finding was created.
 	//
 	// CreatedAt is a required field
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" required:"true"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// An error message.
 	Error *string `locationName:"error" type:"string"`
@@ -1942,7 +1944,7 @@ type AnalyzedResource struct {
 	// The time at which the finding was updated.
 	//
 	// UpdatedAt is a required field
-	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" required:"true"`
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 }
 
 // String returns the string representation
@@ -2064,13 +2066,13 @@ type AnalyzerSummary struct {
 	// A timestamp for the time at which the analyzer was created.
 	//
 	// CreatedAt is a required field
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" required:"true"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The resource that was most recently analyzed by the analyzer.
 	LastResourceAnalyzed *string `locationName:"lastResourceAnalyzed" type:"string"`
 
 	// The time at which the most recently analyzed resource was analyzed.
-	LastResourceAnalyzedAt *time.Time `locationName:"lastResourceAnalyzedAt" type:"timestamp"`
+	LastResourceAnalyzedAt *time.Time `locationName:"lastResourceAnalyzedAt" type:"timestamp" timestampFormat:"iso8601"`
 
 	// The name of the analyzer.
 	//
@@ -2146,7 +2148,7 @@ type ArchiveRuleSummary struct {
 	// The time at which the archive rule was created.
 	//
 	// CreatedAt is a required field
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" required:"true"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// A filter used to define the archive rule.
 	//
@@ -2161,7 +2163,7 @@ type ArchiveRuleSummary struct {
 	// The time at which the archive rule was last updated.
 	//
 	// UpdatedAt is a required field
-	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" required:"true"`
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 }
 
 // String returns the string representation
@@ -2207,7 +2209,8 @@ type CreateAnalyzerInput struct {
 	// AnalyzerName is a required field
 	AnalyzerName *string `locationName:"analyzerName" min:"1" type:"string" required:"true"`
 
-	// Specifies the archive rules to add for the analyzer.
+	// Specifies the archive rules to add for the analyzer. Archive rules automatically
+	// archive findings that meet the criteria you define for the rule.
 	ArchiveRules []*InlineArchiveRule `locationName:"archiveRules" type:"list"`
 
 	// A client token.
@@ -2216,8 +2219,8 @@ type CreateAnalyzerInput struct {
 	// The tags to apply to the analyzer.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
-	// The zone of trust for the analyzer. You can create only one analyzer per
-	// account per Region.
+	// The type of analyzer to create. Only ACCOUNT analyzers are supported. You
+	// can create only one analyzer per account per Region.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"Type"`
@@ -2422,7 +2425,7 @@ func (s CreateArchiveRuleOutput) GoString() string {
 	return s.String()
 }
 
-// The criteria to use in the filter that defines the rule.
+// The criteria to use in the filter that defines the archive rule.
 type Criterion struct {
 	_ struct{} `type:"structure"`
 
@@ -2561,7 +2564,7 @@ func (s DeleteAnalyzerOutput) GoString() string {
 type DeleteArchiveRuleInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the analyzer that was deleted.
+	// The name of the analyzer that associated with the archive rule to delete.
 	//
 	// AnalyzerName is a required field
 	AnalyzerName *string `location:"uri" locationName:"analyzerName" min:"1" type:"string" required:"true"`
@@ -2650,7 +2653,7 @@ type Finding struct {
 	// The time at which the resource was analyzed.
 	//
 	// AnalyzedAt is a required field
-	AnalyzedAt *time.Time `locationName:"analyzedAt" type:"timestamp" required:"true"`
+	AnalyzedAt *time.Time `locationName:"analyzedAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The condition in the analyzed policy statement that resulted in a finding.
 	//
@@ -2660,7 +2663,7 @@ type Finding struct {
 	// The time at which the finding was generated.
 	//
 	// CreatedAt is a required field
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" required:"true"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// An error.
 	Error *string `locationName:"error" type:"string"`
@@ -2693,7 +2696,7 @@ type Finding struct {
 	// The time at which the finding was updated.
 	//
 	// UpdatedAt is a required field
-	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" required:"true"`
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 }
 
 // String returns the string representation
@@ -2790,7 +2793,7 @@ type FindingSummary struct {
 	// analyzed.
 	//
 	// AnalyzedAt is a required field
-	AnalyzedAt *time.Time `locationName:"analyzedAt" type:"timestamp" required:"true"`
+	AnalyzedAt *time.Time `locationName:"analyzedAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The condition in the analyzed policy statement that resulted in a finding.
 	//
@@ -2800,7 +2803,7 @@ type FindingSummary struct {
 	// The time at which the finding was created.
 	//
 	// CreatedAt is a required field
-	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" required:"true"`
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 
 	// The error that resulted in an Error finding.
 	Error *string `locationName:"error" type:"string"`
@@ -2833,7 +2836,7 @@ type FindingSummary struct {
 	// The time at which the finding was most recently updated.
 	//
 	// UpdatedAt is a required field
-	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" required:"true"`
+	UpdatedAt *time.Time `locationName:"updatedAt" type:"timestamp" timestampFormat:"iso8601" required:"true"`
 }
 
 // String returns the string representation
@@ -3205,7 +3208,7 @@ func (s *GetFindingInput) SetId(v string) *GetFindingInput {
 	return s
 }
 
-// The resposne to the request.
+// The response to the request.
 type GetFindingOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3229,11 +3232,12 @@ func (s *GetFindingOutput) SetFinding(v *Finding) *GetFindingOutput {
 	return s
 }
 
-// An inline archive rule.
+// An criterion statement in an archive rule. Each archive rule may have multiple
+// criteria.
 type InlineArchiveRule struct {
 	_ struct{} `type:"structure"`
 
-	// The criteria for the rule.
+	// The condition and values for a criterion.
 	//
 	// Filter is a required field
 	Filter map[string]*Criterion `locationName:"filter" type:"map" required:"true"`
@@ -3406,8 +3410,7 @@ type ListAnalyzersInput struct {
 	// A token used for pagination of results returned.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// The type of analyzer, which corresponds to the zone of trust selected when
-	// the analyzer was created.
+	// The type of analyzer.
 	Type *string `location:"querystring" locationName:"type" type:"string" enum:"Type"`
 }
 
@@ -3654,7 +3657,7 @@ func (s *ListFindingsInput) SetSort(v *SortCriteria) *ListFindingsInput {
 	return s
 }
 
-// The resposne to the request.
+// The response to the request.
 type ListFindingsOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -3756,7 +3759,7 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 	return s
 }
 
-// The sort criteria.
+// The criteria used to sort.
 type SortCriteria struct {
 	_ struct{} `type:"structure"`
 
@@ -3984,7 +3987,7 @@ func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
 	return s
 }
 
-// The response tot he request.
+// The response to the request.
 type UntagResourceOutput struct {
 	_ struct{} `type:"structure"`
 }

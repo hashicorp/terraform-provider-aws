@@ -1,27 +1,95 @@
-## 2.42.0 (Unreleased)
+## 2.44.0 (Unreleased)
 
 FEATURES:
 
-* **New Resource:** `aws_ecs_capacity_provider` [GH-11151]
-* **New Resource:** `aws_media_convert_queue` [GH-10041]
-* **New Resource:** `aws_workspaces_ip_group` [GH-10904]
+* **New Data Source:** `aws_directory_service_directory` [GH-11282]
+* **New Resource:** `aws_workspaces_directory` [GH-11023]
 
 ENHANCEMENTS:
 
-* resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute [GH-10566]
-* resource/aws_codebuild_project: Add `ARM_CONTAINER` as valid `environment` configuration block `compute_type` argument value [GH-11206]
-* resource/aws_ecs_cluster: Add `capacity_providers` argument and `default_capacity_provider_strategy` configuration block (support ECS Capacity Providers) [GH-11151]
-* resource/aws_ecs_service: Add `capacity_provider_strategy` configuration block (support ECS Capacity Providers) [GH-11151]
-* resource/aws_emr_cluster: Add `step_concurrency_level` argument [GH-11196]
-* resource/aws_lb_listener_rule: Support ALB advanced routing rules [GH-8268]
+* data-source/aws_launch_configuration: Add `arn` attribute [GH-11416]
+* resource/aws_ami_launch_permission: Support resource import [GH-11437]
+* resource/aws_api_gateway_authorizer: Support resource import [GH-11436]
+* resource/aws_api_gateway_authorizer: Add plan time validation for `provider_arns` argument [GH-11436]
+* resource/aws_api_gateway_usage_plan_key: Support resource import [GH-11439]
+* resource/aws_batch_compute_environment: Add `compute_environment_name_prefix` argument and make `compute_enviroment_name` argument optional (support full name generation) [GH-10682]
+* resource/aws_batch_compute_environment: Add `compute_resources` configuration block `allocation_strategy` argument [GH-10894]
+* resource/aws_batch_job_queue: Support resource import [GH-11406]
+* resource/aws_cloudformation_stack: Prevent difference with `Transform` templates showing processed template (support SAM templates) [GH-9006]
+* resource/aws_cloudwatch_event_rule: Support tag-on-create [GH-11346]
+* resource/aws_db_instance: Remove `identifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
+* resource/aws_ecs_service: Add plan time validation for `launch_type`, `load_balancer` configuration block `target_group_arn` and `container_port`, and `placement_constraints` configuration block `type` arguments [GH-11423]
+* resource/aws_launch_configuration: Add `arn` attribute [GH-11416]
+* resource/aws_lb: Add plan-time validation for `ip_address_type` and `load_balancer_type` arguments [GH-11419]
+* resource/aws_rds_cluster_instance: Allow updating `ca_cert_identifier` for `aws_rds_cluster_instance` [GH-10954]
+* resource/aws_wafregional_xss_match_set: Support resource import [GH-11432]
 
 BUG FIXES:
 
-* provider: Prevent crash in planning IAM Policy equivalency checking with invalid `Resource` declarations (e.g. a list of list of strings) [GH-11107]
-* resource/aws_eks_cluster: Handle additional `InvalidParameterException: Error in role params` error during creation for IAM eventual consistency [GH-11127]
-* resource/aws_iam_role: Ignore additional `NoSuchEntity` errors on deletion [GH-11125]
-* resource/aws_security_group: Support ampersand (`&`) in `ingress` and `egress` configuration block `description` argument value validation [GH-9528]
-* resource/aws_security_group_rule: Support ampersand (`&`) in `description` argument value validation [GH-9528]
+* provider: Allow `aws` account ID in ARN validation (support ARNs such as AWS Managed IAM Policies) [GH-11450]
+* provider: Support AWS C2S/SC2S Regional ARNs in ARN validation [GH-11471]
+* resource/aws_api_gateway_usage_plan_key: Ensure Terraform performs drift detection of `key_type` argument [GH-11439]
+* resource/aws_appautoscaling_policy: Prevent potential state removal of resource immediately after creation due to eventual consistency [GH-11222]
+* resource/aws_cloudwatch_dashboard: Trigger resource recreation on `dashboard_name` updates (prevent dangling resource) [GH-9784]
+* resource/aws_cloudwatch_event_rule: Improved handling of `is_enabled` argument [GH-11346]
+* resource/aws_ecs_service: Automatically retry IAM Service Linked Role assume role error on creation due to asynchronous creation of role on first usage and IAM eventual consistency [GH-11423]
+* resource/aws_opsworks_stack: Ensure `tags` are refreshed in Terraform state during read for drift detection [GH-11373]
+* resource/aws_rds_cluster_instance: Prevent `is already being deleted` error on deletion and wait for deletion completion [GH-11468]
+
+## 2.43.0 (December 19, 2019)
+
+NOTES:
+
+* This will be the last planned release until early January. Enjoy the rest of your year!
+
+FEATURES:
+
+* **New Data Source:** `aws_organizations_organizational_units` ([#10395](https://github.com/terraform-providers/terraform-provider-aws/issues/10395))
+* **New Resource:** `aws_accessanalyzer_analyzer` ([#11169](https://github.com/terraform-providers/terraform-provider-aws/issues/11169))
+* **New Resource:** `aws_lambda_function_event_invoke_config` ([#11165](https://github.com/terraform-providers/terraform-provider-aws/issues/11165))
+
+ENHANCEMENTS:
+
+* data-source/aws_elb: Add `arn` attribute ([#11345](https://github.com/terraform-providers/terraform-provider-aws/issues/11345))
+* resource/aws_batch_compute_environment: Support resource import ([#11299](https://github.com/terraform-providers/terraform-provider-aws/issues/11299))
+* resource/aws_codebuild_project: Add `queued_timeout` argument ([#11261](https://github.com/terraform-providers/terraform-provider-aws/issues/11261))
+* resource/aws_fsx_windows_file_system: Support `storage_capacity` minimum value of `32` in validation to match recent updates to the API ([#11272](https://github.com/terraform-providers/terraform-provider-aws/issues/11272))
+* resource/aws_opsworks_custom_layer: Add `encrypted` `ebs_volume` configuration ([#7110](https://github.com/terraform-providers/terraform-provider-aws/issues/7110))
+
+BUG FIXES:
+
+* resource/aws_datasync_agent: Trigger resource recreation on updated `InvalidRequestException` error for agents deleted outside Terraform ([#11005](https://github.com/terraform-providers/terraform-provider-aws/issues/11005))
+* resource/aws_ecs_cluster: Fixes intermittent failures on update when cluster dependencies are updating ([#11310](https://github.com/terraform-providers/terraform-provider-aws/issues/11310))
+* resource/aws_ecs_cluster: Fixes bug where ECS cluster capacity providers are updated but default provider strategy is not changed ([#11316](https://github.com/terraform-providers/terraform-provider-aws/issues/11316))
+* resource/aws_globalaccelerator_endpoint_group: Allow `traffic_dial_percentage` to be set to `0` ([#11253](https://github.com/terraform-providers/terraform-provider-aws/issues/11253))
+* resource/aws_lb_listener_rule: Fixes regression from version 2.42.0 when updating a rule without modifying condition ([#11364](https://github.com/terraform-providers/terraform-provider-aws/issues/11364))
+* resource/aws_ssm_activation: Ensure `tags` are refreshed into Terraform state during read for drift detection ([#11290](https://github.com/terraform-providers/terraform-provider-aws/issues/11290))
+
+## 2.42.0 (December 13, 2019)
+
+FEATURES:
+
+* **New Resource:** `aws_ecs_capacity_provider` ([#11151](https://github.com/terraform-providers/terraform-provider-aws/issues/11151))
+* **New Resource:** `aws_media_convert_queue` ([#10041](https://github.com/terraform-providers/terraform-provider-aws/issues/10041))
+* **New Resource:** `aws_workspaces_ip_group` ([#10904](https://github.com/terraform-providers/terraform-provider-aws/issues/10904))
+
+ENHANCEMENTS:
+
+* resource/aws_apigateway_usage_plan: Add `tags` argument and `arn` attribute ([#10566](https://github.com/terraform-providers/terraform-provider-aws/issues/10566))
+* resource/aws_codebuild_project: Add `ARM_CONTAINER` as valid `environment` configuration block `compute_type` argument value ([#11206](https://github.com/terraform-providers/terraform-provider-aws/issues/11206))
+* resource/aws_ecs_cluster: Add `capacity_providers` argument and `default_capacity_provider_strategy` configuration block (support ECS Capacity Providers) ([#11151](https://github.com/terraform-providers/terraform-provider-aws/issues/11151))
+* resource/aws_ecs_service: Add `capacity_provider_strategy` configuration block (support ECS Capacity Providers) ([#11151](https://github.com/terraform-providers/terraform-provider-aws/issues/11151))
+* resource/aws_emr_cluster: Add `step_concurrency_level` argument ([#11196](https://github.com/terraform-providers/terraform-provider-aws/issues/11196))
+* resource/aws_lb_listener_rule: Support ALB advanced routing rules ([#8268](https://github.com/terraform-providers/terraform-provider-aws/issues/8268))
+
+BUG FIXES:
+
+* provider: Prevent crash in planning IAM Policy equivalency checking with invalid `Resource` declarations (e.g. a list of list of strings) ([#11107](https://github.com/terraform-providers/terraform-provider-aws/issues/11107))
+* resource/aws_eks_cluster: Handle additional `InvalidParameterException: Error in role params` error during creation for IAM eventual consistency ([#11127](https://github.com/terraform-providers/terraform-provider-aws/issues/11127))
+* resource/aws_iam_role: Ignore additional `NoSuchEntity` errors on deletion ([#11125](https://github.com/terraform-providers/terraform-provider-aws/issues/11125))
+* resource/aws_network_interface: Prevent extraneous `ModifyNetworkInterfaceAttribute` API call during update ([#11277](https://github.com/terraform-providers/terraform-provider-aws/issues/11277))
+* resource/aws_security_group: Support ampersand (`&`) in `ingress` and `egress` configuration block `description` argument value validation ([#9528](https://github.com/terraform-providers/terraform-provider-aws/issues/9528))
+* resource/aws_security_group_rule: Support ampersand (`&`) in `description` argument value validation ([#9528](https://github.com/terraform-providers/terraform-provider-aws/issues/9528))
 
 ## 2.41.0 (December 04, 2019)
 

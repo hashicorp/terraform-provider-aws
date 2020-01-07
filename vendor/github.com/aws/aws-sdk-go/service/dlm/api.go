@@ -897,6 +897,143 @@ func (s *CreateRule) SetTimes(v []*string) *CreateRule {
 	return s
 }
 
+// Specifies the retention rule for cross-Region snapshot copies.
+type CrossRegionCopyRetainRule struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of time to retain each snapshot. The maximum is 100 years. This
+	// is equivalent to 1200 months, 5200 weeks, or 36500 days.
+	Interval *int64 `min:"1" type:"integer"`
+
+	// The unit of time for time-based retention.
+	IntervalUnit *string `type:"string" enum:"RetentionIntervalUnitValues"`
+}
+
+// String returns the string representation
+func (s CrossRegionCopyRetainRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CrossRegionCopyRetainRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CrossRegionCopyRetainRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CrossRegionCopyRetainRule"}
+	if s.Interval != nil && *s.Interval < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Interval", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInterval sets the Interval field's value.
+func (s *CrossRegionCopyRetainRule) SetInterval(v int64) *CrossRegionCopyRetainRule {
+	s.Interval = &v
+	return s
+}
+
+// SetIntervalUnit sets the IntervalUnit field's value.
+func (s *CrossRegionCopyRetainRule) SetIntervalUnit(v string) *CrossRegionCopyRetainRule {
+	s.IntervalUnit = &v
+	return s
+}
+
+// Specifies a rule for cross-Region snapshot copies.
+type CrossRegionCopyRule struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the AWS KMS customer master key (CMK) to
+	// use for EBS encryption. If this parameter is not specified, your AWS managed
+	// CMK for EBS is used.
+	CmkArn *string `type:"string"`
+
+	// Copy all user-defined tags from the source snapshot to the copied snapshot.
+	CopyTags *bool `type:"boolean"`
+
+	// To encrypt a copy of an unencrypted snapshot if encryption by default is
+	// not enabled, enable encryption using this parameter. Copies of encrypted
+	// snapshots are encrypted, even if this parameter is false or if encryption
+	// by default is not enabled.
+	//
+	// Encrypted is a required field
+	Encrypted *bool `type:"boolean" required:"true"`
+
+	// The retention rule.
+	RetainRule *CrossRegionCopyRetainRule `type:"structure"`
+
+	// The target Region.
+	//
+	// TargetRegion is a required field
+	TargetRegion *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CrossRegionCopyRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CrossRegionCopyRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CrossRegionCopyRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CrossRegionCopyRule"}
+	if s.Encrypted == nil {
+		invalidParams.Add(request.NewErrParamRequired("Encrypted"))
+	}
+	if s.TargetRegion == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetRegion"))
+	}
+	if s.RetainRule != nil {
+		if err := s.RetainRule.Validate(); err != nil {
+			invalidParams.AddNested("RetainRule", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCmkArn sets the CmkArn field's value.
+func (s *CrossRegionCopyRule) SetCmkArn(v string) *CrossRegionCopyRule {
+	s.CmkArn = &v
+	return s
+}
+
+// SetCopyTags sets the CopyTags field's value.
+func (s *CrossRegionCopyRule) SetCopyTags(v bool) *CrossRegionCopyRule {
+	s.CopyTags = &v
+	return s
+}
+
+// SetEncrypted sets the Encrypted field's value.
+func (s *CrossRegionCopyRule) SetEncrypted(v bool) *CrossRegionCopyRule {
+	s.Encrypted = &v
+	return s
+}
+
+// SetRetainRule sets the RetainRule field's value.
+func (s *CrossRegionCopyRule) SetRetainRule(v *CrossRegionCopyRetainRule) *CrossRegionCopyRule {
+	s.RetainRule = v
+	return s
+}
+
+// SetTargetRegion sets the TargetRegion field's value.
+func (s *CrossRegionCopyRule) SetTargetRegion(v string) *CrossRegionCopyRule {
+	s.TargetRegion = &v
+	return s
+}
+
 type DeleteLifecyclePolicyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1614,10 +1751,13 @@ type Schedule struct {
 	// created by this policy.
 	CopyTags *bool `type:"boolean"`
 
-	// The create rule.
+	// The creation rule.
 	CreateRule *CreateRule `type:"structure"`
 
-	// Enable fast snapshot restore.
+	// The rule for cross-Region snapshot copies.
+	CrossRegionCopyRules []*CrossRegionCopyRule `type:"list"`
+
+	// The rule for enabling fast snapshot restore.
 	FastRestoreRule *FastRestoreRule `type:"structure"`
 
 	// The name of the schedule.
@@ -1653,6 +1793,16 @@ func (s *Schedule) Validate() error {
 	if s.CreateRule != nil {
 		if err := s.CreateRule.Validate(); err != nil {
 			invalidParams.AddNested("CreateRule", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.CrossRegionCopyRules != nil {
+		for i, v := range s.CrossRegionCopyRules {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "CrossRegionCopyRules", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 	if s.FastRestoreRule != nil {
@@ -1701,6 +1851,12 @@ func (s *Schedule) SetCopyTags(v bool) *Schedule {
 // SetCreateRule sets the CreateRule field's value.
 func (s *Schedule) SetCreateRule(v *CreateRule) *Schedule {
 	s.CreateRule = v
+	return s
+}
+
+// SetCrossRegionCopyRules sets the CrossRegionCopyRules field's value.
+func (s *Schedule) SetCrossRegionCopyRules(v []*CrossRegionCopyRule) *Schedule {
+	s.CrossRegionCopyRules = v
 	return s
 }
 

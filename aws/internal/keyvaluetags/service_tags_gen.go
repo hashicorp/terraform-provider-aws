@@ -71,6 +71,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/swf"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -2235,6 +2236,33 @@ func (tags KeyValueTags) WafregionalTags() []*waf.Tag {
 
 // WafregionalKeyValueTags creates KeyValueTags from wafregional service tags.
 func WafregionalKeyValueTags(tags []*waf.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// Wafv2Tags returns wafv2 service tags.
+func (tags KeyValueTags) Wafv2Tags() []*wafv2.Tag {
+	result := make([]*wafv2.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &wafv2.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// Wafv2KeyValueTags creates KeyValueTags from wafv2 service tags.
+func Wafv2KeyValueTags(tags []*wafv2.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

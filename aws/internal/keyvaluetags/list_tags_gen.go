@@ -29,6 +29,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
+	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
@@ -52,6 +53,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -69,6 +71,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/securityhub"
@@ -81,6 +84,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -509,6 +513,23 @@ func DevicefarmListTags(conn *devicefarm.DeviceFarm, identifier string) (KeyValu
 	return DevicefarmKeyValueTags(output.Tags), nil
 }
 
+// DirectconnectListTags lists directconnect service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func DirectconnectListTags(conn *directconnect.DirectConnect, identifier string) (KeyValueTags, error) {
+	input := &directconnect.DescribeTagsInput{
+		ResourceArns: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return DirectconnectKeyValueTags(output.ResourceTags[0].Tags), nil
+}
+
 // DirectoryserviceListTags lists directoryservice service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -900,6 +921,23 @@ func KafkaListTags(conn *kafka.Kafka, identifier string) (KeyValueTags, error) {
 	return KafkaKeyValueTags(output.Tags), nil
 }
 
+// KinesisListTags lists kinesis service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisListTags(conn *kinesis.Kinesis, identifier string) (KeyValueTags, error) {
+	input := &kinesis.ListTagsForStreamInput{
+		StreamName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisKeyValueTags(output.Tags), nil
+}
+
 // KinesisanalyticsListTags lists kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1189,6 +1227,24 @@ func ResourcegroupsListTags(conn *resourcegroups.ResourceGroups, identifier stri
 	return ResourcegroupsKeyValueTags(output.Tags), nil
 }
 
+// Route53ListTags lists route53 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53ListTags(conn *route53.Route53, identifier string, resourceType string) (KeyValueTags, error) {
+	input := &route53.ListTagsForResourceInput{
+		ResourceId:   aws.String(identifier),
+		ResourceType: aws.String(resourceType),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Route53KeyValueTags(output.ResourceTagSet.Tags), nil
+}
+
 // Route53resolverListTags lists route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1392,6 +1448,23 @@ func WafregionalListTags(conn *wafregional.WAFRegional, identifier string) (KeyV
 	}
 
 	return WafregionalKeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// Wafv2ListTags lists wafv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Wafv2ListTags(conn *wafv2.WAFV2, identifier string) (KeyValueTags, error) {
+	input := &wafv2.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Wafv2KeyValueTags(output.TagInfoForResource.TagList), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

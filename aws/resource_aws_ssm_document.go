@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const (
@@ -187,7 +188,7 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		docInput.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+		docInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
 	}
 
 	if v, ok := d.GetOk("attachments"); ok {
@@ -221,10 +222,6 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		}
 	} else {
 		log.Printf("[DEBUG] Not setting permissions for %q", d.Id())
-	}
-
-	if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingDocument); err != nil {
-		return fmt.Errorf("error setting SSM Document tags: %s", err)
 	}
 
 	return resourceAwsSsmDocumentRead(d, meta)
@@ -338,14 +335,9 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	tagList, err := ssmconn.ListTagsForResource(&ssm.ListTagsForResourceInput{
-		ResourceId:   aws.String(d.Id()),
-		ResourceType: aws.String(ssm.ResourceTypeForTaggingDocument),
-	})
-	if err != nil {
-		return fmt.Errorf("error listing SSM Document tags for %s: %s", d.Id(), err)
+	if err := d.Set("tags", keyvaluetags.SsmKeyValueTags(doc.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-	d.Set("tags", tagsToMapSSM(tagList.TagList))
 
 	return nil
 }
@@ -354,8 +346,10 @@ func resourceAwsSsmDocumentUpdate(d *schema.ResourceData, meta interface{}) erro
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	if d.HasChange("tags") {
-		if err := setTagsSSM(ssmconn, d, d.Id(), ssm.ResourceTypeForTaggingDocument); err != nil {
-			return fmt.Errorf("error setting SSM Document tags: %s", err)
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SsmUpdateTags(ssmconn, d.Id(), ssm.ResourceTypeForTaggingDocument, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Document (%s) tags: %s", d.Id(), err)
 		}
 	}
 

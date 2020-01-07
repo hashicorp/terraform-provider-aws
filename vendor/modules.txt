@@ -21,7 +21,7 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.25.50
+# github.com/aws/aws-sdk-go v1.27.0
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -194,11 +194,17 @@ github.com/aws/aws-sdk-go/service/swf
 github.com/aws/aws-sdk-go/service/transfer
 github.com/aws/aws-sdk-go/service/waf
 github.com/aws/aws-sdk-go/service/wafregional
+github.com/aws/aws-sdk-go/service/wafv2
 github.com/aws/aws-sdk-go/service/worklink
 github.com/aws/aws-sdk-go/service/workspaces
 github.com/aws/aws-sdk-go/service/xray
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
+# github.com/bflad/tfproviderdocs v0.4.0
+github.com/bflad/tfproviderdocs
+github.com/bflad/tfproviderdocs/check
+github.com/bflad/tfproviderdocs/command
+github.com/bflad/tfproviderdocs/version
 # github.com/bflad/tfproviderlint v0.5.1
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
 github.com/bflad/tfproviderlint/helper/terraformtype
@@ -240,8 +246,10 @@ github.com/bflad/tfproviderlint/passes/schemaschema
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0
 github.com/bgentry/speakeasy
-# github.com/bombsimon/wsl v1.2.5
-github.com/bombsimon/wsl
+# github.com/bmatcuk/doublestar v1.2.1
+github.com/bmatcuk/doublestar
+# github.com/bombsimon/wsl/v2 v2.0.0
+github.com/bombsimon/wsl/v2
 # github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc
 github.com/boombuler/barcode
 github.com/boombuler/barcode/qr
@@ -255,7 +263,7 @@ github.com/davecgh/go-spew/spew
 github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/go-critic/go-critic v0.3.5-0.20190904082202-d79a9f0c64db
+# github.com/go-critic/go-critic v0.4.0
 github.com/go-critic/go-critic/checkers
 github.com/go-critic/go-critic/checkers/internal/lintutil
 # github.com/go-lintpack/lintpack v0.5.2
@@ -320,7 +328,7 @@ github.com/golangci/gocyclo/pkg/gocyclo
 # github.com/golangci/gofmt v0.0.0-20190930125516-244bba706f1a
 github.com/golangci/gofmt/gofmt
 github.com/golangci/gofmt/goimports
-# github.com/golangci/golangci-lint v1.21.0
+# github.com/golangci/golangci-lint v1.22.2
 github.com/golangci/golangci-lint/cmd/golangci-lint
 github.com/golangci/golangci-lint/internal/cache
 github.com/golangci/golangci-lint/internal/errorutil
@@ -382,7 +390,7 @@ github.com/hashicorp/go-cleanhttp
 # github.com/hashicorp/go-getter v1.4.0
 github.com/hashicorp/go-getter
 github.com/hashicorp/go-getter/helper/url
-# github.com/hashicorp/go-hclog v0.9.2
+# github.com/hashicorp/go-hclog v0.10.0
 github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
@@ -423,7 +431,9 @@ github.com/hashicorp/hcl/v2/json
 github.com/hashicorp/logutils
 # github.com/hashicorp/terraform-config-inspect v0.0.0-20191115094559-17f92b0546e8
 github.com/hashicorp/terraform-config-inspect/tfconfig
-# github.com/hashicorp/terraform-plugin-sdk v1.4.0
+# github.com/hashicorp/terraform-json v0.3.1
+github.com/hashicorp/terraform-json
+# github.com/hashicorp/terraform-plugin-sdk v1.4.1
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff
 github.com/hashicorp/terraform-plugin-sdk/helper/encryption
@@ -508,13 +518,13 @@ github.com/konsorten/go-windows-terminal-sequences
 # github.com/kubernetes-sigs/aws-iam-authenticator v0.3.1-0.20181019024009-82544ec86140
 github.com/kubernetes-sigs/aws-iam-authenticator/pkg/arn
 github.com/kubernetes-sigs/aws-iam-authenticator/pkg/token
-# github.com/magiconair/properties v1.8.0
+# github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb
 github.com/matoous/godox
 # github.com/mattn/go-colorable v0.1.4
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.8
+# github.com/mattn/go-isatty v0.0.10
 github.com/mattn/go-isatty
 # github.com/mitchellh/cli v1.0.0
 github.com/mitchellh/cli
@@ -580,15 +590,20 @@ github.com/spf13/cobra
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
-# github.com/spf13/viper v1.4.0
+# github.com/spf13/viper v1.6.1
 github.com/spf13/viper
 # github.com/stretchr/objx v0.2.0
 github.com/stretchr/objx
 # github.com/stretchr/testify v1.4.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
+# github.com/subosito/gotenv v1.2.0
+github.com/subosito/gotenv
 # github.com/timakin/bodyclose v0.0.0-20190930140734-f7f2e9bca95e
 github.com/timakin/bodyclose/passes/bodyclose
+# github.com/tommy-muehle/go-mnd v1.1.1
+github.com/tommy-muehle/go-mnd
+github.com/tommy-muehle/go-mnd/checks
 # github.com/ulikunitz/xz v0.5.5
 github.com/ulikunitz/xz
 github.com/ulikunitz/xz/internal/hash
@@ -598,7 +613,7 @@ github.com/ulikunitz/xz/lzma
 github.com/ultraware/funlen
 # github.com/ultraware/whitespace v0.0.4
 github.com/ultraware/whitespace
-# github.com/uudashr/gocognit v0.0.0-20190926065955-1655d0de0517
+# github.com/uudashr/gocognit v1.0.1
 github.com/uudashr/gocognit
 # github.com/vmihailenco/msgpack v4.0.1+incompatible
 github.com/vmihailenco/msgpack
@@ -663,7 +678,7 @@ golang.org/x/oauth2/google
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# golang.org/x/sys v0.0.0-20190922100055-0a153f010e69
+# golang.org/x/sys v0.0.0-20191008105621-543471e840be
 golang.org/x/sys/cpu
 golang.org/x/sys/unix
 # golang.org/x/text v0.3.2
@@ -672,7 +687,7 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
-# golang.org/x/tools v0.0.0-20191010075000-0337d82405ff
+# golang.org/x/tools v0.0.0-20191113232020-e2727e816f5a
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/internal/analysisflags
 golang.org/x/tools/go/analysis/internal/checker
@@ -732,6 +747,7 @@ golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/imports
 golang.org/x/tools/internal/module
 golang.org/x/tools/internal/semver
+golang.org/x/tools/internal/span
 # google.golang.org/api v0.9.0
 google.golang.org/api/gensupport
 google.golang.org/api/googleapi
@@ -802,6 +818,8 @@ google.golang.org/grpc/tap
 google.golang.org/grpc/test/bufconn
 # gopkg.in/inf.v0 v0.9.1
 gopkg.in/inf.v0
+# gopkg.in/ini.v1 v1.51.0
+gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.2.7
 gopkg.in/yaml.v2
 # honnef.co/go/tools v0.0.1-2019.2.3

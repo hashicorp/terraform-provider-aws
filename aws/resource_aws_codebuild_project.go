@@ -531,6 +531,12 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Default:      "60",
 				ValidateFunc: validation.IntBetween(5, 480),
 			},
+			"queued_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      "480",
+				ValidateFunc: validation.IntBetween(5, 480),
+			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -635,6 +641,10 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("build_timeout"); ok {
 		params.TimeoutInMinutes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("queued_timeout"); ok {
+		params.QueuedTimeoutInMinutes = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok {
@@ -1066,6 +1076,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", project.Name)
 	d.Set("service_role", project.ServiceRole)
 	d.Set("build_timeout", project.TimeoutInMinutes)
+	d.Set("queued_timeout", project.QueuedTimeoutInMinutes)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -1146,6 +1157,10 @@ func resourceAwsCodeBuildProjectUpdate(d *schema.ResourceData, meta interface{})
 
 	if d.HasChange("build_timeout") {
 		params.TimeoutInMinutes = aws.Int64(int64(d.Get("build_timeout").(int)))
+	}
+
+	if d.HasChange("queued_timeout") {
+		params.QueuedTimeoutInMinutes = aws.Int64(int64(d.Get("queued_timeout").(int)))
 	}
 
 	if d.HasChange("badge_enabled") {

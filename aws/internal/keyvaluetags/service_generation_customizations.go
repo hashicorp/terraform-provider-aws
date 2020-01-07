@@ -61,6 +61,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -82,6 +83,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -95,6 +97,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -215,6 +218,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(iotevents.New)
 	case "kafka":
 		funcType = reflect.TypeOf(kafka.New)
+	case "kinesis":
+		funcType = reflect.TypeOf(kinesis.New)
 	case "kinesisanalytics":
 		funcType = reflect.TypeOf(kinesisanalytics.New)
 	case "kinesisanalyticsv2":
@@ -257,6 +262,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(redshift.New)
 	case "resourcegroups":
 		funcType = reflect.TypeOf(resourcegroups.New)
+	case "route53":
+		funcType = reflect.TypeOf(route53.New)
 	case "route53resolver":
 		funcType = reflect.TypeOf(route53resolver.New)
 	case "sagemaker":
@@ -283,6 +290,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(waf.New)
 	case "wafregional":
 		funcType = reflect.TypeOf(wafregional.New)
+	case "wafv2":
+		funcType = reflect.TypeOf(wafv2.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
 	default:

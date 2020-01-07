@@ -63,7 +63,6 @@ func resourceAwsEcsService() *schema.Resource {
 					},
 				},
 			},
-
 			"cluster": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,6 +100,10 @@ func resourceAwsEcsService() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.LaunchTypeEc2,
+					ecs.LaunchTypeFargate,
+				}, false),
 			},
 
 			"platform_version": {
@@ -191,9 +194,10 @@ func resourceAwsEcsService() *schema.Resource {
 						},
 
 						"target_group_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
 						},
 
 						"container_name": {
@@ -203,9 +207,10 @@ func resourceAwsEcsService() *schema.Resource {
 						},
 
 						"container_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 					},
 				},
@@ -248,6 +253,11 @@ func resourceAwsEcsService() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.PlacementStrategyTypeBinpack,
+								ecs.PlacementStrategyTypeRandom,
+								ecs.PlacementStrategyTypeSpread,
+							}, false),
 						},
 						"field": {
 							Type:     schema.TypeString,
@@ -300,6 +310,10 @@ func resourceAwsEcsService() *schema.Resource {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.PlacementConstraintTypeDistinctInstance,
+								ecs.PlacementConstraintTypeMemberOf,
+							}, false),
 						},
 						"expression": {
 							Type:     schema.TypeString,
@@ -429,7 +443,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set).List())
+	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
 	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
 	if len(loadBalancers) > 0 {
@@ -511,6 +525,10 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 				return resource.RetryableError(err)
 			}
 			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role."+
+				" Please verify that the ECS service linked role exists") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -738,12 +756,10 @@ func expandEcsNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	return &ecs.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandEcsCapacityProviderStrategy(cps []interface{}) []*ecs.CapacityProviderStrategyItem {
-	if len(cps) == 0 {
-		return nil
-	}
+func expandEcsCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
+	list := cps.List()
 	results := make([]*ecs.CapacityProviderStrategyItem, 0)
-	for _, raw := range cps {
+	for _, raw := range list {
 		cp := raw.(map[string]interface{})
 		ps := &ecs.CapacityProviderStrategyItem{}
 		if val, ok := cp["base"]; ok {
@@ -922,7 +938,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if d.HasChange("capacity_provider_strategy") {
 		updateService = true
-		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set).List())
+		input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 	}
 
 	if updateService {

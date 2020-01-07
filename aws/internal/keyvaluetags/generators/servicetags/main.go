@@ -87,6 +87,7 @@ var sliceServiceNames = []string{
 	"transfer",
 	"waf",
 	"wafregional",
+	"wafv2",
 	"workspaces",
 }
 

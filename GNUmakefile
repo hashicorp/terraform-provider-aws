@@ -34,8 +34,20 @@ fmtcheck:
 websitefmtcheck:
 	@sh -c "'$(CURDIR)/scripts/websitefmtcheck.sh'"
 
+depscheck:
+	@echo "==> Checking source code with go mod tidy..."
+	@go mod tidy
+	@git diff --exit-code -- go.mod go.sum || \
+		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+	@echo "==> Checking source code with go mod vendor..."
+	@go mod vendor
+	@git diff --compact-summary --exit-code -- vendor || \
+		(echo; echo "Unexpected difference in vendor/ directory. Run 'go mod vendor' command or revert any go.mod/go.sum/vendor changes and commit."; exit 1)
+
 docscheck:
-	@sh -c "'$(CURDIR)/scripts/docscheck.sh'"
+	@tfproviderdocs check \
+		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
+		-require-resource-subcategory
 
 lint:
 	@echo "==> Checking source code against linters..."
@@ -64,6 +76,7 @@ lint:
 		./$(PKG_NAME)
 
 tools:
+	GO111MODULE=on go install github.com/bflad/tfproviderdocs
 	GO111MODULE=on go install github.com/bflad/tfproviderlint/cmd/tfproviderlint
 	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
 	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
@@ -94,5 +107,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test docscheck
+.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-test depscheck docscheck
 

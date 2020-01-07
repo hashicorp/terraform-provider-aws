@@ -58,6 +58,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -78,6 +79,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -91,6 +93,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -1966,6 +1969,50 @@ func KafkaUpdateTags(conn *kafka.Kafka, identifier string, oldTagsMap interface{
 	return nil
 }
 
+// KinesisUpdateTags updates kinesis service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisUpdateTags(conn *kinesis.Kinesis, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		chunks := removedTags.Chunks(10)
+
+		for _, chunk := range chunks {
+			input := &kinesis.RemoveTagsFromStreamInput{
+				StreamName: aws.String(identifier),
+				TagKeys:    aws.StringSlice(chunk.Keys()),
+			}
+
+			_, err := conn.RemoveTagsFromStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			}
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		chunks := updatedTags.Chunks(10)
+
+		for _, chunk := range chunks {
+			input := &kinesis.AddTagsToStreamInput{
+				StreamName: aws.String(identifier),
+				Tags:       aws.StringMap(chunk.IgnoreAws().Map()),
+			}
+
+			_, err := conn.AddTagsToStream(input)
+
+			if err != nil {
+				return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // KinesisanalyticsUpdateTags updates kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -2686,6 +2733,44 @@ func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier st
 	return nil
 }
 
+// Route53UpdateTags updates route53 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Route53UpdateTags(conn *route53.Route53, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &route53.ChangeTagsForResourceInput{
+			ResourceId:    aws.String(identifier),
+			ResourceType:  aws.String(resourceType),
+			RemoveTagKeys: aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.ChangeTagsForResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &route53.ChangeTagsForResourceInput{
+			ResourceId:   aws.String(identifier),
+			ResourceType: aws.String(resourceType),
+			AddTags:      updatedTags.IgnoreAws().Route53Tags(),
+		}
+
+		_, err := conn.ChangeTagsForResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // Route53resolverUpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -3144,6 +3229,42 @@ func WafregionalUpdateTags(conn *wafregional.WAFRegional, identifier string, old
 		input := &waf.TagResourceInput{
 			ResourceARN: aws.String(identifier),
 			Tags:        updatedTags.IgnoreAws().WafregionalTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// Wafv2UpdateTags updates wafv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Wafv2UpdateTags(conn *wafv2.WAFV2, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &wafv2.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &wafv2.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().Wafv2Tags(),
 		}
 
 		_, err := conn.TagResource(input)
