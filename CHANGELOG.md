@@ -1,5 +1,9 @@
 ## 2.44.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_workspaces_directory` [GH-11023]
+
 ENHANCEMENTS:
 
 * data-source/aws_launch_configuration: Add `arn` attribute [GH-11416]
