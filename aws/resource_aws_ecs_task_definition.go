@@ -302,7 +302,7 @@ func resourceAwsEcsTaskDefinitionCustomDiff(d *schema.ResourceDiff, meta interfa
 		"proxy_configuration",
 	} {
 		if d.HasChange(key) {
-			log.Printf("[DEBUG] change to %s will trigger new revision/arn", key)
+			log.Printf("[DEBUG] change to %s will trigger new revision/arn for resource %s", key, d.Id())
 			err := d.SetNewComputed("arn")
 			if err != nil {
 				return err
@@ -317,7 +317,7 @@ func resourceAwsEcsTaskDefinitionCustomDiff(d *schema.ResourceDiff, meta interfa
 	old, new := d.GetChange("container_definitions")
 	equal, _ := EcsContainerDefinitionsAreEquivalent(old.(string), new.(string), isAWSVPC)
 	if !equal {
-		log.Printf("[DEBUG] change to container_definitions will trigger new revision/arn")
+		log.Printf("[DEBUG] change to container_definitions will trigger new revision/arn for resource %s", d.Id())
 		err := d.SetNewComputed("arn")
 		if err != nil {
 			return err
