@@ -1,7 +1,7 @@
 ---
+subcategory: "Kinesis"
 layout: "aws"
 page_title: "AWS: aws_kinesis_stream_consumer"
-sidebar_current: "docs-aws-datasource-kinesis-stream-consumer"
 description: |-
   Provides a Kinesis Stream Consumer data source.
 ---
