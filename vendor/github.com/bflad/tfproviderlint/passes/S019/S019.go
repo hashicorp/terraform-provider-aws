@@ -4,10 +4,9 @@
 package S019
 
 import (
-	"go/ast"
-
 	"golang.org/x/tools/go/analysis"
 
+	"github.com/bflad/tfproviderlint/helper/terraformtype"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"github.com/bflad/tfproviderlint/passes/schemaschema"
 )
@@ -31,31 +30,15 @@ var Analyzer = &analysis.Analyzer{
 
 func run(pass *analysis.Pass) (interface{}, error) {
 	ignorer := pass.ResultOf[commentignore.Analyzer].(*commentignore.Ignorer)
-	schemas := pass.ResultOf[schemaschema.Analyzer].([]*ast.CompositeLit)
+	schemas := pass.ResultOf[schemaschema.Analyzer].([]*terraformtype.HelperSchemaSchemaInfo)
 	for _, schema := range schemas {
-		if ignorer.ShouldIgnore(analyzerName, schema) {
+		if ignorer.ShouldIgnore(analyzerName, schema.AstCompositeLit) {
 			continue
 		}
 
-		for _, elt := range schema.Elts {
-			switch v := elt.(type) {
-			default:
-				continue
-			case *ast.KeyValueExpr:
-				name := v.Key.(*ast.Ident).Name
-
-				if name != "Computed" && name != "Optional" && name != "Required" {
-					continue
-				}
-
-				switch v := v.Value.(type) {
-				default:
-					continue
-				case *ast.Ident:
-					if v.Name == "false" {
-						pass.Reportf(v.Pos(), "%s: schema should omit Computed, Optional, or Required set to false", analyzerName)
-					}
-				}
+		for _, field := range []string{terraformtype.SchemaFieldComputed, terraformtype.SchemaFieldOptional, terraformtype.SchemaFieldRequired} {
+			if schema.DeclaresBoolFieldWithZeroValue(field) {
+				pass.Reportf(schema.Fields[field].Value.Pos(), "%s: schema should omit Computed, Optional, or Required set to false", analyzerName)
 			}
 		}
 	}

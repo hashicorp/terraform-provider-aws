@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 
 	"golang.org/x/tools/internal/gopathwalk"
 	"golang.org/x/tools/internal/module"
@@ -26,6 +25,8 @@ type ModuleResolver struct {
 	env            *ProcessEnv
 	moduleCacheDir string
 	dummyVendorMod *ModuleJSON // If vendoring is enabled, the pseudo-module that represents the /vendor directory.
+	roots          []gopathwalk.Root
+	scannedRoots   map[gopathwalk.Root]bool
 
 	Initialized   bool
 	Main          *ModuleJSON
@@ -41,6 +42,7 @@ type ModuleJSON struct {
 	Path      string      // module path
 	Replace   *ModuleJSON // replaced by this module
 	Main      bool        // is this the main module?
+	Indirect  bool        // is this module only an indirect dependency of main module?
 	Dir       string      // directory holding files for this module, if any
 	GoMod     string      // path to go.mod file for this module, if any
 	GoVersion string      // go version used in module
@@ -85,6 +87,38 @@ func (r *ModuleResolver) init() error {
 		return count(j) < count(i) // descending order
 	})
 
+	r.roots = []gopathwalk.Root{
+		{filepath.Join(r.env.GOROOT, "/src"), gopathwalk.RootGOROOT},
+	}
+	if r.Main != nil {
+		r.roots = append(r.roots, gopathwalk.Root{r.Main.Dir, gopathwalk.RootCurrentModule})
+	}
+	if vendorEnabled {
+		r.roots = append(r.roots, gopathwalk.Root{r.dummyVendorMod.Dir, gopathwalk.RootOther})
+	} else {
+		addDep := func(mod *ModuleJSON) {
+			if mod.Replace == nil {
+				// This is redundant with the cache, but we'll skip it cheaply enough.
+				r.roots = append(r.roots, gopathwalk.Root{mod.Dir, gopathwalk.RootModuleCache})
+			} else {
+				r.roots = append(r.roots, gopathwalk.Root{mod.Dir, gopathwalk.RootOther})
+			}
+		}
+		// Walk dependent modules before scanning the full mod cache, direct deps first.
+		for _, mod := range r.ModsByModPath {
+			if !mod.Indirect {
+				addDep(mod)
+			}
+		}
+		for _, mod := range r.ModsByModPath {
+			if mod.Indirect {
+				addDep(mod)
+			}
+		}
+		r.roots = append(r.roots, gopathwalk.Root{r.moduleCacheDir, gopathwalk.RootModuleCache})
+	}
+
+	r.scannedRoots = map[gopathwalk.Root]bool{}
 	if r.moduleCacheCache == nil {
 		r.moduleCacheCache = &dirInfoCache{
 			dirs: map[string]*directoryPackageInfo{},
@@ -126,6 +160,7 @@ func (r *ModuleResolver) initAllMods() error {
 }
 
 func (r *ModuleResolver) ClearForNewScan() {
+	r.scannedRoots = map[gopathwalk.Root]bool{}
 	r.otherCache = &dirInfoCache{
 		dirs: map[string]*directoryPackageInfo{},
 	}
@@ -211,7 +246,7 @@ func (r *ModuleResolver) cacheKeys() []string {
 }
 
 // cachePackageName caches the package name for a dir already in the cache.
-func (r *ModuleResolver) cachePackageName(info directoryPackageInfo) (directoryPackageInfo, error) {
+func (r *ModuleResolver) cachePackageName(info directoryPackageInfo) (string, error) {
 	if info.rootType == gopathwalk.RootModuleCache {
 		return r.moduleCacheCache.CachePackageName(info)
 	}
@@ -333,41 +368,55 @@ func (r *ModuleResolver) loadPackageNames(importPaths []string, srcDir string) (
 	return names, nil
 }
 
-func (r *ModuleResolver) scan(_ references, loadNames bool, exclude []gopathwalk.RootType) ([]*pkg, error) {
+func (r *ModuleResolver) scan(ctx context.Context, callback *scanCallback) error {
 	if err := r.init(); err != nil {
-		return nil, err
+		return err
 	}
 
-	// Walk GOROOT, GOPATH/pkg/mod, and the main module.
-	roots := []gopathwalk.Root{
-		{filepath.Join(r.env.GOROOT, "/src"), gopathwalk.RootGOROOT},
-	}
-	if r.Main != nil {
-		roots = append(roots, gopathwalk.Root{r.Main.Dir, gopathwalk.RootCurrentModule})
-	}
-	if r.dummyVendorMod != nil {
-		roots = append(roots, gopathwalk.Root{r.dummyVendorMod.Dir, gopathwalk.RootOther})
-	} else {
-		roots = append(roots, gopathwalk.Root{r.moduleCacheDir, gopathwalk.RootModuleCache})
-		// Walk replace targets, just in case they're not in any of the above.
-		for _, mod := range r.ModsByModPath {
-			if mod.Replace != nil {
-				roots = append(roots, gopathwalk.Root{mod.Dir, gopathwalk.RootOther})
-			}
+	processDir := func(info directoryPackageInfo) {
+		// Skip this directory if we were not able to get the package information successfully.
+		if scanned, err := info.reachedStatus(directoryScanned); !scanned || err != nil {
+			return
 		}
+		pkg, err := r.canonicalize(info)
+		if err != nil {
+			return
+		}
+
+		if !callback.dirFound(pkg) {
+			return
+		}
+		pkg.packageName, err = r.cachePackageName(info)
+		if err != nil {
+			return
+		}
+
+		if !callback.packageNameLoaded(pkg) {
+			return
+		}
+		_, exports, err := r.loadExports(ctx, pkg)
+		if err != nil {
+			return
+		}
+		callback.exportsLoaded(pkg, exports)
 	}
 
-	roots = filterRoots(roots, exclude)
+	// Everything we already had is in the cache. Process it now, in hopes we
+	// we don't need anything new.
+	for _, dir := range r.cacheKeys() {
+		if ctx.Err() != nil {
+			return nil
+		}
+		info, ok := r.cacheLoad(dir)
+		if !ok {
+			continue
+		}
+		processDir(info)
+	}
 
-	var result []*pkg
-	var mu sync.Mutex
-
-	// We assume cached directories have not changed. We can skip them and their
-	// children.
+	// We assume cached directories are fully cached, including all their
+	// children, and have not changed. We can skip them.
 	skip := func(root gopathwalk.Root, dir string) bool {
-		mu.Lock()
-		defer mu.Unlock()
-
 		info, ok := r.cacheLoad(dir)
 		if !ok {
 			return false
@@ -379,44 +428,34 @@ func (r *ModuleResolver) scan(_ references, loadNames bool, exclude []gopathwalk
 		return packageScanned
 	}
 
-	// Add anything new to the cache. We'll process everything in it below.
+	// Add anything new to the cache, and process it if we're still looking.
 	add := func(root gopathwalk.Root, dir string) {
-		mu.Lock()
-		defer mu.Unlock()
-
-		r.cacheStore(r.scanDirForPackage(root, dir))
+		info := r.scanDirForPackage(root, dir)
+		r.cacheStore(info)
+		if ctx.Err() == nil {
+			processDir(info)
+		}
 	}
 
-	gopathwalk.WalkSkip(roots, add, skip, gopathwalk.Options{Debug: r.env.Debug, ModulesEnabled: true})
+	// We can't cancel walks, because we need them to finish to have a usable
+	// cache. We can do them one by one and stop in between.
+	// TODO(heschi): Run asynchronously and detach on cancellation? Would risk
+	// racy callbacks.
+	for _, root := range r.roots {
+		if ctx.Err() != nil {
+			return nil
+		}
 
-	// Everything we already had, and everything new, is now in the cache.
-	for _, dir := range r.cacheKeys() {
-		info, ok := r.cacheLoad(dir)
-		if !ok {
+		if r.scannedRoots[root] {
 			continue
 		}
-
-		// Skip this directory if we were not able to get the package information successfully.
-		if scanned, err := info.reachedStatus(directoryScanned); !scanned || err != nil {
+		if !callback.rootFound(root) {
 			continue
 		}
-
-		// If we want package names, make sure the cache has them.
-		if loadNames {
-			var err error
-			if info, err = r.cachePackageName(info); err != nil {
-				continue
-			}
-		}
-
-		res, err := r.canonicalize(info)
-		if err != nil {
-			continue
-		}
-		result = append(result, res)
+		gopathwalk.WalkSkip([]gopathwalk.Root{root}, add, skip, gopathwalk.Options{Debug: r.env.Debug, ModulesEnabled: true})
+		r.scannedRoots[root] = true
 	}
-
-	return result, nil
+	return nil
 }
 
 // canonicalize gets the result of canonicalizing the packages using the results
@@ -428,15 +467,19 @@ func (r *ModuleResolver) canonicalize(info directoryPackageInfo) (*pkg, error) {
 			importPathShort: info.nonCanonicalImportPath,
 			dir:             info.dir,
 			packageName:     path.Base(info.nonCanonicalImportPath),
-			relevance:       0,
+			relevance:       MaxRelevance,
 		}, nil
 	}
 
 	importPath := info.nonCanonicalImportPath
-	relevance := 2
+	relevance := MaxRelevance - 3
 	// Check if the directory is underneath a module that's in scope.
 	if mod := r.findModuleByDir(info.dir); mod != nil {
-		relevance = 1
+		if mod.Indirect {
+			relevance = MaxRelevance - 2
+		} else {
+			relevance = MaxRelevance - 1
+		}
 		// It is. If dir is the target of a replace directive,
 		// our guessed import path is wrong. Use the real one.
 		if mod.Dir == info.dir {
@@ -445,14 +488,15 @@ func (r *ModuleResolver) canonicalize(info directoryPackageInfo) (*pkg, error) {
 			dirInMod := info.dir[len(mod.Dir)+len("/"):]
 			importPath = path.Join(mod.Path, filepath.ToSlash(dirInMod))
 		}
-	} else if info.needsReplace {
+	} else if !strings.HasPrefix(importPath, info.moduleName) {
+		// The module's name doesn't match the package's import path. It
+		// probably needs a replace directive we don't have.
 		return nil, fmt.Errorf("package in %q is not valid without a replace statement", info.dir)
 	}
 
 	res := &pkg{
 		importPathShort: importPath,
 		dir:             info.dir,
-		packageName:     info.packageName, // may not be populated if the caller didn't ask for it
 		relevance:       relevance,
 	}
 	// We may have discovered a package that has a different version
@@ -516,7 +560,6 @@ func (r *ModuleResolver) scanDirForPackage(root gopathwalk.Root, dir string) dir
 		dir:                    dir,
 		rootType:               root.Type,
 		nonCanonicalImportPath: importPath,
-		needsReplace:           false,
 		moduleDir:              modDir,
 		moduleName:             modName,
 	}
@@ -524,14 +567,6 @@ func (r *ModuleResolver) scanDirForPackage(root gopathwalk.Root, dir string) dir
 		// stdlib packages are always in scope, despite the confusing go.mod
 		return result
 	}
-	// Check that this package is not obviously impossible to import.
-	if !strings.HasPrefix(importPath, modName) {
-		// The module's declared path does not match
-		// its expected path. It probably needs a
-		// replace directive we don't have.
-		result.needsReplace = true
-	}
-
 	return result
 }
 
