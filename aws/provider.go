@@ -401,6 +401,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecr_repository_policy":                        resourceAwsEcrRepositoryPolicy(),
 			"aws_ecs_cluster":                                  resourceAwsEcsCluster(),
 			"aws_ecs_service":                                  resourceAwsEcsService(),
+			"aws_ecs_task":										resourceAwsEcsTask(),
 			"aws_ecs_task_definition":                          resourceAwsEcsTaskDefinition(),
 			"aws_efs_file_system":                              resourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                             resourceAwsEfsMountTarget(),

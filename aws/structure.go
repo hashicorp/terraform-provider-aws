@@ -1822,7 +1822,9 @@ func sortInterfaceSlice(in []interface{}) []interface{} {
 	a := []string{}
 	b := []interface{}{}
 	for _, v := range in {
-		a = append(a, v.(string))
+		if v != nil {
+			a = append(a, v.(string))
+		}
 	}
 
 	sort.Strings(a)
