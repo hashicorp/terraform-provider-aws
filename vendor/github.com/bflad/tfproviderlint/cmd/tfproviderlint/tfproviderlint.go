@@ -13,6 +13,9 @@ import (
 	"github.com/bflad/tfproviderlint/passes/AT002"
 	"github.com/bflad/tfproviderlint/passes/AT003"
 	"github.com/bflad/tfproviderlint/passes/AT004"
+	"github.com/bflad/tfproviderlint/passes/AT005"
+	"github.com/bflad/tfproviderlint/passes/AT006"
+	"github.com/bflad/tfproviderlint/passes/AT007"
 	"github.com/bflad/tfproviderlint/passes/R001"
 	"github.com/bflad/tfproviderlint/passes/R002"
 	"github.com/bflad/tfproviderlint/passes/R003"
@@ -36,6 +39,7 @@ import (
 	"github.com/bflad/tfproviderlint/passes/S017"
 	"github.com/bflad/tfproviderlint/passes/S018"
 	"github.com/bflad/tfproviderlint/passes/S019"
+	"github.com/bflad/tfproviderlint/passes/S020"
 )
 
 func main() {
@@ -44,6 +48,9 @@ func main() {
 		AT002.Analyzer,
 		AT003.Analyzer,
 		AT004.Analyzer,
+		AT005.Analyzer,
+		AT006.Analyzer,
+		AT007.Analyzer,
 		R001.Analyzer,
 		R002.Analyzer,
 		R003.Analyzer,
@@ -67,5 +74,6 @@ func main() {
 		S017.Analyzer,
 		S018.Analyzer,
 		S019.Analyzer,
+		S020.Analyzer,
 	)
 }
