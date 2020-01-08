@@ -24,19 +24,28 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 		Delete: resourceAwsEcsTaskDefinitionDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("arn", d.Id())
 
-				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
+				var familyRevision string
+
 				resARN, err := arn.Parse(d.Id())
-				if err != nil {
-					return nil, idErr
+				if err == nil {
+					log.Printf("[DEBUG] import aws_ecs_task_definition resource by arn: %s", d.Id())
+					d.Set("arn", d.Id())
+					familyRevision = strings.TrimPrefix(resARN.Resource, "task-definition/")
+				} else {
+					log.Printf("[DEBUG] import aws_ecs_task_definition resource by FAMILY[:REVISION]: %s", d.Id())
+					familyRevision = d.Id()
 				}
-				familyRevision := strings.TrimPrefix(resARN.Resource, "task-definition/")
+				idErr := fmt.Errorf("Expected ID in format of either arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION, FAMILY:REVISION, or FAMILY, and provided: %s", d.Id())
 				familyRevisionParts := strings.Split(familyRevision, ":")
-				if len(familyRevisionParts) != 2 {
+				if len(familyRevisionParts) > 2 {
 					return nil, idErr
+				} else if len(familyRevisionParts) == 2 {
+					// import resource by either ARN or FAMILY:REVISION
+					d.Set("revision", familyRevisionParts[1])
 				}
 				d.SetId(familyRevisionParts[0])
+				d.Set("family", familyRevisionParts[0])
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -136,11 +145,11 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 									"scope": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											ecs.ScopeShared,
 											ecs.ScopeTask,
 										}, false),
+										Default: ecs.ScopeTask,
 									},
 									"autoprovision": {
 										Type:     schema.TypeBool,
@@ -150,6 +159,7 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 									"driver": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Default:  "local",
 									},
 									"driver_opts": {
 										Type:     schema.TypeMap,

@@ -2057,6 +2057,6 @@ func testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName string) resource.
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["arn"], nil
+		return rs.Primary.Attributes["family"], nil
 	}
 }
