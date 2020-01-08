@@ -12,7 +12,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
+// These tests need to be serialized, because they all rely on the IAM Role `workspaces_DefaultRole`.
+func TestAccAwsWorkspacesDirectory(t *testing.T) {
+	testCases := map[string]func(t *testing.T){
+		"basic":     testAccAwsWorkspacesDirectory_basic,
+		"subnetIds": testAccAwsWorkspacesDirectory_subnetIds,
+	}
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			tc(t)
+		})
+	}
+}
+
+func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
 
@@ -75,7 +89,7 @@ func TestAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
+func testAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
 
