@@ -485,7 +485,14 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 		Include:        []*string{aws.String(ecs.TaskDefinitionFieldTags)},
 	})
 	if err != nil {
-		return err
+		// If the task definition only has INACTIVE revisions, we will get a ClientException with a message "Unable to describe task definition."
+		// This is the same response we would get if there was no task definition at all.
+		if !isAWSErr(err, ecs.ErrCodeClientException, "Unable to describe task definition.") {
+			return err
+		}
+		log.Printf("[DEBUG] Removing ECS task definition %s because it has no ACTIVE revisions", d.Get("family"))
+		d.SetId("")
+		return nil
 	}
 	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.StringValue(out.TaskDefinition.Family),
 		aws.StringValue(out.TaskDefinition.Status), out)
