@@ -33,6 +33,7 @@ BUG FIXES:
 * resource/aws_cloudwatch_dashboard: Trigger resource recreation on `dashboard_name` updates (prevent dangling resource) [GH-9784]
 * resource/aws_cloudwatch_event_rule: Improved handling of `is_enabled` argument [GH-11346]
 * resource/aws_ecs_service: Automatically retry IAM Service Linked Role assume role error on creation due to asynchronous creation of role on first usage and IAM eventual consistency [GH-11423]
+* resource/aws_iam_instance: Allows for instance profiles to be changed when instances are in stopped state [GH-11104]
 * resource/aws_opsworks_stack: Ensure `tags` are refreshed in Terraform state during read for drift detection [GH-11373]
 * resource/aws_rds_cluster_instance: Prevent `is already being deleted` error on deletion and wait for deletion completion [GH-11468]
 
