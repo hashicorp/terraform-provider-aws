@@ -2739,7 +2739,13 @@ resource "aws_autoscaling_group" "bar" {
   	     "GroupDesiredCapacity",
   	     "GroupInServiceInstances",
   	     "GroupMinSize",
-  	     "GroupMaxSize"
+  	     "GroupMaxSize",
+  	     "GroupPendingCapacity",
+  	     "GroupInServiceCapacity",
+  	     "GroupStandbyCapacity",
+  	     "GroupTotalCapacity",
+  	     "GroupTerminatingCapacity",
+  	     "GroupStandbyInstances"
   ]
   metrics_granularity = "1Minute"
 }
@@ -2775,7 +2781,15 @@ resource "aws_autoscaling_group" "bar" {
   	     "GroupPendingInstances",
   	     "GroupTerminatingInstances",
   	     "GroupDesiredCapacity",
-  	     "GroupMaxSize"
+  	     "GroupInServiceInstances",
+  	     "GroupMinSize",
+  	     "GroupMaxSize",
+  	     "GroupPendingCapacity",
+  	     "GroupInServiceCapacity",
+  	     "GroupStandbyCapacity",
+  	     "GroupTotalCapacity",
+  	     "GroupTerminatingCapacity",
+  	     "GroupStandbyInstances"
   ]
   metrics_granularity = "1Minute"
 }
