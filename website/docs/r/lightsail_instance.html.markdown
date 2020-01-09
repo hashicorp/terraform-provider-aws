@@ -31,8 +31,7 @@ resource "aws_lightsail_instance" "gitlab_test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Lightsail Instance. *This must be unique (within your
-account), and cannot be the same as a name given to a `lightsail_static_ip`.*
+* `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - (Required) The Availability Zone in which to create your
 instance (see list below)
 * `blueprint_id` - (Required) The ID for a virtual private server image
