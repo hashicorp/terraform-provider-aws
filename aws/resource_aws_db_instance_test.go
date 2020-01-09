@@ -525,6 +525,31 @@ func TestAccAWSDBInstance_ReplicateSourceDb(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_ReplicateSourceDb_CertIdentifier(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_CertIdentifier(rName, "rds-ca-2019"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_ReplicateSourceDb_AllocatedStorage(t *testing.T) {
 	var dbInstance, sourceDbInstance rds.DBInstance
 
@@ -4316,6 +4341,30 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, rName)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_CertIdentifier(rName string, caCertIdentifier string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  ca_cert_identifier      = %q
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  ca_cert_identifier  = %q
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  replicate_source_db = "${aws_db_instance.source.id}"
+  skip_final_snapshot = true
+}
+`, caCertIdentifier, rName, caCertIdentifier, rName)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_AllocatedStorage(rName string, allocatedStorage int) string {
