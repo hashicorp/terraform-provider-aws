@@ -93,8 +93,6 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "family", "mysql5.6"),
 					resource.TestCheckResourceAttr(
-						resourceName, "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(
 						resourceName, "parameter.1708034931.name", "character_set_results"),
 					resource.TestCheckResourceAttr(
 						resourceName, "parameter.1708034931.value", "utf8"),
@@ -106,8 +104,6 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						resourceName, "parameter.2478663599.name", "character_set_client"),
 					resource.TestCheckResourceAttr(
 						resourceName, "parameter.2478663599.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "1"),
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
 				),
@@ -126,8 +122,6 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(
 						resourceName, "family", "mysql5.6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Test parameter group for terraform"),
 					resource.TestCheckResourceAttr(
 						resourceName, "parameter.1706463059.name", "collation_connection"),
 					resource.TestCheckResourceAttr(
@@ -148,10 +142,19 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 						resourceName, "parameter.2478663599.name", "character_set_client"),
 					resource.TestCheckResourceAttr(
 						resourceName, "parameter.2478663599.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "2"),
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
+				),
+			},
+			{
+				Config: testAccAWSDBParameterGroupConfig(groupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBParameterGroupExists(resourceName, &v),
+					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
+					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_connection"),
+					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_server"),
+					resource.TestCheckNoResourceAttr(resourceName, "parameter.2475805061.value"),
+					resource.TestCheckNoResourceAttr(resourceName, "parameter.1706463059.value"),
 				),
 			},
 		},
@@ -176,7 +179,6 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
-
 					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.name", "character_set_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.value", "utf8"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.name", "character_set_client"),
@@ -274,7 +276,6 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
-
 					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.name", "character_set_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.value", "utf8"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.name", "character_set_client"),
@@ -357,15 +358,6 @@ func TestAccAWSDBParameterGroup_limit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameter.881816039.value", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.748684209.name", "tx_isolation"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.748684209.value", "REPEATABLE-READ"),
-				),
-			},
-			{
-				Config: testAccAWSDBParameterGroupConfig(groupName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBParameterGroupExists("aws_db_parameter_group.bar", &v),
-					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
-					testAccCheckAWSDBParameterNotUserDefined("aws_db_parameter_group.bar", "collation_connection"),
-					testAccCheckAWSDBParameterNotUserDefined("aws_db_parameter_group.bar", "collation_server"),
 				),
 			},
 		},
@@ -653,12 +645,10 @@ func testAccCheckAWSDBParameterNotUserDefined(n, paramName string) resource.Test
 			DBParameterGroupName: aws.String(rs.Primary.ID),
 			Source:               aws.String("user"),
 		}
-		fmt.Printf("test: %s\n", rs.Primary.ID)
 
 		userDefined := false
-		conn.DescribeDBParametersPages(&opts, func(page *rds.DescribeDBParametersOutput, lastPage bool) bool {
+		err := conn.DescribeDBParametersPages(&opts, func(page *rds.DescribeDBParametersOutput, lastPage bool) bool {
 			for _, param := range page.Parameters {
-				fmt.Printf("param: %s %s\n", *param.ParameterName, *param.Source)
 				if *param.ParameterName == paramName {
 					userDefined = true
 					return false
@@ -671,18 +661,8 @@ func testAccCheckAWSDBParameterNotUserDefined(n, paramName string) resource.Test
 			return fmt.Errorf("DB Parameter is user defined")
 		}
 
-		return nil
+		return err
 	}
-}
-
-func randomString(strlen int) string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	const chars = "abcdefghijklmnopqrstuvwxyz"
-	result := make([]byte, strlen)
-	for i := 0; i < strlen; i++ {
-		result[i] = chars[rand.Intn(len(chars))]
-	}
-	return string(result)
 }
 
 func testAccAWSDBParameterGroupConfig(n string) string {
@@ -704,10 +684,6 @@ resource "aws_db_parameter_group" "test" {
   parameter {
     name  = "character_set_results"
     value = "utf8"
-  }
-
-  tags = {
-    foo = "test"
   }
 }
 `, n)
@@ -742,7 +718,6 @@ func testAccAWSDBParameterGroupAddParametersConfig(n string) string {
 resource "aws_db_parameter_group" "test" {
   name        = "%s"
   family      = "mysql5.6"
-  description = "Test parameter group for terraform"
 
   parameter {
     name  = "character_set_server"
@@ -767,11 +742,6 @@ resource "aws_db_parameter_group" "test" {
   parameter {
     name  = "collation_connection"
     value = "utf8_unicode_ci"
-  }
-
-  tags = {
-    foo = "test"
-    baz = "foo"
   }
 }
 `, n)
