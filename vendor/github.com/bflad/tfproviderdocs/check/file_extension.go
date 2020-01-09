@@ -25,56 +25,24 @@ var ValidRegistryFileExtensions = []string{
 }
 
 func LegacyFileExtensionCheck(path string) error {
-	fileExtension := GetFileExtension(path)
-
-	if !IsValidLegacyFileExtension(fileExtension) {
-		return fmt.Errorf("invalid file extension (%s), valid values: %v", fileExtension, ValidLegacyFileExtensions)
+	if !FilePathEndsWithExtensionFrom(path, ValidLegacyFileExtensions) {
+		return fmt.Errorf("file does not end with a valid extension, valid extensions: %v", ValidLegacyFileExtensions)
 	}
 
 	return nil
 }
 
 func RegistryFileExtensionCheck(path string) error {
-	fileExtension := GetFileExtension(path)
-
-	if !IsValidRegistryFileExtension(fileExtension) {
-		return fmt.Errorf("invalid file extension (%s), valid values: %v", fileExtension, ValidRegistryFileExtensions)
+	if !FilePathEndsWithExtensionFrom(path, ValidRegistryFileExtensions) {
+		return fmt.Errorf("file does not end with a valid extension, valid extensions: %v", ValidLegacyFileExtensions)
 	}
 
 	return nil
 }
 
-// GetFileExtension fetches file extensions including those with multiple periods.
-// This is a replacement for filepath.Ext(), which only returns the final period and extension.
-func GetFileExtension(path string) string {
-	filename := filepath.Base(path)
-
-	if filename == "." {
-		return ""
-	}
-
-	dotIndex := strings.IndexByte(filename, '.')
-
-	if dotIndex > 0 {
-		return filename[dotIndex:]
-	}
-
-	return filename
-}
-
-func IsValidLegacyFileExtension(fileExtension string) bool {
-	for _, validLegacyFileExtension := range ValidLegacyFileExtensions {
-		if fileExtension == validLegacyFileExtension {
-			return true
-		}
-	}
-
-	return false
-}
-
-func IsValidRegistryFileExtension(fileExtension string) bool {
-	for _, validRegistryFileExtension := range ValidRegistryFileExtensions {
-		if fileExtension == validRegistryFileExtension {
+func FilePathEndsWithExtensionFrom(path string, validExtensions []string) bool {
+	for _, validExtension := range validExtensions {
+		if strings.HasSuffix(path, validExtension) {
 			return true
 		}
 	}
