@@ -404,41 +404,42 @@ func resourceAwsEc2TransitGatewayMulticastDomainAssociationsUpdate(d *schema.Res
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
 
-	// check if association set has changed
-	if d.HasChange("association") {
-		o, n := d.GetChange("association")
-		old := resourceAwsEc2TransitGatewayMulticastDomainAssociationsCompress(o.(*schema.Set).Difference(n.(*schema.Set)))
-		nw := resourceAwsEc2TransitGatewayMulticastDomainAssociationsCompress(n.(*schema.Set).Difference(o.(*schema.Set)))
+	if !d.HasChange("association") {
+		return nil
+	}
 
-		if old.HashEqual(nw) {
-			log.Printf(
-				"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain assoctiation configuration was " +
-					"determined to be equivalent")
-			d.Set("association", n)
-			return nil
+	o, n := d.GetChange("association")
+	old := resourceAwsEc2TransitGatewayMulticastDomainAssociationsCompress(o.(*schema.Set).Difference(n.(*schema.Set)))
+	nw := resourceAwsEc2TransitGatewayMulticastDomainAssociationsCompress(n.(*schema.Set).Difference(o.(*schema.Set)))
+
+	if old.HashEqual(nw) {
+		log.Printf(
+			"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain assoctiation configuration was " +
+				"determined to be equivalent")
+		d.Set("association", n)
+		return nil
+	}
+
+	// disassociate old associations
+	for _, assoc := range old.List() {
+		assocData := assoc.(map[string]interface{})
+		if err := resourceAwsEc2TransitGatewayMulticastDomainDisassociate(conn, id, assocData); err != nil {
+			return err
 		}
+	}
 
-		// disassociate old associations
-		for _, assoc := range old.List() {
-			assocData := assoc.(map[string]interface{})
-			if err := resourceAwsEc2TransitGatewayMulticastDomainDisassociate(conn, id, assocData); err != nil {
-				return err
-			}
+	// save current state
+	associations := o.(*schema.Set).Intersection(n.(*schema.Set))
+	d.Set("association", associations)
+
+	// associate new subnets
+	for _, assoc := range nw.List() {
+		assocData := assoc.(map[string]interface{})
+		if err := resourceAwsEc2TransitGatewayMulticastDomainAssociate(conn, id, assocData); err != nil {
+			return err
 		}
-
-		// save current state
-		associations := o.(*schema.Set).Intersection(n.(*schema.Set))
+		associations.Add(assoc)
 		d.Set("association", associations)
-
-		// associate new subnets
-		for _, assoc := range nw.List() {
-			assocData := assoc.(map[string]interface{})
-			if err := resourceAwsEc2TransitGatewayMulticastDomainAssociate(conn, id, assocData); err != nil {
-				return err
-			}
-			associations.Add(assoc)
-			d.Set("association", associations)
-		}
 	}
 
 	return nil
@@ -448,40 +449,43 @@ func resourceAwsEc2TransitGatewayMulticastDomainGroupsUpdate(d *schema.ResourceD
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
 	key := resourceAwsEc2TransitGatewayMulticastDomainGroupType(member)
-	if d.HasChange(key) {
-		o, n := d.GetChange(key)
-		old := resourceAwsEc2TransitGatewayMulticastDomainGroupsCompress(o.(*schema.Set).Difference(n.(*schema.Set)))
-		nw := resourceAwsEc2TransitGatewayMulticastDomainGroupsCompress(n.(*schema.Set).Difference(o.(*schema.Set)))
 
-		if old.HashEqual(nw) {
-			log.Printf(
-				"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain group configuration was determined to be " +
-					"equivalent")
-			d.Set(key, n)
-			return nil
+	if !d.HasChange(key) {
+		return nil
+	}
+
+	o, n := d.GetChange(key)
+	old := resourceAwsEc2TransitGatewayMulticastDomainGroupsCompress(o.(*schema.Set).Difference(n.(*schema.Set)))
+	nw := resourceAwsEc2TransitGatewayMulticastDomainGroupsCompress(n.(*schema.Set).Difference(o.(*schema.Set)))
+
+	if old.HashEqual(nw) {
+		log.Printf(
+			"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain group configuration was determined to be " +
+				"equivalent")
+		d.Set(key, n)
+		return nil
+	}
+
+	// remove old groups
+	for _, group := range old.List() {
+		groupData := group.(map[string]interface{})
+		if err := resourceAwsEc2TransitGatewayMulticastDomainGroupDeregister(conn, id, groupData, member); err != nil {
+			return err
 		}
+	}
 
-		// remove old groups
-		for _, group := range old.List() {
-			groupData := group.(map[string]interface{})
-			if err := resourceAwsEc2TransitGatewayMulticastDomainGroupDeregister(conn, id, groupData, member); err != nil {
-				return err
-			}
+	// save current state
+	groups := o.(*schema.Set).Intersection(n.(*schema.Set))
+	d.Set(key, groups)
+
+	// register new groups
+	for _, group := range nw.List() {
+		groupData := group.(map[string]interface{})
+		if err := resourceAwsEc2TransitGatewayMulticastDomainGroupRegister(conn, id, groupData, member); err != nil {
+			return err
 		}
-
-		// save current state
-		groups := o.(*schema.Set).Intersection(n.(*schema.Set))
+		groups.Add(group)
 		d.Set(key, groups)
-
-		// register new groups
-		for _, group := range nw.List() {
-			groupData := group.(map[string]interface{})
-			if err := resourceAwsEc2TransitGatewayMulticastDomainGroupRegister(conn, id, groupData, member); err != nil {
-				return err
-			}
-			groups.Add(group)
-			d.Set(key, groups)
-		}
 	}
 
 	return nil
