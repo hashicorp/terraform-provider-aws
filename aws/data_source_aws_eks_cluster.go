@@ -116,7 +116,7 @@ func dataSourceAwsEksCluster() *schema.Resource {
 						},
 						"public_access_cidrs": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"vpc_id": {
