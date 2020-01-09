@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_launch_configuration: Add `arn` attribute [GH-11416]
+* data-source/aws_eks_cluster: Add `vpc_config` list `public_access_cidrs` attribute [GH-11442]
 * resource/aws_ami_launch_permission: Support resource import [GH-11437]
 * resource/aws_api_gateway_authorizer: Support resource import [GH-11436]
 * resource/aws_api_gateway_authorizer: Add plan time validation for `provider_arns` argument [GH-11436]
@@ -19,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_cloudwatch_event_rule: Support tag-on-create [GH-11346]
 * resource/aws_db_instance: Remove `identifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
 * resource/aws_ecs_service: Add plan time validation for `launch_type`, `load_balancer` configuration block `target_group_arn` and `container_port`, and `placement_constraints` configuration block `type` arguments [GH-11423]
+* resource/aws_eks_cluster: Add `vpc_config` configuration block `public_access_cidrs` argument [GH-11442]
 * resource/aws_launch_configuration: Add `arn` attribute [GH-11416]
 * resource/aws_lb: Add plan-time validation for `ip_address_type` and `load_balancer_type` arguments [GH-11419]
 * resource/aws_rds_cluster_instance: Allow updating `ca_cert_identifier` for `aws_rds_cluster_instance` [GH-10954]
