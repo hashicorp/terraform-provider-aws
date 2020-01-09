@@ -200,7 +200,7 @@ github.com/aws/aws-sdk-go/service/workspaces
 github.com/aws/aws-sdk-go/service/xray
 # github.com/beevik/etree v1.1.0
 github.com/beevik/etree
-# github.com/bflad/tfproviderdocs v0.4.0
+# github.com/bflad/tfproviderdocs v0.4.1
 github.com/bflad/tfproviderdocs
 github.com/bflad/tfproviderdocs/check
 github.com/bflad/tfproviderdocs/command
