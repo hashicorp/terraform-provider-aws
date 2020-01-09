@@ -2,8 +2,8 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -348,18 +348,13 @@ func ec2GetTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, domainID str
 	return associations, nil
 }
 
-func ec2GetTransitGatewayMulticastDomainGroups(conn *ec2.EC2, domainID string, member bool) ([]*ec2.TransitGatewayMulticastGroup, error) {
+func ec2SearchTransitGatewayMulticastDomainGroups(conn *ec2.EC2, domainID string, filters []*ec2.Filter) ([]*ec2.TransitGatewayMulticastGroup, error) {
 	if conn == nil || domainID == "" {
 		return nil, nil
 	}
 
 	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("is-group-member"),
-				Values: []*string{aws.String(strconv.FormatBool(member))},
-			},
-		},
+		Filters:                         filters,
 		TransitGatewayMulticastDomainId: aws.String(domainID),
 	}
 
@@ -386,6 +381,33 @@ func ec2GetTransitGatewayMulticastDomainGroups(conn *ec2.EC2, domainID string, m
 	}
 
 	return groups, nil
+}
+
+func ec2SearchTransitGatewayMulticastDomainGroupsByType(conn *ec2.EC2, domainID string, member bool) ([]*ec2.TransitGatewayMulticastGroup, error) {
+	return ec2SearchTransitGatewayMulticastDomainGroups(conn, domainID, ec2SearchTransitGatewayMulticastDomainGroupsTypeFilter(member))
+}
+
+func ec2SearchTransitGatewayMulticastDomainGroupsTypeFilter(member bool) []*ec2.Filter {
+	var filters []*ec2.Filter
+	if member {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String("is-group-member"),
+			Values: []*string{aws.String("true")},
+		})
+	} else {
+		filters = append(filters, &ec2.Filter{
+			Name:   aws.String("is-group-source"),
+			Values: []*string{aws.String("true")},
+		})
+	}
+	return filters
+}
+
+func ec2SearchTransitGatewayMulticastDomainGroupIpFilters(member bool, groupIP string) []*ec2.Filter {
+	return append(ec2SearchTransitGatewayMulticastDomainGroupsTypeFilter(member), &ec2.Filter{
+		Name:   aws.String("group-ip-address"),
+		Values: []*string{aws.String(groupIP)},
+	})
 }
 
 func ec2TransitGatewayRouteTableAssociationUpdate(conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string, associate bool) error {
@@ -950,4 +972,84 @@ func waitForEc2TransitGatewayMulticastDomainDisassociation(conn *ec2.EC2, domain
 	}
 
 	return err
+}
+
+func waitForEc2TransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, domainID string, groupData map[string]interface{}, member bool) error {
+	filters := ec2SearchTransitGatewayMulticastDomainGroupIpFilters(member, groupData["group_ip_address"].(string))
+	netIDs := groupData["network_interface_ids"].(*schema.Set)
+
+	log.Printf(
+		"[DEBUG] Validating EC2 Transit Gateway Multicast Domain (%s) group was registered successfully",
+		domainID)
+
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		groups, err := ec2SearchTransitGatewayMulticastDomainGroups(conn, domainID, filters)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		// find each net ID for this group
+		for _, netID := range netIDs.List() {
+			found := false
+			for _, group := range groups {
+				if aws.StringValue(group.NetworkInterfaceId) == netID {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				return resource.RetryableError(fmt.Errorf(
+					"EC2 Transit Gateway Multicast Domain (%s) group not available: %s",
+					domainID, groupData))
+			}
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		return fmt.Errorf(
+			"error validating that EC2 Transit Gateway Multicast Domain (%s) group was successfully "+
+				"registered: %s", domainID, err)
+	}
+
+	return nil
+}
+
+func waitForEc2TransitGatewayMulticastDomainGroupDeregister(conn *ec2.EC2, domainID string, groupData map[string]interface{}, member bool) error {
+	filters := ec2SearchTransitGatewayMulticastDomainGroupIpFilters(member, groupData["group_ip_address"].(string))
+	netIDs := groupData["network_interface_ids"].(*schema.Set)
+
+	log.Printf(
+		"[DEBUG] Validating EC2 Transit Gateway Multicast Domain (%s) group was deregistered successfully",
+		domainID)
+
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		groups, err := ec2SearchTransitGatewayMulticastDomainGroups(conn, domainID, filters)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		// make sure no net IDs from this group are found
+		for _, netID := range netIDs.List() {
+			for _, group := range groups {
+				if aws.StringValue(group.NetworkInterfaceId) == netID {
+					return resource.RetryableError(
+						fmt.Errorf("EC2 Transit Gateway Multicast Domain (%s) still available: %s",
+							domainID, groupData))
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		return fmt.Errorf(
+			"error validating that EC2 Transit Gateway Multicast Domain (%s) group was successfully "+
+				"deregistered: %s", domainID, err)
+	}
+
+	return nil
 }

@@ -41,10 +41,12 @@ func resourceAwsEc2TransitGatewayMulticastDomain() *schema.Resource {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
+							MinItems: 1,
+							Set:      schema.HashString,
 						},
 					},
 				},
-				Set: resourceAwsEc2TransitGatewayMulticastDomainAssociationHash,
+				Set: resourceAwsEc2TransitGatewayMulticastDomainAssociationsHash,
 			},
 			"members": {
 				Type:       schema.TypeSet,
@@ -61,6 +63,8 @@ func resourceAwsEc2TransitGatewayMulticastDomain() *schema.Resource {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
+							MinItems: 1,
+							Set:      schema.HashString,
 						},
 					},
 				},
@@ -81,6 +85,8 @@ func resourceAwsEc2TransitGatewayMulticastDomain() *schema.Resource {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
+							MinItems: 1,
+							Set:      schema.HashString,
 						},
 					},
 				},
@@ -120,6 +126,19 @@ func resourceAwsEc2TransitGatewayMulticastDomainRead(d *schema.ResourceData, met
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
 
+	multicastDomain, err := ec2DescribeTransitGatewayMulticastDomain(conn, id)
+	if isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
+		return resourceAwsEc2TransitGatewayMulticastDomainNotFound(d)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Transit Gateway Multicast Domain: %s", err)
+	}
+
+	if multicastDomain == nil {
+		return resourceAwsEc2TransitGatewayMulticastDomainNotFound(d)
+	}
+
 	if err := resourceAwsEc2TransitGatewayMulticastDomainAssociationsRead(d, meta); err != nil {
 		return err
 	}
@@ -128,17 +147,6 @@ func resourceAwsEc2TransitGatewayMulticastDomainRead(d *schema.ResourceData, met
 	}
 	if err := resourceAwsEc2TransitGatewayMulticastDomainGroupsRead(d, meta, false); err != nil {
 		return err
-	}
-
-	multicastDomain, err := ec2DescribeTransitGatewayMulticastDomain(conn, id)
-	if multicastDomain == nil || isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
-		log.Printf("[WARN] EC2 Transit Gateway (%s) not found, removing from state", id)
-		d.SetId("")
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Multicast Domain: %s", err)
 	}
 
 	if aws.StringValue(multicastDomain.State) == ec2.TransitGatewayStateDeleting ||
@@ -153,78 +161,6 @@ func resourceAwsEc2TransitGatewayMulticastDomainRead(d *schema.ResourceData, met
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(multicastDomain.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error settings tags: %s", err)
 	}
-
-	return nil
-}
-
-func resourceAwsEc2TransitGatewayMulticastDomainAssociationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	id := d.Id()
-
-	// get associations by grouping by the attachment ID
-	associations, err := ec2GetTransitGatewayMulticastDomainAssociations(conn, id)
-	if err != nil {
-		return fmt.Errorf("error getting EC2 Transit Gateway Multicast Domain (%s) associations: %s", id, err)
-	}
-
-	tgwAttachmentMap := make(map[string][]*string)
-	for _, assoc := range associations {
-		attachmentID := aws.StringValue(assoc.TransitGatewayAttachmentId)
-		subnetID := assoc.Subnet.SubnetId
-		if lst, exists := tgwAttachmentMap[attachmentID]; exists {
-			tgwAttachmentMap[attachmentID] = append(lst, subnetID)
-			continue
-		}
-		tgwAttachmentMap[attachmentID] = []*string{subnetID}
-	}
-
-	// flatten data so that each association is to 1 tgw attachment
-	assocSet := &schema.Set{F: resourceAwsEc2TransitGatewayMulticastDomainAssociationHash}
-	for attachmentID := range tgwAttachmentMap {
-		assocData := make(map[string]interface{})
-		assocData["transit_gateway_attachment_id"] = attachmentID
-		assocData["subnet_ids"] = flattenStringSet(tgwAttachmentMap[attachmentID])
-		assocSet.Add(assocData)
-	}
-	d.Set("association", assocSet)
-
-	return nil
-}
-
-func resourceAwsEc2TransitGatewayMulticastDomainGroupsRead(d *schema.ResourceData, meta interface{}, member bool) error {
-	conn := meta.(*AWSClient).ec2conn
-	id := d.Id()
-
-	// get groups by grouping by the group IP address
-	groups, err := ec2GetTransitGatewayMulticastDomainGroups(conn, id, member)
-	if err != nil {
-		return fmt.Errorf("error getting EC2 Transit Gateway Multicast Domain (%s) groups: %s", id, err)
-	}
-
-	groupIpMap := make(map[string][]*string)
-	for _, group := range groups {
-		groupIP := aws.StringValue(group.GroupIpAddress)
-		netID := group.NetworkInterfaceId
-		if lst, exists := groupIpMap[groupIP]; exists {
-			groupIpMap[groupIP] = append(lst, netID)
-			continue
-		}
-		groupIpMap[groupIP] = []*string{netID}
-	}
-
-	groupSet := &schema.Set{F: resourceAwsEc2TransitGatewayMulticastDomainGroupsHash}
-	for groupIP := range groupIpMap {
-		groupData := make(map[string]interface{})
-		groupData["group_ip_address"] = groupIP
-		groupData["network_interface_ids"] = flattenStringSet(groupIpMap[groupIP])
-		groupSet.Add(groupData)
-	}
-
-	if member {
-		d.Set("members", groupSet)
-		return nil
-	}
-	d.Set("sources", groupSet)
 
 	return nil
 }
@@ -252,14 +188,235 @@ func resourceAwsEc2TransitGatewayMulticastDomainUpdate(d *schema.ResourceData, m
 	return resourceAwsEc2TransitGatewayMulticastDomainRead(d, meta)
 }
 
+func resourceAwsEc2TransitGatewayMulticastDomainDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+	id := d.Id()
+	if err := resourceAwsEc2TransitGatewayMulticastDomainRead(d, meta); err != nil {
+		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Domain (%s): %s", id, err)
+	}
+
+	if err := resourceAwsEc2TransitGatewayMulticastDomainGroupsDeregisterAll(d, meta, true); err != nil {
+		return err
+	}
+	if err := resourceAwsEc2TransitGatewayMulticastDomainGroupsDeregisterAll(d, meta, false); err != nil {
+		return err
+	}
+	if err := resourceAwsEc2TransitGatewayMulticastDomainDisassociateAll(d, meta); err != nil {
+		return err
+	}
+
+	input := &ec2.DeleteTransitGatewayMulticastDomainInput{
+		TransitGatewayMulticastDomainId: aws.String(id),
+	}
+
+	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain (%s): %s", id, input)
+	_, err := conn.DeleteTransitGatewayMulticastDomain(input)
+	if isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Domain: %s", err)
+	}
+
+	if err := waitForEc2TransitGatewayMulticastDomainDeletion(conn, id); err != nil {
+		return fmt.Errorf("error waiting for EC2 Transit Gateway Multicast Domain (%s) deletion: %s", id, err)
+	}
+
+	return nil
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainNotFound(d *schema.ResourceData) error {
+	log.Printf("[WARN] EC2 Transit Gateway (%s) not found, removing from state", d.Id())
+	d.SetId("")
+	return nil
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainAssociationsRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+	id := d.Id()
+
+	groupedRemoteAssocSet, err := resourceAwsEc2TransitGatewayMulticastDomainAssociationsReadRaw(conn, id)
+	if err != nil {
+		return err
+	}
+
+	localAssocSet := d.Get("association").(*schema.Set).List()
+
+	// match local associations to remote
+	assocSet := &schema.Set{F: resourceAwsEc2TransitGatewayMulticastDomainAssociationsHash}
+	for _, localAssoc := range localAssocSet {
+		assocData := localAssoc.(map[string]interface{})
+		attachmentID := assocData["transit_gateway_attachment_id"].(string)
+		subnetIDs := assocData["subnet_ids"].(*schema.Set)
+
+		c, exists := groupedRemoteAssocSet[attachmentID]
+		if !exists {
+			continue
+		}
+
+		container := c.(map[string]interface{})
+		remoteSubnetIDs := container["subnet_ids"].(*schema.Set)
+		if len(remoteSubnetIDs.List()) == 0 {
+			continue
+		}
+
+		newSubnetIDs := subnetIDs.Intersection(remoteSubnetIDs)
+		if len(newSubnetIDs.List()) == 0 {
+			continue
+		}
+
+		container["subnet_ids"] = remoteSubnetIDs.Difference(newSubnetIDs)
+		groupedRemoteAssocSet[attachmentID] = container
+		assocData["subnet_ids"] = newSubnetIDs
+		assocSet.Add(assocData)
+	}
+
+	// add remaining remote associations
+	for attachmentID, elem := range groupedRemoteAssocSet {
+		subnetIDs := elem.(map[string]interface{})["subnet_ids"].(*schema.Set)
+		if len(subnetIDs.List()) == 0 {
+			continue
+		}
+		assocSet.Add(resourceAwsEc2TransitGatewayMulticastDomainAssociationMake(attachmentID, subnetIDs))
+	}
+
+	d.Set("association", assocSet)
+
+	return nil
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainGroupsRead(d *schema.ResourceData, meta interface{}, member bool) error {
+	conn := meta.(*AWSClient).ec2conn
+	id := d.Id()
+
+	groupedRemoteGroups, err := resourceAwsEc2TransitGatewayMulticastDomainGroupsReadRaw(conn, id, member)
+	if err != nil {
+		return err
+	}
+
+	groupType := resourceAwsEc2TransitGatewayMulticastDomainGroupType(member)
+	localGroups := d.Get(groupType).(*schema.Set).List()
+
+	groups := &schema.Set{F: resourceAwsEc2TransitGatewayMulticastDomainGroupsHash}
+	for _, localGroup := range localGroups {
+		groupData := localGroup.(map[string]interface{})
+		groupIP := groupData["group_ip_address"].(string)
+		netIDs := groupData["network_interface_ids"].(*schema.Set)
+
+		c, exists := groupedRemoteGroups[groupIP]
+		if !exists {
+			continue
+		}
+
+		container := c.(map[string]interface{})
+		remoteNetIDs := container["network_interface_ids"].(*schema.Set)
+		if len(remoteNetIDs.List()) == 0 {
+			continue
+		}
+
+		newNetIDs := netIDs.Intersection(remoteNetIDs)
+		if len(newNetIDs.List()) == 0 {
+			continue
+		}
+
+		container["network_interface_ids"] = remoteNetIDs.Difference(newNetIDs)
+		groupedRemoteGroups[groupIP] = container
+		groupData["network_interface_ids"] = newNetIDs
+		groups.Add(groupData)
+	}
+
+	for groupIP, elem := range groupedRemoteGroups {
+		netIDs := elem.(map[string]interface{})["network_interface_ids"].(*schema.Set)
+		if len(netIDs.List()) == 0 {
+			continue
+		}
+		groups.Add(resourceAwsEc2TransitGatewayMulticastDomainGroupMake(groupIP, netIDs))
+	}
+
+	d.Set(groupType, groups)
+
+	return nil
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainGroupMake(groupIP string, netIDs *schema.Set) map[string]interface{} {
+	group := make(map[string]interface{})
+	group["group_ip_address"] = groupIP
+	group["network_interface_ids"] = netIDs
+	return group
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainAssociationMake(attachID string, subnetIDs *schema.Set) map[string]interface{} {
+	assoc := make(map[string]interface{})
+	assoc["transit_gateway_attachment_id"] = attachID
+	assoc["subnet_ids"] = subnetIDs
+	return assoc
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainGroupsReadRaw(conn *ec2.EC2, domainID string, member bool) (map[string]interface{}, error) {
+	remoteGroups, err := ec2SearchTransitGatewayMulticastDomainGroupsByType(conn, domainID, member)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error getting EC2 Transit Gateway Multicast Domain (%s) groups: %s", domainID, err)
+	}
+
+	groupedRemoteGroups := make(map[string]interface{})
+	for _, remoteGroup := range remoteGroups {
+		groupIP := aws.StringValue(remoteGroup.GroupIpAddress)
+		netID := aws.StringValue(remoteGroup.NetworkInterfaceId)
+		if c, exists := groupedRemoteGroups[groupIP]; exists {
+			container := c.(map[string]interface{})
+			container["network_interface_ids"].(*schema.Set).Add(netID)
+			continue
+		}
+		newSet := &schema.Set{F: schema.HashString}
+		newSet.Add(netID)
+		groupedRemoteGroups[groupIP] = resourceAwsEc2TransitGatewayMulticastDomainGroupMake(groupIP, newSet)
+	}
+
+	return groupedRemoteGroups, nil
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainAssociationsReadRaw(conn *ec2.EC2, domainID string) (map[string]interface{}, error) {
+	remoteAssocSet, err := ec2GetTransitGatewayMulticastDomainAssociations(conn, domainID)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error getting EC2 Transit Gateway Multicast Domain (%s) associations: %s", domainID, err)
+	}
+
+	groupedAssocSet := make(map[string]interface{})
+	for _, remoteAssoc := range remoteAssocSet {
+		attachID := aws.StringValue(remoteAssoc.TransitGatewayAttachmentId)
+		subnetID := aws.StringValue(remoteAssoc.Subnet.SubnetId)
+		if c, exists := groupedAssocSet[attachID]; exists {
+			container := c.(map[string]interface{})
+			container["subnet_ids"].(*schema.Set).Add(subnetID)
+			continue
+		}
+		newSet := &schema.Set{F: schema.HashString}
+		newSet.Add(subnetID)
+		groupedAssocSet[attachID] = resourceAwsEc2TransitGatewayMulticastDomainAssociationMake(attachID, newSet)
+	}
+
+	return groupedAssocSet, nil
+}
+
 func resourceAwsEc2TransitGatewayMulticastDomainAssociationsUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
+
 	// check if association set has changed
 	if d.HasChange("association") {
 		o, n := d.GetChange("association")
-		old := o.(*schema.Set).Difference(n.(*schema.Set))
-		nw := n.(*schema.Set).Difference(o.(*schema.Set))
+		old := resourceAwsEc2TransitGatewayMulticastDomainAssociationsCompress(o.(*schema.Set).Difference(n.(*schema.Set)))
+		nw := resourceAwsEc2TransitGatewayMulticastDomainAssociationsCompress(n.(*schema.Set).Difference(o.(*schema.Set)))
+
+		if old.HashEqual(nw) {
+			log.Printf(
+				"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain assoctiation configuration was " +
+					"determined to be equivelent")
+			d.Set("association", n)
+			return nil
+		}
 
 		// disassociate old associations
 		for _, assoc := range old.List() {
@@ -290,11 +447,19 @@ func resourceAwsEc2TransitGatewayMulticastDomainAssociationsUpdate(d *schema.Res
 func resourceAwsEc2TransitGatewayMulticastDomainGroupsUpdate(d *schema.ResourceData, meta interface{}, member bool) error {
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
-	key := groupType(member)
+	key := resourceAwsEc2TransitGatewayMulticastDomainGroupType(member)
 	if d.HasChange(key) {
 		o, n := d.GetChange(key)
-		old := o.(*schema.Set).Difference(n.(*schema.Set))
-		nw := n.(*schema.Set).Difference(o.(*schema.Set))
+		old := resourceAwsEc2TransitGatewayMulticastDomainGroupsCompress(o.(*schema.Set).Difference(n.(*schema.Set)))
+		nw := resourceAwsEc2TransitGatewayMulticastDomainGroupsCompress(n.(*schema.Set).Difference(o.(*schema.Set)))
+
+		if old.HashEqual(nw) {
+			log.Printf(
+				"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain group configuration was determined to be " +
+					"equivelent")
+			d.Set(key, n)
+			return nil
+		}
 
 		// remove old groups
 		for _, group := range old.List() {
@@ -389,21 +554,26 @@ func resourceAwsEc2TransitGatewayMulticastDomainGroupDeregister(conn *ec2.EC2, i
 			return fmt.Errorf(
 				"error removing member from EC2 Transit Gateway Multicast Domain (%s): %s", id, err)
 		}
-		return nil
+	} else {
+		input := &ec2.DeregisterTransitGatewayMulticastGroupSourcesInput{
+			GroupIpAddress:                  aws.String(groupData["group_ip_address"].(string)),
+			NetworkInterfaceIds:             expandStringSet(groupData["network_interface_ids"].(*schema.Set)),
+			TransitGatewayMulticastDomainId: aws.String(id),
+		}
+
+		log.Printf(
+			"[DEBUG] Deregistering sources from EC2 Transit Gateway Multicast Domain (%s): %s", id, input)
+		if _, err := conn.DeregisterTransitGatewayMulticastGroupSources(input); err != nil {
+			return fmt.Errorf(
+				"error removing source from EC2 Transit Gateway Multicast Domain (%s): %s", id, err)
+		}
 	}
 
-	input := &ec2.DeregisterTransitGatewayMulticastGroupSourcesInput{
-		GroupIpAddress:                  aws.String(groupData["group_ip_address"].(string)),
-		NetworkInterfaceIds:             expandStringSet(groupData["network_interface_ids"].(*schema.Set)),
-		TransitGatewayMulticastDomainId: aws.String(id),
-	}
-
-	log.Printf(
-		"[DEBUG] Deregistering sources from EC2 Transit Gateway Multicast Domain (%s): %s", id, input)
-	if _, err := conn.DeregisterTransitGatewayMulticastGroupSources(input); err != nil {
+	if err := waitForEc2TransitGatewayMulticastDomainGroupDeregister(conn, id, groupData, member); err != nil {
 		return fmt.Errorf(
-			"error removing source from EC2 Transit Gateway Multicast Domain (%s): %s", id, err)
+			"error validating EC2 Transit Gateway Multicast Domain (%s) group deregistration: %s", id, err)
 	}
+
 	return nil
 }
 
@@ -423,56 +593,24 @@ func resourceAwsEc2TransitGatewayMulticastDomainGroupRegister(conn *ec2.EC2, id 
 			return fmt.Errorf(
 				"error registering EC2 Transit Gateway Multicast Domain (%s) members: %s", id, err)
 		}
-		return nil
+	} else {
+		input := &ec2.RegisterTransitGatewayMulticastGroupSourcesInput{
+			GroupIpAddress:                  aws.String(groupData["group_ip_address"].(string)),
+			NetworkInterfaceIds:             expandStringSet(groupData["network_interface_ids"].(*schema.Set)),
+			TransitGatewayMulticastDomainId: aws.String(id),
+		}
+
+		log.Printf(
+			"[DEBUG] Registering sources to EC2 Transit Gateway Multicast Domain (%s): %s", id, input)
+		if _, err := conn.RegisterTransitGatewayMulticastGroupSources(input); err != nil {
+			return fmt.Errorf(
+				"error registering EC2 Transit Gateway Multicast Domain (%s) sources: %s", id, err)
+		}
 	}
 
-	input := &ec2.RegisterTransitGatewayMulticastGroupSourcesInput{
-		GroupIpAddress:                  aws.String(groupData["group_ip_address"].(string)),
-		NetworkInterfaceIds:             expandStringSet(groupData["network_interface_ids"].(*schema.Set)),
-		TransitGatewayMulticastDomainId: aws.String(id),
-	}
-
-	log.Printf(
-		"[DEBUG] Registering sources to EC2 Transit Gateway Multicast Domain (%s): %s", id, input)
-	if _, err := conn.RegisterTransitGatewayMulticastGroupSources(input); err != nil {
+	if err := waitForEc2TransitGatewayMulticastDomainGroupRegister(conn, id, groupData, member); err != nil {
 		return fmt.Errorf(
-			"error registering EC2 Transit Gateway Multicast Domain (%s) sources: %s", id, err)
-	}
-	return nil
-}
-
-func resourceAwsEc2TransitGatewayMulticastDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	id := d.Id()
-	if err := resourceAwsEc2TransitGatewayMulticastDomainRead(d, meta); err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Domain (%s): %s", id, err)
-	}
-
-	if err := resourceAwsEc2TransitGatewayMulticastDomainGroupsDeregisterAll(d, meta, true); err != nil {
-		return err
-	}
-	if err := resourceAwsEc2TransitGatewayMulticastDomainGroupsDeregisterAll(d, meta, false); err != nil {
-		return err
-	}
-	if err := resourceAwsEc2TransitGatewayMulticastDomainDisassociateAll(d, meta); err != nil {
-		return err
-	}
-
-	input := &ec2.DeleteTransitGatewayMulticastDomainInput{
-		TransitGatewayMulticastDomainId: aws.String(id),
-	}
-
-	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Multicast Domain (%s): %s", id, input)
-	_, err := conn.DeleteTransitGatewayMulticastDomain(input)
-	if isAWSErr(err, "InvalidTransitGatewayMulticastDomainId.NotFound", "") {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error deleting EC2 Transit Gateway Multicast Domain: %s", err)
-	}
-
-	if err := waitForEc2TransitGatewayMulticastDomainDeletion(conn, id); err != nil {
-		return fmt.Errorf("error waiting for EC2 Transit Gateway Multicast Domain (%s) deletion: %s", id, err)
+			"error validating EC2 Transit Gateway Multicast Domain (%s) group registration: %s", id, err)
 	}
 
 	return nil
@@ -495,7 +633,7 @@ func resourceAwsEc2TransitGatewayMulticastDomainDisassociateAll(d *schema.Resour
 func resourceAwsEc2TransitGatewayMulticastDomainGroupsDeregisterAll(d *schema.ResourceData, meta interface{}, member bool) error {
 	conn := meta.(*AWSClient).ec2conn
 	id := d.Id()
-	key := groupType(member)
+	key := resourceAwsEc2TransitGatewayMulticastDomainGroupType(member)
 	// deregister groups
 	groups := d.Get(key).(*schema.Set)
 	for _, group := range groups.List() {
@@ -507,7 +645,7 @@ func resourceAwsEc2TransitGatewayMulticastDomainGroupsDeregisterAll(d *schema.Re
 	return nil
 }
 
-func resourceAwsEc2TransitGatewayMulticastDomainAssociationHash(meta interface{}) int {
+func resourceAwsEc2TransitGatewayMulticastDomainAssociationsHash(meta interface{}) int {
 	m, castOk := meta.(map[string]interface{})
 	if !castOk {
 		return 0
@@ -533,9 +671,45 @@ func resourceAwsEc2TransitGatewayMulticastDomainGroupsHash(meta interface{}) int
 	return hashcode.String(buf.String())
 }
 
-func groupType(member bool) string {
+func resourceAwsEc2TransitGatewayMulticastDomainGroupType(member bool) string {
 	if member {
 		return "members"
 	}
 	return "sources"
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainAssociationsCompress(assocSet *schema.Set) *schema.Set {
+	return resourceAwsEc2TransitGatewayMulticastDomainCompress(
+		assocSet, "transit_gateway_attachment_id", "subnet_ids",
+		resourceAwsEc2TransitGatewayMulticastDomainAssociationsHash)
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainGroupsCompress(groupSet *schema.Set) *schema.Set {
+	return resourceAwsEc2TransitGatewayMulticastDomainCompress(
+		groupSet, "group_ip_address", "network_interface_ids",
+		resourceAwsEc2TransitGatewayMulticastDomainGroupsHash)
+}
+
+func resourceAwsEc2TransitGatewayMulticastDomainCompress(set *schema.Set, groupingKey string, compressKey string, setFunc schema.SchemaSetFunc) *schema.Set {
+	groups := make(map[string][]*string)
+	for _, elem := range set.List() {
+		data := elem.(map[string]interface{})
+		groupVal := data[groupingKey].(string)
+		val := expandStringSet(data[compressKey].(*schema.Set))
+		if existing, exists := groups[groupVal]; exists {
+			groups[groupVal] = append(existing, val...)
+			continue
+		}
+		groups[groupVal] = val
+	}
+
+	compressed := &schema.Set{F: setFunc}
+	for group, values := range groups {
+		data := make(map[string]interface{})
+		data[groupingKey] = group
+		data[compressKey] = flattenStringSet(values)
+		compressed.Add(data)
+	}
+
+	return compressed
 }
