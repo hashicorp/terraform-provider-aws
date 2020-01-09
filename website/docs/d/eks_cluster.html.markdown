@@ -56,6 +56,7 @@ output "identity-oidc-issuer" {
   * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster. 
   * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
   * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
+  * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
   * `security_group_ids` – List of security group IDs
   * `subnet_ids` – List of subnet IDs
   * `vpc_id` – The VPC associated with your cluster.
