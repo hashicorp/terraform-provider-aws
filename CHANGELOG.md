@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_db_instance: Remove `identifier_prefix` 16 character truncation for `sqlserver` engine [GH-9040]
 * resource/aws_ecs_service: Add plan time validation for `launch_type`, `load_balancer` configuration block `target_group_arn` and `container_port`, and `placement_constraints` configuration block `type` arguments [GH-11423]
 * resource/aws_eks_cluster: Add `vpc_config` configuration block `public_access_cidrs` argument [GH-11442]
+* resource/aws_elasticache_cluster: Add `arn` attribute [GH-11243]
 * resource/aws_launch_configuration: Add `arn` attribute [GH-11416]
 * resource/aws_lb: Add plan-time validation for `ip_address_type` and `load_balancer_type` arguments [GH-11419]
 * resource/aws_rds_cluster_instance: Allow updating `ca_cert_identifier` for `aws_rds_cluster_instance` [GH-10954]
