@@ -413,7 +413,7 @@ func resourceAwsEc2TransitGatewayMulticastDomainAssociationsUpdate(d *schema.Res
 		if old.HashEqual(nw) {
 			log.Printf(
 				"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain assoctiation configuration was " +
-					"determined to be equivelent")
+					"determined to be equivalent")
 			d.Set("association", n)
 			return nil
 		}
@@ -456,7 +456,7 @@ func resourceAwsEc2TransitGatewayMulticastDomainGroupsUpdate(d *schema.ResourceD
 		if old.HashEqual(nw) {
 			log.Printf(
 				"[DEBUG] Flattened EC2 Transit Gateway Multicast Domain group configuration was determined to be " +
-					"equivelent")
+					"equivalent")
 			d.Set(key, n)
 			return nil
 		}

@@ -335,9 +335,7 @@ func ec2GetTransitGatewayMulticastDomainAssociations(conn *ec2.EC2, domainID str
 			return nil, nil
 		}
 
-		for _, association := range output.MulticastDomainAssociations {
-			associations = append(associations, association)
-		}
+		associations = append(associations, output.MulticastDomainAssociations...)
 
 		if aws.StringValue(output.NextToken) == "" {
 			break
@@ -370,9 +368,7 @@ func ec2SearchTransitGatewayMulticastDomainGroups(conn *ec2.EC2, domainID string
 			return nil, nil
 		}
 
-		for _, group := range output.MulticastGroups {
-			groups = append(groups, group)
-		}
+		groups = append(groups, output.MulticastGroups...)
 
 		if aws.StringValue(output.NextToken) == "" {
 			break
