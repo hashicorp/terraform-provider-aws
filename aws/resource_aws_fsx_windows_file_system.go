@@ -279,7 +279,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 		err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateFileSystem(input)
 
-			if isAWSErr(err, fsx.ErrCodeBadRequest, fmt.Sprintf("Unable to update Active Directory configuration for file system %s because there are other activities currently taking place. Please wait at least 10 minutes and try again.", d.Id())) {
+			if isAWSErr(err, fsx.ErrCodeBadRequest, "Please wait at least 10 minutes and try again.") {
 				resource.RetryableError(err)
 			}
 
