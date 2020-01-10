@@ -188,7 +188,6 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 		BuildId:         aws.String(d.Get("build_id").(string)),
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
 		Name:            aws.String(d.Get("name").(string)),
-		InstanceRoleArn: aws.String(d.Get("instance_role_arn").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -197,6 +196,11 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("ec2_inbound_permission"); ok {
 		input.EC2InboundPermissions = expandGameliftIpPermissions(v.([]interface{}))
 	}
+
+	if v, ok := d.GetOk("instance_role_arn"); ok {
+		input.InstanceRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("metric_groups"); ok {
 		input.MetricGroups = expandStringList(v.([]interface{}))
 	}
@@ -211,7 +215,18 @@ func resourceAwsGameliftFleetCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[INFO] Creating Gamelift Fleet: %s", input)
-	out, err := conn.CreateFleet(&input)
+	var out *gamelift.CreateFleetOutput
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
+		var err error
+		out, err = conn.CreateFleet(&input)
+		if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, "GameLift is not authorized to perform") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -307,8 +322,7 @@ func resourceAwsGameliftFleetUpdate(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[INFO] Updating Gamelift Fleet: %s", d.Id())
 
 	if d.HasChange("description") || d.HasChange("metric_groups") || d.HasChange("name") ||
-		d.HasChange("new_game_session_protection_policy") || d.HasChange("resource_creation_limit_policy") ||
-		d.HasChange("instance_role_arn") {
+		d.HasChange("new_game_session_protection_policy") || d.HasChange("resource_creation_limit_policy") {
 		_, err := conn.UpdateFleetAttributes(&gamelift.UpdateFleetAttributesInput{
 			Description:                    aws.String(d.Get("description").(string)),
 			FleetId:                        aws.String(d.Id()),
