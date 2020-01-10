@@ -1219,6 +1219,21 @@ func ElasticsearchserviceKeyValueTags(tags []*elasticsearchservice.Tag) KeyValue
 	return New(m)
 }
 
+// ElbTagKeys returns elb service tag keys.
+func (tags KeyValueTags) ElbTagKeys() []*elb.TagKeyOnly {
+	result := make([]*elb.TagKeyOnly, 0, len(tags))
+
+	for k := range tags.Map() {
+		tagKey := &elb.TagKeyOnly{
+			Key: aws.String(k),
+		}
+
+		result = append(result, tagKey)
+	}
+
+	return result
+}
+
 // ElbTags returns elb service tags.
 func (tags KeyValueTags) ElbTags() []*elb.Tag {
 	result := make([]*elb.Tag, 0, len(tags))

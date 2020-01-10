@@ -1549,7 +1549,7 @@ func ElbUpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, new
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &elb.RemoveTagsInput{
 			LoadBalancerNames: aws.StringSlice([]string{identifier}),
-			Tags:              removedTags.IgnoreAws().ElbKeys(),
+			Tags:              removedTags.IgnoreAws().ElbTagKeys(),
 		}
 
 		_, err := conn.RemoveTags(input)

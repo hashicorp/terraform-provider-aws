@@ -133,9 +133,9 @@ func main() {
 		"TagPackage":                      keyvaluetags.ServiceTagPackage,
 		"Title":                           strings.Title,
 		"UntagFunction":                   ServiceUntagFunction,
+		"UntagInputRequiresTagKeyType":    ServiceUntagInputRequiresTagKeyType,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
 		"UntagInputTagsField":             ServiceUntagInputTagsField,
-		"UntagInputKeysType":              ServiceUntagInputRequiresKeyType,
 	}
 
 	tmpl, err := template.New("updatetags").Funcs(templateFuncMap).Parse(templateBody)
@@ -271,11 +271,9 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
 			{{- if . | UntagInputRequiresTagType }}
-			{{- if . | UntagInputKeysType }}
-			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Keys(),
-			{{- else }}
 			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Tags(),
-			{{- end }}
+			{{- else if . | UntagInputRequiresTagKeyType }}
+			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}TagKeys(),
 			{{- else }}
 			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.Keys()),
 			{{- end }}
@@ -659,6 +657,14 @@ func ServiceUntagInputRequiresTagType(serviceName string) string {
 		return "yes"
 	case "ec2":
 		return "yes"
+	default:
+		return ""
+	}
+}
+
+// ServiceUntagInputRequiresTagKeyType determines if a special type for the untagging function tag key field is needed.
+func ServiceUntagInputRequiresTagKeyType(serviceName string) string {
+	switch serviceName {
 	case "elb":
 		return "yes"
 	default:
@@ -695,15 +701,5 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "RemoveTagKeys"
 	default:
 		return "TagKeys"
-	}
-}
-
-// ServiceUntagInputRequiresKeyType determines if a special type for the untagging function tag key field is needed.
-func ServiceUntagInputRequiresKeyType(serviceName string) string {
-	switch serviceName {
-	case "elb":
-		return "yes"
-	default:
-		return ""
 	}
 }
