@@ -24,20 +24,25 @@ func resourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"peer_account_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
 			},
 			"peer_region": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"peer_transit_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"tags": tagsSchema(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -46,14 +51,16 @@ func resourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 func resourceAwsEc2TransitGatewayPeeringAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	transitGatewayID := d.Get("transit_gateway_id").(string)
-
+	peerAccountId := meta.(*AWSClient).accountid
+	if v, ok := d.GetOk("peer_account_id"); ok {
+		peerAccountId = v.(string)
+	}
 	input := &ec2.CreateTransitGatewayPeeringAttachmentInput{
-		PeerAccountId:        aws.String(d.Get("peer_account_id").(string)),
+		PeerAccountId:        aws.String(peerAccountId),
 		PeerRegion:           aws.String(d.Get("peer_region").(string)),
 		PeerTransitGatewayId: aws.String(d.Get("peer_transit_gateway_id").(string)),
 		TagSpecifications:    ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeTransitGatewayAttachment),
-		TransitGatewayId:     aws.String(transitGatewayID),
+		TransitGatewayId:     aws.String(d.Get("transit_gateway_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Peering Attachment: %s", input)
@@ -66,15 +73,6 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentCreate(d *schema.ResourceData,
 
 	if err := waitForEc2TransitGatewayPeeringAttachmentCreation(conn, d.Id()); err != nil {
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) availability: %s", d.Id(), err)
-	}
-
-	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
-	if err != nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-	}
-
-	if transitGateway.Options == nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
 	}
 
 	return resourceAwsEc2TransitGatewayPeeringAttachmentRead(d, meta)
@@ -107,49 +105,20 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData, m
 		return nil
 	}
 
-	transitGatewayID := aws.StringValue(transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
-	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
-	if err != nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-	}
-
-	if transitGateway.Options == nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
-	}
+	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
+	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
+	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
+	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
-
-	d.Set("peer_account_id", (transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId != nil))
-	d.Set("peer_region", (transitGatewayPeeringAttachment.AccepterTgwInfo.Region != nil))
-	d.Set("peer_transit_gateway_id", (transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId != nil))
-	d.Set("tags", (transitGatewayPeeringAttachment.Tags))
-	d.Set("transit_gateway_id", (transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId))
 
 	return nil
 }
 
 func resourceAwsEc2TransitGatewayPeeringAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-
-	if d.HasChange("peer_account_id") || d.HasChange("peer_region") || d.HasChange("peer_transit_gateway_id") || d.HasChange("transit_gateway_id") {
-		transitGatewayID := d.Get("transit_gateway_id").(string)
-
-		transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
-		if err != nil {
-			return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-		}
-
-		if transitGateway.Options == nil {
-			return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
-		}
-
-		if err := waitForEc2TransitGatewayPeeringAttachmentUpdate(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) update: %s", d.Id(), err)
-		}
-
-	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
