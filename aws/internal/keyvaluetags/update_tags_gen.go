@@ -2776,33 +2776,31 @@ func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier st
 func Route53UpdateTags(conn *route53.Route53, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := New(oldTagsMap)
 	newTags := New(newTagsMap)
+	removedTags := oldTags.Removed(newTags)
+	updatedTags := oldTags.Updated(newTags)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &route53.ChangeTagsForResourceInput{
-			ResourceId:    aws.String(identifier),
-			ResourceType:  aws.String(resourceType),
-			RemoveTagKeys: aws.StringSlice(removedTags.Keys()),
-		}
-
-		_, err := conn.ChangeTagsForResource(input)
-
-		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
-		}
+	// Ensure we do not send empty requests
+	if len(removedTags) == 0 && len(updatedTags) == 0 {
+		return nil
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &route53.ChangeTagsForResourceInput{
-			ResourceId:   aws.String(identifier),
-			ResourceType: aws.String(resourceType),
-			AddTags:      updatedTags.IgnoreAws().Route53Tags(),
-		}
+	input := &route53.ChangeTagsForResourceInput{
+		ResourceId:   aws.String(identifier),
+		ResourceType: aws.String(resourceType),
+	}
 
-		_, err := conn.ChangeTagsForResource(input)
+	if len(updatedTags) > 0 {
+		input.AddTags = updatedTags.IgnoreAws().Route53Tags()
+	}
 
-		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
-		}
+	if len(removedTags) > 0 {
+		input.RemoveTagKeys = aws.StringSlice(removedTags.Keys())
+	}
+
+	_, err := conn.ChangeTagsForResource(input)
+
+	if err != nil {
+		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil
