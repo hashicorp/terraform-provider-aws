@@ -922,6 +922,33 @@ func TestAccAWSDBInstance_ReplicateSourceDb_VpcSecurityGroupIds(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_ReplicateSourceDb_CACertificateIdentifier(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	caName := "rds-ca-2019"
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_CACertificateIdentifier(rName, caName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "ca_cert_identifier", caName),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", caName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_S3Import(t *testing.T) {
 	var snap rds.DBInstance
 	bucket := acctest.RandomWithPrefix("tf-acc-test")
@@ -4718,6 +4745,30 @@ resource "aws_db_instance" "test" {
   vpc_security_group_ids = ["${aws_security_group.test.id}"]
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_CACertificateIdentifier(rName string, caName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  ca_cert_identifier      = %q
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  replicate_source_db = "${aws_db_instance.source.id}"
+  ca_cert_identifier  = %q
+  skip_final_snapshot = true
+}
+`, rName, caName, rName, caName)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier(rName string) string {
