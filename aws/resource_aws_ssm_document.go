@@ -39,7 +39,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validateAwsSSMName,
 			},
-			"attachments": {
+			"attachments_source": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -48,6 +48,7 @@ func resourceAwsSsmDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								ssm.AttachmentsSourceKeyAttachmentReference,
 								ssm.AttachmentsSourceKeySourceUrl,
 								ssm.AttachmentsSourceKeyS3fileUrl,
 							}, false),
@@ -191,8 +192,8 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 		docInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
 	}
 
-	if v, ok := d.GetOk("attachments"); ok {
-		docInput.Attachments = expandAttachments(v.([]interface{}))
+	if v, ok := d.GetOk("attachments_source"); ok {
+		docInput.Attachments = expandSsmAttachmentsSources(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Document %q to be created", d.Get("name").(string))
@@ -296,11 +297,6 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.Set("status", doc.Status)
-
-	if v, ok := d.GetOk("attachments"); ok {
-		// The API doesn't currently return attachment information so it has to be set this way
-		d.Set("attachments", v)
-	}
 
 	gp, err := getDocumentPermissions(d, meta)
 
@@ -420,7 +416,7 @@ func resourceAwsSsmDocumentDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func expandAttachments(a []interface{}) []*ssm.AttachmentsSource {
+func expandSsmAttachmentsSources(a []interface{}) []*ssm.AttachmentsSource {
 	if len(a) == 0 {
 		return nil
 	}
@@ -633,8 +629,8 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 		DocumentVersion: aws.String(d.Get("default_version").(string)),
 	}
 
-	if d.HasChange("attachments") {
-		updateDocInput.Attachments = expandAttachments(d.Get("attachments").([]interface{}))
+	if d.HasChange("attachments_source") {
+		updateDocInput.Attachments = expandSsmAttachmentsSources(d.Get("attachments_source").([]interface{}))
 	}
 
 	newDefaultVersion := d.Get("default_version").(string)

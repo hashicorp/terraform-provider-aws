@@ -270,7 +270,7 @@ func TestAccAWSSSMDocument_package(t *testing.T) {
 				ResourceName:            "aws_ssm_document.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"attachments"}, // This doesn't work because the API doesn't provide attachments info
+				ImportStateVerifyIgnore: []string{"attachments_source"}, // This doesn't work because the API doesn't provide attachments info directly
 			},
 			{
 				Config: testAccAWSSSMDocumentTypePackageConfig(name, source, rInt2),
@@ -842,7 +842,7 @@ resource "aws_s3_bucket" "object_bucket" {
 resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Package"
-  attachments {
+  attachments_source {
 	key = "SourceUrl"
 	values = ["s3://${aws_s3_bucket.object_bucket.bucket}/test.zip"]
   }
