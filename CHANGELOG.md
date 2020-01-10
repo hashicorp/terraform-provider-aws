@@ -5,6 +5,10 @@ ENHANCEMENTS:
 * resource/aws_neptune_parameter_group: Support tag-on-create [GH-11245]
 * resource/aws_pinpoint_app: Add plan-time validation for `limit` configuration block `daily`, `maximum_duration`, `messages_per_second` and `total` arguments [GH-11368]
 
+BUG FIXES:
+
+* resource/aws_opsworks_permission: Prevent `Unable to change own permission level` error during self updates [GH-11379]
+
 ## 2.44.0 (January 09, 2020)
 
 FEATURES:
