@@ -314,7 +314,7 @@ func resourceAwsDbOptionGroupDelete(d *schema.ResourceData, meta interface{}) er
 		_, err := rdsconn.DeleteOptionGroup(deleteOpts)
 		if err != nil {
 			if isAWSErr(err, rds.ErrCodeInvalidOptionGroupStateFault, "") {
-				log.Printf("[DEBUG] AWS believes the RDS Option Group is still in use, retrying")
+				log.Printf(`[DEBUG] AWS believes the RDS Option Group is still in use, this could be because of a internal snapshot create by AWS, see github issue #4597 for more info. retrying...`)
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
