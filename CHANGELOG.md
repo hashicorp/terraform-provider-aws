@@ -1,4 +1,9 @@
 ## 2.45.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_neptune_parameter_group: Support tag-on-create [GH-11245]
+
 ## 2.44.0 (January 09, 2020)
 
 FEATURES:
