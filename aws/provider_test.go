@@ -338,7 +338,7 @@ func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
 	}
 }
 
-// testAccRegionHasServicePreCheck skips a test if the serviceId has an AWS Go SDK endpoint value in a region
+// testAccRegionHasServicePreCheck skips a test if the AWS Go SDK endpoint value in a region is missing
 // NOTE: Most acceptance testing should prefer behavioral checks against an API (e.g. making an API call and
 //       using response errors) to determine if a test should be skipped since AWS Go SDK endpoint information
 //       can be incorrect, especially for newer endpoints or for private feature testing. This functionality
