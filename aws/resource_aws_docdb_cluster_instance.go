@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -177,7 +178,6 @@ func resourceAwsDocDBClusterInstance() *schema.Resource {
 
 func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
-	tags := tagsFromMapDocDB(d.Get("tags").(map[string]interface{}))
 
 	createOpts := &docdb.CreateDBInstanceInput{
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -185,7 +185,7 @@ func resourceAwsDocDBClusterInstanceCreate(d *schema.ResourceData, meta interfac
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		Tags:                    tags,
+		Tags:                    keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DocdbTags(),
 	}
 
 	if attr, ok := d.GetOk("availability_zone"); ok {
@@ -314,8 +314,15 @@ func resourceAwsDocDBClusterInstanceRead(d *schema.ResourceData, meta interface{
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 
-	if err := saveTagsDocDB(conn, d, aws.StringValue(db.DBInstanceArn)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	arn := aws.StringValue(db.DBInstanceArn)
+	tags, err := keyvaluetags.DocdbListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DocDB Cluster Instance (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting DocDB Cluster Instance tags: %s", err)
 	}
 
 	return nil
@@ -397,8 +404,13 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 
 	}
 
-	if err := setTagsDocDB(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		arn := d.Get("arn").(string)
+
+		if err := keyvaluetags.DocdbUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating DocDB Cluster Instance (%s) tags: %s", arn, err)
+		}
 	}
 
 	return resourceAwsDocDBClusterInstanceRead(d, meta)
