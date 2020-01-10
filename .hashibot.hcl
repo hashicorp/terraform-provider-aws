@@ -828,6 +828,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/eks_*"
     ]
     "service/elastic-transcoder" = [
+      "**/*_elastictranscoder_*",
+      "**/elastictranscoder_*",
       "**/*_elastic_transcoder_*",
       "**/elastic_transcoder_*"
     ]
