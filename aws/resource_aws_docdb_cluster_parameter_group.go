@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -92,7 +93,6 @@ func resourceAwsDocDBClusterParameterGroup() *schema.Resource {
 
 func resourceAwsDocDBClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
-	tags := tagsFromMapDocDB(d.Get("tags").(map[string]interface{}))
 
 	var groupName string
 	if v, ok := d.GetOk("name"); ok {
@@ -107,7 +107,7 @@ func resourceAwsDocDBClusterParameterGroupCreate(d *schema.ResourceData, meta in
 		DBClusterParameterGroupName: aws.String(groupName),
 		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
 		Description:                 aws.String(d.Get("description").(string)),
-		Tags:                        tags,
+		Tags:                        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DocdbTags(),
 	}
 
 	log.Printf("[DEBUG] Create DocDB Cluster Parameter Group: %#v", createOpts)
@@ -166,16 +166,14 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting docdb cluster parameter: %s", err)
 	}
 
-	resp, err := conn.ListTagsForResource(&docdb.ListTagsForResourceInput{
-		ResourceName: aws.String(arn),
-	})
+	tags, err := keyvaluetags.DocdbListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DocDB Cluster Parameter Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for DocDB Cluster Parameter Group (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tagsToMapDocDB(resp.TagList)); err != nil {
-		return fmt.Errorf("Error setting docdb parameter group tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting DocDB Cluster Parameter Group tags: %s", err)
 	}
 
 	return nil
@@ -233,8 +231,13 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
-	if err := setTagsDocDB(conn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		arn := d.Get("arn").(string)
+
+		if err := keyvaluetags.DocdbUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating DocDB Cluster Parameter Group (%s) tags: %s", arn, err)
+		}
 	}
 	d.SetPartial("tags")
 
