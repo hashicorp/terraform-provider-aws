@@ -55,6 +55,7 @@ var sliceServiceNames = []string{
 	"firehose",
 	"fms",
 	"fsx",
+	"gamelift",
 	"iam",
 	"inspector",
 	"iot",

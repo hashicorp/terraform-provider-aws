@@ -45,6 +45,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -785,6 +786,23 @@ func FsxListTags(conn *fsx.FSx, identifier string) (KeyValueTags, error) {
 	}
 
 	return FsxKeyValueTags(output.Tags), nil
+}
+
+// GameliftListTags lists gamelift service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GameliftListTags(conn *gamelift.GameLift, identifier string) (KeyValueTags, error) {
+	input := &gamelift.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GameliftKeyValueTags(output.Tags), nil
 }
 
 // GlueListTags lists glue service tags.

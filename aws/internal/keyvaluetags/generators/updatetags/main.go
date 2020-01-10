@@ -62,6 +62,7 @@ var serviceNames = []string{
 	"emr",
 	"firehose",
 	"fsx",
+	"gamelift",
 	"glue",
 	"guardduty",
 	"greengrass",
@@ -468,6 +469,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 	case "firehose":
 		return "DeliveryStreamName"
 	case "fsx":
+		return "ResourceARN"
+	case "gamelift":
 		return "ResourceARN"
 	case "kinesis":
 		return "StreamName"
