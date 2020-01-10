@@ -3,7 +3,7 @@ subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_lifecycle_hook"
 description: |-
-  Provides an AutoScaling Lifecycle Hooks resource.
+  Provides an AutoScaling Lifecycle Hook resource.
 ---
 
 # Resource: aws_autoscaling_lifecycle_hook
@@ -71,7 +71,7 @@ The following arguments are supported:
 
 ## Import
 
-AutoScaling Lifecycle Hook can be imported using the role autoscaling_group_name and name separated by `/`.
+AutoScaling Lifecycle Hooks can be imported using the role autoscaling_group_name and name separated by `/`.
 
 ```
 $ terraform import aws_aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name

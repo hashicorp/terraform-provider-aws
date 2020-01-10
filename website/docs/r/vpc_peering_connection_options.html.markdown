@@ -11,7 +11,7 @@ description: |-
 Provides a resource to manage VPC peering connection options.
 
 ~> **NOTE on VPC Peering Connections and VPC Peering Connection Options:** Terraform provides
-both a standalone VPC Peering Connection Options and a [VPC Peering Connection](vpc_peering.html)
+both a standalone VPC Peering Connection Options and a [VPC Peering Connection](vpc_peering_connection.html)
 resource with `accepter` and `requester` attributes. Do not manage options for the same VPC peering
 connection in both a VPC Peering Connection resource and a VPC Peering Connection Options resource.
 Doing so will cause a conflict of options and will overwrite the options.
