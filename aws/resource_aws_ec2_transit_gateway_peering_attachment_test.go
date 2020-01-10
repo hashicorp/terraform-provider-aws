@@ -196,6 +196,51 @@ func TestAccAWSEc2TransitGatewayPeeringAttachment_Tags_sameAccount(t *testing.T)
 	})
 }
 
+func TestAccAWSEc2TransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
+	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSEc2TransitGatewayPeeringAttachmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName, &transitGatewayPeeringAttachment),
+					// Test that the peer account ID != the primary (request) account ID
+					func(s *terraform.State) error {
+						if testAccCheckResourceAttrAccountID(resourceName, "peer_account_id") == nil {
+							return fmt.Errorf("peer_account_id attribute incorrectly to the requester's account ID")
+						}
+						return nil
+					},
+					resource.TestCheckResourceAttr(resourceName, "peer_region", testAccGetAlternateRegion()),
+					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+				),
+			},
+			{
+				Config:            testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEc2TransitGatewayPeeringAttachmentExists(resourceName string, transitGatewayPeeringAttachment *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -275,8 +320,8 @@ func testAccCheckAWSEc2TransitGatewayPeeringAttachmentDisappears(transitGatewayP
 	}
 }
 
-func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string) string {
-	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -293,9 +338,34 @@ resource "aws_ec2_transit_gateway" "peer" {
 `, rName)
 }
 
+func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName string) string {
+	return testAccAlternateRegionProviderConfig() + testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName)
+}
+
+func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
+	return testAccAlternateAccountAlternateRegionProviderConfig() +
+		testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName) +
+		fmt.Sprintf(`
+data "aws_caller_identity" "peer" {
+  provider = "aws.alternate"
+}
+`)
+}
+
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName string) string {
 	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_region             = %[1]q
+  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
+  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
+}
+`, testAccGetAlternateRegion())
+}
+
+func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName string) string {
+	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName) + fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_account_id         = "${data.aws_caller_identity.peer.account_id}"
   peer_region             = %[1]q
   peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
   transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
