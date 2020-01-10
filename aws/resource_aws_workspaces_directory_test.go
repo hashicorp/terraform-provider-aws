@@ -5,7 +5,6 @@ import (
 	"log"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
@@ -33,35 +32,11 @@ func testSweepWorkspacesDirectories(region string) error {
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	err = conn.DescribeWorkspaceDirectoriesPages(input, func(resp *workspaces.DescribeWorkspaceDirectoriesOutput, _ bool) bool {
 		for _, directory := range resp.Directories {
-			id := aws.StringValue(directory.DirectoryId)
-
-			deregisterInput := workspaces.DeregisterWorkspaceDirectoryInput{
-				DirectoryId: directory.DirectoryId,
-			}
-
-			log.Printf("[INFO] Deregistering Workspace Directory %q", deregisterInput)
-			_, err := conn.DeregisterWorkspaceDirectory(&deregisterInput)
+			err := workspacesDirectoryDelete(aws.StringValue(directory.DirectoryId), conn)
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error deregistering Workspace Directory %q: %w", id, err))
+				errors = multierror.Append(errors, err)
 			}
 
-			log.Printf("[INFO] Waiting for Workspace Directory %q to be deregistered", id)
-			stateConf := &resource.StateChangeConf{
-				Pending: []string{
-					workspaces.WorkspaceDirectoryStateRegistering,
-					workspaces.WorkspaceDirectoryStateRegistered,
-					workspaces.WorkspaceDirectoryStateDeregistering,
-				},
-				Target: []string{
-					workspaces.WorkspaceDirectoryStateDeregistered,
-				},
-				Refresh: workspacesDirectoryRefreshStateFunc(conn, id),
-				Timeout: 10 * time.Minute,
-			}
-			_, err = stateConf.WaitForState()
-			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error waiting for Workspace Directory %q to be deregistered: %w", id, err))
-			}
 		}
 		return true
 	})
