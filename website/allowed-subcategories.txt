@@ -68,6 +68,7 @@ Lightsail
 MQ
 Macie
 Managed Streaming for Kafka (MSK)
+MediaConnect
 MediaConvert
 MediaPackage
 MediaStore
