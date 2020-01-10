@@ -1,12 +1,12 @@
 ---
+subcategory: "MediaConnect"
 layout: "aws"
 page_title: "AWS: aws_media_connect_flow"
-sidebar_current: "docs-aws-resource-media-connect-flow"
 description: |-
   Provides an AWS Elemental MediaConnect Flow.
 ---
 
-# aws_media_connect_flow
+# Resource: aws_media_connect_flow
 
 Provides an AWS Elemental MediaConnect Flow.
 
