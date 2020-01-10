@@ -360,6 +360,53 @@ func TestAccAWSBeanstalkEnv_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSBeanstalkEnv_tagsWithName(t *testing.T) {
+	var app elasticbeanstalk.EnvironmentDescription
+
+	rString := acctest.RandString(8)
+	appName := fmt.Sprintf("tf_acc_app_env_resource_%s", rString)
+	envName := fmt.Sprintf("tf-acc-env-resource-%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBeanstalkEnvDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBeanstalkEnvConfig_empty_settings(appName, envName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
+					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{}),
+				),
+			},
+
+			{
+				Config: testAccBeanstalkTagsWithNameTemplate(appName, envName, "test1", "test2", "test3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
+					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{"NameFirstTag": "test1", "MiddleNameTag": "test2", "TagEndsName": "test3"}),
+				),
+			},
+
+			{
+				Config: testAccBeanstalkTagsWithNameTemplate(appName, envName, "test2", "test3", "test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
+					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{"NameFirstTag": "test2", "MiddleNameTag": "test3", "TagEndsName": "test1"}),
+				),
+			},
+
+			{
+				Config: testAccBeanstalkEnvConfig_empty_settings(appName, envName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBeanstalkEnvExists("aws_elastic_beanstalk_environment.tfenvtest", &app),
+					testAccCheckBeanstalkEnvTagsMatch(&app, map[string]string{}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSBeanstalkEnv_vpc(t *testing.T) {
 	var app elasticbeanstalk.EnvironmentDescription
 
@@ -1043,11 +1090,34 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
   wait_for_ready_timeout = "15m"
 
   tags = {
-    firstTag  = "%s"
-    secondTag = "%s"
+    firstTag     = "%s"
+    secondTag    = "%s"
   }
 }
 `, appName, envName, firstTag, secondTag)
+}
+
+func testAccBeanstalkTagsWithNameTemplate(appName, envName, firstTag, secondTag, thirdTag string) string {
+	return fmt.Sprintf(`
+resource "aws_elastic_beanstalk_application" "tftest" {
+  name        = "%s"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_environment" "tfenvtest" {
+  name                = "%s"
+  application         = "${aws_elastic_beanstalk_application.tftest.name}"
+  solution_stack_name = "64bit Amazon Linux running Python"
+
+  wait_for_ready_timeout = "15m"
+
+  tags = {
+	NameFirstTag  = "%s"
+	MiddleNameTag = "%s"
+	TagEndsName   = "%s"
+  }
+}
+`, appName, envName, firstTag, secondTag, thirdTag)
 }
 
 func testAccBeanstalkEnv_VPC(sgName, appName, envName string) string {
