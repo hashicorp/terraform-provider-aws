@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -24,23 +25,13 @@ func init() {
 func testSweepWorkspacesDirectories(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).workspacesconn
 
+	var errors error
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
-	for {
-		resp, err := conn.DescribeWorkspaceDirectories(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Workspace Directory sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing Workspace Directories: %s", err)
-		}
-
+	err = conn.DescribeWorkspaceDirectoriesPages(input, func(resp *workspaces.DescribeWorkspaceDirectoriesOutput, _ bool) bool {
 		for _, directory := range resp.Directories {
 			id := aws.StringValue(directory.DirectoryId)
 
@@ -51,7 +42,7 @@ func testSweepWorkspacesDirectories(region string) error {
 			log.Printf("[INFO] Deregistering Workspace Directory %q", deregisterInput)
 			_, err := conn.DeregisterWorkspaceDirectory(&deregisterInput)
 			if err != nil {
-				return fmt.Errorf("error deregistering Workspace Directory %q: %s", id, err)
+				errors = multierror.Append(errors, fmt.Errorf("error deregistering Workspace Directory %q: %w", id, err))
 			}
 
 			log.Printf("[INFO] Waiting for Workspace Directory %q to be deregistered", id)
@@ -69,18 +60,20 @@ func testSweepWorkspacesDirectories(region string) error {
 			}
 			_, err = stateConf.WaitForState()
 			if err != nil {
-				return fmt.Errorf("error waiting for Workspace Directory %q to be deregistered: %s", id, err)
+				errors = multierror.Append(errors, fmt.Errorf("error waiting for Workspace Directory %q to be deregistered: %w", id, err))
 			}
 		}
-
-		if resp.NextToken == nil {
-			break
-		}
-
-		input.NextToken = resp.NextToken
+		return true
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Workspace Directory sweep for %s: %s", region, err)
+		return errors // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		errors = multierror.Append(errors, fmt.Errorf("error listing Workspace Directories: %s", err))
 	}
 
-	return nil
+	return errors
 }
 
 // These tests need to be serialized, because they all rely on the IAM Role `workspaces_DefaultRole`.
