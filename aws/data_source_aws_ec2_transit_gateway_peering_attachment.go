@@ -16,7 +16,7 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 		Read: dataSourceAwsEc2TransitGatewayPeeringAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": dataSourceFiltersSchema(),
+			"filter": ec2CustomFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -47,43 +47,48 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData,
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("id"); ok {
-		input.TransitGatewayAttachmentIds = []*string{aws.String(v.(string))}
+		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	log.Printf("[DEBUG] Reading EC2 Transit Gateways: %s", input)
+	input.Filters = buildEC2CustomFilterList(d.Get("filter").(*schema.Set))
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Filters = append(input.Filters, ec2TagFiltersFromMap(v)...)
+	}
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
+	}
+
+	log.Printf("[DEBUG] Reading EC2 Transit Gateway Peering Attachments: %s", input)
 	output, err := conn.DescribeTransitGatewayPeeringAttachments(input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Transit Gateway Route Table: %s", err)
+		return fmt.Errorf("error reading EC2 Transit Gateway Peering Attachments: %s", err)
 	}
 
 	if output == nil || len(output.TransitGatewayPeeringAttachments) == 0 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: no results found")
+		return errors.New("error reading EC2 Transit Gateway Peering Attachment: no results found")
 	}
 
 	if len(output.TransitGatewayPeeringAttachments) > 1 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: multiple results found, try adjusting search criteria")
+		return errors.New("error reading EC2 Transit Gateway Peering Attachment: multiple results found, try adjusting search criteria")
 	}
 
 	transitGatewayPeeringAttachment := output.TransitGatewayPeeringAttachments[0]
 
 	if transitGatewayPeeringAttachment == nil {
-		return errors.New("error reading EC2 Transit Gateway Route Table: empty result")
+		return errors.New("error reading EC2 Transit Gateway Peering Attachment: empty result")
 	}
+
+	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
+	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
+	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
+	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
-
-	d.Set("peer_account_id", aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId))
-	d.Set("peer_region", aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.Region))
-	d.Set("peer_transit_gateway_id", aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId))
-	d.Set("transit_gateway_id", aws.StringValue(transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId))
 
 	d.SetId(aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 

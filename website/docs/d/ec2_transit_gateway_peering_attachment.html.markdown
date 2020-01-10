@@ -38,20 +38,22 @@ The following arguments are supported:
 
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 * `id` - (Optional) Identifier of the EC2 Transit Gateway Peering Attachment.
+* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+  a pair on the specific EC2 Transit Gateway Peering Attachment to retrieve.
 
-### filter Argument Reference
+More complex filters can be expressed using one or more `filter` sub-blocks,
+which take the following arguments:
 
-* `name` - (Required) Name of the filter.
-* `values` - (Required) List of one or more values for the filter.
+* `name` - (Required) The name of the field to filter by, as defined by
+  [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcPeeringConnections.html).
+* `values` - (Required) Set of values that are accepted for the given field.
+  An EC2 Transit Gateway Peering Attachment be selected if any one of the given values matches.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-
-* `id` - EC2 Transit Gateway Peering Attachment identifier
 * `peer_account_id` - Identifier of the AWS account that owns the accepter Transit Gateway.
 * `peer_region` - Identifier of the AWS region that owns the accepter Transit Gateway.
-* `transit_gateway_id` - Requester EC2 Transit Gateway identifier
 * `peer_transit_gateway_id` - Accepter EC2 Transit Gateway identifier
-* `tags` - Key-value tags for the EC2 Transit Gateway VPC Attachment
+* `transit_gateway_id` - Requester EC2 Transit Gateway identifier
