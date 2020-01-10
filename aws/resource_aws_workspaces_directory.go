@@ -203,17 +203,27 @@ func resourceAwsWorkspacesDirectoryUpdate(d *schema.ResourceData, meta interface
 func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
 
-	input := &workspaces.DeregisterWorkspaceDirectoryInput{
-		DirectoryId: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deregestering workspaces directory...\n%#v\n", *input)
-	_, err := conn.DeregisterWorkspaceDirectory(input)
+	err := workspacesDirectoryDelete(d.Id(), conn)
 	if err != nil {
 		return err
 	}
+	log.Printf("[DEBUG] Workspaces directory %q is deregistered", d.Id())
 
-	log.Printf("[DEBUG] Waiting for workspaces directory %q to become deregistered...", d.Id())
+	return nil
+}
+
+func workspacesDirectoryDelete(id string, conn *workspaces.WorkSpaces) error {
+	input := &workspaces.DeregisterWorkspaceDirectoryInput{
+		DirectoryId: aws.String(id),
+	}
+
+	log.Printf("[DEBUG] Deregistering Workspace Directory %q", id)
+	_, err := conn.DeregisterWorkspaceDirectory(input)
+	if err != nil {
+		return fmt.Errorf("error deregistering Workspace Directory %q: %w", id, err)
+	}
+
+	log.Printf("[DEBUG] Waiting for Workspace Directory %q to be deregistered", id)
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			workspaces.WorkspaceDirectoryStateRegistering,
@@ -223,17 +233,14 @@ func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface
 		Target: []string{
 			workspaces.WorkspaceDirectoryStateDeregistered,
 		},
-		Refresh:      workspacesDirectoryRefreshStateFunc(conn, d.Id()),
+		Refresh:      workspacesDirectoryRefreshStateFunc(conn, id),
 		PollInterval: 30 * time.Second,
 		Timeout:      10 * time.Minute,
 	}
-
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("directory was not deregistered: %s", err)
+		return fmt.Errorf("error waiting for Workspace Directory %q to be deregistered: %w", id, err)
 	}
-	log.Printf("[DEBUG] Workspaces directory %q is deregistered", d.Id())
-
 	return nil
 }
 

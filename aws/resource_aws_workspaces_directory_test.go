@@ -2,15 +2,54 @@ package aws
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"log"
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_workspaces_directory", &resource.Sweeper{
+		Name: "aws_workspaces_directory",
+		F:    testSweepWorkspacesDirectories,
+	})
+}
+
+func testSweepWorkspacesDirectories(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).workspacesconn
+
+	var errors error
+	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
+	err = conn.DescribeWorkspaceDirectoriesPages(input, func(resp *workspaces.DescribeWorkspaceDirectoriesOutput, _ bool) bool {
+		for _, directory := range resp.Directories {
+			err := workspacesDirectoryDelete(aws.StringValue(directory.DirectoryId), conn)
+			if err != nil {
+				errors = multierror.Append(errors, err)
+			}
+
+		}
+		return true
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Workspace Directory sweep for %s: %s", region, err)
+		return errors // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		errors = multierror.Append(errors, fmt.Errorf("error listing Workspace Directories: %s", err))
+	}
+
+	return errors
+}
 
 // These tests need to be serialized, because they all rely on the IAM Role `workspaces_DefaultRole`.
 func TestAccAwsWorkspacesDirectory(t *testing.T) {
