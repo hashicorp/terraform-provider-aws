@@ -57,6 +57,7 @@ var serviceNames = []string{
 	"eks",
 	"elasticache",
 	"elasticsearchservice",
+	"elb",
 	"elbv2",
 	"emr",
 	"firehose",
@@ -134,6 +135,7 @@ func main() {
 		"UntagFunction":                   ServiceUntagFunction,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
 		"UntagInputTagsField":             ServiceUntagInputTagsField,
+		"UntagInputKeysType":              ServiceUntagInputRequiresKeyType,
 	}
 
 	tmpl, err := template.New("updatetags").Funcs(templateFuncMap).Parse(templateBody)
@@ -269,7 +271,11 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{ . | TagInputResourceTypeField }}: aws.String(resourceType),
 			{{- end }}
 			{{- if . | UntagInputRequiresTagType }}
+			{{- if . | UntagInputKeysType }}
+			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Keys(),
+			{{- else }}
 			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Tags(),
+			{{- end }}
 			{{- else }}
 			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.Keys()),
 			{{- end }}
@@ -369,6 +375,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "elasticsearchservice":
 		return "AddTags"
+	case "elb":
+		return "AddTags"
 	case "elbv2":
 		return "AddTags"
 	case "emr":
@@ -453,6 +461,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
+	case "elb":
+		return "LoadBalancerNames"
 	case "elbv2":
 		return "ResourceArns"
 	case "emr":
@@ -518,6 +528,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 func ServiceTagInputIdentifierRequiresSlice(serviceName string) string {
 	switch serviceName {
 	case "ec2":
+		return "yes"
+	case "elb":
 		return "yes"
 	case "elbv2":
 		return "yes"
@@ -597,6 +609,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "elasticsearchservice":
 		return "RemoveTags"
+	case "elb":
+		return "RemoveTags"
 	case "elbv2":
 		return "RemoveTags"
 	case "emr":
@@ -645,6 +659,8 @@ func ServiceUntagInputRequiresTagType(serviceName string) string {
 		return "yes"
 	case "ec2":
 		return "yes"
+	case "elb":
+		return "yes"
 	default:
 		return ""
 	}
@@ -669,6 +685,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "Keys"
 	case "ec2":
 		return "Tags"
+	case "elb":
+		return "Tags"
 	case "glue":
 		return "TagsToRemove"
 	case "resourcegroups":
@@ -677,5 +695,15 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "RemoveTagKeys"
 	default:
 		return "TagKeys"
+	}
+}
+
+// ServiceUntagInputRequiresKeyType determines if a special type for the untagging function tag key field is needed.
+func ServiceUntagInputRequiresKeyType(serviceName string) string {
+	switch serviceName {
+	case "elb":
+		return "yes"
+	default:
+		return ""
 	}
 }

@@ -54,6 +54,7 @@ var serviceNames = []string{
 	"elasticache",
 	"elasticbeanstalk",
 	"elasticsearchservice",
+	"elb",
 	"elbv2",
 	"firehose",
 	"fsx",
@@ -222,6 +223,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "elasticsearchservice":
 		return "ListTags"
+	case "elb":
+		return "DescribeTags"
 	case "elbv2":
 		return "DescribeTags"
 	case "firehose":
@@ -288,6 +291,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "ResourceName"
 	case "elasticsearchservice":
 		return "ARN"
+	case "elb":
+		return "LoadBalancerNames"
 	case "elbv2":
 		return "ResourceArns"
 	case "firehose":
@@ -348,6 +353,8 @@ func ServiceListTagsInputIdentifierRequiresSlice(serviceName string) string {
 		return "yes"
 	case "directconnect":
 		return "yes"
+	case "elb":
+		return "yes"
 	case "elbv2":
 		return "yes"
 	default:
@@ -386,6 +393,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "ResourceTags"
 	case "elasticsearchservice":
 		return "TagList"
+	case "elb":
+		return "TagDescriptions[0].Tags"
 	case "elbv2":
 		return "TagDescriptions[0].Tags"
 	case "mediaconvert":

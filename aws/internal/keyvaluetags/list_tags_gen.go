@@ -41,6 +41,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
@@ -716,6 +717,23 @@ func ElasticsearchserviceListTags(conn *elasticsearchservice.ElasticsearchServic
 	}
 
 	return ElasticsearchserviceKeyValueTags(output.TagList), nil
+}
+
+// ElbListTags lists elb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElbListTags(conn *elb.ELB, identifier string) (KeyValueTags, error) {
+	input := &elb.DescribeTagsInput{
+		LoadBalancerNames: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ElbKeyValueTags(output.TagDescriptions[0].Tags), nil
 }
 
 // Elbv2ListTags lists elbv2 service tags.

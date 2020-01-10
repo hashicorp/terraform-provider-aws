@@ -46,6 +46,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
@@ -1526,6 +1527,42 @@ func ElasticsearchserviceUpdateTags(conn *elasticsearchservice.ElasticsearchServ
 		input := &elasticsearchservice.AddTagsInput{
 			ARN:     aws.String(identifier),
 			TagList: updatedTags.IgnoreAws().ElasticsearchserviceTags(),
+		}
+
+		_, err := conn.AddTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// ElbUpdateTags updates elb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElbUpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &elb.RemoveTagsInput{
+			LoadBalancerNames: aws.StringSlice([]string{identifier}),
+			Tags:              removedTags.IgnoreAws().ElbKeys(),
+		}
+
+		_, err := conn.RemoveTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &elb.AddTagsInput{
+			LoadBalancerNames: aws.StringSlice([]string{identifier}),
+			Tags:              updatedTags.IgnoreAws().ElbTags(),
 		}
 
 		_, err := conn.AddTags(input)
