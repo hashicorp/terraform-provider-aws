@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDocDBCluster() *schema.Resource {
@@ -251,7 +252,6 @@ func resourceAwsDocDBClusterImport(
 
 func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
-	tags := tagsFromMapDocDB(d.Get("tags").(map[string]interface{}))
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -277,7 +277,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			DBClusterIdentifier: aws.String(identifier),
 			Engine:              aws.String(d.Get("engine").(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
-			Tags:                tags,
+			Tags:                keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DocdbTags(),
 		}
 
 		if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
@@ -359,7 +359,7 @@ func resourceAwsDocDBClusterCreate(d *schema.ResourceData, meta interface{}) err
 			Engine:              aws.String(d.Get("engine").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
-			Tags:                tags,
+			Tags:                keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DocdbTags(),
 		}
 
 		if attr, ok := d.GetOk("port"); ok {
@@ -558,9 +558,15 @@ func resourceAwsDocDBClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	// Fetch and save tags
-	if err := saveTagsDocDB(conn, d, aws.StringValue(dbc.DBClusterArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for DocDB Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+	arn := aws.StringValue(dbc.DBClusterArn)
+	tags, err := keyvaluetags.DocdbListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DocDB Cluster (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting DocDB Cluster tags: %s", err)
 	}
 
 	return nil
@@ -656,8 +662,11 @@ func resourceAwsDocDBClusterUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("tags") {
-		if err := setTagsDocDB(conn, d); err != nil {
-			return err
+		o, n := d.GetChange("tags")
+		arn := d.Get("arn").(string)
+
+		if err := keyvaluetags.DocdbUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating DocDB Cluster (%s) tags: %s", arn, err)
 		}
 
 		d.SetPartial("tags")
