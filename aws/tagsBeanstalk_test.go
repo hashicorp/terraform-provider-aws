@@ -71,9 +71,28 @@ func TestIgnoringTagsBeanstalk(t *testing.T) {
 		Key:   aws.String("aws:foo:bar"),
 		Value: aws.String("baz"),
 	})
+	ignoredTags = append(ignoredTags, &elasticbeanstalk.Tag{
+		Key:   aws.String("Name"),
+		Value: aws.String("shouldBeIgnored"),
+	})
 	for _, tag := range ignoredTags {
 		if !tagIgnoredBeanstalk(tag) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
+		}
+	}
+
+	var validTags []*elasticbeanstalk.Tag
+	validTags = append(validTags, &elasticbeanstalk.Tag{
+		Key:   aws.String("MyName"),
+		Value: aws.String("shouldNotBeIgnored"),
+	})
+	validTags = append(validTags, &elasticbeanstalk.Tag{
+		Key:   aws.String("NameOfSomething"),
+		Value: aws.String("shouldNotBeIgnored"),
+	})
+	for _, tag := range validTags {
+		if tagIgnoredBeanstalk(tag) {
+			t.Fatalf("Tag %v with value %v was ignored, but should not be!", *tag.Key, *tag.Value)
 		}
 	}
 }
