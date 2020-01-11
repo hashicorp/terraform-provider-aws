@@ -6424,3 +6424,261 @@ resource "aws_emr_cluster" "tf-test-cluster" {
 }
 `, rName, stepConcurrencyLevel)
 }
+
+func TestAccAWSEMRCluster_defaultRoles(t *testing.T) {
+	var cluster emr.Cluster
+	rInt := acctest.RandInt()
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfig_defaultRoles(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+				),
+			},
+		},
+	})
+}
+
+func testAccAWSEmrClusterConfig_defaultRoles(r int) string {
+	return fmt.Sprintf(`
+  resource "aws_vpc" "vpc" {
+    cidr_block = "10.0.0.0/16"
+  }
+  
+  resource "aws_emr_cluster" "tf-test-cluster" {
+    name          = "emr-test-%[1]d"
+    release_label = "emr-4.6.0"
+    applications  = ["Spark"]
+  
+    ec2_attributes {
+      subnet_id                         = "${aws_subnet.main.id}"
+      instance_profile                  = "${aws_iam_instance_profile.emr_profile.arn}"
+    }
+  
+    master_instance_type = "c4.large"
+    core_instance_type   = "c4.large"
+    core_instance_count  = 1
+  
+    tags {
+      role     = "rolename"
+      dns_zone = "env_zone"
+      env      = "env"
+      name     = "name-env"
+    }
+  
+    termination_protection = false
+  
+    configurations = "test-fixtures/emr_configurations.json"
+  
+    depends_on = ["aws_main_route_table_association.a"]
+  
+    service_role = "${aws_iam_role.iam_emr_default_role.arn}"
+    //ebs_root_volume_size = 21
+  }
+  
+  resource "aws_subnet" "main" {
+    vpc_id     = "${aws_vpc.vpc.id}"
+    cidr_block = "10.0.0.0/24"
+  
+    tags {
+      Name = "tf-acc-emr-cluster"
+    }
+  }
+  
+  
+  resource "aws_internet_gateway" "gw" {
+    vpc_id = "${aws_vpc.vpc.id}"
+  }
+  
+  resource "aws_route_table" "r" {
+    vpc_id = "${aws_vpc.vpc.id}"
+  
+    route {
+      cidr_block = "0.0.0.0/0"
+      gateway_id = "${aws_internet_gateway.gw.id}"
+    }
+  }
+  
+  resource "aws_main_route_table_association" "a" {
+    vpc_id         = "${aws_vpc.vpc.id}"
+    route_table_id = "${aws_route_table.r.id}"
+  }
+  
+  ###
+  
+  # IAM things
+  
+  ###
+  
+  # IAM role for EMR Service
+  resource "aws_iam_role" "iam_emr_default_role" {
+    name = "iam_emr_default_role-%[1]d"
+  
+    assume_role_policy = <<EOT
+{
+    "Version": "2008-10-17",
+    "Statement": [
+      {
+        "Sid": "",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "elasticmapreduce.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }
+  EOT
+  }
+  
+  resource "aws_iam_role_policy_attachment" "service-attach" {
+    role       = "${aws_iam_role.iam_emr_default_role.id}"
+    policy_arn = "${aws_iam_policy.iam_emr_default_policy.arn}"
+  }
+  
+  resource "aws_iam_policy" "iam_emr_default_policy" {
+    name = "iam_emr_default_policy_%[1]d"
+  
+    policy = <<EOT
+{
+      "Version": "2012-10-17",
+      "Statement": [{
+          "Effect": "Allow",
+          "Resource": "*",
+          "Action": [
+              "ec2:AuthorizeSecurityGroupEgress",
+              "ec2:AuthorizeSecurityGroupIngress",
+              "ec2:CancelSpotInstanceRequests",
+              "ec2:CreateNetworkInterface",
+              "ec2:CreateSecurityGroup",
+              "ec2:CreateTags",
+              "ec2:DeleteNetworkInterface",
+              "ec2:DeleteSecurityGroup",
+              "ec2:DeleteTags",
+              "ec2:DescribeAvailabilityZones",
+              "ec2:DescribeAccountAttributes",
+              "ec2:DescribeDhcpOptions",
+              "ec2:DescribeInstanceStatus",
+              "ec2:DescribeInstances",
+              "ec2:DescribeKeyPairs",
+              "ec2:DescribeNetworkAcls",
+              "ec2:DescribeNetworkInterfaces",
+              "ec2:DescribePrefixLists",
+              "ec2:DescribeRouteTables",
+              "ec2:DescribeSecurityGroups",
+              "ec2:DescribeSpotInstanceRequests",
+              "ec2:DescribeSpotPriceHistory",
+              "ec2:DescribeSubnets",
+              "ec2:DescribeVpcAttribute",
+              "ec2:DescribeVpcEndpoints",
+              "ec2:DescribeVpcEndpointServices",
+              "ec2:DescribeVpcs",
+              "ec2:DetachNetworkInterface",
+              "ec2:ModifyImageAttribute",
+              "ec2:ModifyInstanceAttribute",
+              "ec2:RequestSpotInstances",
+              "ec2:RevokeSecurityGroupEgress",
+              "ec2:RunInstances",
+              "ec2:TerminateInstances",
+              "ec2:DeleteVolume",
+              "ec2:DescribeVolumeStatus",
+              "ec2:DescribeVolumes",
+              "ec2:DetachVolume",
+              "iam:GetRole",
+              "iam:GetRolePolicy",
+              "iam:ListInstanceProfiles",
+              "iam:ListRolePolicies",
+              "iam:PassRole",
+              "s3:CreateBucket",
+              "s3:Get*",
+              "s3:List*",
+              "sdb:BatchPutAttributes",
+              "sdb:Select",
+              "sqs:CreateQueue",
+              "sqs:Delete*",
+              "sqs:GetQueue*",
+              "sqs:PurgeQueue",
+              "sqs:ReceiveMessage"
+          ]
+      }]
+  }
+  EOT
+  }
+  
+  # IAM Role for EC2 Instance Profile
+  resource "aws_iam_role" "iam_emr_profile_role" {
+    name = "iam_emr_profile_role-%[1]d"
+  
+    assume_role_policy = <<EOT
+{
+    "Version": "2008-10-17",
+    "Statement": [
+      {
+        "Sid": "",
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "ec2.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  }
+  EOT
+  }
+  
+  resource "aws_iam_instance_profile" "emr_profile" {
+    name  = "emr_profile-%[1]d"
+    role = "${aws_iam_role.iam_emr_profile_role.name}"
+  }
+  
+  resource "aws_iam_role_policy_attachment" "profile-attach" {
+    role       = "${aws_iam_role.iam_emr_profile_role.id}"
+    policy_arn = "${aws_iam_policy.iam_emr_profile_policy.arn}"
+  }
+  
+  resource "aws_iam_policy" "iam_emr_profile_policy" {
+    name = "iam_emr_profile_policy-%[1]d"
+  
+    policy = <<EOT
+{
+      "Version": "2012-10-17",
+      "Statement": [{
+          "Effect": "Allow",
+          "Resource": "*",
+          "Action": [
+              "cloudwatch:*",
+              "dynamodb:*",
+              "ec2:Describe*",
+              "elasticmapreduce:Describe*",
+              "elasticmapreduce:ListBootstrapActions",
+              "elasticmapreduce:ListClusters",
+              "elasticmapreduce:ListInstanceGroups",
+              "elasticmapreduce:ListInstances",
+              "elasticmapreduce:ListSteps",
+              "kinesis:CreateStream",
+              "kinesis:DeleteStream",
+              "kinesis:DescribeStream",
+              "kinesis:GetRecords",
+              "kinesis:GetShardIterator",
+              "kinesis:MergeShards",
+              "kinesis:PutRecord",
+              "kinesis:SplitShard",
+              "rds:Describe*",
+              "s3:*",
+              "sdb:*",
+              "sns:*",
+              "sqs:*"
+          ]
+      }]
+  }
+  EOT
+  }
+  `,
+		r, r, r, r, r, r)
+}
