@@ -682,7 +682,7 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics.#", "7"),
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "13"),
 				),
 			},
 			{
@@ -704,7 +704,7 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics.#", "5"),
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "13"),
 				),
 			},
 		},
