@@ -116,3 +116,24 @@ connection in the peer VPC over the VPC Peering Connection.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC Peering Connection.
+
+## Import
+
+VPC Peering Connection Accepters can be imported by using the Peering Connection ID, e.g.
+
+```sh
+$ terraform import aws_vpc_peering_connection_accepter.example pcx-12345678
+```
+
+Certain resource arguments, like `auto_accept`, do not have an EC2 API method for reading the information after peering connection creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](/docs/configuration/resources.html#ignore_changes) to hide the difference, e.g.
+
+```hcl
+resource "aws_vpc_peering_connection_accepter" "example" {
+  # ... other configuration ...
+
+  # There is no AWS EC2 API for reading auto_accept
+  lifecycle {
+    ignore_changes = ["auto_accept"]
+  }
+}
+```
