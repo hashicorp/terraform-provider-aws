@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
 page_title: "AWS: aws_ses_identity_notification_topic"
-sidebar_current: "docs-aws-resource-ses-identity-notification-topic"
 description: |-
   Setting AWS SES Identity Notification Topic
 ---

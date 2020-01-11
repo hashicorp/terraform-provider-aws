@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
@@ -785,7 +785,7 @@ resource "aws_lambda_function" "test" {
   function_name = "testAcc-%d"
   handler       = "exports.example"
   role          = "${aws_iam_role.lambda.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
@@ -1053,7 +1053,7 @@ resource "aws_lambda_function" "test" {
   function_name = "tf-acc-test-%d"
   handler       = "exports.example"
   role          = "${aws_iam_role.lambda_function.arn}"
-  runtime       = "nodejs8.10"
+  runtime       = "nodejs12.x"
 }
 
 resource "aws_kinesis_analytics_application" "test" {

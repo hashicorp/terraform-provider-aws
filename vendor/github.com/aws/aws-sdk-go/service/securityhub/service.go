@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "SecurityHub" // Name of service.
 	EndpointsID = "securityhub" // ID to lookup a service endpoint with.
-	ServiceID   = "SecurityHub" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "SecurityHub" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the SecurityHub client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a SecurityHub client from just a session.
 //     svc := securityhub.New(mySession)
 //
@@ -49,11 +51,11 @@ func New(p client.ConfigProvider, cfgs ...*aws.Config) *SecurityHub {
 	if c.SigningNameDerived || len(c.SigningName) == 0 {
 		c.SigningName = "securityhub"
 	}
-	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
+	return newClient(*c.Config, c.Handlers, c.PartitionID, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
-func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *SecurityHub {
+func newClient(cfg aws.Config, handlers request.Handlers, partitionID, endpoint, signingRegion, signingName string) *SecurityHub {
 	svc := &SecurityHub{
 		Client: client.New(
 			cfg,
@@ -62,6 +64,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
+				PartitionID:   partitionID,
 				Endpoint:      endpoint,
 				APIVersion:    "2018-10-26",
 			},

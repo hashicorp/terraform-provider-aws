@@ -1,7 +1,7 @@
 ---
+subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_table"
-sidebar_current: "docs-aws-resource-dynamodb-table"
 description: |-
   Provides a DynamoDB table resource
 ---

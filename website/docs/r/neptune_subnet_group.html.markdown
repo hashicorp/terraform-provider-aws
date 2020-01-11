@@ -1,7 +1,7 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_subnet_group"
-sidebar_current: "docs-aws-resource-neptune-subnet-group"
 description: |-
   Provides an Neptune subnet group resource.
 ---

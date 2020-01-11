@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamUser() *schema.Resource {
@@ -233,7 +233,11 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error removing IAM User (%s) SSH keys: %s", d.Id(), err)
 		}
 
-		if err := deleteAwsIamUserMFADevices(iamconn, d.Id()); err != nil {
+		if err := deleteAwsIamUserVirtualMFADevices(iamconn, d.Id()); err != nil {
+			return fmt.Errorf("error removing IAM User (%s) Virtual MFA devices: %s", d.Id(), err)
+		}
+
+		if err := deactivateAwsIamUserMFADevices(iamconn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) MFA devices: %s", d.Id(), err)
 		}
 
@@ -326,7 +330,46 @@ func deleteAwsIamUserSSHKeys(svc *iam.IAM, username string) error {
 	return nil
 }
 
-func deleteAwsIamUserMFADevices(svc *iam.IAM, username string) error {
+func deleteAwsIamUserVirtualMFADevices(svc *iam.IAM, username string) error {
+	var VirtualMFADevices []string
+	var err error
+
+	listVirtualMFADevices := &iam.ListVirtualMFADevicesInput{
+		AssignmentStatus: aws.String("Assigned"),
+	}
+	pageOfVirtualMFADevices := func(page *iam.ListVirtualMFADevicesOutput, lastPage bool) (shouldContinue bool) {
+		for _, m := range page.VirtualMFADevices {
+			// UserName is `nil` for the root user
+			if m.User.UserName != nil && *m.User.UserName == username {
+				VirtualMFADevices = append(VirtualMFADevices, *m.SerialNumber)
+			}
+		}
+		return !lastPage
+	}
+	err = svc.ListVirtualMFADevicesPages(listVirtualMFADevices, pageOfVirtualMFADevices)
+	if err != nil {
+		return fmt.Errorf("Error removing Virtual MFA devices of user %s: %s", username, err)
+	}
+	for _, m := range VirtualMFADevices {
+		_, err := svc.DeactivateMFADevice(&iam.DeactivateMFADeviceInput{
+			UserName:     aws.String(username),
+			SerialNumber: aws.String(m),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deactivating Virtual MFA device %s: %s", m, err)
+		}
+		_, err = svc.DeleteVirtualMFADevice(&iam.DeleteVirtualMFADeviceInput{
+			SerialNumber: aws.String(m),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting Virtual MFA device %s: %s", m, err)
+		}
+	}
+
+	return nil
+}
+
+func deactivateAwsIamUserMFADevices(svc *iam.IAM, username string) error {
 	var MFADevices []string
 	var err error
 
@@ -358,10 +401,11 @@ func deleteAwsIamUserMFADevices(svc *iam.IAM, username string) error {
 
 func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 	var err error
+	input := &iam.DeleteLoginProfileInput{
+		UserName: aws.String(username),
+	}
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err = svc.DeleteLoginProfile(&iam.DeleteLoginProfileInput{
-			UserName: aws.String(username),
-		})
+		_, err = svc.DeleteLoginProfile(input)
 		if err != nil {
 			if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
 				return nil
@@ -374,7 +418,9 @@ func deleteAwsIamUserLoginProfile(svc *iam.IAM, username string) error {
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = svc.DeleteLoginProfile(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Error deleting Account Login Profile: %s", err)
 	}

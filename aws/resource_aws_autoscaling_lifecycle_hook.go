@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
@@ -65,7 +65,7 @@ func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
 
 func resourceAwsAutoscalingLifecycleHookPutOp(conn *autoscaling.AutoScaling, params *autoscaling.PutLifecycleHookInput) error {
 	log.Printf("[DEBUG] AutoScaling PutLifecyleHook: %s", params)
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutLifecycleHook(params)
 
 		if err != nil {
@@ -78,6 +78,13 @@ func resourceAwsAutoscalingLifecycleHookPutOp(conn *autoscaling.AutoScaling, par
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutLifecycleHook(params)
+	}
+	if err != nil {
+		return fmt.Errorf("Error putting autoscaling lifecycle hook: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsAutoscalingLifecycleHookPut(d *schema.ResourceData, meta interface{}) error {

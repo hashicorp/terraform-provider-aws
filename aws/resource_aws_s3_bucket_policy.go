@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsS3BucketPolicy() *schema.Resource {
@@ -54,17 +54,18 @@ func resourceAwsS3BucketPolicyPut(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		if _, err := s3conn.PutBucketPolicy(params); err != nil {
-			if awserr, ok := err.(awserr.Error); ok {
-				if awserr.Code() == "MalformedPolicy" {
-					return resource.RetryableError(awserr)
-				}
-			}
+		_, err := s3conn.PutBucketPolicy(params)
+		if isAWSErr(err, "MalformedPolicy", "") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = s3conn.PutBucketPolicy(params)
+	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 policy: %s", err)
 	}

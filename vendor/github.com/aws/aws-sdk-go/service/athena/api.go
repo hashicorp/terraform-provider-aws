@@ -765,10 +765,21 @@ func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *reque
 
 // GetQueryResults API operation for Amazon Athena.
 //
-// Returns the results of a single query execution specified by QueryExecutionId
-// if you have access to the workgroup in which the query ran. This request
-// does not execute the query but returns results. Use StartQueryExecution to
-// run a query.
+// Streams the results of a single query execution specified by QueryExecutionId
+// from the Athena query results location in Amazon S3. For more information,
+// see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+// in the Amazon Athena User Guide. This request does not execute the query
+// but returns results. Use StartQueryExecution to run a query.
+//
+// To stream query results successfully, the IAM principal with permission to
+// call GetQueryResults also must have permissions to the Amazon S3 GetObject
+// action for the Athena query results location.
+//
+// IAM principals with permission to the Amazon S3 GetObject action for the
+// query results location are able to retrieve query results from Amazon S3
+// even if permission to the GetQueryResults action is denied. To restrict user
+// or role access, ensure that Amazon S3 permissions to the Athena query location
+// are denied.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -851,10 +862,12 @@ func (c *Athena) GetQueryResultsPagesWithContext(ctx aws.Context, input *GetQuer
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetQueryResultsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetQueryResultsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1080,10 +1093,12 @@ func (c *Athena) ListNamedQueriesPagesWithContext(ctx aws.Context, input *ListNa
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNamedQueriesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNamedQueriesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1226,10 +1241,12 @@ func (c *Athena) ListQueryExecutionsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListQueryExecutionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListQueryExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1453,10 +1470,12 @@ func (c *Athena) ListWorkGroupsPagesWithContext(ctx aws.Context, input *ListWork
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2718,7 +2737,7 @@ type GetQueryResultsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of results (rows) to return in this request.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token that specifies where to start pagination if a previous request
 	// was truncated.
@@ -2743,6 +2762,9 @@ func (s GetQueryResultsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *GetQueryResultsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetQueryResultsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.NextToken != nil && len(*s.NextToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
@@ -3445,11 +3467,39 @@ func (s *QueryExecutionContext) SetDatabase(v string) *QueryExecutionContext {
 type QueryExecutionStatistics struct {
 	_ struct{} `type:"structure"`
 
+	// The location and file name of a data manifest file. The manifest file is
+	// saved to the Athena query results location in Amazon S3. The manifest file
+	// tracks files that the query wrote to Amazon S3. If the query fails, the manifest
+	// file also tracks files that the query intended to write. The manifest is
+	// useful for identifying orphaned files resulting from a failed query. For
+	// more information, see Working with Query Results, Output Files, and Query
+	// History (https://docs.aws.amazon.com/athena/latest/ug/querying.html) in the
+	// Amazon Athena User Guide.
+	DataManifestLocation *string `type:"string"`
+
 	// The number of bytes in the data that was queried.
 	DataScannedInBytes *int64 `type:"long"`
 
 	// The number of milliseconds that the query took to execute.
 	EngineExecutionTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to plan the query processing
+	// flow. This includes the time spent retrieving table partitions from the data
+	// source. Note that because the query engine performs the query planning, query
+	// planning time is a subset of engine processing time.
+	QueryPlanningTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that the query was in your query queue waiting
+	// for resources. Note that if transient errors occur, Athena might automatically
+	// add the query back to the queue.
+	QueryQueueTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to finalize and publish the query
+	// results after the query engine finished running the query.
+	ServiceProcessingTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to run the query.
+	TotalExecutionTimeInMillis *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -3462,6 +3512,12 @@ func (s QueryExecutionStatistics) GoString() string {
 	return s.String()
 }
 
+// SetDataManifestLocation sets the DataManifestLocation field's value.
+func (s *QueryExecutionStatistics) SetDataManifestLocation(v string) *QueryExecutionStatistics {
+	s.DataManifestLocation = &v
+	return s
+}
+
 // SetDataScannedInBytes sets the DataScannedInBytes field's value.
 func (s *QueryExecutionStatistics) SetDataScannedInBytes(v int64) *QueryExecutionStatistics {
 	s.DataScannedInBytes = &v
@@ -3471,6 +3527,30 @@ func (s *QueryExecutionStatistics) SetDataScannedInBytes(v int64) *QueryExecutio
 // SetEngineExecutionTimeInMillis sets the EngineExecutionTimeInMillis field's value.
 func (s *QueryExecutionStatistics) SetEngineExecutionTimeInMillis(v int64) *QueryExecutionStatistics {
 	s.EngineExecutionTimeInMillis = &v
+	return s
+}
+
+// SetQueryPlanningTimeInMillis sets the QueryPlanningTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetQueryPlanningTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.QueryPlanningTimeInMillis = &v
+	return s
+}
+
+// SetQueryQueueTimeInMillis sets the QueryQueueTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetQueryQueueTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.QueryQueueTimeInMillis = &v
+	return s
+}
+
+// SetServiceProcessingTimeInMillis sets the ServiceProcessingTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetServiceProcessingTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.ServiceProcessingTimeInMillis = &v
+	return s
+}
+
+// SetTotalExecutionTimeInMillis sets the TotalExecutionTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetTotalExecutionTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.TotalExecutionTimeInMillis = &v
 	return s
 }
 
@@ -3534,8 +3614,7 @@ func (s *QueryExecutionStatus) SetSubmissionDateTime(v time.Time) *QueryExecutio
 // The location in Amazon S3 where query results are stored and the encryption
 // option, if any, used for query results. These are known as "client-side settings".
 // If workgroup settings override client-side settings, then the query uses
-// the location for the query results and the encryption configuration that
-// are specified for the workgroup.
+// the workgroup settings.
 type ResultConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -3549,12 +3628,13 @@ type ResultConfiguration struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// To run the query, you must specify the query results location using one of
+	// the ways: either for individual queries using either this setting (client-side),
+	// or in the workgroup, using WorkGroupConfiguration. If none of them is set,
+	// Athena issues an error that no output location is provided. For more information,
+	// see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	// If workgroup settings override client-side settings, then the query uses
-	// the location for the query results and the encryption configuration that
-	// are specified for the workgroup. The "workgroup settings override" is specified
-	// in EnforceWorkGroupConfiguration (true/false) in the WorkGroupConfiguration.
-	// See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
+	// the settings specified for the workgroup. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	OutputLocation *string `type:"string"`
 }
 
@@ -3604,7 +3684,7 @@ type ResultConfigurationUpdates struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
 	// If workgroup settings override client-side settings, then the query uses
 	// the location for the query results and the encryption configuration that
 	// are specified for the workgroup. The "workgroup settings override" is specified
@@ -4323,8 +4403,8 @@ type WorkGroup struct {
 	// S3 where query results are stored, the encryption configuration, if any,
 	// used for query results; whether the Amazon CloudWatch Metrics are enabled
 	// for the workgroup; whether workgroup settings override client-side settings;
-	// and the data usage limit for the amount of data scanned per query, if it
-	// is specified. The workgroup settings override is specified in EnforceWorkGroupConfiguration
+	// and the data usage limits for the amount of data scanned per query or per
+	// workgroup. The workgroup settings override is specified in EnforceWorkGroupConfiguration
 	// (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	Configuration *WorkGroupConfiguration `type:"structure"`
 
@@ -4387,7 +4467,7 @@ func (s *WorkGroup) SetState(v string) *WorkGroup {
 // S3 where query results are stored, the encryption option, if any, used for
 // query results, whether the Amazon CloudWatch Metrics are enabled for the
 // workgroup and whether workgroup settings override query settings, and the
-// data usage limit for the amount of data scanned per query, if it is specified.
+// data usage limits for the amount of data scanned per query or per workgroup.
 // The workgroup settings override is specified in EnforceWorkGroupConfiguration
 // (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 type WorkGroupConfiguration struct {
@@ -4405,9 +4485,22 @@ type WorkGroupConfiguration struct {
 	// Indicates that the Amazon CloudWatch metrics are enabled for the workgroup.
 	PublishCloudWatchMetricsEnabled *bool `type:"boolean"`
 
+	// If set to true, allows members assigned to a workgroup to reference Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
+
 	// The configuration for the workgroup, which includes the location in Amazon
 	// S3 where query results are stored and the encryption option, if any, used
-	// for query results.
+	// for query results. To run the query, you must specify the query results location
+	// using one of the ways: either in the workgroup using this setting, or for
+	// individual queries (client-side), using ResultConfiguration$OutputLocation.
+	// If none of them is set, Athena issues an error that no output location is
+	// provided. For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	ResultConfiguration *ResultConfiguration `type:"structure"`
 }
 
@@ -4457,6 +4550,12 @@ func (s *WorkGroupConfiguration) SetPublishCloudWatchMetricsEnabled(v bool) *Wor
 	return s
 }
 
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfiguration) SetRequesterPaysEnabled(v bool) *WorkGroupConfiguration {
+	s.RequesterPaysEnabled = &v
+	return s
+}
+
 // SetResultConfiguration sets the ResultConfiguration field's value.
 func (s *WorkGroupConfiguration) SetResultConfiguration(v *ResultConfiguration) *WorkGroupConfiguration {
 	s.ResultConfiguration = v
@@ -4486,6 +4585,15 @@ type WorkGroupConfigurationUpdates struct {
 
 	// Indicates that the data usage control limit per query is removed. WorkGroupConfiguration$BytesScannedCutoffPerQuery
 	RemoveBytesScannedCutoffPerQuery *bool `type:"boolean"`
+
+	// If set to true, allows members assigned to a workgroup to specify Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
 
 	// The result configuration information about the queries in this workgroup
 	// that will be updated. Includes the updated results location and an updated
@@ -4542,6 +4650,12 @@ func (s *WorkGroupConfigurationUpdates) SetPublishCloudWatchMetricsEnabled(v boo
 // SetRemoveBytesScannedCutoffPerQuery sets the RemoveBytesScannedCutoffPerQuery field's value.
 func (s *WorkGroupConfigurationUpdates) SetRemoveBytesScannedCutoffPerQuery(v bool) *WorkGroupConfigurationUpdates {
 	s.RemoveBytesScannedCutoffPerQuery = &v
+	return s
+}
+
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfigurationUpdates) SetRequesterPaysEnabled(v bool) *WorkGroupConfigurationUpdates {
+	s.RequesterPaysEnabled = &v
 	return s
 }
 

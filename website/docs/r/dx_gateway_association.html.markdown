@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_gateway_association"
-sidebar_current: "docs-aws-resource-dx-gateway-association"
 description: |-
   Associates a Direct Connect Gateway with a VGW or transit gateway.
 ---

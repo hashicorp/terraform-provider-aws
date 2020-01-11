@@ -2386,8 +2386,7 @@ func (c *DirectConnect) DeleteDirectConnectGatewayRequest(input *DeleteDirectCon
 //
 // Deletes the specified Direct Connect gateway. You must first delete all virtual
 // interfaces that are attached to the Direct Connect gateway and disassociate
-// all virtual private gateways that are associated with the Direct Connect
-// gateway.
+// all virtual private gateways associated with the Direct Connect gateway.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2471,6 +2470,11 @@ func (c *DirectConnect) DeleteDirectConnectGatewayAssociationRequest(input *Dele
 //
 // Deletes the association between the specified Direct Connect gateway and
 // virtual private gateway.
+//
+// We recommend that you specify the associationID to delete the association.
+// Alternatively, if you own virtual gateway and a Direct Connect gateway association,
+// you can specify the virtualGatewayId and directConnectGatewayId to delete
+// an association.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4999,7 +5003,7 @@ type AllocateHostedConnectionInput struct {
 	// OwnerAccount is a required field
 	OwnerAccount *string `locationName:"ownerAccount" type:"string" required:"true"`
 
-	// The tags to assign to the hosted connection.
+	// The tags associated with the connection.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The dedicated VLAN provisioned to the hosted connection.
@@ -5745,7 +5749,7 @@ type ConfirmPrivateVirtualInterfaceInput struct {
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the virtual interface.
 	//
@@ -6107,10 +6111,13 @@ type Connection struct {
 	// The name of the AWS Direct Connect service provider associated with the connection.
 	PartnerName *string `locationName:"partnerName" type:"string"`
 
+	// The name of the service provider associated with the connection.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
 	// The AWS Region where the connection is located.
 	Region *string `locationName:"region" type:"string"`
 
-	// Any tags assigned to the connection.
+	// The tags associated with the connection.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The ID of the VLAN.
@@ -6202,6 +6209,12 @@ func (s *Connection) SetOwnerAccount(v string) *Connection {
 // SetPartnerName sets the PartnerName field's value.
 func (s *Connection) SetPartnerName(v string) *Connection {
 	s.PartnerName = &v
+	return s
+}
+
+// SetProviderName sets the ProviderName field's value.
+func (s *Connection) SetProviderName(v string) *Connection {
+	s.ProviderName = &v
 	return s
 }
 
@@ -6322,7 +6335,10 @@ type CreateConnectionInput struct {
 	// Location is a required field
 	Location *string `locationName:"location" type:"string" required:"true"`
 
-	// The tags to assign to the connection.
+	// The name of the service provider associated with the requested connection.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
+	// The tags to associate with the lag.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
@@ -6392,6 +6408,12 @@ func (s *CreateConnectionInput) SetLocation(v string) *CreateConnectionInput {
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *CreateConnectionInput) SetProviderName(v string) *CreateConnectionInput {
+	s.ProviderName = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateConnectionInput) SetTags(v []*Tag) *CreateConnectionInput {
 	s.Tags = v
@@ -6402,6 +6424,8 @@ type CreateDirectConnectGatewayAssociationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon VPC prefixes to advertise to the Direct Connect gateway
+	//
+	// This parameter is required when you create an association to a transit gateway.
 	//
 	// For information about how to set the prefixes, see Allowed Prefixes (https://docs.aws.amazon.com/directconnect/latest/UserGuide/multi-account-associate-vgw.html#allowed-prefixes)
 	// in the AWS Direct Connect User Guide.
@@ -6416,7 +6440,7 @@ type CreateDirectConnectGatewayAssociationInput struct {
 	GatewayId *string `locationName:"gatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 }
 
 // String returns the string representation
@@ -6690,7 +6714,10 @@ type CreateInterconnectInput struct {
 	// Location is a required field
 	Location *string `locationName:"location" type:"string" required:"true"`
 
-	// The tags to assign to the interconnect,
+	// The name of the service provider associated with the interconnect.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
+	// The tags to associate with the interconnect.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
@@ -6760,6 +6787,12 @@ func (s *CreateInterconnectInput) SetLocation(v string) *CreateInterconnectInput
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *CreateInterconnectInput) SetProviderName(v string) *CreateInterconnectInput {
+	s.ProviderName = &v
+	return s
+}
+
 // SetTags sets the Tags field's value.
 func (s *CreateInterconnectInput) SetTags(v []*Tag) *CreateInterconnectInput {
 	s.Tags = v
@@ -6769,11 +6802,7 @@ func (s *CreateInterconnectInput) SetTags(v []*Tag) *CreateInterconnectInput {
 type CreateLagInput struct {
 	_ struct{} `type:"structure"`
 
-	// The tags to assign to the child connections of the LAG. Only newly created
-	// child connections as the result of creating a LAG connection are assigned
-	// the provided tags. The tags are not assigned to an existing connection that
-	// is provided via the “connectionId” parameter that will be migrated to
-	// the LAG.
+	// The tags to associate with the automtically created LAGs.
 	ChildConnectionTags []*Tag `locationName:"childConnectionTags" min:"1" type:"list"`
 
 	// The ID of an existing connection to migrate to the LAG.
@@ -6802,7 +6831,10 @@ type CreateLagInput struct {
 	// NumberOfConnections is a required field
 	NumberOfConnections *int64 `locationName:"numberOfConnections" type:"integer" required:"true"`
 
-	// The tags to assign to the link aggregation group (LAG).
+	// The name of the service provider associated with the LAG.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
+	// The tags to associate with the LAG.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
@@ -6897,6 +6929,12 @@ func (s *CreateLagInput) SetLocation(v string) *CreateLagInput {
 // SetNumberOfConnections sets the NumberOfConnections field's value.
 func (s *CreateLagInput) SetNumberOfConnections(v int64) *CreateLagInput {
 	s.NumberOfConnections = &v
+	return s
+}
+
+// SetProviderName sets the ProviderName field's value.
+func (s *CreateLagInput) SetProviderName(v string) *CreateLagInput {
+	s.ProviderName = &v
 	return s
 }
 
@@ -7221,7 +7259,7 @@ type DeleteDirectConnectGatewayAssociationInput struct {
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 }
 
 // String returns the string representation
@@ -7863,7 +7901,7 @@ type DescribeDirectConnectGatewayAssociationsInput struct {
 	NextToken *string `locationName:"nextToken" type:"string"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 }
 
 // String returns the string representation
@@ -8734,7 +8772,7 @@ type GatewayAssociation struct {
 	StateChangeError *string `locationName:"stateChangeError" type:"string"`
 
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the AWS account that owns the virtual private gateway.
 	VirtualGatewayOwnerAccount *string `locationName:"virtualGatewayOwnerAccount" type:"string"`
@@ -8921,7 +8959,7 @@ type GatewayAttachment struct {
 	//    is stopped.
 	AttachmentState *string `locationName:"attachmentState" type:"string" enum:"GatewayAttachmentState"`
 
-	// The interface type.
+	// The type of attachment.
 	AttachmentType *string `locationName:"attachmentType" type:"string" enum:"GatewayAttachmentType"`
 
 	// The ID of the Direct Connect gateway.
@@ -9047,10 +9085,13 @@ type Interconnect struct {
 	// The location of the connection.
 	Location *string `locationName:"location" type:"string"`
 
+	// The name of the service provider associated with the interconnect.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
 	// The AWS Region where the connection is located.
 	Region *string `locationName:"region" type:"string"`
 
-	// Any tags assigned to the interconnect.
+	// The tags associated with the interconnect.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
@@ -9127,6 +9168,12 @@ func (s *Interconnect) SetLoaIssueTime(v time.Time) *Interconnect {
 // SetLocation sets the Location field's value.
 func (s *Interconnect) SetLocation(v string) *Interconnect {
 	s.Location = &v
+	return s
+}
+
+// SetProviderName sets the ProviderName field's value.
+func (s *Interconnect) SetProviderName(v string) *Interconnect {
+	s.ProviderName = &v
 	return s
 }
 
@@ -9208,10 +9255,13 @@ type Lag struct {
 	// The ID of the AWS account that owns the LAG.
 	OwnerAccount *string `locationName:"ownerAccount" type:"string"`
 
+	// The name of the service provider associated with the LAG.
+	ProviderName *string `locationName:"providerName" type:"string"`
+
 	// The AWS Region where the connection is located.
 	Region *string `locationName:"region" type:"string"`
 
-	// Any tags assigned to link aggregation group (LAG).
+	// The tags associated with the LAG.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 }
 
@@ -9309,6 +9359,12 @@ func (s *Lag) SetOwnerAccount(v string) *Lag {
 	return s
 }
 
+// SetProviderName sets the ProviderName field's value.
+func (s *Lag) SetProviderName(v string) *Lag {
+	s.ProviderName = &v
+	return s
+}
+
 // SetRegion sets the Region field's value.
 func (s *Lag) SetRegion(v string) *Lag {
 	s.Region = &v
@@ -9365,6 +9421,9 @@ type Location struct {
 	// The available port speeds for the location.
 	AvailablePortSpeeds []*string `locationName:"availablePortSpeeds" type:"list"`
 
+	// The name of the service provider for the location.
+	AvailableProviders []*string `locationName:"availableProviders" type:"list"`
+
 	// The code for the location.
 	LocationCode *string `locationName:"locationCode" type:"string"`
 
@@ -9389,6 +9448,12 @@ func (s Location) GoString() string {
 // SetAvailablePortSpeeds sets the AvailablePortSpeeds field's value.
 func (s *Location) SetAvailablePortSpeeds(v []*string) *Location {
 	s.AvailablePortSpeeds = v
+	return s
+}
+
+// SetAvailableProviders sets the AvailableProviders field's value.
+func (s *Location) SetAvailableProviders(v []*string) *Location {
+	s.AvailableProviders = v
 	return s
 }
 
@@ -9483,6 +9548,8 @@ type NewPrivateVirtualInterface struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
@@ -9500,11 +9567,11 @@ type NewPrivateVirtualInterface struct {
 	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
 
-	// Any tags assigned to the private virtual interface.
+	// The tags associated with the private virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The name of the virtual interface assigned by the customer network.
 	//
@@ -9637,6 +9704,8 @@ type NewPrivateVirtualInterfaceAllocation struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
@@ -9651,8 +9720,7 @@ type NewPrivateVirtualInterfaceAllocation struct {
 	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
 
-	// Any tags assigned to the private virtual interface to be provisioned on a
-	// connection.
+	// The tags associated with the private virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
@@ -9774,6 +9842,8 @@ type NewPublicVirtualInterface struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
@@ -9788,7 +9858,7 @@ type NewPublicVirtualInterface struct {
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
-	// Any tags assigned to the public virtual interface.
+	// The tags associated with the public virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
@@ -9910,6 +9980,8 @@ type NewPublicVirtualInterfaceAllocation struct {
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
 	//
+	// The valid values are 1-2147483647.
+	//
 	// Asn is a required field
 	Asn *int64 `locationName:"asn" type:"integer" required:"true"`
 
@@ -9924,8 +9996,7 @@ type NewPublicVirtualInterfaceAllocation struct {
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
-	// Any tags assigned to the public virtual interface to be provisioned on a
-	// connection.
+	// The tags associated with the public virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
@@ -10035,7 +10106,7 @@ func (s *NewPublicVirtualInterfaceAllocation) SetVlan(v int64) *NewPublicVirtual
 	return s
 }
 
-// Information about the transit virtual interface.
+// Information about a transit virtual interface.
 type NewTransitVirtualInterface struct {
 	_ struct{} `type:"structure"`
 
@@ -10046,9 +10117,12 @@ type NewTransitVirtualInterface struct {
 	AmazonAddress *string `locationName:"amazonAddress" type:"string"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
@@ -10058,10 +10132,10 @@ type NewTransitVirtualInterface struct {
 	DirectConnectGatewayId *string `locationName:"directConnectGatewayId" type:"string"`
 
 	// The maximum transmission unit (MTU), in bytes. The supported values are 1500
-	// and 8500. The default value is 1500.
+	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
 
-	// Any tags assigned to the transit virtual interface.
+	// The tags associated with the transitive virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
@@ -10164,7 +10238,7 @@ func (s *NewTransitVirtualInterface) SetVlan(v int64) *NewTransitVirtualInterfac
 	return s
 }
 
-// Information about a transit virtual interface.
+// Information about a transit virtual interface to be provisioned on a connection.
 type NewTransitVirtualInterfaceAllocation struct {
 	_ struct{} `type:"structure"`
 
@@ -10175,19 +10249,22 @@ type NewTransitVirtualInterfaceAllocation struct {
 	AmazonAddress *string `locationName:"amazonAddress" type:"string"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
-	// The authentication key for BGP configuration.
+	// The authentication key for BGP configuration. This string has a minimum length
+	// of 6 characters and and a maximun lenth of 80 characters.
 	AuthKey *string `locationName:"authKey" type:"string"`
 
 	// The IP address assigned to the customer interface.
 	CustomerAddress *string `locationName:"customerAddress" type:"string"`
 
 	// The maximum transmission unit (MTU), in bytes. The supported values are 1500
-	// and 8500. The default value is 1500.
+	// and 9001. The default value is 1500.
 	Mtu *int64 `locationName:"mtu" type:"integer"`
 
-	// Any tags assigned to the transit virtual interface.
+	// The tags associated with the transitive virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The name of the virtual interface assigned by the customer network.
@@ -10402,7 +10479,7 @@ type TagResourceInput struct {
 	// ResourceArn is a required field
 	ResourceArn *string `locationName:"resourceArn" type:"string" required:"true"`
 
-	// The tags to assign.
+	// The tags to add.
 	//
 	// Tags is a required field
 	Tags []*Tag `locationName:"tags" min:"1" type:"list" required:"true"`
@@ -10723,6 +10800,8 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	AmazonSideAsn *int64 `locationName:"amazonSideAsn" type:"long"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
 	// The authentication key for BGP configuration. This string has a minimum length
@@ -10767,11 +10846,11 @@ type UpdateVirtualInterfaceAttributesOutput struct {
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
-	// Any tags assigned to the virtual interface.
+	// The tags associated with the virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the virtual interface.
 	VirtualInterfaceId *string `locationName:"virtualInterfaceId" type:"string"`
@@ -10977,7 +11056,7 @@ type VirtualGateway struct {
 	_ struct{} `type:"structure"`
 
 	// The ID of the virtual private gateway.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The state of the virtual private gateway. The following are the possible
 	// values:
@@ -11029,6 +11108,8 @@ type VirtualInterface struct {
 	AmazonSideAsn *int64 `locationName:"amazonSideAsn" type:"long"`
 
 	// The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
+	//
+	// The valid values are 1-2147483647.
 	Asn *int64 `locationName:"asn" type:"integer"`
 
 	// The authentication key for BGP configuration. This string has a minimum length
@@ -11073,11 +11154,11 @@ type VirtualInterface struct {
 	// public virtual interfaces.
 	RouteFilterPrefixes []*RouteFilterPrefix `locationName:"routeFilterPrefixes" type:"list"`
 
-	// Any tags assigned to the virtual interface.
+	// The tags associated with the virtual interface.
 	Tags []*Tag `locationName:"tags" min:"1" type:"list"`
 
 	// The ID of the virtual private gateway. Applies only to private virtual interfaces.
-	VirtualGatewayId *string `locationName:"virtualGatewayId" deprecated:"true" type:"string"`
+	VirtualGatewayId *string `locationName:"virtualGatewayId" type:"string"`
 
 	// The ID of the virtual interface.
 	VirtualInterfaceId *string `locationName:"virtualInterfaceId" type:"string"`

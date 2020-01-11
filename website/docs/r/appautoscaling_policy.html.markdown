@@ -1,7 +1,7 @@
 ---
+subcategory: "Application Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_appautoscaling_policy"
-sidebar_current: "docs-aws-resource-appautoscaling-policy"
 description: |-
   Provides an Application AutoScaling Policy resource.
 ---

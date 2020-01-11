@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl_association"
-sidebar_current: "docs-aws-resource-wafregional-web-acl-association"
 description: |-
   Manages an association with WAF Regional Web ACL
 ---
@@ -94,3 +94,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the association
+
+## Import
+
+WAF Regional Web ACL Association can be imported using their `web_acl_id:resource_arn`, e.g.
+
+```
+$ terraform import aws_wafregional_web_acl_association.foo web_acl_id:resource_arn
+```

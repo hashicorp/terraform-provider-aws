@@ -832,7 +832,9 @@ func (c *DirectoryService) CreateDirectoryRequest(input *CreateDirectoryInput) (
 
 // CreateDirectory API operation for AWS Directory Service.
 //
-// Creates a Simple AD directory.
+// Creates a Simple AD directory. For more information, see Simple Active Directory
+// (https://docs.aws.amazon.com/directoryservice/latest/admin-guide/directory_simple_ad.html)
+// in the AWS Directory Service Admin Guide.
 //
 // Before you call CreateDirectory, ensure that all of the required permissions
 // have been explicitly granted through a policy. For details about what permissions
@@ -928,8 +930,8 @@ func (c *DirectoryService) CreateLogSubscriptionRequest(input *CreateLogSubscrip
 
 // CreateLogSubscription API operation for AWS Directory Service.
 //
-// Creates a subscription to forward real time Directory Service domain controller
-// security logs to the specified CloudWatch log group in your AWS account.
+// Creates a subscription to forward real-time Directory Service domain controller
+// security logs to the specified Amazon CloudWatch log group in your AWS account.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1023,7 +1025,9 @@ func (c *DirectoryService) CreateMicrosoftADRequest(input *CreateMicrosoftADInpu
 
 // CreateMicrosoftAD API operation for AWS Directory Service.
 //
-// Creates an AWS Managed Microsoft AD directory.
+// Creates a Microsoft AD directory in the AWS Cloud. For more information,
+// see AWS Managed Microsoft AD (https://docs.aws.amazon.com/directoryservice/latest/admin-guide/directory_microsoft_ad.html)
+// in the AWS Directory Service Admin Guide.
 //
 // Before you call CreateMicrosoftAD, ensure that all of the required permissions
 // have been explicitly granted through a policy. For details about what permissions
@@ -1728,6 +1732,109 @@ func (c *DirectoryService) DeleteTrustWithContext(ctx aws.Context, input *Delete
 	return out, req.Send()
 }
 
+const opDeregisterCertificate = "DeregisterCertificate"
+
+// DeregisterCertificateRequest generates a "aws/request.Request" representing the
+// client's request for the DeregisterCertificate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeregisterCertificate for more information on using the DeregisterCertificate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeregisterCertificateRequest method.
+//    req, resp := client.DeregisterCertificateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeregisterCertificate
+func (c *DirectoryService) DeregisterCertificateRequest(input *DeregisterCertificateInput) (req *request.Request, output *DeregisterCertificateOutput) {
+	op := &request.Operation{
+		Name:       opDeregisterCertificate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeregisterCertificateInput{}
+	}
+
+	output = &DeregisterCertificateOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeregisterCertificate API operation for AWS Directory Service.
+//
+// Deletes from the system the certificate that was registered for a secured
+// LDAP connection.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation DeregisterCertificate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   The specified directory is unavailable or could not be found.
+//
+//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   The specified directory does not exist in the system.
+//
+//   * ErrCodeCertificateDoesNotExistException "CertificateDoesNotExistException"
+//   The certificate is not present in the system for describe or deregister activities.
+//
+//   * ErrCodeCertificateInUseException "CertificateInUseException"
+//   The certificate is being used for the LDAP security connection and cannot
+//   be removed without disabling LDAP security.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   One or more parameters are not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeregisterCertificate
+func (c *DirectoryService) DeregisterCertificate(input *DeregisterCertificateInput) (*DeregisterCertificateOutput, error) {
+	req, out := c.DeregisterCertificateRequest(input)
+	return out, req.Send()
+}
+
+// DeregisterCertificateWithContext is the same as DeregisterCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeregisterCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) DeregisterCertificateWithContext(ctx aws.Context, input *DeregisterCertificateInput, opts ...request.Option) (*DeregisterCertificateOutput, error) {
+	req, out := c.DeregisterCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeregisterEventTopic = "DeregisterEventTopic"
 
 // DeregisterEventTopicRequest generates a "aws/request.Request" representing the
@@ -1812,6 +1919,101 @@ func (c *DirectoryService) DeregisterEventTopic(input *DeregisterEventTopicInput
 // for more information on using Contexts.
 func (c *DirectoryService) DeregisterEventTopicWithContext(ctx aws.Context, input *DeregisterEventTopicInput, opts ...request.Option) (*DeregisterEventTopicOutput, error) {
 	req, out := c.DeregisterEventTopicRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeCertificate = "DescribeCertificate"
+
+// DescribeCertificateRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeCertificate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeCertificate for more information on using the DescribeCertificate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeCertificateRequest method.
+//    req, resp := client.DescribeCertificateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeCertificate
+func (c *DirectoryService) DescribeCertificateRequest(input *DescribeCertificateInput) (req *request.Request, output *DescribeCertificateOutput) {
+	op := &request.Operation{
+		Name:       opDescribeCertificate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeCertificateInput{}
+	}
+
+	output = &DescribeCertificateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeCertificate API operation for AWS Directory Service.
+//
+// Displays information about the certificate registered for a secured LDAP
+// connection.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation DescribeCertificate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   The specified directory does not exist in the system.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeCertificateDoesNotExistException "CertificateDoesNotExistException"
+//   The certificate is not present in the system for describe or deregister activities.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   One or more parameters are not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeCertificate
+func (c *DirectoryService) DescribeCertificate(input *DescribeCertificateInput) (*DescribeCertificateOutput, error) {
+	req, out := c.DescribeCertificateRequest(input)
+	return out, req.Send()
+}
+
+// DescribeCertificateWithContext is the same as DescribeCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) DescribeCertificateWithContext(ctx aws.Context, input *DescribeCertificateInput, opts ...request.Option) (*DescribeCertificateOutput, error) {
+	req, out := c.DescribeCertificateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2159,10 +2361,12 @@ func (c *DirectoryService) DescribeDomainControllersPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeDomainControllersOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeDomainControllersOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2253,6 +2457,100 @@ func (c *DirectoryService) DescribeEventTopics(input *DescribeEventTopicsInput) 
 // for more information on using Contexts.
 func (c *DirectoryService) DescribeEventTopicsWithContext(ctx aws.Context, input *DescribeEventTopicsInput, opts ...request.Option) (*DescribeEventTopicsOutput, error) {
 	req, out := c.DescribeEventTopicsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeLDAPSSettings = "DescribeLDAPSSettings"
+
+// DescribeLDAPSSettingsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeLDAPSSettings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeLDAPSSettings for more information on using the DescribeLDAPSSettings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeLDAPSSettingsRequest method.
+//    req, resp := client.DescribeLDAPSSettingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeLDAPSSettings
+func (c *DirectoryService) DescribeLDAPSSettingsRequest(input *DescribeLDAPSSettingsInput) (req *request.Request, output *DescribeLDAPSSettingsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeLDAPSSettings,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeLDAPSSettingsInput{}
+	}
+
+	output = &DescribeLDAPSSettingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeLDAPSSettings API operation for AWS Directory Service.
+//
+// Describes the status of LDAP security for the specified directory.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation DescribeLDAPSSettings for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   The specified directory does not exist in the system.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The NextToken value is not valid.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   One or more parameters are not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeLDAPSSettings
+func (c *DirectoryService) DescribeLDAPSSettings(input *DescribeLDAPSSettingsInput) (*DescribeLDAPSSettingsOutput, error) {
+	req, out := c.DescribeLDAPSSettingsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeLDAPSSettingsWithContext is the same as DescribeLDAPSSettings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeLDAPSSettings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) DescribeLDAPSSettingsWithContext(ctx aws.Context, input *DescribeLDAPSSettingsInput, opts ...request.Option) (*DescribeLDAPSSettingsOutput, error) {
+	req, out := c.DescribeLDAPSSettingsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2547,6 +2845,105 @@ func (c *DirectoryService) DescribeTrustsWithContext(ctx aws.Context, input *Des
 	return out, req.Send()
 }
 
+const opDisableLDAPS = "DisableLDAPS"
+
+// DisableLDAPSRequest generates a "aws/request.Request" representing the
+// client's request for the DisableLDAPS operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisableLDAPS for more information on using the DisableLDAPS
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisableLDAPSRequest method.
+//    req, resp := client.DisableLDAPSRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableLDAPS
+func (c *DirectoryService) DisableLDAPSRequest(input *DisableLDAPSInput) (req *request.Request, output *DisableLDAPSOutput) {
+	op := &request.Operation{
+		Name:       opDisableLDAPS,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisableLDAPSInput{}
+	}
+
+	output = &DisableLDAPSOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisableLDAPS API operation for AWS Directory Service.
+//
+// Deactivates LDAP secure calls for the specified directory.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation DisableLDAPS for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   The specified directory is unavailable or could not be found.
+//
+//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   The specified directory does not exist in the system.
+//
+//   * ErrCodeInvalidLDAPSStatusException "InvalidLDAPSStatusException"
+//   The LDAP activities could not be performed because they are limited by the
+//   LDAPS status.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   One or more parameters are not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableLDAPS
+func (c *DirectoryService) DisableLDAPS(input *DisableLDAPSInput) (*DisableLDAPSOutput, error) {
+	req, out := c.DisableLDAPSRequest(input)
+	return out, req.Send()
+}
+
+// DisableLDAPSWithContext is the same as DisableLDAPS with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisableLDAPS for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) DisableLDAPSWithContext(ctx aws.Context, input *DisableLDAPSInput, opts ...request.Option) (*DisableLDAPSOutput, error) {
+	req, out := c.DisableLDAPSRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDisableRadius = "DisableRadius"
 
 // DisableRadiusRequest generates a "aws/request.Request" representing the
@@ -2727,6 +3124,110 @@ func (c *DirectoryService) DisableSsoWithContext(ctx aws.Context, input *Disable
 	return out, req.Send()
 }
 
+const opEnableLDAPS = "EnableLDAPS"
+
+// EnableLDAPSRequest generates a "aws/request.Request" representing the
+// client's request for the EnableLDAPS operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See EnableLDAPS for more information on using the EnableLDAPS
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the EnableLDAPSRequest method.
+//    req, resp := client.EnableLDAPSRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableLDAPS
+func (c *DirectoryService) EnableLDAPSRequest(input *EnableLDAPSInput) (req *request.Request, output *EnableLDAPSOutput) {
+	op := &request.Operation{
+		Name:       opEnableLDAPS,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &EnableLDAPSInput{}
+	}
+
+	output = &EnableLDAPSOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// EnableLDAPS API operation for AWS Directory Service.
+//
+// Activates the switch for the specific directory to always use LDAP secure
+// calls.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation EnableLDAPS for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   The specified directory is unavailable or could not be found.
+//
+//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   The specified directory does not exist in the system.
+//
+//   * ErrCodeNoAvailableCertificateException "NoAvailableCertificateException"
+//   The LDAP activities could not be performed because at least one valid certificate
+//   must be registered with the system.
+//
+//   * ErrCodeInvalidLDAPSStatusException "InvalidLDAPSStatusException"
+//   The LDAP activities could not be performed because they are limited by the
+//   LDAPS status.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   One or more parameters are not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableLDAPS
+func (c *DirectoryService) EnableLDAPS(input *EnableLDAPSInput) (*EnableLDAPSOutput, error) {
+	req, out := c.EnableLDAPSRequest(input)
+	return out, req.Send()
+}
+
+// EnableLDAPSWithContext is the same as EnableLDAPS with the addition of
+// the ability to pass a context and additional request options.
+//
+// See EnableLDAPS for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) EnableLDAPSWithContext(ctx aws.Context, input *EnableLDAPSInput, opts ...request.Option) (*EnableLDAPSOutput, error) {
+	req, out := c.EnableLDAPSRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opEnableRadius = "EnableRadius"
 
 // EnableRadiusRequest generates a "aws/request.Request" representing the
@@ -2866,7 +3367,9 @@ func (c *DirectoryService) EnableSsoRequest(input *EnableSsoInput) (req *request
 
 // EnableSso API operation for AWS Directory Service.
 //
-// Enables single sign-on for a directory.
+// Enables single sign-on for a directory. Single sign-on allows users in your
+// directory to access certain AWS services from a computer joined to the directory
+// without having to enter their credentials separately.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2957,7 +3460,7 @@ func (c *DirectoryService) GetDirectoryLimitsRequest(input *GetDirectoryLimitsIn
 
 // GetDirectoryLimits API operation for AWS Directory Service.
 //
-// Obtains directory limit information for the current region.
+// Obtains directory limit information for the current Region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3078,6 +3581,101 @@ func (c *DirectoryService) GetSnapshotLimits(input *GetSnapshotLimitsInput) (*Ge
 // for more information on using Contexts.
 func (c *DirectoryService) GetSnapshotLimitsWithContext(ctx aws.Context, input *GetSnapshotLimitsInput, opts ...request.Option) (*GetSnapshotLimitsOutput, error) {
 	req, out := c.GetSnapshotLimitsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListCertificates = "ListCertificates"
+
+// ListCertificatesRequest generates a "aws/request.Request" representing the
+// client's request for the ListCertificates operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListCertificates for more information on using the ListCertificates
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListCertificatesRequest method.
+//    req, resp := client.ListCertificatesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListCertificates
+func (c *DirectoryService) ListCertificatesRequest(input *ListCertificatesInput) (req *request.Request, output *ListCertificatesOutput) {
+	op := &request.Operation{
+		Name:       opListCertificates,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListCertificatesInput{}
+	}
+
+	output = &ListCertificatesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListCertificates API operation for AWS Directory Service.
+//
+// For the specified directory, lists all the certificates registered for a
+// secured LDAP connection.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation ListCertificates for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   The specified directory does not exist in the system.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   One or more parameters are not valid.
+//
+//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   The NextToken value is not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListCertificates
+func (c *DirectoryService) ListCertificates(input *ListCertificatesInput) (*ListCertificatesOutput, error) {
+	req, out := c.ListCertificatesRequest(input)
+	return out, req.Send()
+}
+
+// ListCertificatesWithContext is the same as ListCertificates with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListCertificates for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) ListCertificatesWithContext(ctx aws.Context, input *ListCertificatesInput, opts ...request.Option) (*ListCertificatesOutput, error) {
+	req, out := c.ListCertificatesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3436,6 +4034,110 @@ func (c *DirectoryService) ListTagsForResource(input *ListTagsForResourceInput) 
 // for more information on using Contexts.
 func (c *DirectoryService) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRegisterCertificate = "RegisterCertificate"
+
+// RegisterCertificateRequest generates a "aws/request.Request" representing the
+// client's request for the RegisterCertificate operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RegisterCertificate for more information on using the RegisterCertificate
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RegisterCertificateRequest method.
+//    req, resp := client.RegisterCertificateRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RegisterCertificate
+func (c *DirectoryService) RegisterCertificateRequest(input *RegisterCertificateInput) (req *request.Request, output *RegisterCertificateOutput) {
+	op := &request.Operation{
+		Name:       opRegisterCertificate,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &RegisterCertificateInput{}
+	}
+
+	output = &RegisterCertificateOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RegisterCertificate API operation for AWS Directory Service.
+//
+// Registers a certificate for secured LDAP connection.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Directory Service's
+// API operation RegisterCertificate for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   The specified directory is unavailable or could not be found.
+//
+//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   The specified directory does not exist in the system.
+//
+//   * ErrCodeInvalidCertificateException "InvalidCertificateException"
+//   The certificate PEM that was provided has incorrect encoding.
+//
+//   * ErrCodeCertificateLimitExceededException "CertificateLimitExceededException"
+//   The certificate could not be added because the certificate limit has been
+//   reached.
+//
+//   * ErrCodeCertificateAlreadyExistsException "CertificateAlreadyExistsException"
+//   The certificate has already been registered into the system.
+//
+//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   The operation is not supported.
+//
+//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   One or more parameters are not valid.
+//
+//   * ErrCodeClientException "ClientException"
+//   A client exception has occurred.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   An exception has occurred in AWS Directory Service.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RegisterCertificate
+func (c *DirectoryService) RegisterCertificate(input *RegisterCertificateInput) (*RegisterCertificateOutput, error) {
+	req, out := c.RegisterCertificateRequest(input)
+	return out, req.Send()
+}
+
+// RegisterCertificateWithContext is the same as RegisterCertificate with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RegisterCertificate for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DirectoryService) RegisterCertificateWithContext(ctx aws.Context, input *RegisterCertificateInput, opts ...request.Option) (*RegisterCertificateOutput, error) {
+	req, out := c.RegisterCertificateRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3855,6 +4557,20 @@ func (c *DirectoryService) ResetUserPasswordRequest(input *ResetUserPasswordInpu
 //
 // Resets the password for any user in your AWS Managed Microsoft AD or Simple
 // AD directory.
+//
+// You can reset the password for any user in your directory with the following
+// exceptions:
+//
+//    * For Simple AD, you cannot reset the password for any user that is a
+//    member of either the Domain Admins or Enterprise Admins group except for
+//    the administrator user.
+//
+//    * For AWS Managed Microsoft AD, you can only reset the password for a
+//    user that is in an OU based off of the NetBIOS name that you typed when
+//    you created your directory. For example, you cannot reset the password
+//    for a user in the AWS Reserved OU. For more information about the OU structure
+//    for an AWS Managed Microsoft AD directory, see What Gets Created (https://docs.aws.amazon.com/directoryservice/latest/admin-guide/ms_ad_getting_started_what_gets_created.html)
+//    in the AWS Directory Service Administration Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5160,6 +5876,117 @@ func (s CancelSchemaExtensionOutput) GoString() string {
 	return s.String()
 }
 
+// Information about the certificate.
+type Certificate struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the certificate.
+	CertificateId *string `type:"string"`
+
+	// The common name for the certificate.
+	CommonName *string `type:"string"`
+
+	// The date and time when the certificate will expire.
+	ExpiryDateTime *time.Time `type:"timestamp"`
+
+	// The date and time that the certificate was registered.
+	RegisteredDateTime *time.Time `type:"timestamp"`
+
+	// The state of the certificate.
+	State *string `type:"string" enum:"CertificateState"`
+
+	// Describes a state change for the certificate.
+	StateReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s Certificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Certificate) GoString() string {
+	return s.String()
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *Certificate) SetCertificateId(v string) *Certificate {
+	s.CertificateId = &v
+	return s
+}
+
+// SetCommonName sets the CommonName field's value.
+func (s *Certificate) SetCommonName(v string) *Certificate {
+	s.CommonName = &v
+	return s
+}
+
+// SetExpiryDateTime sets the ExpiryDateTime field's value.
+func (s *Certificate) SetExpiryDateTime(v time.Time) *Certificate {
+	s.ExpiryDateTime = &v
+	return s
+}
+
+// SetRegisteredDateTime sets the RegisteredDateTime field's value.
+func (s *Certificate) SetRegisteredDateTime(v time.Time) *Certificate {
+	s.RegisteredDateTime = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *Certificate) SetState(v string) *Certificate {
+	s.State = &v
+	return s
+}
+
+// SetStateReason sets the StateReason field's value.
+func (s *Certificate) SetStateReason(v string) *Certificate {
+	s.StateReason = &v
+	return s
+}
+
+// Contains general information about a certificate.
+type CertificateInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the certificate.
+	CertificateId *string `type:"string"`
+
+	// The common name for the certificate.
+	CommonName *string `type:"string"`
+
+	// The state of the certificate.
+	State *string `type:"string" enum:"CertificateState"`
+}
+
+// String returns the string representation
+func (s CertificateInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateInfo) GoString() string {
+	return s.String()
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *CertificateInfo) SetCertificateId(v string) *CertificateInfo {
+	s.CertificateId = &v
+	return s
+}
+
+// SetCommonName sets the CommonName field's value.
+func (s *CertificateInfo) SetCommonName(v string) *CertificateInfo {
+	s.CommonName = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *CertificateInfo) SetState(v string) *CertificateInfo {
+	s.State = &v
+	return s
+}
+
 // Contains information about a computer account in a directory.
 type Computer struct {
 	_ struct{} `type:"structure"`
@@ -5262,7 +6089,7 @@ type ConnectDirectoryInput struct {
 	// ConnectSettings is a required field
 	ConnectSettings *DirectoryConnectSettings `type:"structure" required:"true"`
 
-	// A textual description for the directory.
+	// A description for the directory.
 	Description *string `type:"string"`
 
 	// The fully qualified name of the on-premises directory, such as corp.example.com.
@@ -5716,7 +6543,7 @@ func (s CreateConditionalForwarderOutput) GoString() string {
 type CreateDirectoryInput struct {
 	_ struct{} `type:"structure"`
 
-	// A textual description for the directory.
+	// A description for the directory.
 	Description *string `type:"string"`
 
 	// The fully qualified name for the directory, such as corp.example.com.
@@ -5728,10 +6555,13 @@ type CreateDirectoryInput struct {
 	// creates a directory administrator account with the user name Administrator
 	// and this password.
 	//
+	// If you need to change the password for the administrator account, you can
+	// use the ResetUserPassword API call.
+	//
 	// Password is a required field
 	Password *string `type:"string" required:"true" sensitive:"true"`
 
-	// The short name of the directory, such as CORP.
+	// The NetBIOS name of the directory, such as CORP.
 	ShortName *string `type:"string"`
 
 	// The size of the directory.
@@ -5860,8 +6690,8 @@ func (s *CreateDirectoryOutput) SetDirectoryId(v string) *CreateDirectoryOutput 
 type CreateLogSubscriptionInput struct {
 	_ struct{} `type:"structure"`
 
-	// Identifier (ID) of the directory to which you want to subscribe and receive
-	// real-time logs to your specified CloudWatch log group.
+	// Identifier of the directory to which you want to subscribe and receive real-time
+	// logs to your specified CloudWatch log group.
 	//
 	// DirectoryId is a required field
 	DirectoryId *string `type:"string" required:"true"`
@@ -5932,29 +6762,32 @@ func (s CreateLogSubscriptionOutput) GoString() string {
 type CreateMicrosoftADInput struct {
 	_ struct{} `type:"structure"`
 
-	// A textual description for the directory. This label will appear on the AWS
-	// console Directory Details page after the directory is created.
+	// A description for the directory. This label will appear on the AWS console
+	// Directory Details page after the directory is created.
 	Description *string `type:"string"`
 
 	// AWS Managed Microsoft AD is available in two editions: Standard and Enterprise.
 	// Enterprise is the default.
 	Edition *string `type:"string" enum:"DirectoryEdition"`
 
-	// The fully qualified domain name for the directory, such as corp.example.com.
-	// This name will resolve inside your VPC only. It does not need to be publicly
-	// resolvable.
+	// The fully qualified domain name for the AWS Managed Microsoft AD directory,
+	// such as corp.example.com. This name will resolve inside your VPC only. It
+	// does not need to be publicly resolvable.
 	//
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
 	// The password for the default administrative user named Admin.
 	//
+	// If you need to change the password for the administrator account, you can
+	// use the ResetUserPassword API call.
+	//
 	// Password is a required field
 	Password *string `type:"string" required:"true" sensitive:"true"`
 
-	// The NetBIOS name for your domain. A short identifier for your domain, such
-	// as CORP. If you don't specify a NetBIOS name, it will default to the first
-	// part of your directory DNS. For example, CORP for the directory DNS corp.example.com.
+	// The NetBIOS name for your domain, such as CORP. If you don't specify a NetBIOS
+	// name, it will default to the first part of your directory DNS. For example,
+	// CORP for the directory DNS corp.example.com.
 	ShortName *string `type:"string"`
 
 	// The tags to be assigned to the AWS Managed Microsoft AD directory.
@@ -6428,7 +7261,7 @@ func (s *DeleteDirectoryOutput) SetDirectoryId(v string) *DeleteDirectoryOutput 
 type DeleteLogSubscriptionInput struct {
 	_ struct{} `type:"structure"`
 
-	// Identifier (ID) of the directory whose log subscription you want to delete.
+	// Identifier of the directory whose log subscription you want to delete.
 	//
 	// DirectoryId is a required field
 	DirectoryId *string `type:"string" required:"true"`
@@ -6613,6 +7446,72 @@ func (s *DeleteTrustOutput) SetTrustId(v string) *DeleteTrustOutput {
 	return s
 }
 
+type DeregisterCertificateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the certificate.
+	//
+	// CertificateId is a required field
+	CertificateId *string `type:"string" required:"true"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeregisterCertificateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeregisterCertificateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeregisterCertificateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeregisterCertificateInput"}
+	if s.CertificateId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateId"))
+	}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *DeregisterCertificateInput) SetCertificateId(v string) *DeregisterCertificateInput {
+	s.CertificateId = &v
+	return s
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *DeregisterCertificateInput) SetDirectoryId(v string) *DeregisterCertificateInput {
+	s.DirectoryId = &v
+	return s
+}
+
+type DeregisterCertificateOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeregisterCertificateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeregisterCertificateOutput) GoString() string {
+	return s.String()
+}
+
 // Removes the specified directory as a publisher to the specified SNS topic.
 type DeregisterEventTopicInput struct {
 	_ struct{} `type:"structure"`
@@ -6683,6 +7582,83 @@ func (s DeregisterEventTopicOutput) String() string {
 // GoString returns the string representation
 func (s DeregisterEventTopicOutput) GoString() string {
 	return s.String()
+}
+
+type DescribeCertificateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the certificate.
+	//
+	// CertificateId is a required field
+	CertificateId *string `type:"string" required:"true"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeCertificateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCertificateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeCertificateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeCertificateInput"}
+	if s.CertificateId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateId"))
+	}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *DescribeCertificateInput) SetCertificateId(v string) *DescribeCertificateInput {
+	s.CertificateId = &v
+	return s
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *DescribeCertificateInput) SetDirectoryId(v string) *DescribeCertificateInput {
+	s.DirectoryId = &v
+	return s
+}
+
+type DescribeCertificateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the certificate, including registered date time, certificate
+	// state, the reason for the state, expiration date time, and certificate common
+	// name.
+	Certificate *Certificate `type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeCertificateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeCertificateOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificate sets the Certificate field's value.
+func (s *DescribeCertificateOutput) SetCertificate(v *Certificate) *DescribeCertificateOutput {
+	s.Certificate = v
+	return s
 }
 
 // Describes a conditional forwarder.
@@ -7007,6 +7983,109 @@ func (s DescribeEventTopicsOutput) GoString() string {
 // SetEventTopics sets the EventTopics field's value.
 func (s *DescribeEventTopicsOutput) SetEventTopics(v []*EventTopic) *DescribeEventTopicsOutput {
 	s.EventTopics = v
+	return s
+}
+
+type DescribeLDAPSSettingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// Specifies the number of items that should be displayed on one page.
+	Limit *int64 `min:"1" type:"integer"`
+
+	// The type of next token used for pagination.
+	NextToken *string `type:"string"`
+
+	// The type of LDAP security the customer wants to enable, either server or
+	// client. Currently supports only Client, (the default).
+	Type *string `type:"string" enum:"LDAPSType"`
+}
+
+// String returns the string representation
+func (s DescribeLDAPSSettingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLDAPSSettingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeLDAPSSettingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeLDAPSSettingsInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *DescribeLDAPSSettingsInput) SetDirectoryId(v string) *DescribeLDAPSSettingsInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *DescribeLDAPSSettingsInput) SetLimit(v int64) *DescribeLDAPSSettingsInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeLDAPSSettingsInput) SetNextToken(v string) *DescribeLDAPSSettingsInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DescribeLDAPSSettingsInput) SetType(v string) *DescribeLDAPSSettingsInput {
+	s.Type = &v
+	return s
+}
+
+type DescribeLDAPSSettingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about LDAP security for the specified directory, including status
+	// of enablement, state last updated date time, and the reason for the state.
+	LDAPSSettingsInfo []*LDAPSSettingInfo `type:"list"`
+
+	// The next token used to retrieve the LDAPS settings if the number of setting
+	// types exceeds page limit and there is another page.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeLDAPSSettingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeLDAPSSettingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetLDAPSSettingsInfo sets the LDAPSSettingsInfo field's value.
+func (s *DescribeLDAPSSettingsOutput) SetLDAPSSettingsInfo(v []*LDAPSSettingInfo) *DescribeLDAPSSettingsOutput {
+	s.LDAPSSettingsInfo = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeLDAPSSettingsOutput) SetNextToken(v string) *DescribeLDAPSSettingsOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -7411,7 +8490,7 @@ type DirectoryConnectSettingsDescription struct {
 	// The security group identifier for the AD Connector directory.
 	SecurityGroupId *string `type:"string"`
 
-	// A list of subnet identifiers in the VPC that the AD connector is in.
+	// A list of subnet identifiers in the VPC that the AD Connector is in.
 	SubnetIds []*string `type:"list"`
 
 	// The identifier of the VPC that the AD Connector is in.
@@ -7482,7 +8561,7 @@ type DirectoryDescription struct {
 	// is an AD Connector directory.
 	ConnectSettings *DirectoryConnectSettingsDescription `type:"structure"`
 
-	// The textual description for the directory.
+	// The description for the directory.
 	Description *string `type:"string"`
 
 	// The desired number of domain controllers in the directory if the directory
@@ -7713,14 +8792,14 @@ func (s *DirectoryDescription) SetVpcSettings(v *DirectoryVpcSettingsDescription
 	return s
 }
 
-// Contains directory limit information for a region.
+// Contains directory limit information for a Region.
 type DirectoryLimits struct {
 	_ struct{} `type:"structure"`
 
-	// The current number of cloud directories in the region.
+	// The current number of cloud directories in the Region.
 	CloudOnlyDirectoriesCurrentCount *int64 `type:"integer"`
 
-	// The maximum number of cloud directories allowed in the region.
+	// The maximum number of cloud directories allowed in the Region.
 	CloudOnlyDirectoriesLimit *int64 `type:"integer"`
 
 	// Indicates if the cloud directory limit has been reached.
@@ -7736,10 +8815,10 @@ type DirectoryLimits struct {
 	// Indicates if the AWS Managed Microsoft AD directory limit has been reached.
 	CloudOnlyMicrosoftADLimitReached *bool `type:"boolean"`
 
-	// The current number of connected directories in the region.
+	// The current number of connected directories in the Region.
 	ConnectedDirectoriesCurrentCount *int64 `type:"integer"`
 
-	// The maximum number of connected directories allowed in the region.
+	// The maximum number of connected directories allowed in the Region.
 	ConnectedDirectoriesLimit *int64 `type:"integer"`
 
 	// Indicates if the connected directory limit has been reached.
@@ -7914,6 +8993,69 @@ func (s *DirectoryVpcSettingsDescription) SetSubnetIds(v []*string) *DirectoryVp
 func (s *DirectoryVpcSettingsDescription) SetVpcId(v string) *DirectoryVpcSettingsDescription {
 	s.VpcId = &v
 	return s
+}
+
+type DisableLDAPSInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// The type of LDAP security that the customer wants to enable. The security
+	// can be either server or client, but currently only the default Client is
+	// supported.
+	Type *string `type:"string" enum:"LDAPSType"`
+}
+
+// String returns the string representation
+func (s DisableLDAPSInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisableLDAPSInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisableLDAPSInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisableLDAPSInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *DisableLDAPSInput) SetDirectoryId(v string) *DisableLDAPSInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *DisableLDAPSInput) SetType(v string) *DisableLDAPSInput {
+	s.Type = &v
+	return s
+}
+
+type DisableLDAPSOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisableLDAPSOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisableLDAPSOutput) GoString() string {
+	return s.String()
 }
 
 // Contains the inputs for the DisableRadius operation.
@@ -8163,6 +9305,68 @@ func (s *DomainController) SetVpcId(v string) *DomainController {
 	return s
 }
 
+type EnableLDAPSInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// The type of LDAP security the customer wants to enable. The security can
+	// be either server or client, but currently only the default Client is supported.
+	Type *string `type:"string" enum:"LDAPSType"`
+}
+
+// String returns the string representation
+func (s EnableLDAPSInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableLDAPSInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *EnableLDAPSInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "EnableLDAPSInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *EnableLDAPSInput) SetDirectoryId(v string) *EnableLDAPSInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *EnableLDAPSInput) SetType(v string) *EnableLDAPSInput {
+	s.Type = &v
+	return s
+}
+
+type EnableLDAPSOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s EnableLDAPSOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EnableLDAPSOutput) GoString() string {
+	return s.String()
+}
+
 // Contains the inputs for the EnableRadius operation.
 type EnableRadiusInput struct {
 	_ struct{} `type:"structure"`
@@ -8405,7 +9609,7 @@ type GetDirectoryLimitsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A DirectoryLimits object that contains the directory limits for the current
-	// region.
+	// rRegion.
 	DirectoryLimits *DirectoryLimits `type:"structure"`
 }
 
@@ -8591,6 +9795,144 @@ func (s *IpRouteInfo) SetIpRouteStatusMsg(v string) *IpRouteInfo {
 // SetIpRouteStatusReason sets the IpRouteStatusReason field's value.
 func (s *IpRouteInfo) SetIpRouteStatusReason(v string) *IpRouteInfo {
 	s.IpRouteStatusReason = &v
+	return s
+}
+
+// Contains general information about the LDAPS settings.
+type LDAPSSettingInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The state of the LDAPS settings.
+	LDAPSStatus *string `type:"string" enum:"LDAPSStatus"`
+
+	// Describes a state change for LDAPS.
+	LDAPSStatusReason *string `type:"string"`
+
+	// The date and time when the LDAPS settings were last updated.
+	LastUpdatedDateTime *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s LDAPSSettingInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LDAPSSettingInfo) GoString() string {
+	return s.String()
+}
+
+// SetLDAPSStatus sets the LDAPSStatus field's value.
+func (s *LDAPSSettingInfo) SetLDAPSStatus(v string) *LDAPSSettingInfo {
+	s.LDAPSStatus = &v
+	return s
+}
+
+// SetLDAPSStatusReason sets the LDAPSStatusReason field's value.
+func (s *LDAPSSettingInfo) SetLDAPSStatusReason(v string) *LDAPSSettingInfo {
+	s.LDAPSStatusReason = &v
+	return s
+}
+
+// SetLastUpdatedDateTime sets the LastUpdatedDateTime field's value.
+func (s *LDAPSSettingInfo) SetLastUpdatedDateTime(v time.Time) *LDAPSSettingInfo {
+	s.LastUpdatedDateTime = &v
+	return s
+}
+
+type ListCertificatesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+
+	// The number of items that should show up on one page
+	Limit *int64 `min:"1" type:"integer"`
+
+	// A token for requesting another page of certificates if the NextToken response
+	// element indicates that more certificates are available. Use the value of
+	// the returned NextToken element in your request until the token comes back
+	// as null. Pass null if this is the first call.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListCertificatesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListCertificatesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListCertificatesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListCertificatesInput"}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.Limit != nil && *s.Limit < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Limit", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *ListCertificatesInput) SetDirectoryId(v string) *ListCertificatesInput {
+	s.DirectoryId = &v
+	return s
+}
+
+// SetLimit sets the Limit field's value.
+func (s *ListCertificatesInput) SetLimit(v int64) *ListCertificatesInput {
+	s.Limit = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListCertificatesInput) SetNextToken(v string) *ListCertificatesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListCertificatesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of certificates with basic details including certificate ID, certificate
+	// common name, certificate state.
+	CertificatesInfo []*CertificateInfo `type:"list"`
+
+	// Indicates whether another page of certificates is available when the number
+	// of available certificates exceeds the page limit.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListCertificatesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListCertificatesOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificatesInfo sets the CertificatesInfo field's value.
+func (s *ListCertificatesOutput) SetCertificatesInfo(v []*CertificateInfo) *ListCertificatesOutput {
+	s.CertificatesInfo = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListCertificatesOutput) SetNextToken(v string) *ListCertificatesOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -9168,6 +10510,84 @@ func (s *RadiusSettings) SetSharedSecret(v string) *RadiusSettings {
 // SetUseSameUsername sets the UseSameUsername field's value.
 func (s *RadiusSettings) SetUseSameUsername(v bool) *RadiusSettings {
 	s.UseSameUsername = &v
+	return s
+}
+
+type RegisterCertificateInput struct {
+	_ struct{} `type:"structure"`
+
+	// The certificate PEM string that needs to be registered.
+	//
+	// CertificateData is a required field
+	CertificateData *string `min:"1" type:"string" required:"true"`
+
+	// The identifier of the directory.
+	//
+	// DirectoryId is a required field
+	DirectoryId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RegisterCertificateInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegisterCertificateInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegisterCertificateInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegisterCertificateInput"}
+	if s.CertificateData == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateData"))
+	}
+	if s.CertificateData != nil && len(*s.CertificateData) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificateData", 1))
+	}
+	if s.DirectoryId == nil {
+		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateData sets the CertificateData field's value.
+func (s *RegisterCertificateInput) SetCertificateData(v string) *RegisterCertificateInput {
+	s.CertificateData = &v
+	return s
+}
+
+// SetDirectoryId sets the DirectoryId field's value.
+func (s *RegisterCertificateInput) SetDirectoryId(v string) *RegisterCertificateInput {
+	s.DirectoryId = &v
+	return s
+}
+
+type RegisterCertificateOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the certificate.
+	CertificateId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s RegisterCertificateOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegisterCertificateOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *RegisterCertificateOutput) SetCertificateId(v string) *RegisterCertificateOutput {
+	s.CertificateId = &v
 	return s
 }
 
@@ -10836,6 +12256,26 @@ func (s *VerifyTrustOutput) SetTrustId(v string) *VerifyTrustOutput {
 }
 
 const (
+	// CertificateStateRegistering is a CertificateState enum value
+	CertificateStateRegistering = "Registering"
+
+	// CertificateStateRegistered is a CertificateState enum value
+	CertificateStateRegistered = "Registered"
+
+	// CertificateStateRegisterFailed is a CertificateState enum value
+	CertificateStateRegisterFailed = "RegisterFailed"
+
+	// CertificateStateDeregistering is a CertificateState enum value
+	CertificateStateDeregistering = "Deregistering"
+
+	// CertificateStateDeregistered is a CertificateState enum value
+	CertificateStateDeregistered = "Deregistered"
+
+	// CertificateStateDeregisterFailed is a CertificateState enum value
+	CertificateStateDeregisterFailed = "DeregisterFailed"
+)
+
+const (
 	// DirectoryEditionEnterprise is a DirectoryEdition enum value
 	DirectoryEditionEnterprise = "Enterprise"
 
@@ -10941,6 +12381,25 @@ const (
 
 	// IpRouteStatusMsgRemoveFailed is a IpRouteStatusMsg enum value
 	IpRouteStatusMsgRemoveFailed = "RemoveFailed"
+)
+
+const (
+	// LDAPSStatusEnabling is a LDAPSStatus enum value
+	LDAPSStatusEnabling = "Enabling"
+
+	// LDAPSStatusEnabled is a LDAPSStatus enum value
+	LDAPSStatusEnabled = "Enabled"
+
+	// LDAPSStatusEnableFailed is a LDAPSStatus enum value
+	LDAPSStatusEnableFailed = "EnableFailed"
+
+	// LDAPSStatusDisabled is a LDAPSStatus enum value
+	LDAPSStatusDisabled = "Disabled"
+)
+
+const (
+	// LDAPSTypeClient is a LDAPSType enum value
+	LDAPSTypeClient = "Client"
 )
 
 const (

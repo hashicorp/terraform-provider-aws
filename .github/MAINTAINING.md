@@ -8,6 +8,7 @@
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
             - [Terraform Updates](#terraform-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
+    - [Pull Request Types to CHANGELOG](#pull-request-types-to-changelog)
 - [Release Process](#release-process)
 
 <!-- /TOC -->
@@ -20,6 +21,12 @@ Notes for each type of pull request are (or will be) available in subsections be
 
 - If you plan to be responsible for the pull request through the merge/closure process, assign it to yourself
 - Add `bug`, `enhancement`, `new-data-source`, `new-resource`, or `technical-debt` labels to match expectations from change
+- Perform a quick scan of open issues and ensure they are referenced in the pull request description (e.g. `Closes #1234`, `Relates #5678`). Edit the description yourself and mention this to the author:
+
+```markdown
+This pull request appears to be related to/solve #1234, so I have edited the pull request description to denote the issue reference.
+```
+
 - Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#checklists-for-contribution)
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
 - If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for maintainer pull requests with minor modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
@@ -244,24 +251,40 @@ Run the full acceptance testing suite against the pull request and verify there 
 - Add any linked issues that will be closed by the pull request to the same upcoming release milestone
 - Merge the pull request
 - Delete the branch (if the branch is on this repository)
-- Update the repository `CHANGELOG.md` by directly committing to the `master` branch. See also the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) for more information about the expected CHANGELOG format.
+- Determine if the pull request should have a CHANGELOG entry by reviewing the [Pull Request Types to CHANGELOG section](#pull-request-types-to-changelog). If so, update the repository `CHANGELOG.md` by directly committing to the `master` branch (e.g. editing the file in the GitHub web interface). See also the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/versioning.html) for more information about the expected CHANGELOG format.
 - Leave a comment on any issues closed by the pull request noting that it has been merged and when to expect the release containing it, e.g.
 
 ```markdown
 The fix for this has been merged and will release with version X.Y.Z of the Terraform AWS Provider, expected in the XXX timeframe.
 ```
 
+### Pull Request Types to CHANGELOG
+
+The CHANGELOG is intended to show operator-impacting changes to the codebase for a particular version. If every change or commit to the code resulted in an entry, the CHANGELOG would become less useful for operators. The lists below are general guidelines on when a decision needs to be made to decide whether a change should have an entry.
+
+Changes that should have a CHANGELOG entry:
+
+- New Resources and Data Sources
+- New full-length documentation guides (e.g. EKS Getting Started Guide, IAM Policy Documents with Terraform)
+- Resource and provider bug fixes
+- Resource and provider enhancements
+- Deprecations
+- Removals
+
+Changes that may have a CHANGELOG entry:
+
+- Dependency updates: If the update contains relevant bug fixes or enhancements that affect operators, those should be called out.
+
+Changes that should _not_ have a CHANGELOG entry:
+
+- Resource and provider documentation updates
+- Testing updates
+
 ## Release Process
 
 - Create a milestone for the next release after this release (generally, the next milestone will be a minor version increase unless previously decided for a major or patch version)
 - Check the existing release milestone for open items and either work through them or move them to the next milestone
 - Run the HashiCorp (non-OSS) TeamCity release job with the `DEPLOYMENT_TARGET_VERSION` matching the expected release milestone and `DEPLOYMENT_NEXT_VERSION` matching the next release milestone
-- Wait for the TeamCity release job and TeamCity website deployment jobs to complete either by watching the build logs or Slack notifications
+- Wait for the TeamCity release job and CircleCI website deployment jobs to complete either by watching the build logs or Slack notifications
 - Close the release milestone
-- For each item noted in the `CHANGELOG.md` for the release just completed (or milestone as a whole), add a comment to the pull request and any linked closed issues noting that it has been released, e.g.
-
-```markdown
-This has been released in [version 2.19.0 of the Terraform AWS provider](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md#2190-july-11-2019). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
-
-For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
-```
+- Create a new GitHub release with the release title exactly matching the tag and milestone (e.g. `v2.22.0`) and copy the notes from the CHANGELOG to the release notes. This will trigger [HashiBot](https://github.com/apps/hashibot) release comments.

@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_api_key"
-sidebar_current: "docs-aws_api_gateway_api_key"
 description: |-
   Get information on an API Gateway API Key
 ---

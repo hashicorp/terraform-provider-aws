@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_rds_global_cluster"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-x"
 description: |-
   Manages a RDS Global Cluster
 ---

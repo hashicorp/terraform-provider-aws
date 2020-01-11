@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_security_group_rule"
-sidebar_current: "docs-aws-resource-security-group-rule"
 description: |-
   Provides an security group rule resource.
 ---

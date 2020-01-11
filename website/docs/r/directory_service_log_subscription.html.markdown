@@ -1,7 +1,7 @@
 ---
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_log_subscription"
-sidebar_current: "docs-aws-resource-directory-service-log-subscription"
 description: |-
   Provides a Log subscription for AWS Directory Service that pushes logs to cloudwatch.
 ---

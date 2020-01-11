@@ -290,7 +290,11 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   TTL order specified in the response body is not valid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified in the response body is not valid. To specify a web
+//   ACL created using the latest version of AWS WAF, use the ACL ARN, for example
+//   arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 //   * ErrCodeTooManyOriginCustomHeaders "TooManyOriginCustomHeaders"
 //   Your request contains too many origin custom headers.
@@ -515,7 +519,11 @@ func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistribution
 //   TTL order specified in the response body is not valid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified in the response body is not valid. To specify a web
+//   ACL created using the latest version of AWS WAF, use the ACL ARN, for example
+//   arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 //   * ErrCodeTooManyOriginCustomHeaders "TooManyOriginCustomHeaders"
 //   Your request contains too many origin custom headers.
@@ -3025,10 +3033,12 @@ func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesPagesWithContext(ctx aw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListCloudFrontOriginAccessIdentitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListCloudFrontOriginAccessIdentitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3160,10 +3170,12 @@ func (c *CloudFront) ListDistributionsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDistributionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDistributionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3225,7 +3237,11 @@ func (c *CloudFront) ListDistributionsByWebACLIdRequest(input *ListDistributions
 //   The argument is invalid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified in the response body is not valid. To specify a web
+//   ACL created using the latest version of AWS WAF, use the ACL ARN, for example
+//   arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributionsByWebACLId
 func (c *CloudFront) ListDistributionsByWebACLId(input *ListDistributionsByWebACLIdInput) (*ListDistributionsByWebACLIdOutput, error) {
@@ -3543,10 +3559,12 @@ func (c *CloudFront) ListInvalidationsPagesWithContext(ctx aws.Context, input *L
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListInvalidationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListInvalidationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3757,10 +3775,12 @@ func (c *CloudFront) ListStreamingDistributionsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListStreamingDistributionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListStreamingDistributionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4356,7 +4376,11 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   TTL order specified in the response body is not valid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
-//   A web ACL id specified in the response body is not valid.
+//   A web ACL ID specified in the response body is not valid. To specify a web
+//   ACL created using the latest version of AWS WAF, use the ACL ARN, for example
+//   arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+//   To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+//   473e64fd-f30b-4765-81a0-62ad96dd167a.
 //
 //   * ErrCodeTooManyOriginCustomHeaders "TooManyOriginCustomHeaders"
 //   Your request contains too many origin custom headers.
@@ -4950,8 +4974,11 @@ type AliasICPRecordal struct {
 	//    * SUSPENDED indicates that the associated CNAME does not have a valid
 	//    ICP recordal number.
 	//
-	//    * PENDING indicates that at least one CNAME associated with the distribution
-	//    does not have a valid ICP recordal number.
+	//    * PENDING indicates that CloudFront can't determine the ICP recordal status
+	//    of the CNAME associated with the distribution because there was an error
+	//    in trying to determine the status. You can try again to see if the error
+	//    is resolved in which case CloudFront returns an APPROVED or SUSPENDED
+	//    status.
 	ICPRecordalStatus *string `type:"string" enum:"ICPRecordalStatus"`
 }
 
@@ -5187,7 +5214,8 @@ type CacheBehavior struct {
 	// or for the default cache behavior in your distribution.
 	FieldLevelEncryptionId *string `type:"string"`
 
-	// A complex type that specifies how CloudFront handles query strings and cookies.
+	// A complex type that specifies how CloudFront handles query strings, cookies,
+	// and HTTP headers.
 	//
 	// ForwardedValues is a required field
 	ForwardedValues *ForwardedValues `type:"structure" required:"true"`
@@ -5871,7 +5899,7 @@ func (s *CookiePreference) SetWhitelistedNames(v *CookieNames) *CookiePreference
 // an Origin Access Identity (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html)
 // in the Amazon CloudFront Developer Guide.
 type CreateCloudFrontOriginAccessIdentityInput struct {
-	_ struct{} `type:"structure" payload:"CloudFrontOriginAccessIdentityConfig"`
+	_ struct{} `locationName:"CreateCloudFrontOriginAccessIdentityRequest" type:"structure" payload:"CloudFrontOriginAccessIdentityConfig"`
 
 	// The current configuration information for the identity.
 	//
@@ -5958,7 +5986,7 @@ func (s *CreateCloudFrontOriginAccessIdentityOutput) SetLocation(v string) *Crea
 
 // The request to create a new distribution.
 type CreateDistributionInput struct {
-	_ struct{} `type:"structure" payload:"DistributionConfig"`
+	_ struct{} `locationName:"CreateDistributionRequest" type:"structure" payload:"DistributionConfig"`
 
 	// The distribution's configuration information.
 	//
@@ -6045,7 +6073,7 @@ func (s *CreateDistributionOutput) SetLocation(v string) *CreateDistributionOutp
 
 // The request to create a new distribution with tags.
 type CreateDistributionWithTagsInput struct {
-	_ struct{} `type:"structure" payload:"DistributionConfigWithTags"`
+	_ struct{} `locationName:"CreateDistributionWithTagsRequest" type:"structure" payload:"DistributionConfigWithTags"`
 
 	// The distribution's configuration information.
 	//
@@ -6131,7 +6159,7 @@ func (s *CreateDistributionWithTagsOutput) SetLocation(v string) *CreateDistribu
 }
 
 type CreateFieldLevelEncryptionConfigInput struct {
-	_ struct{} `type:"structure" payload:"FieldLevelEncryptionConfig"`
+	_ struct{} `locationName:"CreateFieldLevelEncryptionConfigRequest" type:"structure" payload:"FieldLevelEncryptionConfig"`
 
 	// The request to create a new field-level encryption configuration.
 	//
@@ -6217,7 +6245,7 @@ func (s *CreateFieldLevelEncryptionConfigOutput) SetLocation(v string) *CreateFi
 }
 
 type CreateFieldLevelEncryptionProfileInput struct {
-	_ struct{} `type:"structure" payload:"FieldLevelEncryptionProfileConfig"`
+	_ struct{} `locationName:"CreateFieldLevelEncryptionProfileRequest" type:"structure" payload:"FieldLevelEncryptionProfileConfig"`
 
 	// The request to create a field-level encryption profile.
 	//
@@ -6303,7 +6331,7 @@ func (s *CreateFieldLevelEncryptionProfileOutput) SetLocation(v string) *CreateF
 
 // The request to create an invalidation.
 type CreateInvalidationInput struct {
-	_ struct{} `type:"structure" payload:"InvalidationBatch"`
+	_ struct{} `locationName:"CreateInvalidationRequest" type:"structure" payload:"InvalidationBatch"`
 
 	// The distribution's id.
 	//
@@ -6397,7 +6425,7 @@ func (s *CreateInvalidationOutput) SetLocation(v string) *CreateInvalidationOutp
 }
 
 type CreatePublicKeyInput struct {
-	_ struct{} `type:"structure" payload:"PublicKeyConfig"`
+	_ struct{} `locationName:"CreatePublicKeyRequest" type:"structure" payload:"PublicKeyConfig"`
 
 	// The request to add a public key to CloudFront.
 	//
@@ -6483,7 +6511,7 @@ func (s *CreatePublicKeyOutput) SetPublicKey(v *PublicKey) *CreatePublicKeyOutpu
 
 // The request to create a new streaming distribution.
 type CreateStreamingDistributionInput struct {
-	_ struct{} `type:"structure" payload:"StreamingDistributionConfig"`
+	_ struct{} `locationName:"CreateStreamingDistributionRequest" type:"structure" payload:"StreamingDistributionConfig"`
 
 	// The streaming distribution's configuration information.
 	//
@@ -6570,7 +6598,7 @@ func (s *CreateStreamingDistributionOutput) SetStreamingDistribution(v *Streamin
 
 // The request to create a new streaming distribution with tags.
 type CreateStreamingDistributionWithTagsInput struct {
-	_ struct{} `type:"structure" payload:"StreamingDistributionConfigWithTags"`
+	_ struct{} `locationName:"CreateStreamingDistributionWithTagsRequest" type:"structure" payload:"StreamingDistributionConfigWithTags"`
 
 	// The streaming distribution's configuration information.
 	//
@@ -6673,9 +6701,6 @@ type CustomErrorResponse struct {
 	// CloudFront queries your origin to see whether the problem that caused the
 	// error has been resolved and the requested object is now available.
 	//
-	// If you don't want to specify a value, include an empty element, <ErrorCachingMinTTL>,
-	// in the XML document.
-	//
 	// For more information, see Customizing Error Responses (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/custom-error-pages.html)
 	// in the Amazon CloudFront Developer Guide.
 	ErrorCachingMinTTL *int64 `type:"long"`
@@ -6704,8 +6729,7 @@ type CustomErrorResponse struct {
 	//    your customers don't know that your website is down.
 	//
 	// If you specify a value for ResponseCode, you must also specify a value for
-	// ResponsePagePath. If you don't want to specify a value, include an empty
-	// element, <ResponseCode>, in the XML document.
+	// ResponsePagePath.
 	ResponseCode *string `type:"string"`
 
 	// The path to the custom error page that you want CloudFront to return to a
@@ -6724,8 +6748,7 @@ type CustomErrorResponse struct {
 	//    the origin that contains your custom error pages.
 	//
 	// If you specify a value for ResponsePagePath, you must also specify a value
-	// for ResponseCode. If you don't want to specify a value, include an empty
-	// element, <ResponsePagePath>, in the XML document.
+	// for ResponseCode.
 	//
 	// We recommend that you store custom error pages in an Amazon S3 bucket. If
 	// you store custom error pages on an HTTP server and the server starts to return
@@ -7066,7 +7089,8 @@ type DefaultCacheBehavior struct {
 	// or for the default cache behavior in your distribution.
 	FieldLevelEncryptionId *string `type:"string"`
 
-	// A complex type that specifies how CloudFront handles query strings and cookies.
+	// A complex type that specifies how CloudFront handles query strings, cookies,
+	// and HTTP headers.
 	//
 	// ForwardedValues is a required field
 	ForwardedValues *ForwardedValues `type:"structure" required:"true"`
@@ -7290,7 +7314,7 @@ func (s *DefaultCacheBehavior) SetViewerProtocolPolicy(v string) *DefaultCacheBe
 
 // Deletes a origin access identity.
 type DeleteCloudFrontOriginAccessIdentityInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DeleteCloudFrontOriginAccessIdentityRequest" type:"structure"`
 
 	// The origin access identity's ID.
 	//
@@ -7390,7 +7414,7 @@ func (s DeleteCloudFrontOriginAccessIdentityOutput) GoString() string {
 // see Deleting a Distribution (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/HowToDeleteDistribution.html)
 // in the Amazon CloudFront Developer Guide.
 type DeleteDistributionInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DeleteDistributionRequest" type:"structure"`
 
 	// The distribution ID.
 	//
@@ -7455,7 +7479,7 @@ func (s DeleteDistributionOutput) GoString() string {
 }
 
 type DeleteFieldLevelEncryptionConfigInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DeleteFieldLevelEncryptionConfigRequest" type:"structure"`
 
 	// The ID of the configuration you want to delete from CloudFront.
 	//
@@ -7520,7 +7544,7 @@ func (s DeleteFieldLevelEncryptionConfigOutput) GoString() string {
 }
 
 type DeleteFieldLevelEncryptionProfileInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DeleteFieldLevelEncryptionProfileRequest" type:"structure"`
 
 	// Request the ID of the profile you want to delete from CloudFront.
 	//
@@ -7585,7 +7609,7 @@ func (s DeleteFieldLevelEncryptionProfileOutput) GoString() string {
 }
 
 type DeletePublicKeyInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DeletePublicKeyRequest" type:"structure"`
 
 	// The ID of the public key you want to remove from CloudFront.
 	//
@@ -7651,7 +7675,7 @@ func (s DeletePublicKeyOutput) GoString() string {
 
 // The request to delete a streaming distribution.
 type DeleteStreamingDistributionInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"DeleteStreamingDistributionRequest" type:"structure"`
 
 	// The distribution ID.
 	//
@@ -8020,7 +8044,10 @@ type DistributionConfig struct {
 	ViewerCertificate *ViewerCertificate `type:"structure"`
 
 	// A unique identifier that specifies the AWS WAF web ACL, if any, to associate
-	// with this distribution.
+	// with this distribution. To specify a web ACL created using the latest version
+	// of AWS WAF, use the ACL ARN, for example arn:aws:wafv2:us-east-1:123456789012:global/webacl/ExampleWebACL/473e64fd-f30b-4765-81a0-62ad96dd167a.
+	// To specify a web ACL created using AWS WAF Classic, use the ACL ID, for example
+	// 473e64fd-f30b-4765-81a0-62ad96dd167a.
 	//
 	// AWS WAF is a web application firewall that lets you monitor the HTTP and
 	// HTTPS requests that are forwarded to CloudFront, and lets you control access
@@ -8029,7 +8056,7 @@ type DistributionConfig struct {
 	// to requests either with the requested content or with an HTTP 403 status
 	// code (Forbidden). You can also configure CloudFront to return a custom error
 	// page when a request is blocked. For more information about AWS WAF, see the
-	// AWS WAF Developer Guide (http://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html).
+	// AWS WAF Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/what-is-aws-waf.html).
 	WebACLId *string `type:"string"`
 }
 
@@ -9313,7 +9340,8 @@ func (s *FieldPatterns) SetQuantity(v int64) *FieldPatterns {
 	return s
 }
 
-// A complex type that specifies how CloudFront handles query strings and cookies.
+// A complex type that specifies how CloudFront handles query strings, cookies,
+// and HTTP headers.
 type ForwardedValues struct {
 	_ struct{} `type:"structure"`
 
@@ -9522,7 +9550,7 @@ func (s *GeoRestriction) SetRestrictionType(v string) *GeoRestriction {
 // The origin access identity's configuration information. For more information,
 // see CloudFrontOriginAccessIdentityConfig (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_CloudFrontOriginAccessIdentityConfig.html).
 type GetCloudFrontOriginAccessIdentityConfigInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetCloudFrontOriginAccessIdentityConfigRequest" type:"structure"`
 
 	// The identity's ID.
 	//
@@ -9597,7 +9625,7 @@ func (s *GetCloudFrontOriginAccessIdentityConfigOutput) SetETag(v string) *GetCl
 
 // The request to get an origin access identity's information.
 type GetCloudFrontOriginAccessIdentityInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetCloudFrontOriginAccessIdentityRequest" type:"structure"`
 
 	// The identity's ID.
 	//
@@ -9673,7 +9701,7 @@ func (s *GetCloudFrontOriginAccessIdentityOutput) SetETag(v string) *GetCloudFro
 
 // The request to get a distribution configuration.
 type GetDistributionConfigInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetDistributionConfigRequest" type:"structure"`
 
 	// The distribution's ID. If the ID is empty, an empty distribution configuration
 	// is returned.
@@ -9749,7 +9777,7 @@ func (s *GetDistributionConfigOutput) SetETag(v string) *GetDistributionConfigOu
 
 // The request to get a distribution's information.
 type GetDistributionInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetDistributionRequest" type:"structure"`
 
 	// The distribution's ID. If the ID is empty, an empty distribution configuration
 	// is returned.
@@ -9824,7 +9852,7 @@ func (s *GetDistributionOutput) SetETag(v string) *GetDistributionOutput {
 }
 
 type GetFieldLevelEncryptionConfigInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetFieldLevelEncryptionConfigRequest" type:"structure"`
 
 	// Request the ID for the field-level encryption configuration information.
 	//
@@ -9898,7 +9926,7 @@ func (s *GetFieldLevelEncryptionConfigOutput) SetFieldLevelEncryptionConfig(v *F
 }
 
 type GetFieldLevelEncryptionInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetFieldLevelEncryptionRequest" type:"structure"`
 
 	// Request the ID for the field-level encryption configuration information.
 	//
@@ -9972,7 +10000,7 @@ func (s *GetFieldLevelEncryptionOutput) SetFieldLevelEncryption(v *FieldLevelEnc
 }
 
 type GetFieldLevelEncryptionProfileConfigInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetFieldLevelEncryptionProfileConfigRequest" type:"structure"`
 
 	// Get the ID for the field-level encryption profile configuration information.
 	//
@@ -10046,7 +10074,7 @@ func (s *GetFieldLevelEncryptionProfileConfigOutput) SetFieldLevelEncryptionProf
 }
 
 type GetFieldLevelEncryptionProfileInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetFieldLevelEncryptionProfileRequest" type:"structure"`
 
 	// Get the ID for the field-level encryption profile information.
 	//
@@ -10120,7 +10148,7 @@ func (s *GetFieldLevelEncryptionProfileOutput) SetFieldLevelEncryptionProfile(v 
 
 // The request to get an invalidation's information.
 type GetInvalidationInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetInvalidationRequest" type:"structure"`
 
 	// The distribution's ID.
 	//
@@ -10203,7 +10231,7 @@ func (s *GetInvalidationOutput) SetInvalidation(v *Invalidation) *GetInvalidatio
 }
 
 type GetPublicKeyConfigInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetPublicKeyConfigRequest" type:"structure"`
 
 	// Request the ID for the public key configuration.
 	//
@@ -10276,7 +10304,7 @@ func (s *GetPublicKeyConfigOutput) SetPublicKeyConfig(v *PublicKeyConfig) *GetPu
 }
 
 type GetPublicKeyInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetPublicKeyRequest" type:"structure"`
 
 	// Request the ID for the public key.
 	//
@@ -10350,7 +10378,7 @@ func (s *GetPublicKeyOutput) SetPublicKey(v *PublicKey) *GetPublicKeyOutput {
 
 // To request to get a streaming distribution configuration.
 type GetStreamingDistributionConfigInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetStreamingDistributionConfigRequest" type:"structure"`
 
 	// The streaming distribution's ID.
 	//
@@ -10425,7 +10453,7 @@ func (s *GetStreamingDistributionConfigOutput) SetStreamingDistributionConfig(v 
 
 // The request to get a streaming distribution's information.
 type GetStreamingDistributionInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"GetStreamingDistributionRequest" type:"structure"`
 
 	// The streaming distribution's ID.
 	//
@@ -11050,7 +11078,7 @@ func (s *LambdaFunctionAssociations) SetQuantity(v int64) *LambdaFunctionAssocia
 
 // The request to list origin access identities.
 type ListCloudFrontOriginAccessIdentitiesInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListCloudFrontOriginAccessIdentitiesRequest" type:"structure"`
 
 	// Use this when paginating results to indicate where to begin in your list
 	// of origin access identities. The results include identities in the list that
@@ -11112,7 +11140,7 @@ func (s *ListCloudFrontOriginAccessIdentitiesOutput) SetCloudFrontOriginAccessId
 // The request to list distributions that are associated with a specified AWS
 // WAF web ACL.
 type ListDistributionsByWebACLIdInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListDistributionsByWebACLIdRequest" type:"structure"`
 
 	// Use Marker and MaxItems to control pagination of results. If you have more
 	// than MaxItems distributions that satisfy the request, the response includes
@@ -11204,7 +11232,7 @@ func (s *ListDistributionsByWebACLIdOutput) SetDistributionList(v *DistributionL
 
 // The request to list your distributions.
 type ListDistributionsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListDistributionsRequest" type:"structure"`
 
 	// Use this when paginating results to indicate where to begin in your list
 	// of distributions. The results include distributions in the list that occur
@@ -11264,7 +11292,7 @@ func (s *ListDistributionsOutput) SetDistributionList(v *DistributionList) *List
 }
 
 type ListFieldLevelEncryptionConfigsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListFieldLevelEncryptionConfigsRequest" type:"structure"`
 
 	// Use this when paginating results to indicate where to begin in your list
 	// of configurations. The results include configurations in the list that occur
@@ -11325,7 +11353,7 @@ func (s *ListFieldLevelEncryptionConfigsOutput) SetFieldLevelEncryptionList(v *F
 }
 
 type ListFieldLevelEncryptionProfilesInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListFieldLevelEncryptionProfilesRequest" type:"structure"`
 
 	// Use this when paginating results to indicate where to begin in your list
 	// of profiles. The results include profiles in the list that occur after the
@@ -11387,7 +11415,7 @@ func (s *ListFieldLevelEncryptionProfilesOutput) SetFieldLevelEncryptionProfileL
 
 // The request to list invalidations.
 type ListInvalidationsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListInvalidationsRequest" type:"structure"`
 
 	// The distribution's ID.
 	//
@@ -11477,7 +11505,7 @@ func (s *ListInvalidationsOutput) SetInvalidationList(v *InvalidationList) *List
 }
 
 type ListPublicKeysInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListPublicKeysRequest" type:"structure"`
 
 	// Use this when paginating results to indicate where to begin in your list
 	// of public keys. The results include public keys in the list that occur after
@@ -11538,7 +11566,7 @@ func (s *ListPublicKeysOutput) SetPublicKeyList(v *PublicKeyList) *ListPublicKey
 
 // The request to list your streaming distributions.
 type ListStreamingDistributionsInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListStreamingDistributionsRequest" type:"structure"`
 
 	// The value that you provided for the Marker request parameter.
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
@@ -11595,7 +11623,7 @@ func (s *ListStreamingDistributionsOutput) SetStreamingDistributionList(v *Strea
 
 // The request to list tags for a CloudFront resource.
 type ListTagsForResourceInput struct {
-	_ struct{} `type:"structure"`
+	_ struct{} `locationName:"ListTagsForResourceRequest" type:"structure"`
 
 	// An ARN of a CloudFront resource.
 	//
@@ -14184,7 +14212,7 @@ func (s *TagKeys) SetItems(v []*string) *TagKeys {
 
 // The request to add tags to a CloudFront resource.
 type TagResourceInput struct {
-	_ struct{} `type:"structure" payload:"Tags"`
+	_ struct{} `locationName:"TagResourceRequest" type:"structure" payload:"Tags"`
 
 	// An ARN of a CloudFront resource.
 	//
@@ -14382,7 +14410,7 @@ func (s *TrustedSigners) SetQuantity(v int64) *TrustedSigners {
 
 // The request to remove tags from a CloudFront resource.
 type UntagResourceInput struct {
-	_ struct{} `type:"structure" payload:"TagKeys"`
+	_ struct{} `locationName:"UntagResourceRequest" type:"structure" payload:"TagKeys"`
 
 	// An ARN of a CloudFront resource.
 	//
@@ -14449,7 +14477,7 @@ func (s UntagResourceOutput) GoString() string {
 
 // The request to update an origin access identity.
 type UpdateCloudFrontOriginAccessIdentityInput struct {
-	_ struct{} `type:"structure" payload:"CloudFrontOriginAccessIdentityConfig"`
+	_ struct{} `locationName:"UpdateCloudFrontOriginAccessIdentityRequest" type:"structure" payload:"CloudFrontOriginAccessIdentityConfig"`
 
 	// The identity's configuration information.
 	//
@@ -14553,7 +14581,7 @@ func (s *UpdateCloudFrontOriginAccessIdentityOutput) SetETag(v string) *UpdateCl
 
 // The request to update a distribution.
 type UpdateDistributionInput struct {
-	_ struct{} `type:"structure" payload:"DistributionConfig"`
+	_ struct{} `locationName:"UpdateDistributionRequest" type:"structure" payload:"DistributionConfig"`
 
 	// The distribution's configuration information.
 	//
@@ -14656,7 +14684,7 @@ func (s *UpdateDistributionOutput) SetETag(v string) *UpdateDistributionOutput {
 }
 
 type UpdateFieldLevelEncryptionConfigInput struct {
-	_ struct{} `type:"structure" payload:"FieldLevelEncryptionConfig"`
+	_ struct{} `locationName:"UpdateFieldLevelEncryptionConfigRequest" type:"structure" payload:"FieldLevelEncryptionConfig"`
 
 	// Request to update a field-level encryption configuration.
 	//
@@ -14759,7 +14787,7 @@ func (s *UpdateFieldLevelEncryptionConfigOutput) SetFieldLevelEncryption(v *Fiel
 }
 
 type UpdateFieldLevelEncryptionProfileInput struct {
-	_ struct{} `type:"structure" payload:"FieldLevelEncryptionProfileConfig"`
+	_ struct{} `locationName:"UpdateFieldLevelEncryptionProfileRequest" type:"structure" payload:"FieldLevelEncryptionProfileConfig"`
 
 	// Request to update a field-level encryption profile.
 	//
@@ -14861,7 +14889,7 @@ func (s *UpdateFieldLevelEncryptionProfileOutput) SetFieldLevelEncryptionProfile
 }
 
 type UpdatePublicKeyInput struct {
-	_ struct{} `type:"structure" payload:"PublicKeyConfig"`
+	_ struct{} `locationName:"UpdatePublicKeyRequest" type:"structure" payload:"PublicKeyConfig"`
 
 	// ID of the public key to be updated.
 	//
@@ -14964,7 +14992,7 @@ func (s *UpdatePublicKeyOutput) SetPublicKey(v *PublicKey) *UpdatePublicKeyOutpu
 
 // The request to update a streaming distribution.
 type UpdateStreamingDistributionInput struct {
-	_ struct{} `type:"structure" payload:"StreamingDistributionConfig"`
+	_ struct{} `locationName:"UpdateStreamingDistributionRequest" type:"structure" payload:"StreamingDistributionConfig"`
 
 	// The streaming distribution's id.
 	//
@@ -15071,7 +15099,7 @@ func (s *UpdateStreamingDistributionOutput) SetStreamingDistribution(v *Streamin
 //    * Whether you want viewers to use HTTP or HTTPS to request your objects.
 //
 //    * If you want viewers to use HTTPS, whether you're using an alternate
-//    domain name such as example.com or the CloudFront domain name for your
+//    domain name, such as example.com, or the CloudFront domain name for your
 //    distribution, such as d111111abcdef8.cloudfront.net.
 //
 //    * If you're using an alternate domain name, whether AWS Certificate Manager
@@ -15094,13 +15122,13 @@ type ViewerCertificate struct {
 
 	// If you want viewers to use HTTPS to request your objects and you're using
 	// an alternate domain name, you must choose the type of certificate that you
-	// want to use. Specify the following value if ACM provided your certificate:
+	// want to use. If ACM provided your certificate, specify the Amazon Resource
+	// Name (ARN) for the ACM certificate that you want to use for this distribution.
+	// CloudFront only supports ACM certificates in the US East (N. Virginia) Region
+	// (us-east-1).
 	//
-	//    * <ACMCertificateArn>ARN for ACM SSL/TLS certificate<ACMCertificateArn>
-	//    where ARN for ACM SSL/TLS certificate is the ARN for the ACM SSL/TLS certificate
-	//    that you want to use for this distribution.
-	//
-	// If you specify ACMCertificateArn, you must also specify a value for SSLSupportMethod.
+	// If you specify an ACM certificate ARN, you must also specify an SSL support
+	// method (sni-only or vip).
 	ACMCertificateArn *string `type:"string"`
 
 	// This field is no longer used. Use one of the following fields instead:
@@ -15126,48 +15154,44 @@ type ViewerCertificate struct {
 	CertificateSource *string `deprecated:"true" type:"string" enum:"CertificateSource"`
 
 	// If you're using the CloudFront domain name for your distribution, such as
-	// d111111abcdef8.cloudfront.net, specify the following value:
-	//
-	//    * <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>
+	// d111111abcdef8.cloudfront.net, specify this value as true.
 	CloudFrontDefaultCertificate *bool `type:"boolean"`
 
 	// If you want viewers to use HTTPS to request your objects and you're using
 	// an alternate domain name, you must choose the type of certificate that you
-	// want to use. Specify the following value if you purchased your certificate
-	// from a third-party certificate authority:
+	// want to use. If you purchased your certificate from a third-party certificate
+	// authority and uploaded it to the IAM certificate store, specify the certificate
+	// ID that you want to use for this distribution.
 	//
-	//    * <IAMCertificateId>IAM certificate ID<IAMCertificateId> where IAM certificate
-	//    ID is the ID that IAM returned when you added the certificate to the IAM
-	//    certificate store.
-	//
-	// If you specify IAMCertificateId, you must also specify a value for SSLSupportMethod.
+	// If you specify a certificate ID, you must also specify an SSL support method
+	// (sni-only or vip).
 	IAMCertificateId *string `type:"string"`
 
 	// Specify the security policy that you want CloudFront to use for HTTPS connections.
 	// A security policy determines two settings:
 	//
 	//    * The minimum SSL/TLS protocol that CloudFront uses to communicate with
-	//    viewers
+	//    viewers.
 	//
 	//    * The cipher that CloudFront uses to encrypt the content that it returns
-	//    to viewers
+	//    to viewers.
 	//
-	// On the CloudFront console, this setting is called Security policy.
+	// On the CloudFront console, this setting is called Security Policy.
 	//
-	// We recommend that you specify TLSv1.1_2016 unless your users are using browsers
-	// or devices that do not support TLSv1.1 or later.
+	// We recommend that you specify TLSv1.1_2016 unless your viewers are using
+	// browsers or devices that do not support TLSv1.1 or later.
 	//
 	// When both of the following are true, you must specify TLSv1 or later for
 	// the security policy:
 	//
-	//    * You're using a custom certificate: you specified a value for ACMCertificateArn
-	//    or for IAMCertificateId
+	//    * You're using a custom certificate; that is, you specified a value for
+	//    ACMCertificateArn or for IAMCertificateId.
 	//
-	//    * You're using SNI: you specified sni-only for SSLSupportMethod
+	//    * You're using SNI; that is, you specified sni-only for SSLSupportMethod.
 	//
 	// If you specify true for CloudFrontDefaultCertificate, CloudFront automatically
 	// sets the security policy to TLSv1 regardless of the value that you specify
-	// for MinimumProtocolVersion.
+	// here.
 	//
 	// For information about the relationship between the security policy that you
 	// choose and the protocols and ciphers that CloudFront uses to communicate
@@ -15179,14 +15203,14 @@ type ViewerCertificate struct {
 	// If you specify a value for ACMCertificateArn (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-ACMCertificateArn)
 	// or for IAMCertificateId (https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_ViewerCertificate.html#cloudfront-Type-ViewerCertificate-IAMCertificateId),
 	// you must also specify how you want CloudFront to serve HTTPS requests: using
-	// a method that works for browsers and clients released after 2010 or one that
-	// works for all clients.
+	// a method that works for browsers and clients released after 2010, or one
+	// that works for all clients.
 	//
 	//    * sni-only: CloudFront can respond to HTTPS requests from viewers that
 	//    support Server Name Indication (SNI). All modern browsers support SNI,
 	//    but there are a few that don't. For a current list of the browsers that
 	//    support SNI, see the Wikipedia entry Server Name Indication (http://en.wikipedia.org/wiki/Server_Name_Indication).
-	//    To learn about options to explore if you have users with browsers that
+	//    To learn about options to explore if you have viewers with browsers that
 	//    don't include SNI support, see Choosing How CloudFront Serves HTTPS Requests
 	//    (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-https-dedicated-ip-or-sni.html)
 	//    in the Amazon CloudFront Developer Guide.
@@ -15197,7 +15221,8 @@ type ViewerCertificate struct {
 	//    see Custom SSL options for Amazon CloudFront (http://aws.amazon.com/cloudfront/custom-ssl-domains/)
 	//    on the AWS marketing site.
 	//
-	// Don't specify a value for SSLSupportMethod if you specified <CloudFrontDefaultCertificate>true<CloudFrontDefaultCertificate>.
+	// Don't specify a value here if you specified CloudFrontDefaultCertificate
+	// as true.
 	//
 	// For more information, see Choosing How CloudFront Serves HTTPS Requests (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cnames-https-dedicated-ip-or-sni.html)
 	// in the Amazon CloudFront Developer Guide.
