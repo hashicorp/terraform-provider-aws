@@ -40,10 +40,6 @@ func resourceAwsGameliftFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					gamelift.ProtectionPolicyNoProtection,
-					gamelift.ProtectionPolicyFullProtection,
-				}, false),
 			},
 			"fleet_type": {
 				Type:     schema.TypeString,

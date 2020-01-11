@@ -556,13 +556,13 @@ func testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
-  name              = "%s"
+  name              = %[1]q
 
   runtime_configuration {
     server_process {
       concurrent_executions = 1
-      launch_path           = %q
-      parameters            = "%s"
+      launch_path           = %[2]q
+      parameters            = %[3]q
     }
   }
 }
@@ -734,13 +734,13 @@ resource "aws_gamelift_fleet" "test" {
 func testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
 	return fmt.Sprintf(`
 resource "aws_gamelift_build" "test" {
-  name             = "%s"
+  name             = %[1]q
   operating_system = "WINDOWS_2012"
 
   storage_location {
-    bucket   = "%s"
-    key      = "%s"
-    role_arn = "%s"
+    bucket   = %[2]q
+    key      = %[3]q
+    role_arn = %[4]q
   }
 }
 `, buildName, bucketName, key, roleArn)
