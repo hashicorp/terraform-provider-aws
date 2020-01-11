@@ -332,6 +332,10 @@ func resourceAwsGameliftFleetRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("resource_creation_limit_policy", flattenGameliftResourceCreationLimitPolicy(fleet.ResourceCreationLimitPolicy))
 	tags, err := keyvaluetags.GameliftListTags(conn, arn)
 
+	if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, fmt.Sprintf("Resource %s is not in a taggable state", d.Id())) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for Game Lift Fleet (%s): %s", arn, err)
 	}

@@ -594,7 +594,7 @@ func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resou
 			return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
 		}
 
-		return waitForGameliftFleetToBeDeleted(conn, *res.FleetId, 5*time.Minute)
+		return waitForGameliftFleetToBeDeleted(conn, *res.FleetId, 15*time.Minute)
 	}
 }
 
