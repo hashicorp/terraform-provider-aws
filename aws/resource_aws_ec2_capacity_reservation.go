@@ -7,8 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+)
+
+const (
+	// There is no constant in the SDK for this resource type
+	ec2ResourceTypeCapacityReservation = "capacity-reservation"
 )
 
 func resourceAwsEc2CapacityReservation() *schema.Resource {
@@ -106,11 +112,12 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).ec2conn
 
 	opts := &ec2.CreateCapacityReservationInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
-		EndDateType:      aws.String(d.Get("end_date_type").(string)),
-		InstanceCount:    aws.Int64(int64(d.Get("instance_count").(int))),
-		InstancePlatform: aws.String(d.Get("instance_platform").(string)),
-		InstanceType:     aws.String(d.Get("instance_type").(string)),
+		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		EndDateType:       aws.String(d.Get("end_date_type").(string)),
+		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
+		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
+		InstanceType:      aws.String(d.Get("instance_type").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2ResourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
@@ -137,16 +144,6 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 		opts.Tenancy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
-		opts.TagSpecifications = []*ec2.TagSpecification{
-			{
-				// There is no constant in the SDK for this resource type
-				ResourceType: aws.String("capacity-reservation"),
-				Tags:         tagsFromMap(v.(map[string]interface{})),
-			},
-		}
-	}
-
 	log.Printf("[DEBUG] Capacity reservation: %s", opts)
 
 	out, err := conn.CreateCapacityReservation(opts)
@@ -165,13 +162,16 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error describing EC2 Capacity Reservations: %s", err)
+		if isAWSErr(err, "InvalidCapacityReservationId.NotFound", "") {
+			log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error reading EC2 Capacity Reservation %s: %s", d.Id(), err)
 	}
 
-	// If nothing was found, then return no state
-	if len(resp.CapacityReservations) == 0 {
-		log.Printf("[WARN] EC2 Capacity Reservation (%s) not found, removing from state", d.Id())
-		d.SetId("")
+	if resp == nil || len(resp.CapacityReservations) == 0 || resp.CapacityReservations[0] == nil {
+		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): empty response", d.Id())
 	}
 
 	reservation := resp.CapacityReservations[0]
@@ -197,7 +197,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	d.Set("instance_platform", reservation.InstancePlatform)
 	d.Set("instance_type", reservation.InstanceType)
 
-	if err := d.Set("tags", tagsToMap(reservation.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(reservation.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -208,18 +208,6 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 
 func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-
-	d.Partial(true)
-
-	if d.HasChange("tags") {
-		if err := setTags(conn, d); err != nil {
-			return err
-		} else {
-			d.SetPartial("tags")
-		}
-	}
-
-	d.Partial(false)
 
 	opts := &ec2.ModifyCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
@@ -241,6 +229,15 @@ func resourceAwsEc2CapacityReservationUpdate(d *schema.ResourceData, meta interf
 	if err != nil {
 		return fmt.Errorf("Error modifying EC2 Capacity Reservation: %s", err)
 	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
 	return resourceAwsEc2CapacityReservationRead(d, meta)
 }
 

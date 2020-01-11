@@ -8,10 +8,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsKmsKey() *schema.Resource {
@@ -92,7 +93,7 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		req.Policy = aws.String(v.(string))
 	}
 	if v, exists := d.GetOk("tags"); exists {
-		req.Tags = tagsFromMapKMS(v.(map[string]interface{}))
+		req.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().KmsTags()
 	}
 
 	var resp *kms.CreateKeyOutput
@@ -186,16 +187,14 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	krs, _ := out.(*kms.GetKeyRotationStatusOutput)
 	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 
-	tOut, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.ListResourceTags(&kms.ListResourceTagsInput{
-			KeyId: metadata.KeyId,
-		})
-	})
+	tags, err := keyvaluetags.KmsListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("Failed to get KMS key tags (key: %s): %s", d.Get("key_id").(string), err)
+		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
 	}
-	tagList := tOut.(*kms.ListResourceTagsOutput)
-	d.Set("tags", tagsToMapKMS(tagList.Tags))
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -236,8 +235,12 @@ func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if err := setTagsKMS(conn, d, d.Id()); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.KmsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating KMS Key (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsKmsKeyRead(d, meta)

@@ -1,7 +1,7 @@
 ---
+subcategory: "Athena"
 layout: "aws"
 page_title: "AWS: aws_athena_named_query"
-sidebar_current: "docs-aws-resource-athena-named-query"
 description: |-
   Provides an Athena Named Query resource.
 ---
@@ -37,7 +37,7 @@ resource "aws_athena_workgroup" "test" {
 
 resource "aws_athena_database" "hoge" {
   name   = "users"
-  bucket = "${aws_s3_bucket.hoge.bucket}"
+  bucket = "${aws_s3_bucket.hoge.id}"
 }
 
 resource "aws_athena_named_query" "foo" {

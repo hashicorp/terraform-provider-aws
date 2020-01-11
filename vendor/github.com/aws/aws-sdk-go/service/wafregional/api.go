@@ -7015,7 +7015,7 @@ func (c *WAFRegional) PutLoggingConfigurationRequest(input *waf.PutLoggingConfig
 // You can access information about all traffic that AWS WAF inspects using
 // the following steps:
 //
-// Create an Amazon Kinesis Data Firehose .
+// Create an Amazon Kinesis Data Firehose.
 //
 // Create the data firehose with a PUT source and in the region that you are
 // operating. However, if you are capturing logs for Amazon CloudFront, always

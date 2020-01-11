@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDataSyncLocationS3() *schema.Resource {
@@ -87,7 +89,35 @@ func resourceAwsDataSyncLocationS3Create(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
-	output, err := conn.CreateLocationS3(input)
+
+	var output *datasync.CreateLocationS3Output
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.CreateLocationS3(input)
+
+		// Retry for IAM eventual consistency on error:
+		// InvalidRequestException: Unable to assume role. Reason: Access denied when calling sts:AssumeRole
+		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "Unable to assume role") {
+			return resource.RetryableError(err)
+		}
+
+		// Retry for IAM eventual consistency on error:
+		// InvalidRequestException: DataSync location access test failed: could not perform s3:ListObjectsV2 on bucket
+		if isAWSErr(err, datasync.ErrCodeInvalidRequestException, "access test failed") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateLocationS3(input)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error creating DataSync Location S3: %s", err)
 	}

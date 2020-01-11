@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_dhcp_options_association"
-sidebar_current: "docs-aws-resource-vpc-dhcp-options-association"
 description: |-
   Provides a VPC DHCP Options Association resource.
 ---

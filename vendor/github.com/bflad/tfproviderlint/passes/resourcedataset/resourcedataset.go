@@ -2,10 +2,9 @@ package resourcedataset
 
 import (
 	"go/ast"
-	"go/types"
 	"reflect"
-	"strings"
 
+	"github.com/bflad/tfproviderlint/helper/terraformtype"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
@@ -13,7 +12,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "resourcedataset",
-	Doc:  "find github.com/hashicorp/terraform/helper/schema.ResourceData.Set() calls for later passes",
+	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/helper/schema.ResourceData.Set() calls for later passes",
 	Requires: []*analysis.Analyzer{
 		inspect.Analyzer,
 	},
@@ -66,48 +65,13 @@ func isResourceDataSet(pass *analysis.Pass, ce *ast.CallExpr) bool {
 				default:
 					return false
 				case *ast.StarExpr:
-					switch t := pass.TypesInfo.TypeOf(t.X).(type) {
-					default:
-						return false
-					case *types.Named:
-						if !isSchemaResourceData(t) {
-							return false
-						}
-					}
+					return terraformtype.IsHelperSchemaTypeResourceData(pass.TypesInfo.TypeOf(t.X))
 				case *ast.SelectorExpr:
-					switch t := pass.TypesInfo.TypeOf(t).(type) {
-					default:
-						return false
-					case *types.Named:
-						if !isSchemaResourceData(t) {
-							return false
-						}
-					}
+					return terraformtype.IsHelperSchemaTypeResourceData(pass.TypesInfo.TypeOf(t))
 				}
 			case *ast.ValueSpec:
-				switch t := pass.TypesInfo.TypeOf(decl.Type).(type) {
-				default:
-					return false
-				case *types.Named:
-					if !isSchemaResourceData(t) {
-						return false
-					}
-				}
+				return terraformtype.IsHelperSchemaTypeResourceData(pass.TypesInfo.TypeOf(decl.Type))
 			}
 		}
 	}
-	return true
-}
-
-func isSchemaResourceData(t *types.Named) bool {
-	if t.Obj().Name() != "ResourceData" {
-		return false
-	}
-
-	// HasSuffix here due to vendoring
-	if !strings.HasSuffix(t.Obj().Pkg().Path(), "github.com/hashicorp/terraform/helper/schema") {
-		return false
-	}
-
-	return true
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "Global Accelerator"
 layout: "aws"
 page_title: "AWS: aws_globalaccelerator_endpoint_group"
-sidebar_current: "docs-aws-resource-globalaccelerator-endpoint-group"
 description: |-
   Provides a Global Accelerator endpoint group.
 ---
@@ -52,5 +52,5 @@ In addition to all arguments above, the following attributes are exported:
 Global Accelerator endpoint groups can be imported using the `id`, e.g.
 
 ```
-$ terraform import globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
+$ terraform import aws_globalaccelerator_endpoint_group.example arn:aws:globalaccelerator::111111111111:accelerator/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/listener/xxxxxxx/endpoint-group/xxxxxxxx
 ```

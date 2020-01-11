@@ -10,11 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -476,9 +477,11 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateElasticsearchDomain(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating ElasticSearch domain: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
@@ -487,21 +490,17 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	// This should mean that if the creation fails (eg because your token expired
 	// whilst the operation is being performed), we still get the required tags on
 	// the resources.
-	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
-
-	if err := setTagsElasticsearchService(conn, d, aws.StringValue(out.DomainStatus.ARN)); err != nil {
-		return err
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+		}
 	}
-
-	d.Set("tags", tagsToMapElasticsearchService(tags))
-	d.SetPartial("tags")
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be created", d.Id())
 	err = waitForElasticSearchDomainCreation(conn, d.Get("domain_name").(string), d.Id())
 	if err != nil {
 		return err
 	}
-	d.Partial(false)
 
 	log.Printf("[DEBUG] ElasticSearch domain %q created", d.Id())
 
@@ -509,10 +508,13 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 }
 
 func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService, domainName, arn string) error {
-	return resource.Retry(60*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(domainName),
-		})
+	input := &elasticsearch.DescribeElasticsearchDomainInput{
+		DomainName: aws.String(domainName),
+	}
+	var out *elasticsearch.DescribeElasticsearchDomainOutput
+	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+		var err error
+		out, err = conn.DescribeElasticsearchDomain(input)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -524,6 +526,19 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for the domain to be created", arn))
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeElasticsearchDomain(input)
+		if err != nil {
+			return fmt.Errorf("Error describing ElasticSearch domain: %s", err)
+		}
+		if !*out.DomainStatus.Processing && (out.DomainStatus.Endpoint != nil || out.DomainStatus.Endpoints != nil) {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for ElasticSearch domain to be created: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
@@ -626,19 +641,15 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("arn", ds.ARN)
 
-	listOut, err := conn.ListTags(&elasticsearch.ListTagsInput{
-		ARN: ds.ARN,
-	})
+	tags, err := keyvaluetags.ElasticsearchserviceListTags(conn, d.Id())
 
 	if err != nil {
-		return err
-	}
-	var est []*elasticsearch.Tag
-	if len(listOut.TagList) > 0 {
-		est = listOut.TagList
+		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("tags", tagsToMapElasticsearchService(est))
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -646,13 +657,13 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
 
-	d.Partial(true)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err := setTagsElasticsearchService(conn, d, d.Id()); err != nil {
-		return err
+		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+		}
 	}
-
-	d.SetPartial("tags")
 
 	input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -727,10 +738,12 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		return err
 	}
 
+	descInput := &elasticsearch.DescribeElasticsearchDomainInput{
+		DomainName: aws.String(d.Get("domain_name").(string)),
+	}
+	var out *elasticsearch.DescribeElasticsearchDomainOutput
 	err = resource.Retry(60*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
-			DomainName: aws.String(d.Get("domain_name").(string)),
-		})
+		out, err = conn.DescribeElasticsearchDomain(descInput)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -742,8 +755,17 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		return resource.RetryableError(
 			fmt.Errorf("%q: Timeout while waiting for changes to be processed", d.Id()))
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeElasticsearchDomain(descInput)
+		if err != nil {
+			return fmt.Errorf("Error describing ElasticSearch domain: %s", err)
+		}
+		if !*out.DomainStatus.Processing {
+			return nil
+		}
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error waiting for ElasticSearch domain changes to be processed: %s", err)
 	}
 
 	if d.HasChange("elasticsearch_version") {
@@ -780,8 +802,6 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	d.Partial(false)
-
 	return resourceAwsElasticSearchDomainRead(d, meta)
 }
 
@@ -810,8 +830,10 @@ func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elastic
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(domainName),
 	}
+	var out *elasticsearch.DescribeElasticsearchDomainOutput
 	err := resource.Retry(90*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeElasticsearchDomain(input)
+		var err error
+		out, err = conn.DescribeElasticsearchDomain(input)
 
 		if err != nil {
 			if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
@@ -826,8 +848,22 @@ func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elastic
 
 		return resource.RetryableError(fmt.Errorf("timeout while waiting for the domain %q to be deleted", domainName))
 	})
-
-	return err
+	if isResourceTimeoutError(err) {
+		out, err = conn.DescribeElasticsearchDomain(input)
+		if err != nil {
+			if isAWSErr(err, elasticsearch.ErrCodeResourceNotFoundException, "") {
+				return nil
+			}
+			return fmt.Errorf("Error describing ElasticSearch domain: %s", err)
+		}
+		if out.DomainStatus != nil && !aws.BoolValue(out.DomainStatus.Processing) {
+			return nil
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for ElasticSearch domain to be deleted: %s", err)
+	}
+	return nil
 }
 
 func suppressEquivalentKmsKeyIds(k, old, new string, d *schema.ResourceData) bool {

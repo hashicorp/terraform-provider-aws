@@ -1,7 +1,7 @@
 ---
+subcategory: "Transfer"
 layout: "aws"
 page_title: "AWS: aws_transfer_user"
-sidebar_current: "docs-aws-resource-transfer-user"
 description: |-
   Provides a AWS Transfer User resource.
 ---

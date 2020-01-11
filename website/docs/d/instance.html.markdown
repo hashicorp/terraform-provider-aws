@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_instance"
-sidebar_current: "docs-aws-datasource-instance"
 description: |-
   Get information on an Amazon EC2 Instance.
 ---
@@ -67,6 +67,7 @@ interpolation.
   * `device_name` - The physical name of the device.
   * `encrypted` - If the EBS volume is encrypted.
   * `iops` - `0` If the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
+  * `kms_key_arn` - Amazon Resource Name (ARN) of KMS Key, if EBS volume is encrypted.
   * `snapshot_id` - The ID of the snapshot.
   * `volume_size` - The size of the volume, in GiB.
   * `volume_type` - The volume type.
@@ -96,7 +97,9 @@ interpolation.
 * `public_ip` - The public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip`, as this field will change after the EIP is attached.
 * `root_block_device` - The root block device mappings of the Instance
   * `delete_on_termination` - If the root block device will be deleted on termination.
+  * `encrypted` - If the EBS volume is encrypted.
   * `iops` - `0` If the volume is not a provisioned IOPS image, otherwise the supported IOPS count.
+  * `kms_key_arn` - Amazon Resource Name (ARN) of KMS Key, if EBS volume is encrypted.
   * `volume_size` - The size of the volume, in GiB.
   * `volume_type` - The type of the volume.
 * `security_groups` - The associated security groups.

@@ -2070,6 +2070,12 @@ type BrokerInstanceOption struct {
 	// The type of broker instance.
 	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
 
+	// The broker's storage type.
+	StorageType *string `locationName:"storageType" type:"string" enum:"BrokerStorageType"`
+
+	// The list of supported deployment modes.
+	SupportedDeploymentModes []*string `locationName:"supportedDeploymentModes" type:"list"`
+
 	// The list of supported engine versions.
 	SupportedEngineVersions []*string `locationName:"supportedEngineVersions" type:"list"`
 }
@@ -2099,6 +2105,18 @@ func (s *BrokerInstanceOption) SetEngineType(v string) *BrokerInstanceOption {
 // SetHostInstanceType sets the HostInstanceType field's value.
 func (s *BrokerInstanceOption) SetHostInstanceType(v string) *BrokerInstanceOption {
 	s.HostInstanceType = &v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *BrokerInstanceOption) SetStorageType(v string) *BrokerInstanceOption {
+	s.StorageType = &v
+	return s
+}
+
+// SetSupportedDeploymentModes sets the SupportedDeploymentModes field's value.
+func (s *BrokerInstanceOption) SetSupportedDeploymentModes(v []*string) *BrokerInstanceOption {
+	s.SupportedDeploymentModes = v
 	return s
 }
 
@@ -2442,6 +2460,9 @@ type CreateBrokerRequest struct {
 
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 
+	// The storage type of the broker.
+	StorageType *string `locationName:"storageType" type:"string" enum:"BrokerStorageType"`
+
 	SubnetIds []*string `locationName:"subnetIds" type:"list"`
 
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -2549,6 +2570,12 @@ func (s *CreateBrokerRequest) SetPubliclyAccessible(v bool) *CreateBrokerRequest
 // SetSecurityGroups sets the SecurityGroups field's value.
 func (s *CreateBrokerRequest) SetSecurityGroups(v []*string) *CreateBrokerRequest {
 	s.SecurityGroups = v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *CreateBrokerRequest) SetStorageType(v string) *CreateBrokerRequest {
+	s.StorageType = &v
 	return s
 }
 
@@ -3187,6 +3214,8 @@ type DescribeBrokerInstanceOptionsInput struct {
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	StorageType *string `location:"querystring" locationName:"storageType" type:"string"`
 }
 
 // String returns the string representation
@@ -3233,6 +3262,12 @@ func (s *DescribeBrokerInstanceOptionsInput) SetMaxResults(v int64) *DescribeBro
 // SetNextToken sets the NextToken field's value.
 func (s *DescribeBrokerInstanceOptionsInput) SetNextToken(v string) *DescribeBrokerInstanceOptionsInput {
 	s.NextToken = &v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *DescribeBrokerInstanceOptionsInput) SetStorageType(v string) *DescribeBrokerInstanceOptionsInput {
+	s.StorageType = &v
 	return s
 }
 
@@ -3318,9 +3353,16 @@ type DescribeBrokerResponse struct {
 
 	PendingEngineVersion *string `locationName:"pendingEngineVersion" type:"string"`
 
+	PendingHostInstanceType *string `locationName:"pendingHostInstanceType" type:"string"`
+
+	PendingSecurityGroups []*string `locationName:"pendingSecurityGroups" type:"list"`
+
 	PubliclyAccessible *bool `locationName:"publiclyAccessible" type:"boolean"`
 
 	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
+
+	// The storage type of the broker.
+	StorageType *string `locationName:"storageType" type:"string" enum:"BrokerStorageType"`
 
 	SubnetIds []*string `locationName:"subnetIds" type:"list"`
 
@@ -3435,6 +3477,18 @@ func (s *DescribeBrokerResponse) SetPendingEngineVersion(v string) *DescribeBrok
 	return s
 }
 
+// SetPendingHostInstanceType sets the PendingHostInstanceType field's value.
+func (s *DescribeBrokerResponse) SetPendingHostInstanceType(v string) *DescribeBrokerResponse {
+	s.PendingHostInstanceType = &v
+	return s
+}
+
+// SetPendingSecurityGroups sets the PendingSecurityGroups field's value.
+func (s *DescribeBrokerResponse) SetPendingSecurityGroups(v []*string) *DescribeBrokerResponse {
+	s.PendingSecurityGroups = v
+	return s
+}
+
 // SetPubliclyAccessible sets the PubliclyAccessible field's value.
 func (s *DescribeBrokerResponse) SetPubliclyAccessible(v bool) *DescribeBrokerResponse {
 	s.PubliclyAccessible = &v
@@ -3444,6 +3498,12 @@ func (s *DescribeBrokerResponse) SetPubliclyAccessible(v bool) *DescribeBrokerRe
 // SetSecurityGroups sets the SecurityGroups field's value.
 func (s *DescribeBrokerResponse) SetSecurityGroups(v []*string) *DescribeBrokerResponse {
 	s.SecurityGroups = v
+	return s
+}
+
+// SetStorageType sets the StorageType field's value.
+func (s *DescribeBrokerResponse) SetStorageType(v string) *DescribeBrokerResponse {
+	s.StorageType = &v
 	return s
 }
 
@@ -4539,8 +4599,12 @@ type UpdateBrokerRequest struct {
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4593,9 +4657,21 @@ func (s *UpdateBrokerRequest) SetEngineVersion(v string) *UpdateBrokerRequest {
 	return s
 }
 
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerRequest) SetHostInstanceType(v string) *UpdateBrokerRequest {
+	s.HostInstanceType = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerRequest) SetLogs(v *Logs) *UpdateBrokerRequest {
 	s.Logs = v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerRequest) SetSecurityGroups(v []*string) *UpdateBrokerRequest {
+	s.SecurityGroups = v
 	return s
 }
 
@@ -4611,8 +4687,12 @@ type UpdateBrokerResponse struct {
 
 	EngineVersion *string `locationName:"engineVersion" type:"string"`
 
+	HostInstanceType *string `locationName:"hostInstanceType" type:"string"`
+
 	// The list of information about logs to be enabled for the specified broker.
 	Logs *Logs `locationName:"logs" type:"structure"`
+
+	SecurityGroups []*string `locationName:"securityGroups" type:"list"`
 }
 
 // String returns the string representation
@@ -4649,9 +4729,21 @@ func (s *UpdateBrokerResponse) SetEngineVersion(v string) *UpdateBrokerResponse 
 	return s
 }
 
+// SetHostInstanceType sets the HostInstanceType field's value.
+func (s *UpdateBrokerResponse) SetHostInstanceType(v string) *UpdateBrokerResponse {
+	s.HostInstanceType = &v
+	return s
+}
+
 // SetLogs sets the Logs field's value.
 func (s *UpdateBrokerResponse) SetLogs(v *Logs) *UpdateBrokerResponse {
 	s.Logs = v
+	return s
+}
+
+// SetSecurityGroups sets the SecurityGroups field's value.
+func (s *UpdateBrokerResponse) SetSecurityGroups(v []*string) *UpdateBrokerResponse {
+	s.SecurityGroups = v
 	return s
 }
 
@@ -5062,6 +5154,15 @@ const (
 
 	// BrokerStateRebootInProgress is a BrokerState enum value
 	BrokerStateRebootInProgress = "REBOOT_IN_PROGRESS"
+)
+
+// The storage type of the broker.
+const (
+	// BrokerStorageTypeEbs is a BrokerStorageType enum value
+	BrokerStorageTypeEbs = "EBS"
+
+	// BrokerStorageTypeEfs is a BrokerStorageType enum value
+	BrokerStorageTypeEfs = "EFS"
 )
 
 // The type of change pending for the ActiveMQ user.

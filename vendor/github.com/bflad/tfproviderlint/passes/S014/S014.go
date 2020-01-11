@@ -37,50 +37,38 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	schemamaps := pass.ResultOf[schemamap.Analyzer].([]*ast.CompositeLit)
 
 	for _, smap := range schemamaps {
-		for _, schema := range schemamap.GetSchemaAttributes(smap) {
-			if ignorer.ShouldIgnore(analyzerName, schema) {
+		for _, schemaCompositeLit := range schemamap.GetSchemaAttributes(smap) {
+			schema := terraformtype.NewHelperSchemaSchemaInfo(schemaCompositeLit, pass.TypesInfo)
+
+			if ignorer.ShouldIgnore(analyzerName, schema.AstCompositeLit) {
 				continue
 			}
 
-			for _, elt := range schema.Elts {
-				// filter to Elem
-				switch tElt := elt.(type) {
+			elemKvExpr := schema.Fields[terraformtype.SchemaFieldElem]
+
+			if elemKvExpr == nil {
+				continue
+			}
+
+			// search within Elem
+			switch elemValue := elemKvExpr.Value.(type) {
+			default:
+				continue
+			case *ast.UnaryExpr:
+				if elemValue.Op != token.AND || !terraformtype.IsHelperSchemaTypeSchema(pass.TypesInfo.TypeOf(elemValue.X)) {
+					continue
+				}
+
+				switch tElemSchema := elemValue.X.(type) {
 				default:
 					continue
-				case *ast.KeyValueExpr:
-					name := tElt.Key.(*ast.Ident).Name
+				case *ast.CompositeLit:
+					elemSchema := terraformtype.NewHelperSchemaSchemaInfo(tElemSchema, pass.TypesInfo)
 
-					if name != "Elem" {
-						continue
-					}
-
-					// search within Elem
-					switch elemValue := tElt.Value.(type) {
-					default:
-						continue
-					case *ast.UnaryExpr:
-						if elemValue.Op != token.AND || !terraformtype.IsTypeHelperSchema(pass.TypesInfo.TypeOf(elemValue.X)) {
-							continue
-						}
-
-						switch tElemSchema := elemValue.X.(type) {
-						default:
-							continue
-						case *ast.CompositeLit:
-							for _, elemSchemaElt := range tElemSchema.Elts {
-								switch v := elemSchemaElt.(type) {
-								default:
-									continue
-								case *ast.KeyValueExpr:
-									name := v.Key.(*ast.Ident).Name
-
-									switch name {
-									case "Computed", "Optional", "Required":
-										pass.Reportf(elemSchemaElt.Pos(), "%s: schema within Elem should not configure Computed, Optional, or Required", analyzerName)
-										break
-									}
-								}
-							}
+					for _, field := range []string{terraformtype.SchemaFieldComputed, terraformtype.SchemaFieldOptional, terraformtype.SchemaFieldRequired} {
+						if kvExpr := elemSchema.Fields[field]; kvExpr != nil {
+							pass.Reportf(kvExpr.Pos(), "%s: schema within Elem should not configure Computed, Optional, or Required", analyzerName)
+							break
 						}
 					}
 				}

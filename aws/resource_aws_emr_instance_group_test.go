@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
@@ -91,6 +91,46 @@ func TestAccAWSEMRInstanceGroup_BidPrice(t *testing.T) {
 	})
 }
 
+func TestAccAWSEMRInstanceGroup_ConfigurationsJson(t *testing.T) {
+	var ig emr.InstanceGroup
+	rInt := acctest.RandInt()
+
+	resourceName := "aws_emr_instance_group.task"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(rInt, "partitionName1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(rInt, "partitionName2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEMRInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEMRInstanceGroup_AutoScalingPolicy(t *testing.T) {
 	var ig emr.InstanceGroup
 	rInt := acctest.RandInt()
@@ -156,6 +196,32 @@ func TestAccAWSEMRInstanceGroup_InstanceCount(t *testing.T) {
 			{
 				Config: testAccAWSEmrInstanceGroupConfig_zeroCount(rInt),
 				Check:  testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+			},
+		},
+	})
+}
+
+// Regression test for https://github.com/terraform-providers/terraform-provider-aws/issues/1355
+func TestAccAWSEMRInstanceGroup_EmrClusterDisappears(t *testing.T) {
+	var cluster emr.Cluster
+	var ig emr.InstanceGroup
+	rInt := acctest.RandInt()
+	emrClusterResourceName := "aws_emr_cluster.tf-test-cluster"
+	resourceName := "aws_emr_instance_group.task"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrInstanceGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrInstanceGroupConfig_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(emrClusterResourceName, &cluster),
+					testAccCheckAWSEmrInstanceGroupExists(resourceName, &ig),
+					testAccCheckAWSEmrClusterDisappears(&cluster),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -333,7 +399,7 @@ resource "aws_main_route_table_association" "a" {
 ## EMR Cluster Configuration
 resource "aws_emr_cluster" "tf-test-cluster" {
   name          = "tf-test-emr-%[1]d"
-  release_label = "emr-4.6.0"
+  release_label = "emr-5.26.0"
   applications  = ["Spark"]
 
   ec2_attributes {
@@ -574,6 +640,27 @@ func testAccAWSEmrInstanceGroupConfig_BidPrice(r int) string {
     instance_type  = "c4.large"
   }
 `, r)
+}
+
+func testAccAWSEmrInstanceGroupConfig_ConfigurationsJson(r int, name string) string {
+	return fmt.Sprintf(testAccAWSEmrInstanceGroupBase+`
+	resource "aws_emr_instance_group" "task" {
+    cluster_id     = "${aws_emr_cluster.tf-test-cluster.id}"
+    instance_count = 1
+    instance_type  = "c4.large"
+    configurations_json =  <<EOF
+    [
+      {
+        "Classification": "yarn-site",
+        "Properties": {
+          "yarn.nodemanager.node-labels.provider": "config",
+          "yarn.nodemanager.node-labels.provider.configured-node-partition": "%s"
+        }
+      }
+    ]
+EOF
+  }
+`, r, name)
 }
 
 func testAccAWSEmrInstanceGroupConfig_AutoScalingPolicy(r, min, max int) string {

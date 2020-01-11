@@ -1,7 +1,7 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_account"
-sidebar_current: "docs-aws-resource-organizations-account"
 description: |-
   Provides a resource to create a member account in the current AWS Organization.
 ---

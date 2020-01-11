@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_launch_configuration"
-sidebar_current: "docs-aws-resource-launch-configuration"
 description: |-
   Provides a resource to create a new launch configuration, used for autoscaling groups.
 ---
@@ -180,6 +180,7 @@ The `root_block_device` mapping supports the following:
   This must be set with a `volume_type` of `"io1"`.
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
+* `encrypted` - (Optional) Whether the volume should be encrypted or not. (Default: `false`).
 
 Modifying any of the `root_block_device` settings requires resource
 replacement.
@@ -223,6 +224,7 @@ configuration, resource recreation can be manually triggered by using the
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the launch configuration.
+* `arn` - The Amazon Resource Name of the launch configuration.
 * `name` - The name of the launch configuration.
 
 [1]: /docs/providers/aws/r/autoscaling_group.html

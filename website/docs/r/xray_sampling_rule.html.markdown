@@ -1,7 +1,7 @@
 ---
+subcategory: "XRay"
 layout: "aws"
 page_title: "AWS: aws_xray_sampling_rule"
-sidebar_current: "docs-aws-resource-xray-sampling-rule"
 description: |-
     Creates and manages an AWS XRay Sampling Rule.
 ---

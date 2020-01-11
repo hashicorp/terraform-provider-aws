@@ -1,7 +1,7 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_policy"
-sidebar_current: "docs-aws-resource-organizations-policy"
 description: |-
   Provides a resource to manage an AWS Organizations policy.
 ---

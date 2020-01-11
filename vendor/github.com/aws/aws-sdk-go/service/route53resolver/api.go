@@ -1297,10 +1297,12 @@ func (c *Route53Resolver) ListResolverEndpointIpAddressesPagesWithContext(ctx aw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListResolverEndpointIpAddressesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListResolverEndpointIpAddressesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1445,10 +1447,12 @@ func (c *Route53Resolver) ListResolverEndpointsPagesWithContext(ctx aws.Context,
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListResolverEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListResolverEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1593,10 +1597,12 @@ func (c *Route53Resolver) ListResolverRuleAssociationsPagesWithContext(ctx aws.C
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListResolverRuleAssociationsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListResolverRuleAssociationsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1740,10 +1746,12 @@ func (c *Route53Resolver) ListResolverRulesPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListResolverRulesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListResolverRulesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

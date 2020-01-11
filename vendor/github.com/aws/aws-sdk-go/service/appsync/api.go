@@ -12,6 +12,100 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
+const opCreateApiCache = "CreateApiCache"
+
+// CreateApiCacheRequest generates a "aws/request.Request" representing the
+// client's request for the CreateApiCache operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateApiCache for more information on using the CreateApiCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateApiCacheRequest method.
+//    req, resp := client.CreateApiCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateApiCache
+func (c *AppSync) CreateApiCacheRequest(input *CreateApiCacheInput) (req *request.Request, output *CreateApiCacheOutput) {
+	op := &request.Operation{
+		Name:       opCreateApiCache,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/apis/{apiId}/ApiCaches",
+	}
+
+	if input == nil {
+		input = &CreateApiCacheInput{}
+	}
+
+	output = &CreateApiCacheOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateApiCache API operation for AWS AppSync.
+//
+// Creates a cache for the GraphQL API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS AppSync's
+// API operation CreateApiCache for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and then try again.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   Another modification is in progress at this time and it must complete before
+//   you can make your change.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The resource specified in the request was not found. Check the resource,
+//   and then try again.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An internal AWS AppSync error occurred. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/CreateApiCache
+func (c *AppSync) CreateApiCache(input *CreateApiCacheInput) (*CreateApiCacheOutput, error) {
+	req, out := c.CreateApiCacheRequest(input)
+	return out, req.Send()
+}
+
+// CreateApiCacheWithContext is the same as CreateApiCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateApiCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppSync) CreateApiCacheWithContext(ctx aws.Context, input *CreateApiCacheInput, opts ...request.Option) (*CreateApiCacheOutput, error) {
+	req, out := c.CreateApiCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCreateApiKey = "CreateApiKey"
 
 // CreateApiKeyRequest generates a "aws/request.Request" representing the
@@ -586,6 +680,101 @@ func (c *AppSync) CreateTypeWithContext(ctx aws.Context, input *CreateTypeInput,
 	return out, req.Send()
 }
 
+const opDeleteApiCache = "DeleteApiCache"
+
+// DeleteApiCacheRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteApiCache operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteApiCache for more information on using the DeleteApiCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteApiCacheRequest method.
+//    req, resp := client.DeleteApiCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteApiCache
+func (c *AppSync) DeleteApiCacheRequest(input *DeleteApiCacheInput) (req *request.Request, output *DeleteApiCacheOutput) {
+	op := &request.Operation{
+		Name:       opDeleteApiCache,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/apis/{apiId}/ApiCaches",
+	}
+
+	if input == nil {
+		input = &DeleteApiCacheInput{}
+	}
+
+	output = &DeleteApiCacheOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteApiCache API operation for AWS AppSync.
+//
+// Deletes an ApiCache object.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS AppSync's
+// API operation DeleteApiCache for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and then try again.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   Another modification is in progress at this time and it must complete before
+//   you can make your change.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The resource specified in the request was not found. Check the resource,
+//   and then try again.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An internal AWS AppSync error occurred. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/DeleteApiCache
+func (c *AppSync) DeleteApiCache(input *DeleteApiCacheInput) (*DeleteApiCacheOutput, error) {
+	req, out := c.DeleteApiCacheRequest(input)
+	return out, req.Send()
+}
+
+// DeleteApiCacheWithContext is the same as DeleteApiCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteApiCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppSync) DeleteApiCacheWithContext(ctx aws.Context, input *DeleteApiCacheInput, opts ...request.Option) (*DeleteApiCacheOutput, error) {
+	req, out := c.DeleteApiCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteApiKey = "DeleteApiKey"
 
 // DeleteApiKeyRequest generates a "aws/request.Request" representing the
@@ -1142,6 +1331,195 @@ func (c *AppSync) DeleteType(input *DeleteTypeInput) (*DeleteTypeOutput, error) 
 // for more information on using Contexts.
 func (c *AppSync) DeleteTypeWithContext(ctx aws.Context, input *DeleteTypeInput, opts ...request.Option) (*DeleteTypeOutput, error) {
 	req, out := c.DeleteTypeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opFlushApiCache = "FlushApiCache"
+
+// FlushApiCacheRequest generates a "aws/request.Request" representing the
+// client's request for the FlushApiCache operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See FlushApiCache for more information on using the FlushApiCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the FlushApiCacheRequest method.
+//    req, resp := client.FlushApiCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/FlushApiCache
+func (c *AppSync) FlushApiCacheRequest(input *FlushApiCacheInput) (req *request.Request, output *FlushApiCacheOutput) {
+	op := &request.Operation{
+		Name:       opFlushApiCache,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/v1/apis/{apiId}/FlushCache",
+	}
+
+	if input == nil {
+		input = &FlushApiCacheInput{}
+	}
+
+	output = &FlushApiCacheOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// FlushApiCache API operation for AWS AppSync.
+//
+// Flushes an ApiCache object.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS AppSync's
+// API operation FlushApiCache for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and then try again.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   Another modification is in progress at this time and it must complete before
+//   you can make your change.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The resource specified in the request was not found. Check the resource,
+//   and then try again.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An internal AWS AppSync error occurred. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/FlushApiCache
+func (c *AppSync) FlushApiCache(input *FlushApiCacheInput) (*FlushApiCacheOutput, error) {
+	req, out := c.FlushApiCacheRequest(input)
+	return out, req.Send()
+}
+
+// FlushApiCacheWithContext is the same as FlushApiCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See FlushApiCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppSync) FlushApiCacheWithContext(ctx aws.Context, input *FlushApiCacheInput, opts ...request.Option) (*FlushApiCacheOutput, error) {
+	req, out := c.FlushApiCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetApiCache = "GetApiCache"
+
+// GetApiCacheRequest generates a "aws/request.Request" representing the
+// client's request for the GetApiCache operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetApiCache for more information on using the GetApiCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetApiCacheRequest method.
+//    req, resp := client.GetApiCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetApiCache
+func (c *AppSync) GetApiCacheRequest(input *GetApiCacheInput) (req *request.Request, output *GetApiCacheOutput) {
+	op := &request.Operation{
+		Name:       opGetApiCache,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v1/apis/{apiId}/ApiCaches",
+	}
+
+	if input == nil {
+		input = &GetApiCacheInput{}
+	}
+
+	output = &GetApiCacheOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetApiCache API operation for AWS AppSync.
+//
+// Retrieves an ApiCache object.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS AppSync's
+// API operation GetApiCache for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and then try again.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   Another modification is in progress at this time and it must complete before
+//   you can make your change.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The resource specified in the request was not found. Check the resource,
+//   and then try again.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An internal AWS AppSync error occurred. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/GetApiCache
+func (c *AppSync) GetApiCache(input *GetApiCacheInput) (*GetApiCacheOutput, error) {
+	req, out := c.GetApiCacheRequest(input)
+	return out, req.Send()
+}
+
+// GetApiCacheWithContext is the same as GetApiCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetApiCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppSync) GetApiCacheWithContext(ctx aws.Context, input *GetApiCacheInput, opts ...request.Option) (*GetApiCacheOutput, error) {
+	req, out := c.GetApiCacheRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2802,6 +3180,100 @@ func (c *AppSync) UntagResourceWithContext(ctx aws.Context, input *UntagResource
 	return out, req.Send()
 }
 
+const opUpdateApiCache = "UpdateApiCache"
+
+// UpdateApiCacheRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateApiCache operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateApiCache for more information on using the UpdateApiCache
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateApiCacheRequest method.
+//    req, resp := client.UpdateApiCacheRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateApiCache
+func (c *AppSync) UpdateApiCacheRequest(input *UpdateApiCacheInput) (req *request.Request, output *UpdateApiCacheOutput) {
+	op := &request.Operation{
+		Name:       opUpdateApiCache,
+		HTTPMethod: "POST",
+		HTTPPath:   "/v1/apis/{apiId}/ApiCaches/update",
+	}
+
+	if input == nil {
+		input = &UpdateApiCacheInput{}
+	}
+
+	output = &UpdateApiCacheOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateApiCache API operation for AWS AppSync.
+//
+// Updates the cache for the GraphQL API.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS AppSync's
+// API operation UpdateApiCache for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeBadRequestException "BadRequestException"
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and then try again.
+//
+//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   Another modification is in progress at this time and it must complete before
+//   you can make your change.
+//
+//   * ErrCodeNotFoundException "NotFoundException"
+//   The resource specified in the request was not found. Check the resource,
+//   and then try again.
+//
+//   * ErrCodeUnauthorizedException "UnauthorizedException"
+//   You are not authorized to perform this operation.
+//
+//   * ErrCodeInternalFailureException "InternalFailureException"
+//   An internal AWS AppSync error occurred. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/appsync-2017-07-25/UpdateApiCache
+func (c *AppSync) UpdateApiCache(input *UpdateApiCacheInput) (*UpdateApiCacheOutput, error) {
+	req, out := c.UpdateApiCacheRequest(input)
+	return out, req.Send()
+}
+
+// UpdateApiCacheWithContext is the same as UpdateApiCache with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateApiCache for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AppSync) UpdateApiCacheWithContext(ctx aws.Context, input *UpdateApiCacheInput, opts ...request.Option) (*UpdateApiCacheOutput, error) {
+	req, out := c.UpdateApiCacheRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateApiKey = "UpdateApiKey"
 
 // UpdateApiKeyRequest generates a "aws/request.Request" representing the
@@ -3426,6 +3898,105 @@ func (s *AdditionalAuthenticationProvider) SetUserPoolConfig(v *CognitoUserPoolC
 	return s
 }
 
+type ApiCache struct {
+	_ struct{} `type:"structure"`
+
+	// Caching behavior.
+	//
+	//    * FULL_REQUEST_CACHING: All requests are fully cached.
+	//
+	//    * PER_RESOLVER_CACHING: Individual resovlers that you specify are cached.
+	ApiCachingBehavior *string `locationName:"apiCachingBehavior" type:"string" enum:"ApiCachingBehavior"`
+
+	// At rest encryption flag for cache. This setting cannot be updated after creation.
+	AtRestEncryptionEnabled *bool `locationName:"atRestEncryptionEnabled" type:"boolean"`
+
+	// The cache instance status.
+	//
+	//    * AVAILABLE: The instance is available for use.
+	//
+	//    * CREATING: The instance is currently creating.
+	//
+	//    * DELETING: The instance is currently deleting.
+	//
+	//    * MODIFYING: The instance is currently modifying.
+	//
+	//    * FAILED: The instance has failed creation.
+	Status *string `locationName:"status" type:"string" enum:"ApiCacheStatus"`
+
+	// Transit encryption flag when connecting to cache. This setting cannot be
+	// updated after creation.
+	TransitEncryptionEnabled *bool `locationName:"transitEncryptionEnabled" type:"boolean"`
+
+	// TTL in seconds for cache entries.
+	//
+	// Valid values are between 1 and 3600 seconds.
+	Ttl *int64 `locationName:"ttl" type:"long"`
+
+	// The cache instance type.
+	//
+	//    * T2_SMALL: A t2.small instance type.
+	//
+	//    * T2_MEDIUM: A t2.medium instance type.
+	//
+	//    * R4_LARGE: A r4.large instance type.
+	//
+	//    * R4_XLARGE: A r4.xlarge instance type.
+	//
+	//    * R4_2XLARGE: A r4.2xlarge instance type.
+	//
+	//    * R4_4XLARGE: A r4.4xlarge instance type.
+	//
+	//    * R4_8XLARGE: A r4.8xlarge instance type.
+	Type *string `locationName:"type" type:"string" enum:"ApiCacheType"`
+}
+
+// String returns the string representation
+func (s ApiCache) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ApiCache) GoString() string {
+	return s.String()
+}
+
+// SetApiCachingBehavior sets the ApiCachingBehavior field's value.
+func (s *ApiCache) SetApiCachingBehavior(v string) *ApiCache {
+	s.ApiCachingBehavior = &v
+	return s
+}
+
+// SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
+func (s *ApiCache) SetAtRestEncryptionEnabled(v bool) *ApiCache {
+	s.AtRestEncryptionEnabled = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ApiCache) SetStatus(v string) *ApiCache {
+	s.Status = &v
+	return s
+}
+
+// SetTransitEncryptionEnabled sets the TransitEncryptionEnabled field's value.
+func (s *ApiCache) SetTransitEncryptionEnabled(v bool) *ApiCache {
+	s.TransitEncryptionEnabled = &v
+	return s
+}
+
+// SetTtl sets the Ttl field's value.
+func (s *ApiCache) SetTtl(v int64) *ApiCache {
+	s.Ttl = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ApiCache) SetType(v string) *ApiCache {
+	s.Type = &v
+	return s
+}
+
 // Describes an API key.
 //
 // Customers invoke AWS AppSync GraphQL API operations with API keys as an identity
@@ -3589,6 +4160,44 @@ func (s *AwsIamConfig) SetSigningServiceName(v string) *AwsIamConfig {
 	return s
 }
 
+// The caching configuration for a resolver that has caching enabled.
+type CachingConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The caching keys for a resolver that has caching enabled.
+	//
+	// Valid values are entries from the $context.identity and $context.arguments
+	// maps.
+	CachingKeys []*string `locationName:"cachingKeys" type:"list"`
+
+	// The TTL in seconds for a resolver that has caching enabled.
+	//
+	// Valid values are between 1 and 3600 seconds.
+	Ttl *int64 `locationName:"ttl" type:"long"`
+}
+
+// String returns the string representation
+func (s CachingConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CachingConfig) GoString() string {
+	return s.String()
+}
+
+// SetCachingKeys sets the CachingKeys field's value.
+func (s *CachingConfig) SetCachingKeys(v []*string) *CachingConfig {
+	s.CachingKeys = v
+	return s
+}
+
+// SetTtl sets the Ttl field's value.
+func (s *CachingConfig) SetTtl(v int64) *CachingConfig {
+	s.Ttl = &v
+	return s
+}
+
 // Describes an Amazon Cognito user pool configuration.
 type CognitoUserPoolConfig struct {
 	_ struct{} `type:"structure"`
@@ -3649,6 +4258,153 @@ func (s *CognitoUserPoolConfig) SetAwsRegion(v string) *CognitoUserPoolConfig {
 // SetUserPoolId sets the UserPoolId field's value.
 func (s *CognitoUserPoolConfig) SetUserPoolId(v string) *CognitoUserPoolConfig {
 	s.UserPoolId = &v
+	return s
+}
+
+// Represents the input of a CreateApiCache operation.
+type CreateApiCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// Caching behavior.
+	//
+	//    * FULL_REQUEST_CACHING: All requests are fully cached.
+	//
+	//    * PER_RESOLVER_CACHING: Individual resovlers that you specify are cached.
+	//
+	// ApiCachingBehavior is a required field
+	ApiCachingBehavior *string `locationName:"apiCachingBehavior" type:"string" required:"true" enum:"ApiCachingBehavior"`
+
+	// The GraphQL API Id.
+	//
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	// At rest encryption flag for cache. This setting cannot be updated after creation.
+	AtRestEncryptionEnabled *bool `locationName:"atRestEncryptionEnabled" type:"boolean"`
+
+	// Transit encryption flag when connecting to cache. This setting cannot be
+	// updated after creation.
+	TransitEncryptionEnabled *bool `locationName:"transitEncryptionEnabled" type:"boolean"`
+
+	// TTL in seconds for cache entries.
+	//
+	// Valid values are between 1 and 3600 seconds.
+	//
+	// Ttl is a required field
+	Ttl *int64 `locationName:"ttl" type:"long" required:"true"`
+
+	// The cache instance type.
+	//
+	//    * T2_SMALL: A t2.small instance type.
+	//
+	//    * T2_MEDIUM: A t2.medium instance type.
+	//
+	//    * R4_LARGE: A r4.large instance type.
+	//
+	//    * R4_XLARGE: A r4.xlarge instance type.
+	//
+	//    * R4_2XLARGE: A r4.2xlarge instance type.
+	//
+	//    * R4_4XLARGE: A r4.4xlarge instance type.
+	//
+	//    * R4_8XLARGE: A r4.8xlarge instance type.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"ApiCacheType"`
+}
+
+// String returns the string representation
+func (s CreateApiCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateApiCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateApiCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateApiCacheInput"}
+	if s.ApiCachingBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiCachingBehavior"))
+	}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.Ttl == nil {
+		invalidParams.Add(request.NewErrParamRequired("Ttl"))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiCachingBehavior sets the ApiCachingBehavior field's value.
+func (s *CreateApiCacheInput) SetApiCachingBehavior(v string) *CreateApiCacheInput {
+	s.ApiCachingBehavior = &v
+	return s
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *CreateApiCacheInput) SetApiId(v string) *CreateApiCacheInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
+func (s *CreateApiCacheInput) SetAtRestEncryptionEnabled(v bool) *CreateApiCacheInput {
+	s.AtRestEncryptionEnabled = &v
+	return s
+}
+
+// SetTransitEncryptionEnabled sets the TransitEncryptionEnabled field's value.
+func (s *CreateApiCacheInput) SetTransitEncryptionEnabled(v bool) *CreateApiCacheInput {
+	s.TransitEncryptionEnabled = &v
+	return s
+}
+
+// SetTtl sets the Ttl field's value.
+func (s *CreateApiCacheInput) SetTtl(v int64) *CreateApiCacheInput {
+	s.Ttl = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *CreateApiCacheInput) SetType(v string) *CreateApiCacheInput {
+	s.Type = &v
+	return s
+}
+
+// Represents the output of a CreateApiCache operation.
+type CreateApiCacheOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ApiCache object.
+	ApiCache *ApiCache `locationName:"apiCache" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateApiCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateApiCacheOutput) GoString() string {
+	return s.String()
+}
+
+// SetApiCache sets the ApiCache field's value.
+func (s *CreateApiCacheOutput) SetApiCache(v *ApiCache) *CreateApiCacheOutput {
+	s.ApiCache = v
 	return s
 }
 
@@ -3763,7 +4519,7 @@ type CreateDataSourceInput struct {
 	// A user-supplied name for the DataSource.
 	//
 	// Name is a required field
-	Name *string `locationName:"name" type:"string" required:"true"`
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
 	// Relational database settings.
 	RelationalDatabaseConfig *RelationalDatabaseDataSourceConfig `locationName:"relationalDatabaseConfig" type:"structure"`
@@ -3799,6 +4555,9 @@ func (s *CreateDataSourceInput) Validate() error {
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
@@ -3924,7 +4683,7 @@ type CreateFunctionInput struct {
 	// The Function DataSource name.
 	//
 	// DataSourceName is a required field
-	DataSourceName *string `locationName:"dataSourceName" type:"string" required:"true"`
+	DataSourceName *string `locationName:"dataSourceName" min:"1" type:"string" required:"true"`
 
 	// The Function description.
 	Description *string `locationName:"description" type:"string"`
@@ -3938,7 +4697,7 @@ type CreateFunctionInput struct {
 	// The Function name. The function name does not have to be unique.
 	//
 	// Name is a required field
-	Name *string `locationName:"name" type:"string" required:"true"`
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
 	// The Function request mapping template. Functions support only the 2018-05-29
 	// version of the request mapping template.
@@ -3972,11 +4731,17 @@ func (s *CreateFunctionInput) Validate() error {
 	if s.DataSourceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DataSourceName"))
 	}
+	if s.DataSourceName != nil && len(*s.DataSourceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DataSourceName", 1))
+	}
 	if s.FunctionVersion == nil {
 		invalidParams.Add(request.NewErrParamRequired("FunctionVersion"))
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.RequestMappingTemplate == nil {
 		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
@@ -4215,13 +4980,16 @@ type CreateResolverInput struct {
 	// ApiId is a required field
 	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
 
+	// The caching configuration for the resolver.
+	CachingConfig *CachingConfig `locationName:"cachingConfig" type:"structure"`
+
 	// The name of the data source for which the resolver is being created.
-	DataSourceName *string `locationName:"dataSourceName" type:"string"`
+	DataSourceName *string `locationName:"dataSourceName" min:"1" type:"string"`
 
 	// The name of the field to attach the resolver to.
 	//
 	// FieldName is a required field
-	FieldName *string `locationName:"fieldName" type:"string" required:"true"`
+	FieldName *string `locationName:"fieldName" min:"1" type:"string" required:"true"`
 
 	// The resolver type.
 	//
@@ -4249,10 +5017,13 @@ type CreateResolverInput struct {
 	// The mapping template to be used for responses from the data source.
 	ResponseMappingTemplate *string `locationName:"responseMappingTemplate" min:"1" type:"string"`
 
+	// The SyncConfig for a resolver attached to a versioned datasource.
+	SyncConfig *SyncConfig `locationName:"syncConfig" type:"structure"`
+
 	// The name of the Type.
 	//
 	// TypeName is a required field
-	TypeName *string `location:"uri" locationName:"typeName" type:"string" required:"true"`
+	TypeName *string `location:"uri" locationName:"typeName" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -4274,8 +5045,14 @@ func (s *CreateResolverInput) Validate() error {
 	if s.ApiId != nil && len(*s.ApiId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
 	}
+	if s.DataSourceName != nil && len(*s.DataSourceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DataSourceName", 1))
+	}
 	if s.FieldName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FieldName"))
+	}
+	if s.FieldName != nil && len(*s.FieldName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FieldName", 1))
 	}
 	if s.RequestMappingTemplate == nil {
 		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
@@ -4302,6 +5079,12 @@ func (s *CreateResolverInput) Validate() error {
 // SetApiId sets the ApiId field's value.
 func (s *CreateResolverInput) SetApiId(v string) *CreateResolverInput {
 	s.ApiId = &v
+	return s
+}
+
+// SetCachingConfig sets the CachingConfig field's value.
+func (s *CreateResolverInput) SetCachingConfig(v *CachingConfig) *CreateResolverInput {
+	s.CachingConfig = v
 	return s
 }
 
@@ -4338,6 +5121,12 @@ func (s *CreateResolverInput) SetRequestMappingTemplate(v string) *CreateResolve
 // SetResponseMappingTemplate sets the ResponseMappingTemplate field's value.
 func (s *CreateResolverInput) SetResponseMappingTemplate(v string) *CreateResolverInput {
 	s.ResponseMappingTemplate = &v
+	return s
+}
+
+// SetSyncConfig sets the SyncConfig field's value.
+func (s *CreateResolverInput) SetSyncConfig(v *SyncConfig) *CreateResolverInput {
+	s.SyncConfig = v
 	return s
 }
 
@@ -4487,7 +5276,7 @@ type DataSource struct {
 	LambdaConfig *LambdaDataSourceConfig `locationName:"lambdaConfig" type:"structure"`
 
 	// The name of the data source.
-	Name *string `locationName:"name" type:"string"`
+	Name *string `locationName:"name" min:"1" type:"string"`
 
 	// Relational database settings.
 	RelationalDatabaseConfig *RelationalDatabaseDataSourceConfig `locationName:"relationalDatabaseConfig" type:"structure"`
@@ -4586,6 +5375,63 @@ func (s *DataSource) SetType(v string) *DataSource {
 	return s
 }
 
+// Represents the input of a DeleteApiCache operation.
+type DeleteApiCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// The API ID.
+	//
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteApiCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApiCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteApiCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteApiCacheInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *DeleteApiCacheInput) SetApiId(v string) *DeleteApiCacheInput {
+	s.ApiId = &v
+	return s
+}
+
+// Represents the output of a DeleteApiCache operation.
+type DeleteApiCacheOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteApiCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteApiCacheOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteApiKeyInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4669,7 +5515,7 @@ type DeleteDataSourceInput struct {
 	// The name of the data source.
 	//
 	// Name is a required field
-	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
+	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -4741,7 +5587,7 @@ type DeleteFunctionInput struct {
 	// The Function ID.
 	//
 	// FunctionId is a required field
-	FunctionId *string `location:"uri" locationName:"functionId" type:"string" required:"true"`
+	FunctionId *string `location:"uri" locationName:"functionId" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -4868,12 +5714,12 @@ type DeleteResolverInput struct {
 	// The resolver field name.
 	//
 	// FieldName is a required field
-	FieldName *string `location:"uri" locationName:"fieldName" type:"string" required:"true"`
+	FieldName *string `location:"uri" locationName:"fieldName" min:"1" type:"string" required:"true"`
 
 	// The name of the resolver type.
 	//
 	// TypeName is a required field
-	TypeName *string `location:"uri" locationName:"typeName" type:"string" required:"true"`
+	TypeName *string `location:"uri" locationName:"typeName" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -4957,7 +5803,7 @@ type DeleteTypeInput struct {
 	// The type name.
 	//
 	// TypeName is a required field
-	TypeName *string `location:"uri" locationName:"typeName" type:"string" required:"true"`
+	TypeName *string `location:"uri" locationName:"typeName" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5018,6 +5864,49 @@ func (s DeleteTypeOutput) GoString() string {
 	return s.String()
 }
 
+// Describes a Delta Sync configuration.
+type DeltaSyncConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The number of minutes an Item is stored in the datasource.
+	BaseTableTTL *int64 `locationName:"baseTableTTL" type:"long"`
+
+	// The Delta Sync table name.
+	DeltaSyncTableName *string `locationName:"deltaSyncTableName" type:"string"`
+
+	// The number of minutes a Delta Sync log entry is stored in the Delta Sync
+	// table.
+	DeltaSyncTableTTL *int64 `locationName:"deltaSyncTableTTL" type:"long"`
+}
+
+// String returns the string representation
+func (s DeltaSyncConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeltaSyncConfig) GoString() string {
+	return s.String()
+}
+
+// SetBaseTableTTL sets the BaseTableTTL field's value.
+func (s *DeltaSyncConfig) SetBaseTableTTL(v int64) *DeltaSyncConfig {
+	s.BaseTableTTL = &v
+	return s
+}
+
+// SetDeltaSyncTableName sets the DeltaSyncTableName field's value.
+func (s *DeltaSyncConfig) SetDeltaSyncTableName(v string) *DeltaSyncConfig {
+	s.DeltaSyncTableName = &v
+	return s
+}
+
+// SetDeltaSyncTableTTL sets the DeltaSyncTableTTL field's value.
+func (s *DeltaSyncConfig) SetDeltaSyncTableTTL(v int64) *DeltaSyncConfig {
+	s.DeltaSyncTableTTL = &v
+	return s
+}
+
 // Describes an Amazon DynamoDB data source configuration.
 type DynamodbDataSourceConfig struct {
 	_ struct{} `type:"structure"`
@@ -5027,6 +5916,9 @@ type DynamodbDataSourceConfig struct {
 	// AwsRegion is a required field
 	AwsRegion *string `locationName:"awsRegion" type:"string" required:"true"`
 
+	// The DeltaSyncConfig for a versioned datasource.
+	DeltaSyncConfig *DeltaSyncConfig `locationName:"deltaSyncConfig" type:"structure"`
+
 	// The table name.
 	//
 	// TableName is a required field
@@ -5034,6 +5926,9 @@ type DynamodbDataSourceConfig struct {
 
 	// Set to TRUE to use Amazon Cognito credentials with this data source.
 	UseCallerCredentials *bool `locationName:"useCallerCredentials" type:"boolean"`
+
+	// Set to TRUE to use Conflict Detection and Resolution with this data source.
+	Versioned *bool `locationName:"versioned" type:"boolean"`
 }
 
 // String returns the string representation
@@ -5068,6 +5963,12 @@ func (s *DynamodbDataSourceConfig) SetAwsRegion(v string) *DynamodbDataSourceCon
 	return s
 }
 
+// SetDeltaSyncConfig sets the DeltaSyncConfig field's value.
+func (s *DynamodbDataSourceConfig) SetDeltaSyncConfig(v *DeltaSyncConfig) *DynamodbDataSourceConfig {
+	s.DeltaSyncConfig = v
+	return s
+}
+
 // SetTableName sets the TableName field's value.
 func (s *DynamodbDataSourceConfig) SetTableName(v string) *DynamodbDataSourceConfig {
 	s.TableName = &v
@@ -5077,6 +5978,12 @@ func (s *DynamodbDataSourceConfig) SetTableName(v string) *DynamodbDataSourceCon
 // SetUseCallerCredentials sets the UseCallerCredentials field's value.
 func (s *DynamodbDataSourceConfig) SetUseCallerCredentials(v bool) *DynamodbDataSourceConfig {
 	s.UseCallerCredentials = &v
+	return s
+}
+
+// SetVersioned sets the Versioned field's value.
+func (s *DynamodbDataSourceConfig) SetVersioned(v bool) *DynamodbDataSourceConfig {
+	s.Versioned = &v
 	return s
 }
 
@@ -5133,13 +6040,70 @@ func (s *ElasticsearchDataSourceConfig) SetEndpoint(v string) *ElasticsearchData
 	return s
 }
 
+// Represents the input of a FlushApiCache operation.
+type FlushApiCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// The API ID.
+	//
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s FlushApiCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FlushApiCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FlushApiCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FlushApiCacheInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *FlushApiCacheInput) SetApiId(v string) *FlushApiCacheInput {
+	s.ApiId = &v
+	return s
+}
+
+// Represents the output of a FlushApiCache operation.
+type FlushApiCacheOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s FlushApiCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FlushApiCacheOutput) GoString() string {
+	return s.String()
+}
+
 // A function is a reusable entity. Multiple functions can be used to compose
 // the resolver logic.
 type FunctionConfiguration struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the DataSource.
-	DataSourceName *string `locationName:"dataSourceName" type:"string"`
+	DataSourceName *string `locationName:"dataSourceName" min:"1" type:"string"`
 
 	// The Function description.
 	Description *string `locationName:"description" type:"string"`
@@ -5155,7 +6119,7 @@ type FunctionConfiguration struct {
 	FunctionVersion *string `locationName:"functionVersion" type:"string"`
 
 	// The name of the Function object.
-	Name *string `locationName:"name" type:"string"`
+	Name *string `locationName:"name" min:"1" type:"string"`
 
 	// The Function request mapping template. Functions support only the 2018-05-29
 	// version of the request mapping template.
@@ -5223,6 +6187,71 @@ func (s *FunctionConfiguration) SetResponseMappingTemplate(v string) *FunctionCo
 	return s
 }
 
+// Represents the input of a GetApiCache operation.
+type GetApiCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// The API ID.
+	//
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetApiCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetApiCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetApiCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetApiCacheInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *GetApiCacheInput) SetApiId(v string) *GetApiCacheInput {
+	s.ApiId = &v
+	return s
+}
+
+// Represents the output of a GetApiCache operation.
+type GetApiCacheOutput struct {
+	_ struct{} `type:"structure"`
+
+	ApiCache *ApiCache `locationName:"apiCache" type:"structure"`
+}
+
+// String returns the string representation
+func (s GetApiCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetApiCacheOutput) GoString() string {
+	return s.String()
+}
+
+// SetApiCache sets the ApiCache field's value.
+func (s *GetApiCacheOutput) SetApiCache(v *ApiCache) *GetApiCacheOutput {
+	s.ApiCache = v
+	return s
+}
+
 type GetDataSourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5234,7 +6263,7 @@ type GetDataSourceInput struct {
 	// The name of the data source.
 	//
 	// Name is a required field
-	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
+	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5315,7 +6344,7 @@ type GetFunctionInput struct {
 	// The Function ID.
 	//
 	// FunctionId is a required field
-	FunctionId *string `location:"uri" locationName:"functionId" type:"string" required:"true"`
+	FunctionId *string `location:"uri" locationName:"functionId" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5549,12 +6578,12 @@ type GetResolverInput struct {
 	// The resolver field name.
 	//
 	// FieldName is a required field
-	FieldName *string `location:"uri" locationName:"fieldName" type:"string" required:"true"`
+	FieldName *string `location:"uri" locationName:"fieldName" min:"1" type:"string" required:"true"`
 
 	// The resolver type name.
 	//
 	// TypeName is a required field
-	TypeName *string `location:"uri" locationName:"typeName" type:"string" required:"true"`
+	TypeName *string `location:"uri" locationName:"typeName" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5726,7 +6755,7 @@ type GetTypeInput struct {
 	// The type name.
 	//
 	// TypeName is a required field
-	TypeName *string `location:"uri" locationName:"typeName" type:"string" required:"true"`
+	TypeName *string `location:"uri" locationName:"typeName" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5825,7 +6854,7 @@ type GraphqlApi struct {
 	LogConfig *LogConfig `locationName:"logConfig" type:"structure"`
 
 	// The API name.
-	Name *string `locationName:"name" type:"string"`
+	Name *string `locationName:"name" min:"1" type:"string"`
 
 	// The OpenID Connect configuration.
 	OpenIDConnectConfig *OpenIDConnectConfig `locationName:"openIDConnectConfig" type:"structure"`
@@ -5961,6 +6990,29 @@ func (s *HttpDataSourceConfig) SetEndpoint(v string) *HttpDataSourceConfig {
 	return s
 }
 
+type LambdaConflictHandlerConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Arn for the Lambda function to use as the Conflict Handler.
+	LambdaConflictHandlerArn *string `locationName:"lambdaConflictHandlerArn" type:"string"`
+}
+
+// String returns the string representation
+func (s LambdaConflictHandlerConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LambdaConflictHandlerConfig) GoString() string {
+	return s.String()
+}
+
+// SetLambdaConflictHandlerArn sets the LambdaConflictHandlerArn field's value.
+func (s *LambdaConflictHandlerConfig) SetLambdaConflictHandlerArn(v string) *LambdaConflictHandlerConfig {
+	s.LambdaConflictHandlerArn = &v
+	return s
+}
+
 // Describes an AWS Lambda data source configuration.
 type LambdaDataSourceConfig struct {
 	_ struct{} `type:"structure"`
@@ -6013,7 +7065,7 @@ type ListApiKeysInput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
-	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+	NextToken *string `location:"querystring" locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6034,6 +7086,9 @@ func (s *ListApiKeysInput) Validate() error {
 	}
 	if s.ApiId != nil && len(*s.ApiId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6068,7 +7123,7 @@ type ListApiKeysOutput struct {
 
 	// An identifier to be passed in the next request to this operation to return
 	// the next set of items in the list.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6106,7 +7161,7 @@ type ListDataSourcesInput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
-	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+	NextToken *string `location:"querystring" locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6127,6 +7182,9 @@ func (s *ListDataSourcesInput) Validate() error {
 	}
 	if s.ApiId != nil && len(*s.ApiId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6161,7 +7219,7 @@ type ListDataSourcesOutput struct {
 
 	// An identifier to be passed in the next request to this operation to return
 	// the next set of items in the list.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6199,7 +7257,7 @@ type ListFunctionsInput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
-	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+	NextToken *string `location:"querystring" locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6220,6 +7278,9 @@ func (s *ListFunctionsInput) Validate() error {
 	}
 	if s.ApiId != nil && len(*s.ApiId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6254,7 +7315,7 @@ type ListFunctionsOutput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6287,7 +7348,7 @@ type ListGraphqlApisInput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
-	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+	NextToken *string `location:"querystring" locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6298,6 +7359,19 @@ func (s ListGraphqlApisInput) String() string {
 // GoString returns the string representation
 func (s ListGraphqlApisInput) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListGraphqlApisInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListGraphqlApisInput"}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -6320,7 +7394,7 @@ type ListGraphqlApisOutput struct {
 
 	// An identifier to be passed in the next request to this operation to return
 	// the next set of items in the list.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6363,7 +7437,7 @@ type ListResolversByFunctionInput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which you can use to return the next set of items in the list.
-	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+	NextToken *string `location:"querystring" locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6390,6 +7464,9 @@ func (s *ListResolversByFunctionInput) Validate() error {
 	}
 	if s.FunctionId != nil && len(*s.FunctionId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("FunctionId", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6426,7 +7503,7 @@ type ListResolversByFunctionOutput struct {
 	_ struct{} `type:"structure"`
 
 	// An identifier that can be used to return the next set of items in the list.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// The list of resolvers.
 	Resolvers []*Resolver `locationName:"resolvers" type:"list"`
@@ -6467,7 +7544,7 @@ type ListResolversInput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
-	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+	NextToken *string `location:"querystring" locationName:"nextToken" min:"1" type:"string"`
 
 	// The type name.
 	//
@@ -6493,6 +7570,9 @@ func (s *ListResolversInput) Validate() error {
 	}
 	if s.ApiId != nil && len(*s.ApiId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 	if s.TypeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TypeName"))
@@ -6536,7 +7616,7 @@ type ListResolversOutput struct {
 
 	// An identifier to be passed in the next request to this operation to return
 	// the next set of items in the list.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// The Resolver objects.
 	Resolvers []*Resolver `locationName:"resolvers" type:"list"`
@@ -6646,7 +7726,7 @@ type ListTypesInput struct {
 
 	// An identifier that was returned from the previous call to this operation,
 	// which can be used to return the next set of items in the list.
-	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+	NextToken *string `location:"querystring" locationName:"nextToken" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -6670,6 +7750,9 @@ func (s *ListTypesInput) Validate() error {
 	}
 	if s.Format == nil {
 		invalidParams.Add(request.NewErrParamRequired("Format"))
+	}
+	if s.NextToken != nil && len(*s.NextToken) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -6707,7 +7790,7 @@ type ListTypesOutput struct {
 
 	// An identifier to be passed in the next request to this operation to return
 	// the next set of items in the list.
-	NextToken *string `locationName:"nextToken" type:"string"`
+	NextToken *string `locationName:"nextToken" min:"1" type:"string"`
 
 	// The Type objects.
 	Types []*Type `locationName:"types" type:"list"`
@@ -6744,6 +7827,10 @@ type LogConfig struct {
 	//
 	// CloudWatchLogsRoleArn is a required field
 	CloudWatchLogsRoleArn *string `locationName:"cloudWatchLogsRoleArn" type:"string" required:"true"`
+
+	// Set to TRUE to exclude sections that contain information such as headers,
+	// context, and evaluated mapping templates, regardless of logging level.
+	ExcludeVerboseContent *bool `locationName:"excludeVerboseContent" type:"boolean"`
 
 	// The field logging level. Values can be NONE, ERROR, or ALL.
 	//
@@ -6790,6 +7877,12 @@ func (s *LogConfig) Validate() error {
 // SetCloudWatchLogsRoleArn sets the CloudWatchLogsRoleArn field's value.
 func (s *LogConfig) SetCloudWatchLogsRoleArn(v string) *LogConfig {
 	s.CloudWatchLogsRoleArn = &v
+	return s
+}
+
+// SetExcludeVerboseContent sets the ExcludeVerboseContent field's value.
+func (s *LogConfig) SetExcludeVerboseContent(v bool) *LogConfig {
+	s.ExcludeVerboseContent = &v
 	return s
 }
 
@@ -6993,11 +8086,14 @@ func (s *RelationalDatabaseDataSourceConfig) SetRelationalDatabaseSourceType(v s
 type Resolver struct {
 	_ struct{} `type:"structure"`
 
+	// The caching configuration for the resolver.
+	CachingConfig *CachingConfig `locationName:"cachingConfig" type:"structure"`
+
 	// The resolver data source name.
-	DataSourceName *string `locationName:"dataSourceName" type:"string"`
+	DataSourceName *string `locationName:"dataSourceName" min:"1" type:"string"`
 
 	// The resolver field name.
-	FieldName *string `locationName:"fieldName" type:"string"`
+	FieldName *string `locationName:"fieldName" min:"1" type:"string"`
 
 	// The resolver type.
 	//
@@ -7022,8 +8118,11 @@ type Resolver struct {
 	// The response mapping template.
 	ResponseMappingTemplate *string `locationName:"responseMappingTemplate" min:"1" type:"string"`
 
+	// The SyncConfig for a resolver attached to a versioned datasource.
+	SyncConfig *SyncConfig `locationName:"syncConfig" type:"structure"`
+
 	// The resolver type name.
-	TypeName *string `locationName:"typeName" type:"string"`
+	TypeName *string `locationName:"typeName" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -7034,6 +8133,12 @@ func (s Resolver) String() string {
 // GoString returns the string representation
 func (s Resolver) GoString() string {
 	return s.String()
+}
+
+// SetCachingConfig sets the CachingConfig field's value.
+func (s *Resolver) SetCachingConfig(v *CachingConfig) *Resolver {
+	s.CachingConfig = v
+	return s
 }
 
 // SetDataSourceName sets the DataSourceName field's value.
@@ -7075,6 +8180,12 @@ func (s *Resolver) SetResolverArn(v string) *Resolver {
 // SetResponseMappingTemplate sets the ResponseMappingTemplate field's value.
 func (s *Resolver) SetResponseMappingTemplate(v string) *Resolver {
 	s.ResponseMappingTemplate = &v
+	return s
+}
+
+// SetSyncConfig sets the SyncConfig field's value.
+func (s *Resolver) SetSyncConfig(v *SyncConfig) *Resolver {
+	s.SyncConfig = v
 	return s
 }
 
@@ -7162,6 +8273,63 @@ func (s StartSchemaCreationOutput) GoString() string {
 // SetStatus sets the Status field's value.
 func (s *StartSchemaCreationOutput) SetStatus(v string) *StartSchemaCreationOutput {
 	s.Status = &v
+	return s
+}
+
+// Describes a Sync configuration for a resolver.
+//
+// Contains information on which Conflict Detection as well as Resolution strategy
+// should be performed when the resolver is invoked.
+type SyncConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Conflict Detection strategy to use.
+	//
+	//    * VERSION: Detect conflicts based on object versions for this resolver.
+	//
+	//    * NONE: Do not detect conflicts when executing this resolver.
+	ConflictDetection *string `locationName:"conflictDetection" type:"string" enum:"ConflictDetectionType"`
+
+	// The Conflict Resolution strategy to perform in the event of a conflict.
+	//
+	//    * OPTIMISTIC_CONCURRENCY: Resolve conflicts by rejecting mutations when
+	//    versions do not match the latest version at the server.
+	//
+	//    * AUTOMERGE: Resolve conflicts with the Automerge conflict resolution
+	//    strategy.
+	//
+	//    * LAMBDA: Resolve conflicts with a Lambda function supplied in the LambdaConflictHandlerConfig.
+	ConflictHandler *string `locationName:"conflictHandler" type:"string" enum:"ConflictHandlerType"`
+
+	// The LambdaConflictHandlerConfig when configuring LAMBDA as the Conflict Handler.
+	LambdaConflictHandlerConfig *LambdaConflictHandlerConfig `locationName:"lambdaConflictHandlerConfig" type:"structure"`
+}
+
+// String returns the string representation
+func (s SyncConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SyncConfig) GoString() string {
+	return s.String()
+}
+
+// SetConflictDetection sets the ConflictDetection field's value.
+func (s *SyncConfig) SetConflictDetection(v string) *SyncConfig {
+	s.ConflictDetection = &v
+	return s
+}
+
+// SetConflictHandler sets the ConflictHandler field's value.
+func (s *SyncConfig) SetConflictHandler(v string) *SyncConfig {
+	s.ConflictHandler = &v
+	return s
+}
+
+// SetLambdaConflictHandlerConfig sets the LambdaConflictHandlerConfig field's value.
+func (s *SyncConfig) SetLambdaConflictHandlerConfig(v *LambdaConflictHandlerConfig) *SyncConfig {
+	s.LambdaConflictHandlerConfig = v
 	return s
 }
 
@@ -7254,7 +8422,7 @@ type Type struct {
 	Format *string `locationName:"format" type:"string" enum:"TypeDefinitionFormat"`
 
 	// The type name.
-	Name *string `locationName:"name" type:"string"`
+	Name *string `locationName:"name" min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -7367,6 +8535,134 @@ func (s UntagResourceOutput) String() string {
 // GoString returns the string representation
 func (s UntagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// Represents the input of a UpdateApiCache operation.
+type UpdateApiCacheInput struct {
+	_ struct{} `type:"structure"`
+
+	// Caching behavior.
+	//
+	//    * FULL_REQUEST_CACHING: All requests are fully cached.
+	//
+	//    * PER_RESOLVER_CACHING: Individual resovlers that you specify are cached.
+	//
+	// ApiCachingBehavior is a required field
+	ApiCachingBehavior *string `locationName:"apiCachingBehavior" type:"string" required:"true" enum:"ApiCachingBehavior"`
+
+	// The GraphQL API Id.
+	//
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	// TTL in seconds for cache entries.
+	//
+	// Valid values are between 1 and 3600 seconds.
+	//
+	// Ttl is a required field
+	Ttl *int64 `locationName:"ttl" type:"long" required:"true"`
+
+	// The cache instance type.
+	//
+	//    * T2_SMALL: A t2.small instance type.
+	//
+	//    * T2_MEDIUM: A t2.medium instance type.
+	//
+	//    * R4_LARGE: A r4.large instance type.
+	//
+	//    * R4_XLARGE: A r4.xlarge instance type.
+	//
+	//    * R4_2XLARGE: A r4.2xlarge instance type.
+	//
+	//    * R4_4XLARGE: A r4.4xlarge instance type.
+	//
+	//    * R4_8XLARGE: A r4.8xlarge instance type.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"ApiCacheType"`
+}
+
+// String returns the string representation
+func (s UpdateApiCacheInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApiCacheInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateApiCacheInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateApiCacheInput"}
+	if s.ApiCachingBehavior == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiCachingBehavior"))
+	}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.Ttl == nil {
+		invalidParams.Add(request.NewErrParamRequired("Ttl"))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiCachingBehavior sets the ApiCachingBehavior field's value.
+func (s *UpdateApiCacheInput) SetApiCachingBehavior(v string) *UpdateApiCacheInput {
+	s.ApiCachingBehavior = &v
+	return s
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *UpdateApiCacheInput) SetApiId(v string) *UpdateApiCacheInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetTtl sets the Ttl field's value.
+func (s *UpdateApiCacheInput) SetTtl(v int64) *UpdateApiCacheInput {
+	s.Ttl = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *UpdateApiCacheInput) SetType(v string) *UpdateApiCacheInput {
+	s.Type = &v
+	return s
+}
+
+// Represents the output of a UpdateApiCache operation.
+type UpdateApiCacheOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The ApiCache object.
+	ApiCache *ApiCache `locationName:"apiCache" type:"structure"`
+}
+
+// String returns the string representation
+func (s UpdateApiCacheOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateApiCacheOutput) GoString() string {
+	return s.String()
+}
+
+// SetApiCache sets the ApiCache field's value.
+func (s *UpdateApiCacheOutput) SetApiCache(v *ApiCache) *UpdateApiCacheOutput {
+	s.ApiCache = v
+	return s
 }
 
 type UpdateApiKeyInput struct {
@@ -7495,7 +8791,7 @@ type UpdateDataSourceInput struct {
 	// The new name for the data source.
 	//
 	// Name is a required field
-	Name *string `location:"uri" locationName:"name" type:"string" required:"true"`
+	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
 
 	// The new relational database configuration.
 	RelationalDatabaseConfig *RelationalDatabaseDataSourceConfig `locationName:"relationalDatabaseConfig" type:"structure"`
@@ -7658,7 +8954,7 @@ type UpdateFunctionInput struct {
 	// The Function DataSource name.
 	//
 	// DataSourceName is a required field
-	DataSourceName *string `locationName:"dataSourceName" type:"string" required:"true"`
+	DataSourceName *string `locationName:"dataSourceName" min:"1" type:"string" required:"true"`
 
 	// The Function description.
 	Description *string `locationName:"description" type:"string"`
@@ -7666,7 +8962,7 @@ type UpdateFunctionInput struct {
 	// The function ID.
 	//
 	// FunctionId is a required field
-	FunctionId *string `location:"uri" locationName:"functionId" type:"string" required:"true"`
+	FunctionId *string `location:"uri" locationName:"functionId" min:"1" type:"string" required:"true"`
 
 	// The version of the request mapping template. Currently the supported value
 	// is 2018-05-29.
@@ -7677,7 +8973,7 @@ type UpdateFunctionInput struct {
 	// The Function name.
 	//
 	// Name is a required field
-	Name *string `locationName:"name" type:"string" required:"true"`
+	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
 	// The Function request mapping template. Functions support only the 2018-05-29
 	// version of the request mapping template.
@@ -7711,6 +9007,9 @@ func (s *UpdateFunctionInput) Validate() error {
 	if s.DataSourceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DataSourceName"))
 	}
+	if s.DataSourceName != nil && len(*s.DataSourceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DataSourceName", 1))
+	}
 	if s.FunctionId == nil {
 		invalidParams.Add(request.NewErrParamRequired("FunctionId"))
 	}
@@ -7722,6 +9021,9 @@ func (s *UpdateFunctionInput) Validate() error {
 	}
 	if s.Name == nil {
 		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
 	if s.RequestMappingTemplate == nil {
 		invalidParams.Add(request.NewErrParamRequired("RequestMappingTemplate"))
@@ -7966,13 +9268,16 @@ type UpdateResolverInput struct {
 	// ApiId is a required field
 	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
 
+	// The caching configuration for the resolver.
+	CachingConfig *CachingConfig `locationName:"cachingConfig" type:"structure"`
+
 	// The new data source name.
-	DataSourceName *string `locationName:"dataSourceName" type:"string"`
+	DataSourceName *string `locationName:"dataSourceName" min:"1" type:"string"`
 
 	// The new field name.
 	//
 	// FieldName is a required field
-	FieldName *string `location:"uri" locationName:"fieldName" type:"string" required:"true"`
+	FieldName *string `location:"uri" locationName:"fieldName" min:"1" type:"string" required:"true"`
 
 	// The resolver type.
 	//
@@ -7996,10 +9301,13 @@ type UpdateResolverInput struct {
 	// The new response mapping template.
 	ResponseMappingTemplate *string `locationName:"responseMappingTemplate" min:"1" type:"string"`
 
+	// The SyncConfig for a resolver attached to a versioned datasource.
+	SyncConfig *SyncConfig `locationName:"syncConfig" type:"structure"`
+
 	// The new type name.
 	//
 	// TypeName is a required field
-	TypeName *string `location:"uri" locationName:"typeName" type:"string" required:"true"`
+	TypeName *string `location:"uri" locationName:"typeName" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -8020,6 +9328,9 @@ func (s *UpdateResolverInput) Validate() error {
 	}
 	if s.ApiId != nil && len(*s.ApiId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.DataSourceName != nil && len(*s.DataSourceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DataSourceName", 1))
 	}
 	if s.FieldName == nil {
 		invalidParams.Add(request.NewErrParamRequired("FieldName"))
@@ -8052,6 +9363,12 @@ func (s *UpdateResolverInput) Validate() error {
 // SetApiId sets the ApiId field's value.
 func (s *UpdateResolverInput) SetApiId(v string) *UpdateResolverInput {
 	s.ApiId = &v
+	return s
+}
+
+// SetCachingConfig sets the CachingConfig field's value.
+func (s *UpdateResolverInput) SetCachingConfig(v *CachingConfig) *UpdateResolverInput {
+	s.CachingConfig = v
 	return s
 }
 
@@ -8088,6 +9405,12 @@ func (s *UpdateResolverInput) SetRequestMappingTemplate(v string) *UpdateResolve
 // SetResponseMappingTemplate sets the ResponseMappingTemplate field's value.
 func (s *UpdateResolverInput) SetResponseMappingTemplate(v string) *UpdateResolverInput {
 	s.ResponseMappingTemplate = &v
+	return s
+}
+
+// SetSyncConfig sets the SyncConfig field's value.
+func (s *UpdateResolverInput) SetSyncConfig(v *SyncConfig) *UpdateResolverInput {
+	s.SyncConfig = v
 	return s
 }
 
@@ -8139,7 +9462,7 @@ type UpdateTypeInput struct {
 	// The new type name.
 	//
 	// TypeName is a required field
-	TypeName *string `location:"uri" locationName:"typeName" type:"string" required:"true"`
+	TypeName *string `location:"uri" locationName:"typeName" min:"1" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -8304,6 +9627,54 @@ func (s *UserPoolConfig) SetUserPoolId(v string) *UserPoolConfig {
 }
 
 const (
+	// ApiCacheStatusAvailable is a ApiCacheStatus enum value
+	ApiCacheStatusAvailable = "AVAILABLE"
+
+	// ApiCacheStatusCreating is a ApiCacheStatus enum value
+	ApiCacheStatusCreating = "CREATING"
+
+	// ApiCacheStatusDeleting is a ApiCacheStatus enum value
+	ApiCacheStatusDeleting = "DELETING"
+
+	// ApiCacheStatusModifying is a ApiCacheStatus enum value
+	ApiCacheStatusModifying = "MODIFYING"
+
+	// ApiCacheStatusFailed is a ApiCacheStatus enum value
+	ApiCacheStatusFailed = "FAILED"
+)
+
+const (
+	// ApiCacheTypeT2Small is a ApiCacheType enum value
+	ApiCacheTypeT2Small = "T2_SMALL"
+
+	// ApiCacheTypeT2Medium is a ApiCacheType enum value
+	ApiCacheTypeT2Medium = "T2_MEDIUM"
+
+	// ApiCacheTypeR4Large is a ApiCacheType enum value
+	ApiCacheTypeR4Large = "R4_LARGE"
+
+	// ApiCacheTypeR4Xlarge is a ApiCacheType enum value
+	ApiCacheTypeR4Xlarge = "R4_XLARGE"
+
+	// ApiCacheTypeR42xlarge is a ApiCacheType enum value
+	ApiCacheTypeR42xlarge = "R4_2XLARGE"
+
+	// ApiCacheTypeR44xlarge is a ApiCacheType enum value
+	ApiCacheTypeR44xlarge = "R4_4XLARGE"
+
+	// ApiCacheTypeR48xlarge is a ApiCacheType enum value
+	ApiCacheTypeR48xlarge = "R4_8XLARGE"
+)
+
+const (
+	// ApiCachingBehaviorFullRequestCaching is a ApiCachingBehavior enum value
+	ApiCachingBehaviorFullRequestCaching = "FULL_REQUEST_CACHING"
+
+	// ApiCachingBehaviorPerResolverCaching is a ApiCachingBehavior enum value
+	ApiCachingBehaviorPerResolverCaching = "PER_RESOLVER_CACHING"
+)
+
+const (
 	// AuthenticationTypeApiKey is a AuthenticationType enum value
 	AuthenticationTypeApiKey = "API_KEY"
 
@@ -8320,6 +9691,28 @@ const (
 const (
 	// AuthorizationTypeAwsIam is a AuthorizationType enum value
 	AuthorizationTypeAwsIam = "AWS_IAM"
+)
+
+const (
+	// ConflictDetectionTypeVersion is a ConflictDetectionType enum value
+	ConflictDetectionTypeVersion = "VERSION"
+
+	// ConflictDetectionTypeNone is a ConflictDetectionType enum value
+	ConflictDetectionTypeNone = "NONE"
+)
+
+const (
+	// ConflictHandlerTypeOptimisticConcurrency is a ConflictHandlerType enum value
+	ConflictHandlerTypeOptimisticConcurrency = "OPTIMISTIC_CONCURRENCY"
+
+	// ConflictHandlerTypeLambda is a ConflictHandlerType enum value
+	ConflictHandlerTypeLambda = "LAMBDA"
+
+	// ConflictHandlerTypeAutomerge is a ConflictHandlerType enum value
+	ConflictHandlerTypeAutomerge = "AUTOMERGE"
+
+	// ConflictHandlerTypeNone is a ConflictHandlerType enum value
+	ConflictHandlerTypeNone = "NONE"
 )
 
 const (

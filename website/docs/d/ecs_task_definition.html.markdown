@@ -1,7 +1,7 @@
 ---
+subcategory: "ECS"
 layout: "aws"
 page_title: "AWS: aws_ecs_task_definition"
-sidebar_current: "docs-aws-datasource-ecs-task-definition"
 description: |-
     Provides details about an ecs task definition
 ---

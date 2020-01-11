@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_dhcp_options"
-sidebar_current: "docs-aws-datasource-vpc-dhcp-options"
 description: |-
   Retrieve information about an EC2 DHCP Options configuration
 ---

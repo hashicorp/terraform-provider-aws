@@ -4,6 +4,10 @@ package apigatewayv2
 
 const (
 
+	// ErrCodeAccessDeniedException for service response error code
+	// "AccessDeniedException".
+	ErrCodeAccessDeniedException = "AccessDeniedException"
+
 	// ErrCodeBadRequestException for service response error code
 	// "BadRequestException".
 	//
