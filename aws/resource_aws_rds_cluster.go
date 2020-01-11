@@ -403,7 +403,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 					}, false),
 				},
 			},
-			"data_api_enabled": {
+			"enable_http_endpoint": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -780,7 +780,7 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.MasterUsername = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("data_api_enabled"); ok {
+		if v, ok := d.GetOk("enable_http_endpoint"); ok {
 			createOpts.EnableHttpEndpoint = aws.Bool(v.(bool))
 		}
 		// Need to check value > 0 due to:
@@ -1032,7 +1032,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("data_api_enabled", dbc.HttpEndpointEnabled)
+	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
@@ -1149,9 +1149,9 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
-	if d.HasChange("data_api_enabled") {
-		d.SetPartial("data_api_enabled")
-		req.EnableHttpEndpoint = aws.Bool(d.Get("data_api_enabled").(bool))
+	if d.HasChange("enable_http_endpoint") {
+		d.SetPartial("enable_http_endpoint")
+		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
 		requestUpdate = true
 	}
 

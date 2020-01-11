@@ -2060,7 +2060,7 @@ func testAccCheckAWSClusterRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 	}
 }
 
-func TestAccAWSRDSCluster_DataApiEnabled(t *testing.T) {
+func TestAccAWSRDSCluster_EnableHttpEndpoint(t *testing.T) {
 	var dbCluster rds.DBCluster
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2072,10 +2072,10 @@ func TestAccAWSRDSCluster_DataApiEnabled(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_DataApiEnabled(rName, true),
+				Config: testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "data_api_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "true"),
 				),
 			},
 			{
@@ -2091,10 +2091,10 @@ func TestAccAWSRDSCluster_DataApiEnabled(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccAWSRDSClusterConfig_DataApiEnabled(rName, false),
+				Config: testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "data_api_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "false"),
 				),
 			},
 		},
@@ -3362,15 +3362,15 @@ resource "aws_rds_cluster" "test" {
 `, n, f)
 }
 
-func testAccAWSRDSClusterConfig_DataApiEnabled(rName string, dataApiEnabled bool) string {
+func testAccAWSRDSClusterConfig_EnableHttpEndpoint(rName string, enableHttpEndpoint bool) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier  = %q
-  engine_mode         = "serverless"
-  master_password     = "barbarbarbar"
-  master_username     = "foo"
-  skip_final_snapshot = true
-  data_api_enabled    = %t
+  cluster_identifier    = %q
+  engine_mode           = "serverless"
+  master_password       = "barbarbarbar"
+  master_username       = "foo"
+  skip_final_snapshot   = true
+  enable_http_endpoint  = %t
 
   scaling_configuration {
     auto_pause               = false
@@ -3380,5 +3380,5 @@ resource "aws_rds_cluster" "test" {
     timeout_action           = "RollbackCapacityChange"
   }
 }
-`, rName, dataApiEnabled)
+`, rName, enableHttpEndpoint)
 }
