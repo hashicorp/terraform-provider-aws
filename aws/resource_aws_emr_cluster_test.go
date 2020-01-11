@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -675,6 +676,48 @@ func TestAccAWSEMRCluster_updateAutoScalingPolicy(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"configurations", "keep_job_flow_alive_when_no_steps"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEMRCluster_Ec2Attributes_DefaultManagedSecurityGroups(t *testing.T) {
+	var cluster emr.Cluster
+	var vpc ec2.Vpc
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_emr_cluster.tf-test-cluster"
+	vpcResourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEmrDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEmrClusterConfigEc2AttributesDefaultManagedSecurityGroups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEmrClusterExists(resourceName, &cluster),
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+				),
+			},
+			{
+				Config:      testAccAWSEmrClusterConfigEc2AttributesDefaultManagedSecurityGroups(rName),
+				Destroy:     true,
+				ExpectError: regexp.MustCompile(`DependencyViolation`),
+			},
+			{
+				PreConfig: func() {
+					conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+					err := testAccEmrDeleteManagedSecurityGroups(conn, &vpc)
+
+					if err != nil {
+						t.Fatal(err)
+					}
+				},
+				Config:  testAccAWSEmrClusterConfigEc2AttributesDefaultManagedSecurityGroups(rName),
+				Destroy: true,
 			},
 		},
 	})
@@ -1602,6 +1645,100 @@ func testAccCheckAWSEmrClusterRecreated(i, j *emr.Cluster) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+func testAccEmrDeleteManagedSecurityGroups(conn *ec2.EC2, vpc *ec2.Vpc) error {
+	// Reference: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-man-sec-groups.html
+	managedSecurityGroups := map[string]*ec2.SecurityGroup{
+		"ElasticMapReduce-master": nil,
+		"ElasticMapReduce-slave":  nil,
+	}
+
+	for groupName := range managedSecurityGroups {
+		securityGroup, err := testAccEmrDescribeManagedSecurityGroup(conn, vpc, groupName)
+
+		if err != nil {
+			return fmt.Errorf("error describing EMR Managed Security Group (%s): %s", groupName, err)
+		}
+
+		managedSecurityGroups[groupName] = securityGroup
+	}
+
+	// EMR Managed Security Groups rules reference each other, so rules from all
+	// groups must be revoked first.
+	for groupName, securityGroup := range managedSecurityGroups {
+		if securityGroup == nil {
+			continue
+		}
+
+		err := testAccEmrRevokeManagedSecurityGroup(conn, securityGroup)
+
+		if err != nil {
+			return fmt.Errorf("error revoking EMR Managed Security Group (%s): %s", groupName, err)
+		}
+	}
+
+	for groupName, securityGroup := range managedSecurityGroups {
+		if securityGroup == nil {
+			continue
+		}
+
+		err := testAccEmrDeleteManagedSecurityGroup(conn, securityGroup)
+
+		if err != nil {
+			return fmt.Errorf("error deleting EMR Managed Security Group (%s): %s", groupName, err)
+		}
+	}
+
+	return nil
+}
+
+func testAccEmrDescribeManagedSecurityGroup(conn *ec2.EC2, vpc *ec2.Vpc, securityGroupName string) (*ec2.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("group-name"),
+				Values: aws.StringSlice([]string{securityGroupName}),
+			},
+			{
+				Name:   aws.String("vpc-id"),
+				Values: []*string{vpc.VpcId},
+			},
+		},
+	}
+
+	output, err := conn.DescribeSecurityGroups(input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.SecurityGroups) != 1 {
+		return nil, nil
+	}
+
+	return output.SecurityGroups[0], nil
+}
+
+func testAccEmrRevokeManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
+	input := &ec2.RevokeSecurityGroupIngressInput{
+		GroupId:       securityGroup.GroupId,
+		IpPermissions: securityGroup.IpPermissions,
+	}
+
+	_, err := conn.RevokeSecurityGroupIngress(input)
+
+	return err
+}
+
+func testAccEmrDeleteManagedSecurityGroup(conn *ec2.EC2, securityGroup *ec2.SecurityGroup) error {
+	input := &ec2.DeleteSecurityGroupInput{
+		GroupId: securityGroup.GroupId,
+	}
+
+	_, err := conn.DeleteSecurityGroup(input)
+
+	return err
 }
 
 func testAccAWSEmrClusterConfigBaseVpc(mapPublicIpOnLaunch bool) string {
@@ -4762,6 +4899,29 @@ resource "aws_iam_role_policy_attachment" "emr-autoscaling-role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 `, r)
+}
+
+func testAccAWSEmrClusterConfigEc2AttributesDefaultManagedSecurityGroups(rName string) string {
+	return testAccAWSEmrClusterConfigBaseVpc(false) + fmt.Sprintf(`
+resource "aws_emr_cluster" "tf-test-cluster" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.28.0"
+  service_role                      = "EMR_DefaultRole"
+
+  ec2_attributes {
+    instance_profile = "EMR_EC2_DefaultRole"
+    subnet_id        = "${aws_subnet.test.id}"
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = ["aws_route_table_association.test"]
+}
+`, rName)
 }
 
 func testAccAWSEmrClusterConfigMasterInstanceGroupBidPrice(rName, bidPrice string) string {
