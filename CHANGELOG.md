@@ -10,6 +10,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_emr_cluster: Prevent perpetual difference with `ec2_attributes` configuration block `emr_managed_master_security_group`, `emr_managed_slave_security_group`, and `service_access_security_groups` arguments when omitted (support EMR Managed Security Groups) [GH-5493]
 * resource/aws_opsworks_permission: Prevent `Unable to change own permission level` error during self updates [GH-11379]
 
 ## 2.44.0 (January 09, 2020)
