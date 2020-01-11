@@ -43,6 +43,11 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				Computed: true,
 			},
 
+			"service_execution_role": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
 			"code": {
 				Type:     schema.TypeString,
 				Optional: true,
