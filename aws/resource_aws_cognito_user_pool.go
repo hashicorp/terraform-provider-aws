@@ -68,6 +68,7 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      7,
+							Deprecated:   "Use password_policy.temporary_password_validity_days instead",
 							ValidateFunc: validation.IntBetween(0, 90),
 						},
 					},
@@ -294,6 +295,11 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"require_uppercase": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"temporary_password_validity_days": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 365),
 						},
 					},
 				},
@@ -672,6 +678,11 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 			log.Printf("[DEBUG] Received %s, retrying CreateUserPool", err)
 			return resource.RetryableError(err)
 		}
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
+			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
+			params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
+			return resource.RetryableError(err)
+		}
 
 		return resource.NonRetryableError(err)
 	})
@@ -946,6 +957,11 @@ func resourceAwsCognitoUserPoolUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS") {
 			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool", err)
+			return resource.RetryableError(err)
+		}
+		if isAWSErr(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") {
+			log.Printf("[DEBUG] Received %s, retrying UpdateUserPool without UnusedAccountValidityDays", err)
+			params.AdminCreateUserConfig.UnusedAccountValidityDays = nil
 			return resource.RetryableError(err)
 		}
 

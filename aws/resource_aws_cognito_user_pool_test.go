@@ -484,6 +484,7 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_numbers", "false"),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_symbols", "true"),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_uppercase", "false"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", "7"),
 				),
 			},
 			{
@@ -500,6 +501,7 @@ func TestAccAWSCognitoUserPool_withPasswordPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_numbers", "true"),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_symbols", "false"),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_uppercase", "true"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", "14"),
 				),
 			},
 		},
@@ -872,6 +874,11 @@ resource "aws_cognito_user_pool" "test" {
       sms_message   = "Your username is {username} and temporary password is {####}."
     }
   }
+
+  password_policy {
+    minimum_length                   = 6
+    temporary_password_validity_days = 6
+  }
 }
 `, name)
 }
@@ -890,6 +897,11 @@ resource "aws_cognito_user_pool" "test" {
       email_subject = "Foo{####}BaBaz"
       sms_message   = "Your username is {username} and constant password is {####}."
     }
+  }
+
+  password_policy {
+    minimum_length                   = 6
+    temporary_password_validity_days = 7
   }
 }
 `, name)
@@ -1086,11 +1098,12 @@ resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   password_policy {
-    minimum_length    = 7
-    require_lowercase = true
-    require_numbers   = false
-    require_symbols   = true
-    require_uppercase = false
+    minimum_length                   = 7
+    require_lowercase                = true
+    require_numbers                  = false
+    require_symbols                  = true
+    require_uppercase                = false
+    temporary_password_validity_days = 7
   }
 }
 `, name)
@@ -1102,11 +1115,12 @@ resource "aws_cognito_user_pool" "test" {
   name = "terraform-test-pool-%s"
 
   password_policy {
-    minimum_length    = 9
-    require_lowercase = false
-    require_numbers   = true
-    require_symbols   = false
-    require_uppercase = true
+    minimum_length                   = 9
+    require_lowercase                = false
+    require_numbers                  = true
+    require_symbols                  = false
+    require_uppercase                = true
+    temporary_password_validity_days = 14
   }
 }
 `, name)
