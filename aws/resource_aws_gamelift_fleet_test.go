@@ -236,7 +236,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 
 	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
 	uFleetName := acctest.RandomWithPrefix("tf-acc-fleet-upd")
-	buildName := acctest.RandomWithPrefix("tf-acc-fleet")
+	buildName := acctest.RandomWithPrefix("tf-acc-build")
 
 	desc := fmt.Sprintf("Updated description %s", acctest.RandString(8))
 
@@ -282,6 +282,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", launchPath),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -303,6 +304,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
 					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", launchPath),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -313,7 +315,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
 	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
-	buildName := acctest.RandomWithPrefix("tf-acc-fleet")
+	buildName := acctest.RandomWithPrefix("tf-acc-build")
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
@@ -330,6 +332,8 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 	bucketName := *loc.Bucket
 	roleArn := *loc.RoleArn
 	key := *loc.Key
+	launchPath := g.LaunchPath
+	params := g.Parameters(33435)
 
 	resourceName := "aws_gamelift_fleet.test"
 
@@ -339,7 +343,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, buildName, bucketName, key, roleArn, "key1", "value1"),
+				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -347,7 +351,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGameliftFleetBasicConfigTags2(fleetName, buildName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAWSGameliftFleetBasicConfigTags2(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -356,7 +360,7 @@ func TestAccAWSGameliftFleet_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, buildName, bucketName, key, roleArn, "key2", "value2"),
+				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, launchPath, params, buildName, bucketName, key, roleArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -371,7 +375,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
 	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
-	buildName := acctest.RandomWithPrefix("tf-acc-fleet")
+	buildName := acctest.RandomWithPrefix("tf-acc-build")
 
 	desc := fmt.Sprintf("Terraform Acceptance Test %s", acctest.RandString(8))
 
@@ -485,6 +489,49 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	})
 }
 
+func TestAccAWSGameliftFleet_disappears(t *testing.T) {
+	var conf gamelift.FleetAttributes
+
+	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
+	buildName := acctest.RandomWithPrefix("tf-acc-build")
+
+	region := testAccGetRegion()
+	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	loc := g.Location
+	bucketName := *loc.Bucket
+	roleArn := *loc.RoleArn
+	key := *loc.Key
+
+	launchPath := g.LaunchPath
+	params := g.Parameters(33435)
+	resourceName := "aws_gamelift_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					testAccCheckAWSGameliftFleetDisappears(&conf),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -521,6 +568,33 @@ func testAccCheckAWSGameliftFleetExists(n string, res *gamelift.FleetAttributes)
 		*res = *fleet
 
 		return nil
+	}
+}
+
+func testAccCheckAWSGameliftFleetDisappears(res *gamelift.FleetAttributes) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).gameliftconn
+
+		input := &gamelift.DeleteFleetInput{FleetId: res.FleetId}
+		err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+			_, err := conn.DeleteFleet(input)
+			if err != nil {
+				msg := fmt.Sprintf("Cannot delete fleet %s that is in status of ", *res.FleetId)
+				if isAWSErr(err, gamelift.ErrCodeInvalidRequestException, msg) {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
+		if isResourceTimeoutError(err) {
+			_, err = conn.DeleteFleet(input)
+		}
+		if err != nil {
+			return fmt.Errorf("Error deleting Gamelift fleet: %s", err)
+		}
+
+		return waitForGameliftFleetToBeDeleted(conn, *res.FleetId, 5*time.Minute)
 	}
 }
 
@@ -569,33 +643,49 @@ resource "aws_gamelift_fleet" "test" {
 `, fleetName, launchPath, params)
 }
 
-func testAccAWSGameliftFleetBasicConfigTags1(fleetName, buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
+func testAccAWSGameliftFleetBasicConfigTags1(fleetName, launchPath, params, buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
 	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
   name              = %[1]q
 
-  tags = {
-    %[2]q = %[3]q
+  runtime_configuration {
+    server_process {
+      concurrent_executions = 1
+      launch_path           = %[2]q
+      parameters            = %[3]q
+    }
   }
-}
-`, fleetName, tagKey1, tagValue1)
-}
-
-func testAccAWSGameliftFleetBasicConfigTags2(fleetName, buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
-resource "aws_gamelift_fleet" "test" {
-  build_id          = "${aws_gamelift_build.test.id}"
-  ec2_instance_type = "c4.large"
-  name              = %[1]q
 
   tags = {
-    %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
-`, fleetName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, fleetName, launchPath, params, tagKey1, tagValue1)
+}
+
+func testAccAWSGameliftFleetBasicConfigTags2(fleetName, launchPath, params, buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+resource "aws_gamelift_fleet" "test" {
+  build_id          = "${aws_gamelift_build.test.id}"
+  ec2_instance_type = "c4.large"
+  name              = %[1]q
+
+  runtime_configuration {
+    server_process {
+      concurrent_executions = 1
+      launch_path           = %[2]q
+      parameters            = %[3]q
+    }
+  }
+
+  tags = {
+    %[4]q = %[5]q
+    %[6]q = %[7]q
+  }
+}
+`, fleetName, launchPath, params, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSGameliftFleetBasicUpdatedConfig(desc, fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
