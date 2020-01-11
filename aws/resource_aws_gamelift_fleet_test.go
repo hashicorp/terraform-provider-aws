@@ -14,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-const testAccGameliftFleetPrefix = "tf_acc_fleet_"
-
 func init() {
 	resource.AddTestSweepers("aws_gamelift_fleet", &resource.Sweeper{
 		Name: "aws_gamelift_fleet",
@@ -236,13 +234,11 @@ func TestDiffGameliftPortSettings(t *testing.T) {
 func TestAccAWSGameliftFleet_basic(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
-	rString := acctest.RandString(8)
+	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
+	uFleetName := acctest.RandomWithPrefix("tf-acc-fleet-upd")
+	buildName := acctest.RandomWithPrefix("tf-acc-fleet")
 
-	fleetName := fmt.Sprintf("%s%s", testAccGameliftFleetPrefix, rString)
-	uFleetName := fmt.Sprintf("%supd_%s", testAccGameliftFleetPrefix, rString)
-	buildName := fmt.Sprintf("%s%s", testAccGameliftBuildPrefix, rString)
-
-	desc := fmt.Sprintf("Updated description %s", rString)
+	desc := fmt.Sprintf("Updated description %s", acctest.RandString(8))
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
@@ -262,6 +258,7 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 
 	launchPath := g.LaunchPath
 	params := g.Parameters(33435)
+	resourceName := "aws_gamelift_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
@@ -271,42 +268,99 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 			{
 				Config: testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
-					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
-					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "default"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "new_game_session_protection_policy", "NoProtection"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.#", "0"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.launch_path", launchPath),
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", fleetName),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "default"),
+					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "NoProtection"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", launchPath),
 				),
 			},
 			{
 				Config: testAccAWSGameliftFleetBasicUpdatedConfig(desc, uFleetName, launchPath, params, buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
-					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
-					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", uFleetName),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "UpdatedGroup"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "new_game_session_protection_policy", "FullProtection"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.0.new_game_sessions_per_creator", "2"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.0.policy_period_in_minutes", "15"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.launch_path", launchPath),
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", uFleetName),
+					resource.TestCheckResourceAttr(resourceName, "description", desc),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "UpdatedGroup"),
+					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "FullProtection"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.new_game_sessions_per_creator", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.policy_period_in_minutes", "15"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", launchPath),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGameliftFleet_tags(t *testing.T) {
+	var conf gamelift.FleetAttributes
+
+	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
+	buildName := acctest.RandomWithPrefix("tf-acc-fleet")
+
+	region := testAccGetRegion()
+	g, err := testAccAWSGameliftSampleGame(region)
+
+	if isResourceNotFoundError(err) {
+		t.Skip(err)
+	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	loc := g.Location
+	bucketName := *loc.Bucket
+	roleArn := *loc.RoleArn
+	key := *loc.Key
+
+	resourceName := "aws_gamelift_fleet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGameliftFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, buildName, bucketName, key, roleArn, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSGameliftFleetBasicConfigTags2(fleetName, buildName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSGameliftFleetBasicConfigTags1(fleetName, buildName, bucketName, key, roleArn, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -316,12 +370,10 @@ func TestAccAWSGameliftFleet_basic(t *testing.T) {
 func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 	var conf gamelift.FleetAttributes
 
-	rString := acctest.RandString(8)
+	fleetName := acctest.RandomWithPrefix("tf-acc-fleet")
+	buildName := acctest.RandomWithPrefix("tf-acc-fleet")
 
-	fleetName := fmt.Sprintf("%s%s", testAccGameliftFleetPrefix, rString)
-	buildName := fmt.Sprintf("%s%s", testAccGameliftBuildPrefix, rString)
-
-	desc := fmt.Sprintf("Terraform Acceptance Test %s", rString)
+	desc := fmt.Sprintf("Terraform Acceptance Test %s", acctest.RandString(8))
 
 	region := testAccGetRegion()
 	g, err := testAccAWSGameliftSampleGame(region)
@@ -344,6 +396,7 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 		g.Parameters(33435),
 		g.Parameters(33436),
 	}
+	resourceName := "aws_gamelift_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSGamelift(t) },
@@ -353,81 +406,79 @@ func TestAccAWSGameliftFleet_allFields(t *testing.T) {
 			{
 				Config: testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath, params[0], buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
-					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
-					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "fleet_type", "ON_DEMAND"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.#", "3"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.from_port", "8080"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.ip_range", "8.8.8.8/32"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.to_port", "8080"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.from_port", "8443"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.ip_range", "8.8.0.0/16"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.protocol", "TCP"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.to_port", "8443"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.from_port", "60000"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.protocol", "UDP"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.to_port", "60000"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "TerraformAccTest"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "new_game_session_protection_policy", "FullProtection"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "operating_system", "WINDOWS_2012"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.0.new_game_sessions_per_creator", "4"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.0.policy_period_in_minutes", "25"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.game_session_activation_timeout_seconds", "35"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.max_concurrent_game_session_activations", "99"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.launch_path", launchPath),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.parameters", params[0]),
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
+					resource.TestCheckResourceAttr(resourceName, "name", fleetName),
+					resource.TestCheckResourceAttr(resourceName, "description", desc),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.from_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.ip_range", "8.8.8.8/32"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.to_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.from_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.ip_range", "8.8.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.to_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.from_port", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.protocol", "UDP"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.to_port", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "TerraformAccTest"),
+					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "FullProtection"),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.new_game_sessions_per_creator", "4"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.policy_period_in_minutes", "25"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.game_session_activation_timeout_seconds", "35"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.max_concurrent_game_session_activations", "99"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", launchPath),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.parameters", params[0]),
 				),
 			},
 			{
 				Config: testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath, params[1], buildName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSGameliftFleetExists("aws_gamelift_fleet.test", &conf),
-					resource.TestCheckResourceAttrSet("aws_gamelift_fleet.test", "build_id"),
-					resource.TestMatchResourceAttr("aws_gamelift_fleet.test", "arn", regexp.MustCompile(`^arn:[^:]+:gamelift:[^:]+:[^:]+:.+$`)),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_instance_type", "c4.large"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "fleet_type", "ON_DEMAND"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "name", fleetName),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "description", desc),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.#", "3"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.from_port", "8888"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.ip_range", "8.8.8.8/32"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.protocol", "TCP"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.0.to_port", "8888"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.from_port", "8443"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.ip_range", "8.4.0.0/16"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.protocol", "TCP"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.1.to_port", "8443"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.from_port", "60000"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.protocol", "UDP"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "ec2_inbound_permission.2.to_port", "60000"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "log_paths.#", "0"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "metric_groups.0", "TerraformAccTest"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "new_game_session_protection_policy", "FullProtection"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "operating_system", "WINDOWS_2012"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.0.new_game_sessions_per_creator", "4"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "resource_creation_limit_policy.0.policy_period_in_minutes", "25"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.game_session_activation_timeout_seconds", "35"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.max_concurrent_game_session_activations", "98"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.#", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.launch_path", launchPath),
-					resource.TestCheckResourceAttr("aws_gamelift_fleet.test", "runtime_configuration.0.server_process.0.parameters", params[1]),
+					testAccCheckAWSGameliftFleetExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "build_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
+					resource.TestCheckResourceAttr(resourceName, "name", fleetName),
+					resource.TestCheckResourceAttr(resourceName, "description", desc),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.from_port", "8888"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.ip_range", "8.8.8.8/32"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.0.to_port", "8888"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.from_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.ip_range", "8.4.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.1.to_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.from_port", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.ip_range", "8.8.8.8/32"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.protocol", "UDP"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.2.to_port", "60000"),
+					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "TerraformAccTest"),
+					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "FullProtection"),
+					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.new_game_sessions_per_creator", "4"),
+					resource.TestCheckResourceAttr(resourceName, "resource_creation_limit_policy.0.policy_period_in_minutes", "25"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.game_session_activation_timeout_seconds", "35"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.max_concurrent_game_session_activations", "98"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.launch_path", launchPath),
+					resource.TestCheckResourceAttr(resourceName, "runtime_configuration.0.server_process.0.parameters", params[1]),
 				),
 			},
 		},
@@ -501,7 +552,7 @@ func testAccCheckAWSGameliftFleetDestroy(s *terraform.State) error {
 }
 
 func testAccAWSGameliftFleetBasicConfig(fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
-	return fmt.Sprintf(`
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
@@ -515,14 +566,40 @@ resource "aws_gamelift_fleet" "test" {
     }
   }
 }
+`, fleetName, launchPath, params)
+}
 
-%s
+func testAccAWSGameliftFleetBasicConfigTags1(fleetName, buildName, bucketName, key, roleArn, tagKey1, tagValue1 string) string {
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+resource "aws_gamelift_fleet" "test" {
+  build_id          = "${aws_gamelift_build.test.id}"
+  ec2_instance_type = "c4.large"
+  name              = %[1]q
 
-`, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, fleetName, tagKey1, tagValue1)
+}
+
+func testAccAWSGameliftFleetBasicConfigTags2(fleetName, buildName, bucketName, key, roleArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+resource "aws_gamelift_fleet" "test" {
+  build_id          = "${aws_gamelift_build.test.id}"
+  ec2_instance_type = "c4.large"
+  name              = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, fleetName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSGameliftFleetBasicUpdatedConfig(desc, fleetName, launchPath, params, buildName, bucketName, key, roleArn string) string {
-	return fmt.Sprintf(`
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id                           = "${aws_gamelift_build.test.id}"
   ec2_instance_type                  = "c4.large"
@@ -544,14 +621,11 @@ resource "aws_gamelift_fleet" "test" {
     }
   }
 }
-
-%s
-
-`, desc, fleetName, launchPath, params, testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn))
+`, desc, fleetName, launchPath, params)
 }
 
 func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
-	return fmt.Sprintf(`
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
@@ -600,17 +674,11 @@ resource "aws_gamelift_fleet" "test" {
     }
   }
 }
-
-%s
-
-%s
-
-`, fleetName, desc, launchPath, params,
-		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn), testAccAWSGameLiftFleetIAMRole(buildName))
+`, fleetName, desc, launchPath, params)
 }
 
 func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
-	return fmt.Sprintf(`
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
@@ -660,13 +728,7 @@ resource "aws_gamelift_fleet" "test" {
     }
   }
 }
-
-%s
-
-%s
-
-`, fleetName, desc, launchPath, params,
-		testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn), testAccAWSGameLiftFleetIAMRole(buildName))
+`, fleetName, desc, launchPath, params)
 }
 
 func testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn string) string {
