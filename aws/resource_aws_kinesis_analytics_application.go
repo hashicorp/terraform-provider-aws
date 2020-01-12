@@ -48,9 +48,29 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				Required: true,
 			},
 
+			"runtime": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"s3_bucket": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"s3_object": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
 			"code": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+
+			"code_content_type": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 
 			"create_timestamp": {
@@ -150,7 +170,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 									"role_arn": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validateArn,
 									},
 								},
@@ -367,7 +387,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 
 									"role_arn": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validateArn,
 									},
 								},
@@ -566,8 +586,64 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
+	serviceExecutionRole := d.Get("service_execution_role").(string)
+	runtime := d.Get("runtime").(string)
+	s3Bucket := d.Get("s3_bucket").(string)
+	s3Object := d.Get("s3_object").(string)
+	codeContentType := d.Get("code_content_type").(string)
+
+	var sqlApplicationConfiguration *kinesisanalyticsv2.SqlApplicationConfiguration
+	var flinkApplicationConfiguration *kinesisanalyticsv2.FlinkApplicationConfiguration
+	switch {
+	case strings.HasPrefix(runtime, "SQL"):
+		sqlApplicationConfiguration = &kinesisanalyticsv2.SqlApplicationConfiguration{}
+		if v, ok := d.GetOk("inputs"); ok {
+			i := v.([]interface{})[0].(map[string]interface{})
+			inputs := expandKinesisAnalyticsInputs(i)
+			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
+		}
+		if v := d.Get("outputs").([]interface{}); len(v) > 0 {
+			outputs := make([]*kinesisanalyticsv2.Output, 0)
+			for _, o := range v {
+				output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
+				outputs = append(outputs, output)
+			}
+			sqlApplicationConfiguration.Outputs = outputs
+		}
+	case strings.HasPrefix(runtime, "FLINK"):
+		flinkApplicationConfiguration = &kinesisanalyticsv2.FlinkApplicationConfiguration{}
+	}
+
+	var contentType *string
+	switch codeContentType {
+	case "zip":
+		contentType = aws.String(kinesisanalyticsv2.CodeContentTypeZipfile)
+	case "plain_text":
+		contentType = aws.String(kinesisanalyticsv2.CodeContentTypePlaintext)
+	}
+
+	var s3ContentLocation *kinesisanalyticsv2.S3ContentLocation
+	if s3Bucket != "" && s3Object != "" {
+		s3ContentLocation = &kinesisanalyticsv2.S3ContentLocation{
+			BucketARN: aws.String(s3Bucket),
+			FileKey:   aws.String(s3Object),
+		}
+	}
+
 	createOpts := &kinesisanalyticsv2.CreateApplicationInput{
-		ApplicationName: aws.String(name),
+		RuntimeEnvironment:   aws.String(runtime),
+		ApplicationName:      aws.String(name),
+		ServiceExecutionRole: aws.String(serviceExecutionRole),
+		ApplicationConfiguration: &kinesisanalyticsv2.ApplicationConfiguration{
+			SqlApplicationConfiguration:   sqlApplicationConfiguration,
+			FlinkApplicationConfiguration: flinkApplicationConfiguration,
+			ApplicationCodeConfiguration: &kinesisanalyticsv2.ApplicationCodeConfiguration{
+				CodeContent: &kinesisanalyticsv2.CodeContent{
+					S3ContentLocation: s3ContentLocation,
+				},
+				CodeContentType: contentType,
+			},
+		},
 	}
 
 	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
@@ -578,21 +654,6 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		clo := v.([]interface{})[0].(map[string]interface{})
 		cloudwatchLoggingOption := expandKinesisAnalyticsCloudwatchLoggingOption(clo)
 		createOpts.CloudWatchLoggingOptions = []*kinesisanalyticsv2.CloudWatchLoggingOption{cloudwatchLoggingOption}
-	}
-
-	if v, ok := d.GetOk("inputs"); ok {
-		i := v.([]interface{})[0].(map[string]interface{})
-		inputs := expandKinesisAnalyticsInputs(i)
-		createOpts.ApplicationConfiguration.SqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
-	}
-
-	if v := d.Get("outputs").([]interface{}); len(v) > 0 {
-		outputs := make([]*kinesisanalyticsv2.Output, 0)
-		for _, o := range v {
-			output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
-			outputs = append(outputs, output)
-		}
-		createOpts.ApplicationConfiguration.SqlApplicationConfiguration.Outputs = outputs
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -669,12 +730,14 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error setting inputs: %s", err)
 	}
 
-	if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.OutputDescriptions)); err != nil {
-		return fmt.Errorf("error setting outputs: %s", err)
-	}
+	if runtime, ok := d.Get("runtime").(string); ok && strings.HasPrefix(runtime, "SQL") {
+		if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.OutputDescriptions)); err != nil {
+			return fmt.Errorf("error setting outputs: %s", err)
+		}
 
-	if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions)); err != nil {
-		return fmt.Errorf("error setting reference_data_sources: %s", err)
+		if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions)); err != nil {
+			return fmt.Errorf("error setting reference_data_sources: %s", err)
+		}
 	}
 
 	tags, err := keyvaluetags.Kinesisanalyticsv2ListTags(conn, arn)
