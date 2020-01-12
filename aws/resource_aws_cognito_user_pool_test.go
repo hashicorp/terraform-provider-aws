@@ -128,7 +128,7 @@ func TestAccAWSCognitoUserPool_withAdminCreateUserConfiguration(t *testing.T) {
 			{
 				Config: testAccAWSCognitoUserPoolConfig_withAdminCreateUserConfigurationUpdated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.unused_account_validity_days", "6"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_message", "Your username is {username} and constant password is {####}. "),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.invite_message_template.0.email_subject", "Foo{####}BaBaz"),
@@ -874,11 +874,6 @@ resource "aws_cognito_user_pool" "test" {
       sms_message   = "Your username is {username} and temporary password is {####}."
     }
   }
-
-  password_policy {
-    minimum_length                   = 6
-    temporary_password_validity_days = 6
-  }
 }
 `, name)
 }
@@ -890,18 +885,13 @@ resource "aws_cognito_user_pool" "test" {
 
   admin_create_user_config {
     allow_admin_create_user_only = false
-    unused_account_validity_days = 7
+    unused_account_validity_days = 6
 
     invite_message_template {
       email_message = "Your username is {username} and constant password is {####}. "
       email_subject = "Foo{####}BaBaz"
       sms_message   = "Your username is {username} and constant password is {####}."
     }
-  }
-
-  password_policy {
-    minimum_length                   = 6
-    temporary_password_validity_days = 7
   }
 }
 `, name)
