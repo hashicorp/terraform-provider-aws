@@ -56,7 +56,6 @@ resource "aws_ram_resource_share_accepter" "receiver_accept" {
 The following arguments are supported:
 
 * `share_arn` - (Required) The ARN of the resource share.
-* `account_id` - (Optional) The account ID of the receiver account.
 
 ## Attributes Reference
 
@@ -77,5 +76,3 @@ Resource share accepters can be imported using the resource share ARN, e.g.
 ```
 $ terraform import aws_ram_resource_share_accepter.example arn:aws:ram:us-east-1:123456789012:resource-share/c4b56393-e8d9-89d9-6dc9-883752de4767
 ```
-
-~> **Note:** This resource can be imported only if the corresponding invitation has already been accepted. In such a case, the argument `account_id` must be specified to ensure the resource can be deleted, since this information is required by AWS to dissassociate from a Resource Share. Under normal operation this argument is sourced from the invitation and stored in the `receiver_account_id`, but the invitation has usually disappeared when an import is made.
