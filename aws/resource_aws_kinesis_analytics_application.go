@@ -124,6 +124,91 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 				},
 			},
 
+			// Flink only
+			"checkpoint_configuration": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"checkpoint_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  60000,
+						},
+						"checkpointing_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"configuration_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  kinesisanalyticsv2.ConfigurationTypeDefault,
+						},
+						"min_pause_between_checkpoints": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  5000,
+						},
+					},
+				},
+			},
+			// Flink only
+			"monitoring_configuration": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configuration_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  kinesisanalyticsv2.ConfigurationTypeDefault,
+						},
+						"log_level": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"metrics_level": {
+							Type:     schema.TypeString,
+							Required: true,
+							// TODO add validation
+							// that this is one of
+							// "APPLICATION",
+							// "TASK", "OPERATOR",
+							// or "PARALLELISM"
+						},
+					},
+				},
+			},
+			// Flink only
+			"parallelism_configuration": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auto_scaling": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"configuration_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  kinesisanalyticsv2.ConfigurationTypeDefault,
+						},
+						"parallelism": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"parallelism_per_kpu": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+			},
+
+			// SQL only
 			"inputs": {
 				Type:     schema.TypeList,
 				Optional: true,
