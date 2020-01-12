@@ -85,6 +85,37 @@ func TestAccAWSEgressOnlyInternetGateway_basic(t *testing.T) {
 	})
 }
 
+func TestAccCheckAWSEgressOnlyInternetGateway_tags(t *testing.T) {
+	var v ec2.EgressOnlyInternetGateway
+	resourceName := "aws_egress_only_internet_gateway.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEgressOnlyInternetGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEgressOnlyInternetGatewayConfig_Tags,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEgressOnlyInternetGatewayExists(resourceName, &v),
+					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-egress-only-igw-tags"),
+					testAccCheckTags(&v.Tags, "test", "bar"),
+				),
+			},
+			{
+				Config: testAccAWSEgressOnlyInternetGatewayConfig_TagsUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEgressOnlyInternetGatewayExists(resourceName, &v),
+					testAccCheckTags(&v.Tags, "Name", "terraform-testacc-egress-only-igw-tags"),
+					testAccCheckTags(&v.Tags, "test", ""),
+					testAccCheckTags(&v.Tags, "bar", "baz"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEgressOnlyInternetGatewayDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -150,5 +181,41 @@ resource "aws_vpc" "test" {
 
 resource "aws_egress_only_internet_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
+}
+`
+
+const testAccAWSEgressOnlyInternetGatewayConfig_Tags = `
+resource "aws_vpc" "test" {
+	cidr_block = "10.1.0.0/16"
+	assign_generated_ipv6_cidr_block = true
+	tags = {
+		Name = "terraform-testacc-egress-only-igw-tags"
+	}
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+	vpc_id = "${aws_vpc.test.id}"
+	tags = {
+		Name = "terraform-testacc-egress-only-igw-tags"
+		test = "bar"
+	}
+}
+`
+
+const testAccAWSEgressOnlyInternetGatewayConfig_TagsUpdate = `
+resource "aws_vpc" "test" {
+	cidr_block = "10.1.0.0/16"
+	assign_generated_ipv6_cidr_block = true
+	tags = {
+		Name = "terraform-testacc-egress-only-igw-tags"
+	}
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+	vpc_id = "${aws_vpc.test.id}"
+	tags = {
+		Name = "terraform-testacc-egress-only-igw-tags"
+		bar = "baz"
+	}
 }
 `

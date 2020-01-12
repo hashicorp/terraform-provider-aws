@@ -15,6 +15,7 @@ func resourceAwsEgressOnlyInternetGateway() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEgressOnlyInternetGatewayCreate,
 		Read:   resourceAwsEgressOnlyInternetGatewayRead,
+		Update: resourceAwsEgressOnlyInternetGatewayUpdate,
 		Delete: resourceAwsEgressOnlyInternetGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -26,6 +27,7 @@ func resourceAwsEgressOnlyInternetGateway() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -41,6 +43,11 @@ func resourceAwsEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.StringValue(resp.EgressOnlyInternetGateway.EgressOnlyInternetGatewayId))
+
+	err = setTags(conn, d)
+	if err != nil {
+		return err
+	}
 
 	return resourceAwsEgressOnlyInternetGatewayRead(d, meta)
 }
@@ -85,6 +92,8 @@ func resourceAwsEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta inter
 		d.Set("vpc_id", igw.Attachments[0].VpcId)
 	}
 
+	d.Set("tags", tagsToMap(igw.Tags))
+
 	return nil
 }
 
@@ -97,6 +106,18 @@ func getEc2EgressOnlyInternetGateway(id string, resp *ec2.DescribeEgressOnlyInte
 		}
 	}
 	return nil
+}
+
+func resourceAwsEgressOnlyInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	if err := setTags(conn, d); err != nil {
+		return err
+	}
+
+	d.SetPartial("tags")
+
+	return resourceAwsEgressOnlyInternetGatewayRead(d, meta)
 }
 
 func resourceAwsEgressOnlyInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
