@@ -793,6 +793,7 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
 		return fmt.Errorf("error reading Kinesis Analytics Application (%s): %s", d.Id(), err)
 	}
@@ -811,11 +812,12 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
 	}
 
-	if err := d.Set("inputs", flattenKinesisAnalyticsInputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions)); err != nil {
-		return fmt.Errorf("error setting inputs: %s", err)
-	}
+	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
+	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
+		if err := d.Set("inputs", flattenKinesisAnalyticsInputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions)); err != nil {
+			return fmt.Errorf("error setting inputs: %s", err)
+		}
 
-	if runtime, ok := d.Get("runtime").(string); ok && strings.HasPrefix(runtime, "SQL") {
 		if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.OutputDescriptions)); err != nil {
 			return fmt.Errorf("error setting outputs: %s", err)
 		}
@@ -823,6 +825,16 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions)); err != nil {
 			return fmt.Errorf("error setting reference_data_sources: %s", err)
 		}
+	}
+	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
+		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
+
+		d.Set("checkpoint_configuration", map[string]interface{}{
+			"checkpoint_interval":           resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.CheckpointInterval,
+			"checkpointing_enabled":         resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.CheckpointingEnabled,
+			"configuration_type":            resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.ConfigurationType,
+			"min_pause_between_checkpoints": resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription.CheckpointConfigurationDescription.MinPauseBetweenCheckpoints,
+		})
 	}
 
 	tags, err := keyvaluetags.Kinesisanalyticsv2ListTags(conn, arn)
@@ -937,38 +949,40 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			}
 		}
 
-		oldOutputs, newOutputs := d.GetChange("outputs")
-		if len(oldOutputs.([]interface{})) == 0 && len(newOutputs.([]interface{})) > 0 {
-			if v, ok := d.GetOk("outputs"); ok {
-				o := v.([]interface{})[0].(map[string]interface{})
-				output := expandKinesisAnalyticsOutputs(o)
-				addOpts := &kinesisanalyticsv2.AddApplicationOutputInput{
-					ApplicationName:             aws.String(name),
-					CurrentApplicationVersionId: aws.Int64(int64(version)),
-					Output:                      output,
-				}
-				// Retry for IAM eventual consistency
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AddApplicationOutput(addOpts)
-					if err != nil {
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-							return resource.RetryableError(err)
-						}
-						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
+		if d.Get("runtime") == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
+			oldOutputs, newOutputs := d.GetChange("outputs")
+			if len(oldOutputs.([]interface{})) == 0 && len(newOutputs.([]interface{})) > 0 {
+				if v, ok := d.GetOk("outputs"); ok {
+					o := v.([]interface{})[0].(map[string]interface{})
+					output := expandKinesisAnalyticsOutputs(o)
+					addOpts := &kinesisanalyticsv2.AddApplicationOutputInput{
+						ApplicationName:             aws.String(name),
+						CurrentApplicationVersionId: aws.Int64(int64(version)),
+						Output:                      output,
 					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationOutput(addOpts)
+					// Retry for IAM eventual consistency
+					err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+						_, err := conn.AddApplicationOutput(addOpts)
+						if err != nil {
+							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+								return resource.RetryableError(err)
+							}
+							// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+								return resource.RetryableError(err)
+							}
+							return resource.NonRetryableError(err)
+						}
+						return nil
+					})
+					if isResourceTimeoutError(err) {
+						_, err = conn.AddApplicationOutput(addOpts)
+					}
+					if err != nil {
+						return fmt.Errorf("Unable to add application outputs: %s", err)
+					}
+					version = version + 1
 				}
-				if err != nil {
-					return fmt.Errorf("Unable to add application outputs: %s", err)
-				}
-				version = version + 1
 			}
 		}
 
@@ -1246,53 +1260,55 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 		}
 	}
 
-	oldInputs, newInputs := d.GetChange("inputs")
-	if len(oldInputs.([]interface{})) > 0 && len(newInputs.([]interface{})) > 0 {
-		if v, ok := d.GetOk("inputs"); ok {
-			vL := v.([]interface{})[0].(map[string]interface{})
-			inputUpdate := expandKinesisAnalyticsInputUpdate(vL)
-			applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.InputUpdates = []*kinesisanalyticsv2.InputUpdate{inputUpdate}
-		}
-	}
-
-	oldOutputs, newOutputs := d.GetChange("outputs")
-	if len(oldOutputs.([]interface{})) > 0 && len(newOutputs.([]interface{})) > 0 {
-		if v, ok := d.GetOk("outputs"); ok {
-			vL := v.([]interface{})[0].(map[string]interface{})
-			outputUpdate := expandKinesisAnalyticsOutputUpdate(vL)
-			applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.OutputUpdates = []*kinesisanalyticsv2.OutputUpdate{outputUpdate}
-		}
-	}
-
-	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
-	if len(oldReferenceData.([]interface{})) > 0 && len(newReferenceData.([]interface{})) > 0 {
-		if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
-			var rdsus []*kinesisanalyticsv2.ReferenceDataSourceUpdate
-			for _, rd := range v {
-				rdL := rd.(map[string]interface{})
-				rdsu := &kinesisanalyticsv2.ReferenceDataSourceUpdate{
-					ReferenceId:     aws.String(rdL["id"].(string)),
-					TableNameUpdate: aws.String(rdL["table_name"].(string)),
-				}
-
-				if v := rdL["s3"].([]interface{}); len(v) > 0 {
-					vL := v[0].(map[string]interface{})
-					s3rdsu := &kinesisanalyticsv2.S3ReferenceDataSourceUpdate{
-						BucketARNUpdate: aws.String(vL["bucket_arn"].(string)),
-						FileKeyUpdate:   aws.String(vL["file_key"].(string)),
-					}
-					rdsu.S3ReferenceDataSourceUpdate = s3rdsu
-				}
-
-				if v := rdL["schema"].([]interface{}); len(v) > 0 {
-					vL := v[0].(map[string]interface{})
-					ss := expandKinesisAnalyticsSourceSchema(vL)
-					rdsu.ReferenceSchemaUpdate = ss
-				}
-
-				rdsus = append(rdsus, rdsu)
+	if d.Get("runtime") == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
+		oldInputs, newInputs := d.GetChange("inputs")
+		if len(oldInputs.([]interface{})) > 0 && len(newInputs.([]interface{})) > 0 {
+			if v, ok := d.GetOk("inputs"); ok {
+				vL := v.([]interface{})[0].(map[string]interface{})
+				inputUpdate := expandKinesisAnalyticsInputUpdate(vL)
+				applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.InputUpdates = []*kinesisanalyticsv2.InputUpdate{inputUpdate}
 			}
-			applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.ReferenceDataSourceUpdates = rdsus
+		}
+
+		oldOutputs, newOutputs := d.GetChange("outputs")
+		if len(oldOutputs.([]interface{})) > 0 && len(newOutputs.([]interface{})) > 0 {
+			if v, ok := d.GetOk("outputs"); ok {
+				vL := v.([]interface{})[0].(map[string]interface{})
+				outputUpdate := expandKinesisAnalyticsOutputUpdate(vL)
+				applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.OutputUpdates = []*kinesisanalyticsv2.OutputUpdate{outputUpdate}
+			}
+		}
+
+		oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
+		if len(oldReferenceData.([]interface{})) > 0 && len(newReferenceData.([]interface{})) > 0 {
+			if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
+				var rdsus []*kinesisanalyticsv2.ReferenceDataSourceUpdate
+				for _, rd := range v {
+					rdL := rd.(map[string]interface{})
+					rdsu := &kinesisanalyticsv2.ReferenceDataSourceUpdate{
+						ReferenceId:     aws.String(rdL["id"].(string)),
+						TableNameUpdate: aws.String(rdL["table_name"].(string)),
+					}
+
+					if v := rdL["s3"].([]interface{}); len(v) > 0 {
+						vL := v[0].(map[string]interface{})
+						s3rdsu := &kinesisanalyticsv2.S3ReferenceDataSourceUpdate{
+							BucketARNUpdate: aws.String(vL["bucket_arn"].(string)),
+							FileKeyUpdate:   aws.String(vL["file_key"].(string)),
+						}
+						rdsu.S3ReferenceDataSourceUpdate = s3rdsu
+					}
+
+					if v := rdL["schema"].([]interface{}); len(v) > 0 {
+						vL := v[0].(map[string]interface{})
+						ss := expandKinesisAnalyticsSourceSchema(vL)
+						rdsu.ReferenceSchemaUpdate = ss
+					}
+
+					rdsus = append(rdsus, rdsu)
+				}
+				applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.ReferenceDataSourceUpdates = rdsus
+			}
 		}
 	}
 
