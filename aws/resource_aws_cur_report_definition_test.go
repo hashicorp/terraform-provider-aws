@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsCurReportDefinition_basic(t *testing.T) {
+func TestAccAwsCurReportDefinition_athena(t *testing.T) {
 	oldvar := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
 
-	resourceName := "aws_cur_report_definition.test"
+	resourceName := "aws_cur_report_definition.athena"
 
 	reportName := acctest.RandomWithPrefix("tf_acc_test")
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
@@ -29,11 +29,46 @@ func TestAccAwsCurReportDefinition_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsCurReportDefinitionConfig_basic(reportName, bucketName, bucketRegion),
+				Config: testAccAwsCurReportDefinitionConfig_basic_athena(reportName, bucketName, bucketRegion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCurReportDefinitionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
 					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "format", "Parquet"),
+					resource.TestCheckResourceAttr(resourceName, "compression", "Parquet"),
+					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
+					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "s3_region", bucketRegion),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsCurReportDefinition_redshift_quicksight(t *testing.T) {
+	oldvar := os.Getenv("AWS_DEFAULT_REGION")
+	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
+	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+
+	resourceName := "aws_cur_report_definition.redshift_quicksight"
+	reportName := acctest.RandomWithPrefix("tf_acc_test")
+	bucketName := fmt.Sprintf("tf-test-bucket-%d", acctest.RandInt())
+	bucketRegion := "us-east-1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCur(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsCurReportDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(reportName, bucketName, bucketRegion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCurReportDefinitionExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "report_name", reportName),
+					resource.TestCheckResourceAttr(resourceName, "time_unit", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "format", "textORcsv"),
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket", bucketName),
@@ -105,17 +140,17 @@ func testAccPreCheckAWSCur(t *testing.T) {
 }
 
 // note: cur report definitions are currently only supported in us-east-1
-func testAccAwsCurReportDefinitionConfig_basic(reportName string, bucketName string, bucketRegion string) string {
+func testAccAwsCurReportDefinitionConfig_basic(bucketName string, bucketRegion string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket        = "%[2]s"
+  bucket        = "%[1]s"
   acl           = "private"
   force_destroy = true
-  region        = "%[3]s"
+  region        = "%[2]s"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -151,8 +186,14 @@ resource "aws_s3_bucket_policy" "test" {
 }
 POLICY
 }
+`, bucketName, bucketRegion)
+}
 
-resource "aws_cur_report_definition" "test" {
+func testAccAwsCurReportDefinitionConfig_basic_redshift_quicksight(reportName string, bucketName string, bucketRegion string) string {
+	reportDefinition := fmt.Sprintf(`
+resource "aws_cur_report_definition" "redshift_quicksight" {
+  depends_on = ["aws_s3_bucket_policy.test"]
+
   report_name                = "%[1]s"
   time_unit                  = "DAILY"
   format                     = "textORcsv"
@@ -163,5 +204,27 @@ resource "aws_cur_report_definition" "test" {
   s3_region                  = "${aws_s3_bucket.test.region}"
   additional_artifacts       = ["REDSHIFT", "QUICKSIGHT"]
 }
-`, reportName, bucketName, bucketRegion)
+`, reportName)
+
+	return testAccAwsCurReportDefinitionConfig_basic(bucketName, bucketRegion) + reportDefinition
+}
+
+//``
+func testAccAwsCurReportDefinitionConfig_basic_athena(reportName string, bucketName string, bucketRegion string) string {
+	reportDefinition := fmt.Sprintf(`
+resource "aws_cur_report_definition" "athena" {
+  depends_on = ["aws_s3_bucket_policy.test"]
+
+  report_name                = "%[1]s"
+  time_unit                  = "DAILY"
+  format                     = "Parquet"
+  compression                = "Parquet"
+  additional_schema_elements = ["RESOURCES"]
+  s3_bucket                  = "${aws_s3_bucket.test.id}"
+  s3_prefix                  = ""
+  s3_region                  = "${aws_s3_bucket.test.region}"
+  additional_artifacts       = ["ATHENA"]
+}
+`, reportName)
+	return testAccAwsCurReportDefinitionConfig_basic(bucketName, bucketRegion) + reportDefinition
 }
