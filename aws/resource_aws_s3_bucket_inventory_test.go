@@ -278,8 +278,8 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format     = "Parquet"
-      bucket_arn = "${aws_s3_bucket.test.arn}"
+      format = "Parquet"
+      bucket_arn = "${aws_s3_bucket.bucket.arn}"
 
       encryption {
         sse_kms {

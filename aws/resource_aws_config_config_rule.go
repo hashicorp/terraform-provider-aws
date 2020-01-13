@@ -31,7 +31,10 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
+				ValidateFunc: validateMaxLength(128),
+				// The API documentation claims the maximum name length is 64,
+				// but when you use the AWS console, it shows a maximum length
+				// of 128 and allows you to create such rules with a long name.
 			},
 			"rule_id": {
 				Type:     schema.TypeString,
