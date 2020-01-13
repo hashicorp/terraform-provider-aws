@@ -17,17 +17,17 @@ This resource can be useful for getting back a set of subnet ids for a vpc.
 The following shows outputing all cidr blocks for every subnet id in a vpc.
 
 ```hcl
-data aws_subnet_ids example {
+data "aws_subnet_ids" "example" {
   vpc_id = var.vpc_id
 }
 
-data aws_subnet example {
-  count = length(data.aws_subnet_ids.example.ids)
-  id    = tolist(data.aws_subnet_ids.example.ids)[count.index]
+data "aws_subnet" "example" {
+  for_each = data.aws_subnet_ids.example.ids
+  id       = each.value
 }
 
-output subnet_cidr_blocks {
-  value = data.aws_subnet.example.*.cidr_block
+output "subnet_cidr_blocks" {
+  value = [for s in data.aws_subnet.for-each-example : s.cidr_block]
 }
 ```
 
@@ -45,10 +45,10 @@ data "aws_subnet_ids" "private" {
 }
 
 resource "aws_instance" "app" {
-  count         = "3"
+  for_each      = data.aws_subnet_ids.example.ids
   ami           = var.ami
   instance_type = "t2.micro"
-  subnet_id     = element(data.aws_subnet_ids.private.ids, count.index)
+  subnet_id     = each.value
 }
 ```
 
@@ -69,10 +69,10 @@ which take the following arguments:
   For example, if matching against tag `Name`, use:
 
 ```hcl
-data aws_subnet_ids selected {
+data "aws_subnet_ids" "selected" {
   filter {
     name   = "tag:Name"
-    values = [""]       # insert values here
+    values = [""] # insert values here
   }
 }
 ```
