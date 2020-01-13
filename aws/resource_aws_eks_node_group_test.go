@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -28,6 +29,7 @@ func testSweepEksFargateNodegroups(region string) error {
 	}
 	conn := client.(*AWSClient).eksconn
 
+	var errors error
 	input := &eks.ListClustersInput{}
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		for _, cluster := range page.Clusters {
@@ -43,34 +45,36 @@ func testSweepEksFargateNodegroups(region string) error {
 						ClusterName:   cluster,
 						NodegroupName: nodegroup,
 					}
-					_, err = conn.DeleteNodegroup(input)
+					_, err := conn.DeleteNodegroup(input)
 
 					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-						log.Printf("[ERROR] Error deleting EKS Node Group %q: %s", nodegroupName, err)
+						errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Node Group %q: %w", nodegroupName, err))
+						continue
 					}
 
 					if err := waitForEksNodeGroupDeletion(conn, clusterName, nodegroupName, 10*time.Minute); err != nil {
-						log.Printf("[ERROR] Error waiting for EKS Node Group %q deletion: %s", nodegroupName, err)
+						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Node Group %q deletion: %w", nodegroupName, err))
+						continue
 					}
 				}
 				return true
 			})
 			if err != nil {
-				log.Printf("[ERROR] Failed to list Node Groups for EKS Cluster %s: %s", clusterName, err)
+				errors = multierror.Append(errors, fmt.Errorf("error listing Node Groups for EKS Cluster %s: %w", clusterName, err))
 			}
 		}
 
 		return true
 	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+		return errors // In case we have completed some pages, but had errors
+	}
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EKS Clusters: %w", err)
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
 	}
 
-	return err
+	return errors
 }
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {

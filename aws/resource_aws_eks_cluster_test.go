@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -34,6 +35,7 @@ func testSweepEksClusters(region string) error {
 	}
 	conn := client.(*AWSClient).eksconn
 
+	var errors error
 	input := &eks.ListClustersInput{}
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		for _, cluster := range page.Clusters {
@@ -42,25 +44,26 @@ func testSweepEksClusters(region string) error {
 			log.Printf("[INFO] Deleting EKS Cluster: %s", name)
 			err := deleteEksCluster(conn, name)
 			if err != nil {
-				log.Printf("[ERROR] Failed to delete EKS Cluster %s: %s", name, err)
+				errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Cluster %q: %w", name, err))
 				continue
 			}
 			err = waitForDeleteEksCluster(conn, name, 15*time.Minute)
 			if err != nil {
-				log.Printf("[ERROR] Failed to wait for EKS Cluster %s deletion: %s", name, err)
+				errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Cluster %q deletion: %w", name, err))
+				continue
 			}
 		}
 		return true
 	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+		return errors // In case we have completed some pages, but had errors
+	}
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EKS Clusters: %w", err)
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
 	}
 
-	return nil
+	return errors
 }
 
 func TestAccAWSEksCluster_basic(t *testing.T) {

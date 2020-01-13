@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -28,6 +29,7 @@ func testSweepEksFargateProfiles(region string) error {
 	}
 	conn := client.(*AWSClient).eksconn
 
+	var errors error
 	input := &eks.ListClustersInput{}
 	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		for _, cluster := range page.Clusters {
@@ -43,34 +45,36 @@ func testSweepEksFargateProfiles(region string) error {
 						ClusterName:        cluster,
 						FargateProfileName: profile,
 					}
-					_, err = conn.DeleteFargateProfile(input)
+					_, err := conn.DeleteFargateProfile(input)
 
 					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
-						log.Printf("[ERROR] Error deleting EKS Fargate Profile %q: %s", profileName, err)
+						errors = multierror.Append(errors, fmt.Errorf("error deleting EKS Fargate Profile %q: %w", profileName, err))
+						continue
 					}
 
 					if err := waitForEksFargateProfileDeletion(conn, clusterName, profileName, 10*time.Minute); err != nil {
-						log.Printf("[ERROR] Error waiting for EKS Fargate Profile %q deletion: %s", profileName, err)
+						errors = multierror.Append(errors, fmt.Errorf("error waiting for EKS Fargate Profile %q deletion: %w", profileName, err))
+						continue
 					}
 				}
 				return true
 			})
 			if err != nil {
-				log.Printf("[ERROR] Failed to list Fargate Profiles for EKS Cluster %s: %s", clusterName, err)
+				errors = multierror.Append(errors, fmt.Errorf("error listing Fargate Profiles for EKS Cluster %s: %w", clusterName, err))
 			}
 		}
 
 		return true
 	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+		return errors // In case we have completed some pages, but had errors
+	}
 	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EKS Clusters: %w", err)
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EKS Clusters: %w", err))
 	}
 
-	return err
+	return errors
 }
 
 func TestAccAWSEksFargateProfile_basic(t *testing.T) {
