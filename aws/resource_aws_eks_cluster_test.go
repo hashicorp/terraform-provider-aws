@@ -20,6 +20,10 @@ func init() {
 	resource.AddTestSweepers("aws_eks_cluster", &resource.Sweeper{
 		Name: "aws_eks_cluster",
 		F:    testSweepEksClusters,
+		Dependencies: []string{
+			"aws_eks_fargate_profile",
+			"aws_eks_fargate_node_group",
+		},
 	})
 }
 
@@ -31,22 +35,8 @@ func testSweepEksClusters(region string) error {
 	conn := client.(*AWSClient).eksconn
 
 	input := &eks.ListClustersInput{}
-	for {
-		out, err := conn.ListClusters(input)
-		if err != nil {
-			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("Error retrieving EKS Clusters: %s", err)
-		}
-
-		if out == nil || len(out.Clusters) == 0 {
-			log.Printf("[INFO] No EKS Clusters to sweep")
-			return nil
-		}
-
-		for _, cluster := range out.Clusters {
+	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		for _, cluster := range page.Clusters {
 			name := aws.StringValue(cluster)
 
 			log.Printf("[INFO] Deleting EKS Cluster: %s", name)
@@ -60,12 +50,14 @@ func testSweepEksClusters(region string) error {
 				log.Printf("[ERROR] Failed to wait for EKS Cluster %s deletion: %s", name, err)
 			}
 		}
-
-		if out.NextToken == nil {
-			break
+		return true
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+			return nil
 		}
-
-		input.NextToken = out.NextToken
+		return fmt.Errorf("Error retrieving EKS Clusters: %w", err)
 	}
 
 	return nil
