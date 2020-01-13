@@ -122,7 +122,6 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
 				),
 			},
-
 			{
 				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
 				Check: resource.ComposeTestCheckFunc(
@@ -130,6 +129,7 @@ func testAccAwsOrganizationsOrganization_EnabledPolicyTypes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
 				),
 			},
+
 			{
 				Config: testAccAwsOrganizationsOrganizationConfigEnabledPolicyTypes1(organizations.PolicyTypeTagPolicy),
 				Check: resource.ComposeTestCheckFunc(
