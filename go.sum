@@ -314,6 +314,7 @@ github.com/hashicorp/terraform-plugin-sdk v1.3.0 h1:leoaxwa8dUs7v11SX4xe33AZOwcb
 github.com/hashicorp/terraform-plugin-sdk v1.3.0/go.mod h1:fY7uWsWuLHi/hsGmBC2Sm7lic5RlFFjcM4zwua5VDuk=
 github.com/hashicorp/terraform-plugin-sdk v1.4.0 h1:b1LluARpES0Gq78oF4a9of3eS0iXM5JTwlt604vGvBY=
 github.com/hashicorp/terraform-plugin-sdk v1.4.0/go.mod h1:H5QLx/uhwfxBZ59Bc5SqT19M4i+fYt7LZjHTpbLZiAg=
+github.com/hashicorp/terraform-plugin-sdk v1.4.1 h1:REgN6WbySD6aIYdF6Uob3ic4eQkfh4NXSWU/casmgb4=
 github.com/hashicorp/terraform-svchost v0.0.0-20191011084731-65d371908596 h1:hjyO2JsNZUKT1ym+FAdlBEkGPevazYsmVgIMw7dVELg=
 github.com/hashicorp/terraform-svchost v0.0.0-20191011084731-65d371908596/go.mod h1:kNDNcF7sN4DocDLBkQYz73HGKwN1ANB1blq4lIYLYvg=
 github.com/hashicorp/vault v0.10.4 h1:4x0lHxui/ZRp/B3E0Auv1QNBJpzETqHR2kQD3mHSBJU=
