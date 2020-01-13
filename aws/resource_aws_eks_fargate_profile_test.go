@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +13,65 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_eks_fargate_profile", &resource.Sweeper{
+		Name: "aws_eks_fargate_profile",
+		F:    testSweepEksFargateProfiles,
+	})
+}
+
+func testSweepEksFargateProfiles(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).eksconn
+
+	input := &eks.ListClustersInput{}
+	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		for _, cluster := range page.Clusters {
+			clusterName := aws.StringValue(cluster)
+			input := &eks.ListFargateProfilesInput{
+				ClusterName: cluster,
+			}
+			err := conn.ListFargateProfilesPages(input, func(page *eks.ListFargateProfilesOutput, lastPage bool) bool {
+				for _, profile := range page.FargateProfileNames {
+					profileName := aws.StringValue(profile)
+					log.Printf("[INFO] Deleting Fargate Profile %q", profileName)
+					input := &eks.DeleteFargateProfileInput{
+						ClusterName:        cluster,
+						FargateProfileName: profile,
+					}
+					_, err = conn.DeleteFargateProfile(input)
+
+					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+						log.Printf("[ERROR] Error deleting EKS Fargate Profile %q: %s", profileName, err)
+					}
+
+					if err := waitForEksFargateProfileDeletion(conn, clusterName, profileName, 10*time.Minute); err != nil {
+						log.Printf("[ERROR] Error waiting for EKS Fargate Profile %q deletion: %s", profileName, err)
+					}
+				}
+				return true
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to list Fargate Profiles for EKS Cluster %s: %s", clusterName, err)
+			}
+		}
+
+		return true
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving EKS Clusters: %w", err)
+	}
+
+	return err
+}
 
 func TestAccAWSEksFargateProfile_basic(t *testing.T) {
 	var fargateProfile eks.FargateProfile

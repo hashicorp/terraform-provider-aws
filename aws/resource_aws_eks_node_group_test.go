@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +13,65 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_eks_fargate_node_group", &resource.Sweeper{
+		Name: "aws_eks_fargate_node_group",
+		F:    testSweepEksFargateNodegroups,
+	})
+}
+
+func testSweepEksFargateNodegroups(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).eksconn
+
+	input := &eks.ListClustersInput{}
+	err = conn.ListClustersPages(input, func(page *eks.ListClustersOutput, lastPage bool) bool {
+		for _, cluster := range page.Clusters {
+			clusterName := aws.StringValue(cluster)
+			input := &eks.ListNodegroupsInput{
+				ClusterName: cluster,
+			}
+			err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
+				for _, nodegroup := range page.Nodegroups {
+					nodegroupName := aws.StringValue(nodegroup)
+					log.Printf("[INFO] Deleting EKS Node Group %q", nodegroupName)
+					input := &eks.DeleteNodegroupInput{
+						ClusterName:   cluster,
+						NodegroupName: nodegroup,
+					}
+					_, err = conn.DeleteNodegroup(input)
+
+					if err != nil && !isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
+						log.Printf("[ERROR] Error deleting EKS Node Group %q: %s", nodegroupName, err)
+					}
+
+					if err := waitForEksNodeGroupDeletion(conn, clusterName, nodegroupName, 10*time.Minute); err != nil {
+						log.Printf("[ERROR] Error waiting for EKS Node Group %q deletion: %s", nodegroupName, err)
+					}
+				}
+				return true
+			})
+			if err != nil {
+				log.Printf("[ERROR] Failed to list Node Groups for EKS Cluster %s: %s", clusterName, err)
+			}
+		}
+
+		return true
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping EKS Clusters sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("Error retrieving EKS Clusters: %w", err)
+	}
+
+	return err
+}
 
 func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	var nodeGroup eks.Nodegroup
