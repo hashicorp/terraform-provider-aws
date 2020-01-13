@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -110,12 +111,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 						},
 
 						"log_stream_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateArn,
-						},
-
-						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateArn,
@@ -984,6 +979,38 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					version = version + 1
 				}
 			}
+			oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
+			if len(oldReferenceData.([]interface{})) == 0 && len(newReferenceData.([]interface{})) > 0 {
+				if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
+					for _, r := range v {
+						rd := r.(map[string]interface{})
+						referenceData := expandKinesisAnalyticsReferenceData(rd)
+						addOpts := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
+							ApplicationName:             aws.String(name),
+							CurrentApplicationVersionId: aws.Int64(int64(version)),
+							ReferenceDataSource:         referenceData,
+						}
+						// Retry for IAM eventual consistency
+						err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+							_, err := conn.AddApplicationReferenceDataSource(addOpts)
+							if err != nil {
+								if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+									return resource.RetryableError(err)
+								}
+								return resource.NonRetryableError(err)
+							}
+							return nil
+						})
+						if isResourceTimeoutError(err) {
+							_, err = conn.AddApplicationReferenceDataSource(addOpts)
+						}
+						if err != nil {
+							return fmt.Errorf("Unable to add application reference data source: %s", err)
+						}
+						version = version + 1
+					}
+				}
+			}
 		}
 
 		arn := d.Get("arn").(string)
@@ -992,39 +1019,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 			if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
 				return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
-			}
-		}
-	}
-
-	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
-	if len(oldReferenceData.([]interface{})) == 0 && len(newReferenceData.([]interface{})) > 0 {
-		if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
-			for _, r := range v {
-				rd := r.(map[string]interface{})
-				referenceData := expandKinesisAnalyticsReferenceData(rd)
-				addOpts := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
-					ApplicationName:             aws.String(name),
-					CurrentApplicationVersionId: aws.Int64(int64(version)),
-					ReferenceDataSource:         referenceData,
-				}
-				// Retry for IAM eventual consistency
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AddApplicationReferenceDataSource(addOpts)
-					if err != nil {
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
-					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationReferenceDataSource(addOpts)
-				}
-				if err != nil {
-					return fmt.Errorf("Unable to add application reference data source: %s", err)
-				}
-				version = version + 1
 			}
 		}
 	}
@@ -1243,11 +1237,19 @@ func expandKinesisAnalyticsReferenceData(rd map[string]interface{}) *kinesisanal
 }
 
 func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.UpdateApplicationInput, error) {
-	applicationUpdate := &kinesisanalyticsv2.UpdateApplicationInput{}
+	applicationUpdate := &kinesisanalyticsv2.UpdateApplicationInput{
+		ApplicationConfigurationUpdate: &kinesisanalyticsv2.ApplicationConfigurationUpdate{},
+	}
 
 	if d.HasChange("code") {
 		if v, ok := d.GetOk("code"); ok && v.(string) != "" {
-			applicationUpdate.ApplicationConfigurationUpdate.ApplicationCodeConfigurationUpdate.CodeContentUpdate.TextContentUpdate = aws.String(v.(string))
+			applicationUpdate.ApplicationConfigurationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{
+				ApplicationCodeConfigurationUpdate: &kinesisanalyticsv2.ApplicationCodeConfigurationUpdate{
+					CodeContentUpdate: &kinesisanalyticsv2.CodeContentUpdate{
+						TextContentUpdate: aws.String(v.(string)),
+					},
+				},
+			}
 		}
 	}
 
@@ -1260,13 +1262,16 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 		}
 	}
 
-	if d.Get("runtime") == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
+	runtime := d.Get("runtime").(string)
+	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
+		sqlUpdate := &kinesisanalyticsv2.SqlApplicationConfigurationUpdate{}
+
 		oldInputs, newInputs := d.GetChange("inputs")
 		if len(oldInputs.([]interface{})) > 0 && len(newInputs.([]interface{})) > 0 {
 			if v, ok := d.GetOk("inputs"); ok {
 				vL := v.([]interface{})[0].(map[string]interface{})
 				inputUpdate := expandKinesisAnalyticsInputUpdate(vL)
-				applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.InputUpdates = []*kinesisanalyticsv2.InputUpdate{inputUpdate}
+				sqlUpdate.InputUpdates = []*kinesisanalyticsv2.InputUpdate{inputUpdate}
 			}
 		}
 
@@ -1275,7 +1280,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 			if v, ok := d.GetOk("outputs"); ok {
 				vL := v.([]interface{})[0].(map[string]interface{})
 				outputUpdate := expandKinesisAnalyticsOutputUpdate(vL)
-				applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.OutputUpdates = []*kinesisanalyticsv2.OutputUpdate{outputUpdate}
+				sqlUpdate.OutputUpdates = []*kinesisanalyticsv2.OutputUpdate{outputUpdate}
 			}
 		}
 
@@ -1307,9 +1312,47 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 
 					rdsus = append(rdsus, rdsu)
 				}
-				applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate.ReferenceDataSourceUpdates = rdsus
+				sqlUpdate.ReferenceDataSourceUpdates = rdsus
 			}
 		}
+		applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate = sqlUpdate
+	}
+	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
+		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
+
+		flinkUpdate := &kinesisanalyticsv2.FlinkApplicationConfigurationUpdate{}
+
+		oldConfig, newConfig := d.GetChange("checkpoint_configuration")
+		if len(oldConfig.(map[string]interface{})) > 0 && len(newConfig.(map[string]interface{})) > 0 {
+			if v := d.Get("checkpoint_configuration").(map[string]interface{}); len(v) > 0 {
+
+				var checkpointingEnabled *bool
+				var checkpointInterval *int64
+				var configurationType *string
+				var configurationMinPause *int64
+
+				if interval, ok := v["checkpoint_interval"]; ok {
+					checkpointInterval = aws.Int64(interval.(int64))
+				}
+				if enabled, ok := v["checkpointing_enabled"]; ok {
+					v, _ := strconv.ParseBool(enabled.(string))
+					checkpointingEnabled = aws.Bool(v)
+				}
+				if confType, ok := v["configuration_type"]; ok {
+					configurationType = aws.String(confType.(string))
+				}
+				if minPause, ok := v["min_pause_between_checkpoints"]; ok {
+					configurationMinPause = aws.Int64(minPause.(int64))
+				}
+				flinkUpdate.CheckpointConfigurationUpdate = &kinesisanalyticsv2.CheckpointConfigurationUpdate{
+					CheckpointIntervalUpdate:         checkpointInterval,
+					CheckpointingEnabledUpdate:       checkpointingEnabled,
+					ConfigurationTypeUpdate:          configurationType,
+					MinPauseBetweenCheckpointsUpdate: configurationMinPause,
+				}
+			}
+		}
+		applicationUpdate.ApplicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = flinkUpdate
 	}
 
 	return applicationUpdate, nil
