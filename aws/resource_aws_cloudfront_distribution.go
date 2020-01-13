@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
@@ -748,7 +749,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 	params := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
-			Tags:               tagsFromMapCloudFront(d.Get("tags").(map[string]interface{})),
+			Tags:               &cloudfront.Tags{Items: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudfrontTags()},
 		},
 	}
 
@@ -826,18 +827,12 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	d.Set("etag", resp.ETag)
 	d.Set("arn", resp.Distribution.ARN)
 
-	tagResp, err := conn.ListTagsForResource(&cloudfront.ListTagsForResourceInput{
-		Resource: aws.String(d.Get("arn").(string)),
-	})
-
+	tags, err := keyvaluetags.CloudfrontListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf(
-			"Error retrieving EC2 tags for CloudFront Distribution %q (ARN: %q): %s",
-			d.Id(), d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}
-
-	if err := d.Set("tags", tagsToMapCloudFront(tagResp.Tags)); err != nil {
-		return err
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -884,8 +879,11 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := setTagsCloudFront(conn, d, d.Get("arn").(string)); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.CloudfrontUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for CloudFront Distribution (%s): %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCloudFrontDistributionRead(d, meta)
