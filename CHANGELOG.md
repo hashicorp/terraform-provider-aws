@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_autoscaling_group: Prevent indefinite wait for desired capacity to be available when instance_weight specified and >=1 [GH-11357]
 * resource/aws_codepipeline_webhook: Properly trigger resource recreation when `authentication_configuration` configuration block `allowed_ip_range` and `secret_token` arguments change [GH-11387]
 * resource/aws_emr_cluster: Prevent perpetual difference with `ec2_attributes` configuration block `emr_managed_master_security_group`, `emr_managed_slave_security_group`, and `service_access_security_groups` arguments when omitted (support EMR Managed Security Groups) [GH-5493]
 * resource/aws_opsworks_permission: Prevent `Unable to change own permission level` error during self updates [GH-11379]
