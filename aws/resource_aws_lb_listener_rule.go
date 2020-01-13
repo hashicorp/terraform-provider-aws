@@ -162,6 +162,16 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 				Set:      lbListenerRuleConditionSetHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"field": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"host-header",
+								"path-pattern",
+							}, true),
+							Deprecated: "use 'host_header' or 'path_pattern' attribute instead",
+						},
 						"host_header": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
@@ -280,6 +290,17 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 								},
 							},
 						},
+						"values": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 128),
+							},
+							Optional:   true,
+							Computed:   true,
+							Deprecated: "use 'host_header' or 'path_pattern' attribute instead",
+						},
 					},
 				},
 			},
@@ -308,6 +329,12 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 				fmt.Fprint(&buf, l, "-")
 			}
 		}
+	} else if m["field"].(string) == "host-header" {
+		// Backwards compatibility
+		field = "host-header"
+		for _, l := range m["values"].([]interface{}) {
+			fmt.Fprint(&buf, l, "-")
+		}
 	}
 
 	if httpHeader, ok := m["http_header"].([]interface{}); ok && len(httpHeader) > 0 && httpHeader[0] != nil {
@@ -335,6 +362,12 @@ func lbListenerRuleConditionSetHash(v interface{}) int {
 			for _, l := range values.List() {
 				fmt.Fprint(&buf, l, "-")
 			}
+		}
+	} else if m["field"].(string) == "path-pattern" {
+		// Backwards compatibility
+		field = "path-pattern"
+		for _, l := range m["values"].([]interface{}) {
+			fmt.Fprint(&buf, l, "-")
 		}
 	}
 
@@ -553,6 +586,10 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 	conditions := make([]interface{}, len(rule.Conditions))
 	for i, condition := range rule.Conditions {
 		conditionMap := make(map[string]interface{})
+
+		// Deprecated: remove in next major version of provider
+		conditionMap["field"] = aws.StringValue(condition.Field)
+		conditionMap["values"] = aws.StringValueSlice(condition.Values)
 
 		switch conditionMap["field"] {
 		case "host-header":
@@ -870,6 +907,17 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			elbConditions[i].SourceIpConfig = &elbv2.SourceIpConditionConfig{
 				Values: expandStringSet(values),
 			}
+		}
+
+		// Deprecated backwards compatibility
+		if cmField, ok := conditionMap["field"].(string); ok && cmField != "" {
+			field = cmField
+			attrs += 1
+			values := conditionMap["values"].([]interface{})
+			if len(values) == 0 {
+				return nil, errors.New("Both field and values must be set in a condition block")
+			}
+			elbConditions[i].Values = expandStringList(values)
 		}
 
 		// FIXME Rework this and use ConflictsWith when it finally works with collections:
