@@ -330,10 +330,29 @@ func testAccEC2VPCOnlyPreCheck(t *testing.T) {
 	}
 }
 
-func testAccHasServicePreCheck(service string, t *testing.T) {
+func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		if _, ok := partition.Services()[service]; !ok {
-			t.Skip(fmt.Sprintf("skipping tests; partition does not support %s service", service))
+		if _, ok := partition.Services()[serviceId]; !ok {
+			t.Skip(fmt.Sprintf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId))
+		}
+	}
+}
+
+// testAccRegionHasServicePreCheck skips a test if the AWS Go SDK endpoint value in a region is missing
+// NOTE: Most acceptance testing should prefer behavioral checks against an API (e.g. making an API call and
+//       using response errors) to determine if a test should be skipped since AWS Go SDK endpoint information
+//       can be incorrect, especially for newer endpoints or for private feature testing. This functionality
+//       is provided for cases where the API behavior may be completely unacceptable, such as permanent
+//       retries by the AWS Go SDK.
+func testAccRegionHasServicePreCheck(serviceId string, t *testing.T) {
+	regionId := testAccGetRegion()
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), regionId); ok {
+		service, ok := partition.Services()[serviceId]
+		if !ok {
+			t.Skip(fmt.Sprintf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId))
+		}
+		if _, ok := service.Regions()[regionId]; !ok {
+			t.Skip(fmt.Sprintf("skipping tests; region %s does not support %s service", regionId, serviceId))
 		}
 	}
 }

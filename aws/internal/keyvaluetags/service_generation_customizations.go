@@ -48,10 +48,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -192,6 +194,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(elasticbeanstalk.New)
 	case "elasticsearchservice":
 		funcType = reflect.TypeOf(elasticsearchservice.New)
+	case "elb":
+		funcType = reflect.TypeOf(elb.New)
 	case "elbv2":
 		funcType = reflect.TypeOf(elbv2.New)
 	case "emr":
@@ -200,6 +204,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(firehose.New)
 	case "fsx":
 		funcType = reflect.TypeOf(fsx.New)
+	case "gamelift":
+		funcType = reflect.TypeOf(gamelift.New)
 	case "glue":
 		funcType = reflect.TypeOf(glue.New)
 	case "guardduty":

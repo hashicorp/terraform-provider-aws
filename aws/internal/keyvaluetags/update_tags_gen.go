@@ -46,10 +46,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -74,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -1537,6 +1540,42 @@ func ElasticsearchserviceUpdateTags(conn *elasticsearchservice.ElasticsearchServ
 	return nil
 }
 
+// ElbUpdateTags updates elb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElbUpdateTags(conn *elb.ELB, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &elb.RemoveTagsInput{
+			LoadBalancerNames: aws.StringSlice([]string{identifier}),
+			Tags:              removedTags.IgnoreAws().ElbTagKeys(),
+		}
+
+		_, err := conn.RemoveTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &elb.AddTagsInput{
+			LoadBalancerNames: aws.StringSlice([]string{identifier}),
+			Tags:              updatedTags.IgnoreAws().ElbTags(),
+		}
+
+		_, err := conn.AddTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // Elbv2UpdateTags updates elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1669,6 +1708,42 @@ func FsxUpdateTags(conn *fsx.FSx, identifier string, oldTagsMap interface{}, new
 		input := &fsx.TagResourceInput{
 			ResourceARN: aws.String(identifier),
 			Tags:        updatedTags.IgnoreAws().FsxTags(),
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
+// GameliftUpdateTags updates gamelift service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GameliftUpdateTags(conn *gamelift.GameLift, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &gamelift.UntagResourceInput{
+			ResourceARN: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &gamelift.TagResourceInput{
+			ResourceARN: aws.String(identifier),
+			Tags:        updatedTags.IgnoreAws().GameliftTags(),
 		}
 
 		_, err := conn.TagResource(input)
@@ -2553,6 +2628,42 @@ func OrganizationsUpdateTags(conn *organizations.Organizations, identifier strin
 	return nil
 }
 
+// PinpointUpdateTags updates pinpoint service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func PinpointUpdateTags(conn *pinpoint.Pinpoint, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &pinpoint.UntagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagKeys:     aws.StringSlice(removedTags.Keys()),
+		}
+
+		_, err := conn.UntagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &pinpoint.TagResourceInput{
+			ResourceArn: aws.String(identifier),
+			TagsModel:   &pinpoint.TagsModel{Tags: updatedTags.IgnoreAws().PinpointTags()},
+		}
+
+		_, err := conn.TagResource(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // QldbUpdateTags updates qldb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -2739,33 +2850,31 @@ func ResourcegroupsUpdateTags(conn *resourcegroups.ResourceGroups, identifier st
 func Route53UpdateTags(conn *route53.Route53, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := New(oldTagsMap)
 	newTags := New(newTagsMap)
+	removedTags := oldTags.Removed(newTags)
+	updatedTags := oldTags.Updated(newTags)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input := &route53.ChangeTagsForResourceInput{
-			ResourceId:    aws.String(identifier),
-			ResourceType:  aws.String(resourceType),
-			RemoveTagKeys: aws.StringSlice(removedTags.Keys()),
-		}
-
-		_, err := conn.ChangeTagsForResource(input)
-
-		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
-		}
+	// Ensure we do not send empty requests
+	if len(removedTags) == 0 && len(updatedTags) == 0 {
+		return nil
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input := &route53.ChangeTagsForResourceInput{
-			ResourceId:   aws.String(identifier),
-			ResourceType: aws.String(resourceType),
-			AddTags:      updatedTags.IgnoreAws().Route53Tags(),
-		}
+	input := &route53.ChangeTagsForResourceInput{
+		ResourceId:   aws.String(identifier),
+		ResourceType: aws.String(resourceType),
+	}
 
-		_, err := conn.ChangeTagsForResource(input)
+	if len(updatedTags) > 0 {
+		input.AddTags = updatedTags.IgnoreAws().Route53Tags()
+	}
 
-		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
-		}
+	if len(removedTags) > 0 {
+		input.RemoveTagKeys = aws.StringSlice(removedTags.Keys())
+	}
+
+	_, err := conn.ChangeTagsForResource(input)
+
+	if err != nil {
+		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil

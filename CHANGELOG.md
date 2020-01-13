@@ -1,4 +1,21 @@
 ## 2.45.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_codepipeline_webhook: Support in-place `tags` updates [GH-11387]
+* resource/aws_gamelift_alias: Add `tags` argument [GH-11486]
+* resource/aws_gamelift_build: Add `tags` argument and `arn` attribute [GH-11486]
+* resource/aws_gamelift_game_session_queue: Add `tags` argument [GH-11486]
+* resource/aws_neptune_parameter_group: Support tag-on-create [GH-11245]
+* resource/aws_pinpoint_app: Add plan-time validation for `limit` configuration block `daily`, `maximum_duration`, `messages_per_second` and `total` arguments [GH-11368]
+* resource/aws_vpc_peering_connection_accepter: Support resource import [GH-4486]
+
+BUG FIXES:
+
+* resource/aws_codepipeline_webhook: Properly trigger resource recreation when `authentication_configuration` configuration block `allowed_ip_range` and `secret_token` arguments change [GH-11387]
+* resource/aws_emr_cluster: Prevent perpetual difference with `ec2_attributes` configuration block `emr_managed_master_security_group`, `emr_managed_slave_security_group`, and `service_access_security_groups` arguments when omitted (support EMR Managed Security Groups) [GH-5493]
+* resource/aws_opsworks_permission: Prevent `Unable to change own permission level` error during self updates [GH-11379]
+
 ## 2.44.0 (January 09, 2020)
 
 FEATURES:

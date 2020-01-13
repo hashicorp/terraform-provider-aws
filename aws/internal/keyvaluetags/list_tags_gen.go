@@ -41,9 +41,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -68,6 +70,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
@@ -717,6 +720,23 @@ func ElasticsearchserviceListTags(conn *elasticsearchservice.ElasticsearchServic
 	return ElasticsearchserviceKeyValueTags(output.TagList), nil
 }
 
+// ElbListTags lists elb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElbListTags(conn *elb.ELB, identifier string) (KeyValueTags, error) {
+	input := &elb.DescribeTagsInput{
+		LoadBalancerNames: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ElbKeyValueTags(output.TagDescriptions[0].Tags), nil
+}
+
 // Elbv2ListTags lists elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -766,6 +786,23 @@ func FsxListTags(conn *fsx.FSx, identifier string) (KeyValueTags, error) {
 	}
 
 	return FsxKeyValueTags(output.Tags), nil
+}
+
+// GameliftListTags lists gamelift service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GameliftListTags(conn *gamelift.GameLift, identifier string) (KeyValueTags, error) {
+	input := &gamelift.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GameliftKeyValueTags(output.Tags), nil
 }
 
 // GlueListTags lists glue service tags.
@@ -1174,6 +1211,23 @@ func OrganizationsListTags(conn *organizations.Organizations, identifier string)
 	}
 
 	return OrganizationsKeyValueTags(output.Tags), nil
+}
+
+// PinpointListTags lists pinpoint service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func PinpointListTags(conn *pinpoint.Pinpoint, identifier string) (KeyValueTags, error) {
+	input := &pinpoint.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return PinpointKeyValueTags(output.TagsModel.Tags), nil
 }
 
 // QldbListTags lists qldb service tags.
