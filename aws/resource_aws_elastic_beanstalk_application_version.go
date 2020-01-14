@@ -76,7 +76,7 @@ func resourceAwsElasticBeanstalkApplicationVersionCreate(d *schema.ResourceData,
 		ApplicationName: aws.String(application),
 		Description:     aws.String(description),
 		SourceBundle:    &s3Location,
-		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticbeanstalkTags(),
+		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
 		VersionLabel:    aws.String(name),
 	}
 
@@ -124,7 +124,7 @@ func resourceAwsElasticBeanstalkApplicationVersionRead(d *schema.ResourceData, m
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application version (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreElasticbeanstalk().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

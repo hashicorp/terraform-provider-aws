@@ -79,7 +79,7 @@ func resourceAwsElasticBeanstalkApplicationCreate(d *schema.ResourceData, meta i
 	req := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
 		Description:     aws.String(description),
-		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ElasticbeanstalkTags(),
+		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
 	}
 
 	app, err := beanstalkConn.CreateApplication(req)
@@ -256,7 +256,7 @@ func resourceAwsElasticBeanstalkApplicationRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error listing tags for Elastic Beanstalk Application (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreElasticbeanstalk().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
