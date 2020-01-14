@@ -22,6 +22,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+// This is a fake comment for tctest testing
+
 func resourceAwsInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsInstanceCreate,
