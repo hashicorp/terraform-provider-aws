@@ -3,11 +3,13 @@
 ENHANCEMENTS:
 
 * resource/aws_codepipeline_webhook: Support in-place `tags` updates [GH-11387]
+* resource/aws_db_parameter_group - Support resetting parameter group values [GH-11540]
 * resource/aws_gamelift_alias: Add `tags` argument [GH-11486]
 * resource/aws_gamelift_build: Add `tags` argument and `arn` attribute [GH-11486]
 * resource/aws_gamelift_game_session_queue: Add `tags` argument [GH-11486]
 * resource/aws_neptune_parameter_group: Support tag-on-create [GH-11245]
 * resource/aws_pinpoint_app: Add plan-time validation for `limit` configuration block `daily`, `maximum_duration`, `messages_per_second` and `total` arguments [GH-11368]
+* resource/aws_rds_cluster_parameter_group - Support resetting parameter group values [GH-11540]
 * resource/aws_ssm_document: Add support for "Package" document type [GH-11492]
 * resource/aws_vpc_peering_connection_accepter: Support resource import [GH-4486]
 
