@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * resource/aws_codepipeline_webhook: Support in-place `tags` updates [GH-11387]
 * resource/aws_db_parameter_group - Support resetting parameter group values [GH-11540]
+* resource/aws_docdb_cluster: Support `profiler` CloudWatch export type [GH-11051]
 * resource/aws_gamelift_alias: Add `tags` argument [GH-11486]
 * resource/aws_gamelift_build: Add `tags` argument and `arn` attribute [GH-11486]
 * resource/aws_gamelift_game_session_queue: Add `tags` argument [GH-11486]
