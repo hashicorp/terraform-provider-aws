@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // initialize sweeper
@@ -746,7 +747,7 @@ func testAccCheckBeanstalkEnvTagsMatch(env *elasticbeanstalk.EnvironmentDescript
 			return err
 		}
 
-		foundTags := tagsToMapBeanstalk(tags.ResourceTags)
+		foundTags := keyvaluetags.ElasticbeanstalkKeyValueTags(tags.ResourceTags).IgnoreAws().Map()
 
 		if !reflect.DeepEqual(foundTags, expectedValue) {
 			return fmt.Errorf("Tag value: %s.  Expected %s", foundTags, expectedValue)
