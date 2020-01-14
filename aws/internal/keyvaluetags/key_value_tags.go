@@ -2,6 +2,8 @@
 //go:generate go run generators/listtags/main.go
 //go:generate go run generators/updatetags/main.go
 
+// This is a fake comment for a fake commit
+
 package keyvaluetags
 
 import (
