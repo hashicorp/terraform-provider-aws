@@ -383,7 +383,13 @@ func (c *LexModelBuildingService) DeleteBotRequest(input *DeleteBotInput) (req *
 // DeleteBot API operation for Amazon Lex Model Building Service.
 //
 // Deletes all versions of the bot, including the $LATEST version. To delete
-// a specific version of the bot, use the DeleteBotVersion operation.
+// a specific version of the bot, use the DeleteBotVersion operation. The DeleteBot
+// operation doesn't immediately remove the bot schema. Instead, it is marked
+// for deletion and removed later.
+//
+// Amazon Lex stores utterances indefinitely for improving the ability of your
+// bot to respond to user inputs. These utterances are not removed when the
+// bot is deleted. To remove the utterances, use the DeleteUtterances operation.
 //
 // If a bot has an alias, you can't delete it. Instead, the DeleteBot operation
 // returns a ResourceInUseException exception that includes a reference to the
@@ -1289,8 +1295,11 @@ func (c *LexModelBuildingService) DeleteUtterancesRequest(input *DeleteUtterance
 // then stored indefinitely for use in improving the ability of your bot to
 // respond to user input.
 //
-// Use the DeleteStoredUtterances operation to manually delete stored utterances
-// for a specific user.
+// Use the DeleteUtterances operation to manually delete stored utterances for
+// a specific user. When you use the DeleteUtterances operation, utterances
+// stored for improving your bot's ability to respond to user input are deleted
+// immediately. Utterances stored for use with the GetUtterancesView operation
+// are deleted after 15 days.
 //
 // This operation requires permissions for the lex:DeleteUtterances action.
 //
@@ -3667,9 +3676,13 @@ func (c *LexModelBuildingService) GetUtterancesViewRequest(input *GetUtterancesV
 // two versions.
 //
 // Utterance statistics are generated once a day. Data is available for the
-// last 15 days. You can request information for up to 5 versions in each request.
-// The response contains information about a maximum of 100 utterances for each
-// version.
+// last 15 days. You can request information for up to 5 versions of your bot
+// in each request. Amazon Lex returns the most frequent utterances received
+// by the bot in the last 15 days. The response contains information about a
+// maximum of 100 utterances for each version.
+//
+// If you set childDirected field to true when you created your bot, or if you
+// opted out of participating in improving Amazon Lex, utterances are not available.
 //
 // This operation requires permissions for the lex:GetUtterancesView action.
 //
@@ -3774,7 +3787,7 @@ func (c *LexModelBuildingService) PutBotRequest(input *PutBotInput) (req *reques
 // an exception.
 //
 // This operation requires permissions for the lex:PutBot action. For more information,
-// see auth-and-access-control.
+// see security-iam.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4262,6 +4275,9 @@ type BotAliasMetadata struct {
 	// Checksum of the bot alias.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// Settings that determine how Amazon Lex uses conversation logs for the alias.
+	ConversationLogs *ConversationLogsResponse `locationName:"conversationLogs" type:"structure"`
+
 	// The date that the bot alias was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
@@ -4301,6 +4317,12 @@ func (s *BotAliasMetadata) SetBotVersion(v string) *BotAliasMetadata {
 // SetChecksum sets the Checksum field's value.
 func (s *BotAliasMetadata) SetChecksum(v string) *BotAliasMetadata {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *BotAliasMetadata) SetConversationLogs(v *ConversationLogsResponse) *BotAliasMetadata {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -4664,6 +4686,111 @@ func (s *CodeHook) SetUri(v string) *CodeHook {
 	return s
 }
 
+// Provides the settings needed for conversation logs.
+type ConversationLogsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of an IAM role with permission to write to
+	// your CloudWatch Logs for text logs and your S3 bucket for audio logs. If
+	// audio encryption is enabled, this role also provides access permission for
+	// the AWS KMS key used for encrypting audio logs. For more information, see
+	// Creating an IAM Role and Policy for Conversation Logs (https://docs.aws.amazon.com/lex/latest/dg/conversation-logs-role-and-policy.html).
+	//
+	// IamRoleArn is a required field
+	IamRoleArn *string `locationName:"iamRoleArn" min:"20" type:"string" required:"true"`
+
+	// The settings for your conversation logs. You can log the conversation text,
+	// conversation audio, or both.
+	//
+	// LogSettings is a required field
+	LogSettings []*LogSettingsRequest `locationName:"logSettings" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s ConversationLogsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConversationLogsRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ConversationLogsRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ConversationLogsRequest"}
+	if s.IamRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("IamRoleArn"))
+	}
+	if s.IamRoleArn != nil && len(*s.IamRoleArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("IamRoleArn", 20))
+	}
+	if s.LogSettings == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogSettings"))
+	}
+	if s.LogSettings != nil {
+		for i, v := range s.LogSettings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "LogSettings", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *ConversationLogsRequest) SetIamRoleArn(v string) *ConversationLogsRequest {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetLogSettings sets the LogSettings field's value.
+func (s *ConversationLogsRequest) SetLogSettings(v []*LogSettingsRequest) *ConversationLogsRequest {
+	s.LogSettings = v
+	return s
+}
+
+// Contains information about conversation log settings.
+type ConversationLogsResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the IAM role used to write your logs to
+	// CloudWatch Logs or an S3 bucket.
+	IamRoleArn *string `locationName:"iamRoleArn" min:"20" type:"string"`
+
+	// The settings for your conversation logs. You can log text, audio, or both.
+	LogSettings []*LogSettingsResponse `locationName:"logSettings" type:"list"`
+}
+
+// String returns the string representation
+func (s ConversationLogsResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConversationLogsResponse) GoString() string {
+	return s.String()
+}
+
+// SetIamRoleArn sets the IamRoleArn field's value.
+func (s *ConversationLogsResponse) SetIamRoleArn(v string) *ConversationLogsResponse {
+	s.IamRoleArn = &v
+	return s
+}
+
+// SetLogSettings sets the LogSettings field's value.
+func (s *ConversationLogsResponse) SetLogSettings(v []*LogSettingsResponse) *ConversationLogsResponse {
+	s.LogSettings = v
+	return s
+}
+
 type CreateBotVersionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4764,6 +4891,10 @@ type CreateBotVersionOutput struct {
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
 
+	// Indicates whether utterances entered by the user should be sent to Amazon
+	// Comprehend for sentiment analysis.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
+
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
 	// the bot.
 	FailureReason *string `locationName:"failureReason" type:"string"`
@@ -4841,6 +4972,12 @@ func (s *CreateBotVersionOutput) SetCreatedDate(v time.Time) *CreateBotVersionOu
 // SetDescription sets the Description field's value.
 func (s *CreateBotVersionOutput) SetDescription(v string) *CreateBotVersionOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *CreateBotVersionOutput) SetDetectSentiment(v bool) *CreateBotVersionOutput {
+	s.DetectSentiment = &v
 	return s
 }
 
@@ -6141,6 +6278,10 @@ type GetBotAliasOutput struct {
 	// Checksum of the bot alias.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// The settings that determine how Amazon Lex uses conversation logs for the
+	// alias.
+	ConversationLogs *ConversationLogsResponse `locationName:"conversationLogs" type:"structure"`
+
 	// The date that the bot alias was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
 
@@ -6180,6 +6321,12 @@ func (s *GetBotAliasOutput) SetBotVersion(v string) *GetBotAliasOutput {
 // SetChecksum sets the Checksum field's value.
 func (s *GetBotAliasOutput) SetChecksum(v string) *GetBotAliasOutput {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *GetBotAliasOutput) SetConversationLogs(v *ConversationLogsResponse) *GetBotAliasOutput {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -6742,6 +6889,10 @@ type GetBotOutput struct {
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
 
+	// Indicates whether user utterances should be sent to Amazon Comprehend for
+	// sentiment analysis.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
+
 	// If status is FAILED, Amazon Lex explains why it failed to build the bot.
 	FailureReason *string `locationName:"failureReason" type:"string"`
 
@@ -6762,10 +6913,19 @@ type GetBotOutput struct {
 	// The name of the bot.
 	Name *string `locationName:"name" min:"2" type:"string"`
 
-	// The status of the bot. If the bot is ready to run, the status is READY. If
-	// there was a problem with building the bot, the status is FAILED and the failureReason
-	// explains why the bot did not build. If the bot was saved but not built, the
-	// status is NOT BUILT.
+	// The status of the bot.
+	//
+	// When the status is BUILDING Amazon Lex is building the bot for testing and
+	// use.
+	//
+	// If the status of the bot is READY_BASIC_TESTING, you can test the bot using
+	// the exact utterances specified in the bot's intents. When the bot is ready
+	// for full testing or to run, the status is READY.
+	//
+	// If there was a problem with building the bot, the status is FAILED and the
+	// failureReason field explains why the bot did not build.
+	//
+	// If the bot was saved but not built, the status is NOT_BUILT.
 	Status *string `locationName:"status" type:"string" enum:"Status"`
 
 	// The version of the bot. For a new bot, the version is always $LATEST.
@@ -6819,6 +6979,12 @@ func (s *GetBotOutput) SetCreatedDate(v time.Time) *GetBotOutput {
 // SetDescription sets the Description field's value.
 func (s *GetBotOutput) SetDescription(v string) *GetBotOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *GetBotOutput) SetDetectSentiment(v bool) *GetBotOutput {
+	s.DetectSentiment = &v
 	return s
 }
 
@@ -8429,7 +8595,7 @@ type GetUtterancesViewInput struct {
 	// BotVersions is a required field
 	BotVersions []*string `location:"querystring" locationName:"bot_versions" min:"1" type:"list" required:"true"`
 
-	// To return utterances that were recognized and handled, useDetected. To return
+	// To return utterances that were recognized and handled, use Detected. To return
 	// utterances that were not recognized, use Missed.
 	//
 	// StatusType is a required field
@@ -8497,7 +8663,9 @@ type GetUtterancesViewOutput struct {
 
 	// An array of UtteranceList objects, each containing a list of UtteranceData
 	// objects describing the utterances that were processed by your bot. The response
-	// contains a maximum of 100 UtteranceData objects for each version.
+	// contains a maximum of 100 UtteranceData objects for each version. Amazon
+	// Lex returns the most frequent utterances received by the bot in the last
+	// 15 days.
 	Utterances []*UtteranceList `locationName:"utterances" type:"list"`
 }
 
@@ -8640,6 +8808,158 @@ func (s *IntentMetadata) SetName(v string) *IntentMetadata {
 // SetVersion sets the Version field's value.
 func (s *IntentMetadata) SetVersion(v string) *IntentMetadata {
 	s.Version = &v
+	return s
+}
+
+// Settings used to configure delivery mode and destination for conversation
+// logs.
+type LogSettingsRequest struct {
+	_ struct{} `type:"structure"`
+
+	// Where the logs will be delivered. Text logs are delivered to a CloudWatch
+	// Logs log group. Audio logs are delivered to an S3 bucket.
+	//
+	// Destination is a required field
+	Destination *string `locationName:"destination" type:"string" required:"true" enum:"Destination"`
+
+	// The Amazon Resource Name (ARN) of the AWS KMS customer managed key for encrypting
+	// audio logs delivered to an S3 bucket. The key does not apply to CloudWatch
+	// Logs and is optional for S3 buckets.
+	KmsKeyArn *string `locationName:"kmsKeyArn" min:"20" type:"string"`
+
+	// The type of logging to enable. Text logs are delivered to a CloudWatch Logs
+	// log group. Audio logs are delivered to an S3 bucket.
+	//
+	// LogType is a required field
+	LogType *string `locationName:"logType" type:"string" required:"true" enum:"LogType"`
+
+	// The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket
+	// where the logs should be delivered.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s LogSettingsRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogSettingsRequest) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LogSettingsRequest) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LogSettingsRequest"}
+	if s.Destination == nil {
+		invalidParams.Add(request.NewErrParamRequired("Destination"))
+	}
+	if s.KmsKeyArn != nil && len(*s.KmsKeyArn) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("KmsKeyArn", 20))
+	}
+	if s.LogType == nil {
+		invalidParams.Add(request.NewErrParamRequired("LogType"))
+	}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestination sets the Destination field's value.
+func (s *LogSettingsRequest) SetDestination(v string) *LogSettingsRequest {
+	s.Destination = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *LogSettingsRequest) SetKmsKeyArn(v string) *LogSettingsRequest {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetLogType sets the LogType field's value.
+func (s *LogSettingsRequest) SetLogType(v string) *LogSettingsRequest {
+	s.LogType = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *LogSettingsRequest) SetResourceArn(v string) *LogSettingsRequest {
+	s.ResourceArn = &v
+	return s
+}
+
+// The settings for conversation logs.
+type LogSettingsResponse struct {
+	_ struct{} `type:"structure"`
+
+	// The destination where logs are delivered.
+	Destination *string `locationName:"destination" type:"string" enum:"Destination"`
+
+	// The Amazon Resource Name (ARN) of the key used to encrypt audio logs in an
+	// S3 bucket.
+	KmsKeyArn *string `locationName:"kmsKeyArn" min:"20" type:"string"`
+
+	// The type of logging that is enabled.
+	LogType *string `locationName:"logType" type:"string" enum:"LogType"`
+
+	// The Amazon Resource Name (ARN) of the CloudWatch Logs log group or S3 bucket
+	// where the logs are delivered.
+	ResourceArn *string `locationName:"resourceArn" min:"1" type:"string"`
+
+	// The resource prefix is the first part of the S3 object key within the S3
+	// bucket that you specified to contain audio logs. For CloudWatch Logs it is
+	// the prefix of the log stream name within the log group that you specified.
+	ResourcePrefix *string `locationName:"resourcePrefix" type:"string"`
+}
+
+// String returns the string representation
+func (s LogSettingsResponse) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LogSettingsResponse) GoString() string {
+	return s.String()
+}
+
+// SetDestination sets the Destination field's value.
+func (s *LogSettingsResponse) SetDestination(v string) *LogSettingsResponse {
+	s.Destination = &v
+	return s
+}
+
+// SetKmsKeyArn sets the KmsKeyArn field's value.
+func (s *LogSettingsResponse) SetKmsKeyArn(v string) *LogSettingsResponse {
+	s.KmsKeyArn = &v
+	return s
+}
+
+// SetLogType sets the LogType field's value.
+func (s *LogSettingsResponse) SetLogType(v string) *LogSettingsResponse {
+	s.LogType = &v
+	return s
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *LogSettingsResponse) SetResourceArn(v string) *LogSettingsResponse {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetResourcePrefix sets the ResourcePrefix field's value.
+func (s *LogSettingsResponse) SetResourcePrefix(v string) *LogSettingsResponse {
+	s.ResourcePrefix = &v
 	return s
 }
 
@@ -8825,6 +9145,9 @@ type PutBotAliasInput struct {
 	// you get a PreconditionFailedException exception.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// Settings for conversation logs for the alias.
+	ConversationLogs *ConversationLogsRequest `locationName:"conversationLogs" type:"structure"`
+
 	// A description of the alias.
 	Description *string `locationName:"description" type:"string"`
 
@@ -8865,6 +9188,11 @@ func (s *PutBotAliasInput) Validate() error {
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
+	if s.ConversationLogs != nil {
+		if err := s.ConversationLogs.Validate(); err != nil {
+			invalidParams.AddNested("ConversationLogs", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8887,6 +9215,12 @@ func (s *PutBotAliasInput) SetBotVersion(v string) *PutBotAliasInput {
 // SetChecksum sets the Checksum field's value.
 func (s *PutBotAliasInput) SetChecksum(v string) *PutBotAliasInput {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *PutBotAliasInput) SetConversationLogs(v *ConversationLogsRequest) *PutBotAliasInput {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -8913,6 +9247,10 @@ type PutBotAliasOutput struct {
 
 	// The checksum for the current version of the alias.
 	Checksum *string `locationName:"checksum" type:"string"`
+
+	// The settings that determine how Amazon Lex uses conversation logs for the
+	// alias.
+	ConversationLogs *ConversationLogsResponse `locationName:"conversationLogs" type:"structure"`
 
 	// The date that the bot alias was created.
 	CreatedDate *time.Time `locationName:"createdDate" type:"timestamp"`
@@ -8953,6 +9291,12 @@ func (s *PutBotAliasOutput) SetBotVersion(v string) *PutBotAliasOutput {
 // SetChecksum sets the Checksum field's value.
 func (s *PutBotAliasOutput) SetChecksum(v string) *PutBotAliasOutput {
 	s.Checksum = &v
+	return s
+}
+
+// SetConversationLogs sets the ConversationLogs field's value.
+func (s *PutBotAliasOutput) SetConversationLogs(v *ConversationLogsResponse) *PutBotAliasOutput {
+	s.ConversationLogs = v
 	return s
 }
 
@@ -8997,6 +9341,10 @@ type PutBotInput struct {
 	// For example, in a pizza ordering application, OrderPizza might be one of
 	// the intents. This intent might require the CrustType slot. You specify the
 	// valueElicitationPrompt field when you create the CrustType slot.
+	//
+	// If you have defined a fallback intent the abort statement will not be sent
+	// to the user, the fallback intent is used instead. For more information, see
+	// AMAZON.FallbackIntent (https://docs.aws.amazon.com/lex/latest/dg/built-in-intent-fallback.html).
 	AbortStatement *Statement `locationName:"abortStatement" type:"structure"`
 
 	// Identifies a specific revision of the $LATEST version.
@@ -9038,7 +9386,7 @@ type PutBotInput struct {
 	ChildDirected *bool `locationName:"childDirected" type:"boolean" required:"true"`
 
 	// When Amazon Lex doesn't understand the user's intent, it uses this message
-	// to get clarification. To specify how many times Amazon Lex should repeate
+	// to get clarification. To specify how many times Amazon Lex should repeat
 	// the clarification prompt, use the maxAttempts field. If Amazon Lex still
 	// doesn't understand, it sends the message in the abortStatement field.
 	//
@@ -9046,12 +9394,40 @@ type PutBotInput struct {
 	// response from the user. for example, for a bot that orders pizza and drinks,
 	// you might create this clarification prompt: "What would you like to do? You
 	// can say 'Order a pizza' or 'Order a drink.'"
+	//
+	// If you have defined a fallback intent, it will be invoked if the clarification
+	// prompt is repeated the number of times defined in the maxAttempts field.
+	// For more information, see AMAZON.FallbackIntent (https://docs.aws.amazon.com/lex/latest/dg/built-in-intent-fallback.html).
+	//
+	// If you don't define a clarification prompt, at runtime Amazon Lex will return
+	// a 400 Bad Request exception in three cases:
+	//
+	//    * Follow-up prompt - When the user responds to a follow-up prompt but
+	//    does not provide an intent. For example, in response to a follow-up prompt
+	//    that says "Would you like anything else today?" the user says "Yes." Amazon
+	//    Lex will return a 400 Bad Request exception because it does not have a
+	//    clarification prompt to send to the user to get an intent.
+	//
+	//    * Lambda function - When using a Lambda function, you return an ElicitIntent
+	//    dialog type. Since Amazon Lex does not have a clarification prompt to
+	//    get an intent from the user, it returns a 400 Bad Request exception.
+	//
+	//    * PutSession operation - When using the PutSession operation, you send
+	//    an ElicitIntent dialog type. Since Amazon Lex does not have a clarification
+	//    prompt to get an intent from the user, it returns a 400 Bad Request exception.
 	ClarificationPrompt *Prompt `locationName:"clarificationPrompt" type:"structure"`
 
+	// When set to true a new numbered version of the bot is created. This is the
+	// same as calling the CreateBotVersion operation. If you don't specify createVersion,
+	// the default is false.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
+
+	// When set to true user utterances are sent to Amazon Comprehend for sentiment
+	// analysis. If you don't specify detectSentiment, the default is false.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
 	// The maximum time in seconds that Amazon Lex retains the data gathered in
 	// a conversation.
@@ -9099,7 +9475,7 @@ type PutBotInput struct {
 
 	// The Amazon Polly voice ID that you want Amazon Lex to use for voice interactions
 	// with the user. The locale configured for the voice must match the locale
-	// of the bot. For more information, see Available Voices (http://docs.aws.amazon.com/polly/latest/dg/voicelist.html)
+	// of the bot. For more information, see Voices in Amazon Polly (https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)
 	// in the Amazon Polly Developer Guide.
 	VoiceId *string `locationName:"voiceId" type:"string"`
 }
@@ -9195,6 +9571,12 @@ func (s *PutBotInput) SetDescription(v string) *PutBotInput {
 	return s
 }
 
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *PutBotInput) SetDetectSentiment(v bool) *PutBotInput {
+	s.DetectSentiment = &v
+	return s
+}
+
 // SetIdleSessionTTLInSeconds sets the IdleSessionTTLInSeconds field's value.
 func (s *PutBotInput) SetIdleSessionTTLInSeconds(v int64) *PutBotInput {
 	s.IdleSessionTTLInSeconds = &v
@@ -9270,6 +9652,9 @@ type PutBotOutput struct {
 	// For more information, see PutBot.
 	ClarificationPrompt *Prompt `locationName:"clarificationPrompt" type:"structure"`
 
+	// True if a new version of the bot was created. If the createVersion field
+	// was not specified in the request, the createVersion field is set to false
+	// in the response.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the bot was created.
@@ -9277,6 +9662,11 @@ type PutBotOutput struct {
 
 	// A description of the bot.
 	Description *string `locationName:"description" type:"string"`
+
+	// true if the bot is configured to send user utterances to Amazon Comprehend
+	// for sentiment analysis. If the detectSentiment field was not specified in
+	// the request, the detectSentiment field is false in the response.
+	DetectSentiment *bool `locationName:"detectSentiment" type:"boolean"`
 
 	// If status is FAILED, Amazon Lex provides the reason that it failed to build
 	// the bot.
@@ -9300,13 +9690,19 @@ type PutBotOutput struct {
 	Name *string `locationName:"name" min:"2" type:"string"`
 
 	// When you send a request to create a bot with processBehavior set to BUILD,
-	// Amazon Lex sets the status response element to BUILDING. After Amazon Lex
-	// builds the bot, it sets status to READY. If Amazon Lex can't build the bot,
-	// Amazon Lex sets status to FAILED. Amazon Lex returns the reason for the failure
-	// in the failureReason response element.
+	// Amazon Lex sets the status response element to BUILDING.
 	//
-	// When you set processBehaviorto SAVE, Amazon Lex sets the status code to NOT
-	// BUILT.
+	// In the READY_BASIC_TESTING state you can test the bot with user inputs that
+	// exactly match the utterances configured for the bot's intents and values
+	// in the slot types.
+	//
+	// If Amazon Lex can't build the bot, Amazon Lex sets status to FAILED. Amazon
+	// Lex returns the reason for the failure in the failureReason response element.
+	//
+	// When you set processBehavior to SAVE, Amazon Lex sets the status code to
+	// NOT BUILT.
+	//
+	// When the bot is in the READY state you can test and publish the bot.
 	Status *string `locationName:"status" type:"string" enum:"Status"`
 
 	// The version of the bot. For a new bot, the version is always $LATEST.
@@ -9366,6 +9762,12 @@ func (s *PutBotOutput) SetCreatedDate(v time.Time) *PutBotOutput {
 // SetDescription sets the Description field's value.
 func (s *PutBotOutput) SetDescription(v string) *PutBotOutput {
 	s.Description = &v
+	return s
+}
+
+// SetDetectSentiment sets the DetectSentiment field's value.
+func (s *PutBotOutput) SetDetectSentiment(v bool) *PutBotOutput {
+	s.DetectSentiment = &v
 	return s
 }
 
@@ -9461,6 +9863,9 @@ type PutIntentInput struct {
 	// or neither.
 	ConfirmationPrompt *Prompt `locationName:"confirmationPrompt" type:"structure"`
 
+	// When set to true a new numbered version of the intent is created. This is
+	// the same as calling the CreateIntentVersion operation. If you do not specify
+	// createVersion, the default is false.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// A description of the intent.
@@ -9702,6 +10107,9 @@ type PutIntentOutput struct {
 	// before fulfilling it.
 	ConfirmationPrompt *Prompt `locationName:"confirmationPrompt" type:"structure"`
 
+	// True if a new version of the intent was created. If the createVersion field
+	// was not specified in the request, the createVersion field is set to false
+	// in the response.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the intent was created.
@@ -9867,6 +10275,9 @@ type PutSlotTypeInput struct {
 	// you get a PreconditionFailedException exception.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// When set to true a new numbered version of the slot type is created. This
+	// is the same as calling the CreateSlotTypeVersion operation. If you do not
+	// specify createVersion, the default is false.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// A description of the slot type.
@@ -9992,6 +10403,9 @@ type PutSlotTypeOutput struct {
 	// Checksum of the $LATEST version of the slot type.
 	Checksum *string `locationName:"checksum" type:"string"`
 
+	// True if a new version of the slot type was created. If the createVersion
+	// field was not specified in the request, the createVersion field is set to
+	// false in the response.
 	CreateVersion *bool `locationName:"createVersion" type:"boolean"`
 
 	// The date that the slot type was created.
@@ -10133,6 +10547,13 @@ type Slot struct {
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
 
+	// Determines whether a slot is obfuscated in conversation logs and stored utterances.
+	// When you obfuscate a slot, the value is replaced by the slot name in curly
+	// braces ({}). For example, if the slot name is "full_name", obfuscated values
+	// are replaced with "{full_name}". For more information, see Slot Obfuscation
+	// (https://docs.aws.amazon.com/lex/latest/dg/how-obfuscate.html).
+	ObfuscationSetting *string `locationName:"obfuscationSetting" type:"string" enum:"ObfuscationSetting"`
+
 	// Directs Lex the order in which to elicit this slot value from the user. For
 	// example, if the intent has two slots with priorities 1 and 2, AWS Lex first
 	// elicits a value for the slot with priority 1.
@@ -10220,6 +10641,12 @@ func (s *Slot) SetDescription(v string) *Slot {
 // SetName sets the Name field's value.
 func (s *Slot) SetName(v string) *Slot {
 	s.Name = &v
+	return s
+}
+
+// SetObfuscationSetting sets the ObfuscationSetting field's value.
+func (s *Slot) SetObfuscationSetting(v string) *Slot {
+	s.ObfuscationSetting = &v
 	return s
 }
 
@@ -10680,6 +11107,14 @@ const (
 )
 
 const (
+	// DestinationCloudwatchLogs is a Destination enum value
+	DestinationCloudwatchLogs = "CLOUDWATCH_LOGS"
+
+	// DestinationS3 is a Destination enum value
+	DestinationS3 = "S3"
+)
+
+const (
 	// ExportStatusInProgress is a ExportStatus enum value
 	ExportStatusInProgress = "IN_PROGRESS"
 
@@ -10729,11 +11164,27 @@ const (
 )
 
 const (
+	// LogTypeAudio is a LogType enum value
+	LogTypeAudio = "AUDIO"
+
+	// LogTypeText is a LogType enum value
+	LogTypeText = "TEXT"
+)
+
+const (
 	// MergeStrategyOverwriteLatest is a MergeStrategy enum value
 	MergeStrategyOverwriteLatest = "OVERWRITE_LATEST"
 
 	// MergeStrategyFailOnConflict is a MergeStrategy enum value
 	MergeStrategyFailOnConflict = "FAIL_ON_CONFLICT"
+)
+
+const (
+	// ObfuscationSettingNone is a ObfuscationSetting enum value
+	ObfuscationSettingNone = "NONE"
+
+	// ObfuscationSettingDefaultObfuscation is a ObfuscationSetting enum value
+	ObfuscationSettingDefaultObfuscation = "DEFAULT_OBFUSCATION"
 )
 
 const (

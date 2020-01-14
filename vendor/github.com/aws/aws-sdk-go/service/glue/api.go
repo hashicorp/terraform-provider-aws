@@ -16763,6 +16763,13 @@ type CreateMLTransformInput struct {
 	// default is an empty string.
 	Description *string `type:"string"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	//
 	// InputRecordTables is a required field
@@ -16773,6 +16780,21 @@ type CreateMLTransformInput struct {
 	// is 10. A DPU is a relative measure of processing power that consists of 4
 	// vCPUs of compute capacity and 16 GB of memory. For more information, see
 	// the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
+	//
+	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
+	// field is set automatically and becomes read-only.
 	//
 	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
 	// field is set automatically and becomes read-only.
@@ -16789,6 +16811,8 @@ type CreateMLTransformInput struct {
 
 	// The number of workers of a defined workerType that are allocated when this
 	// task runs.
+	//
+	// If WorkerType is set, then NumberOfWorkers is required (and vice versa).
 	NumberOfWorkers *int64 `type:"integer"`
 
 	// The algorithmic parameters that are specific to the transform type used.
@@ -16798,9 +16822,17 @@ type CreateMLTransformInput struct {
 	Parameters *TransformParameters `type:"structure" required:"true"`
 
 	// The name or Amazon Resource Name (ARN) of the IAM role with the required
-	// permissions. Ensure that this role has permission to your Amazon Simple Storage
-	// Service (Amazon S3) sources, targets, temporary directory, scripts, and any
-	// libraries that are used by the task run for this transform.
+	// permissions. The required permissions include both AWS Glue service role
+	// permissions to AWS Glue resources, and Amazon S3 permissions required by
+	// the transform.
+	//
+	//    * This role needs AWS Glue service role permissions to allow access to
+	//    resources in AWS Glue. See Attach a Policy to IAM Users That Access AWS
+	//    Glue (https://docs.aws.amazon.com/glue/latest/dg/attach-policy-iam-user.html).
+	//
+	//    * This role needs permission to your Amazon Simple Storage Service (Amazon
+	//    S3) sources, targets, temporary directory, scripts, and any libraries
+	//    used by the task run for this transform.
 	//
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
@@ -16821,6 +16853,18 @@ type CreateMLTransformInput struct {
 	//
 	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
 	//    and a 128GB disk, and 1 executor per worker.
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -16837,6 +16881,9 @@ func (s CreateMLTransformInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CreateMLTransformInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CreateMLTransformInput"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.InputRecordTables == nil {
 		invalidParams.Add(request.NewErrParamRequired("InputRecordTables"))
 	}
@@ -16880,6 +16927,12 @@ func (s *CreateMLTransformInput) Validate() error {
 // SetDescription sets the Description field's value.
 func (s *CreateMLTransformInput) SetDescription(v string) *CreateMLTransformInput {
 	s.Description = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *CreateMLTransformInput) SetGlueVersion(v string) *CreateMLTransformInput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -21836,6 +21889,13 @@ type GetMLTransformOutput struct {
 	// The latest evaluation metrics.
 	EvaluationMetrics *EvaluationMetrics `type:"structure"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	InputRecordTables []*Table `type:"list"`
 
@@ -21929,6 +21989,12 @@ func (s *GetMLTransformOutput) SetDescription(v string) *GetMLTransformOutput {
 // SetEvaluationMetrics sets the EvaluationMetrics field's value.
 func (s *GetMLTransformOutput) SetEvaluationMetrics(v *EvaluationMetrics) *GetMLTransformOutput {
 	s.EvaluationMetrics = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *GetMLTransformOutput) SetGlueVersion(v string) *GetMLTransformOutput {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -25999,6 +26065,13 @@ type MLTransform struct {
 	// quality of your machine learning transform.
 	EvaluationMetrics *EvaluationMetrics `type:"structure"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// A list of AWS Glue table definitions used by the transform.
 	InputRecordTables []*Table `type:"list"`
 
@@ -26015,7 +26088,19 @@ type MLTransform struct {
 	// task runs for this transform. You can allocate from 2 to 100 DPUs; the default
 	// is 10. A DPU is a relative measure of processing power that consists of 4
 	// vCPUs of compute capacity and 16 GB of memory. For more information, see
-	// the AWS Glue pricing page (https://aws.amazon.com/glue/pricing/).
+	// the AWS Glue pricing page (http://aws.amazon.com/glue/pricing/).
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	//
 	// When the WorkerType field is set to a value other than Standard, the MaxCapacity
 	// field is set automatically and becomes read-only.
@@ -26031,6 +26116,8 @@ type MLTransform struct {
 
 	// The number of workers of a defined workerType that are allocated when a task
 	// of the transform runs.
+	//
+	// If WorkerType is set, then NumberOfWorkers is required (and vice versa).
 	NumberOfWorkers *int64 `type:"integer"`
 
 	// A TransformParameters object. You can use parameters to tune (customize)
@@ -26040,9 +26127,17 @@ type MLTransform struct {
 	Parameters *TransformParameters `type:"structure"`
 
 	// The name or Amazon Resource Name (ARN) of the IAM role with the required
-	// permissions. This role needs permission to your Amazon Simple Storage Service
-	// (Amazon S3) sources, targets, temporary directory, scripts, and any libraries
-	// used by the task run for this transform.
+	// permissions. The required permissions include both AWS Glue service role
+	// permissions to AWS Glue resources, and Amazon S3 permissions required by
+	// the transform.
+	//
+	//    * This role needs AWS Glue service role permissions to allow access to
+	//    resources in AWS Glue. See Attach a Policy to IAM Users That Access AWS
+	//    Glue (https://docs.aws.amazon.com/glue/latest/dg/attach-policy-iam-user.html).
+	//
+	//    * This role needs permission to your Amazon Simple Storage Service (Amazon
+	//    S3) sources, targets, temporary directory, scripts, and any libraries
+	//    used by the task run for this transform.
 	Role *string `type:"string"`
 
 	// A map of key-value pairs representing the columns and data types that this
@@ -26070,6 +26165,18 @@ type MLTransform struct {
 	//
 	//    * For the G.2X worker type, each worker provides 8 vCPU, 32 GB of memory
 	//    and a 128GB disk, and 1 executor per worker.
+	//
+	// MaxCapacity is a mutually exclusive option with NumberOfWorkers and WorkerType.
+	//
+	//    * If either NumberOfWorkers or WorkerType is set, then MaxCapacity cannot
+	//    be set.
+	//
+	//    * If MaxCapacity is set then neither NumberOfWorkers or WorkerType can
+	//    be set.
+	//
+	//    * If WorkerType is set, then NumberOfWorkers is required (and vice versa).
+	//
+	//    * MaxCapacity and NumberOfWorkers must both be at least 1.
 	WorkerType *string `type:"string" enum:"WorkerType"`
 }
 
@@ -26098,6 +26205,12 @@ func (s *MLTransform) SetDescription(v string) *MLTransform {
 // SetEvaluationMetrics sets the EvaluationMetrics field's value.
 func (s *MLTransform) SetEvaluationMetrics(v *EvaluationMetrics) *MLTransform {
 	s.EvaluationMetrics = v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *MLTransform) SetGlueVersion(v string) *MLTransform {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -29791,6 +29904,13 @@ type TransformFilterCriteria struct {
 	// The time and date before which the transforms were created.
 	CreatedBefore *time.Time `type:"timestamp"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// Filter on transforms last modified after this date.
 	LastModifiedAfter *time.Time `type:"timestamp"`
 
@@ -29829,6 +29949,9 @@ func (s TransformFilterCriteria) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *TransformFilterCriteria) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "TransformFilterCriteria"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -29858,6 +29981,12 @@ func (s *TransformFilterCriteria) SetCreatedAfter(v time.Time) *TransformFilterC
 // SetCreatedBefore sets the CreatedBefore field's value.
 func (s *TransformFilterCriteria) SetCreatedBefore(v time.Time) *TransformFilterCriteria {
 	s.CreatedBefore = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *TransformFilterCriteria) SetGlueVersion(v string) *TransformFilterCriteria {
+	s.GlueVersion = &v
 	return s
 }
 
@@ -31236,6 +31365,13 @@ type UpdateMLTransformInput struct {
 	// A description of the transform. The default is an empty string.
 	Description *string `type:"string"`
 
+	// This value determines which version of AWS Glue this machine learning transform
+	// is compatible with. Glue 1.0 is recommended for most customers. If the value
+	// is not set, the Glue compatibility defaults to Glue 0.9. For more information,
+	// see AWS Glue Versions (https://docs.aws.amazon.com/glue/latest/dg/release-notes.html#release-notes-versions)
+	// in the developer guide.
+	GlueVersion *string `min:"1" type:"string"`
+
 	// The number of AWS Glue data processing units (DPUs) that are allocated to
 	// task runs for this transform. You can allocate from 2 to 100 DPUs; the default
 	// is 10. A DPU is a relative measure of processing power that consists of 4
@@ -31302,6 +31438,9 @@ func (s UpdateMLTransformInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *UpdateMLTransformInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateMLTransformInput"}
+	if s.GlueVersion != nil && len(*s.GlueVersion) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("GlueVersion", 1))
+	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
 	}
@@ -31329,6 +31468,12 @@ func (s *UpdateMLTransformInput) Validate() error {
 // SetDescription sets the Description field's value.
 func (s *UpdateMLTransformInput) SetDescription(v string) *UpdateMLTransformInput {
 	s.Description = &v
+	return s
+}
+
+// SetGlueVersion sets the GlueVersion field's value.
+func (s *UpdateMLTransformInput) SetGlueVersion(v string) *UpdateMLTransformInput {
+	s.GlueVersion = &v
 	return s
 }
 

@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "elasticfilesystem" // Name of service.
 	EndpointsID = ServiceName         // ID to lookup a service endpoint with.
-	ServiceID   = "EFS"               // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "EFS"               // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the EFS client with a session.

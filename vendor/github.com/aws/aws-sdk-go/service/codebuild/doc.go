@@ -30,12 +30,22 @@
 //
 //    * CreateProject: Creates a build project.
 //
+//    * CreateReportGroup: Creates a report group. A report group contains a
+//    collection of reports.
+//
 //    * CreateWebhook: For an existing AWS CodeBuild build project that has
 //    its source code stored in a GitHub or Bitbucket repository, enables AWS
 //    CodeBuild to start rebuilding the source code every time a code change
 //    is pushed to the repository.
 //
 //    * DeleteProject: Deletes a build project.
+//
+//    * DeleteReport: Deletes a report.
+//
+//    * DeleteReportGroup: Deletes a report group.
+//
+//    * DeleteResourcePolicy: Deletes a resource policy that is identified by
+//    its resource ARN.
 //
 //    * DeleteSourceCredentials: Deletes a set of GitHub, GitHub Enterprise,
 //    or Bitbucket source credentials.
@@ -44,6 +54,12 @@
 //    its source code stored in a GitHub or Bitbucket repository, stops AWS
 //    CodeBuild from rebuilding the source code every time a code change is
 //    pushed to the repository.
+//
+//    * DescribeTestCases: Returns a list of details about test cases for a
+//    report.
+//
+//    * GetResourcePolicy: Gets a resource policy that is identified by its
+//    resource ARN.
 //
 //    * ImportSourceCredentials: Imports the source repository credentials for
 //    an AWS CodeBuild project that has its source code stored in a GitHub,
@@ -63,15 +79,34 @@
 //    * ListProjects: Gets a list of build project names, with each build project
 //    name representing a single build project.
 //
+//    * ListReportGroups: Gets a list ARNs for the report groups in the current
+//    AWS account.
+//
+//    * ListReports: Gets a list ARNs for the reports in the current AWS account.
+//
+//    * ListReportsForReportGroup: Returns a list of ARNs for the reports that
+//    belong to a ReportGroup.
+//
+//    * ListSharedProjects: Gets a list of ARNs associated with projects shared
+//    with the current AWS account or user.
+//
+//    * ListSharedReportGroups: Gets a list of ARNs associated with report groups
+//    shared with the current AWS account or user
+//
 //    * ListSourceCredentials: Returns a list of SourceCredentialsInfo objects.
 //    Each SourceCredentialsInfo object includes the authentication type, token
 //    ARN, and type of source provider for one set of credentials.
+//
+//    * PutResourcePolicy: Stores a resource policy for the ARN of a Project
+//    or ReportGroup object.
 //
 //    * StartBuild: Starts running a build.
 //
 //    * StopBuild: Attempts to stop running a build.
 //
 //    * UpdateProject: Changes the settings of an existing build project.
+//
+//    * UpdateReportGroup: Changes a report group.
 //
 //    * UpdateWebhook: Changes the settings of an existing webhook.
 //

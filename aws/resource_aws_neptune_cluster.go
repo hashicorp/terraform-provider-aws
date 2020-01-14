@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsNeptuneCluster() *schema.Resource {
@@ -237,7 +238,7 @@ func resourceAwsNeptuneCluster() *schema.Resource {
 
 func resourceAwsNeptuneClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
-	tags := tagsFromMapNeptune(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().NeptuneTags()
 
 	// Check if any of the parameters that require a cluster modification after creation are set
 	clusterUpdate := false
@@ -484,8 +485,14 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 	arn := aws.StringValue(dbc.DBClusterArn)
 	d.Set("arn", arn)
 
-	if err := saveTagsNeptune(conn, d, arn); err != nil {
-		return fmt.Errorf("Failed to save tags for Neptune Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+	tags, err := keyvaluetags.NeptuneListTags(conn, d.Get("arn").(string))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %s", d.Get("arn").(string), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -601,12 +608,14 @@ func resourceAwsNeptuneClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if arn, ok := d.GetOk("arn"); ok {
-		if err := setTagsNeptune(conn, d, arn.(string)); err != nil {
-			return err
-		} else {
-			d.SetPartial("tags")
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Neptune Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
+
+		d.SetPartial("tags")
 	}
 
 	return resourceAwsNeptuneClusterRead(d, meta)

@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Backup" // Name of service.
 	EndpointsID = "backup" // ID to lookup a service endpoint with.
-	ServiceID   = "Backup" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Backup" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the Backup client with a session.

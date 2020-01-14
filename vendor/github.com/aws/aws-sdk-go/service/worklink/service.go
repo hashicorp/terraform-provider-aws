@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "WorkLink" // Name of service.
 	EndpointsID = "worklink" // ID to lookup a service endpoint with.
-	ServiceID   = "WorkLink" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "WorkLink" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the WorkLink client with a session.

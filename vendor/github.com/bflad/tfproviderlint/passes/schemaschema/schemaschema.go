@@ -20,7 +20,7 @@ var Analyzer = &analysis.Analyzer{
 		schemamap.Analyzer,
 	},
 	Run:        run,
-	ResultType: reflect.TypeOf([]*ast.CompositeLit{}),
+	ResultType: reflect.TypeOf([]*terraformtype.HelperSchemaSchemaInfo{}),
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
@@ -29,10 +29,12 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{
 		(*ast.CompositeLit)(nil),
 	}
-	var result []*ast.CompositeLit
+	var result []*terraformtype.HelperSchemaSchemaInfo
 
 	for _, smap := range schemamaps {
-		result = append(result, schemamap.GetSchemaAttributes(smap)...)
+		for _, schema := range schemamap.GetSchemaAttributes(smap) {
+			result = append(result, terraformtype.NewHelperSchemaSchemaInfo(schema, pass.TypesInfo))
+		}
 	}
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
@@ -42,7 +44,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		result = append(result, x)
+		result = append(result, terraformtype.NewHelperSchemaSchemaInfo(x, pass.TypesInfo))
 	})
 
 	return result, nil
@@ -53,8 +55,6 @@ func isSchemaSchema(pass *analysis.Pass, cl *ast.CompositeLit) bool {
 	default:
 		return false
 	case *ast.SelectorExpr:
-		return terraformtype.IsTypeHelperSchema(pass.TypesInfo.TypeOf(v))
+		return terraformtype.IsHelperSchemaTypeSchema(pass.TypesInfo.TypeOf(v))
 	}
-
-	return true
 }

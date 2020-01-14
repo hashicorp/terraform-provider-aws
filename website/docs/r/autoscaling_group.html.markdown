@@ -111,10 +111,12 @@ resource "aws_autoscaling_group" "example" {
 
       override {
         instance_type = "c4.large"
+        weighted_capacity = "3"
       }
 
       override {
         instance_type = "c3.large"
+        weighted_capacity = "2"
       }
     }
   }
@@ -188,7 +190,7 @@ The following arguments are supported:
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the autoscaling group **before** instances are launched. The
   syntax is exactly the same as the separate
-  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
   resource, without the `autoscaling_group_name` attribute. Please note that this will only work when creating
   a new autoscaling group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 * `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
@@ -231,6 +233,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
    autoscaling group will not select instances with this setting for terminination
    during scale in events.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
+* `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 604800 and 31536000 seconds.
 
 ### launch_template
 
@@ -245,7 +248,7 @@ The top-level `launch_template` block supports the following:
 ### mixed_instances_policy
 
 * `instances_distribution` - (Optional) Nested argument containing settings on how to mix on-demand and Spot instances in the Auto Scaling group. Defined below.
-* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types. Defined below.
+* `launch_template` - (Required) Nested argument containing launch template settings along with the overrides to specify multiple instance types and weights. Defined below.
 
 #### mixed_instances_policy instances_distribution
 
@@ -280,6 +283,7 @@ This configuration block supports the following:
 This configuration block supports the following:
 
 * `instance_type` - (Optional) Override the instance type in the Launch Template.
+* `weighted_capacity` - (Optional) The number of capacity units, which gives the instance type a proportional weight to other instance types.
 
 ### tag and tags
 
@@ -294,6 +298,8 @@ To declare multiple tags additional `tag` blocks can be specified.
 Alternatively the `tags` attributes can be used, which accepts a list of maps containing the above field names as keys and their respective values.
 This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
 `tag` and `tags` are mutually exclusive, only one of them can be specified.
+
+~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. To ignore the removal of these automatic tags, see the [`ignore_tags` provider configuration](https://www.terraform.io/docs/providers/aws/index.html#ignore_tags) or the [`ignore_changes` lifecycle argument for Terraform resources](https://www.terraform.io/docs/configuration/resources.html#ignore_changes).
 
 ## Attributes Reference
 
@@ -320,7 +326,7 @@ AutoScaling Group
 
 ~> **NOTE:** Terraform has two types of ways you can add lifecycle hooks - via
 the `initial_lifecycle_hook` attribute from this resource, or via the separate
-[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
 resource. `initial_lifecycle_hook` exists here because any lifecycle hooks
 added with `aws_autoscaling_lifecycle_hook` will not be added until the
 autoscaling group has been created, and depending on your

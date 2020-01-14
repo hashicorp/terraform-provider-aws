@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsSsmActivation() *schema.Resource {
@@ -92,7 +93,7 @@ func resourceAwsSsmActivationCreate(d *schema.ResourceData, meta interface{}) er
 		activationInput.RegistrationLimit = aws.Int64(int64(d.Get("registration_limit").(int)))
 	}
 	if v, ok := d.GetOk("tags"); ok {
-		activationInput.Tags = tagsFromMapSSM(v.(map[string]interface{}))
+		activationInput.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SsmTags()
 	}
 
 	// Retry to allow iam_role to be created and policy attachment to take place
@@ -160,6 +161,9 @@ func resourceAwsSsmActivationRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("iam_role", activation.IamRole)
 	d.Set("registration_limit", activation.RegistrationLimit)
 	d.Set("registration_count", activation.RegistrationsCount)
+	if err := d.Set("tags", keyvaluetags.SsmKeyValueTags(activation.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

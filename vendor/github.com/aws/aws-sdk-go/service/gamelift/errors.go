@@ -78,6 +78,14 @@ const (
 	// should not retry such requests.
 	ErrCodeNotFoundException = "NotFoundException"
 
+	// ErrCodeTaggingFailedException for service response error code
+	// "TaggingFailedException".
+	//
+	// The requested tagging operation did not succeed. This may be due to invalid
+	// tag format or the maximum tag limit may have been exceeded. Resolve the issue
+	// before retrying.
+	ErrCodeTaggingFailedException = "TaggingFailedException"
+
 	// ErrCodeTerminalRoutingStrategyException for service response error code
 	// "TerminalRoutingStrategyException".
 	//
@@ -97,6 +105,6 @@ const (
 	// ErrCodeUnsupportedRegionException for service response error code
 	// "UnsupportedRegionException".
 	//
-	// The requested operation is not supported in the region specified.
+	// The requested operation is not supported in the Region specified.
 	ErrCodeUnsupportedRegionException = "UnsupportedRegionException"
 )

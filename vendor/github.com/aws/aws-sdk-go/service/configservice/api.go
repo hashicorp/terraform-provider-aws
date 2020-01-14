@@ -605,8 +605,8 @@ func (c *ConfigService) DeleteConformancePackRequest(input *DeleteConformancePac
 
 // DeleteConformancePack API operation for AWS Config.
 //
-// Deletes the specified conformance pack and all the AWS Config rules and all
-// evaluation results within that conformance pack.
+// Deletes the specified conformance pack and all the AWS Config rules, remediation
+// actions, and all evaluation results within that conformance pack.
 //
 // AWS Config sets the conformance pack to DELETE_IN_PROGRESS until the deletion
 // is complete. You cannot update a conformance pack while it is in this state.
@@ -1354,6 +1354,92 @@ func (c *ConfigService) DeleteRemediationExceptions(input *DeleteRemediationExce
 // for more information on using Contexts.
 func (c *ConfigService) DeleteRemediationExceptionsWithContext(ctx aws.Context, input *DeleteRemediationExceptionsInput, opts ...request.Option) (*DeleteRemediationExceptionsOutput, error) {
 	req, out := c.DeleteRemediationExceptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteResourceConfig = "DeleteResourceConfig"
+
+// DeleteResourceConfigRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteResourceConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteResourceConfig for more information on using the DeleteResourceConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteResourceConfigRequest method.
+//    req, resp := client.DeleteResourceConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteResourceConfig
+func (c *ConfigService) DeleteResourceConfigRequest(input *DeleteResourceConfigInput) (req *request.Request, output *DeleteResourceConfigOutput) {
+	op := &request.Operation{
+		Name:       opDeleteResourceConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteResourceConfigInput{}
+	}
+
+	output = &DeleteResourceConfigOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteResourceConfig API operation for AWS Config.
+//
+// Records the configuration state for a custom resource that has been deleted.
+// This API records a new ConfigurationItem with a ResourceDeleted status. You
+// can retrieve the ConfigurationItems recorded for this resource in your AWS
+// Config History.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation DeleteResourceConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeValidationException "ValidationException"
+//   The requested action is not valid.
+//
+//   * ErrCodeNoRunningConfigurationRecorderException "NoRunningConfigurationRecorderException"
+//   There is no configuration recorder running.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteResourceConfig
+func (c *ConfigService) DeleteResourceConfig(input *DeleteResourceConfigInput) (*DeleteResourceConfigOutput, error) {
+	req, out := c.DeleteResourceConfigRequest(input)
+	return out, req.Send()
+}
+
+// DeleteResourceConfigWithContext is the same as DeleteResourceConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteResourceConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) DeleteResourceConfigWithContext(ctx aws.Context, input *DeleteResourceConfigInput, opts ...request.Option) (*DeleteResourceConfigOutput, error) {
+	req, out := c.DeleteResourceConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2510,10 +2596,9 @@ func (c *ConfigService) DescribeConformancePackComplianceRequest(input *Describe
 
 // DescribeConformancePackCompliance API operation for AWS Config.
 //
-// Returns compliance information for each rule in that conformance pack.
+// Returns compliance details for each rule in that conformance pack.
 //
-// You must provide exact rule names otherwise AWS Config cannot return evaluation
-// results due to insufficient data.
+// You must provide exact rule names.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2607,6 +2692,8 @@ func (c *ConfigService) DescribeConformancePackStatusRequest(input *DescribeConf
 // DescribeConformancePackStatus API operation for AWS Config.
 //
 // Provides one or more conformance packs deployment status.
+//
+// If there are no conformance packs then you will see an empty result.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3259,9 +3346,12 @@ func (c *ConfigService) DescribeOrganizationConformancePacksRequest(input *Descr
 // Returns a list of organization conformance packs.
 //
 // When you specify the limit and the next token, you receive a paginated response.
+//
 // Limit and next token are not applicable if you specify organization conformance
 // packs names. They are only applicable, when you request all the organization
-// conformance packs. Only a master account can call this API.
+// conformance packs.
+//
+// Only a master account can call this API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4703,6 +4793,9 @@ func (c *ConfigService) GetConformancePackComplianceSummaryRequest(input *GetCon
 
 // GetConformancePackComplianceSummary API operation for AWS Config.
 //
+// Returns compliance details for the conformance pack based on the cumulative
+// compliance results of all the rules in that conformance pack.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5739,9 +5832,8 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //      a service linked role.
 //
 //      * For PutConformancePack and PutOrganizationConformancePack, a conformance
-//      pack cannot be created becuase you do not have permissions: To call IAM
+//      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
-//      To create a rule and a stack.
 //
 //   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
 //   There are no configuration recorders available to provide the role needed
@@ -6029,7 +6121,8 @@ func (c *ConfigService) PutConformancePackRequest(input *PutConformancePackInput
 // PutConformancePack API operation for AWS Config.
 //
 // Creates or updates a conformance pack. A conformance pack is a collection
-// of AWS Config rules that can be easily deployed in an account and a region.
+// of AWS Config rules that can be easily deployed in an account and a region
+// and across AWS Organization.
 //
 // This API creates a service linked role AWSServiceRoleForConfigConforms in
 // your account. The service linked role is created only when the role does
@@ -6062,9 +6155,8 @@ func (c *ConfigService) PutConformancePackRequest(input *PutConformancePackInput
 //      a service linked role.
 //
 //      * For PutConformancePack and PutOrganizationConformancePack, a conformance
-//      pack cannot be created becuase you do not have permissions: To call IAM
+//      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
-//      To create a rule and a stack.
 //
 //   * ErrCodeConformancePackTemplateValidationException "ConformancePackTemplateValidationException"
 //   You have specified a template that is not valid or supported.
@@ -6101,8 +6193,8 @@ func (c *ConfigService) PutConformancePackRequest(input *PutConformancePackInput
 //   are valid and try again.
 //
 //   * ErrCodeMaxNumberOfConformancePacksExceededException "MaxNumberOfConformancePacksExceededException"
-//   You have reached the limit (20) of the number of conformance packs in an
-//   account.
+//   You have reached the limit (6) of the number of conformance packs in an account
+//   (6 conformance pack with 25 AWS Config rules per pack).
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutConformancePack
 func (c *ConfigService) PutConformancePack(input *PutConformancePackInput) (*PutConformancePackOutput, error) {
@@ -6469,9 +6561,8 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //      a service linked role.
 //
 //      * For PutConformancePack and PutOrganizationConformancePack, a conformance
-//      pack cannot be created becuase you do not have permissions: To call IAM
+//      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
-//      To create a rule and a stack.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConfigRule
 func (c *ConfigService) PutOrganizationConfigRule(input *PutOrganizationConfigRuleInput) (*PutOrganizationConfigRuleOutput, error) {
@@ -6541,17 +6632,21 @@ func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganiza
 //
 // Deploys conformance packs across member accounts in an AWS Organization.
 //
-// This API enables organization service access through the EnableAWSServiceAccess
-// action and creates a service linked role AWSServiceRoleForConfigMultiAccountSetup
-// in the master account of your organization. The service linked role is created
-// only when the role does not exist in the master account. AWS Config verifies
-// the existence of role with GetRole action.
-//
-// The SPN is config-multiaccountsetup.amazonaws.com.
+// This API enables organization service access for config-multiaccountsetup.amazonaws.com
+// through the EnableAWSServiceAccess action and creates a service linked role
+// AWSServiceRoleForConfigMultiAccountSetup in the master account of your organization.
+// The service linked role is created only when the role does not exist in the
+// master account. AWS Config verifies the existence of role with GetRole action.
 //
 // You must specify either the TemplateS3Uri or the TemplateBody parameter,
 // but not both. If you provide both AWS Config uses the TemplateS3Uri parameter
 // and ignores the TemplateBody parameter.
+//
+// AWS Config sets the state of a conformance pack to CREATE_IN_PROGRESS and
+// UPDATE_IN_PROGRESS until the confomance pack is created or updated. You cannot
+// update a conformance pack while it is in this state.
+//
+// You can create 6 conformance packs with 25 AWS Config rules in each pack.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6562,8 +6657,9 @@ func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganiza
 //
 // Returned Error Codes:
 //   * ErrCodeMaxNumberOfOrganizationConformancePacksExceededException "MaxNumberOfOrganizationConformancePacksExceededException"
-//   You have reached the limit (10) of the number of organization conformance
-//   packs in an account.
+//   You have reached the limit (6) of the number of organization conformance
+//   packs in an account (6 conformance pack with 25 AWS Config rules per pack
+//   per account).
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   You see this exception in the following cases:
@@ -6617,9 +6713,8 @@ func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganiza
 //      a service linked role.
 //
 //      * For PutConformancePack and PutOrganizationConformancePack, a conformance
-//      pack cannot be created becuase you do not have permissions: To call IAM
+//      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
-//      To create a rule and a stack.
 //
 //   * ErrCodeOrganizationConformancePackTemplateValidationException "OrganizationConformancePackTemplateValidationException"
 //   You have specified a template that is not valid or supported.
@@ -6725,9 +6820,8 @@ func (c *ConfigService) PutRemediationConfigurationsRequest(input *PutRemediatio
 //      a service linked role.
 //
 //      * For PutConformancePack and PutOrganizationConformancePack, a conformance
-//      pack cannot be created becuase you do not have permissions: To call IAM
+//      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
-//      To create a rule and a stack.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
 //   One or more of the specified parameters are invalid. Verify that your parameters
@@ -6832,6 +6926,121 @@ func (c *ConfigService) PutRemediationExceptions(input *PutRemediationExceptions
 // for more information on using Contexts.
 func (c *ConfigService) PutRemediationExceptionsWithContext(ctx aws.Context, input *PutRemediationExceptionsInput, opts ...request.Option) (*PutRemediationExceptionsOutput, error) {
 	req, out := c.PutRemediationExceptionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutResourceConfig = "PutResourceConfig"
+
+// PutResourceConfigRequest generates a "aws/request.Request" representing the
+// client's request for the PutResourceConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutResourceConfig for more information on using the PutResourceConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutResourceConfigRequest method.
+//    req, resp := client.PutResourceConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutResourceConfig
+func (c *ConfigService) PutResourceConfigRequest(input *PutResourceConfigInput) (req *request.Request, output *PutResourceConfigOutput) {
+	op := &request.Operation{
+		Name:       opPutResourceConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutResourceConfigInput{}
+	}
+
+	output = &PutResourceConfigOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutResourceConfig API operation for AWS Config.
+//
+// Records the configuration state for the resource provided in the request.
+// The configuration state of a resource is represented in AWS Config as Configuration
+// Items. Once this API records the configuration item, you can retrieve the
+// list of configuration items for the custom resource type using existing AWS
+// Config APIs.
+//
+// The custom resource type must be registered with AWS CloudFormation. This
+// API accepts the configuration item registered with AWS CloudFormation.
+//
+// When you call this API, AWS Config only stores configuration state of the
+// resource provided in the request. This API does not change or remediate the
+// configuration of the resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Config's
+// API operation PutResourceConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeValidationException "ValidationException"
+//   The requested action is not valid.
+//
+//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   Indicates one of the following errors:
+//
+//      * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//      to AWS Config lacks permissions to perform the config:Put* action.
+//
+//      * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//      the function ARN, and check the function's permissions.
+//
+//      * For PutOrganizationConfigRule, organization config rule cannot be created
+//      because you do not have permissions to call IAM GetRole action or create
+//      a service linked role.
+//
+//      * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//      pack cannot be created because you do not have permissions: To call IAM
+//      GetRole action or create a service linked role. To read Amazon S3 bucket.
+//
+//   * ErrCodeNoRunningConfigurationRecorderException "NoRunningConfigurationRecorderException"
+//   There is no configuration recorder running.
+//
+//   * ErrCodeMaxActiveResourcesExceededException "MaxActiveResourcesExceededException"
+//   You have reached the limit (100,000) of active custom resource types in your
+//   account. Delete unused resources using DeleteResourceConfig.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutResourceConfig
+func (c *ConfigService) PutResourceConfig(input *PutResourceConfigInput) (*PutResourceConfigOutput, error) {
+	req, out := c.PutResourceConfigRequest(input)
+	return out, req.Send()
+}
+
+// PutResourceConfigWithContext is the same as PutResourceConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutResourceConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ConfigService) PutResourceConfigWithContext(ctx aws.Context, input *PutResourceConfigInput, opts ...request.Option) (*PutResourceConfigOutput, error) {
+	req, out := c.PutResourceConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -7332,9 +7541,8 @@ func (c *ConfigService) StartRemediationExecutionRequest(input *StartRemediation
 //      a service linked role.
 //
 //      * For PutConformancePack and PutOrganizationConformancePack, a conformance
-//      pack cannot be created becuase you do not have permissions: To call IAM
+//      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
-//      To create a rule and a stack.
 //
 //   * ErrCodeNoSuchRemediationConfigurationException "NoSuchRemediationConfigurationException"
 //   You specified an AWS Config rule without a remediation configuration.
@@ -9397,7 +9605,9 @@ type ConfigurationItem struct {
 	// CloudTrail, see What Is AWS CloudTrail (https://docs.aws.amazon.com/awscloudtrail/latest/userguide/what_is_cloud_trail_top_level.html).
 	//
 	// An empty field indicates that the current configuration was not initiated
-	// by any event.
+	// by any event. As of Version 1.3, the relatedEvents field is empty. You can
+	// access the LookupEvents API (https://docs.aws.amazon.com/awscloudtrail/latest/APIReference/API_LookupEvents.html)
+	// in the AWS CloudTrail API Reference to retrieve the events for the resource.
 	RelatedEvents []*string `locationName:"relatedEvents" type:"list"`
 
 	// A list of related AWS resources.
@@ -9726,12 +9936,18 @@ func (s *ConformancePackComplianceFilters) SetConfigRuleNames(v []*string) *Conf
 	return s
 }
 
+// Summary includes the name and status of the conformance pack.
 type ConformancePackComplianceSummary struct {
 	_ struct{} `type:"structure"`
 
+	// The status of the conformance pack. The allowed values are COMPLIANT and
+	// NON_COMPLIANT.
+	//
 	// ConformancePackComplianceStatus is a required field
 	ConformancePackComplianceStatus *string `type:"string" required:"true" enum:"ConformancePackComplianceType"`
 
+	// The name of the conformance pack name.
+	//
 	// ConformancePackName is a required field
 	ConformancePackName *string `min:"1" type:"string" required:"true"`
 }
@@ -9759,7 +9975,8 @@ func (s *ConformancePackComplianceSummary) SetConformancePackName(v string) *Con
 }
 
 // Returns details of a conformance pack. A conformance pack is a collection
-// of AWS Config rules that can be easily deployed in an account and a region.
+// of AWS Config rules and remediation actions that can be easily deployed in
+// an account and a region.
 type ConformancePackDetail struct {
 	_ struct{} `type:"structure"`
 
@@ -9781,15 +9998,16 @@ type ConformancePackDetail struct {
 	// ConformancePackName is a required field
 	ConformancePackName *string `min:"1" type:"string" required:"true"`
 
+	// AWS service that created the conformance pack.
 	CreatedBy *string `min:"1" type:"string"`
 
-	// Location of an Amazon S3 bucket where AWS Config can deliver evaluation results
-	// and conformance pack template that is used to create a pack.
+	// Conformance pack template that is used to create a pack. The delivery bucket
+	// name should start with awsconfigconforms. For example: "Resource": "arn:aws:s3:::your_bucket_name/*".
 	//
 	// DeliveryS3Bucket is a required field
 	DeliveryS3Bucket *string `min:"3" type:"string" required:"true"`
 
-	// Any folder structure you want to add to an Amazon S3 bucket.
+	// The prefix for the Amazon S3 bucket.
 	DeliveryS3KeyPrefix *string `min:"1" type:"string"`
 
 	// Last time when conformation pack update was requested.
@@ -9868,6 +10086,9 @@ type ConformancePackEvaluationFilters struct {
 	ConfigRuleNames []*string `type:"list"`
 
 	// Filters the results by resource IDs.
+	//
+	// This is valid only when you provide resource type. If there is no resource
+	// type, you will see an error.
 	ResourceIds []*string `type:"list"`
 
 	// Filters the results by the resource type (for example, "AWS::EC2::Instance").
@@ -9930,9 +10151,7 @@ type ConformancePackEvaluationResult struct {
 	// Supplementary information about how the evaluation determined the compliance.
 	Annotation *string `type:"string"`
 
-	// Filters the results by compliance.
-	//
-	// The allowed values are COMPLIANT and NON_COMPLIANT.
+	// The compliance type. The allowed values are COMPLIANT and NON_COMPLIANT.
 	//
 	// ComplianceType is a required field
 	ComplianceType *string `type:"string" required:"true" enum:"ConformancePackComplianceType"`
@@ -10053,12 +10272,12 @@ func (s *ConformancePackInputParameter) SetParameterValue(v string) *Conformance
 type ConformancePackRuleCompliance struct {
 	_ struct{} `type:"structure"`
 
-	// Filters the results by compliance.
+	// Compliance of the AWS Config rule
 	//
 	// The allowed values are COMPLIANT and NON_COMPLIANT.
 	ComplianceType *string `type:"string" enum:"ConformancePackComplianceType"`
 
-	// Filters the results by AWS Config rule name.
+	// Name of the config rule.
 	ConfigRuleName *string `min:"1" type:"string"`
 }
 
@@ -10117,7 +10336,7 @@ type ConformancePackStatusDetail struct {
 	//
 	//    * DELETE_IN_PROGRESS when a conformance pack deletion is in progress.
 	//
-	//    * DELETE_FAILED when a conformance pack deletion failed from your account.
+	//    * DELETE_FAILED when a conformance pack deletion failed in your account.
 	//
 	// ConformancePackState is a required field
 	ConformancePackState *string `type:"string" required:"true" enum:"ConformancePackState"`
@@ -10941,6 +11160,78 @@ func (s DeleteRemediationExceptionsOutput) GoString() string {
 func (s *DeleteRemediationExceptionsOutput) SetFailedBatches(v []*FailedDeleteRemediationExceptionsBatch) *DeleteRemediationExceptionsOutput {
 	s.FailedBatches = v
 	return s
+}
+
+type DeleteResourceConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique identifier of the resource.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+
+	// The type of the resource.
+	//
+	// ResourceType is a required field
+	ResourceType *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteResourceConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteResourceConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteResourceConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteResourceConfigInput"}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+	if s.ResourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *DeleteResourceConfigInput) SetResourceId(v string) *DeleteResourceConfigInput {
+	s.ResourceId = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *DeleteResourceConfigInput) SetResourceType(v string) *DeleteResourceConfigInput {
+	s.ResourceType = &v
+	return s
+}
+
+type DeleteResourceConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteResourceConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteResourceConfigOutput) GoString() string {
+	return s.String()
 }
 
 type DeleteRetentionConfigurationInput struct {
@@ -12141,7 +12432,7 @@ type DescribeConformancePackStatusInput struct {
 	// Comma-separated list of conformance pack names.
 	ConformancePackNames []*string `type:"list"`
 
-	// The maximum number of conformance packs returned on each page.
+	// The maximum number of conformance packs status returned on each page.
 	Limit *int64 `type:"integer"`
 
 	// The nextToken string returned in a previous request that you use to request
@@ -14502,11 +14793,16 @@ func (s *GetConformancePackComplianceDetailsOutput) SetNextToken(v string) *GetC
 type GetConformancePackComplianceSummaryInput struct {
 	_ struct{} `type:"structure"`
 
+	// Names of conformance packs.
+	//
 	// ConformancePackNames is a required field
 	ConformancePackNames []*string `min:"1" type:"list" required:"true"`
 
+	// The maximum number of conformance packs returned on each page.
 	Limit *int64 `type:"integer"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 }
 
@@ -14557,8 +14853,11 @@ func (s *GetConformancePackComplianceSummaryInput) SetNextToken(v string) *GetCo
 type GetConformancePackComplianceSummaryOutput struct {
 	_ struct{} `type:"structure"`
 
+	// A list of ConformancePackComplianceSummary objects.
 	ConformancePackComplianceSummaryList []*ConformancePackComplianceSummary `min:"1" type:"list"`
 
+	// The nextToken string returned on a previous page that you use to get the
+	// next page of results in a paginated response.
 	NextToken *string `type:"string"`
 }
 
@@ -15975,7 +16274,7 @@ type OrganizationConformancePackStatus struct {
 	_ struct{} `type:"structure"`
 
 	// An error code that is returned when organization conformance pack creation
-	// or deletion has failed in the member account.
+	// or deletion has failed in a member account.
 	ErrorCode *string `type:"string"`
 
 	// An error message indicating that organization conformance pack creation or
@@ -16820,7 +17119,6 @@ type PutConformancePackInput struct {
 	// ConformancePackName is a required field
 	ConformancePackName *string `min:"1" type:"string" required:"true"`
 
-	// Location of an Amazon S3 bucket where AWS Config can deliver evaluation results.
 	// AWS Config stores intermediate files while processing conformance pack template.
 	//
 	// DeliveryS3Bucket is a required field
@@ -16834,12 +17132,12 @@ type PutConformancePackInput struct {
 	// 51,200 bytes.
 	//
 	// You can only use a YAML template with one resource type, that is, config
-	// rule.
+	// rule and a remediation action.
 	TemplateBody *string `min:"1" type:"string"`
 
-	// Location of file containing the template body. The uri must point to the
-	// conformance pack template (max size: 300,000 bytes) that is located in an
-	// Amazon S3 bucket in the same region as the conformance pack.
+	// Location of file containing the template body (s3://bucketname/prefix). The
+	// uri must point to the conformance pack template (max size: 300 KB) that is
+	// located in an Amazon S3 bucket in the same region as the conformance pack.
 	//
 	// You must have access to read Amazon S3 bucket.
 	TemplateS3Uri *string `min:"1" type:"string"`
@@ -17223,6 +17521,10 @@ type PutOrganizationConformancePackInput struct {
 	// Location of an Amazon S3 bucket where AWS Config can deliver evaluation results.
 	// AWS Config stores intermediate files while processing conformance pack template.
 	//
+	// The delivery bucket name should start with awsconfigconforms. For example:
+	// "Resource": "arn:aws:s3:::your_bucket_name/*". For more information, see
+	// Permissions for cross account bucket access (https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html).
+	//
 	// DeliveryS3Bucket is a required field
 	DeliveryS3Bucket *string `min:"3" type:"string" required:"true"`
 
@@ -17244,7 +17546,7 @@ type PutOrganizationConformancePackInput struct {
 	TemplateBody *string `min:"1" type:"string"`
 
 	// Location of file containing the template body. The uri must point to the
-	// conformance pack template (max size: 300,000 bytes).
+	// conformance pack template (max size: 300 KB).
 	//
 	// You must have access to read Amazon S3 bucket.
 	TemplateS3Uri *string `min:"1" type:"string"`
@@ -17551,6 +17853,135 @@ func (s PutRemediationExceptionsOutput) GoString() string {
 func (s *PutRemediationExceptionsOutput) SetFailedBatches(v []*FailedRemediationExceptionBatch) *PutRemediationExceptionsOutput {
 	s.FailedBatches = v
 	return s
+}
+
+type PutResourceConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The configuration object of the resource in valid JSON format. It must match
+	// the schema registered with AWS CloudFormation.
+	//
+	// The configuration JSON must not exceed 64 KB.
+	//
+	// Configuration is a required field
+	Configuration *string `type:"string" required:"true"`
+
+	// Unique identifier of the resource.
+	//
+	// ResourceId is a required field
+	ResourceId *string `min:"1" type:"string" required:"true"`
+
+	// Name of the resource.
+	ResourceName *string `type:"string"`
+
+	// The type of the resource. The custom resource type must be registered with
+	// AWS CloudFormation.
+	//
+	// You cannot use the organization names “aws”, “amzn”, “amazon”,
+	// “alexa”, “custom” with custom resource types. It is the first part
+	// of the ResourceType up to the first ::.
+	//
+	// ResourceType is a required field
+	ResourceType *string `min:"1" type:"string" required:"true"`
+
+	// Version of the schema registered for the ResourceType in AWS CloudFormation.
+	//
+	// SchemaVersionId is a required field
+	SchemaVersionId *string `min:"1" type:"string" required:"true"`
+
+	// Tags associated with the resource.
+	Tags map[string]*string `type:"map"`
+}
+
+// String returns the string representation
+func (s PutResourceConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutResourceConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutResourceConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutResourceConfigInput"}
+	if s.Configuration == nil {
+		invalidParams.Add(request.NewErrParamRequired("Configuration"))
+	}
+	if s.ResourceId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceId"))
+	}
+	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+	if s.ResourceType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.ResourceType != nil && len(*s.ResourceType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceType", 1))
+	}
+	if s.SchemaVersionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SchemaVersionId"))
+	}
+	if s.SchemaVersionId != nil && len(*s.SchemaVersionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("SchemaVersionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfiguration sets the Configuration field's value.
+func (s *PutResourceConfigInput) SetConfiguration(v string) *PutResourceConfigInput {
+	s.Configuration = &v
+	return s
+}
+
+// SetResourceId sets the ResourceId field's value.
+func (s *PutResourceConfigInput) SetResourceId(v string) *PutResourceConfigInput {
+	s.ResourceId = &v
+	return s
+}
+
+// SetResourceName sets the ResourceName field's value.
+func (s *PutResourceConfigInput) SetResourceName(v string) *PutResourceConfigInput {
+	s.ResourceName = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *PutResourceConfigInput) SetResourceType(v string) *PutResourceConfigInput {
+	s.ResourceType = &v
+	return s
+}
+
+// SetSchemaVersionId sets the SchemaVersionId field's value.
+func (s *PutResourceConfigInput) SetSchemaVersionId(v string) *PutResourceConfigInput {
+	s.SchemaVersionId = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PutResourceConfigInput) SetTags(v map[string]*string) *PutResourceConfigInput {
+	s.Tags = v
+	return s
+}
+
+type PutResourceConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutResourceConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutResourceConfigOutput) GoString() string {
+	return s.String()
 }
 
 type PutRetentionConfigurationInput struct {

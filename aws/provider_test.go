@@ -193,6 +193,67 @@ func testAccMatchResourceAttrGlobalARN(resourceName, attributeName, arnService s
 	}
 }
 
+// testAccCheckListHasSomeElementAttrPair is a TestCheckFunc which validates that the collection on the left has an element with an attribute value
+// matching the value on the left
+// Based on TestCheckResourceAttrPair from the Terraform SDK testing framework
+func testAccCheckListHasSomeElementAttrPair(nameFirst string, resourceAttr string, elementAttr string, nameSecond string, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		isFirst, err := primaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		isSecond, err := primaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vSecond, ok := isSecond.Attributes[keySecond]
+		if !ok {
+			return fmt.Errorf("%s: No attribute %q found", nameSecond, keySecond)
+		} else if vSecond == "" {
+			return fmt.Errorf("%s: No value was set on attribute %q", nameSecond, keySecond)
+		}
+
+		attrsFirst := make([]string, 0, len(isFirst.Attributes))
+		attrMatcher := regexp.MustCompile(fmt.Sprintf("%s\\.\\d+\\.%s", resourceAttr, elementAttr))
+		for k := range isFirst.Attributes {
+			if attrMatcher.MatchString(k) {
+				attrsFirst = append(attrsFirst, k)
+			}
+		}
+
+		found := false
+		for _, attrName := range attrsFirst {
+			vFirst := isFirst.Attributes[attrName]
+			if vFirst == vSecond {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("%s: No element of %q found with attribute %q matching value %q set on %q of %s", nameFirst, resourceAttr, elementAttr, vSecond, keySecond, nameSecond)
+		}
+
+		return nil
+	}
+}
+
+// Copied and inlined from the SDK testing code
+func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
+	rs, ok := s.RootModule().Resources[name]
+	if !ok {
+		return nil, fmt.Errorf("Not found: %s", name)
+	}
+
+	is := rs.Primary
+	if is == nil {
+		return nil, fmt.Errorf("No primary instance: %s", name)
+	}
+
+	return is, nil
+}
+
 // testAccGetAccountID returns the account ID of testAccProvider
 // Must be used returned within a resource.TestCheckFunc
 func testAccGetAccountID() string {
@@ -222,6 +283,13 @@ func testAccGetPartition() string {
 	return "aws"
 }
 
+func testAccGetAlternateRegionPartition() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetAlternateRegion()); ok {
+		return partition.ID()
+	}
+	return "aws"
+}
+
 func testAccAlternateAccountPreCheck(t *testing.T) {
 	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
 		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
@@ -235,6 +303,10 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 func testAccAlternateRegionPreCheck(t *testing.T) {
 	if testAccGetRegion() == testAccGetAlternateRegion() {
 		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
+	}
+
+	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
+		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
 	}
 }
 
@@ -258,10 +330,29 @@ func testAccEC2VPCOnlyPreCheck(t *testing.T) {
 	}
 }
 
-func testAccHasServicePreCheck(service string, t *testing.T) {
+func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		if _, ok := partition.Services()[service]; !ok {
-			t.Skip(fmt.Sprintf("skipping tests; partition does not support %s service", service))
+		if _, ok := partition.Services()[serviceId]; !ok {
+			t.Skip(fmt.Sprintf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId))
+		}
+	}
+}
+
+// testAccRegionHasServicePreCheck skips a test if the AWS Go SDK endpoint value in a region is missing
+// NOTE: Most acceptance testing should prefer behavioral checks against an API (e.g. making an API call and
+//       using response errors) to determine if a test should be skipped since AWS Go SDK endpoint information
+//       can be incorrect, especially for newer endpoints or for private feature testing. This functionality
+//       is provided for cases where the API behavior may be completely unacceptable, such as permanent
+//       retries by the AWS Go SDK.
+func testAccRegionHasServicePreCheck(serviceId string, t *testing.T) {
+	regionId := testAccGetRegion()
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), regionId); ok {
+		service, ok := partition.Services()[serviceId]
+		if !ok {
+			t.Skip(fmt.Sprintf("skipping tests; partition %s does not support %s service", partition.ID(), serviceId))
+		}
+		if _, ok := service.Regions()[regionId]; !ok {
+			t.Skip(fmt.Sprintf("skipping tests; region %s does not support %s service", regionId, serviceId))
 		}
 	}
 }

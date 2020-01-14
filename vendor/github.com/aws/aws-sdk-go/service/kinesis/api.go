@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -3160,10 +3159,17 @@ func (c *Kinesis) SubscribeToShardRequest(input *SubscribeToShardInput) (req *re
 
 	output = &SubscribeToShardOutput{}
 	req = c.newRequest(op, input, output)
+
+	es := newSubscribeToShardEventStream()
+	req.Handlers.Unmarshal.PushBack(es.setStreamCloser)
+	output.EventStream = es
+
 	req.Handlers.Send.Swap(client.LogHTTPResponseHandler.Name, client.LogHTTPResponseHeaderHandler)
 	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, rest.UnmarshalHandler)
-	req.Handlers.Unmarshal.PushBack(output.runEventStreamLoop)
-	req.Handlers.Unmarshal.PushBack(output.unmarshalInitialResponse)
+	req.Handlers.Unmarshal.PushBack(es.runOutputStream)
+	es.output = output
+	req.Handlers.Unmarshal.PushBack(es.recvInitialEvent)
+	req.Handlers.Unmarshal.PushBack(es.runOnStreamPartClose)
 	return
 }
 
@@ -3225,6 +3231,168 @@ func (c *Kinesis) SubscribeToShardWithContext(ctx aws.Context, input *SubscribeT
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// SubscribeToShardEventStream provides the event stream handling for the SubscribeToShard.
+type SubscribeToShardEventStream struct {
+
+	// Reader is the EventStream reader for the SubscribeToShardEventStream
+	// events. This value is automatically set by the SDK when the API call is made
+	// Use this member when unit testing your code with the SDK to mock out the
+	// EventStream Reader.
+	//
+	// Must not be nil.
+	Reader SubscribeToShardEventStreamReader
+
+	outputReader io.ReadCloser
+	output       *SubscribeToShardOutput
+
+	// StreamCloser is the io.Closer for the EventStream connection. For HTTP
+	// EventStream this is the response Body. The stream will be closed when
+	// the Close method of the EventStream is called.
+	StreamCloser io.Closer
+
+	done      chan struct{}
+	closeOnce sync.Once
+	err       *eventstreamapi.OnceError
+}
+
+func newSubscribeToShardEventStream() *SubscribeToShardEventStream {
+	return &SubscribeToShardEventStream{
+		done: make(chan struct{}),
+		err:  eventstreamapi.NewOnceError(),
+	}
+}
+
+func (es *SubscribeToShardEventStream) setStreamCloser(r *request.Request) {
+	es.StreamCloser = r.HTTPResponse.Body
+}
+
+func (es *SubscribeToShardEventStream) runOnStreamPartClose(r *request.Request) {
+	if es.done == nil {
+		return
+	}
+	go es.waitStreamPartClose()
+
+}
+
+func (es *SubscribeToShardEventStream) waitStreamPartClose() {
+	var outputErrCh <-chan struct{}
+	if v, ok := es.Reader.(interface{ ErrorSet() <-chan struct{} }); ok {
+		outputErrCh = v.ErrorSet()
+	}
+	var outputClosedCh <-chan struct{}
+	if v, ok := es.Reader.(interface{ Closed() <-chan struct{} }); ok {
+		outputClosedCh = v.Closed()
+	}
+
+	select {
+	case <-es.done:
+	case <-outputErrCh:
+		es.err.SetError(es.Reader.Err())
+		es.Close()
+	case <-outputClosedCh:
+		if err := es.Reader.Err(); err != nil {
+			es.err.SetError(es.Reader.Err())
+		}
+		es.Close()
+	}
+}
+
+func (es *SubscribeToShardEventStream) eventTypeForSubscribeToShardEventStreamOutputEvent(eventType string) (eventstreamapi.Unmarshaler, error) {
+	if eventType == "initial-response" {
+		return es.output, nil
+	}
+	return unmarshalerForSubscribeToShardEventStreamEvent(eventType)
+}
+
+// Events returns a channel to read events from.
+//
+// These events are:
+//
+//     * SubscribeToShardEvent
+func (es *SubscribeToShardEventStream) Events() <-chan SubscribeToShardEventStreamEvent {
+	return es.Reader.Events()
+}
+
+func (es *SubscribeToShardEventStream) runOutputStream(r *request.Request) {
+	var opts []func(*eventstream.Decoder)
+	if r.Config.Logger != nil && r.Config.LogLevel.Matches(aws.LogDebugWithEventStreamBody) {
+		opts = append(opts, eventstream.DecodeWithLogger(r.Config.Logger))
+	}
+
+	decoder := eventstream.NewDecoder(r.HTTPResponse.Body, opts...)
+	eventReader := eventstreamapi.NewEventReader(decoder,
+		protocol.HandlerPayloadUnmarshal{
+			Unmarshalers: r.Handlers.UnmarshalStream,
+		},
+		es.eventTypeForSubscribeToShardEventStreamOutputEvent,
+	)
+
+	es.outputReader = r.HTTPResponse.Body
+	es.Reader = newReadSubscribeToShardEventStream(eventReader)
+}
+func (es *SubscribeToShardEventStream) recvInitialEvent(r *request.Request) {
+	// Wait for the initial response event, which must be the first
+	// event to be received from the API.
+	select {
+	case event, ok := <-es.Events():
+		if !ok {
+			return
+		}
+
+		v, ok := event.(*SubscribeToShardOutput)
+		if !ok || v == nil {
+			r.Error = awserr.New(
+				request.ErrCodeSerialization,
+				fmt.Sprintf("invalid event, %T, expect %T, %v",
+					event, (*SubscribeToShardOutput)(nil), v),
+				nil,
+			)
+			return
+		}
+
+		*es.output = *v
+		es.output.EventStream = es
+	}
+}
+
+// Close closes the stream. This will also cause the stream to be closed.
+// Close must be called when done using the stream API. Not calling Close
+// may result in resource leaks.
+//
+// You can use the closing of the Reader's Events channel to terminate your
+// application's read from the API's stream.
+//
+func (es *SubscribeToShardEventStream) Close() (err error) {
+	es.closeOnce.Do(es.safeClose)
+	return es.Err()
+}
+
+func (es *SubscribeToShardEventStream) safeClose() {
+	if es.done != nil {
+		close(es.done)
+	}
+
+	es.Reader.Close()
+	if es.outputReader != nil {
+		es.outputReader.Close()
+	}
+
+	es.StreamCloser.Close()
+}
+
+// Err returns any error that occurred while reading or writing EventStream
+// Events from the service API's response. Returns nil if there were no errors.
+func (es *SubscribeToShardEventStream) Err() error {
+	if err := es.err.Err(); err != nil {
+		return err
+	}
+	if err := es.Reader.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 const opUpdateShardCount = "UpdateShardCount"
@@ -4810,6 +4978,16 @@ func (s *InternalFailureException) UnmarshalEvent(
 	return nil
 }
 
+func (s *InternalFailureException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
+}
+
 // Code returns the exception type name.
 func (s InternalFailureException) Code() string {
 	return "InternalFailureException"
@@ -4865,6 +5043,16 @@ func (s *KMSAccessDeniedException) UnmarshalEvent(
 	return nil
 }
 
+func (s *KMSAccessDeniedException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
+}
+
 // Code returns the exception type name.
 func (s KMSAccessDeniedException) Code() string {
 	return "KMSAccessDeniedException"
@@ -4918,6 +5106,16 @@ func (s *KMSDisabledException) UnmarshalEvent(
 		return err
 	}
 	return nil
+}
+
+func (s *KMSDisabledException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
 }
 
 // Code returns the exception type name.
@@ -4977,6 +5175,16 @@ func (s *KMSInvalidStateException) UnmarshalEvent(
 	return nil
 }
 
+func (s *KMSInvalidStateException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
+}
+
 // Code returns the exception type name.
 func (s KMSInvalidStateException) Code() string {
 	return "KMSInvalidStateException"
@@ -5030,6 +5238,16 @@ func (s *KMSNotFoundException) UnmarshalEvent(
 		return err
 	}
 	return nil
+}
+
+func (s *KMSNotFoundException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
 }
 
 // Code returns the exception type name.
@@ -5086,6 +5304,16 @@ func (s *KMSOptInRequired) UnmarshalEvent(
 	return nil
 }
 
+func (s *KMSOptInRequired) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
+}
+
 // Code returns the exception type name.
 func (s KMSOptInRequired) Code() string {
 	return "KMSOptInRequired"
@@ -5140,6 +5368,16 @@ func (s *KMSThrottlingException) UnmarshalEvent(
 		return err
 	}
 	return nil
+}
+
+func (s *KMSThrottlingException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
 }
 
 // Code returns the exception type name.
@@ -6455,6 +6693,16 @@ func (s *ResourceInUseException) UnmarshalEvent(
 	return nil
 }
 
+func (s *ResourceInUseException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
+}
+
 // Code returns the exception type name.
 func (s ResourceInUseException) Code() string {
 	return "ResourceInUseException"
@@ -6508,6 +6756,16 @@ func (s *ResourceNotFoundException) UnmarshalEvent(
 		return err
 	}
 	return nil
+}
+
+func (s *ResourceNotFoundException) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.ExceptionMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
 }
 
 // Code returns the exception type name.
@@ -7350,78 +7608,30 @@ func (s *SubscribeToShardEvent) UnmarshalEvent(
 	return nil
 }
 
-// SubscribeToShardEventStream provides handling of EventStreams for
-// the SubscribeToShard API.
-//
-// Use this type to receive SubscribeToShardEventStream events. The events
-// can be read from the Events channel member.
-//
-// The events that can be received are:
-//
-//     * SubscribeToShardEvent
-type SubscribeToShardEventStream struct {
-	// Reader is the EventStream reader for the SubscribeToShardEventStream
-	// events. This value is automatically set by the SDK when the API call is made
-	// Use this member when unit testing your code with the SDK to mock out the
-	// EventStream Reader.
-	//
-	// Must not be nil.
-	Reader SubscribeToShardEventStreamReader
-
-	// StreamCloser is the io.Closer for the EventStream connection. For HTTP
-	// EventStream this is the response Body. The stream will be closed when
-	// the Close method of the EventStream is called.
-	StreamCloser io.Closer
-}
-
-// Close closes the EventStream. This will also cause the Events channel to be
-// closed. You can use the closing of the Events channel to terminate your
-// application's read from the API's EventStream.
-//
-// Will close the underlying EventStream reader. For EventStream over HTTP
-// connection this will also close the HTTP connection.
-//
-// Close must be called when done using the EventStream API. Not calling Close
-// may result in resource leaks.
-func (es *SubscribeToShardEventStream) Close() (err error) {
-	es.Reader.Close()
-	es.StreamCloser.Close()
-
-	return es.Err()
-}
-
-// Err returns any error that occurred while reading EventStream Events from
-// the service API's response. Returns nil if there were no errors.
-func (es *SubscribeToShardEventStream) Err() error {
-	if err := es.Reader.Err(); err != nil {
-		return err
+func (s *SubscribeToShardEvent) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.EventMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
 	}
-	return nil
-}
-
-// Events returns a channel to read EventStream Events from the
-// SubscribeToShard API.
-//
-// These events are:
-//
-//     * SubscribeToShardEvent
-func (es *SubscribeToShardEventStream) Events() <-chan SubscribeToShardEventStreamEvent {
-	return es.Reader.Events()
+	msg.Payload = buf.Bytes()
+	return msg, err
 }
 
 // SubscribeToShardEventStreamEvent groups together all EventStream
-// events read from the SubscribeToShard API.
+// events writes for SubscribeToShardEventStream.
 //
 // These events are:
 //
 //     * SubscribeToShardEvent
 type SubscribeToShardEventStreamEvent interface {
 	eventSubscribeToShardEventStream()
+	eventstreamapi.Marshaler
+	eventstreamapi.Unmarshaler
 }
 
-// SubscribeToShardEventStreamReader provides the interface for reading EventStream
-// Events from the SubscribeToShard API. The
-// default implementation for this interface will be SubscribeToShardEventStream.
+// SubscribeToShardEventStreamReader provides the interface for reading to the stream. The
+// default implementation for this interface will be SubscribeToShardEventStreamData.
 //
 // The reader's Close method must allow multiple concurrent calls.
 //
@@ -7432,8 +7642,7 @@ type SubscribeToShardEventStreamReader interface {
 	// Returns a channel of events as they are read from the event stream.
 	Events() <-chan SubscribeToShardEventStreamEvent
 
-	// Close will close the underlying event stream reader. For event stream over
-	// HTTP this will also close the HTTP connection.
+	// Close will stop the reader reading events from the stream.
 	Close() error
 
 	// Returns any error that has occurred while reading from the event stream.
@@ -7443,61 +7652,44 @@ type SubscribeToShardEventStreamReader interface {
 type readSubscribeToShardEventStream struct {
 	eventReader *eventstreamapi.EventReader
 	stream      chan SubscribeToShardEventStreamEvent
-	errVal      atomic.Value
+	err         *eventstreamapi.OnceError
 
 	done      chan struct{}
 	closeOnce sync.Once
-
-	initResp eventstreamapi.Unmarshaler
 }
 
-func newReadSubscribeToShardEventStream(
-	reader io.ReadCloser,
-	unmarshalers request.HandlerList,
-	logger aws.Logger,
-	logLevel aws.LogLevelType,
-	initResp eventstreamapi.Unmarshaler,
-) *readSubscribeToShardEventStream {
+func newReadSubscribeToShardEventStream(eventReader *eventstreamapi.EventReader) *readSubscribeToShardEventStream {
 	r := &readSubscribeToShardEventStream{
-		stream:   make(chan SubscribeToShardEventStreamEvent),
-		done:     make(chan struct{}),
-		initResp: initResp,
+		eventReader: eventReader,
+		stream:      make(chan SubscribeToShardEventStreamEvent),
+		done:        make(chan struct{}),
+		err:         eventstreamapi.NewOnceError(),
 	}
-
-	r.eventReader = eventstreamapi.NewEventReader(
-		reader,
-		protocol.HandlerPayloadUnmarshal{
-			Unmarshalers: unmarshalers,
-		},
-		r.unmarshalerForEventType,
-	)
-	r.eventReader.UseLogger(logger, logLevel)
+	go r.readEventStream()
 
 	return r
 }
 
-// Close will close the underlying event stream reader. For EventStream over
-// HTTP this will also close the HTTP connection.
+// Close will close the underlying event stream reader.
 func (r *readSubscribeToShardEventStream) Close() error {
 	r.closeOnce.Do(r.safeClose)
-
 	return r.Err()
+}
+
+func (r *readSubscribeToShardEventStream) ErrorSet() <-chan struct{} {
+	return r.err.ErrorSet()
+}
+
+func (r *readSubscribeToShardEventStream) Closed() <-chan struct{} {
+	return r.done
 }
 
 func (r *readSubscribeToShardEventStream) safeClose() {
 	close(r.done)
-	err := r.eventReader.Close()
-	if err != nil {
-		r.errVal.Store(err)
-	}
 }
 
 func (r *readSubscribeToShardEventStream) Err() error {
-	if v := r.errVal.Load(); v != nil {
-		return v.(error)
-	}
-
-	return nil
+	return r.err.Err()
 }
 
 func (r *readSubscribeToShardEventStream) Events() <-chan SubscribeToShardEventStreamEvent {
@@ -7505,6 +7697,7 @@ func (r *readSubscribeToShardEventStream) Events() <-chan SubscribeToShardEventS
 }
 
 func (r *readSubscribeToShardEventStream) readEventStream() {
+	defer r.Close()
 	defer close(r.stream)
 
 	for {
@@ -7519,7 +7712,7 @@ func (r *readSubscribeToShardEventStream) readEventStream() {
 				return
 			default:
 			}
-			r.errVal.Store(err)
+			r.err.SetError(err)
 			return
 		}
 
@@ -7531,40 +7724,26 @@ func (r *readSubscribeToShardEventStream) readEventStream() {
 	}
 }
 
-func (r *readSubscribeToShardEventStream) unmarshalerForEventType(
-	eventType string,
-) (eventstreamapi.Unmarshaler, error) {
+func unmarshalerForSubscribeToShardEventStreamEvent(eventType string) (eventstreamapi.Unmarshaler, error) {
 	switch eventType {
-	case "initial-response":
-		return r.initResp, nil
-
 	case "SubscribeToShardEvent":
 		return &SubscribeToShardEvent{}, nil
-
 	case "InternalFailureException":
 		return &InternalFailureException{}, nil
-
 	case "KMSAccessDeniedException":
 		return &KMSAccessDeniedException{}, nil
-
 	case "KMSDisabledException":
 		return &KMSDisabledException{}, nil
-
 	case "KMSInvalidStateException":
 		return &KMSInvalidStateException{}, nil
-
 	case "KMSNotFoundException":
 		return &KMSNotFoundException{}, nil
-
 	case "KMSOptInRequired":
 		return &KMSOptInRequired{}, nil
-
 	case "KMSThrottlingException":
 		return &KMSThrottlingException{}, nil
-
 	case "ResourceInUseException":
 		return &ResourceInUseException{}, nil
-
 	case "ResourceNotFoundException":
 		return &ResourceNotFoundException{}, nil
 	default:
@@ -7655,10 +7834,7 @@ func (s *SubscribeToShardInput) SetStartingPosition(v *StartingPosition) *Subscr
 type SubscribeToShardOutput struct {
 	_ struct{} `type:"structure"`
 
-	// Use EventStream to use the API's stream.
-	//
-	// EventStream is a required field
-	EventStream *SubscribeToShardEventStream `type:"structure" required:"true"`
+	EventStream *SubscribeToShardEventStream
 }
 
 // String returns the string representation
@@ -7671,53 +7847,17 @@ func (s SubscribeToShardOutput) GoString() string {
 	return s.String()
 }
 
-// SetEventStream sets the EventStream field's value.
 func (s *SubscribeToShardOutput) SetEventStream(v *SubscribeToShardEventStream) *SubscribeToShardOutput {
 	s.EventStream = v
 	return s
 }
-
-func (s *SubscribeToShardOutput) runEventStreamLoop(r *request.Request) {
-	if r.Error != nil {
-		return
-	}
-	reader := newReadSubscribeToShardEventStream(
-		r.HTTPResponse.Body,
-		r.Handlers.UnmarshalStream,
-		r.Config.Logger,
-		r.Config.LogLevel.Value(),
-		s,
-	)
-	go reader.readEventStream()
-
-	eventStream := &SubscribeToShardEventStream{
-		StreamCloser: r.HTTPResponse.Body,
-		Reader:       reader,
-	}
-	s.EventStream = eventStream
+func (s *SubscribeToShardOutput) GetEventStream() *SubscribeToShardEventStream {
+	return s.EventStream
 }
 
-func (s *SubscribeToShardOutput) unmarshalInitialResponse(r *request.Request) {
-	// Wait for the initial response event, which must be the first event to be
-	// received from the API.
-	select {
-	case event, ok := <-s.EventStream.Events():
-		if !ok {
-			return
-		}
-		es := s.EventStream
-		v, ok := event.(*SubscribeToShardOutput)
-		if !ok || v == nil {
-			r.Error = awserr.New(
-				request.ErrCodeSerialization,
-				fmt.Sprintf("invalid event, %T, expect *SubscribeToShardOutput, %v", event, v),
-				nil,
-			)
-			return
-		}
-		*s = *v
-		s.EventStream = es
-	}
+// GetStream returns the type to interact with the event stream.
+func (s *SubscribeToShardOutput) GetStream() *SubscribeToShardEventStream {
+	return s.EventStream
 }
 
 // The SubscribeToShardOutput is and event in the SubscribeToShardEventStream group of events.
@@ -7735,6 +7875,16 @@ func (s *SubscribeToShardOutput) UnmarshalEvent(
 		return err
 	}
 	return nil
+}
+
+func (s *SubscribeToShardOutput) MarshalEvent(pm protocol.PayloadMarshaler) (msg eventstream.Message, err error) {
+	msg.Headers.Set(eventstreamapi.MessageTypeHeader, eventstream.StringValue(eventstreamapi.EventMessageType))
+	var buf bytes.Buffer
+	if err = pm.MarshalPayload(&buf, s); err != nil {
+		return eventstream.Message{}, err
+	}
+	msg.Payload = buf.Bytes()
+	return msg, err
 }
 
 // Metadata assigned to the stream, consisting of a key-value pair.

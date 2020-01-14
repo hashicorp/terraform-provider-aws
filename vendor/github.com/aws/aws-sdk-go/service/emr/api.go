@@ -2054,6 +2054,90 @@ func (c *EMR) ListStepsPagesWithContext(ctx aws.Context, input *ListStepsInput, 
 	return p.Err()
 }
 
+const opModifyCluster = "ModifyCluster"
+
+// ModifyClusterRequest generates a "aws/request.Request" representing the
+// client's request for the ModifyCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ModifyCluster for more information on using the ModifyCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ModifyClusterRequest method.
+//    req, resp := client.ModifyClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyCluster
+func (c *EMR) ModifyClusterRequest(input *ModifyClusterInput) (req *request.Request, output *ModifyClusterOutput) {
+	op := &request.Operation{
+		Name:       opModifyCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ModifyClusterInput{}
+	}
+
+	output = &ModifyClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ModifyCluster API operation for Amazon Elastic MapReduce.
+//
+// Modifies the number of steps that can be executed concurrently for the cluster
+// specified using ClusterID.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic MapReduce's
+// API operation ModifyCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInternalServerError "InternalServerError"
+//   Indicates that an error occurred while processing the request and that the
+//   request was not completed.
+//
+//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   This exception occurs when there is something wrong with user input.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/elasticmapreduce-2009-03-31/ModifyCluster
+func (c *EMR) ModifyCluster(input *ModifyClusterInput) (*ModifyClusterOutput, error) {
+	req, out := c.ModifyClusterRequest(input)
+	return out, req.Send()
+}
+
+// ModifyClusterWithContext is the same as ModifyCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ModifyCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EMR) ModifyClusterWithContext(ctx aws.Context, input *ModifyClusterInput, opts ...request.Option) (*ModifyClusterOutput, error) {
+	req, out := c.ModifyClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opModifyInstanceFleet = "ModifyInstanceFleet"
 
 // ModifyInstanceFleetRequest generates a "aws/request.Request" representing the
@@ -3790,11 +3874,19 @@ type CancelStepsInput struct {
 
 	// The ClusterID for which specified steps will be canceled. Use RunJobFlow
 	// and ListClusters to get ClusterIDs.
-	ClusterId *string `type:"string"`
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// The option to choose for cancelling RUNNING steps. By default, the value
+	// is SEND_INTERRUPT.
+	StepCancellationOption *string `type:"string" enum:"StepCancellationOption"`
 
 	// The list of StepIDs to cancel. Use ListSteps to get steps and their states
 	// for the specified cluster.
-	StepIds []*string `type:"list"`
+	//
+	// StepIds is a required field
+	StepIds []*string `type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -3807,9 +3899,31 @@ func (s CancelStepsInput) GoString() string {
 	return s.String()
 }
 
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelStepsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelStepsInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+	if s.StepIds == nil {
+		invalidParams.Add(request.NewErrParamRequired("StepIds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
 // SetClusterId sets the ClusterId field's value.
 func (s *CancelStepsInput) SetClusterId(v string) *CancelStepsInput {
 	s.ClusterId = &v
+	return s
+}
+
+// SetStepCancellationOption sets the StepCancellationOption field's value.
+func (s *CancelStepsInput) SetStepCancellationOption(v string) *CancelStepsInput {
+	s.StepCancellationOption = &v
 	return s
 }
 
@@ -4050,6 +4164,9 @@ type Cluster struct {
 	// the actual billing rate.
 	NormalizedInstanceHours *int64 `type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the Outpost where the cluster is launched.
+	OutpostArn *string `type:"string"`
+
 	// The Amazon EMR release label, which determines the version of open-source
 	// application packages installed on the cluster. Release labels are in the
 	// form emr-x.x.x, where x.x.x is an Amazon EMR release version such as emr-5.14.0.
@@ -4094,6 +4211,9 @@ type Cluster struct {
 
 	// The current status details about the cluster.
 	Status *ClusterStatus `type:"structure"`
+
+	// Specifies the number of steps that can be executed concurrently.
+	StepConcurrencyLevel *int64 `type:"integer"`
 
 	// A list of tags associated with a cluster.
 	Tags []*Tag `type:"list"`
@@ -4214,6 +4334,12 @@ func (s *Cluster) SetNormalizedInstanceHours(v int64) *Cluster {
 	return s
 }
 
+// SetOutpostArn sets the OutpostArn field's value.
+func (s *Cluster) SetOutpostArn(v string) *Cluster {
+	s.OutpostArn = &v
+	return s
+}
+
 // SetReleaseLabel sets the ReleaseLabel field's value.
 func (s *Cluster) SetReleaseLabel(v string) *Cluster {
 	s.ReleaseLabel = &v
@@ -4259,6 +4385,12 @@ func (s *Cluster) SetServiceRole(v string) *Cluster {
 // SetStatus sets the Status field's value.
 func (s *Cluster) SetStatus(v *ClusterStatus) *Cluster {
 	s.Status = v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *Cluster) SetStepConcurrencyLevel(v int64) *Cluster {
+	s.StepConcurrencyLevel = &v
 	return s
 }
 
@@ -4377,6 +4509,9 @@ type ClusterSummary struct {
 	// the actual billing rate.
 	NormalizedInstanceHours *int64 `type:"integer"`
 
+	// The Amazon Resource Name (ARN) of the Outpost where the cluster is launched.
+	OutpostArn *string `type:"string"`
+
 	// The details about the current status of the cluster.
 	Status *ClusterStatus `type:"structure"`
 }
@@ -4412,6 +4547,12 @@ func (s *ClusterSummary) SetName(v string) *ClusterSummary {
 // SetNormalizedInstanceHours sets the NormalizedInstanceHours field's value.
 func (s *ClusterSummary) SetNormalizedInstanceHours(v int64) *ClusterSummary {
 	s.NormalizedInstanceHours = &v
+	return s
+}
+
+// SetOutpostArn sets the OutpostArn field's value.
+func (s *ClusterSummary) SetOutpostArn(v string) *ClusterSummary {
+	s.OutpostArn = &v
 	return s
 }
 
@@ -8655,6 +8796,77 @@ func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	return s
 }
 
+type ModifyClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique identifier of the cluster.
+	//
+	// ClusterId is a required field
+	ClusterId *string `type:"string" required:"true"`
+
+	// The number of steps that can be executed concurrently. You can specify a
+	// maximum of 256 steps.
+	StepConcurrencyLevel *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ModifyClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ModifyClusterInput"}
+	if s.ClusterId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterId sets the ClusterId field's value.
+func (s *ModifyClusterInput) SetClusterId(v string) *ModifyClusterInput {
+	s.ClusterId = &v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *ModifyClusterInput) SetStepConcurrencyLevel(v int64) *ModifyClusterInput {
+	s.StepConcurrencyLevel = &v
+	return s
+}
+
+type ModifyClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The number of steps that can be executed concurrently.
+	StepConcurrencyLevel *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ModifyClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ModifyClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *ModifyClusterOutput) SetStepConcurrencyLevel(v int64) *ModifyClusterOutput {
+	s.StepConcurrencyLevel = &v
+	return s
+}
+
 type ModifyInstanceFleetInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9349,6 +9561,10 @@ type RunJobFlowInput struct {
 	// resources on your behalf.
 	ServiceRole *string `type:"string"`
 
+	// Specifies the number of steps that can be executed concurrently. The default
+	// value is 1. The maximum value is 256.
+	StepConcurrencyLevel *int64 `type:"integer"`
+
 	// A list of steps to run.
 	Steps []*StepConfig `type:"list"`
 
@@ -9542,6 +9758,12 @@ func (s *RunJobFlowInput) SetSecurityConfiguration(v string) *RunJobFlowInput {
 // SetServiceRole sets the ServiceRole field's value.
 func (s *RunJobFlowInput) SetServiceRole(v string) *RunJobFlowInput {
 	s.ServiceRole = &v
+	return s
+}
+
+// SetStepConcurrencyLevel sets the StepConcurrencyLevel field's value.
+func (s *RunJobFlowInput) SetStepConcurrencyLevel(v int64) *RunJobFlowInput {
+	s.StepConcurrencyLevel = &v
 	return s
 }
 
@@ -11243,6 +11465,14 @@ const (
 
 	// StatisticMaximum is a Statistic enum value
 	StatisticMaximum = "MAXIMUM"
+)
+
+const (
+	// StepCancellationOptionSendInterrupt is a StepCancellationOption enum value
+	StepCancellationOptionSendInterrupt = "SEND_INTERRUPT"
+
+	// StepCancellationOptionTerminateProcess is a StepCancellationOption enum value
+	StepCancellationOptionTerminateProcess = "TERMINATE_PROCESS"
 )
 
 const (
