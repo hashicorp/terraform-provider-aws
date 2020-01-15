@@ -154,9 +154,6 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 						"from_email_address": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringInSlice([]string{""}, false),
-							),
 						},
 						"email_sending_account": {
 							Type:     schema.TypeString,
