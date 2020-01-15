@@ -849,6 +849,7 @@ func TestAccAWSRDSCluster_EngineMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
 				),
 			},
 			{
@@ -869,6 +870,7 @@ func TestAccAWSRDSCluster_EngineMode(t *testing.T) {
 					testAccCheckAWSClusterExists(resourceName, &dbCluster2),
 					testAccCheckAWSClusterRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
 				),
 			},
 			{

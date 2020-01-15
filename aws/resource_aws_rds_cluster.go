@@ -182,7 +182,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"min_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  2,
+							Default:  1,
 						},
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
@@ -758,13 +758,12 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		createOpts := &rds.CreateDBClusterInput{
-			CopyTagsToSnapshot:   aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBClusterIdentifier:  aws.String(identifier),
-			DeletionProtection:   aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:               aws.String(d.Get("engine").(string)),
-			EngineMode:           aws.String(d.Get("engine_mode").(string)),
-			ScalingConfiguration: expandRdsScalingConfiguration(d.Get("scaling_configuration").([]interface{})),
-			Tags:                 tags,
+			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
+			Engine:              aws.String(d.Get("engine").(string)),
+			EngineMode:          aws.String(d.Get("engine_mode").(string)),
+			Tags:                tags,
 		}
 
 		if v, ok := d.GetOk("master_password"); ok && v.(string) != "" {
