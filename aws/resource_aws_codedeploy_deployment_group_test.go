@@ -866,8 +866,6 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_update(t *testing.T) {
 	})
 }
 
-// Removing deployment_style from configuration does not trigger an update
-// to the default state, but the previous state is instead retained...
 func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 
@@ -896,10 +894,10 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_delete(t *testing.T) {
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
-					resource.TestCheckResourceAttrSet(
-						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option"),
-					resource.TestCheckResourceAttrSet(
-						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITHOUT_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "IN_PLACE"),
 				),
 			},
 			{

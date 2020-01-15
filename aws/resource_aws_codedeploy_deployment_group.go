@@ -76,15 +76,16 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 			},
 
 			"deployment_style": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"deployment_option": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  codedeploy.DeploymentOptionWithoutTrafficControl,
 							ValidateFunc: validation.StringInSlice([]string{
 								codedeploy.DeploymentOptionWithTrafficControl,
 								codedeploy.DeploymentOptionWithoutTrafficControl,
@@ -93,6 +94,7 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 						"deployment_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  codedeploy.DeploymentTypeInPlace,
 							ValidateFunc: validation.StringInSlice([]string{
 								codedeploy.DeploymentTypeInPlace,
 								codedeploy.DeploymentTypeBlueGreen,
