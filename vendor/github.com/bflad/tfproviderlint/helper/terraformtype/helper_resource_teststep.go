@@ -61,6 +61,8 @@ func IsHelperResourceTypeTestStep(t types.Type) bool {
 	switch t := t.(type) {
 	case *types.Named:
 		return IsHelperResourceNamedType(t, TypeNameTestStep)
+	case *types.Pointer:
+		return IsHelperResourceTypeTestStep(t.Elem())
 	default:
 		return false
 	}

@@ -3,6 +3,8 @@ package terraformtype
 import (
 	"go/ast"
 	"go/types"
+
+	"github.com/bflad/tfproviderlint/helper/astutils"
 )
 
 const (
@@ -14,10 +16,14 @@ const (
 
 // IsHelperResourceFunc returns if the function call is in the helper/schema package
 func IsHelperSchemaFunc(e ast.Expr, info *types.Info, funcName string) bool {
-	return isPackageFunc(e, info, PackagePathHelperSchema, funcName)
+	return astutils.IsPackageFunc(e, info, PackagePathHelperSchema, funcName)
 }
 
 // IsHelperSchemaNamedType returns if the type name matches and is from the helper/schema package
 func IsHelperSchemaNamedType(t *types.Named, typeName string) bool {
-	return isPackageNamedType(t, PackagePathHelperSchema, typeName)
+	return astutils.IsPackageNamedType(t, PackagePathHelperSchema, typeName)
+}
+
+func IsHelperSchemaReceiverMethod(e ast.Expr, info *types.Info, receiverName string, methodName string) bool {
+	return astutils.IsPackageReceiverMethod(e, info, PackagePathHelperSchema, receiverName, methodName)
 }

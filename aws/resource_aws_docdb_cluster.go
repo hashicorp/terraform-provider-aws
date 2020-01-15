@@ -232,6 +232,7 @@ func resourceAwsDocDBCluster() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						"audit",
+						"profiler",
 					}, false),
 				},
 			},

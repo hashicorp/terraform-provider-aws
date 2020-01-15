@@ -28,50 +28,14 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	var result []*ast.CallExpr
 
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
-		x := n.(*ast.CallExpr)
+		callExpr := n.(*ast.CallExpr)
 
-		if !isResourceDataSet(pass, x) {
+		if !terraformtype.IsHelperSchemaReceiverMethod(callExpr.Fun, pass.TypesInfo, terraformtype.TypeNameResourceData, "Set") {
 			return
 		}
 
-		result = append(result, x)
+		result = append(result, callExpr)
 	})
 
 	return result, nil
-}
-
-func isResourceDataSet(pass *analysis.Pass, ce *ast.CallExpr) bool {
-	switch f := ce.Fun.(type) {
-	default:
-		return false
-	case *ast.SelectorExpr:
-		if f.Sel.Name != "Set" {
-			return false
-		}
-
-		switch x := f.X.(type) {
-		default:
-			return false
-		case *ast.Ident:
-			if x.Obj == nil {
-				return false
-			}
-
-			switch decl := x.Obj.Decl.(type) {
-			default:
-				return false
-			case *ast.Field:
-				switch t := decl.Type.(type) {
-				default:
-					return false
-				case *ast.StarExpr:
-					return terraformtype.IsHelperSchemaTypeResourceData(pass.TypesInfo.TypeOf(t.X))
-				case *ast.SelectorExpr:
-					return terraformtype.IsHelperSchemaTypeResourceData(pass.TypesInfo.TypeOf(t))
-				}
-			case *ast.ValueSpec:
-				return terraformtype.IsHelperSchemaTypeResourceData(pass.TypesInfo.TypeOf(decl.Type))
-			}
-		}
-	}
 }
