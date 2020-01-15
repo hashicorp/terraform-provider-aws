@@ -205,9 +205,11 @@ github.com/bflad/tfproviderdocs
 github.com/bflad/tfproviderdocs/check
 github.com/bflad/tfproviderdocs/command
 github.com/bflad/tfproviderdocs/version
-# github.com/bflad/tfproviderlint v0.6.0
+# github.com/bflad/tfproviderlint v0.7.0
 github.com/bflad/tfproviderlint/cmd/tfproviderlint
+github.com/bflad/tfproviderlint/helper/astutils
 github.com/bflad/tfproviderlint/helper/terraformtype
+github.com/bflad/tfproviderlint/passes
 github.com/bflad/tfproviderlint/passes/AT001
 github.com/bflad/tfproviderlint/passes/AT002
 github.com/bflad/tfproviderlint/passes/AT003
@@ -219,6 +221,8 @@ github.com/bflad/tfproviderlint/passes/R001
 github.com/bflad/tfproviderlint/passes/R002
 github.com/bflad/tfproviderlint/passes/R003
 github.com/bflad/tfproviderlint/passes/R004
+github.com/bflad/tfproviderlint/passes/R005
+github.com/bflad/tfproviderlint/passes/R006
 github.com/bflad/tfproviderlint/passes/S001
 github.com/bflad/tfproviderlint/passes/S002
 github.com/bflad/tfproviderlint/passes/S003
@@ -239,14 +243,21 @@ github.com/bflad/tfproviderlint/passes/S017
 github.com/bflad/tfproviderlint/passes/S018
 github.com/bflad/tfproviderlint/passes/S019
 github.com/bflad/tfproviderlint/passes/S020
+github.com/bflad/tfproviderlint/passes/S021
+github.com/bflad/tfproviderlint/passes/S022
+github.com/bflad/tfproviderlint/passes/S023
+github.com/bflad/tfproviderlint/passes/V001
 github.com/bflad/tfproviderlint/passes/acctestcase
 github.com/bflad/tfproviderlint/passes/acctestfunc
 github.com/bflad/tfproviderlint/passes/commentignore
 github.com/bflad/tfproviderlint/passes/resourcedataset
+github.com/bflad/tfproviderlint/passes/retryfunc
 github.com/bflad/tfproviderlint/passes/schemamap
 github.com/bflad/tfproviderlint/passes/schemaresource
 github.com/bflad/tfproviderlint/passes/schemaschema
+github.com/bflad/tfproviderlint/passes/schemavalidatefunc
 github.com/bflad/tfproviderlint/passes/testfunc
+github.com/bflad/tfproviderlint/version
 # github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d
 github.com/bgentry/go-netrc/netrc
 # github.com/bgentry/speakeasy v0.1.0

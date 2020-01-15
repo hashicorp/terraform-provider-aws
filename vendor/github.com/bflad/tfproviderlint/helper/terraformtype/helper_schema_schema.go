@@ -158,6 +158,8 @@ func IsHelperSchemaTypeSchema(t types.Type) bool {
 	switch t := t.(type) {
 	case *types.Named:
 		return IsHelperSchemaNamedType(t, TypeNameSchema)
+	case *types.Pointer:
+		return IsHelperSchemaTypeSchema(t.Elem())
 	default:
 		return false
 	}
@@ -184,6 +186,8 @@ func IsHelperSchemaTypeSet(t types.Type) bool {
 	switch t := t.(type) {
 	case *types.Named:
 		return IsHelperSchemaNamedType(t, TypeNameSet)
+	case *types.Pointer:
+		return IsHelperSchemaTypeSet(t.Elem())
 	default:
 		return false
 	}

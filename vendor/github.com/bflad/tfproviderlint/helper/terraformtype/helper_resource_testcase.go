@@ -51,6 +51,8 @@ func IsHelperResourceTypeTestCase(t types.Type) bool {
 	switch t := t.(type) {
 	case *types.Named:
 		return IsHelperResourceNamedType(t, TypeNameTestCase)
+	case *types.Pointer:
+		return IsHelperResourceTypeTestCase(t.Elem())
 	default:
 		return false
 	}
