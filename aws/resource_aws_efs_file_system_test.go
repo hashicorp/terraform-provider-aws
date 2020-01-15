@@ -2,17 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
 
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_efs_file_system", &resource.Sweeper{
+		Name: "aws_efs_file_system",
+		F:    testSweepEfsFileSystems,
+	})
+}
+
+func testSweepEfsFileSystems(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).efsconn
+
+	var errors error
+	input := &efs.DescribeFileSystemsInput{}
+	for {
+		out, err := conn.DescribeFileSystems(input)
+		if err != nil {
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping EFS File Systems sweep for %s: %s", region, err)
+				return errors
+			}
+			errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
+			return errors
+		}
+
+		if out == nil || len(out.FileSystems) == 0 {
+			log.Printf("[INFO] No EFS File Systems to sweep")
+			return errors
+		}
+
+		for _, filesystem := range out.FileSystems {
+			id := aws.StringValue(filesystem.FileSystemId)
+
+			log.Printf("[INFO] Deleting EFS File System: %s", id)
+			_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
+				FileSystemId: filesystem.FileSystemId,
+			})
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error deleting EFS File System %q: %w", id, err))
+				continue
+			}
+
+			err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err))
+				continue
+			}
+		}
+
+		if out.NextMarker == nil {
+			break
+		}
+		input.Marker = out.NextMarker
+	}
+
+	return errors
+}
 
 func TestResourceAWSEFSFileSystem_hasEmptyFileSystems(t *testing.T) {
 	fs := &efs.DescribeFileSystemsOutput{
