@@ -211,7 +211,6 @@ func resourceAwsCodeDeployDeploymentGroup() *schema.Resource {
 			"load_balancer_info": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -1030,14 +1029,14 @@ func expandDeploymentStyle(list []interface{}) *codedeploy.DeploymentStyle {
 }
 
 // expandLoadBalancerInfo converts a raw schema list containing a map[string]interface{}
-// into a single codedeploy.LoadBalancerInfo object
+// into a single codedeploy.LoadBalancerInfo object. Returns an empty object if list is nil.
 func expandLoadBalancerInfo(list []interface{}) *codedeploy.LoadBalancerInfo {
+	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
 	if len(list) == 0 || list[0] == nil {
-		return nil
+		return loadBalancerInfo
 	}
 
 	lbInfo := list[0].(map[string]interface{})
-	loadBalancerInfo := &codedeploy.LoadBalancerInfo{}
 
 	if attr, ok := lbInfo["elb_info"]; ok && attr.(*schema.Set).Len() > 0 {
 		loadBalancerInfo.ElbInfoList = expandCodeDeployElbInfo(attr.(*schema.Set).List())

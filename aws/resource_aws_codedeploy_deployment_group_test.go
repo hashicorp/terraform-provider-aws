@@ -996,8 +996,6 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 	})
 }
 
-// Without "Computed: true" on load_balancer_info, removing the resource
-// from configuration causes an error, because the remote resource still exists.
 func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
 
@@ -1025,7 +1023,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
 					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "0"),
 				),
 			},
 			{
@@ -1150,7 +1148,7 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
 					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "1"),
+						"aws_codedeploy_deployment_group.foo_group", "load_balancer_info.#", "0"),
 				),
 			},
 			{
@@ -1861,35 +1859,46 @@ func TestAWSCodeDeployDeploymentGroup_flattenDeploymentStyle(t *testing.T) {
 }
 
 func TestAWSCodeDeployDeploymentGroup_expandLoadBalancerInfo(t *testing.T) {
-	input := []interface{}{
-		map[string]interface{}{
-			"elb_info": schema.NewSet(loadBalancerInfoHash, []interface{}{
+	testCases := []struct {
+		Input    []interface{}
+		Expected *codedeploy.LoadBalancerInfo
+	}{
+		{
+			Input:    nil,
+			Expected: &codedeploy.LoadBalancerInfo{},
+		},
+		{
+			Input: []interface{}{
 				map[string]interface{}{
-					"name": "foo-elb",
+					"elb_info": schema.NewSet(loadBalancerInfoHash, []interface{}{
+						map[string]interface{}{
+							"name": "foo-elb",
+						},
+						map[string]interface{}{
+							"name": "bar-elb",
+						},
+					}),
 				},
-				map[string]interface{}{
-					"name": "bar-elb",
+			},
+			Expected: &codedeploy.LoadBalancerInfo{
+				ElbInfoList: []*codedeploy.ELBInfo{
+					{
+						Name: aws.String("foo-elb"),
+					},
+					{
+						Name: aws.String("bar-elb"),
+					},
 				},
-			}),
+			},
 		},
 	}
 
-	expected := &codedeploy.LoadBalancerInfo{
-		ElbInfoList: []*codedeploy.ELBInfo{
-			{
-				Name: aws.String("foo-elb"),
-			},
-			{
-				Name: aws.String("bar-elb"),
-			},
-		},
-	}
-
-	actual := expandLoadBalancerInfo(input)
-
-	if !reflect.DeepEqual(actual, expected) {
-		t.Fatalf("expandLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
-			actual, expected)
+	for _, tc := range testCases {
+		actual := expandLoadBalancerInfo(tc.Input)
+		if !reflect.DeepEqual(actual, tc.Expected) {
+			t.Fatalf("expandLoadBalancerInfo output is not correct.\nGot:\n%#v\nExpected:\n%#v\n",
+				actual, tc.Expected)
+		}
 	}
 }
 
