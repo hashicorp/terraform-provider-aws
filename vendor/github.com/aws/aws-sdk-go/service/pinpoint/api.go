@@ -66,23 +66,23 @@ func (c *Pinpoint) CreateAppRequest(input *CreateAppInput) (req *request.Request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateApp
@@ -161,23 +161,23 @@ func (c *Pinpoint) CreateCampaignRequest(input *CreateCampaignInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateCampaign
@@ -255,20 +255,20 @@ func (c *Pinpoint) CreateEmailTemplateRequest(input *CreateEmailTemplateInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateEmailTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+// Returned Error Types:
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateEmailTemplate
@@ -346,23 +346,23 @@ func (c *Pinpoint) CreateExportJobRequest(input *CreateExportJobInput) (req *req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateExportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateExportJob
@@ -440,23 +440,23 @@ func (c *Pinpoint) CreateImportJobRequest(input *CreateImportJobInput) (req *req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateImportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateImportJob
@@ -534,23 +534,23 @@ func (c *Pinpoint) CreateJourneyRequest(input *CreateJourneyInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateJourney for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateJourney
@@ -629,20 +629,20 @@ func (c *Pinpoint) CreatePushTemplateRequest(input *CreatePushTemplateInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreatePushTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+// Returned Error Types:
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreatePushTemplate
@@ -721,23 +721,23 @@ func (c *Pinpoint) CreateSegmentRequest(input *CreateSegmentInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateSegment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateSegment
@@ -815,20 +815,20 @@ func (c *Pinpoint) CreateSmsTemplateRequest(input *CreateSmsTemplateInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateSmsTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+// Returned Error Types:
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateSmsTemplate
@@ -906,20 +906,20 @@ func (c *Pinpoint) CreateVoiceTemplateRequest(input *CreateVoiceTemplateInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation CreateVoiceTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+// Returned Error Types:
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/CreateVoiceTemplate
@@ -998,23 +998,23 @@ func (c *Pinpoint) DeleteAdmChannelRequest(input *DeleteAdmChannelInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteAdmChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteAdmChannel
@@ -1093,23 +1093,23 @@ func (c *Pinpoint) DeleteApnsChannelRequest(input *DeleteApnsChannelInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteApnsChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsChannel
@@ -1188,23 +1188,23 @@ func (c *Pinpoint) DeleteApnsSandboxChannelRequest(input *DeleteApnsSandboxChann
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteApnsSandboxChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsSandboxChannel
@@ -1283,23 +1283,23 @@ func (c *Pinpoint) DeleteApnsVoipChannelRequest(input *DeleteApnsVoipChannelInpu
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteApnsVoipChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsVoipChannel
@@ -1378,23 +1378,23 @@ func (c *Pinpoint) DeleteApnsVoipSandboxChannelRequest(input *DeleteApnsVoipSand
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteApnsVoipSandboxChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApnsVoipSandboxChannel
@@ -1472,23 +1472,23 @@ func (c *Pinpoint) DeleteAppRequest(input *DeleteAppInput) (req *request.Request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteApp
@@ -1567,23 +1567,23 @@ func (c *Pinpoint) DeleteBaiduChannelRequest(input *DeleteBaiduChannelInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteBaiduChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteBaiduChannel
@@ -1661,23 +1661,23 @@ func (c *Pinpoint) DeleteCampaignRequest(input *DeleteCampaignInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteCampaign
@@ -1756,23 +1756,23 @@ func (c *Pinpoint) DeleteEmailChannelRequest(input *DeleteEmailChannelInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteEmailChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEmailChannel
@@ -1851,23 +1851,23 @@ func (c *Pinpoint) DeleteEmailTemplateRequest(input *DeleteEmailTemplateInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteEmailTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEmailTemplate
@@ -1945,23 +1945,23 @@ func (c *Pinpoint) DeleteEndpointRequest(input *DeleteEndpointInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEndpoint
@@ -2039,23 +2039,23 @@ func (c *Pinpoint) DeleteEventStreamRequest(input *DeleteEventStreamInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteEventStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteEventStream
@@ -2134,23 +2134,23 @@ func (c *Pinpoint) DeleteGcmChannelRequest(input *DeleteGcmChannelInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteGcmChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteGcmChannel
@@ -2228,23 +2228,23 @@ func (c *Pinpoint) DeleteJourneyRequest(input *DeleteJourneyInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteJourney for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteJourney
@@ -2323,23 +2323,23 @@ func (c *Pinpoint) DeletePushTemplateRequest(input *DeletePushTemplateInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeletePushTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeletePushTemplate
@@ -2417,23 +2417,23 @@ func (c *Pinpoint) DeleteSegmentRequest(input *DeleteSegmentInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteSegment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteSegment
@@ -2512,23 +2512,23 @@ func (c *Pinpoint) DeleteSmsChannelRequest(input *DeleteSmsChannelInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteSmsChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteSmsChannel
@@ -2606,23 +2606,23 @@ func (c *Pinpoint) DeleteSmsTemplateRequest(input *DeleteSmsTemplateInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteSmsTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteSmsTemplate
@@ -2700,23 +2700,23 @@ func (c *Pinpoint) DeleteUserEndpointsRequest(input *DeleteUserEndpointsInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteUserEndpoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteUserEndpoints
@@ -2795,23 +2795,23 @@ func (c *Pinpoint) DeleteVoiceChannelRequest(input *DeleteVoiceChannelInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteVoiceChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteVoiceChannel
@@ -2890,23 +2890,23 @@ func (c *Pinpoint) DeleteVoiceTemplateRequest(input *DeleteVoiceTemplateInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation DeleteVoiceTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/DeleteVoiceTemplate
@@ -2985,23 +2985,23 @@ func (c *Pinpoint) GetAdmChannelRequest(input *GetAdmChannelInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetAdmChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetAdmChannel
@@ -3080,23 +3080,23 @@ func (c *Pinpoint) GetApnsChannelRequest(input *GetApnsChannelInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApnsChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsChannel
@@ -3175,23 +3175,23 @@ func (c *Pinpoint) GetApnsSandboxChannelRequest(input *GetApnsSandboxChannelInpu
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApnsSandboxChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsSandboxChannel
@@ -3270,23 +3270,23 @@ func (c *Pinpoint) GetApnsVoipChannelRequest(input *GetApnsVoipChannelInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApnsVoipChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsVoipChannel
@@ -3365,23 +3365,23 @@ func (c *Pinpoint) GetApnsVoipSandboxChannelRequest(input *GetApnsVoipSandboxCha
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApnsVoipSandboxChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApnsVoipSandboxChannel
@@ -3459,23 +3459,23 @@ func (c *Pinpoint) GetAppRequest(input *GetAppInput) (req *request.Request, outp
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApp for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApp
@@ -3554,23 +3554,23 @@ func (c *Pinpoint) GetApplicationDateRangeKpiRequest(input *GetApplicationDateRa
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApplicationDateRangeKpi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApplicationDateRangeKpi
@@ -3648,23 +3648,23 @@ func (c *Pinpoint) GetApplicationSettingsRequest(input *GetApplicationSettingsIn
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApplicationSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApplicationSettings
@@ -3743,23 +3743,23 @@ func (c *Pinpoint) GetAppsRequest(input *GetAppsInput) (req *request.Request, ou
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetApps for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetApps
@@ -3838,23 +3838,23 @@ func (c *Pinpoint) GetBaiduChannelRequest(input *GetBaiduChannelInput) (req *req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetBaiduChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetBaiduChannel
@@ -3933,23 +3933,23 @@ func (c *Pinpoint) GetCampaignRequest(input *GetCampaignInput) (req *request.Req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaign
@@ -4027,23 +4027,23 @@ func (c *Pinpoint) GetCampaignActivitiesRequest(input *GetCampaignActivitiesInpu
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetCampaignActivities for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignActivities
@@ -4122,23 +4122,23 @@ func (c *Pinpoint) GetCampaignDateRangeKpiRequest(input *GetCampaignDateRangeKpi
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetCampaignDateRangeKpi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignDateRangeKpi
@@ -4217,23 +4217,23 @@ func (c *Pinpoint) GetCampaignVersionRequest(input *GetCampaignVersionInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetCampaignVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignVersion
@@ -4312,23 +4312,23 @@ func (c *Pinpoint) GetCampaignVersionsRequest(input *GetCampaignVersionsInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetCampaignVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaignVersions
@@ -4407,23 +4407,23 @@ func (c *Pinpoint) GetCampaignsRequest(input *GetCampaignsInput) (req *request.R
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetCampaigns for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetCampaigns
@@ -4502,23 +4502,23 @@ func (c *Pinpoint) GetChannelsRequest(input *GetChannelsInput) (req *request.Req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetChannels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetChannels
@@ -4597,23 +4597,23 @@ func (c *Pinpoint) GetEmailChannelRequest(input *GetEmailChannelInput) (req *req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetEmailChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEmailChannel
@@ -4692,23 +4692,23 @@ func (c *Pinpoint) GetEmailTemplateRequest(input *GetEmailTemplateInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetEmailTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEmailTemplate
@@ -4787,23 +4787,23 @@ func (c *Pinpoint) GetEndpointRequest(input *GetEndpointInput) (req *request.Req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEndpoint
@@ -4881,23 +4881,23 @@ func (c *Pinpoint) GetEventStreamRequest(input *GetEventStreamInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetEventStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetEventStream
@@ -4976,23 +4976,23 @@ func (c *Pinpoint) GetExportJobRequest(input *GetExportJobInput) (req *request.R
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetExportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetExportJob
@@ -5071,23 +5071,23 @@ func (c *Pinpoint) GetExportJobsRequest(input *GetExportJobsInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetExportJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetExportJobs
@@ -5166,23 +5166,23 @@ func (c *Pinpoint) GetGcmChannelRequest(input *GetGcmChannelInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetGcmChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetGcmChannel
@@ -5261,23 +5261,23 @@ func (c *Pinpoint) GetImportJobRequest(input *GetImportJobInput) (req *request.R
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetImportJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetImportJob
@@ -5356,23 +5356,23 @@ func (c *Pinpoint) GetImportJobsRequest(input *GetImportJobsInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetImportJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetImportJobs
@@ -5451,23 +5451,23 @@ func (c *Pinpoint) GetJourneyRequest(input *GetJourneyInput) (req *request.Reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetJourney for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetJourney
@@ -5546,23 +5546,23 @@ func (c *Pinpoint) GetJourneyDateRangeKpiRequest(input *GetJourneyDateRangeKpiIn
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetJourneyDateRangeKpi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetJourneyDateRangeKpi
@@ -5641,23 +5641,23 @@ func (c *Pinpoint) GetJourneyExecutionActivityMetricsRequest(input *GetJourneyEx
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetJourneyExecutionActivityMetrics for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetJourneyExecutionActivityMetrics
@@ -5736,23 +5736,23 @@ func (c *Pinpoint) GetJourneyExecutionMetricsRequest(input *GetJourneyExecutionM
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetJourneyExecutionMetrics for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetJourneyExecutionMetrics
@@ -5831,23 +5831,23 @@ func (c *Pinpoint) GetPushTemplateRequest(input *GetPushTemplateInput) (req *req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetPushTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetPushTemplate
@@ -5926,23 +5926,23 @@ func (c *Pinpoint) GetSegmentRequest(input *GetSegmentInput) (req *request.Reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSegment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegment
@@ -6021,23 +6021,23 @@ func (c *Pinpoint) GetSegmentExportJobsRequest(input *GetSegmentExportJobsInput)
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSegmentExportJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentExportJobs
@@ -6116,23 +6116,23 @@ func (c *Pinpoint) GetSegmentImportJobsRequest(input *GetSegmentImportJobsInput)
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSegmentImportJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentImportJobs
@@ -6211,23 +6211,23 @@ func (c *Pinpoint) GetSegmentVersionRequest(input *GetSegmentVersionInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSegmentVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentVersion
@@ -6306,23 +6306,23 @@ func (c *Pinpoint) GetSegmentVersionsRequest(input *GetSegmentVersionsInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSegmentVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegmentVersions
@@ -6401,23 +6401,23 @@ func (c *Pinpoint) GetSegmentsRequest(input *GetSegmentsInput) (req *request.Req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSegments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSegments
@@ -6496,23 +6496,23 @@ func (c *Pinpoint) GetSmsChannelRequest(input *GetSmsChannelInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSmsChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSmsChannel
@@ -6591,23 +6591,23 @@ func (c *Pinpoint) GetSmsTemplateRequest(input *GetSmsTemplateInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetSmsTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetSmsTemplate
@@ -6686,23 +6686,23 @@ func (c *Pinpoint) GetUserEndpointsRequest(input *GetUserEndpointsInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetUserEndpoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetUserEndpoints
@@ -6781,23 +6781,23 @@ func (c *Pinpoint) GetVoiceChannelRequest(input *GetVoiceChannelInput) (req *req
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetVoiceChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetVoiceChannel
@@ -6876,23 +6876,23 @@ func (c *Pinpoint) GetVoiceTemplateRequest(input *GetVoiceTemplateInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation GetVoiceTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/GetVoiceTemplate
@@ -6971,23 +6971,23 @@ func (c *Pinpoint) ListJourneysRequest(input *ListJourneysInput) (req *request.R
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation ListJourneys for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/ListJourneys
@@ -7140,23 +7140,23 @@ func (c *Pinpoint) ListTemplateVersionsRequest(input *ListTemplateVersionsInput)
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation ListTemplateVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/ListTemplateVersions
@@ -7235,20 +7235,20 @@ func (c *Pinpoint) ListTemplatesRequest(input *ListTemplatesInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation ListTemplates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+// Returned Error Types:
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/ListTemplates
@@ -7326,23 +7326,23 @@ func (c *Pinpoint) PhoneNumberValidateRequest(input *PhoneNumberValidateInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation PhoneNumberValidate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/PhoneNumberValidate
@@ -7421,23 +7421,23 @@ func (c *Pinpoint) PutEventStreamRequest(input *PutEventStreamInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation PutEventStream for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/PutEventStream
@@ -7516,23 +7516,23 @@ func (c *Pinpoint) PutEventsRequest(input *PutEventsInput) (req *request.Request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation PutEvents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/PutEvents
@@ -7611,23 +7611,23 @@ func (c *Pinpoint) RemoveAttributesRequest(input *RemoveAttributesInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation RemoveAttributes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/RemoveAttributes
@@ -7705,23 +7705,23 @@ func (c *Pinpoint) SendMessagesRequest(input *SendMessagesInput) (req *request.R
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation SendMessages for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/SendMessages
@@ -7799,23 +7799,23 @@ func (c *Pinpoint) SendUsersMessagesRequest(input *SendUsersMessagesInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation SendUsersMessages for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/SendUsersMessages
@@ -8046,23 +8046,23 @@ func (c *Pinpoint) UpdateAdmChannelRequest(input *UpdateAdmChannelInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateAdmChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateAdmChannel
@@ -8141,23 +8141,23 @@ func (c *Pinpoint) UpdateApnsChannelRequest(input *UpdateApnsChannelInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateApnsChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsChannel
@@ -8236,23 +8236,23 @@ func (c *Pinpoint) UpdateApnsSandboxChannelRequest(input *UpdateApnsSandboxChann
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateApnsSandboxChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsSandboxChannel
@@ -8331,23 +8331,23 @@ func (c *Pinpoint) UpdateApnsVoipChannelRequest(input *UpdateApnsVoipChannelInpu
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateApnsVoipChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsVoipChannel
@@ -8426,23 +8426,23 @@ func (c *Pinpoint) UpdateApnsVoipSandboxChannelRequest(input *UpdateApnsVoipSand
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateApnsVoipSandboxChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApnsVoipSandboxChannel
@@ -8520,23 +8520,23 @@ func (c *Pinpoint) UpdateApplicationSettingsRequest(input *UpdateApplicationSett
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateApplicationSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateApplicationSettings
@@ -8615,23 +8615,23 @@ func (c *Pinpoint) UpdateBaiduChannelRequest(input *UpdateBaiduChannelInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateBaiduChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateBaiduChannel
@@ -8709,23 +8709,23 @@ func (c *Pinpoint) UpdateCampaignRequest(input *UpdateCampaignInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateCampaign for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateCampaign
@@ -8804,23 +8804,23 @@ func (c *Pinpoint) UpdateEmailChannelRequest(input *UpdateEmailChannelInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateEmailChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEmailChannel
@@ -8899,23 +8899,23 @@ func (c *Pinpoint) UpdateEmailTemplateRequest(input *UpdateEmailTemplateInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateEmailTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEmailTemplate
@@ -8996,23 +8996,23 @@ func (c *Pinpoint) UpdateEndpointRequest(input *UpdateEndpointInput) (req *reque
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateEndpoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEndpoint
@@ -9093,23 +9093,23 @@ func (c *Pinpoint) UpdateEndpointsBatchRequest(input *UpdateEndpointsBatchInput)
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateEndpointsBatch for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateEndpointsBatch
@@ -9188,23 +9188,23 @@ func (c *Pinpoint) UpdateGcmChannelRequest(input *UpdateGcmChannelInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateGcmChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateGcmChannel
@@ -9282,23 +9282,23 @@ func (c *Pinpoint) UpdateJourneyRequest(input *UpdateJourneyInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateJourney for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateJourney
@@ -9376,23 +9376,23 @@ func (c *Pinpoint) UpdateJourneyStateRequest(input *UpdateJourneyStateInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateJourneyState for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateJourneyState
@@ -9471,23 +9471,23 @@ func (c *Pinpoint) UpdatePushTemplateRequest(input *UpdatePushTemplateInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdatePushTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdatePushTemplate
@@ -9566,23 +9566,23 @@ func (c *Pinpoint) UpdateSegmentRequest(input *UpdateSegmentInput) (req *request
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateSegment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateSegment
@@ -9661,23 +9661,23 @@ func (c *Pinpoint) UpdateSmsChannelRequest(input *UpdateSmsChannelInput) (req *r
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateSmsChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateSmsChannel
@@ -9756,23 +9756,23 @@ func (c *Pinpoint) UpdateSmsTemplateRequest(input *UpdateSmsTemplateInput) (req 
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateSmsTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateSmsTemplate
@@ -9850,23 +9850,23 @@ func (c *Pinpoint) UpdateTemplateActiveVersionRequest(input *UpdateTemplateActiv
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateTemplateActiveVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateTemplateActiveVersion
@@ -9945,23 +9945,23 @@ func (c *Pinpoint) UpdateVoiceChannelRequest(input *UpdateVoiceChannelInput) (re
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateVoiceChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateVoiceChannel
@@ -10040,23 +10040,23 @@ func (c *Pinpoint) UpdateVoiceTemplateRequest(input *UpdateVoiceTemplateInput) (
 // See the AWS API reference guide for Amazon Pinpoint's
 // API operation UpdateVoiceTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeMethodNotAllowedException "MethodNotAllowedException"
+//   * MethodNotAllowedException
 //   Provides information about an API request or response.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Provides information about an API request or response.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/pinpoint-2016-12-01/UpdateVoiceTemplate
@@ -12603,6 +12603,64 @@ func (s *AttributesResource) SetAttributeType(v string) *AttributesResource {
 func (s *AttributesResource) SetAttributes(v []*string) *AttributesResource {
 	s.Attributes = v
 	return s
+}
+
+// Provides information about an API request or response.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	RequestID_ *string `locationName:"RequestID" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Specifies the status and settings of the Baidu (Baidu Cloud Push) channel
@@ -19061,6 +19119,64 @@ func (s *ExportJobsResponse) SetNextToken(v string) *ExportJobsResponse {
 	return s
 }
 
+// Provides information about an API request or response.
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	RequestID_ *string `locationName:"RequestID" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Specifies the status and settings of the GCM channel for an application.
 // This channel enables Amazon Pinpoint to send push notifications through the
 // Firebase Cloud Messaging (FCM), formerly Google Cloud Messaging (GCM), service.
@@ -23458,6 +23574,64 @@ func (s *ImportJobsResponse) SetNextToken(v string) *ImportJobsResponse {
 	return s
 }
 
+// Provides information about an API request or response.
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	RequestID_ *string `locationName:"RequestID" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Provides information about the results of a request to create or update an
 // endpoint that's associated with an event.
 type ItemResponse struct {
@@ -24987,6 +25161,64 @@ func (s *MessageResult) SetUpdatedToken(v string) *MessageResult {
 	return s
 }
 
+// Provides information about an API request or response.
+type MethodNotAllowedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	RequestID_ *string `locationName:"RequestID" type:"string"`
+}
+
+// String returns the string representation
+func (s MethodNotAllowedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MethodNotAllowedException) GoString() string {
+	return s.String()
+}
+
+func newErrorMethodNotAllowedException(v protocol.ResponseMetadata) error {
+	return &MethodNotAllowedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MethodNotAllowedException) Code() string {
+	return "MethodNotAllowedException"
+}
+
+// Message returns the exception's message.
+func (s MethodNotAllowedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MethodNotAllowedException) OrigErr() error {
+	return nil
+}
+
+func (s MethodNotAllowedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MethodNotAllowedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MethodNotAllowedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Specifies metric-based criteria for including or excluding endpoints from
 // a segment. These criteria derive from custom metrics that you define for
 // endpoints.
@@ -25157,6 +25389,64 @@ func (s *MultiConditionalSplitActivity) SetDefaultActivity(v string) *MultiCondi
 func (s *MultiConditionalSplitActivity) SetEvaluationWaitTime(v *WaitTime) *MultiConditionalSplitActivity {
 	s.EvaluationWaitTime = v
 	return s
+}
+
+// Provides information about an API request or response.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	RequestID_ *string `locationName:"RequestID" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Specifies a phone number to validate and retrieve information about.
@@ -28937,6 +29227,64 @@ func (s *TemplatesResponse) SetItem(v []*TemplateResponse) *TemplatesResponse {
 func (s *TemplatesResponse) SetNextToken(v string) *TemplatesResponse {
 	s.NextToken = &v
 	return s
+}
+
+// Provides information about an API request or response.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	RequestID_ *string `locationName:"RequestID" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Specifies the settings for a campaign treatment. A treatment is a variation

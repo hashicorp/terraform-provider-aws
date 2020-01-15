@@ -78,12 +78,12 @@ func (c *WAFV2) AssociateWebACLRequest(input *AssociateWebACLInput) (req *reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation AssociateWebACL for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -98,11 +98,11 @@ func (c *WAFV2) AssociateWebACLRequest(input *AssociateWebACLInput) (req *reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFUnavailableEntityException "WAFUnavailableEntityException"
+//   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/AssociateWebACL
@@ -195,12 +195,12 @@ func (c *WAFV2) CheckCapacityRequest(input *CheckCapacityInput) (req *request.Re
 // See the AWS API reference guide for AWS WAFV2's
 // API operation CheckCapacity for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -215,21 +215,21 @@ func (c *WAFV2) CheckCapacityRequest(input *CheckCapacityInput) (req *request.Re
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFInvalidResourceException "WAFInvalidResourceException"
+//   * WAFInvalidResourceException
 //   AWS WAF couldn’t perform the operation because the resource that you requested
 //   isn’t valid. Check the resource, and try again.
 //
-//   * ErrCodeWAFUnavailableEntityException "WAFUnavailableEntityException"
+//   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/CheckCapacity
@@ -315,12 +315,12 @@ func (c *WAFV2) CreateIPSetRequest(input *CreateIPSetInput) (req *request.Reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation CreateIPSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -335,26 +335,26 @@ func (c *WAFV2) CreateIPSetRequest(input *CreateIPSetInput) (req *request.Reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -438,12 +438,12 @@ func (c *WAFV2) CreateRegexPatternSetRequest(input *CreateRegexPatternSetInput) 
 // See the AWS API reference guide for AWS WAFV2's
 // API operation CreateRegexPatternSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -458,26 +458,26 @@ func (c *WAFV2) CreateRegexPatternSetRequest(input *CreateRegexPatternSetInput) 
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -567,12 +567,12 @@ func (c *WAFV2) CreateRuleGroupRequest(input *CreateRuleGroupInput) (req *reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation CreateRuleGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -587,29 +587,29 @@ func (c *WAFV2) CreateRuleGroupRequest(input *CreateRuleGroupInput) (req *reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFUnavailableEntityException "WAFUnavailableEntityException"
+//   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -702,12 +702,12 @@ func (c *WAFV2) CreateWebACLRequest(input *CreateWebACLInput) (req *request.Requ
 // See the AWS API reference guide for AWS WAFV2's
 // API operation CreateWebACL for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -722,37 +722,37 @@ func (c *WAFV2) CreateWebACLRequest(input *CreateWebACLInput) (req *request.Requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFInvalidResourceException "WAFInvalidResourceException"
+//   * WAFInvalidResourceException
 //   AWS WAF couldn’t perform the operation because the resource that you requested
 //   isn’t valid. Check the resource, and try again.
 //
-//   * ErrCodeWAFUnavailableEntityException "WAFUnavailableEntityException"
+//   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -837,12 +837,12 @@ func (c *WAFV2) DeleteIPSetRequest(input *DeleteIPSetInput) (req *request.Reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation DeleteIPSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -857,20 +857,20 @@ func (c *WAFV2) DeleteIPSetRequest(input *DeleteIPSetInput) (req *request.Reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -955,16 +955,16 @@ func (c *WAFV2) DeleteLoggingConfigurationRequest(input *DeleteLoggingConfigurat
 // See the AWS API reference guide for AWS WAFV2's
 // API operation DeleteLoggingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
@@ -1051,12 +1051,12 @@ func (c *WAFV2) DeleteRegexPatternSetRequest(input *DeleteRegexPatternSetInput) 
 // See the AWS API reference guide for AWS WAFV2's
 // API operation DeleteRegexPatternSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1071,20 +1071,20 @@ func (c *WAFV2) DeleteRegexPatternSetRequest(input *DeleteRegexPatternSetInput) 
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -1169,12 +1169,12 @@ func (c *WAFV2) DeleteRuleGroupRequest(input *DeleteRuleGroupInput) (req *reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation DeleteRuleGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1189,20 +1189,20 @@ func (c *WAFV2) DeleteRuleGroupRequest(input *DeleteRuleGroupInput) (req *reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -1287,12 +1287,12 @@ func (c *WAFV2) DeleteWebACLRequest(input *DeleteWebACLInput) (req *request.Requ
 // See the AWS API reference guide for AWS WAFV2's
 // API operation DeleteWebACL for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1307,24 +1307,24 @@ func (c *WAFV2) DeleteWebACLRequest(input *DeleteWebACLInput) (req *request.Requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFAssociatedItemException "WAFAssociatedItemException"
+//   * WAFAssociatedItemException
 //   AWS WAF couldn’t perform the operation because your resource is being used
 //   by another resource or it’s associated with another resource.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -1409,12 +1409,12 @@ func (c *WAFV2) DescribeManagedRuleGroupRequest(input *DescribeManagedRuleGroupI
 // See the AWS API reference guide for AWS WAFV2's
 // API operation DescribeManagedRuleGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1429,11 +1429,11 @@ func (c *WAFV2) DescribeManagedRuleGroupRequest(input *DescribeManagedRuleGroupI
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFInvalidResourceException "WAFInvalidResourceException"
+//   * WAFInvalidResourceException
 //   AWS WAF couldn’t perform the operation because the resource that you requested
 //   isn’t valid. Check the resource, and try again.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -1523,12 +1523,12 @@ func (c *WAFV2) DisassociateWebACLRequest(input *DisassociateWebACLInput) (req *
 // See the AWS API reference guide for AWS WAFV2's
 // API operation DisassociateWebACL for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1543,7 +1543,7 @@ func (c *WAFV2) DisassociateWebACLRequest(input *DisassociateWebACLInput) (req *
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -1627,12 +1627,12 @@ func (c *WAFV2) GetIPSetRequest(input *GetIPSetInput) (req *request.Request, out
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetIPSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1647,7 +1647,7 @@ func (c *WAFV2) GetIPSetRequest(input *GetIPSetInput) (req *request.Request, out
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -1731,12 +1731,12 @@ func (c *WAFV2) GetLoggingConfigurationRequest(input *GetLoggingConfigurationInp
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetLoggingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -1823,12 +1823,12 @@ func (c *WAFV2) GetRateBasedStatementManagedKeysRequest(input *GetRateBasedState
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetRateBasedStatementManagedKeys for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1843,7 +1843,7 @@ func (c *WAFV2) GetRateBasedStatementManagedKeysRequest(input *GetRateBasedState
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -1927,12 +1927,12 @@ func (c *WAFV2) GetRegexPatternSetRequest(input *GetRegexPatternSetInput) (req *
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetRegexPatternSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -1947,7 +1947,7 @@ func (c *WAFV2) GetRegexPatternSetRequest(input *GetRegexPatternSetInput) (req *
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -2031,12 +2031,12 @@ func (c *WAFV2) GetRuleGroupRequest(input *GetRuleGroupInput) (req *request.Requ
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetRuleGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2051,7 +2051,7 @@ func (c *WAFV2) GetRuleGroupRequest(input *GetRuleGroupInput) (req *request.Requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -2145,16 +2145,16 @@ func (c *WAFV2) GetSampledRequestsRequest(input *GetSampledRequestsInput) (req *
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetSampledRequests for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+// Returned Error Types:
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2249,12 +2249,12 @@ func (c *WAFV2) GetWebACLRequest(input *GetWebACLInput) (req *request.Request, o
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetWebACL for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2269,7 +2269,7 @@ func (c *WAFV2) GetWebACLRequest(input *GetWebACLInput) (req *request.Request, o
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
@@ -2353,16 +2353,16 @@ func (c *WAFV2) GetWebACLForResourceRequest(input *GetWebACLForResourceInput) (r
 // See the AWS API reference guide for AWS WAFV2's
 // API operation GetWebACLForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2377,7 +2377,7 @@ func (c *WAFV2) GetWebACLForResourceRequest(input *GetWebACLForResourceInput) (r
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFUnavailableEntityException "WAFUnavailableEntityException"
+//   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/GetWebACLForResource
@@ -2462,12 +2462,12 @@ func (c *WAFV2) ListAvailableManagedRuleGroupsRequest(input *ListAvailableManage
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListAvailableManagedRuleGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2562,12 +2562,12 @@ func (c *WAFV2) ListIPSetsRequest(input *ListIPSetsInput) (req *request.Request,
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListIPSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2662,12 +2662,12 @@ func (c *WAFV2) ListLoggingConfigurationsRequest(input *ListLoggingConfiguration
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListLoggingConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2763,12 +2763,12 @@ func (c *WAFV2) ListRegexPatternSetsRequest(input *ListRegexPatternSetsInput) (r
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListRegexPatternSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2865,16 +2865,16 @@ func (c *WAFV2) ListResourcesForWebACLRequest(input *ListResourcesForWebACLInput
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListResourcesForWebACL for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -2970,12 +2970,12 @@ func (c *WAFV2) ListRuleGroupsRequest(input *ListRuleGroupsInput) (req *request.
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListRuleGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3070,12 +3070,12 @@ func (c *WAFV2) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3090,14 +3090,14 @@ func (c *WAFV2) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -3181,12 +3181,12 @@ func (c *WAFV2) ListWebACLsRequest(input *ListWebACLsInput) (req *request.Reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation ListWebACLs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3301,22 +3301,22 @@ func (c *WAFV2) PutLoggingConfigurationRequest(input *PutLoggingConfigurationInp
 // See the AWS API reference guide for AWS WAFV2's
 // API operation PutLoggingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFServiceLinkedRoleErrorException "WAFServiceLinkedRoleErrorException"
+//   * WAFServiceLinkedRoleErrorException
 //   AWS WAF is not able to access the service linked role. This can be caused
 //   by a previous PutLoggingConfiguration request, which can lock the service
 //   linked role for about 20 seconds. Please try your request again. The service
@@ -3326,7 +3326,7 @@ func (c *WAFV2) PutLoggingConfigurationRequest(input *PutLoggingConfigurationInp
 //   again. If you receive this same exception again, you will have to wait additional
 //   time until the role is unlocked.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3426,12 +3426,12 @@ func (c *WAFV2) TagResourceRequest(input *TagResourceInput) (req *request.Reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3446,20 +3446,20 @@ func (c *WAFV2) TagResourceRequest(input *TagResourceInput) (req *request.Reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -3547,12 +3547,12 @@ func (c *WAFV2) UntagResourceRequest(input *UntagResourceInput) (req *request.Re
 // See the AWS API reference guide for AWS WAFV2's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3567,14 +3567,14 @@ func (c *WAFV2) UntagResourceRequest(input *UntagResourceInput) (req *request.Re
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFTagOperationException "WAFTagOperationException"
+//   * WAFTagOperationException
 //   An error occurred during the tagging operation. Retry your request.
 //
-//   * ErrCodeWAFTagOperationInternalErrorException "WAFTagOperationInternalErrorException"
+//   * WAFTagOperationInternalErrorException
 //   AWS WAF couldn’t perform your tagging operation because of an internal
 //   error. Retry your request.
 //
@@ -3658,12 +3658,12 @@ func (c *WAFV2) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation UpdateIPSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3678,21 +3678,21 @@ func (c *WAFV2) UpdateIPSetRequest(input *UpdateIPSetInput) (req *request.Reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -3778,12 +3778,12 @@ func (c *WAFV2) UpdateRegexPatternSetRequest(input *UpdateRegexPatternSetInput) 
 // See the AWS API reference guide for AWS WAFV2's
 // API operation UpdateRegexPatternSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3798,21 +3798,21 @@ func (c *WAFV2) UpdateRegexPatternSetRequest(input *UpdateRegexPatternSetInput) 
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
@@ -3904,12 +3904,12 @@ func (c *WAFV2) UpdateRuleGroupRequest(input *UpdateRuleGroupInput) (req *reques
 // See the AWS API reference guide for AWS WAFV2's
 // API operation UpdateRuleGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -3924,27 +3924,27 @@ func (c *WAFV2) UpdateRuleGroupRequest(input *UpdateRuleGroupInput) (req *reques
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFUnavailableEntityException "WAFUnavailableEntityException"
+//   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/UpdateRuleGroup
@@ -4036,12 +4036,12 @@ func (c *WAFV2) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Requ
 // See the AWS API reference guide for AWS WAFV2's
 // API operation UpdateWebACL for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeWAFInternalErrorException "WAFInternalErrorException"
+// Returned Error Types:
+//   * WAFInternalErrorException
 //   Your request is valid, but AWS WAF couldn’t perform the operation because
 //   of a system problem. Retry your request.
 //
-//   * ErrCodeWAFInvalidParameterException "WAFInvalidParameterException"
+//   * WAFInvalidParameterException
 //   The operation failed because AWS WAF didn't recognize a parameter in the
 //   request. For example:
 //
@@ -4056,31 +4056,31 @@ func (c *WAFV2) UpdateWebACLRequest(input *UpdateWebACLInput) (req *request.Requ
 //      * Your request references an ARN that is malformed, or corresponds to
 //      a resource with which a Web ACL cannot be associated.
 //
-//   * ErrCodeWAFNonexistentItemException "WAFNonexistentItemException"
+//   * WAFNonexistentItemException
 //   AWS WAF couldn’t perform the operation because your resource doesn’t
 //   exist.
 //
-//   * ErrCodeWAFDuplicateItemException "WAFDuplicateItemException"
+//   * WAFDuplicateItemException
 //   AWS WAF couldn’t perform the operation because the resource that you tried
 //   to save is a duplicate of an existing one.
 //
-//   * ErrCodeWAFOptimisticLockException "WAFOptimisticLockException"
+//   * WAFOptimisticLockException
 //   AWS WAF couldn’t save your changes because you tried to update or delete
 //   a resource that has changed since you last retrieved it. Get the resource
 //   again, make any changes you need to make to the new copy, and retry your
 //   operation.
 //
-//   * ErrCodeWAFLimitsExceededException "WAFLimitsExceededException"
+//   * WAFLimitsExceededException
 //   AWS WAF couldn’t perform the operation because you exceeded your resource
 //   limit. For example, the maximum number of WebACL objects that you can create
 //   for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeWAFInvalidResourceException "WAFInvalidResourceException"
+//   * WAFInvalidResourceException
 //   AWS WAF couldn’t perform the operation because the resource that you requested
 //   isn’t valid. Check the resource, and try again.
 //
-//   * ErrCodeWAFUnavailableEntityException "WAFUnavailableEntityException"
+//   * WAFUnavailableEntityException
 //   AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/wafv2-2019-07-29/UpdateWebACL
@@ -11927,6 +11927,715 @@ func (s *VisibilityConfig) SetMetricName(v string) *VisibilityConfig {
 func (s *VisibilityConfig) SetSampledRequestsEnabled(v bool) *VisibilityConfig {
 	s.SampledRequestsEnabled = &v
 	return s
+}
+
+// AWS WAF couldn’t perform the operation because your resource is being used
+// by another resource or it’s associated with another resource.
+type WAFAssociatedItemException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFAssociatedItemException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFAssociatedItemException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFAssociatedItemException(v protocol.ResponseMetadata) error {
+	return &WAFAssociatedItemException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFAssociatedItemException) Code() string {
+	return "WAFAssociatedItemException"
+}
+
+// Message returns the exception's message.
+func (s WAFAssociatedItemException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFAssociatedItemException) OrigErr() error {
+	return nil
+}
+
+func (s WAFAssociatedItemException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFAssociatedItemException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFAssociatedItemException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF couldn’t perform the operation because the resource that you tried
+// to save is a duplicate of an existing one.
+type WAFDuplicateItemException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFDuplicateItemException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFDuplicateItemException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFDuplicateItemException(v protocol.ResponseMetadata) error {
+	return &WAFDuplicateItemException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFDuplicateItemException) Code() string {
+	return "WAFDuplicateItemException"
+}
+
+// Message returns the exception's message.
+func (s WAFDuplicateItemException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFDuplicateItemException) OrigErr() error {
+	return nil
+}
+
+func (s WAFDuplicateItemException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFDuplicateItemException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFDuplicateItemException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Your request is valid, but AWS WAF couldn’t perform the operation because
+// of a system problem. Retry your request.
+type WAFInternalErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFInternalErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFInternalErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFInternalErrorException(v protocol.ResponseMetadata) error {
+	return &WAFInternalErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFInternalErrorException) Code() string {
+	return "WAFInternalErrorException"
+}
+
+// Message returns the exception's message.
+func (s WAFInternalErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFInternalErrorException) OrigErr() error {
+	return nil
+}
+
+func (s WAFInternalErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFInternalErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFInternalErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The operation failed because AWS WAF didn't recognize a parameter in the
+// request. For example:
+//
+//    * You specified an invalid parameter name or value.
+//
+//    * Your nested statement isn't valid. You might have tried to nest a statement
+//    that can’t be nested.
+//
+//    * You tried to update a WebACL with a DefaultAction that isn't among the
+//    types available at DefaultAction.
+//
+//    * Your request references an ARN that is malformed, or corresponds to
+//    a resource with which a Web ACL cannot be associated.
+type WAFInvalidParameterException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Field *string `type:"string" enum:"ParameterExceptionField"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	Parameter *string `min:"1" type:"string"`
+
+	Reason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s WAFInvalidParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFInvalidParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFInvalidParameterException(v protocol.ResponseMetadata) error {
+	return &WAFInvalidParameterException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFInvalidParameterException) Code() string {
+	return "WAFInvalidParameterException"
+}
+
+// Message returns the exception's message.
+func (s WAFInvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFInvalidParameterException) OrigErr() error {
+	return nil
+}
+
+func (s WAFInvalidParameterException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFInvalidParameterException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFInvalidParameterException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF couldn’t perform the operation because the resource that you requested
+// isn’t valid. Check the resource, and try again.
+type WAFInvalidResourceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFInvalidResourceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFInvalidResourceException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFInvalidResourceException(v protocol.ResponseMetadata) error {
+	return &WAFInvalidResourceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFInvalidResourceException) Code() string {
+	return "WAFInvalidResourceException"
+}
+
+// Message returns the exception's message.
+func (s WAFInvalidResourceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFInvalidResourceException) OrigErr() error {
+	return nil
+}
+
+func (s WAFInvalidResourceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFInvalidResourceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFInvalidResourceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF couldn’t perform the operation because you exceeded your resource
+// limit. For example, the maximum number of WebACL objects that you can create
+// for an AWS account. For more information, see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+// in the AWS WAF Developer Guide.
+type WAFLimitsExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFLimitsExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFLimitsExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFLimitsExceededException(v protocol.ResponseMetadata) error {
+	return &WAFLimitsExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFLimitsExceededException) Code() string {
+	return "WAFLimitsExceededException"
+}
+
+// Message returns the exception's message.
+func (s WAFLimitsExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFLimitsExceededException) OrigErr() error {
+	return nil
+}
+
+func (s WAFLimitsExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFLimitsExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFLimitsExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF couldn’t perform the operation because your resource doesn’t
+// exist.
+type WAFNonexistentItemException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFNonexistentItemException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFNonexistentItemException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFNonexistentItemException(v protocol.ResponseMetadata) error {
+	return &WAFNonexistentItemException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFNonexistentItemException) Code() string {
+	return "WAFNonexistentItemException"
+}
+
+// Message returns the exception's message.
+func (s WAFNonexistentItemException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFNonexistentItemException) OrigErr() error {
+	return nil
+}
+
+func (s WAFNonexistentItemException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFNonexistentItemException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFNonexistentItemException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF couldn’t save your changes because you tried to update or delete
+// a resource that has changed since you last retrieved it. Get the resource
+// again, make any changes you need to make to the new copy, and retry your
+// operation.
+type WAFOptimisticLockException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFOptimisticLockException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFOptimisticLockException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFOptimisticLockException(v protocol.ResponseMetadata) error {
+	return &WAFOptimisticLockException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFOptimisticLockException) Code() string {
+	return "WAFOptimisticLockException"
+}
+
+// Message returns the exception's message.
+func (s WAFOptimisticLockException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFOptimisticLockException) OrigErr() error {
+	return nil
+}
+
+func (s WAFOptimisticLockException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFOptimisticLockException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFOptimisticLockException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF is not able to access the service linked role. This can be caused
+// by a previous PutLoggingConfiguration request, which can lock the service
+// linked role for about 20 seconds. Please try your request again. The service
+// linked role can also be locked by a previous DeleteServiceLinkedRole request,
+// which can lock the role for 15 minutes or more. If you recently made a call
+// to DeleteServiceLinkedRole, wait at least 15 minutes and try the request
+// again. If you receive this same exception again, you will have to wait additional
+// time until the role is unlocked.
+type WAFServiceLinkedRoleErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFServiceLinkedRoleErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFServiceLinkedRoleErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFServiceLinkedRoleErrorException(v protocol.ResponseMetadata) error {
+	return &WAFServiceLinkedRoleErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFServiceLinkedRoleErrorException) Code() string {
+	return "WAFServiceLinkedRoleErrorException"
+}
+
+// Message returns the exception's message.
+func (s WAFServiceLinkedRoleErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFServiceLinkedRoleErrorException) OrigErr() error {
+	return nil
+}
+
+func (s WAFServiceLinkedRoleErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFServiceLinkedRoleErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFServiceLinkedRoleErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An error occurred during the tagging operation. Retry your request.
+type WAFTagOperationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFTagOperationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFTagOperationException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFTagOperationException(v protocol.ResponseMetadata) error {
+	return &WAFTagOperationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFTagOperationException) Code() string {
+	return "WAFTagOperationException"
+}
+
+// Message returns the exception's message.
+func (s WAFTagOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFTagOperationException) OrigErr() error {
+	return nil
+}
+
+func (s WAFTagOperationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFTagOperationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFTagOperationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF couldn’t perform your tagging operation because of an internal
+// error. Retry your request.
+type WAFTagOperationInternalErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFTagOperationInternalErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFTagOperationInternalErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFTagOperationInternalErrorException(v protocol.ResponseMetadata) error {
+	return &WAFTagOperationInternalErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFTagOperationInternalErrorException) Code() string {
+	return "WAFTagOperationInternalErrorException"
+}
+
+// Message returns the exception's message.
+func (s WAFTagOperationInternalErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFTagOperationInternalErrorException) OrigErr() error {
+	return nil
+}
+
+func (s WAFTagOperationInternalErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFTagOperationInternalErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFTagOperationInternalErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
+type WAFUnavailableEntityException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s WAFUnavailableEntityException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WAFUnavailableEntityException) GoString() string {
+	return s.String()
+}
+
+func newErrorWAFUnavailableEntityException(v protocol.ResponseMetadata) error {
+	return &WAFUnavailableEntityException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s WAFUnavailableEntityException) Code() string {
+	return "WAFUnavailableEntityException"
+}
+
+// Message returns the exception's message.
+func (s WAFUnavailableEntityException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s WAFUnavailableEntityException) OrigErr() error {
+	return nil
+}
+
+func (s WAFUnavailableEntityException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s WAFUnavailableEntityException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s WAFUnavailableEntityException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 //

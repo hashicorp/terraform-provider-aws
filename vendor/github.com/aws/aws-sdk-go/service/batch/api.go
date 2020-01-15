@@ -70,13 +70,13 @@ func (c *Batch) CancelJobRequest(input *CancelJobInput) (req *request.Request, o
 // See the AWS API reference guide for AWS Batch's
 // API operation CancelJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/CancelJob
@@ -193,13 +193,13 @@ func (c *Batch) CreateComputeEnvironmentRequest(input *CreateComputeEnvironmentI
 // See the AWS API reference guide for AWS Batch's
 // API operation CreateComputeEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/CreateComputeEnvironment
@@ -285,13 +285,13 @@ func (c *Batch) CreateJobQueueRequest(input *CreateJobQueueInput) (req *request.
 // See the AWS API reference guide for AWS Batch's
 // API operation CreateJobQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/CreateJobQueue
@@ -374,13 +374,13 @@ func (c *Batch) DeleteComputeEnvironmentRequest(input *DeleteComputeEnvironmentI
 // See the AWS API reference guide for AWS Batch's
 // API operation DeleteComputeEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DeleteComputeEnvironment
@@ -464,13 +464,13 @@ func (c *Batch) DeleteJobQueueRequest(input *DeleteJobQueueInput) (req *request.
 // See the AWS API reference guide for AWS Batch's
 // API operation DeleteJobQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DeleteJobQueue
@@ -549,13 +549,13 @@ func (c *Batch) DeregisterJobDefinitionRequest(input *DeregisterJobDefinitionInp
 // See the AWS API reference guide for AWS Batch's
 // API operation DeregisterJobDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DeregisterJobDefinition
@@ -643,13 +643,13 @@ func (c *Batch) DescribeComputeEnvironmentsRequest(input *DescribeComputeEnviron
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeComputeEnvironments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeComputeEnvironments
@@ -786,13 +786,13 @@ func (c *Batch) DescribeJobDefinitionsRequest(input *DescribeJobDefinitionsInput
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeJobDefinitions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeJobDefinitions
@@ -928,13 +928,13 @@ func (c *Batch) DescribeJobQueuesRequest(input *DescribeJobQueuesInput) (req *re
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeJobQueues for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeJobQueues
@@ -1064,13 +1064,13 @@ func (c *Batch) DescribeJobsRequest(input *DescribeJobsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Batch's
 // API operation DescribeJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/DescribeJobs
@@ -1165,13 +1165,13 @@ func (c *Batch) ListJobsRequest(input *ListJobsInput) (req *request.Request, out
 // See the AWS API reference guide for AWS Batch's
 // API operation ListJobs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/ListJobs
@@ -1301,13 +1301,13 @@ func (c *Batch) RegisterJobDefinitionRequest(input *RegisterJobDefinitionInput) 
 // See the AWS API reference guide for AWS Batch's
 // API operation RegisterJobDefinition for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/RegisterJobDefinition
@@ -1386,13 +1386,13 @@ func (c *Batch) SubmitJobRequest(input *SubmitJobInput) (req *request.Request, o
 // See the AWS API reference guide for AWS Batch's
 // API operation SubmitJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/SubmitJob
@@ -1473,13 +1473,13 @@ func (c *Batch) TerminateJobRequest(input *TerminateJobInput) (req *request.Requ
 // See the AWS API reference guide for AWS Batch's
 // API operation TerminateJob for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/TerminateJob
@@ -1557,13 +1557,13 @@ func (c *Batch) UpdateComputeEnvironmentRequest(input *UpdateComputeEnvironmentI
 // See the AWS API reference guide for AWS Batch's
 // API operation UpdateComputeEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/UpdateComputeEnvironment
@@ -1641,13 +1641,13 @@ func (c *Batch) UpdateJobQueueRequest(input *UpdateJobQueueInput) (req *request.
 // See the AWS API reference guide for AWS Batch's
 // API operation UpdateJobQueue for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeClientException "ClientException"
+// Returned Error Types:
+//   * ClientException
 //   These errors are usually caused by a client action, such as using an action
 //   or resource on behalf of a user that doesn't have permissions to use the
 //   action or resource, or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server issue.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/batch-2016-08-10/UpdateJobQueue
@@ -1971,6 +1971,64 @@ func (s CancelJobOutput) String() string {
 // GoString returns the string representation
 func (s CancelJobOutput) GoString() string {
 	return s.String()
+}
+
+// These errors are usually caused by a client action, such as using an action
+// or resource on behalf of a user that doesn't have permissions to use the
+// action or resource, or specifying an identifier that is not valid.
+type ClientException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientException(v protocol.ResponseMetadata) error {
+	return &ClientException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClientException) Code() string {
+	return "ClientException"
+}
+
+// Message returns the exception's message.
+func (s ClientException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClientException) OrigErr() error {
+	return nil
+}
+
+func (s ClientException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClientException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClientException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An object representing an AWS Batch compute environment.
@@ -5443,6 +5501,62 @@ func (s RetryStrategy) GoString() string {
 func (s *RetryStrategy) SetAttempts(v int64) *RetryStrategy {
 	s.Attempts = &v
 	return s
+}
+
+// These errors are usually caused by a server issue.
+type ServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorServerException(v protocol.ResponseMetadata) error {
+	return &ServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServerException) Code() string {
+	return "ServerException"
+}
+
+// Message returns the exception's message.
+func (s ServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServerException) OrigErr() error {
+	return nil
+}
+
+func (s ServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServerException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type SubmitJobInput struct {

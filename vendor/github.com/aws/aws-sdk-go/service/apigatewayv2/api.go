@@ -3,6 +3,7 @@
 package apigatewayv2
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -65,19 +66,19 @@ func (c *ApiGatewayV2) CreateApiRequest(input *CreateApiInput) (req *request.Req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -157,19 +158,19 @@ func (c *ApiGatewayV2) CreateApiMappingRequest(input *CreateApiMappingInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateApiMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -249,19 +250,19 @@ func (c *ApiGatewayV2) CreateAuthorizerRequest(input *CreateAuthorizerInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -341,19 +342,19 @@ func (c *ApiGatewayV2) CreateDeploymentRequest(input *CreateDeploymentInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateDeployment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -433,24 +434,24 @@ func (c *ApiGatewayV2) CreateDomainNameRequest(input *CreateDomainNameInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateDomainName for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/CreateDomainName
 func (c *ApiGatewayV2) CreateDomainName(input *CreateDomainNameInput) (*CreateDomainNameOutput, error) {
@@ -527,19 +528,19 @@ func (c *ApiGatewayV2) CreateIntegrationRequest(input *CreateIntegrationInput) (
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateIntegration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -619,19 +620,19 @@ func (c *ApiGatewayV2) CreateIntegrationResponseRequest(input *CreateIntegration
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateIntegrationResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -711,19 +712,19 @@ func (c *ApiGatewayV2) CreateModelRequest(input *CreateModelInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -803,19 +804,19 @@ func (c *ApiGatewayV2) CreateRouteRequest(input *CreateRouteInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateRoute for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -895,19 +896,19 @@ func (c *ApiGatewayV2) CreateRouteResponseRequest(input *CreateRouteResponseInpu
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateRouteResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -987,19 +988,19 @@ func (c *ApiGatewayV2) CreateStageRequest(input *CreateStageInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation CreateStage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -1080,12 +1081,12 @@ func (c *ApiGatewayV2) DeleteApiRequest(input *DeleteApiInput) (req *request.Req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteApi
@@ -1164,15 +1165,15 @@ func (c *ApiGatewayV2) DeleteApiMappingRequest(input *DeleteApiMappingInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteApiMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -1252,12 +1253,12 @@ func (c *ApiGatewayV2) DeleteAuthorizerRequest(input *DeleteAuthorizerInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteAuthorizer
@@ -1336,12 +1337,12 @@ func (c *ApiGatewayV2) DeleteCorsConfigurationRequest(input *DeleteCorsConfigura
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteCorsConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteCorsConfiguration
@@ -1420,12 +1421,12 @@ func (c *ApiGatewayV2) DeleteDeploymentRequest(input *DeleteDeploymentInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteDeployment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteDeployment
@@ -1504,12 +1505,12 @@ func (c *ApiGatewayV2) DeleteDomainNameRequest(input *DeleteDomainNameInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteDomainName for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteDomainName
@@ -1588,12 +1589,12 @@ func (c *ApiGatewayV2) DeleteIntegrationRequest(input *DeleteIntegrationInput) (
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteIntegration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteIntegration
@@ -1672,12 +1673,12 @@ func (c *ApiGatewayV2) DeleteIntegrationResponseRequest(input *DeleteIntegration
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteIntegrationResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteIntegrationResponse
@@ -1756,12 +1757,12 @@ func (c *ApiGatewayV2) DeleteModelRequest(input *DeleteModelInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteModel
@@ -1840,12 +1841,12 @@ func (c *ApiGatewayV2) DeleteRouteRequest(input *DeleteRouteInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteRoute for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteRoute
@@ -1924,12 +1925,12 @@ func (c *ApiGatewayV2) DeleteRouteResponseRequest(input *DeleteRouteResponseInpu
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteRouteResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteRouteResponse
@@ -2008,12 +2009,12 @@ func (c *ApiGatewayV2) DeleteRouteSettingsRequest(input *DeleteRouteSettingsInpu
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteRouteSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteRouteSettings
@@ -2092,12 +2093,12 @@ func (c *ApiGatewayV2) DeleteStageRequest(input *DeleteStageInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation DeleteStage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/DeleteStage
@@ -2175,12 +2176,12 @@ func (c *ApiGatewayV2) GetApiRequest(input *GetApiInput) (req *request.Request, 
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetApi
@@ -2258,15 +2259,15 @@ func (c *ApiGatewayV2) GetApiMappingRequest(input *GetApiMappingInput) (req *req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetApiMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -2345,15 +2346,15 @@ func (c *ApiGatewayV2) GetApiMappingsRequest(input *GetApiMappingsInput) (req *r
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetApiMappings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -2432,15 +2433,15 @@ func (c *ApiGatewayV2) GetApisRequest(input *GetApisInput) (req *request.Request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetApis for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -2519,12 +2520,12 @@ func (c *ApiGatewayV2) GetAuthorizerRequest(input *GetAuthorizerInput) (req *req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetAuthorizer
@@ -2602,15 +2603,15 @@ func (c *ApiGatewayV2) GetAuthorizersRequest(input *GetAuthorizersInput) (req *r
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetAuthorizers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -2689,12 +2690,12 @@ func (c *ApiGatewayV2) GetDeploymentRequest(input *GetDeploymentInput) (req *req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetDeployment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetDeployment
@@ -2772,15 +2773,15 @@ func (c *ApiGatewayV2) GetDeploymentsRequest(input *GetDeploymentsInput) (req *r
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetDeployments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -2859,12 +2860,12 @@ func (c *ApiGatewayV2) GetDomainNameRequest(input *GetDomainNameInput) (req *req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetDomainName for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetDomainName
@@ -2942,15 +2943,15 @@ func (c *ApiGatewayV2) GetDomainNamesRequest(input *GetDomainNamesInput) (req *r
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetDomainNames for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -3029,12 +3030,12 @@ func (c *ApiGatewayV2) GetIntegrationRequest(input *GetIntegrationInput) (req *r
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetIntegration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetIntegration
@@ -3112,12 +3113,12 @@ func (c *ApiGatewayV2) GetIntegrationResponseRequest(input *GetIntegrationRespon
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetIntegrationResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetIntegrationResponse
@@ -3195,15 +3196,15 @@ func (c *ApiGatewayV2) GetIntegrationResponsesRequest(input *GetIntegrationRespo
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetIntegrationResponses for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -3282,15 +3283,15 @@ func (c *ApiGatewayV2) GetIntegrationsRequest(input *GetIntegrationsInput) (req 
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetIntegrations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -3369,12 +3370,12 @@ func (c *ApiGatewayV2) GetModelRequest(input *GetModelInput) (req *request.Reque
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetModel
@@ -3452,12 +3453,12 @@ func (c *ApiGatewayV2) GetModelTemplateRequest(input *GetModelTemplateInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetModelTemplate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetModelTemplate
@@ -3535,15 +3536,15 @@ func (c *ApiGatewayV2) GetModelsRequest(input *GetModelsInput) (req *request.Req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetModels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -3622,12 +3623,12 @@ func (c *ApiGatewayV2) GetRouteRequest(input *GetRouteInput) (req *request.Reque
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetRoute for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetRoute
@@ -3705,12 +3706,12 @@ func (c *ApiGatewayV2) GetRouteResponseRequest(input *GetRouteResponseInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetRouteResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetRouteResponse
@@ -3788,15 +3789,15 @@ func (c *ApiGatewayV2) GetRouteResponsesRequest(input *GetRouteResponsesInput) (
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetRouteResponses for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -3875,15 +3876,15 @@ func (c *ApiGatewayV2) GetRoutesRequest(input *GetRoutesInput) (req *request.Req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetRoutes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -3962,12 +3963,12 @@ func (c *ApiGatewayV2) GetStageRequest(input *GetStageInput) (req *request.Reque
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetStage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/GetStage
@@ -4045,15 +4046,15 @@ func (c *ApiGatewayV2) GetStagesRequest(input *GetStagesInput) (req *request.Req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetStages for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
@@ -4132,19 +4133,19 @@ func (c *ApiGatewayV2) GetTagsRequest(input *GetTagsInput) (req *request.Request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation GetTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4224,19 +4225,19 @@ func (c *ApiGatewayV2) ImportApiRequest(input *ImportApiInput) (req *request.Req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation ImportApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4316,19 +4317,19 @@ func (c *ApiGatewayV2) ReimportApiRequest(input *ReimportApiInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation ReimportApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4409,19 +4410,19 @@ func (c *ApiGatewayV2) TagResourceRequest(input *TagResourceInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4502,19 +4503,19 @@ func (c *ApiGatewayV2) UntagResourceRequest(input *UntagResourceInput) (req *req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4594,19 +4595,19 @@ func (c *ApiGatewayV2) UpdateApiRequest(input *UpdateApiInput) (req *request.Req
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateApi for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4686,19 +4687,19 @@ func (c *ApiGatewayV2) UpdateApiMappingRequest(input *UpdateApiMappingInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateApiMapping for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4778,19 +4779,19 @@ func (c *ApiGatewayV2) UpdateAuthorizerRequest(input *UpdateAuthorizerInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateAuthorizer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4870,19 +4871,19 @@ func (c *ApiGatewayV2) UpdateDeploymentRequest(input *UpdateDeploymentInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateDeployment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -4962,19 +4963,19 @@ func (c *ApiGatewayV2) UpdateDomainNameRequest(input *UpdateDomainNameInput) (re
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateDomainName for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -5054,19 +5055,19 @@ func (c *ApiGatewayV2) UpdateIntegrationRequest(input *UpdateIntegrationInput) (
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateIntegration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -5146,19 +5147,19 @@ func (c *ApiGatewayV2) UpdateIntegrationResponseRequest(input *UpdateIntegration
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateIntegrationResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -5238,19 +5239,19 @@ func (c *ApiGatewayV2) UpdateModelRequest(input *UpdateModelInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateModel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -5330,19 +5331,19 @@ func (c *ApiGatewayV2) UpdateRouteRequest(input *UpdateRouteInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateRoute for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -5422,19 +5423,19 @@ func (c *ApiGatewayV2) UpdateRouteResponseRequest(input *UpdateRouteResponseInpu
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateRouteResponse for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -5514,19 +5515,19 @@ func (c *ApiGatewayV2) UpdateStageRequest(input *UpdateStageInput) (req *request
 // See the AWS API reference guide for AmazonApiGatewayV2's
 // API operation UpdateStage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //   The resource specified in the request was not found. See the message field
 //   for more information.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   A limit has been exceeded. See the accompanying error message for details.
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //   The request is not valid, for example, the input is incomplete or incorrect.
 //   See the accompanying error message for details.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   The requested operation would cause a conflict with the current state of
 //   a service resource associated with the request. Resolve the conflict before
 //   retrying this request. See the accompanying error message for details.
@@ -5551,6 +5552,61 @@ func (c *ApiGatewayV2) UpdateStageWithContext(ctx aws.Context, input *UpdateStag
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Settings for logging access in a stage.
@@ -5924,6 +5980,123 @@ func (s *Authorizer) SetJwtConfiguration(v *JWTConfiguration) *Authorizer {
 func (s *Authorizer) SetName(v string) *Authorizer {
 	s.Name = &v
 	return s
+}
+
+// The request is not valid, for example, the input is incomplete or incorrect.
+// See the accompanying error message for details.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Describes the error encountered.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The requested operation would cause a conflict with the current state of
+// a service resource associated with the request. Resolve the conflict before
+// retrying this request. See the accompanying error message for details.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Describes the error encountered.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Represents a CORS configuration. Supported only for HTTP APIs. See Configuring
@@ -12899,6 +13072,67 @@ func (s *Model) SetSchema(v string) *Model {
 	return s
 }
 
+// The resource specified in the request was not found. See the message field
+// for more information.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// Describes the error encountered.
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The resource type.
+	ResourceType *string `locationName:"resourceType" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Validation constraints imposed on parameters of a request (path, query string,
 // headers).
 type ParameterConstraints struct {
@@ -13620,6 +13854,64 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// A limit has been exceeded. See the accompanying error message for details.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	LimitType *string `locationName:"limitType" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UntagResourceInput struct {

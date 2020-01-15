@@ -70,14 +70,14 @@ func (c *CloudWatchEvents) ActivateEventSourceRequest(input *ActivateEventSource
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ActivateEventSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   The specified state isn't a valid state for an event source.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ActivateEventSource
@@ -160,23 +160,23 @@ func (c *CloudWatchEvents) CreateEventBusRequest(input *CreateEventBusInput) (re
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation CreateEventBus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
 //   The resource that you're trying to create already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   The specified state isn't a valid state for an event source.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   You tried to create more resources than is allowed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/CreateEventBus
@@ -282,17 +282,17 @@ func (c *CloudWatchEvents) CreatePartnerEventSourceRequest(input *CreatePartnerE
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation CreatePartnerEventSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
 //   The resource that you're trying to create already exists.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   You tried to create more resources than is allowed.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/CreatePartnerEventSource
@@ -377,14 +377,14 @@ func (c *CloudWatchEvents) DeactivateEventSourceRequest(input *DeactivateEventSo
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DeactivateEventSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInvalidStateException "InvalidStateException"
+//   * InvalidStateException
 //   The specified state isn't a valid state for an event source.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DeactivateEventSource
@@ -467,8 +467,8 @@ func (c *CloudWatchEvents) DeleteEventBusRequest(input *DeleteEventBusInput) (re
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DeleteEventBus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DeleteEventBus
@@ -551,8 +551,8 @@ func (c *CloudWatchEvents) DeletePartnerEventSourceRequest(input *DeletePartnerE
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DeletePartnerEventSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DeletePartnerEventSource
@@ -642,21 +642,21 @@ func (c *CloudWatchEvents) DeleteRuleRequest(input *DeleteRuleInput) (req *reque
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DeleteRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
 //   targets from the rule. You can't modify these managed rules by using DisableRule,
 //   EnableRule, PutTargets, PutRule, TagResource, or UntagResource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DeleteRule
@@ -742,11 +742,11 @@ func (c *CloudWatchEvents) DescribeEventBusRequest(input *DescribeEventBusInput)
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DescribeEventBus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DescribeEventBus
@@ -827,11 +827,11 @@ func (c *CloudWatchEvents) DescribeEventSourceRequest(input *DescribeEventSource
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DescribeEventSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DescribeEventSource
@@ -913,11 +913,11 @@ func (c *CloudWatchEvents) DescribePartnerEventSourceRequest(input *DescribePart
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DescribePartnerEventSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DescribePartnerEventSource
@@ -998,11 +998,11 @@ func (c *CloudWatchEvents) DescribeRuleRequest(input *DescribeRuleInput) (req *r
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DescribeRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DescribeRule
@@ -1085,21 +1085,21 @@ func (c *CloudWatchEvents) DisableRuleRequest(input *DisableRuleInput) (req *req
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation DisableRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
 //   targets from the rule. You can't modify these managed rules by using DisableRule,
 //   EnableRule, PutTargets, PutRule, TagResource, or UntagResource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/DisableRule
@@ -1182,21 +1182,21 @@ func (c *CloudWatchEvents) EnableRuleRequest(input *EnableRuleInput) (req *reque
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation EnableRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
 //   targets from the rule. You can't modify these managed rules by using DisableRule,
 //   EnableRule, PutTargets, PutRule, TagResource, or UntagResource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/EnableRule
@@ -1277,8 +1277,8 @@ func (c *CloudWatchEvents) ListEventBusesRequest(input *ListEventBusesInput) (re
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListEventBuses for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListEventBuses
@@ -1360,8 +1360,8 @@ func (c *CloudWatchEvents) ListEventSourcesRequest(input *ListEventSourcesInput)
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListEventSources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListEventSources
@@ -1442,11 +1442,11 @@ func (c *CloudWatchEvents) ListPartnerEventSourceAccountsRequest(input *ListPart
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListPartnerEventSourceAccounts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListPartnerEventSourceAccounts
@@ -1527,8 +1527,8 @@ func (c *CloudWatchEvents) ListPartnerEventSourcesRequest(input *ListPartnerEven
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListPartnerEventSources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListPartnerEventSources
@@ -1607,11 +1607,11 @@ func (c *CloudWatchEvents) ListRuleNamesByTargetRequest(input *ListRuleNamesByTa
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListRuleNamesByTarget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListRuleNamesByTarget
@@ -1693,11 +1693,11 @@ func (c *CloudWatchEvents) ListRulesRequest(input *ListRulesInput) (req *request
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListRules for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListRules
@@ -1776,11 +1776,11 @@ func (c *CloudWatchEvents) ListTagsForResourceRequest(input *ListTagsForResource
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListTagsForResource
@@ -1858,11 +1858,11 @@ func (c *CloudWatchEvents) ListTargetsByRuleRequest(input *ListTargetsByRuleInpu
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation ListTargetsByRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/ListTargetsByRule
@@ -1941,8 +1941,8 @@ func (c *CloudWatchEvents) PutEventsRequest(input *PutEventsInput) (req *request
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation PutEvents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PutEvents
@@ -2024,8 +2024,8 @@ func (c *CloudWatchEvents) PutPartnerEventsRequest(input *PutPartnerEventsInput)
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation PutPartnerEvents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalException "InternalException"
+// Returned Error Types:
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PutPartnerEvents
@@ -2123,17 +2123,17 @@ func (c *CloudWatchEvents) PutPermissionRequest(input *PutPermissionInput) (req 
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation PutPermission for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
+//   * PolicyLengthExceededException
 //   The event bus policy is too long. For more information, see the limits.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PutPermission
@@ -2264,27 +2264,27 @@ func (c *CloudWatchEvents) PutRuleRequest(input *PutRuleInput) (req *request.Req
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation PutRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidEventPatternException "InvalidEventPatternException"
+// Returned Error Types:
+//   * InvalidEventPatternException
 //   The event pattern isn't valid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   You tried to create more resources than is allowed.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
 //   targets from the rule. You can't modify these managed rules by using DisableRule,
 //   EnableRule, PutTargets, PutRule, TagResource, or UntagResource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PutRule
@@ -2464,24 +2464,24 @@ func (c *CloudWatchEvents) PutTargetsRequest(input *PutTargetsInput) (req *reque
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation PutTargets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   You tried to create more resources than is allowed.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
 //   targets from the rule. You can't modify these managed rules by using DisableRule,
 //   EnableRule, PutTargets, PutRule, TagResource, or UntagResource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/PutTargets
@@ -2563,14 +2563,14 @@ func (c *CloudWatchEvents) RemovePermissionRequest(input *RemovePermissionInput)
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation RemovePermission for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/RemovePermission
@@ -2658,21 +2658,21 @@ func (c *CloudWatchEvents) RemoveTargetsRequest(input *RemoveTargetsInput) (req 
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation RemoveTargets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
 //   targets from the rule. You can't modify these managed rules by using DisableRule,
 //   EnableRule, PutTargets, PutRule, TagResource, or UntagResource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/RemoveTargets
@@ -2766,17 +2766,17 @@ func (c *CloudWatchEvents) TagResourceRequest(input *TagResourceInput) (req *req
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
@@ -2864,11 +2864,11 @@ func (c *CloudWatchEvents) TestEventPatternRequest(input *TestEventPatternInput)
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation TestEventPattern for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidEventPatternException "InvalidEventPatternException"
+// Returned Error Types:
+//   * InvalidEventPatternException
 //   The event pattern isn't valid.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/events-2015-10-07/TestEventPattern
@@ -2948,17 +2948,17 @@ func (c *CloudWatchEvents) UntagResourceRequest(input *UntagResourceInput) (req 
 // See the AWS API reference guide for Amazon CloudWatch Events's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An entity that you specified doesn't exist.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception occurs due to unexpected causes.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   There is concurrent modification on a resource.
 //
-//   * ErrCodeManagedRuleException "ManagedRuleException"
+//   * ManagedRuleException
 //   An AWS service created this rule on behalf of your account. That service
 //   manages it. If you see this error in response to DeleteRule or RemoveTargets,
 //   you can use the Force parameter in those calls to delete the rule or remove
@@ -3239,6 +3239,57 @@ func (s BatchRetryStrategy) GoString() string {
 func (s *BatchRetryStrategy) SetAttempts(v int64) *BatchRetryStrategy {
 	s.Attempts = &v
 	return s
+}
+
+// There is concurrent modification on a resource.
+type ConcurrentModificationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ConcurrentModificationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentModificationException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentModificationException(v protocol.ResponseMetadata) error {
+	return &ConcurrentModificationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConcurrentModificationException) Code() string {
+	return "ConcurrentModificationException"
+}
+
+// Message returns the exception's message.
+func (s ConcurrentModificationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConcurrentModificationException) OrigErr() error {
+	return nil
+}
+
+func (s ConcurrentModificationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConcurrentModificationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConcurrentModificationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A JSON string that you can use to limit the event bus permissions that you're
@@ -4632,6 +4683,159 @@ func (s *InputTransformer) SetInputTemplate(v string) *InputTransformer {
 	return s
 }
 
+// This exception occurs due to unexpected causes.
+type InternalException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InternalException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalException(v protocol.ResponseMetadata) error {
+	return &InternalException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalException) Code() string {
+	return "InternalException"
+}
+
+// Message returns the exception's message.
+func (s InternalException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalException) OrigErr() error {
+	return nil
+}
+
+func (s InternalException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The event pattern isn't valid.
+type InvalidEventPatternException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidEventPatternException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidEventPatternException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidEventPatternException(v protocol.ResponseMetadata) error {
+	return &InvalidEventPatternException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidEventPatternException) Code() string {
+	return "InvalidEventPatternException"
+}
+
+// Message returns the exception's message.
+func (s InvalidEventPatternException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidEventPatternException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidEventPatternException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidEventPatternException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidEventPatternException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified state isn't a valid state for an event source.
+type InvalidStateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidStateException(v protocol.ResponseMetadata) error {
+	return &InvalidStateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidStateException) Code() string {
+	return "InvalidStateException"
+}
+
+// Message returns the exception's message.
+func (s InvalidStateException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidStateException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidStateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidStateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidStateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // This object enables you to specify a JSON path to extract from the event
 // and use as the partition key for the Amazon Kinesis data stream so that you
 // can control the shard that the event goes to. If you don't include this parameter,
@@ -4674,6 +4878,57 @@ func (s *KinesisParameters) Validate() error {
 func (s *KinesisParameters) SetPartitionKeyPath(v string) *KinesisParameters {
 	s.PartitionKeyPath = &v
 	return s
+}
+
+// You tried to create more resources than is allowed.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListEventBusesInput struct {
@@ -5463,6 +5718,61 @@ func (s *ListTargetsByRuleOutput) SetTargets(v []*Target) *ListTargetsByRuleOutp
 	return s
 }
 
+// An AWS service created this rule on behalf of your account. That service
+// manages it. If you see this error in response to DeleteRule or RemoveTargets,
+// you can use the Force parameter in those calls to delete the rule or remove
+// targets from the rule. You can't modify these managed rules by using DisableRule,
+// EnableRule, PutTargets, PutRule, TagResource, or UntagResource.
+type ManagedRuleException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ManagedRuleException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ManagedRuleException) GoString() string {
+	return s.String()
+}
+
+func newErrorManagedRuleException(v protocol.ResponseMetadata) error {
+	return &ManagedRuleException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ManagedRuleException) Code() string {
+	return "ManagedRuleException"
+}
+
+// Message returns the exception's message.
+func (s ManagedRuleException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ManagedRuleException) OrigErr() error {
+	return nil
+}
+
+func (s ManagedRuleException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ManagedRuleException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ManagedRuleException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // This structure specifies the network configuration for an ECS task.
 type NetworkConfiguration struct {
 	_ struct{} `type:"structure"`
@@ -5593,6 +5903,57 @@ func (s *PartnerEventSourceAccount) SetExpirationTime(v time.Time) *PartnerEvent
 func (s *PartnerEventSourceAccount) SetState(v string) *PartnerEventSourceAccount {
 	s.State = &v
 	return s
+}
+
+// The event bus policy is too long. For more information, see the limits.
+type PolicyLengthExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s PolicyLengthExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PolicyLengthExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorPolicyLengthExceededException(v protocol.ResponseMetadata) error {
+	return &PolicyLengthExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s PolicyLengthExceededException) Code() string {
+	return "PolicyLengthExceededException"
+}
+
+// Message returns the exception's message.
+func (s PolicyLengthExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s PolicyLengthExceededException) OrigErr() error {
+	return nil
+}
+
+func (s PolicyLengthExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s PolicyLengthExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s PolicyLengthExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type PutEventsInput struct {
@@ -6654,6 +7015,108 @@ func (s *RemoveTargetsResultEntry) SetErrorMessage(v string) *RemoveTargetsResul
 func (s *RemoveTargetsResultEntry) SetTargetId(v string) *RemoveTargetsResultEntry {
 	s.TargetId = &v
 	return s
+}
+
+// The resource that you're trying to create already exists.
+type ResourceAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An entity that you specified doesn't exist.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains information about a rule in Amazon EventBridge.

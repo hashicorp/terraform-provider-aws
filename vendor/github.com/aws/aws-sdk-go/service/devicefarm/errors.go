@@ -2,6 +2,10 @@
 
 package devicefarm
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeArgumentException for service response error code
@@ -81,3 +85,18 @@ const (
 	// of tags that can be applied to a repository is 50.
 	ErrCodeTooManyTagsException = "TooManyTagsException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ArgumentException":         newErrorArgumentException,
+	"CannotDeleteException":     newErrorCannotDeleteException,
+	"IdempotencyException":      newErrorIdempotencyException,
+	"InternalServiceException":  newErrorInternalServiceException,
+	"InvalidOperationException": newErrorInvalidOperationException,
+	"LimitExceededException":    newErrorLimitExceededException,
+	"NotEligibleException":      newErrorNotEligibleException,
+	"NotFoundException":         newErrorNotFoundException,
+	"ServiceAccountException":   newErrorServiceAccountException,
+	"TagOperationException":     newErrorTagOperationException,
+	"TagPolicyException":        newErrorTagPolicyException,
+	"TooManyTagsException":      newErrorTooManyTagsException,
+}

@@ -3,6 +3,7 @@
 package cloud9
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,26 +68,26 @@ func (c *Cloud9) CreateEnvironmentEC2Request(input *CreateEnvironmentEC2Input) (
 // See the AWS API reference guide for AWS Cloud9's
 // API operation CreateEnvironmentEC2 for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/CreateEnvironmentEC2
@@ -164,26 +165,26 @@ func (c *Cloud9) CreateEnvironmentMembershipRequest(input *CreateEnvironmentMemb
 // See the AWS API reference guide for AWS Cloud9's
 // API operation CreateEnvironmentMembership for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/CreateEnvironmentMembership
@@ -263,26 +264,26 @@ func (c *Cloud9) DeleteEnvironmentRequest(input *DeleteEnvironmentInput) (req *r
 // See the AWS API reference guide for AWS Cloud9's
 // API operation DeleteEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/DeleteEnvironment
@@ -361,26 +362,26 @@ func (c *Cloud9) DeleteEnvironmentMembershipRequest(input *DeleteEnvironmentMemb
 // See the AWS API reference guide for AWS Cloud9's
 // API operation DeleteEnvironmentMembership for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/DeleteEnvironmentMembership
@@ -465,26 +466,26 @@ func (c *Cloud9) DescribeEnvironmentMembershipsRequest(input *DescribeEnvironmen
 // See the AWS API reference guide for AWS Cloud9's
 // API operation DescribeEnvironmentMemberships for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/DescribeEnvironmentMemberships
@@ -614,26 +615,26 @@ func (c *Cloud9) DescribeEnvironmentStatusRequest(input *DescribeEnvironmentStat
 // See the AWS API reference guide for AWS Cloud9's
 // API operation DescribeEnvironmentStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/DescribeEnvironmentStatus
@@ -711,26 +712,26 @@ func (c *Cloud9) DescribeEnvironmentsRequest(input *DescribeEnvironmentsInput) (
 // See the AWS API reference guide for AWS Cloud9's
 // API operation DescribeEnvironments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/DescribeEnvironments
@@ -814,26 +815,26 @@ func (c *Cloud9) ListEnvironmentsRequest(input *ListEnvironmentsInput) (req *req
 // See the AWS API reference guide for AWS Cloud9's
 // API operation ListEnvironments for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/ListEnvironments
@@ -964,26 +965,26 @@ func (c *Cloud9) UpdateEnvironmentRequest(input *UpdateEnvironmentInput) (req *r
 // See the AWS API reference guide for AWS Cloud9's
 // API operation UpdateEnvironment for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/UpdateEnvironment
@@ -1062,26 +1063,26 @@ func (c *Cloud9) UpdateEnvironmentMembershipRequest(input *UpdateEnvironmentMemb
 // See the AWS API reference guide for AWS Cloud9's
 // API operation UpdateEnvironmentMembership for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   The target request is invalid.
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //   A conflict occurred.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   The target resource cannot be found.
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //   An access permissions issue occurred.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Too many service requests were made over the given time period.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A service limit was exceeded.
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //   An internal server error occurred.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloud9-2017-09-23/UpdateEnvironmentMembership
@@ -1104,6 +1105,108 @@ func (c *Cloud9) UpdateEnvironmentMembershipWithContext(ctx aws.Context, input *
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// The target request is invalid.
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A conflict occurred.
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type CreateEnvironmentEC2Input struct {
@@ -1923,6 +2026,159 @@ func (s *EnvironmentMember) SetUserId(v string) *EnvironmentMember {
 	return s
 }
 
+// An access permissions issue occurred.
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An internal server error occurred.
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A service limit was exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListEnvironmentsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1993,6 +2249,108 @@ func (s *ListEnvironmentsOutput) SetEnvironmentIds(v []*string) *ListEnvironment
 func (s *ListEnvironmentsOutput) SetNextToken(v string) *ListEnvironmentsOutput {
 	s.NextToken = &v
 	return s
+}
+
+// The target resource cannot be found.
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Too many service requests were made over the given time period.
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UpdateEnvironmentInput struct {

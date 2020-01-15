@@ -2,6 +2,10 @@
 
 package ecs
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -169,3 +173,29 @@ const (
 	// it resumes where it stopped previously.
 	ErrCodeUpdateInProgressException = "UpdateInProgressException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":                          newErrorAccessDeniedException,
+	"AttributeLimitExceededException":                newErrorAttributeLimitExceededException,
+	"BlockedException":                               newErrorBlockedException,
+	"ClientException":                                newErrorClientException,
+	"ClusterContainsContainerInstancesException":     newErrorClusterContainsContainerInstancesException,
+	"ClusterContainsServicesException":               newErrorClusterContainsServicesException,
+	"ClusterContainsTasksException":                  newErrorClusterContainsTasksException,
+	"ClusterNotFoundException":                       newErrorClusterNotFoundException,
+	"InvalidParameterException":                      newErrorInvalidParameterException,
+	"LimitExceededException":                         newErrorLimitExceededException,
+	"MissingVersionException":                        newErrorMissingVersionException,
+	"NoUpdateAvailableException":                     newErrorNoUpdateAvailableException,
+	"PlatformTaskDefinitionIncompatibilityException": newErrorPlatformTaskDefinitionIncompatibilityException,
+	"PlatformUnknownException":                       newErrorPlatformUnknownException,
+	"ResourceInUseException":                         newErrorResourceInUseException,
+	"ResourceNotFoundException":                      newErrorResourceNotFoundException,
+	"ServerException":                                newErrorServerException,
+	"ServiceNotActiveException":                      newErrorServiceNotActiveException,
+	"ServiceNotFoundException":                       newErrorServiceNotFoundException,
+	"TargetNotFoundException":                        newErrorTargetNotFoundException,
+	"TaskSetNotFoundException":                       newErrorTaskSetNotFoundException,
+	"UnsupportedFeatureException":                    newErrorUnsupportedFeatureException,
+	"UpdateInProgressException":                      newErrorUpdateInProgressException,
+}

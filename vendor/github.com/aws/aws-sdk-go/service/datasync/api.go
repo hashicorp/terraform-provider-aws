@@ -76,11 +76,11 @@ func (c *DataSync) CancelTaskExecutionRequest(input *CancelTaskExecutionInput) (
 // See the AWS API reference guide for AWS DataSync's
 // API operation CancelTaskExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CancelTaskExecution
@@ -175,11 +175,11 @@ func (c *DataSync) CreateAgentRequest(input *CreateAgentInput) (req *request.Req
 // See the AWS API reference guide for AWS DataSync's
 // API operation CreateAgent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateAgent
@@ -257,11 +257,11 @@ func (c *DataSync) CreateLocationEfsRequest(input *CreateLocationEfsInput) (req 
 // See the AWS API reference guide for AWS DataSync's
 // API operation CreateLocationEfs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationEfs
@@ -340,11 +340,11 @@ func (c *DataSync) CreateLocationNfsRequest(input *CreateLocationNfsInput) (req 
 // See the AWS API reference guide for AWS DataSync's
 // API operation CreateLocationNfs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationNfs
@@ -431,11 +431,11 @@ func (c *DataSync) CreateLocationS3Request(input *CreateLocationS3Input) (req *r
 // See the AWS API reference guide for AWS DataSync's
 // API operation CreateLocationS3 for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationS3
@@ -514,11 +514,11 @@ func (c *DataSync) CreateLocationSmbRequest(input *CreateLocationSmbInput) (req 
 // See the AWS API reference guide for AWS DataSync's
 // API operation CreateLocationSmb for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateLocationSmb
@@ -612,11 +612,11 @@ func (c *DataSync) CreateTaskRequest(input *CreateTaskInput) (req *request.Reque
 // See the AWS API reference guide for AWS DataSync's
 // API operation CreateTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/CreateTask
@@ -698,11 +698,11 @@ func (c *DataSync) DeleteAgentRequest(input *DeleteAgentInput) (req *request.Req
 // See the AWS API reference guide for AWS DataSync's
 // API operation DeleteAgent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DeleteAgent
@@ -781,11 +781,11 @@ func (c *DataSync) DeleteLocationRequest(input *DeleteLocationInput) (req *reque
 // See the AWS API reference guide for AWS DataSync's
 // API operation DeleteLocation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DeleteLocation
@@ -864,11 +864,11 @@ func (c *DataSync) DeleteTaskRequest(input *DeleteTaskInput) (req *request.Reque
 // See the AWS API reference guide for AWS DataSync's
 // API operation DeleteTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DeleteTask
@@ -949,11 +949,11 @@ func (c *DataSync) DescribeAgentRequest(input *DescribeAgentInput) (req *request
 // See the AWS API reference guide for AWS DataSync's
 // API operation DescribeAgent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeAgent
@@ -1031,11 +1031,11 @@ func (c *DataSync) DescribeLocationEfsRequest(input *DescribeLocationEfsInput) (
 // See the AWS API reference guide for AWS DataSync's
 // API operation DescribeLocationEfs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationEfs
@@ -1113,11 +1113,11 @@ func (c *DataSync) DescribeLocationNfsRequest(input *DescribeLocationNfsInput) (
 // See the AWS API reference guide for AWS DataSync's
 // API operation DescribeLocationNfs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationNfs
@@ -1195,11 +1195,11 @@ func (c *DataSync) DescribeLocationS3Request(input *DescribeLocationS3Input) (re
 // See the AWS API reference guide for AWS DataSync's
 // API operation DescribeLocationS3 for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationS3
@@ -1277,11 +1277,11 @@ func (c *DataSync) DescribeLocationSmbRequest(input *DescribeLocationSmbInput) (
 // See the AWS API reference guide for AWS DataSync's
 // API operation DescribeLocationSmb for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeLocationSmb
@@ -1359,11 +1359,11 @@ func (c *DataSync) DescribeTaskRequest(input *DescribeTaskInput) (req *request.R
 // See the AWS API reference guide for AWS DataSync's
 // API operation DescribeTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeTask
@@ -1441,11 +1441,11 @@ func (c *DataSync) DescribeTaskExecutionRequest(input *DescribeTaskExecutionInpu
 // See the AWS API reference guide for AWS DataSync's
 // API operation DescribeTaskExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/DescribeTaskExecution
@@ -1539,11 +1539,11 @@ func (c *DataSync) ListAgentsRequest(input *ListAgentsInput) (req *request.Reque
 // See the AWS API reference guide for AWS DataSync's
 // API operation ListAgents for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/ListAgents
@@ -1684,11 +1684,11 @@ func (c *DataSync) ListLocationsRequest(input *ListLocationsInput) (req *request
 // See the AWS API reference guide for AWS DataSync's
 // API operation ListLocations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/ListLocations
@@ -1824,11 +1824,11 @@ func (c *DataSync) ListTagsForResourceRequest(input *ListTagsForResourceInput) (
 // See the AWS API reference guide for AWS DataSync's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/ListTagsForResource
@@ -1964,11 +1964,11 @@ func (c *DataSync) ListTaskExecutionsRequest(input *ListTaskExecutionsInput) (re
 // See the AWS API reference guide for AWS DataSync's
 // API operation ListTaskExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/ListTaskExecutions
@@ -2104,11 +2104,11 @@ func (c *DataSync) ListTasksRequest(input *ListTasksInput) (req *request.Request
 // See the AWS API reference guide for AWS DataSync's
 // API operation ListTasks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/ListTasks
@@ -2246,11 +2246,11 @@ func (c *DataSync) StartTaskExecutionRequest(input *StartTaskExecutionInput) (re
 // See the AWS API reference guide for AWS DataSync's
 // API operation StartTaskExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/StartTaskExecution
@@ -2329,11 +2329,11 @@ func (c *DataSync) TagResourceRequest(input *TagResourceInput) (req *request.Req
 // See the AWS API reference guide for AWS DataSync's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/TagResource
@@ -2412,11 +2412,11 @@ func (c *DataSync) UntagResourceRequest(input *UntagResourceInput) (req *request
 // See the AWS API reference guide for AWS DataSync's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/UntagResource
@@ -2495,11 +2495,11 @@ func (c *DataSync) UpdateAgentRequest(input *UpdateAgentInput) (req *request.Req
 // See the AWS API reference guide for AWS DataSync's
 // API operation UpdateAgent for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/UpdateAgent
@@ -2578,11 +2578,11 @@ func (c *DataSync) UpdateTaskRequest(input *UpdateTaskInput) (req *request.Reque
 // See the AWS API reference guide for AWS DataSync's
 // API operation UpdateTask for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   This exception is thrown when the client submits a malformed request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   This exception is thrown when an error occurs in the AWS DataSync service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/datasync-2018-11-09/UpdateTask
@@ -4843,6 +4843,122 @@ func (s *FilterRule) SetFilterType(v string) *FilterRule {
 func (s *FilterRule) SetValue(v string) *FilterRule {
 	s.Value = &v
 	return s
+}
+
+// This exception is thrown when an error occurs in the AWS DataSync service.
+type InternalException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalException(v protocol.ResponseMetadata) error {
+	return &InternalException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalException) Code() string {
+	return "InternalException"
+}
+
+// Message returns the exception's message.
+func (s InternalException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalException) OrigErr() error {
+	return nil
+}
+
+func (s InternalException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// This exception is thrown when the client submits a malformed request.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	ErrorCode *string `locationName:"errorCode" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // ListAgentsRequest

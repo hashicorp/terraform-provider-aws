@@ -2,6 +2,10 @@
 
 package kms
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAlreadyExistsException for service response error code
@@ -325,3 +329,39 @@ const (
 	// a specified resource is not valid for this operation.
 	ErrCodeUnsupportedOperationException = "UnsupportedOperationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AlreadyExistsException":                       newErrorAlreadyExistsException,
+	"CloudHsmClusterInUseException":                newErrorCloudHsmClusterInUseException,
+	"CloudHsmClusterInvalidConfigurationException": newErrorCloudHsmClusterInvalidConfigurationException,
+	"CloudHsmClusterNotActiveException":            newErrorCloudHsmClusterNotActiveException,
+	"CloudHsmClusterNotFoundException":             newErrorCloudHsmClusterNotFoundException,
+	"CloudHsmClusterNotRelatedException":           newErrorCloudHsmClusterNotRelatedException,
+	"CustomKeyStoreHasCMKsException":               newErrorCustomKeyStoreHasCMKsException,
+	"CustomKeyStoreInvalidStateException":          newErrorCustomKeyStoreInvalidStateException,
+	"CustomKeyStoreNameInUseException":             newErrorCustomKeyStoreNameInUseException,
+	"CustomKeyStoreNotFoundException":              newErrorCustomKeyStoreNotFoundException,
+	"DependencyTimeoutException":                   newErrorDependencyTimeoutException,
+	"DisabledException":                            newErrorDisabledException,
+	"ExpiredImportTokenException":                  newErrorExpiredImportTokenException,
+	"IncorrectKeyException":                        newErrorIncorrectKeyException,
+	"IncorrectKeyMaterialException":                newErrorIncorrectKeyMaterialException,
+	"IncorrectTrustAnchorException":                newErrorIncorrectTrustAnchorException,
+	"KMSInternalException":                         newErrorInternalException,
+	"InvalidAliasNameException":                    newErrorInvalidAliasNameException,
+	"InvalidArnException":                          newErrorInvalidArnException,
+	"InvalidCiphertextException":                   newErrorInvalidCiphertextException,
+	"InvalidGrantIdException":                      newErrorInvalidGrantIdException,
+	"InvalidGrantTokenException":                   newErrorInvalidGrantTokenException,
+	"InvalidImportTokenException":                  newErrorInvalidImportTokenException,
+	"InvalidKeyUsageException":                     newErrorInvalidKeyUsageException,
+	"InvalidMarkerException":                       newErrorInvalidMarkerException,
+	"KMSInvalidStateException":                     newErrorInvalidStateException,
+	"KMSInvalidSignatureException":                 newErrorKMSInvalidSignatureException,
+	"KeyUnavailableException":                      newErrorKeyUnavailableException,
+	"LimitExceededException":                       newErrorLimitExceededException,
+	"MalformedPolicyDocumentException":             newErrorMalformedPolicyDocumentException,
+	"NotFoundException":                            newErrorNotFoundException,
+	"TagException":                                 newErrorTagException,
+	"UnsupportedOperationException":                newErrorUnsupportedOperationException,
+}

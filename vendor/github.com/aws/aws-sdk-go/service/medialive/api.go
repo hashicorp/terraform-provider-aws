@@ -65,22 +65,22 @@ func (c *MediaLive) BatchUpdateScheduleRequest(input *BatchUpdateScheduleInput) 
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation BatchUpdateSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchUpdateSchedule
 func (c *MediaLive) BatchUpdateSchedule(input *BatchUpdateScheduleInput) (*BatchUpdateScheduleOutput, error) {
@@ -157,22 +157,22 @@ func (c *MediaLive) CreateChannelRequest(input *CreateChannelInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateChannel
 func (c *MediaLive) CreateChannel(input *CreateChannelInput) (*CreateChannelOutput, error) {
@@ -249,18 +249,18 @@ func (c *MediaLive) CreateInputRequest(input *CreateInputInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInput
 func (c *MediaLive) CreateInput(input *CreateInputInput) (*CreateInputOutput, error) {
@@ -337,18 +337,18 @@ func (c *MediaLive) CreateInputSecurityGroupRequest(input *CreateInputSecurityGr
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputSecurityGroup
 func (c *MediaLive) CreateInputSecurityGroup(input *CreateInputSecurityGroupInput) (*CreateInputSecurityGroupOutput, error) {
@@ -425,22 +425,22 @@ func (c *MediaLive) CreateMultiplexRequest(input *CreateMultiplexInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplex
 func (c *MediaLive) CreateMultiplex(input *CreateMultiplexInput) (*CreateMultiplexOutput, error) {
@@ -517,22 +517,22 @@ func (c *MediaLive) CreateMultiplexProgramRequest(input *CreateMultiplexProgramI
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplexProgram
 func (c *MediaLive) CreateMultiplexProgram(input *CreateMultiplexProgramInput) (*CreateMultiplexProgramOutput, error) {
@@ -610,14 +610,14 @@ func (c *MediaLive) CreateTagsRequest(input *CreateTagsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateTags
 func (c *MediaLive) CreateTags(input *CreateTagsInput) (*CreateTagsOutput, error) {
@@ -694,22 +694,22 @@ func (c *MediaLive) DeleteChannelRequest(input *DeleteChannelInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteChannel
 func (c *MediaLive) DeleteChannel(input *DeleteChannelInput) (*DeleteChannelOutput, error) {
@@ -787,22 +787,22 @@ func (c *MediaLive) DeleteInputRequest(input *DeleteInputInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInput
 func (c *MediaLive) DeleteInput(input *DeleteInputInput) (*DeleteInputOutput, error) {
@@ -880,20 +880,20 @@ func (c *MediaLive) DeleteInputSecurityGroupRequest(input *DeleteInputSecurityGr
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputSecurityGroup
 func (c *MediaLive) DeleteInputSecurityGroup(input *DeleteInputSecurityGroupInput) (*DeleteInputSecurityGroupOutput, error) {
@@ -970,22 +970,22 @@ func (c *MediaLive) DeleteMultiplexRequest(input *DeleteMultiplexInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplex
 func (c *MediaLive) DeleteMultiplex(input *DeleteMultiplexInput) (*DeleteMultiplexOutput, error) {
@@ -1062,22 +1062,22 @@ func (c *MediaLive) DeleteMultiplexProgramRequest(input *DeleteMultiplexProgramI
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplexProgram
 func (c *MediaLive) DeleteMultiplexProgram(input *DeleteMultiplexProgramInput) (*DeleteMultiplexProgramOutput, error) {
@@ -1154,22 +1154,22 @@ func (c *MediaLive) DeleteReservationRequest(input *DeleteReservationInput) (req
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteReservation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteReservation
 func (c *MediaLive) DeleteReservation(input *DeleteReservationInput) (*DeleteReservationOutput, error) {
@@ -1247,20 +1247,20 @@ func (c *MediaLive) DeleteScheduleRequest(input *DeleteScheduleInput) (req *requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteSchedule
 func (c *MediaLive) DeleteSchedule(input *DeleteScheduleInput) (*DeleteScheduleOutput, error) {
@@ -1338,14 +1338,14 @@ func (c *MediaLive) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteTags
 func (c *MediaLive) DeleteTags(input *DeleteTagsInput) (*DeleteTagsOutput, error) {
@@ -1422,20 +1422,20 @@ func (c *MediaLive) DescribeChannelRequest(input *DescribeChannelInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeChannel
 func (c *MediaLive) DescribeChannel(input *DescribeChannelInput) (*DescribeChannelOutput, error) {
@@ -1512,20 +1512,20 @@ func (c *MediaLive) DescribeInputRequest(input *DescribeInputInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInput
 func (c *MediaLive) DescribeInput(input *DescribeInputInput) (*DescribeInputOutput, error) {
@@ -1602,20 +1602,20 @@ func (c *MediaLive) DescribeInputSecurityGroupRequest(input *DescribeInputSecuri
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputSecurityGroup
 func (c *MediaLive) DescribeInputSecurityGroup(input *DescribeInputSecurityGroupInput) (*DescribeInputSecurityGroupOutput, error) {
@@ -1692,20 +1692,20 @@ func (c *MediaLive) DescribeMultiplexRequest(input *DescribeMultiplexInput) (req
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplex
 func (c *MediaLive) DescribeMultiplex(input *DescribeMultiplexInput) (*DescribeMultiplexOutput, error) {
@@ -1782,20 +1782,20 @@ func (c *MediaLive) DescribeMultiplexProgramRequest(input *DescribeMultiplexProg
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplexProgram
 func (c *MediaLive) DescribeMultiplexProgram(input *DescribeMultiplexProgramInput) (*DescribeMultiplexProgramOutput, error) {
@@ -1872,20 +1872,20 @@ func (c *MediaLive) DescribeOfferingRequest(input *DescribeOfferingInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeOffering for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeOffering
 func (c *MediaLive) DescribeOffering(input *DescribeOfferingInput) (*DescribeOfferingOutput, error) {
@@ -1962,20 +1962,20 @@ func (c *MediaLive) DescribeReservationRequest(input *DescribeReservationInput) 
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeReservation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeReservation
 func (c *MediaLive) DescribeReservation(input *DescribeReservationInput) (*DescribeReservationOutput, error) {
@@ -2058,20 +2058,20 @@ func (c *MediaLive) DescribeScheduleRequest(input *DescribeScheduleInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeSchedule
 func (c *MediaLive) DescribeSchedule(input *DescribeScheduleInput) (*DescribeScheduleOutput, error) {
@@ -2206,18 +2206,18 @@ func (c *MediaLive) ListChannelsRequest(input *ListChannelsInput) (req *request.
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListChannels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListChannels
 func (c *MediaLive) ListChannels(input *ListChannelsInput) (*ListChannelsOutput, error) {
@@ -2352,18 +2352,18 @@ func (c *MediaLive) ListInputSecurityGroupsRequest(input *ListInputSecurityGroup
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListInputSecurityGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputSecurityGroups
 func (c *MediaLive) ListInputSecurityGroups(input *ListInputSecurityGroupsInput) (*ListInputSecurityGroupsOutput, error) {
@@ -2498,18 +2498,18 @@ func (c *MediaLive) ListInputsRequest(input *ListInputsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListInputs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputs
 func (c *MediaLive) ListInputs(input *ListInputsInput) (*ListInputsOutput, error) {
@@ -2644,20 +2644,20 @@ func (c *MediaLive) ListMultiplexProgramsRequest(input *ListMultiplexProgramsInp
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListMultiplexPrograms for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexPrograms
 func (c *MediaLive) ListMultiplexPrograms(input *ListMultiplexProgramsInput) (*ListMultiplexProgramsOutput, error) {
@@ -2792,18 +2792,18 @@ func (c *MediaLive) ListMultiplexesRequest(input *ListMultiplexesInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListMultiplexes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexes
 func (c *MediaLive) ListMultiplexes(input *ListMultiplexesInput) (*ListMultiplexesOutput, error) {
@@ -2938,18 +2938,18 @@ func (c *MediaLive) ListOfferingsRequest(input *ListOfferingsInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListOfferings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListOfferings
 func (c *MediaLive) ListOfferings(input *ListOfferingsInput) (*ListOfferingsOutput, error) {
@@ -3084,18 +3084,18 @@ func (c *MediaLive) ListReservationsRequest(input *ListReservationsInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListReservations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListReservations
 func (c *MediaLive) ListReservations(input *ListReservationsInput) (*ListReservationsOutput, error) {
@@ -3224,14 +3224,14 @@ func (c *MediaLive) ListTagsForResourceRequest(input *ListTagsForResourceInput) 
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListTagsForResource
 func (c *MediaLive) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -3308,22 +3308,22 @@ func (c *MediaLive) PurchaseOfferingRequest(input *PurchaseOfferingInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation PurchaseOffering for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/PurchaseOffering
 func (c *MediaLive) PurchaseOffering(input *PurchaseOfferingInput) (*PurchaseOfferingOutput, error) {
@@ -3400,22 +3400,22 @@ func (c *MediaLive) StartChannelRequest(input *StartChannelInput) (req *request.
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StartChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartChannel
 func (c *MediaLive) StartChannel(input *StartChannelInput) (*StartChannelOutput, error) {
@@ -3493,22 +3493,22 @@ func (c *MediaLive) StartMultiplexRequest(input *StartMultiplexInput) (req *requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StartMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartMultiplex
 func (c *MediaLive) StartMultiplex(input *StartMultiplexInput) (*StartMultiplexOutput, error) {
@@ -3585,22 +3585,22 @@ func (c *MediaLive) StopChannelRequest(input *StopChannelInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StopChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopChannel
 func (c *MediaLive) StopChannel(input *StopChannelInput) (*StopChannelOutput, error) {
@@ -3678,22 +3678,22 @@ func (c *MediaLive) StopMultiplexRequest(input *StopMultiplexInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StopMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopMultiplex
 func (c *MediaLive) StopMultiplex(input *StopMultiplexInput) (*StopMultiplexOutput, error) {
@@ -3770,20 +3770,20 @@ func (c *MediaLive) UpdateChannelRequest(input *UpdateChannelInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannel
 func (c *MediaLive) UpdateChannel(input *UpdateChannelInput) (*UpdateChannelOutput, error) {
@@ -3860,24 +3860,24 @@ func (c *MediaLive) UpdateChannelClassRequest(input *UpdateChannelClassInput) (r
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateChannelClass for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannelClass
 func (c *MediaLive) UpdateChannelClass(input *UpdateChannelClassInput) (*UpdateChannelClassOutput, error) {
@@ -3954,20 +3954,20 @@ func (c *MediaLive) UpdateInputRequest(input *UpdateInputInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInput
 func (c *MediaLive) UpdateInput(input *UpdateInputInput) (*UpdateInputOutput, error) {
@@ -4044,20 +4044,20 @@ func (c *MediaLive) UpdateInputSecurityGroupRequest(input *UpdateInputSecurityGr
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputSecurityGroup
 func (c *MediaLive) UpdateInputSecurityGroup(input *UpdateInputSecurityGroupInput) (*UpdateInputSecurityGroupOutput, error) {
@@ -4134,22 +4134,22 @@ func (c *MediaLive) UpdateMultiplexRequest(input *UpdateMultiplexInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplex
 func (c *MediaLive) UpdateMultiplex(input *UpdateMultiplexInput) (*UpdateMultiplexOutput, error) {
@@ -4226,22 +4226,22 @@ func (c *MediaLive) UpdateMultiplexProgramRequest(input *UpdateMultiplexProgramI
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplexProgram
 func (c *MediaLive) UpdateMultiplexProgram(input *UpdateMultiplexProgramInput) (*UpdateMultiplexProgramOutput, error) {
@@ -4318,22 +4318,22 @@ func (c *MediaLive) UpdateReservationRequest(input *UpdateReservationInput) (req
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateReservation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateReservation
 func (c *MediaLive) UpdateReservation(input *UpdateReservationInput) (*UpdateReservationOutput, error) {
@@ -5512,6 +5512,116 @@ func (s *AvailSettings) SetScte35SpliceInsert(v *Scte35SpliceInsert) *AvailSetti
 func (s *AvailSettings) SetScte35TimeSignalApos(v *Scte35TimeSignalApos) *AvailSettings {
 	s.Scte35TimeSignalApos = v
 	return s
+}
+
+type BadGatewayException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadGatewayException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadGatewayException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadGatewayException(v protocol.ResponseMetadata) error {
+	return &BadGatewayException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadGatewayException) Code() string {
+	return "BadGatewayException"
+}
+
+// Message returns the exception's message.
+func (s BadGatewayException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadGatewayException) OrigErr() error {
+	return nil
+}
+
+func (s BadGatewayException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadGatewayException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadGatewayException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+type BadRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s BadRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s BadRequestException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // A list of schedule actions to create (in a request) or that have been created
@@ -6871,6 +6981,61 @@ func (s ColorSpacePassthroughSettings) String() string {
 // GoString returns the string representation
 func (s ColorSpacePassthroughSettings) GoString() string {
 	return s.String()
+}
+
+type ConflictException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConflictException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConflictException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type CreateChannelInput struct {
@@ -10611,6 +10776,61 @@ func (s *FollowModeScheduleActionStartSettings) SetReferenceActionName(v string)
 	return s
 }
 
+type ForbiddenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ForbiddenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ForbiddenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Frame Capture Group Settings
 type FrameCaptureGroupSettings struct {
 	_ struct{} `type:"structure"`
@@ -10731,6 +10951,61 @@ func (s *FrameCaptureSettings) SetCaptureInterval(v int64) *FrameCaptureSettings
 func (s *FrameCaptureSettings) SetCaptureIntervalUnits(v string) *FrameCaptureSettings {
 	s.CaptureIntervalUnits = &v
 	return s
+}
+
+type GatewayTimeoutException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s GatewayTimeoutException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GatewayTimeoutException) GoString() string {
+	return s.String()
+}
+
+func newErrorGatewayTimeoutException(v protocol.ResponseMetadata) error {
+	return &GatewayTimeoutException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s GatewayTimeoutException) Code() string {
+	return "GatewayTimeoutException"
+}
+
+// Message returns the exception's message.
+func (s GatewayTimeoutException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s GatewayTimeoutException) OrigErr() error {
+	return nil
+}
+
+func (s GatewayTimeoutException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s GatewayTimeoutException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s GatewayTimeoutException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Global Configuration
@@ -13947,6 +14222,61 @@ func (s *InputWhitelistRuleCidr) SetCidr(v string) *InputWhitelistRuleCidr {
 	return s
 }
 
+type InternalServerErrorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerErrorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerErrorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Key Provider Settings
 type KeyProviderSettings struct {
 	_ struct{} `type:"structure"`
@@ -16848,6 +17178,61 @@ func (s *NielsenConfiguration) SetDistributorId(v string) *NielsenConfiguration 
 func (s *NielsenConfiguration) SetNielsenPcmToId3Tagging(v string) *NielsenConfiguration {
 	s.NielsenPcmToId3Tagging = &v
 	return s
+}
+
+type NotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Reserved resources available for purchase
@@ -20419,6 +20804,61 @@ func (s *TimecodeConfig) SetSyncThreshold(v int64) *TimecodeConfig {
 	return s
 }
 
+type TooManyRequestsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyRequestsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyRequestsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Ttml Destination Settings
 type TtmlDestinationSettings struct {
 	_ struct{} `type:"structure"`
@@ -20615,6 +21055,63 @@ func (s *UdpOutputSettings) SetDestination(v *OutputLocationRef) *UdpOutputSetti
 func (s *UdpOutputSettings) SetFecOutputSettings(v *FecOutputSettings) *UdpOutputSettings {
 	s.FecOutputSettings = v
 	return s
+}
+
+type UnprocessableEntityException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	ValidationErrors []*ValidationError `locationName:"validationErrors" type:"list"`
+}
+
+// String returns the string representation
+func (s UnprocessableEntityException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnprocessableEntityException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnprocessableEntityException(v protocol.ResponseMetadata) error {
+	return &UnprocessableEntityException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnprocessableEntityException) Code() string {
+	return "UnprocessableEntityException"
+}
+
+// Message returns the exception's message.
+func (s UnprocessableEntityException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnprocessableEntityException) OrigErr() error {
+	return nil
+}
+
+func (s UnprocessableEntityException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnprocessableEntityException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnprocessableEntityException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type UpdateChannelClassInput struct {
