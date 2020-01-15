@@ -33,7 +33,8 @@ func resourceAwsSesConfigurationSet() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"tls_policy": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Default:  ses.TlsPolicyOptional,
 							ValidateFunc: validation.StringInSlice([]string{
 								ses.TlsPolicyRequire,
 								ses.TlsPolicyOptional,
@@ -116,9 +117,11 @@ func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}
 		tlsPolicy := map[string]interface{}{
 			"tls_policy": response.DeliveryOptions.TlsPolicy,
 		}
-
 		deliveryOptions = append(deliveryOptions, tlsPolicy)
-		d.Set("delivery_options", deliveryOptions)
+
+		if err := d.Set("delivery_options", deliveryOptions); err != nil {
+			return fmt.Errorf("Error setting delivery_options for SES configuration set %s: %s", d.Id(), err)
+		}
 	}
 
 	d.Set("name", aws.StringValue(response.ConfigurationSet.Name))

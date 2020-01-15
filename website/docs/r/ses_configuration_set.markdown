@@ -18,11 +18,27 @@ resource "aws_ses_configuration_set" "test" {
 }
 ```
 
+### Require TLS Connections
+
+```hcl
+resource "aws_ses_configuration_set" "test" {
+  name = "some-configuration-set-test"
+
+  delivery_options {
+    tls_policy = "Require"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the configuration set
+
+Delivery Options (`delivery_options`) support the following:
+
+* `tls_policy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `Require` and `Optional`. If the value is `Require`, messages are only delivered if a TLS connection can be established. If the value is `Optional`, messages can be delivered in plain text if a TLS connection can't be established. Defaults to `Optional`.
 
 ## Import
 
