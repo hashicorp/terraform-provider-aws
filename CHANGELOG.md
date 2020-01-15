@@ -7,6 +7,7 @@ ENHANCEMENTS:
 * resource/aws_docdb_cluster: Support `profiler` CloudWatch export type [GH-11051]
 * resource/aws_gamelift_alias: Add `tags` argument [GH-11486]
 * resource/aws_gamelift_build: Add `tags` argument and `arn` attribute [GH-11486]
+* resource/aws_gamelift_fleet - Add support for instance_role_arn [GH-11553]
 * resource/aws_gamelift_game_session_queue: Add `tags` argument [GH-11486]
 * resource/aws_neptune_parameter_group: Support tag-on-create [GH-11245]
 * resource/aws_pinpoint_app: Add plan-time validation for `limit` configuration block `daily`, `maximum_duration`, `messages_per_second` and `total` arguments [GH-11368]
