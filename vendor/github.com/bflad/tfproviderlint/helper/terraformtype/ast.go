@@ -2,7 +2,6 @@ package terraformtype
 
 import (
 	"go/ast"
-	"go/types"
 	"strconv"
 	"strings"
 )
@@ -125,31 +124,4 @@ func astIntValue(e ast.Expr) *int {
 	default:
 		return nil
 	}
-}
-
-// isPackageFunc returns true if the function package suffix (for vendoring) and name matches
-func isPackageFunc(e ast.Expr, info *types.Info, packageSuffix string, funcName string) bool {
-	switch e := e.(type) {
-	case *ast.SelectorExpr:
-		if e.Sel.Name != funcName {
-			return false
-		}
-
-		switch x := e.X.(type) {
-		case *ast.Ident:
-			return strings.HasSuffix(info.ObjectOf(x).(*types.PkgName).Imported().Path(), packageSuffix)
-		}
-	}
-
-	return false
-}
-
-// isPackageNamedType returns if the type name matches and is from the package suffix
-func isPackageNamedType(t *types.Named, packageSuffix string, typeName string) bool {
-	if t.Obj().Name() != typeName {
-		return false
-	}
-
-	// HasSuffix here due to vendoring
-	return strings.HasSuffix(t.Obj().Pkg().Path(), packageSuffix)
 }

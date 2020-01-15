@@ -55,6 +55,8 @@ func IsHelperSchemaTypeResource(t types.Type) bool {
 	switch t := t.(type) {
 	case *types.Named:
 		return IsHelperSchemaNamedType(t, TypeNameResource)
+	case *types.Pointer:
+		return IsHelperSchemaTypeResource(t.Elem())
 	default:
 		return false
 	}
