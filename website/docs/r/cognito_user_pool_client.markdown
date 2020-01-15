@@ -55,6 +55,7 @@ The following arguments are supported:
 * `generate_secret` - (Optional) Should an application secret be generated.
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers.
 * `name` - (Required) The name of the application client.
+* `prevent_user_existence_errors` - (Optional, Default: ENABLED) How should Cognito APIs handle errors when a user does not exist in the user pool (LEGACY, ENABLED).
 * `read_attributes` - (Optional) List of user pool attributes the application client can read from.
 * `refresh_token_validity` - (Optional) The time limit in days refresh tokens are valid for.
 * `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client.
