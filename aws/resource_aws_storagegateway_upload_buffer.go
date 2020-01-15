@@ -55,6 +55,34 @@ func resourceAwsStorageGatewayUploadBufferCreate(d *schema.ResourceData, meta in
 
 	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
 
+	// Depending on the Storage Gateway software, it will sometimes relabel a local DiskId
+	// with a UUID if previously unlabeled, e.g.
+	// Before conn.AddUploadBuffer(): "DiskId": "/dev/xvdb",
+	// After conn.AddUploadBuffer(): "DiskId": "112764d7-7e83-42ce-9af3-d482985a31cc",
+	// This prevents us from successfully reading the disk after creation.
+	// Here we try to refresh the local disks to see if we can find a new DiskId.
+
+	listLocalDisksInput := &storagegateway.ListLocalDisksInput{
+		GatewayARN: aws.String(gatewayARN),
+	}
+
+	log.Printf("[DEBUG] Reading Storage Gateway Local Disk: %s", listLocalDisksInput)
+	output, err := conn.ListLocalDisks(listLocalDisksInput)
+	if err != nil {
+		return fmt.Errorf("error reading Storage Gateway Local Disk: %s", err)
+	}
+
+	if output != nil {
+		for _, disk := range output.Disks {
+			if aws.StringValue(disk.DiskId) == diskID || aws.StringValue(disk.DiskNode) == diskID || aws.StringValue(disk.DiskPath) == diskID {
+				diskID = aws.StringValue(disk.DiskId)
+				break
+			}
+		}
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
+
 	return resourceAwsStorageGatewayUploadBufferRead(d, meta)
 }
 
