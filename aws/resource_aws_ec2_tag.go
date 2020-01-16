@@ -70,13 +70,15 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	resourceID := d.Get("resource_id").(string)
+	key := d.Get("key").(string)
+	value := d.Get("value").(string)
 
 	_, err := conn.CreateTags(&ec2.CreateTagsInput{
 		Resources: []*string{aws.String(resourceID)},
 		Tags: []*ec2.Tag{
 			{
-				Key:   aws.String(d.Get("key").(string)),
-				Value: aws.String(d.Get("value").(string)),
+				Key:   aws.String(key),
+				Value: aws.String(value),
 			},
 		},
 	})
@@ -85,30 +87,15 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", resourceID, d.Get("key").(string)))
-	return resourceAwsEc2TagRead(d, meta)
-}
-
-func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).ec2conn
-	id, err := extractResourceIdFromEc2TagId(d)
-
-	if err != nil {
-		return err
-	}
-
-	key := d.Get("key").(string)
-	var tags *ec2.DescribeTagsOutput
-
-	// The EC2 API is eventually consistent. This means that writing a tag
-	// followed by an immediate describe call can sometimes fail. To address
-	// this we retry for a couple of minutes before failing.
+	// Handle EC2 eventual consistency on creation
+	log.Printf("[DEBUG] Waiting for tag %s on resource %s to become available", key, resourceID)
 	retryError := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		var tags *ec2.DescribeTagsOutput
 		tags, err = conn.DescribeTags(&ec2.DescribeTagsInput{
 			Filters: []*ec2.Filter{
 				{
 					Name:   aws.String("resource-id"),
-					Values: []*string{aws.String(id)},
+					Values: []*string{aws.String(resourceID)},
 				},
 				{
 					Name:   aws.String("key"),
@@ -131,8 +118,40 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 
 	if retryError != nil {
 		if _, ok := retryError.(*ResourceNotExists); !ok {
-			return fmt.Errorf("[ERROR] Could not read tag %s on resource %s", key, id)
+			return fmt.Errorf("[ERROR] Could not create tag %s:%s on resource %s", key, value, resourceID)
 		}
+	}
+
+	d.SetId(fmt.Sprintf("%s:%s", resourceID, key))
+	return resourceAwsEc2TagRead(d, meta)
+}
+
+func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+	id, err := extractResourceIdFromEc2TagId(d)
+
+	if err != nil {
+		return err
+	}
+
+	key := d.Get("key").(string)
+	var tags *ec2.DescribeTagsOutput
+
+	tags, err = conn.DescribeTags(&ec2.DescribeTagsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []*string{aws.String(id)},
+			},
+			{
+				Name:   aws.String("key"),
+				Values: []*string{aws.String(key)},
+			},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("[ERROR] Could not read tag %s on resource %s", key, id)
 	}
 
 	if len(tags.Tags) == 0 {
