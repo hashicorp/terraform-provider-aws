@@ -72,6 +72,22 @@ func resourceAwsDbInstance() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"aurora",
+					"aurora-mysql",
+					"aurora-postgresql",
+					"mariadb",
+					"mysql",
+					"oracle-ee",
+					"oracle-se",
+					"oracle-se1",
+					"oracle-se2",
+					"postgres",
+					"sqlserver-ee",
+					"sqlserver-ex",
+					"sqlserver-se",
+					"sqlserver-web",
+				}, false),
 			},
 
 			"engine_version": {
@@ -861,11 +877,6 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			default:
 				opts.DBName = aws.String(attr.(string))
 			}
-		}
-
-		// allow postgresql as input as postgres
-		if strings.ToLower(d.Get("engine").(string)) == "postgresql" {
-			d.Set("engine", "postgres")
 		}
 
 		if attr, ok := d.GetOk("allocated_storage"); ok {
