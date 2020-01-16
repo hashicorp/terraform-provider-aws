@@ -189,6 +189,13 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.checkpointing_enabled", "false"),
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.configuration_type", "CUSTOM"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttr(resName, "monitoring_configuration.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "monitoring_configuration.log_level", "WARN"),
+					resource.TestCheckResourceAttr(resName, "monitoring_configuration.metrics_level", "APPLICATION"),
+					resource.TestCheckResourceAttr(resName, "parallelism_configuration.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "parallelism_configuration.autoscaling_enabled", "true"),
+					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism", "1"),
+					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism_per_kpu", "1"),
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
 			},
@@ -936,6 +943,19 @@ resource "aws_kinesis_analytics_application" "test" {
   checkpoint_configuration = {
     checkpointing_enabled = false
     configuration_type    = "CUSTOM"
+  }
+
+  parallelism_configuration = {
+    "configuration_type"  = "CUSTOM"
+    "autoscaling_enabled" = true
+    "parallelism"         = 1
+    "parallelism_per_kpu" = 1
+  }
+
+  monitoring_configuration = {
+    "configuration_type" = "CUSTOM"
+    "log_level"          = "WARN"
+    "metrics_level"      = "APPLICATION"
   }
 
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
