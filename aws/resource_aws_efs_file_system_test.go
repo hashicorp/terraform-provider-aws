@@ -21,6 +21,9 @@ func init() {
 	resource.AddTestSweepers("aws_efs_file_system", &resource.Sweeper{
 		Name: "aws_efs_file_system",
 		F:    testSweepEfsFileSystems,
+		Dependencies: []string{
+			"aws_efs_mount_target",
+		},
 	})
 }
 

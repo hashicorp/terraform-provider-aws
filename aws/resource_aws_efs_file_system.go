@@ -382,7 +382,6 @@ func waitForDeleteEfsFileSystem(conn *efs.EFS, id string, timeout time.Duration)
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-
 	_, err := stateConf.WaitForState()
 	return err
 }
