@@ -2400,6 +2400,35 @@ func validateCloudWatchEventBusName(v interface{}, k string) (ws []string, error
 	return
 }
 
+func validateCloudWatchEventEventBusNameReference(v interface{}, k string) (ws []string, errors []error) {
+	// The names of custom event buses can't contain the / character.
+	//
+	// If this is a partner event bus, the name must exactly match the name of the
+	// partner event source that this event bus is matched to. This name will include
+	// the / character.
+	value := v.(string)
+
+	if strings.HasPrefix(value, "aws.") {
+		// should be a partner event bus
+		return validateCloudWatchEventSourceName(v, k)
+	}
+
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q cannot be less than 1 character: %q", k, value))
+	} else if len(value) > 256 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters: %q", k, value))
+	}
+
+	pattern := `^[a-zA-Z0-9._\-]+$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q doesn't comply with restrictions (%q): %q",
+			k, pattern, value))
+	}
+
+	return
+}
+
 func validateCloudWatchEventSourceName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 

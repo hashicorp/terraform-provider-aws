@@ -54,7 +54,7 @@ func resourceAwsCloudWatchEventRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validateCloudWatchEventBusName,
+				ValidateFunc: validateCloudWatchEventEventBusNameReference,
 			},
 			"event_pattern": {
 				Type:         schema.TypeString,
