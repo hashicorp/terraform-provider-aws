@@ -1346,12 +1346,46 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 					LogLevelUpdate:          monitoringConfig.LogLevel,
 					MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
 				}
+				parallelismConfig := expandParallelismConfiguration(v)
+				flinkUpdate.ParallelismConfigurationUpdate = &kinesisanalyticsv2.ParallelismConfigurationUpdate{
+					AutoScalingEnabledUpdate: parallelismConfig.AutoScalingEnabled,
+					ConfigurationTypeUpdate:  parallelismConfig.ConfigurationType,
+					ParallelismUpdate:        parallelismConfig.Parallelism,
+					ParallelismPerKPUUpdate:  parallelismConfig.ParallelismPerKPU,
+				}
 			}
 		}
 		applicationUpdate.ApplicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = flinkUpdate
 	}
 
 	return applicationUpdate, nil
+}
+
+func expandParallelismConfiguration(v map[string]interface{}) *kinesisanalyticsv2.ParallelismConfiguration {
+	var autoscalingEnabled *bool
+	var configurationType *string
+	var parallelism *int64
+	var parallelismPerKPU *int64
+
+	if aEnabled, ok := v["autoscaling_enabled"]; ok {
+		v, _ := strconv.ParseBool(aEnabled.(string))
+		autoscalingEnabled = aws.Bool(v)
+	}
+	if confType, ok := v["configuration_type"]; ok {
+		configurationType = aws.String(confType.(string))
+	}
+	if p, ok := v["parallelism"]; ok {
+		parallelism = aws.Int64(p.(int64))
+	}
+	if p, ok := v["parallelism_per_kpu"]; ok {
+		parallelismPerKPU = aws.Int64(p.(int64))
+	}
+	return &kinesisanalyticsv2.ParallelismConfiguration{
+		AutoScalingEnabled: autoscalingEnabled,
+		ConfigurationType:  configurationType,
+		Parallelism:        parallelism,
+		ParallelismPerKPU:  parallelismPerKPU,
+	}
 }
 
 func expandMonitoringConfiguration(v map[string]interface{}) *kinesisanalyticsv2.MonitoringConfiguration {
