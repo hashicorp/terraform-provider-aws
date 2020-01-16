@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_security_groups"
-sidebar_current: "docs-aws-datasource-security-groups"
 description: |-
   Get information about a set of Security Groups.
 ---

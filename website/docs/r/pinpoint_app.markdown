@@ -1,7 +1,7 @@
 ---
+subcategory: "Pinpoint"
 layout: "aws"
 page_title: "AWS: aws_pinpoint_app"
-sidebar_current: "docs-aws-resource-pinpoint-app"
 description: |-
   Provides a Pinpoint App resource.
 ---

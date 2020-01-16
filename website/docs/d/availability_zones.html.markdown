@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_availability_zones"
-sidebar_current: "docs-aws-datasource-availability-zones"
 description: |-
     Provides a list of Availability Zones which can be used by an AWS account.
 ---

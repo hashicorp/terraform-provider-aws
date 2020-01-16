@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
@@ -36,6 +36,31 @@ func TestAccAWSAPIGatewayDeployment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stage_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "variables.%"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayDeployment_disappears_RestApi(t *testing.T) {
+	var deployment apigateway.Deployment
+	var restApi apigateway.RestApi
+	resourceName := "aws_api_gateway_deployment.test"
+	restApiResourceName := "aws_api_gateway_rest_api.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test-deployment")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayDeploymentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayDeploymentConfigStageName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayDeploymentExists(resourceName, &deployment),
+					testAccCheckAWSAPIGatewayRestAPIExists(restApiResourceName, &restApi),
+					testAccCheckAWSAPIGatewayRestAPIDisappears(&restApi),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

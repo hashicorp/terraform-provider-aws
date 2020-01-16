@@ -10,9 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRDSCluster() *schema.Resource {
@@ -143,6 +144,7 @@ func resourceAwsRDSCluster() *schema.Resource {
 				Default:  "provisioned",
 				ValidateFunc: validation.StringInSlice([]string{
 					"global",
+					"multimaster",
 					"parallelquery",
 					"provisioned",
 					"serverless",
@@ -397,8 +399,14 @@ func resourceAwsRDSCluster() *schema.Resource {
 						"error",
 						"general",
 						"slowquery",
+						"postgresql",
 					}, false),
 				},
+			},
+			"enable_http_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 
 			"tags": tagsSchema(),
@@ -417,7 +425,7 @@ func resourceAwsRdsClusterImport(
 
 func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags()
 
 	// Some API calls (e.g. RestoreDBClusterFromSnapshot do not support all
 	// parameters to correctly apply all settings in one pass. For missing
@@ -772,6 +780,9 @@ func resourceAwsRDSClusterCreate(d *schema.ResourceData, meta interface{}) error
 			createOpts.MasterUsername = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("enable_http_endpoint"); ok {
+			createOpts.EnableHttpEndpoint = aws.Bool(v.(bool))
+		}
 		// Need to check value > 0 due to:
 		// InvalidParameterValue: Backtrack is not enabled for the aurora-postgresql engine.
 		if v, ok := d.GetOk("backtrack_window"); ok && v.(int) > 0 {
@@ -1021,6 +1032,7 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 
 	var vpcg []string
 	for _, g := range dbc.VpcSecurityGroups {
@@ -1030,9 +1042,12 @@ func resourceAwsRDSClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	// Fetch and save tags
-	if err := saveTagsRDS(conn, d, aws.StringValue(dbc.DBClusterArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+	tags, err := keyvaluetags.RdsListTags(conn, aws.StringValue(dbc.DBClusterArn))
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterArn), err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	// Fetch and save Global Cluster if engine mode global
@@ -1134,6 +1149,12 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		requestUpdate = true
 	}
 
+	if d.HasChange("enable_http_endpoint") {
+		d.SetPartial("enable_http_endpoint")
+		req.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
+		requestUpdate = true
+	}
+
 	if requestUpdate {
 		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 			_, err := conn.ModifyDBCluster(req)
@@ -1221,8 +1242,10 @@ func resourceAwsRDSClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("tags") {
-		if err := setTagsRDS(conn, d, d.Get("arn").(string)); err != nil {
-			return err
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		} else {
 			d.SetPartial("tags")
 		}

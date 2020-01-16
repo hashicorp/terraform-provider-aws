@@ -1,7 +1,7 @@
 ---
+subcategory: "ACM PCA"
 layout: "aws"
 page_title: "AWS: aws_acmpca_certificate_authority"
-sidebar_current: "docs-aws-resource-acmpca-certificate-authority"
 description: |-
   Provides a resource to manage AWS Certificate Manager Private Certificate Authorities
 ---

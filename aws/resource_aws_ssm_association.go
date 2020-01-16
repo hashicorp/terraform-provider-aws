@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSsmAssociation() *schema.Resource {
@@ -17,6 +17,9 @@ func resourceAwsSsmAssociation() *schema.Resource {
 		Read:   resourceAwsSsmAssociationRead,
 		Update: resourceAwsSsmAssociationUpdate,
 		Delete: resourceAwsSsmAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		MigrateState:  resourceAwsSsmAssociationMigrateState,
 		SchemaVersion: 1,

@@ -3414,6 +3414,9 @@ const (
 )
 
 const (
+	// TransitionToIARulesAfter7Days is a TransitionToIARules enum value
+	TransitionToIARulesAfter7Days = "AFTER_7_DAYS"
+
 	// TransitionToIARulesAfter14Days is a TransitionToIARules enum value
 	TransitionToIARulesAfter14Days = "AFTER_14_DAYS"
 

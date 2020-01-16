@@ -78,19 +78,16 @@ func (c *Lambda) AddLayerVersionPermissionRequest(input *AddLayerVersionPermissi
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
 //   The permissions policy for the resource is too large. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
@@ -180,7 +177,7 @@ func (c *Lambda) AddPermissionRequest(input *AddPermissionInput) (req *request.R
 // without specifying the source, other accounts could potentially configure
 // resources in their account to invoke your Lambda function.
 //
-// This action adds a statement to a resource-based permission policy for the
+// This action adds a statement to a resource-based permissions policy for the
 // function. For more information about function policies, see Lambda Function
 // Policies (https://docs.aws.amazon.com/lambda/latest/dg/access-control-resource-based.html).
 //
@@ -196,22 +193,19 @@ func (c *Lambda) AddPermissionRequest(input *AddPermissionInput) (req *request.R
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodePolicyLengthExceededException "PolicyLengthExceededException"
 //   The permissions policy for the resource is too large. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
@@ -304,19 +298,16 @@ func (c *Lambda) CreateAliasRequest(input *CreateAliasInput) (req *request.Reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateAlias
 func (c *Lambda) CreateAlias(input *CreateAliasInput) (*AliasConfiguration, error) {
@@ -389,11 +380,26 @@ func (c *Lambda) CreateEventSourceMappingRequest(input *CreateEventSourceMapping
 //
 // For details about each event source type, see the following topics.
 //
+//    * Using AWS Lambda with Amazon DynamoDB (https://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html)
+//
 //    * Using AWS Lambda with Amazon Kinesis (https://docs.aws.amazon.com/lambda/latest/dg/with-kinesis.html)
 //
 //    * Using AWS Lambda with Amazon SQS (https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html)
 //
-//    * Using AWS Lambda with Amazon DynamoDB (https://docs.aws.amazon.com/lambda/latest/dg/with-ddb.html)
+// The following error handling options are only available for stream sources
+// (DynamoDB and Kinesis):
+//
+//    * BisectBatchOnFunctionError - If the function returns an error, split
+//    the batch in two and retry.
+//
+//    * DestinationConfig - Send discarded records to an Amazon SQS queue or
+//    Amazon SNS topic.
+//
+//    * MaximumRecordAgeInSeconds - Discard records older than the specified
+//    age.
+//
+//    * MaximumRetryAttempts - Discard records after the specified number of
+//    retries.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -407,19 +413,16 @@ func (c *Lambda) CreateEventSourceMappingRequest(input *CreateEventSourceMapping
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/CreateEventSourceMapping
 func (c *Lambda) CreateEventSourceMapping(input *CreateEventSourceMappingInput) (*EventSourceMappingConfiguration, error) {
@@ -494,6 +497,13 @@ func (c *Lambda) CreateFunctionRequest(input *CreateFunctionInput) (req *request
 // the function permission to use AWS services, such as Amazon CloudWatch Logs
 // for log streaming and AWS X-Ray for request tracing.
 //
+// When you create a function, Lambda provisions an instance of the function
+// and its supporting resources. If your function connects to a VPC, this process
+// can take a minute or so. During this time, you can't invoke or modify the
+// function. The State, StateReason, and StateReasonCode fields in the response
+// from GetFunctionConfiguration indicate when the function is ready to invoke.
+// For more information, see Function States (https://docs.aws.amazon.com/lambda/latest/dg/functions-states.html).
+//
 // A function has an unpublished version, and can have published versions and
 // aliases. The unpublished version changes when you update your function's
 // code and configuration. A published version is a snapshot of your function
@@ -515,7 +525,7 @@ func (c *Lambda) CreateFunctionRequest(input *CreateFunctionInput) (req *request
 // To invoke your function directly, use Invoke. To invoke your function in
 // response to events in other AWS services, create an event source mapping
 // (CreateEventSourceMapping), or configure a function trigger in the other
-// service. For more information, see Invoking Functions (https://docs.aws.amazon.com/lambda/latest/dg/invoking-lambda-functions.html).
+// service. For more information, see Invoking Functions (https://docs.aws.amazon.com/lambda/latest/dg/lambda-invocation.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -529,19 +539,16 @@ func (c *Lambda) CreateFunctionRequest(input *CreateFunctionInput) (req *request
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
@@ -627,12 +634,13 @@ func (c *Lambda) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteAlias
 func (c *Lambda) DeleteAlias(input *DeleteAliasInput) (*DeleteAliasOutput, error) {
@@ -703,6 +711,9 @@ func (c *Lambda) DeleteEventSourceMappingRequest(input *DeleteEventSourceMapping
 // Deletes an event source mapping (https://docs.aws.amazon.com/lambda/latest/dg/intro-invocation-modes.html).
 // You can get the identifier of a mapping from the output of ListEventSourceMappings.
 //
+// When you delete an event source mapping, it enters a Deleting state and might
+// not be completely deleted for several seconds.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -715,16 +726,13 @@ func (c *Lambda) DeleteEventSourceMappingRequest(input *DeleteEventSourceMapping
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   The operation conflicts with the resource's availability. For example, you
@@ -817,19 +825,16 @@ func (c *Lambda) DeleteFunctionRequest(input *DeleteFunctionInput) (req *request
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunction
 func (c *Lambda) DeleteFunction(input *DeleteFunctionInput) (*DeleteFunctionOutput, error) {
@@ -912,16 +917,16 @@ func (c *Lambda) DeleteFunctionConcurrencyRequest(input *DeleteFunctionConcurren
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunctionConcurrency
 func (c *Lambda) DeleteFunctionConcurrency(input *DeleteFunctionConcurrencyInput) (*DeleteFunctionConcurrencyOutput, error) {
@@ -940,6 +945,98 @@ func (c *Lambda) DeleteFunctionConcurrency(input *DeleteFunctionConcurrencyInput
 // for more information on using Contexts.
 func (c *Lambda) DeleteFunctionConcurrencyWithContext(ctx aws.Context, input *DeleteFunctionConcurrencyInput, opts ...request.Option) (*DeleteFunctionConcurrencyOutput, error) {
 	req, out := c.DeleteFunctionConcurrencyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteFunctionEventInvokeConfig = "DeleteFunctionEventInvokeConfig"
+
+// DeleteFunctionEventInvokeConfigRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteFunctionEventInvokeConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteFunctionEventInvokeConfig for more information on using the DeleteFunctionEventInvokeConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteFunctionEventInvokeConfigRequest method.
+//    req, resp := client.DeleteFunctionEventInvokeConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunctionEventInvokeConfig
+func (c *Lambda) DeleteFunctionEventInvokeConfigRequest(input *DeleteFunctionEventInvokeConfigInput) (req *request.Request, output *DeleteFunctionEventInvokeConfigOutput) {
+	op := &request.Operation{
+		Name:       opDeleteFunctionEventInvokeConfig,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2019-09-25/functions/{FunctionName}/event-invoke-config",
+	}
+
+	if input == nil {
+		input = &DeleteFunctionEventInvokeConfigInput{}
+	}
+
+	output = &DeleteFunctionEventInvokeConfigOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteFunctionEventInvokeConfig API operation for AWS Lambda.
+//
+// Deletes the configuration for asynchronous invocation for a function, version,
+// or alias.
+//
+// To configure options for asynchronous invocation, use PutFunctionEventInvokeConfig.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation DeleteFunctionEventInvokeConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteFunctionEventInvokeConfig
+func (c *Lambda) DeleteFunctionEventInvokeConfig(input *DeleteFunctionEventInvokeConfigInput) (*DeleteFunctionEventInvokeConfigOutput, error) {
+	req, out := c.DeleteFunctionEventInvokeConfigRequest(input)
+	return out, req.Send()
+}
+
+// DeleteFunctionEventInvokeConfigWithContext is the same as DeleteFunctionEventInvokeConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteFunctionEventInvokeConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) DeleteFunctionEventInvokeConfigWithContext(ctx aws.Context, input *DeleteFunctionEventInvokeConfigInput, opts ...request.Option) (*DeleteFunctionEventInvokeConfigOutput, error) {
+	req, out := c.DeleteFunctionEventInvokeConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1007,7 +1104,7 @@ func (c *Lambda) DeleteLayerVersionRequest(input *DeleteLayerVersionInput) (req 
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteLayerVersion
 func (c *Lambda) DeleteLayerVersion(input *DeleteLayerVersionInput) (*DeleteLayerVersionOutput, error) {
@@ -1026,6 +1123,98 @@ func (c *Lambda) DeleteLayerVersion(input *DeleteLayerVersionInput) (*DeleteLaye
 // for more information on using Contexts.
 func (c *Lambda) DeleteLayerVersionWithContext(ctx aws.Context, input *DeleteLayerVersionInput, opts ...request.Option) (*DeleteLayerVersionOutput, error) {
 	req, out := c.DeleteLayerVersionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteProvisionedConcurrencyConfig = "DeleteProvisionedConcurrencyConfig"
+
+// DeleteProvisionedConcurrencyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteProvisionedConcurrencyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteProvisionedConcurrencyConfig for more information on using the DeleteProvisionedConcurrencyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteProvisionedConcurrencyConfigRequest method.
+//    req, resp := client.DeleteProvisionedConcurrencyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteProvisionedConcurrencyConfig
+func (c *Lambda) DeleteProvisionedConcurrencyConfigRequest(input *DeleteProvisionedConcurrencyConfigInput) (req *request.Request, output *DeleteProvisionedConcurrencyConfigOutput) {
+	op := &request.Operation{
+		Name:       opDeleteProvisionedConcurrencyConfig,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency",
+	}
+
+	if input == nil {
+		input = &DeleteProvisionedConcurrencyConfigInput{}
+	}
+
+	output = &DeleteProvisionedConcurrencyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteProvisionedConcurrencyConfig API operation for AWS Lambda.
+//
+// Deletes the provisioned concurrency configuration for a function.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation DeleteProvisionedConcurrencyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/DeleteProvisionedConcurrencyConfig
+func (c *Lambda) DeleteProvisionedConcurrencyConfig(input *DeleteProvisionedConcurrencyConfigInput) (*DeleteProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.DeleteProvisionedConcurrencyConfigRequest(input)
+	return out, req.Send()
+}
+
+// DeleteProvisionedConcurrencyConfigWithContext is the same as DeleteProvisionedConcurrencyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteProvisionedConcurrencyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) DeleteProvisionedConcurrencyConfigWithContext(ctx aws.Context, input *DeleteProvisionedConcurrencyConfigInput, opts ...request.Option) (*DeleteProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.DeleteProvisionedConcurrencyConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1087,7 +1276,7 @@ func (c *Lambda) GetAccountSettingsRequest(input *GetAccountSettingsInput) (req 
 //
 // Returned Error Codes:
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeServiceException "ServiceException"
 //   The AWS Lambda service encountered an internal error.
@@ -1172,16 +1361,13 @@ func (c *Lambda) GetAliasRequest(input *GetAliasInput) (req *request.Request, ou
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetAlias
 func (c *Lambda) GetAlias(input *GetAliasInput) (*AliasConfiguration, error) {
@@ -1264,16 +1450,13 @@ func (c *Lambda) GetEventSourceMappingRequest(input *GetEventSourceMappingInput)
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetEventSourceMapping
 func (c *Lambda) GetEventSourceMapping(input *GetEventSourceMappingInput) (*EventSourceMappingConfiguration, error) {
@@ -1357,16 +1540,13 @@ func (c *Lambda) GetFunctionRequest(input *GetFunctionInput) (req *request.Reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunction
 func (c *Lambda) GetFunction(input *GetFunctionInput) (*GetFunctionOutput, error) {
@@ -1385,6 +1565,95 @@ func (c *Lambda) GetFunction(input *GetFunctionInput) (*GetFunctionOutput, error
 // for more information on using Contexts.
 func (c *Lambda) GetFunctionWithContext(ctx aws.Context, input *GetFunctionInput, opts ...request.Option) (*GetFunctionOutput, error) {
 	req, out := c.GetFunctionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetFunctionConcurrency = "GetFunctionConcurrency"
+
+// GetFunctionConcurrencyRequest generates a "aws/request.Request" representing the
+// client's request for the GetFunctionConcurrency operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetFunctionConcurrency for more information on using the GetFunctionConcurrency
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetFunctionConcurrencyRequest method.
+//    req, resp := client.GetFunctionConcurrencyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConcurrency
+func (c *Lambda) GetFunctionConcurrencyRequest(input *GetFunctionConcurrencyInput) (req *request.Request, output *GetFunctionConcurrencyOutput) {
+	op := &request.Operation{
+		Name:       opGetFunctionConcurrency,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/concurrency",
+	}
+
+	if input == nil {
+		input = &GetFunctionConcurrencyInput{}
+	}
+
+	output = &GetFunctionConcurrencyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetFunctionConcurrency API operation for AWS Lambda.
+//
+// Returns details about the concurrency configuration for a function. To set
+// a concurrency limit for a function, use PutFunctionConcurrency.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetFunctionConcurrency for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConcurrency
+func (c *Lambda) GetFunctionConcurrency(input *GetFunctionConcurrencyInput) (*GetFunctionConcurrencyOutput, error) {
+	req, out := c.GetFunctionConcurrencyRequest(input)
+	return out, req.Send()
+}
+
+// GetFunctionConcurrencyWithContext is the same as GetFunctionConcurrency with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetFunctionConcurrency for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetFunctionConcurrencyWithContext(ctx aws.Context, input *GetFunctionConcurrencyInput, opts ...request.Option) (*GetFunctionConcurrencyOutput, error) {
+	req, out := c.GetFunctionConcurrencyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1453,16 +1722,13 @@ func (c *Lambda) GetFunctionConfigurationRequest(input *GetFunctionConfiguration
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionConfiguration
 func (c *Lambda) GetFunctionConfiguration(input *GetFunctionConfigurationInput) (*FunctionConfiguration, error) {
@@ -1481,6 +1747,97 @@ func (c *Lambda) GetFunctionConfiguration(input *GetFunctionConfigurationInput) 
 // for more information on using Contexts.
 func (c *Lambda) GetFunctionConfigurationWithContext(ctx aws.Context, input *GetFunctionConfigurationInput, opts ...request.Option) (*FunctionConfiguration, error) {
 	req, out := c.GetFunctionConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetFunctionEventInvokeConfig = "GetFunctionEventInvokeConfig"
+
+// GetFunctionEventInvokeConfigRequest generates a "aws/request.Request" representing the
+// client's request for the GetFunctionEventInvokeConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetFunctionEventInvokeConfig for more information on using the GetFunctionEventInvokeConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetFunctionEventInvokeConfigRequest method.
+//    req, resp := client.GetFunctionEventInvokeConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionEventInvokeConfig
+func (c *Lambda) GetFunctionEventInvokeConfigRequest(input *GetFunctionEventInvokeConfigInput) (req *request.Request, output *GetFunctionEventInvokeConfigOutput) {
+	op := &request.Operation{
+		Name:       opGetFunctionEventInvokeConfig,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-25/functions/{FunctionName}/event-invoke-config",
+	}
+
+	if input == nil {
+		input = &GetFunctionEventInvokeConfigInput{}
+	}
+
+	output = &GetFunctionEventInvokeConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetFunctionEventInvokeConfig API operation for AWS Lambda.
+//
+// Retrieves the configuration for asynchronous invocation for a function, version,
+// or alias.
+//
+// To configure options for asynchronous invocation, use PutFunctionEventInvokeConfig.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetFunctionEventInvokeConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetFunctionEventInvokeConfig
+func (c *Lambda) GetFunctionEventInvokeConfig(input *GetFunctionEventInvokeConfigInput) (*GetFunctionEventInvokeConfigOutput, error) {
+	req, out := c.GetFunctionEventInvokeConfigRequest(input)
+	return out, req.Send()
+}
+
+// GetFunctionEventInvokeConfigWithContext is the same as GetFunctionEventInvokeConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetFunctionEventInvokeConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetFunctionEventInvokeConfigWithContext(ctx aws.Context, input *GetFunctionEventInvokeConfigInput, opts ...request.Option) (*GetFunctionEventInvokeConfigOutput, error) {
+	req, out := c.GetFunctionEventInvokeConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1545,16 +1902,13 @@ func (c *Lambda) GetLayerVersionRequest(input *GetLayerVersionInput) (req *reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersion
 func (c *Lambda) GetLayerVersion(input *GetLayerVersionInput) (*GetLayerVersionOutput, error) {
@@ -1637,16 +1991,13 @@ func (c *Lambda) GetLayerVersionByArnRequest(input *GetLayerVersionByArnInput) (
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionByArn
 func (c *Lambda) GetLayerVersionByArn(input *GetLayerVersionByArnInput) (*GetLayerVersionByArnOutput, error) {
@@ -1729,16 +2080,13 @@ func (c *Lambda) GetLayerVersionPolicyRequest(input *GetLayerVersionPolicyInput)
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetLayerVersionPolicy
 func (c *Lambda) GetLayerVersionPolicy(input *GetLayerVersionPolicyInput) (*GetLayerVersionPolicyOutput, error) {
@@ -1821,16 +2169,13 @@ func (c *Lambda) GetPolicyRequest(input *GetPolicyInput) (req *request.Request, 
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetPolicy
 func (c *Lambda) GetPolicy(input *GetPolicyInput) (*GetPolicyOutput, error) {
@@ -1849,6 +2194,98 @@ func (c *Lambda) GetPolicy(input *GetPolicyInput) (*GetPolicyOutput, error) {
 // for more information on using Contexts.
 func (c *Lambda) GetPolicyWithContext(ctx aws.Context, input *GetPolicyInput, opts ...request.Option) (*GetPolicyOutput, error) {
 	req, out := c.GetPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetProvisionedConcurrencyConfig = "GetProvisionedConcurrencyConfig"
+
+// GetProvisionedConcurrencyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the GetProvisionedConcurrencyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetProvisionedConcurrencyConfig for more information on using the GetProvisionedConcurrencyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetProvisionedConcurrencyConfigRequest method.
+//    req, resp := client.GetProvisionedConcurrencyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetProvisionedConcurrencyConfig
+func (c *Lambda) GetProvisionedConcurrencyConfigRequest(input *GetProvisionedConcurrencyConfigInput) (req *request.Request, output *GetProvisionedConcurrencyConfigOutput) {
+	op := &request.Operation{
+		Name:       opGetProvisionedConcurrencyConfig,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency",
+	}
+
+	if input == nil {
+		input = &GetProvisionedConcurrencyConfigInput{}
+	}
+
+	output = &GetProvisionedConcurrencyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetProvisionedConcurrencyConfig API operation for AWS Lambda.
+//
+// Retrieves the provisioned concurrency configuration for a function's alias
+// or version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation GetProvisionedConcurrencyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeProvisionedConcurrencyConfigNotFoundException "ProvisionedConcurrencyConfigNotFoundException"
+//   The specified configuration does not exist.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/GetProvisionedConcurrencyConfig
+func (c *Lambda) GetProvisionedConcurrencyConfig(input *GetProvisionedConcurrencyConfigInput) (*GetProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.GetProvisionedConcurrencyConfigRequest(input)
+	return out, req.Send()
+}
+
+// GetProvisionedConcurrencyConfigWithContext is the same as GetProvisionedConcurrencyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetProvisionedConcurrencyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) GetProvisionedConcurrencyConfigWithContext(ctx aws.Context, input *GetProvisionedConcurrencyConfigInput, opts ...request.Option) (*GetProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.GetProvisionedConcurrencyConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1902,18 +2339,24 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 // for the response), or asynchronously. To invoke a function asynchronously,
 // set InvocationType to Event.
 //
-// For synchronous invocation, details about the function response, including
-// errors, are included in the response body and headers. For either invocation
-// type, you can find more information in the execution log (https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions.html)
-// and trace (https://docs.aws.amazon.com/lambda/latest/dg/dlq.html). To record
-// function errors for asynchronous invocations, configure your function with
-// a dead letter queue (https://docs.aws.amazon.com/lambda/latest/dg/dlq.html).
+// For synchronous invocation (https://docs.aws.amazon.com/lambda/latest/dg/invocation-sync.html),
+// details about the function response, including errors, are included in the
+// response body and headers. For either invocation type, you can find more
+// information in the execution log (https://docs.aws.amazon.com/lambda/latest/dg/monitoring-functions.html)
+// and trace (https://docs.aws.amazon.com/lambda/latest/dg/lambda-x-ray.html).
 //
 // When an error occurs, your function may be invoked multiple times. Retry
 // behavior varies by error type, client, event source, and invocation type.
 // For example, if you invoke a function asynchronously and it returns an error,
 // Lambda executes the function up to two more times. For more information,
 // see Retry Behavior (https://docs.aws.amazon.com/lambda/latest/dg/retries-on-errors.html).
+//
+// For asynchronous invocation (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html),
+// Lambda adds events to a queue before sending them to your function. If your
+// function does not have enough capacity to keep up with the queue, events
+// may be lost. Occasionally, your function may receive the same event multiple
+// times, even if no error occurs. To retain events that were not processed,
+// configure your function with a dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq).
 //
 // The status code in the API response doesn't reflect function errors. Error
 // codes are reserved for errors that prevent your function from executing,
@@ -1942,8 +2385,7 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidRequestContentException "InvalidRequestContentException"
 //   The request body could not be parsed as JSON.
@@ -1956,12 +2398,10 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 //   The content type of the Invoke request body is not JSON.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeEC2UnexpectedException "EC2UnexpectedException"
 //   AWS Lambda received an unexpected EC2 client exception while setting up for
@@ -1972,9 +2412,9 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 //   one or more configured subnets has no available IP addresses.
 //
 //   * ErrCodeENILimitReachedException "ENILimitReachedException"
-//   AWS Lambda was not able to create an Elastic Network Interface (ENI) in the
-//   VPC, specified as part of Lambda function configuration, because the limit
-//   for network interfaces has been reached.
+//   AWS Lambda was not able to create an elastic network interface in the VPC,
+//   specified as part of Lambda function configuration, because the limit for
+//   network interfaces has been reached.
 //
 //   * ErrCodeEC2ThrottledException "EC2ThrottledException"
 //   AWS Lambda was throttled by Amazon EC2 during Lambda function initialization
@@ -2011,6 +2451,13 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 //
 //   * ErrCodeInvalidRuntimeException "InvalidRuntimeException"
 //   The runtime or runtime version specified is not supported.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
+//
+//   * ErrCodeResourceNotReadyException "ResourceNotReadyException"
+//   The function is inactive and its VPC connection is no longer available. Wait
+//   for the VPC connection to reestablish and try again.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/Invoke
 func (c *Lambda) Invoke(input *InvokeInput) (*InvokeOutput, error) {
@@ -2100,14 +2547,16 @@ func (c *Lambda) InvokeAsyncRequest(input *InvokeAsyncInput) (req *request.Reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidRequestContentException "InvalidRequestContentException"
 //   The request body could not be parsed as JSON.
 //
 //   * ErrCodeInvalidRuntimeException "InvalidRuntimeException"
 //   The runtime or runtime version specified is not supported.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/InvokeAsync
 //
@@ -2166,6 +2615,12 @@ func (c *Lambda) ListAliasesRequest(input *ListAliasesInput) (req *request.Reque
 		Name:       opListAliases,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2015-03-31/functions/{FunctionName}/aliases",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2194,16 +2649,13 @@ func (c *Lambda) ListAliasesRequest(input *ListAliasesInput) (req *request.Reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListAliases
 func (c *Lambda) ListAliases(input *ListAliasesInput) (*ListAliasesOutput, error) {
@@ -2225,6 +2677,58 @@ func (c *Lambda) ListAliasesWithContext(ctx aws.Context, input *ListAliasesInput
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListAliasesPages iterates over the pages of a ListAliases operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListAliases method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListAliases operation.
+//    pageNum := 0
+//    err := client.ListAliasesPages(params,
+//        func(page *lambda.ListAliasesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Lambda) ListAliasesPages(input *ListAliasesInput, fn func(*ListAliasesOutput, bool) bool) error {
+	return c.ListAliasesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListAliasesPagesWithContext same as ListAliasesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListAliasesPagesWithContext(ctx aws.Context, input *ListAliasesInput, fn func(*ListAliasesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListAliasesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListAliasesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListAliasesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListEventSourceMappings = "ListEventSourceMappings"
@@ -2292,16 +2796,13 @@ func (c *Lambda) ListEventSourceMappingsRequest(input *ListEventSourceMappingsIn
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListEventSourceMappings
 func (c *Lambda) ListEventSourceMappings(input *ListEventSourceMappingsInput) (*ListEventSourceMappingsOutput, error) {
@@ -2368,10 +2869,160 @@ func (c *Lambda) ListEventSourceMappingsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListEventSourceMappingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListEventSourceMappingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListFunctionEventInvokeConfigs = "ListFunctionEventInvokeConfigs"
+
+// ListFunctionEventInvokeConfigsRequest generates a "aws/request.Request" representing the
+// client's request for the ListFunctionEventInvokeConfigs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListFunctionEventInvokeConfigs for more information on using the ListFunctionEventInvokeConfigs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListFunctionEventInvokeConfigsRequest method.
+//    req, resp := client.ListFunctionEventInvokeConfigsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctionEventInvokeConfigs
+func (c *Lambda) ListFunctionEventInvokeConfigsRequest(input *ListFunctionEventInvokeConfigsInput) (req *request.Request, output *ListFunctionEventInvokeConfigsOutput) {
+	op := &request.Operation{
+		Name:       opListFunctionEventInvokeConfigs,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-25/functions/{FunctionName}/event-invoke-config/list",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListFunctionEventInvokeConfigsInput{}
+	}
+
+	output = &ListFunctionEventInvokeConfigsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListFunctionEventInvokeConfigs API operation for AWS Lambda.
+//
+// Retrieves a list of configurations for asynchronous invocation for a function.
+//
+// To configure options for asynchronous invocation, use PutFunctionEventInvokeConfig.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation ListFunctionEventInvokeConfigs for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctionEventInvokeConfigs
+func (c *Lambda) ListFunctionEventInvokeConfigs(input *ListFunctionEventInvokeConfigsInput) (*ListFunctionEventInvokeConfigsOutput, error) {
+	req, out := c.ListFunctionEventInvokeConfigsRequest(input)
+	return out, req.Send()
+}
+
+// ListFunctionEventInvokeConfigsWithContext is the same as ListFunctionEventInvokeConfigs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListFunctionEventInvokeConfigs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListFunctionEventInvokeConfigsWithContext(ctx aws.Context, input *ListFunctionEventInvokeConfigsInput, opts ...request.Option) (*ListFunctionEventInvokeConfigsOutput, error) {
+	req, out := c.ListFunctionEventInvokeConfigsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListFunctionEventInvokeConfigsPages iterates over the pages of a ListFunctionEventInvokeConfigs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListFunctionEventInvokeConfigs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListFunctionEventInvokeConfigs operation.
+//    pageNum := 0
+//    err := client.ListFunctionEventInvokeConfigsPages(params,
+//        func(page *lambda.ListFunctionEventInvokeConfigsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Lambda) ListFunctionEventInvokeConfigsPages(input *ListFunctionEventInvokeConfigsInput, fn func(*ListFunctionEventInvokeConfigsOutput, bool) bool) error {
+	return c.ListFunctionEventInvokeConfigsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListFunctionEventInvokeConfigsPagesWithContext same as ListFunctionEventInvokeConfigsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListFunctionEventInvokeConfigsPagesWithContext(ctx aws.Context, input *ListFunctionEventInvokeConfigsInput, fn func(*ListFunctionEventInvokeConfigsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListFunctionEventInvokeConfigsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListFunctionEventInvokeConfigsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListFunctionEventInvokeConfigsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -2444,12 +3095,10 @@ func (c *Lambda) ListFunctionsRequest(input *ListFunctionsInput) (req *request.R
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListFunctions
 func (c *Lambda) ListFunctions(input *ListFunctionsInput) (*ListFunctionsOutput, error) {
@@ -2516,10 +3165,12 @@ func (c *Lambda) ListFunctionsPagesWithContext(ctx aws.Context, input *ListFunct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFunctionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFunctionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2554,6 +3205,12 @@ func (c *Lambda) ListLayerVersionsRequest(input *ListLayerVersionsInput) (req *r
 		Name:       opListLayerVersions,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2018-10-31/layers/{LayerName}/versions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2584,16 +3241,13 @@ func (c *Lambda) ListLayerVersionsRequest(input *ListLayerVersionsInput) (req *r
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayerVersions
 func (c *Lambda) ListLayerVersions(input *ListLayerVersionsInput) (*ListLayerVersionsOutput, error) {
@@ -2615,6 +3269,58 @@ func (c *Lambda) ListLayerVersionsWithContext(ctx aws.Context, input *ListLayerV
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListLayerVersionsPages iterates over the pages of a ListLayerVersions operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListLayerVersions method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListLayerVersions operation.
+//    pageNum := 0
+//    err := client.ListLayerVersionsPages(params,
+//        func(page *lambda.ListLayerVersionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Lambda) ListLayerVersionsPages(input *ListLayerVersionsInput, fn func(*ListLayerVersionsOutput, bool) bool) error {
+	return c.ListLayerVersionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListLayerVersionsPagesWithContext same as ListLayerVersionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListLayerVersionsPagesWithContext(ctx aws.Context, input *ListLayerVersionsInput, fn func(*ListLayerVersionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListLayerVersionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListLayerVersionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListLayerVersionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListLayers = "ListLayers"
@@ -2648,6 +3354,12 @@ func (c *Lambda) ListLayersRequest(input *ListLayersInput) (req *request.Request
 		Name:       opListLayers,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2018-10-31/layers",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2678,12 +3390,10 @@ func (c *Lambda) ListLayersRequest(input *ListLayersInput) (req *request.Request
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListLayers
 func (c *Lambda) ListLayers(input *ListLayersInput) (*ListLayersOutput, error) {
@@ -2705,6 +3415,204 @@ func (c *Lambda) ListLayersWithContext(ctx aws.Context, input *ListLayersInput, 
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListLayersPages iterates over the pages of a ListLayers operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListLayers method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListLayers operation.
+//    pageNum := 0
+//    err := client.ListLayersPages(params,
+//        func(page *lambda.ListLayersOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Lambda) ListLayersPages(input *ListLayersInput, fn func(*ListLayersOutput, bool) bool) error {
+	return c.ListLayersPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListLayersPagesWithContext same as ListLayersPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListLayersPagesWithContext(ctx aws.Context, input *ListLayersInput, fn func(*ListLayersOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListLayersInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListLayersRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListLayersOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListProvisionedConcurrencyConfigs = "ListProvisionedConcurrencyConfigs"
+
+// ListProvisionedConcurrencyConfigsRequest generates a "aws/request.Request" representing the
+// client's request for the ListProvisionedConcurrencyConfigs operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListProvisionedConcurrencyConfigs for more information on using the ListProvisionedConcurrencyConfigs
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListProvisionedConcurrencyConfigsRequest method.
+//    req, resp := client.ListProvisionedConcurrencyConfigsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListProvisionedConcurrencyConfigs
+func (c *Lambda) ListProvisionedConcurrencyConfigsRequest(input *ListProvisionedConcurrencyConfigsInput) (req *request.Request, output *ListProvisionedConcurrencyConfigsOutput) {
+	op := &request.Operation{
+		Name:       opListProvisionedConcurrencyConfigs,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency?List=ALL",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListProvisionedConcurrencyConfigsInput{}
+	}
+
+	output = &ListProvisionedConcurrencyConfigsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListProvisionedConcurrencyConfigs API operation for AWS Lambda.
+//
+// Retrieves a list of provisioned concurrency configurations for a function.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation ListProvisionedConcurrencyConfigs for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListProvisionedConcurrencyConfigs
+func (c *Lambda) ListProvisionedConcurrencyConfigs(input *ListProvisionedConcurrencyConfigsInput) (*ListProvisionedConcurrencyConfigsOutput, error) {
+	req, out := c.ListProvisionedConcurrencyConfigsRequest(input)
+	return out, req.Send()
+}
+
+// ListProvisionedConcurrencyConfigsWithContext is the same as ListProvisionedConcurrencyConfigs with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListProvisionedConcurrencyConfigs for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListProvisionedConcurrencyConfigsWithContext(ctx aws.Context, input *ListProvisionedConcurrencyConfigsInput, opts ...request.Option) (*ListProvisionedConcurrencyConfigsOutput, error) {
+	req, out := c.ListProvisionedConcurrencyConfigsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListProvisionedConcurrencyConfigsPages iterates over the pages of a ListProvisionedConcurrencyConfigs operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListProvisionedConcurrencyConfigs method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListProvisionedConcurrencyConfigs operation.
+//    pageNum := 0
+//    err := client.ListProvisionedConcurrencyConfigsPages(params,
+//        func(page *lambda.ListProvisionedConcurrencyConfigsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Lambda) ListProvisionedConcurrencyConfigsPages(input *ListProvisionedConcurrencyConfigsInput, fn func(*ListProvisionedConcurrencyConfigsOutput, bool) bool) error {
+	return c.ListProvisionedConcurrencyConfigsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListProvisionedConcurrencyConfigsPagesWithContext same as ListProvisionedConcurrencyConfigsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListProvisionedConcurrencyConfigsPagesWithContext(ctx aws.Context, input *ListProvisionedConcurrencyConfigsInput, fn func(*ListProvisionedConcurrencyConfigsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListProvisionedConcurrencyConfigsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListProvisionedConcurrencyConfigsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListProvisionedConcurrencyConfigsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListTags = "ListTags"
@@ -2766,16 +3674,13 @@ func (c *Lambda) ListTagsRequest(input *ListTagsInput) (req *request.Request, ou
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListTags
 func (c *Lambda) ListTags(input *ListTagsInput) (*ListTagsOutput, error) {
@@ -2830,6 +3735,12 @@ func (c *Lambda) ListVersionsByFunctionRequest(input *ListVersionsByFunctionInpu
 		Name:       opListVersionsByFunction,
 		HTTPMethod: "GET",
 		HTTPPath:   "/2015-03-31/functions/{FunctionName}/versions",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"Marker"},
+			OutputTokens:    []string{"NextMarker"},
+			LimitToken:      "MaxItems",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -2858,16 +3769,13 @@ func (c *Lambda) ListVersionsByFunctionRequest(input *ListVersionsByFunctionInpu
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/ListVersionsByFunction
 func (c *Lambda) ListVersionsByFunction(input *ListVersionsByFunctionInput) (*ListVersionsByFunctionOutput, error) {
@@ -2889,6 +3797,58 @@ func (c *Lambda) ListVersionsByFunctionWithContext(ctx aws.Context, input *ListV
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListVersionsByFunctionPages iterates over the pages of a ListVersionsByFunction operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListVersionsByFunction method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListVersionsByFunction operation.
+//    pageNum := 0
+//    err := client.ListVersionsByFunctionPages(params,
+//        func(page *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *Lambda) ListVersionsByFunctionPages(input *ListVersionsByFunctionInput, fn func(*ListVersionsByFunctionOutput, bool) bool) error {
+	return c.ListVersionsByFunctionPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListVersionsByFunctionPagesWithContext same as ListVersionsByFunctionPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) ListVersionsByFunctionPagesWithContext(ctx aws.Context, input *ListVersionsByFunctionInput, fn func(*ListVersionsByFunctionOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListVersionsByFunctionInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListVersionsByFunctionRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListVersionsByFunctionOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opPublishLayerVersion = "PublishLayerVersion"
@@ -2937,7 +3897,7 @@ func (c *Lambda) PublishLayerVersionRequest(input *PublishLayerVersionInput) (re
 //
 // Creates an AWS Lambda layer (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html)
 // from a ZIP archive. Each time you call PublishLayerVersion with the same
-// version name, a new version is created.
+// layer name, a new version is created.
 //
 // Add layers to your function with CreateFunction or UpdateFunctionConfiguration.
 //
@@ -2953,16 +3913,13 @@ func (c *Lambda) PublishLayerVersionRequest(input *PublishLayerVersionInput) (re
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
@@ -3056,16 +4013,13 @@ func (c *Lambda) PublishVersionRequest(input *PublishVersionInput) (req *request
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
@@ -3074,6 +4028,9 @@ func (c *Lambda) PublishVersionRequest(input *PublishVersionInput) (req *request
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PublishVersion
 func (c *Lambda) PublishVersion(input *PublishVersionInput) (*FunctionConfiguration, error) {
@@ -3150,7 +4107,7 @@ func (c *Lambda) PutFunctionConcurrencyRequest(input *PutFunctionConcurrencyInpu
 // simultaneously, and prevents it from scaling beyond that level. Use GetFunction
 // to see the current setting for a function.
 //
-// Use GetAccountSettings to see your regional concurrency limit. You can reserve
+// Use GetAccountSettings to see your Regional concurrency limit. You can reserve
 // concurrency for as many functions as you like, as long as you leave at least
 // 100 simultaneous executions unreserved for functions that aren't configured
 // with a per-function limit. For more information, see Managing Concurrency
@@ -3168,16 +4125,16 @@ func (c *Lambda) PutFunctionConcurrencyRequest(input *PutFunctionConcurrencyInpu
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutFunctionConcurrency
 func (c *Lambda) PutFunctionConcurrency(input *PutFunctionConcurrencyInput) (*PutFunctionConcurrencyOutput, error) {
@@ -3196,6 +4153,192 @@ func (c *Lambda) PutFunctionConcurrency(input *PutFunctionConcurrencyInput) (*Pu
 // for more information on using Contexts.
 func (c *Lambda) PutFunctionConcurrencyWithContext(ctx aws.Context, input *PutFunctionConcurrencyInput, opts ...request.Option) (*PutFunctionConcurrencyOutput, error) {
 	req, out := c.PutFunctionConcurrencyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutFunctionEventInvokeConfig = "PutFunctionEventInvokeConfig"
+
+// PutFunctionEventInvokeConfigRequest generates a "aws/request.Request" representing the
+// client's request for the PutFunctionEventInvokeConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutFunctionEventInvokeConfig for more information on using the PutFunctionEventInvokeConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutFunctionEventInvokeConfigRequest method.
+//    req, resp := client.PutFunctionEventInvokeConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutFunctionEventInvokeConfig
+func (c *Lambda) PutFunctionEventInvokeConfigRequest(input *PutFunctionEventInvokeConfigInput) (req *request.Request, output *PutFunctionEventInvokeConfigOutput) {
+	op := &request.Operation{
+		Name:       opPutFunctionEventInvokeConfig,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2019-09-25/functions/{FunctionName}/event-invoke-config",
+	}
+
+	if input == nil {
+		input = &PutFunctionEventInvokeConfigInput{}
+	}
+
+	output = &PutFunctionEventInvokeConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutFunctionEventInvokeConfig API operation for AWS Lambda.
+//
+// Configures options for asynchronous invocation (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html)
+// on a function, version, or alias.
+//
+// By default, Lambda retries an asynchronous invocation twice if the function
+// returns an error. It retains events in a queue for up to six hours. When
+// an event fails all processing attempts or stays in the asynchronous invocation
+// queue for too long, Lambda discards it. To retain discarded events, configure
+// a dead-letter queue with UpdateFunctionConfiguration.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation PutFunctionEventInvokeConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutFunctionEventInvokeConfig
+func (c *Lambda) PutFunctionEventInvokeConfig(input *PutFunctionEventInvokeConfigInput) (*PutFunctionEventInvokeConfigOutput, error) {
+	req, out := c.PutFunctionEventInvokeConfigRequest(input)
+	return out, req.Send()
+}
+
+// PutFunctionEventInvokeConfigWithContext is the same as PutFunctionEventInvokeConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutFunctionEventInvokeConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) PutFunctionEventInvokeConfigWithContext(ctx aws.Context, input *PutFunctionEventInvokeConfigInput, opts ...request.Option) (*PutFunctionEventInvokeConfigOutput, error) {
+	req, out := c.PutFunctionEventInvokeConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutProvisionedConcurrencyConfig = "PutProvisionedConcurrencyConfig"
+
+// PutProvisionedConcurrencyConfigRequest generates a "aws/request.Request" representing the
+// client's request for the PutProvisionedConcurrencyConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutProvisionedConcurrencyConfig for more information on using the PutProvisionedConcurrencyConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutProvisionedConcurrencyConfigRequest method.
+//    req, resp := client.PutProvisionedConcurrencyConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutProvisionedConcurrencyConfig
+func (c *Lambda) PutProvisionedConcurrencyConfigRequest(input *PutProvisionedConcurrencyConfigInput) (req *request.Request, output *PutProvisionedConcurrencyConfigOutput) {
+	op := &request.Operation{
+		Name:       opPutProvisionedConcurrencyConfig,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2019-09-30/functions/{FunctionName}/provisioned-concurrency",
+	}
+
+	if input == nil {
+		input = &PutProvisionedConcurrencyConfigInput{}
+	}
+
+	output = &PutProvisionedConcurrencyConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PutProvisionedConcurrencyConfig API operation for AWS Lambda.
+//
+// Adds a provisioned concurrency configuration to a function's alias or version.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation PutProvisionedConcurrencyConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/PutProvisionedConcurrencyConfig
+func (c *Lambda) PutProvisionedConcurrencyConfig(input *PutProvisionedConcurrencyConfigInput) (*PutProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.PutProvisionedConcurrencyConfigRequest(input)
+	return out, req.Send()
+}
+
+// PutProvisionedConcurrencyConfigWithContext is the same as PutProvisionedConcurrencyConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutProvisionedConcurrencyConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) PutProvisionedConcurrencyConfigWithContext(ctx aws.Context, input *PutProvisionedConcurrencyConfigInput, opts ...request.Option) (*PutProvisionedConcurrencyConfigOutput, error) {
+	req, out := c.PutProvisionedConcurrencyConfigRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -3262,16 +4405,13 @@ func (c *Lambda) RemoveLayerVersionPermissionRequest(input *RemoveLayerVersionPe
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
@@ -3360,16 +4500,13 @@ func (c *Lambda) RemovePermissionRequest(input *RemovePermissionInput) (req *req
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
@@ -3458,16 +4595,13 @@ func (c *Lambda) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/TagResource
 func (c *Lambda) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
@@ -3551,16 +4685,13 @@ func (c *Lambda) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UntagResource
 func (c *Lambda) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
@@ -3642,21 +4773,21 @@ func (c *Lambda) UpdateAliasRequest(input *UpdateAliasInput) (req *request.Reque
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateAlias
 func (c *Lambda) UpdateAlias(input *UpdateAliasInput) (*AliasConfiguration, error) {
@@ -3727,6 +4858,21 @@ func (c *Lambda) UpdateEventSourceMappingRequest(input *UpdateEventSourceMapping
 // Updates an event source mapping. You can change the function that AWS Lambda
 // invokes, or pause invocation and resume later from the same location.
 //
+// The following error handling options are only available for stream sources
+// (DynamoDB and Kinesis):
+//
+//    * BisectBatchOnFunctionError - If the function returns an error, split
+//    the batch in two and retry.
+//
+//    * DestinationConfig - Send discarded records to an Amazon SQS queue or
+//    Amazon SNS topic.
+//
+//    * MaximumRecordAgeInSeconds - Discard records older than the specified
+//    age.
+//
+//    * MaximumRetryAttempts - Discard records after the specified number of
+//    retries.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -3739,19 +4885,16 @@ func (c *Lambda) UpdateEventSourceMappingRequest(input *UpdateEventSourceMapping
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodeResourceInUseException "ResourceInUseException"
 //   The operation conflicts with the resource's availability. For example, you
@@ -3841,16 +4984,13 @@ func (c *Lambda) UpdateFunctionCodeRequest(input *UpdateFunctionCodeInput) (req 
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeCodeStorageExceededException "CodeStorageExceededException"
 //   You have exceeded your maximum total code size per account. Learn more (https://docs.aws.amazon.com/lambda/latest/dg/limits.html)
@@ -3859,6 +4999,9 @@ func (c *Lambda) UpdateFunctionCodeRequest(input *UpdateFunctionCodeInput) (req 
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
 //   function or alias. Call the GetFunction or the GetAlias API to retrieve the
 //   latest RevisionId for your resource.
+//
+//   * ErrCodeResourceConflictException "ResourceConflictException"
+//   The resource already exists, or another operation is in progress.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionCode
 func (c *Lambda) UpdateFunctionCode(input *UpdateFunctionCodeInput) (*FunctionConfiguration, error) {
@@ -3928,6 +5071,14 @@ func (c *Lambda) UpdateFunctionConfigurationRequest(input *UpdateFunctionConfigu
 //
 // Modify the version-specific settings of a Lambda function.
 //
+// When you update a function, Lambda provisions an instance of the function
+// and its supporting resources. If your function connects to a VPC, this process
+// can take a minute. During this time, you can't modify the function, but you
+// can still invoke it. The LastUpdateStatus, LastUpdateStatusReason, and LastUpdateStatusReasonCode
+// fields in the response from GetFunctionConfiguration indicate when the update
+// is complete and the function is processing events with the new configuration.
+// For more information, see Function States (https://docs.aws.amazon.com/lambda/latest/dg/functions-states.html).
+//
 // These settings can vary between versions of a function and are locked when
 // you publish a version. You can't modify the configuration of a published
 // version, only the unpublished version.
@@ -3947,19 +5098,16 @@ func (c *Lambda) UpdateFunctionConfigurationRequest(input *UpdateFunctionConfigu
 //   The AWS Lambda service encountered an internal error.
 //
 //   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
-//   The resource (for example, a Lambda function or access policy statement)
-//   specified in the request does not exist.
+//   The resource specified in the request does not exist.
 //
 //   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
-//   One of the parameters in the request is invalid. For example, if you provided
-//   an IAM role for AWS Lambda to assume in the CreateFunction or the UpdateFunctionConfiguration
-//   API, that AWS Lambda is unable to assume you will get this exception.
+//   One of the parameters in the request is invalid.
 //
 //   * ErrCodeTooManyRequestsException "TooManyRequestsException"
-//   Request throughput limit exceeded.
+//   The request throughput limit was exceeded.
 //
 //   * ErrCodeResourceConflictException "ResourceConflictException"
-//   The resource already exists.
+//   The resource already exists, or another operation is in progress.
 //
 //   * ErrCodePreconditionFailedException "PreconditionFailedException"
 //   The RevisionId provided does not match the latest RevisionId for the Lambda
@@ -3988,12 +5136,104 @@ func (c *Lambda) UpdateFunctionConfigurationWithContext(ctx aws.Context, input *
 	return out, req.Send()
 }
 
-// Limits that are related to concurrency and code storage. All file and storage
+const opUpdateFunctionEventInvokeConfig = "UpdateFunctionEventInvokeConfig"
+
+// UpdateFunctionEventInvokeConfigRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateFunctionEventInvokeConfig operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateFunctionEventInvokeConfig for more information on using the UpdateFunctionEventInvokeConfig
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateFunctionEventInvokeConfigRequest method.
+//    req, resp := client.UpdateFunctionEventInvokeConfigRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionEventInvokeConfig
+func (c *Lambda) UpdateFunctionEventInvokeConfigRequest(input *UpdateFunctionEventInvokeConfigInput) (req *request.Request, output *UpdateFunctionEventInvokeConfigOutput) {
+	op := &request.Operation{
+		Name:       opUpdateFunctionEventInvokeConfig,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2019-09-25/functions/{FunctionName}/event-invoke-config",
+	}
+
+	if input == nil {
+		input = &UpdateFunctionEventInvokeConfigInput{}
+	}
+
+	output = &UpdateFunctionEventInvokeConfigOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateFunctionEventInvokeConfig API operation for AWS Lambda.
+//
+// Updates the configuration for asynchronous invocation for a function, version,
+// or alias.
+//
+// To configure options for asynchronous invocation, use PutFunctionEventInvokeConfig.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Lambda's
+// API operation UpdateFunctionEventInvokeConfig for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeServiceException "ServiceException"
+//   The AWS Lambda service encountered an internal error.
+//
+//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   The resource specified in the request does not exist.
+//
+//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   One of the parameters in the request is invalid.
+//
+//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   The request throughput limit was exceeded.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lambda-2015-03-31/UpdateFunctionEventInvokeConfig
+func (c *Lambda) UpdateFunctionEventInvokeConfig(input *UpdateFunctionEventInvokeConfigInput) (*UpdateFunctionEventInvokeConfigOutput, error) {
+	req, out := c.UpdateFunctionEventInvokeConfigRequest(input)
+	return out, req.Send()
+}
+
+// UpdateFunctionEventInvokeConfigWithContext is the same as UpdateFunctionEventInvokeConfig with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateFunctionEventInvokeConfig for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Lambda) UpdateFunctionEventInvokeConfigWithContext(ctx aws.Context, input *UpdateFunctionEventInvokeConfigInput, opts ...request.Option) (*UpdateFunctionEventInvokeConfigOutput, error) {
+	req, out := c.UpdateFunctionEventInvokeConfigRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// Limits that are related to concurrency and storage. All file and storage
 // sizes are in bytes.
 type AccountLimit struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum size of your function's code and layers when they're extracted.
+	// The maximum size of a function's deployment package and layers when they're
+	// extracted.
 	CodeSizeUnzipped *int64 `type:"long"`
 
 	// The maximum size of a deployment package when it's uploaded directly to AWS
@@ -4634,6 +5874,13 @@ type CreateEventSourceMappingInput struct {
 	//    * Amazon Simple Queue Service - Default 10. Max 10.
 	BatchSize *int64 `min:"1" type:"integer"`
 
+	// (Streams) If the function returns an error, split the batch in two and retry.
+	BisectBatchOnFunctionError *bool `type:"boolean"`
+
+	// (Streams) An Amazon SQS queue or Amazon SNS topic destination for discarded
+	// records.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
 	// Disables the event source mapping to pause polling and invocation.
 	Enabled *bool `type:"boolean"`
 
@@ -4665,6 +5912,21 @@ type CreateEventSourceMappingInput struct {
 	//
 	// FunctionName is a required field
 	FunctionName *string `min:"1" type:"string" required:"true"`
+
+	// The maximum amount of time to gather records before invoking the function,
+	// in seconds.
+	MaximumBatchingWindowInSeconds *int64 `type:"integer"`
+
+	// (Streams) The maximum age of a record that Lambda sends to a function for
+	// processing.
+	MaximumRecordAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// (Streams) The maximum number of times to retry when the function returns
+	// an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+
+	// (Streams) The number of batches to process from each shard concurrently.
+	ParallelizationFactor *int64 `min:"1" type:"integer"`
 
 	// The position in a stream from which to start reading. Required for Amazon
 	// Kinesis and Amazon DynamoDB Streams sources. AT_TIMESTAMP is only supported
@@ -4700,6 +5962,12 @@ func (s *CreateEventSourceMappingInput) Validate() error {
 	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
 	}
+	if s.MaximumRecordAgeInSeconds != nil && *s.MaximumRecordAgeInSeconds < 60 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumRecordAgeInSeconds", 60))
+	}
+	if s.ParallelizationFactor != nil && *s.ParallelizationFactor < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParallelizationFactor", 1))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4710,6 +5978,18 @@ func (s *CreateEventSourceMappingInput) Validate() error {
 // SetBatchSize sets the BatchSize field's value.
 func (s *CreateEventSourceMappingInput) SetBatchSize(v int64) *CreateEventSourceMappingInput {
 	s.BatchSize = &v
+	return s
+}
+
+// SetBisectBatchOnFunctionError sets the BisectBatchOnFunctionError field's value.
+func (s *CreateEventSourceMappingInput) SetBisectBatchOnFunctionError(v bool) *CreateEventSourceMappingInput {
+	s.BisectBatchOnFunctionError = &v
+	return s
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *CreateEventSourceMappingInput) SetDestinationConfig(v *DestinationConfig) *CreateEventSourceMappingInput {
+	s.DestinationConfig = v
 	return s
 }
 
@@ -4728,6 +6008,30 @@ func (s *CreateEventSourceMappingInput) SetEventSourceArn(v string) *CreateEvent
 // SetFunctionName sets the FunctionName field's value.
 func (s *CreateEventSourceMappingInput) SetFunctionName(v string) *CreateEventSourceMappingInput {
 	s.FunctionName = &v
+	return s
+}
+
+// SetMaximumBatchingWindowInSeconds sets the MaximumBatchingWindowInSeconds field's value.
+func (s *CreateEventSourceMappingInput) SetMaximumBatchingWindowInSeconds(v int64) *CreateEventSourceMappingInput {
+	s.MaximumBatchingWindowInSeconds = &v
+	return s
+}
+
+// SetMaximumRecordAgeInSeconds sets the MaximumRecordAgeInSeconds field's value.
+func (s *CreateEventSourceMappingInput) SetMaximumRecordAgeInSeconds(v int64) *CreateEventSourceMappingInput {
+	s.MaximumRecordAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *CreateEventSourceMappingInput) SetMaximumRetryAttempts(v int64) *CreateEventSourceMappingInput {
+	s.MaximumRetryAttempts = &v
+	return s
+}
+
+// SetParallelizationFactor sets the ParallelizationFactor field's value.
+func (s *CreateEventSourceMappingInput) SetParallelizationFactor(v int64) *CreateEventSourceMappingInput {
+	s.ParallelizationFactor = &v
 	return s
 }
 
@@ -4753,7 +6057,7 @@ type CreateFunctionInput struct {
 
 	// A dead letter queue configuration that specifies the queue or topic where
 	// Lambda sends asynchronous events when they fail processing. For more information,
-	// see Dead Letter Queues (https://docs.aws.amazon.com/lambda/latest/dg/dlq.html).
+	// see Dead Letter Queues (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq).
 	DeadLetterConfig *DeadLetterConfig `type:"structure"`
 
 	// A description of the function.
@@ -4829,7 +6133,7 @@ type CreateFunctionInput struct {
 	// For network connectivity to AWS resources in a VPC, specify a list of security
 	// groups and subnets in the VPC. When you connect a function to a VPC, it can
 	// only access resources and the internet through that VPC. For more information,
-	// see VPC Settings (https://docs.aws.amazon.com/lambda/latest/dg/vpc.html).
+	// see VPC Settings (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -4978,7 +6282,7 @@ func (s *CreateFunctionInput) SetVpcConfig(v *VpcConfig) *CreateFunctionInput {
 	return s
 }
 
-// The dead letter queue (https://docs.aws.amazon.com/lambda/latest/dg/dlq.html)
+// The dead-letter queue (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq)
 // for failed asynchronous invocations.
 type DeadLetterConfig struct {
 	_ struct{} `type:"structure"`
@@ -5193,6 +6497,85 @@ func (s DeleteFunctionConcurrencyOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteFunctionEventInvokeConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function, version, or alias.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function (name-only), my-function:v1 (with alias).
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// You can append a version number or alias to any of the formats. The length
+	// constraint applies only to the full ARN. If you specify only the function
+	// name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// A version number or alias name.
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteFunctionEventInvokeConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFunctionEventInvokeConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteFunctionEventInvokeConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteFunctionEventInvokeConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *DeleteFunctionEventInvokeConfigInput) SetFunctionName(v string) *DeleteFunctionEventInvokeConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *DeleteFunctionEventInvokeConfigInput) SetQualifier(v string) *DeleteFunctionEventInvokeConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type DeleteFunctionEventInvokeConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteFunctionEventInvokeConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFunctionEventInvokeConfigOutput) GoString() string {
+	return s.String()
+}
+
 type DeleteFunctionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5342,6 +6725,123 @@ func (s DeleteLayerVersionOutput) GoString() string {
 	return s.String()
 }
 
+type DeleteProvisionedConcurrencyConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The version number or alias name.
+	//
+	// Qualifier is a required field
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteProvisionedConcurrencyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisionedConcurrencyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteProvisionedConcurrencyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteProvisionedConcurrencyConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.Qualifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("Qualifier"))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *DeleteProvisionedConcurrencyConfigInput) SetFunctionName(v string) *DeleteProvisionedConcurrencyConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *DeleteProvisionedConcurrencyConfigInput) SetQualifier(v string) *DeleteProvisionedConcurrencyConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type DeleteProvisionedConcurrencyConfigOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteProvisionedConcurrencyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteProvisionedConcurrencyConfigOutput) GoString() string {
+	return s.String()
+}
+
+// A configuration object that specifies the destination of an event after Lambda
+// processes it.
+type DestinationConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The destination configuration for failed invocations.
+	OnFailure *OnFailure `type:"structure"`
+
+	// The destination configuration for successful invocations.
+	OnSuccess *OnSuccess `type:"structure"`
+}
+
+// String returns the string representation
+func (s DestinationConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DestinationConfig) GoString() string {
+	return s.String()
+}
+
+// SetOnFailure sets the OnFailure field's value.
+func (s *DestinationConfig) SetOnFailure(v *OnFailure) *DestinationConfig {
+	s.OnFailure = v
+	return s
+}
+
+// SetOnSuccess sets the OnSuccess field's value.
+func (s *DestinationConfig) SetOnSuccess(v *OnSuccess) *DestinationConfig {
+	s.OnSuccess = v
+	return s
+}
+
 // A function's environment variable settings.
 type Environment struct {
 	_ struct{} `type:"structure"`
@@ -5399,7 +6899,9 @@ func (s *EnvironmentError) SetMessage(v string) *EnvironmentError {
 	return s
 }
 
-// The results of a configuration update that applied environment variables.
+// The results of an operation to update or read environment variables. If the
+// operation is successful, the response contains the environment variables.
+// If it failed, the response contains details about the error.
 type EnvironmentResponse struct {
 	_ struct{} `type:"structure"`
 
@@ -5440,23 +6942,46 @@ type EventSourceMappingConfiguration struct {
 	// The maximum number of items to retrieve in a single batch.
 	BatchSize *int64 `min:"1" type:"integer"`
 
+	// (Streams) If the function returns an error, split the batch in two and retry.
+	BisectBatchOnFunctionError *bool `type:"boolean"`
+
+	// (Streams) An Amazon SQS queue or Amazon SNS topic destination for discarded
+	// records.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
 	// The Amazon Resource Name (ARN) of the event source.
 	EventSourceArn *string `type:"string"`
 
 	// The ARN of the Lambda function.
 	FunctionArn *string `type:"string"`
 
-	// The date that the event source mapping was last updated.
+	// The date that the event source mapping was last updated, or its state changed.
 	LastModified *time.Time `type:"timestamp"`
 
 	// The result of the last AWS Lambda invocation of your Lambda function.
 	LastProcessingResult *string `type:"string"`
 
+	// The maximum amount of time to gather records before invoking the function,
+	// in seconds.
+	MaximumBatchingWindowInSeconds *int64 `type:"integer"`
+
+	// (Streams) The maximum age of a record that Lambda sends to a function for
+	// processing.
+	MaximumRecordAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// (Streams) The maximum number of times to retry when the function returns
+	// an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+
+	// (Streams) The number of batches to process from each shard concurrently.
+	ParallelizationFactor *int64 `min:"1" type:"integer"`
+
 	// The state of the event source mapping. It can be one of the following: Creating,
 	// Enabling, Enabled, Disabling, Disabled, Updating, or Deleting.
 	State *string `type:"string"`
 
-	// The cause of the last state change, either User initiated or Lambda initiated.
+	// Indicates whether the last change to the event source mapping was made by
+	// a user, or by the Lambda service.
 	StateTransitionReason *string `type:"string"`
 
 	// The identifier of the event source mapping.
@@ -5476,6 +7001,18 @@ func (s EventSourceMappingConfiguration) GoString() string {
 // SetBatchSize sets the BatchSize field's value.
 func (s *EventSourceMappingConfiguration) SetBatchSize(v int64) *EventSourceMappingConfiguration {
 	s.BatchSize = &v
+	return s
+}
+
+// SetBisectBatchOnFunctionError sets the BisectBatchOnFunctionError field's value.
+func (s *EventSourceMappingConfiguration) SetBisectBatchOnFunctionError(v bool) *EventSourceMappingConfiguration {
+	s.BisectBatchOnFunctionError = &v
+	return s
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *EventSourceMappingConfiguration) SetDestinationConfig(v *DestinationConfig) *EventSourceMappingConfiguration {
+	s.DestinationConfig = v
 	return s
 }
 
@@ -5500,6 +7037,30 @@ func (s *EventSourceMappingConfiguration) SetLastModified(v time.Time) *EventSou
 // SetLastProcessingResult sets the LastProcessingResult field's value.
 func (s *EventSourceMappingConfiguration) SetLastProcessingResult(v string) *EventSourceMappingConfiguration {
 	s.LastProcessingResult = &v
+	return s
+}
+
+// SetMaximumBatchingWindowInSeconds sets the MaximumBatchingWindowInSeconds field's value.
+func (s *EventSourceMappingConfiguration) SetMaximumBatchingWindowInSeconds(v int64) *EventSourceMappingConfiguration {
+	s.MaximumBatchingWindowInSeconds = &v
+	return s
+}
+
+// SetMaximumRecordAgeInSeconds sets the MaximumRecordAgeInSeconds field's value.
+func (s *EventSourceMappingConfiguration) SetMaximumRecordAgeInSeconds(v int64) *EventSourceMappingConfiguration {
+	s.MaximumRecordAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *EventSourceMappingConfiguration) SetMaximumRetryAttempts(v int64) *EventSourceMappingConfiguration {
+	s.MaximumRetryAttempts = &v
+	return s
+}
+
+// SetParallelizationFactor sets the ParallelizationFactor field's value.
+func (s *EventSourceMappingConfiguration) SetParallelizationFactor(v int64) *EventSourceMappingConfiguration {
+	s.ParallelizationFactor = &v
 	return s
 }
 
@@ -5658,12 +7219,21 @@ type FunctionConfiguration struct {
 	Handler *string `type:"string"`
 
 	// The KMS key that's used to encrypt the function's environment variables.
-	// This key is only returned if you've configured a customer-managed CMK.
+	// This key is only returned if you've configured a customer managed CMK.
 	KMSKeyArn *string `type:"string"`
 
 	// The date and time that the function was last updated, in ISO-8601 format
 	// (https://www.w3.org/TR/NOTE-datetime) (YYYY-MM-DDThh:mm:ss.sTZD).
 	LastModified *string `type:"string"`
+
+	// The status of the last update that was performed on the function.
+	LastUpdateStatus *string `type:"string" enum:"LastUpdateStatus"`
+
+	// The reason for the last update that was performed on the function.
+	LastUpdateStatusReason *string `type:"string"`
+
+	// The reason code for the last update that was performed on the function.
+	LastUpdateStatusReasonCode *string `type:"string" enum:"LastUpdateStatusReasonCode"`
 
 	// The function's layers (https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html).
 	Layers []*Layer `type:"list"`
@@ -5682,6 +7252,17 @@ type FunctionConfiguration struct {
 
 	// The runtime environment for the Lambda function.
 	Runtime *string `type:"string" enum:"Runtime"`
+
+	// The current state of the function. When the state is Inactive, you can reactivate
+	// the function by invoking it.
+	State *string `type:"string" enum:"State"`
+
+	// The reason for the function's current state.
+	StateReason *string `type:"string"`
+
+	// The reason code for the function's current state. When the code is Creating,
+	// you can't invoke or modify the function.
+	StateReasonCode *string `type:"string" enum:"StateReasonCode"`
 
 	// The amount of time that Lambda allows a function to run before stopping it.
 	Timeout *int64 `min:"1" type:"integer"`
@@ -5766,6 +7347,24 @@ func (s *FunctionConfiguration) SetLastModified(v string) *FunctionConfiguration
 	return s
 }
 
+// SetLastUpdateStatus sets the LastUpdateStatus field's value.
+func (s *FunctionConfiguration) SetLastUpdateStatus(v string) *FunctionConfiguration {
+	s.LastUpdateStatus = &v
+	return s
+}
+
+// SetLastUpdateStatusReason sets the LastUpdateStatusReason field's value.
+func (s *FunctionConfiguration) SetLastUpdateStatusReason(v string) *FunctionConfiguration {
+	s.LastUpdateStatusReason = &v
+	return s
+}
+
+// SetLastUpdateStatusReasonCode sets the LastUpdateStatusReasonCode field's value.
+func (s *FunctionConfiguration) SetLastUpdateStatusReasonCode(v string) *FunctionConfiguration {
+	s.LastUpdateStatusReasonCode = &v
+	return s
+}
+
 // SetLayers sets the Layers field's value.
 func (s *FunctionConfiguration) SetLayers(v []*Layer) *FunctionConfiguration {
 	s.Layers = v
@@ -5802,6 +7401,24 @@ func (s *FunctionConfiguration) SetRuntime(v string) *FunctionConfiguration {
 	return s
 }
 
+// SetState sets the State field's value.
+func (s *FunctionConfiguration) SetState(v string) *FunctionConfiguration {
+	s.State = &v
+	return s
+}
+
+// SetStateReason sets the StateReason field's value.
+func (s *FunctionConfiguration) SetStateReason(v string) *FunctionConfiguration {
+	s.StateReason = &v
+	return s
+}
+
+// SetStateReasonCode sets the StateReasonCode field's value.
+func (s *FunctionConfiguration) SetStateReasonCode(v string) *FunctionConfiguration {
+	s.StateReasonCode = &v
+	return s
+}
+
 // SetTimeout sets the Timeout field's value.
 func (s *FunctionConfiguration) SetTimeout(v int64) *FunctionConfiguration {
 	s.Timeout = &v
@@ -5823,6 +7440,75 @@ func (s *FunctionConfiguration) SetVersion(v string) *FunctionConfiguration {
 // SetVpcConfig sets the VpcConfig field's value.
 func (s *FunctionConfiguration) SetVpcConfig(v *VpcConfigResponse) *FunctionConfiguration {
 	s.VpcConfig = v
+	return s
+}
+
+type FunctionEventInvokeConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Destinations
+	//
+	//    * Function - The Amazon Resource Name (ARN) of a Lambda function.
+	//
+	//    * Queue - The ARN of an SQS queue.
+	//
+	//    * Topic - The ARN of an SNS topic.
+	//
+	//    * Event Bus - The ARN of an Amazon EventBridge event bus.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the function.
+	FunctionArn *string `type:"string"`
+
+	// The date and time that the configuration was last updated.
+	LastModified *time.Time `type:"timestamp"`
+
+	// The maximum age of a request that Lambda sends to a function for processing.
+	MaximumEventAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// The maximum number of times to retry when the function returns an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s FunctionEventInvokeConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FunctionEventInvokeConfig) GoString() string {
+	return s.String()
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *FunctionEventInvokeConfig) SetDestinationConfig(v *DestinationConfig) *FunctionEventInvokeConfig {
+	s.DestinationConfig = v
+	return s
+}
+
+// SetFunctionArn sets the FunctionArn field's value.
+func (s *FunctionEventInvokeConfig) SetFunctionArn(v string) *FunctionEventInvokeConfig {
+	s.FunctionArn = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *FunctionEventInvokeConfig) SetLastModified(v time.Time) *FunctionEventInvokeConfig {
+	s.LastModified = &v
+	return s
+}
+
+// SetMaximumEventAgeInSeconds sets the MaximumEventAgeInSeconds field's value.
+func (s *FunctionEventInvokeConfig) SetMaximumEventAgeInSeconds(v int64) *FunctionEventInvokeConfig {
+	s.MaximumEventAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *FunctionEventInvokeConfig) SetMaximumRetryAttempts(v int64) *FunctionEventInvokeConfig {
+	s.MaximumRetryAttempts = &v
 	return s
 }
 
@@ -5982,6 +7668,81 @@ func (s *GetEventSourceMappingInput) SetUUID(v string) *GetEventSourceMappingInp
 	return s
 }
 
+type GetFunctionConcurrencyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetFunctionConcurrencyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFunctionConcurrencyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetFunctionConcurrencyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetFunctionConcurrencyInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *GetFunctionConcurrencyInput) SetFunctionName(v string) *GetFunctionConcurrencyInput {
+	s.FunctionName = &v
+	return s
+}
+
+type GetFunctionConcurrencyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The number of simultaneous executions that are reserved for the function.
+	ReservedConcurrentExecutions *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s GetFunctionConcurrencyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFunctionConcurrencyOutput) GoString() string {
+	return s.String()
+}
+
+// SetReservedConcurrentExecutions sets the ReservedConcurrentExecutions field's value.
+func (s *GetFunctionConcurrencyOutput) SetReservedConcurrentExecutions(v int64) *GetFunctionConcurrencyOutput {
+	s.ReservedConcurrentExecutions = &v
+	return s
+}
+
 type GetFunctionConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6045,6 +7806,140 @@ func (s *GetFunctionConfigurationInput) SetFunctionName(v string) *GetFunctionCo
 // SetQualifier sets the Qualifier field's value.
 func (s *GetFunctionConfigurationInput) SetQualifier(v string) *GetFunctionConfigurationInput {
 	s.Qualifier = &v
+	return s
+}
+
+type GetFunctionEventInvokeConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function, version, or alias.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function (name-only), my-function:v1 (with alias).
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// You can append a version number or alias to any of the formats. The length
+	// constraint applies only to the full ARN. If you specify only the function
+	// name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// A version number or alias name.
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetFunctionEventInvokeConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFunctionEventInvokeConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetFunctionEventInvokeConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetFunctionEventInvokeConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *GetFunctionEventInvokeConfigInput) SetFunctionName(v string) *GetFunctionEventInvokeConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *GetFunctionEventInvokeConfigInput) SetQualifier(v string) *GetFunctionEventInvokeConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type GetFunctionEventInvokeConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Destinations
+	//
+	//    * Function - The Amazon Resource Name (ARN) of a Lambda function.
+	//
+	//    * Queue - The ARN of an SQS queue.
+	//
+	//    * Topic - The ARN of an SNS topic.
+	//
+	//    * Event Bus - The ARN of an Amazon EventBridge event bus.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the function.
+	FunctionArn *string `type:"string"`
+
+	// The date and time that the configuration was last updated.
+	LastModified *time.Time `type:"timestamp"`
+
+	// The maximum age of a request that Lambda sends to a function for processing.
+	MaximumEventAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// The maximum number of times to retry when the function returns an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s GetFunctionEventInvokeConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetFunctionEventInvokeConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *GetFunctionEventInvokeConfigOutput) SetDestinationConfig(v *DestinationConfig) *GetFunctionEventInvokeConfigOutput {
+	s.DestinationConfig = v
+	return s
+}
+
+// SetFunctionArn sets the FunctionArn field's value.
+func (s *GetFunctionEventInvokeConfigOutput) SetFunctionArn(v string) *GetFunctionEventInvokeConfigOutput {
+	s.FunctionArn = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *GetFunctionEventInvokeConfigOutput) SetLastModified(v time.Time) *GetFunctionEventInvokeConfigOutput {
+	s.LastModified = &v
+	return s
+}
+
+// SetMaximumEventAgeInSeconds sets the MaximumEventAgeInSeconds field's value.
+func (s *GetFunctionEventInvokeConfigOutput) SetMaximumEventAgeInSeconds(v int64) *GetFunctionEventInvokeConfigOutput {
+	s.MaximumEventAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *GetFunctionEventInvokeConfigOutput) SetMaximumRetryAttempts(v int64) *GetFunctionEventInvokeConfigOutput {
+	s.MaximumRetryAttempts = &v
 	return s
 }
 
@@ -6615,6 +8510,145 @@ func (s *GetPolicyOutput) SetPolicy(v string) *GetPolicyOutput {
 // SetRevisionId sets the RevisionId field's value.
 func (s *GetPolicyOutput) SetRevisionId(v string) *GetPolicyOutput {
 	s.RevisionId = &v
+	return s
+}
+
+type GetProvisionedConcurrencyConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The version number or alias name.
+	//
+	// Qualifier is a required field
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetProvisionedConcurrencyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetProvisionedConcurrencyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetProvisionedConcurrencyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetProvisionedConcurrencyConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.Qualifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("Qualifier"))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *GetProvisionedConcurrencyConfigInput) SetFunctionName(v string) *GetProvisionedConcurrencyConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *GetProvisionedConcurrencyConfigInput) SetQualifier(v string) *GetProvisionedConcurrencyConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type GetProvisionedConcurrencyConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of provisioned concurrency allocated.
+	AllocatedProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The amount of provisioned concurrency available.
+	AvailableProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The date and time that a user last updated the configuration, in ISO 8601
+	// format (https://www.iso.org/iso-8601-date-and-time-format.html).
+	LastModified *string `type:"string"`
+
+	// The amount of provisioned concurrency requested.
+	RequestedProvisionedConcurrentExecutions *int64 `min:"1" type:"integer"`
+
+	// The status of the allocation process.
+	Status *string `type:"string" enum:"ProvisionedConcurrencyStatusEnum"`
+
+	// For failed allocations, the reason that provisioned concurrency could not
+	// be allocated.
+	StatusReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s GetProvisionedConcurrencyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetProvisionedConcurrencyConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedProvisionedConcurrentExecutions sets the AllocatedProvisionedConcurrentExecutions field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetAllocatedProvisionedConcurrentExecutions(v int64) *GetProvisionedConcurrencyConfigOutput {
+	s.AllocatedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetAvailableProvisionedConcurrentExecutions sets the AvailableProvisionedConcurrentExecutions field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetAvailableProvisionedConcurrentExecutions(v int64) *GetProvisionedConcurrencyConfigOutput {
+	s.AvailableProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetLastModified(v string) *GetProvisionedConcurrencyConfigOutput {
+	s.LastModified = &v
+	return s
+}
+
+// SetRequestedProvisionedConcurrentExecutions sets the RequestedProvisionedConcurrentExecutions field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetRequestedProvisionedConcurrentExecutions(v int64) *GetProvisionedConcurrencyConfigOutput {
+	s.RequestedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetStatus(v string) *GetProvisionedConcurrencyConfigOutput {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *GetProvisionedConcurrencyConfigOutput) SetStatusReason(v string) *GetProvisionedConcurrencyConfigOutput {
+	s.StatusReason = &v
 	return s
 }
 
@@ -7391,6 +9425,112 @@ func (s *ListEventSourceMappingsOutput) SetNextMarker(v string) *ListEventSource
 	return s
 }
 
+type ListFunctionEventInvokeConfigsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// Specify the pagination token that's returned by a previous request to retrieve
+	// the next page of results.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// The maximum number of configurations to return.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListFunctionEventInvokeConfigsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListFunctionEventInvokeConfigsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListFunctionEventInvokeConfigsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListFunctionEventInvokeConfigsInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.MaxItems != nil && *s.MaxItems < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *ListFunctionEventInvokeConfigsInput) SetFunctionName(v string) *ListFunctionEventInvokeConfigsInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListFunctionEventInvokeConfigsInput) SetMarker(v string) *ListFunctionEventInvokeConfigsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListFunctionEventInvokeConfigsInput) SetMaxItems(v int64) *ListFunctionEventInvokeConfigsInput {
+	s.MaxItems = &v
+	return s
+}
+
+type ListFunctionEventInvokeConfigsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of configurations.
+	FunctionEventInvokeConfigs []*FunctionEventInvokeConfig `type:"list"`
+
+	// The pagination token that's included if more results are available.
+	NextMarker *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListFunctionEventInvokeConfigsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListFunctionEventInvokeConfigsOutput) GoString() string {
+	return s.String()
+}
+
+// SetFunctionEventInvokeConfigs sets the FunctionEventInvokeConfigs field's value.
+func (s *ListFunctionEventInvokeConfigsOutput) SetFunctionEventInvokeConfigs(v []*FunctionEventInvokeConfig) *ListFunctionEventInvokeConfigsOutput {
+	s.FunctionEventInvokeConfigs = v
+	return s
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListFunctionEventInvokeConfigsOutput) SetNextMarker(v string) *ListFunctionEventInvokeConfigsOutput {
+	s.NextMarker = &v
+	return s
+}
+
 type ListFunctionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7679,6 +9819,112 @@ func (s *ListLayersOutput) SetNextMarker(v string) *ListLayersOutput {
 	return s
 }
 
+type ListProvisionedConcurrencyConfigsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// Specify the pagination token that's returned by a previous request to retrieve
+	// the next page of results.
+	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
+
+	// Specify a number to limit the number of configurations returned.
+	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s ListProvisionedConcurrencyConfigsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisionedConcurrencyConfigsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListProvisionedConcurrencyConfigsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListProvisionedConcurrencyConfigsInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.MaxItems != nil && *s.MaxItems < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxItems", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *ListProvisionedConcurrencyConfigsInput) SetFunctionName(v string) *ListProvisionedConcurrencyConfigsInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetMarker sets the Marker field's value.
+func (s *ListProvisionedConcurrencyConfigsInput) SetMarker(v string) *ListProvisionedConcurrencyConfigsInput {
+	s.Marker = &v
+	return s
+}
+
+// SetMaxItems sets the MaxItems field's value.
+func (s *ListProvisionedConcurrencyConfigsInput) SetMaxItems(v int64) *ListProvisionedConcurrencyConfigsInput {
+	s.MaxItems = &v
+	return s
+}
+
+type ListProvisionedConcurrencyConfigsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The pagination token that's included if more results are available.
+	NextMarker *string `type:"string"`
+
+	// A list of provisioned concurrency configurations.
+	ProvisionedConcurrencyConfigs []*ProvisionedConcurrencyConfigListItem `type:"list"`
+}
+
+// String returns the string representation
+func (s ListProvisionedConcurrencyConfigsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListProvisionedConcurrencyConfigsOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextMarker sets the NextMarker field's value.
+func (s *ListProvisionedConcurrencyConfigsOutput) SetNextMarker(v string) *ListProvisionedConcurrencyConfigsOutput {
+	s.NextMarker = &v
+	return s
+}
+
+// SetProvisionedConcurrencyConfigs sets the ProvisionedConcurrencyConfigs field's value.
+func (s *ListProvisionedConcurrencyConfigsOutput) SetProvisionedConcurrencyConfigs(v []*ProvisionedConcurrencyConfigListItem) *ListProvisionedConcurrencyConfigsOutput {
+	s.ProvisionedConcurrencyConfigs = v
+	return s
+}
+
 type ListTagsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -7846,6 +10092,135 @@ func (s *ListVersionsByFunctionOutput) SetNextMarker(v string) *ListVersionsByFu
 // SetVersions sets the Versions field's value.
 func (s *ListVersionsByFunctionOutput) SetVersions(v []*FunctionConfiguration) *ListVersionsByFunctionOutput {
 	s.Versions = v
+	return s
+}
+
+// A destination for events that failed processing.
+type OnFailure struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the destination resource.
+	Destination *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OnFailure) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OnFailure) GoString() string {
+	return s.String()
+}
+
+// SetDestination sets the Destination field's value.
+func (s *OnFailure) SetDestination(v string) *OnFailure {
+	s.Destination = &v
+	return s
+}
+
+// A destination for events that were processed successfully.
+type OnSuccess struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the destination resource.
+	Destination *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OnSuccess) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OnSuccess) GoString() string {
+	return s.String()
+}
+
+// SetDestination sets the Destination field's value.
+func (s *OnSuccess) SetDestination(v string) *OnSuccess {
+	s.Destination = &v
+	return s
+}
+
+// Details about the provisioned concurrency configuration for a function alias
+// or version.
+type ProvisionedConcurrencyConfigListItem struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of provisioned concurrency allocated.
+	AllocatedProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The amount of provisioned concurrency available.
+	AvailableProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The Amazon Resource Name (ARN) of the alias or version.
+	FunctionArn *string `type:"string"`
+
+	// The date and time that a user last updated the configuration, in ISO 8601
+	// format (https://www.iso.org/iso-8601-date-and-time-format.html).
+	LastModified *string `type:"string"`
+
+	// The amount of provisioned concurrency requested.
+	RequestedProvisionedConcurrentExecutions *int64 `min:"1" type:"integer"`
+
+	// The status of the allocation process.
+	Status *string `type:"string" enum:"ProvisionedConcurrencyStatusEnum"`
+
+	// For failed allocations, the reason that provisioned concurrency could not
+	// be allocated.
+	StatusReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ProvisionedConcurrencyConfigListItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisionedConcurrencyConfigListItem) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedProvisionedConcurrentExecutions sets the AllocatedProvisionedConcurrentExecutions field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetAllocatedProvisionedConcurrentExecutions(v int64) *ProvisionedConcurrencyConfigListItem {
+	s.AllocatedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetAvailableProvisionedConcurrentExecutions sets the AvailableProvisionedConcurrentExecutions field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetAvailableProvisionedConcurrentExecutions(v int64) *ProvisionedConcurrencyConfigListItem {
+	s.AvailableProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetFunctionArn sets the FunctionArn field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetFunctionArn(v string) *ProvisionedConcurrencyConfigListItem {
+	s.FunctionArn = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetLastModified(v string) *ProvisionedConcurrencyConfigListItem {
+	s.LastModified = &v
+	return s
+}
+
+// SetRequestedProvisionedConcurrentExecutions sets the RequestedProvisionedConcurrentExecutions field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetRequestedProvisionedConcurrentExecutions(v int64) *ProvisionedConcurrencyConfigListItem {
+	s.RequestedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetStatus(v string) *ProvisionedConcurrencyConfigListItem {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *ProvisionedConcurrencyConfigListItem) SetStatusReason(v string) *ProvisionedConcurrencyConfigListItem {
+	s.StatusReason = &v
 	return s
 }
 
@@ -8203,6 +10578,336 @@ func (s PutFunctionConcurrencyOutput) GoString() string {
 // SetReservedConcurrentExecutions sets the ReservedConcurrentExecutions field's value.
 func (s *PutFunctionConcurrencyOutput) SetReservedConcurrentExecutions(v int64) *PutFunctionConcurrencyOutput {
 	s.ReservedConcurrentExecutions = &v
+	return s
+}
+
+type PutFunctionEventInvokeConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Destinations
+	//
+	//    * Function - The Amazon Resource Name (ARN) of a Lambda function.
+	//
+	//    * Queue - The ARN of an SQS queue.
+	//
+	//    * Topic - The ARN of an SNS topic.
+	//
+	//    * Event Bus - The ARN of an Amazon EventBridge event bus.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
+	// The name of the Lambda function, version, or alias.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function (name-only), my-function:v1 (with alias).
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// You can append a version number or alias to any of the formats. The length
+	// constraint applies only to the full ARN. If you specify only the function
+	// name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The maximum age of a request that Lambda sends to a function for processing.
+	MaximumEventAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// The maximum number of times to retry when the function returns an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+
+	// A version number or alias name.
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s PutFunctionEventInvokeConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutFunctionEventInvokeConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutFunctionEventInvokeConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutFunctionEventInvokeConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.MaximumEventAgeInSeconds != nil && *s.MaximumEventAgeInSeconds < 60 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumEventAgeInSeconds", 60))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *PutFunctionEventInvokeConfigInput) SetDestinationConfig(v *DestinationConfig) *PutFunctionEventInvokeConfigInput {
+	s.DestinationConfig = v
+	return s
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *PutFunctionEventInvokeConfigInput) SetFunctionName(v string) *PutFunctionEventInvokeConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetMaximumEventAgeInSeconds sets the MaximumEventAgeInSeconds field's value.
+func (s *PutFunctionEventInvokeConfigInput) SetMaximumEventAgeInSeconds(v int64) *PutFunctionEventInvokeConfigInput {
+	s.MaximumEventAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *PutFunctionEventInvokeConfigInput) SetMaximumRetryAttempts(v int64) *PutFunctionEventInvokeConfigInput {
+	s.MaximumRetryAttempts = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *PutFunctionEventInvokeConfigInput) SetQualifier(v string) *PutFunctionEventInvokeConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type PutFunctionEventInvokeConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Destinations
+	//
+	//    * Function - The Amazon Resource Name (ARN) of a Lambda function.
+	//
+	//    * Queue - The ARN of an SQS queue.
+	//
+	//    * Topic - The ARN of an SNS topic.
+	//
+	//    * Event Bus - The ARN of an Amazon EventBridge event bus.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the function.
+	FunctionArn *string `type:"string"`
+
+	// The date and time that the configuration was last updated.
+	LastModified *time.Time `type:"timestamp"`
+
+	// The maximum age of a request that Lambda sends to a function for processing.
+	MaximumEventAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// The maximum number of times to retry when the function returns an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s PutFunctionEventInvokeConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutFunctionEventInvokeConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *PutFunctionEventInvokeConfigOutput) SetDestinationConfig(v *DestinationConfig) *PutFunctionEventInvokeConfigOutput {
+	s.DestinationConfig = v
+	return s
+}
+
+// SetFunctionArn sets the FunctionArn field's value.
+func (s *PutFunctionEventInvokeConfigOutput) SetFunctionArn(v string) *PutFunctionEventInvokeConfigOutput {
+	s.FunctionArn = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *PutFunctionEventInvokeConfigOutput) SetLastModified(v time.Time) *PutFunctionEventInvokeConfigOutput {
+	s.LastModified = &v
+	return s
+}
+
+// SetMaximumEventAgeInSeconds sets the MaximumEventAgeInSeconds field's value.
+func (s *PutFunctionEventInvokeConfigOutput) SetMaximumEventAgeInSeconds(v int64) *PutFunctionEventInvokeConfigOutput {
+	s.MaximumEventAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *PutFunctionEventInvokeConfigOutput) SetMaximumRetryAttempts(v int64) *PutFunctionEventInvokeConfigOutput {
+	s.MaximumRetryAttempts = &v
+	return s
+}
+
+type PutProvisionedConcurrencyConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Lambda function.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function.
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// The length constraint applies only to the full ARN. If you specify only the
+	// function name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The amount of provisioned concurrency to allocate for the version or alias.
+	//
+	// ProvisionedConcurrentExecutions is a required field
+	ProvisionedConcurrentExecutions *int64 `min:"1" type:"integer" required:"true"`
+
+	// The version number or alias name.
+	//
+	// Qualifier is a required field
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutProvisionedConcurrencyConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutProvisionedConcurrencyConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutProvisionedConcurrencyConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutProvisionedConcurrencyConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.ProvisionedConcurrentExecutions == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProvisionedConcurrentExecutions"))
+	}
+	if s.ProvisionedConcurrentExecutions != nil && *s.ProvisionedConcurrentExecutions < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ProvisionedConcurrentExecutions", 1))
+	}
+	if s.Qualifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("Qualifier"))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *PutProvisionedConcurrencyConfigInput) SetFunctionName(v string) *PutProvisionedConcurrencyConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetProvisionedConcurrentExecutions sets the ProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigInput) SetProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigInput {
+	s.ProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *PutProvisionedConcurrencyConfigInput) SetQualifier(v string) *PutProvisionedConcurrencyConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type PutProvisionedConcurrencyConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The amount of provisioned concurrency allocated.
+	AllocatedProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The amount of provisioned concurrency available.
+	AvailableProvisionedConcurrentExecutions *int64 `type:"integer"`
+
+	// The date and time that a user last updated the configuration, in ISO 8601
+	// format (https://www.iso.org/iso-8601-date-and-time-format.html).
+	LastModified *string `type:"string"`
+
+	// The amount of provisioned concurrency requested.
+	RequestedProvisionedConcurrentExecutions *int64 `min:"1" type:"integer"`
+
+	// The status of the allocation process.
+	Status *string `type:"string" enum:"ProvisionedConcurrencyStatusEnum"`
+
+	// For failed allocations, the reason that provisioned concurrency could not
+	// be allocated.
+	StatusReason *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PutProvisionedConcurrencyConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutProvisionedConcurrencyConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetAllocatedProvisionedConcurrentExecutions sets the AllocatedProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetAllocatedProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigOutput {
+	s.AllocatedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetAvailableProvisionedConcurrentExecutions sets the AvailableProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetAvailableProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigOutput {
+	s.AvailableProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetLastModified(v string) *PutProvisionedConcurrencyConfigOutput {
+	s.LastModified = &v
+	return s
+}
+
+// SetRequestedProvisionedConcurrentExecutions sets the RequestedProvisionedConcurrentExecutions field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetRequestedProvisionedConcurrentExecutions(v int64) *PutProvisionedConcurrencyConfigOutput {
+	s.RequestedProvisionedConcurrentExecutions = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetStatus(v string) *PutProvisionedConcurrencyConfigOutput {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *PutProvisionedConcurrencyConfigOutput) SetStatusReason(v string) *PutProvisionedConcurrencyConfigOutput {
+	s.StatusReason = &v
 	return s
 }
 
@@ -8719,6 +11424,13 @@ type UpdateEventSourceMappingInput struct {
 	//    * Amazon Simple Queue Service - Default 10. Max 10.
 	BatchSize *int64 `min:"1" type:"integer"`
 
+	// (Streams) If the function returns an error, split the batch in two and retry.
+	BisectBatchOnFunctionError *bool `type:"boolean"`
+
+	// (Streams) An Amazon SQS queue or Amazon SNS topic destination for discarded
+	// records.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
 	// Disables the event source mapping to pause polling and invocation.
 	Enabled *bool `type:"boolean"`
 
@@ -8737,6 +11449,21 @@ type UpdateEventSourceMappingInput struct {
 	// The length constraint applies only to the full ARN. If you specify only the
 	// function name, it's limited to 64 characters in length.
 	FunctionName *string `min:"1" type:"string"`
+
+	// The maximum amount of time to gather records before invoking the function,
+	// in seconds.
+	MaximumBatchingWindowInSeconds *int64 `type:"integer"`
+
+	// (Streams) The maximum age of a record that Lambda sends to a function for
+	// processing.
+	MaximumRecordAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// (Streams) The maximum number of times to retry when the function returns
+	// an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+
+	// (Streams) The number of batches to process from each shard concurrently.
+	ParallelizationFactor *int64 `min:"1" type:"integer"`
 
 	// The identifier of the event source mapping.
 	//
@@ -8763,6 +11490,12 @@ func (s *UpdateEventSourceMappingInput) Validate() error {
 	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
 	}
+	if s.MaximumRecordAgeInSeconds != nil && *s.MaximumRecordAgeInSeconds < 60 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumRecordAgeInSeconds", 60))
+	}
+	if s.ParallelizationFactor != nil && *s.ParallelizationFactor < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParallelizationFactor", 1))
+	}
 	if s.UUID == nil {
 		invalidParams.Add(request.NewErrParamRequired("UUID"))
 	}
@@ -8782,6 +11515,18 @@ func (s *UpdateEventSourceMappingInput) SetBatchSize(v int64) *UpdateEventSource
 	return s
 }
 
+// SetBisectBatchOnFunctionError sets the BisectBatchOnFunctionError field's value.
+func (s *UpdateEventSourceMappingInput) SetBisectBatchOnFunctionError(v bool) *UpdateEventSourceMappingInput {
+	s.BisectBatchOnFunctionError = &v
+	return s
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *UpdateEventSourceMappingInput) SetDestinationConfig(v *DestinationConfig) *UpdateEventSourceMappingInput {
+	s.DestinationConfig = v
+	return s
+}
+
 // SetEnabled sets the Enabled field's value.
 func (s *UpdateEventSourceMappingInput) SetEnabled(v bool) *UpdateEventSourceMappingInput {
 	s.Enabled = &v
@@ -8791,6 +11536,30 @@ func (s *UpdateEventSourceMappingInput) SetEnabled(v bool) *UpdateEventSourceMap
 // SetFunctionName sets the FunctionName field's value.
 func (s *UpdateEventSourceMappingInput) SetFunctionName(v string) *UpdateEventSourceMappingInput {
 	s.FunctionName = &v
+	return s
+}
+
+// SetMaximumBatchingWindowInSeconds sets the MaximumBatchingWindowInSeconds field's value.
+func (s *UpdateEventSourceMappingInput) SetMaximumBatchingWindowInSeconds(v int64) *UpdateEventSourceMappingInput {
+	s.MaximumBatchingWindowInSeconds = &v
+	return s
+}
+
+// SetMaximumRecordAgeInSeconds sets the MaximumRecordAgeInSeconds field's value.
+func (s *UpdateEventSourceMappingInput) SetMaximumRecordAgeInSeconds(v int64) *UpdateEventSourceMappingInput {
+	s.MaximumRecordAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *UpdateEventSourceMappingInput) SetMaximumRetryAttempts(v int64) *UpdateEventSourceMappingInput {
+	s.MaximumRetryAttempts = &v
+	return s
+}
+
+// SetParallelizationFactor sets the ParallelizationFactor field's value.
+func (s *UpdateEventSourceMappingInput) SetParallelizationFactor(v int64) *UpdateEventSourceMappingInput {
+	s.ParallelizationFactor = &v
 	return s
 }
 
@@ -8937,7 +11706,7 @@ type UpdateFunctionConfigurationInput struct {
 
 	// A dead letter queue configuration that specifies the queue or topic where
 	// Lambda sends asynchronous events when they fail processing. For more information,
-	// see Dead Letter Queues (https://docs.aws.amazon.com/lambda/latest/dg/dlq.html).
+	// see Dead Letter Queues (https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#dlq).
 	DeadLetterConfig *DeadLetterConfig `type:"structure"`
 
 	// A description of the function.
@@ -9005,7 +11774,7 @@ type UpdateFunctionConfigurationInput struct {
 	// For network connectivity to AWS resources in a VPC, specify a list of security
 	// groups and subnets in the VPC. When you connect a function to a VPC, it can
 	// only access resources and the internet through that VPC. For more information,
-	// see VPC Settings (https://docs.aws.amazon.com/lambda/latest/dg/vpc.html).
+	// see VPC Settings (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
 	VpcConfig *VpcConfig `type:"structure"`
 }
 
@@ -9125,7 +11894,182 @@ func (s *UpdateFunctionConfigurationInput) SetVpcConfig(v *VpcConfig) *UpdateFun
 	return s
 }
 
+type UpdateFunctionEventInvokeConfigInput struct {
+	_ struct{} `type:"structure"`
+
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Destinations
+	//
+	//    * Function - The Amazon Resource Name (ARN) of a Lambda function.
+	//
+	//    * Queue - The ARN of an SQS queue.
+	//
+	//    * Topic - The ARN of an SNS topic.
+	//
+	//    * Event Bus - The ARN of an Amazon EventBridge event bus.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
+	// The name of the Lambda function, version, or alias.
+	//
+	// Name formats
+	//
+	//    * Function name - my-function (name-only), my-function:v1 (with alias).
+	//
+	//    * Function ARN - arn:aws:lambda:us-west-2:123456789012:function:my-function.
+	//
+	//    * Partial ARN - 123456789012:function:my-function.
+	//
+	// You can append a version number or alias to any of the formats. The length
+	// constraint applies only to the full ARN. If you specify only the function
+	// name, it is limited to 64 characters in length.
+	//
+	// FunctionName is a required field
+	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
+
+	// The maximum age of a request that Lambda sends to a function for processing.
+	MaximumEventAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// The maximum number of times to retry when the function returns an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+
+	// A version number or alias name.
+	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateFunctionEventInvokeConfigInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateFunctionEventInvokeConfigInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateFunctionEventInvokeConfigInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateFunctionEventInvokeConfigInput"}
+	if s.FunctionName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FunctionName"))
+	}
+	if s.FunctionName != nil && len(*s.FunctionName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FunctionName", 1))
+	}
+	if s.MaximumEventAgeInSeconds != nil && *s.MaximumEventAgeInSeconds < 60 {
+		invalidParams.Add(request.NewErrParamMinValue("MaximumEventAgeInSeconds", 60))
+	}
+	if s.Qualifier != nil && len(*s.Qualifier) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Qualifier", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *UpdateFunctionEventInvokeConfigInput) SetDestinationConfig(v *DestinationConfig) *UpdateFunctionEventInvokeConfigInput {
+	s.DestinationConfig = v
+	return s
+}
+
+// SetFunctionName sets the FunctionName field's value.
+func (s *UpdateFunctionEventInvokeConfigInput) SetFunctionName(v string) *UpdateFunctionEventInvokeConfigInput {
+	s.FunctionName = &v
+	return s
+}
+
+// SetMaximumEventAgeInSeconds sets the MaximumEventAgeInSeconds field's value.
+func (s *UpdateFunctionEventInvokeConfigInput) SetMaximumEventAgeInSeconds(v int64) *UpdateFunctionEventInvokeConfigInput {
+	s.MaximumEventAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *UpdateFunctionEventInvokeConfigInput) SetMaximumRetryAttempts(v int64) *UpdateFunctionEventInvokeConfigInput {
+	s.MaximumRetryAttempts = &v
+	return s
+}
+
+// SetQualifier sets the Qualifier field's value.
+func (s *UpdateFunctionEventInvokeConfigInput) SetQualifier(v string) *UpdateFunctionEventInvokeConfigInput {
+	s.Qualifier = &v
+	return s
+}
+
+type UpdateFunctionEventInvokeConfigOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A destination for events after they have been sent to a function for processing.
+	//
+	// Destinations
+	//
+	//    * Function - The Amazon Resource Name (ARN) of a Lambda function.
+	//
+	//    * Queue - The ARN of an SQS queue.
+	//
+	//    * Topic - The ARN of an SNS topic.
+	//
+	//    * Event Bus - The ARN of an Amazon EventBridge event bus.
+	DestinationConfig *DestinationConfig `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the function.
+	FunctionArn *string `type:"string"`
+
+	// The date and time that the configuration was last updated.
+	LastModified *time.Time `type:"timestamp"`
+
+	// The maximum age of a request that Lambda sends to a function for processing.
+	MaximumEventAgeInSeconds *int64 `min:"60" type:"integer"`
+
+	// The maximum number of times to retry when the function returns an error.
+	MaximumRetryAttempts *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s UpdateFunctionEventInvokeConfigOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateFunctionEventInvokeConfigOutput) GoString() string {
+	return s.String()
+}
+
+// SetDestinationConfig sets the DestinationConfig field's value.
+func (s *UpdateFunctionEventInvokeConfigOutput) SetDestinationConfig(v *DestinationConfig) *UpdateFunctionEventInvokeConfigOutput {
+	s.DestinationConfig = v
+	return s
+}
+
+// SetFunctionArn sets the FunctionArn field's value.
+func (s *UpdateFunctionEventInvokeConfigOutput) SetFunctionArn(v string) *UpdateFunctionEventInvokeConfigOutput {
+	s.FunctionArn = &v
+	return s
+}
+
+// SetLastModified sets the LastModified field's value.
+func (s *UpdateFunctionEventInvokeConfigOutput) SetLastModified(v time.Time) *UpdateFunctionEventInvokeConfigOutput {
+	s.LastModified = &v
+	return s
+}
+
+// SetMaximumEventAgeInSeconds sets the MaximumEventAgeInSeconds field's value.
+func (s *UpdateFunctionEventInvokeConfigOutput) SetMaximumEventAgeInSeconds(v int64) *UpdateFunctionEventInvokeConfigOutput {
+	s.MaximumEventAgeInSeconds = &v
+	return s
+}
+
+// SetMaximumRetryAttempts sets the MaximumRetryAttempts field's value.
+func (s *UpdateFunctionEventInvokeConfigOutput) SetMaximumRetryAttempts(v int64) *UpdateFunctionEventInvokeConfigOutput {
+	s.MaximumRetryAttempts = &v
+	return s
+}
+
 // The VPC security groups and subnets that are attached to a Lambda function.
+// For more information, see VPC Settings (https://docs.aws.amazon.com/lambda/latest/dg/configuration-vpc.html).
 type VpcConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -9228,11 +12172,47 @@ const (
 )
 
 const (
+	// LastUpdateStatusSuccessful is a LastUpdateStatus enum value
+	LastUpdateStatusSuccessful = "Successful"
+
+	// LastUpdateStatusFailed is a LastUpdateStatus enum value
+	LastUpdateStatusFailed = "Failed"
+
+	// LastUpdateStatusInProgress is a LastUpdateStatus enum value
+	LastUpdateStatusInProgress = "InProgress"
+)
+
+const (
+	// LastUpdateStatusReasonCodeEniLimitExceeded is a LastUpdateStatusReasonCode enum value
+	LastUpdateStatusReasonCodeEniLimitExceeded = "EniLimitExceeded"
+
+	// LastUpdateStatusReasonCodeInsufficientRolePermissions is a LastUpdateStatusReasonCode enum value
+	LastUpdateStatusReasonCodeInsufficientRolePermissions = "InsufficientRolePermissions"
+
+	// LastUpdateStatusReasonCodeInvalidConfiguration is a LastUpdateStatusReasonCode enum value
+	LastUpdateStatusReasonCodeInvalidConfiguration = "InvalidConfiguration"
+
+	// LastUpdateStatusReasonCodeInternalError is a LastUpdateStatusReasonCode enum value
+	LastUpdateStatusReasonCodeInternalError = "InternalError"
+)
+
+const (
 	// LogTypeNone is a LogType enum value
 	LogTypeNone = "None"
 
 	// LogTypeTail is a LogType enum value
 	LogTypeTail = "Tail"
+)
+
+const (
+	// ProvisionedConcurrencyStatusEnumInProgress is a ProvisionedConcurrencyStatusEnum enum value
+	ProvisionedConcurrencyStatusEnumInProgress = "IN_PROGRESS"
+
+	// ProvisionedConcurrencyStatusEnumReady is a ProvisionedConcurrencyStatusEnum enum value
+	ProvisionedConcurrencyStatusEnumReady = "READY"
+
+	// ProvisionedConcurrencyStatusEnumFailed is a ProvisionedConcurrencyStatusEnum enum value
+	ProvisionedConcurrencyStatusEnumFailed = "FAILED"
 )
 
 const (
@@ -9251,8 +12231,14 @@ const (
 	// RuntimeNodejs10X is a Runtime enum value
 	RuntimeNodejs10X = "nodejs10.x"
 
+	// RuntimeNodejs12X is a Runtime enum value
+	RuntimeNodejs12X = "nodejs12.x"
+
 	// RuntimeJava8 is a Runtime enum value
 	RuntimeJava8 = "java8"
+
+	// RuntimeJava11 is a Runtime enum value
+	RuntimeJava11 = "java11"
 
 	// RuntimePython27 is a Runtime enum value
 	RuntimePython27 = "python2.7"
@@ -9262,6 +12248,9 @@ const (
 
 	// RuntimePython37 is a Runtime enum value
 	RuntimePython37 = "python3.7"
+
+	// RuntimePython38 is a Runtime enum value
+	RuntimePython38 = "python3.8"
 
 	// RuntimeDotnetcore10 is a Runtime enum value
 	RuntimeDotnetcore10 = "dotnetcore1.0"
@@ -9283,6 +12272,46 @@ const (
 
 	// RuntimeProvided is a Runtime enum value
 	RuntimeProvided = "provided"
+)
+
+const (
+	// StatePending is a State enum value
+	StatePending = "Pending"
+
+	// StateActive is a State enum value
+	StateActive = "Active"
+
+	// StateInactive is a State enum value
+	StateInactive = "Inactive"
+
+	// StateFailed is a State enum value
+	StateFailed = "Failed"
+)
+
+const (
+	// StateReasonCodeIdle is a StateReasonCode enum value
+	StateReasonCodeIdle = "Idle"
+
+	// StateReasonCodeCreating is a StateReasonCode enum value
+	StateReasonCodeCreating = "Creating"
+
+	// StateReasonCodeRestoring is a StateReasonCode enum value
+	StateReasonCodeRestoring = "Restoring"
+
+	// StateReasonCodeEniLimitExceeded is a StateReasonCode enum value
+	StateReasonCodeEniLimitExceeded = "EniLimitExceeded"
+
+	// StateReasonCodeInsufficientRolePermissions is a StateReasonCode enum value
+	StateReasonCodeInsufficientRolePermissions = "InsufficientRolePermissions"
+
+	// StateReasonCodeInvalidConfiguration is a StateReasonCode enum value
+	StateReasonCodeInvalidConfiguration = "InvalidConfiguration"
+
+	// StateReasonCodeInternalError is a StateReasonCode enum value
+	StateReasonCodeInternalError = "InternalError"
+
+	// StateReasonCodeSubnetOutOfIpaddresses is a StateReasonCode enum value
+	StateReasonCodeSubnetOutOfIpaddresses = "SubnetOutOfIPAddresses"
 )
 
 const (

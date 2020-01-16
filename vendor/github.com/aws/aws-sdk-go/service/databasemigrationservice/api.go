@@ -441,6 +441,13 @@ func (c *DatabaseMigrationService) CreateReplicationInstanceRequest(input *Creat
 //
 // Creates the replication instance using the specified parameters.
 //
+// AWS DMS requires that your account have certain roles with appropriate permissions
+// before you can create a replication instance. For information on the required
+// roles, see Creating the IAM Roles to Use With the AWS CLI and AWS DMS API
+// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.APIRole.html).
+// For information on the required permissions, see IAM Permissions Needed to
+// Use AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Security.IAMPermissions.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -774,6 +781,93 @@ func (c *DatabaseMigrationService) DeleteCertificate(input *DeleteCertificateInp
 // for more information on using Contexts.
 func (c *DatabaseMigrationService) DeleteCertificateWithContext(ctx aws.Context, input *DeleteCertificateInput, opts ...request.Option) (*DeleteCertificateOutput, error) {
 	req, out := c.DeleteCertificateRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteConnection = "DeleteConnection"
+
+// DeleteConnectionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteConnection operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteConnection for more information on using the DeleteConnection
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteConnectionRequest method.
+//    req, resp := client.DeleteConnectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteConnection
+func (c *DatabaseMigrationService) DeleteConnectionRequest(input *DeleteConnectionInput) (req *request.Request, output *DeleteConnectionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteConnection,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteConnectionInput{}
+	}
+
+	output = &DeleteConnectionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteConnection API operation for AWS Database Migration Service.
+//
+// Deletes the connection between a replication instance and an endpoint.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Database Migration Service's
+// API operation DeleteConnection for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeAccessDeniedFault "AccessDeniedFault"
+//   AWS DMS was denied access to the endpoint. Check that the role is correctly
+//   configured.
+//
+//   * ErrCodeResourceNotFoundFault "ResourceNotFoundFault"
+//   The resource could not be found.
+//
+//   * ErrCodeInvalidResourceStateFault "InvalidResourceStateFault"
+//   The resource is in a state that prevents it from being used for database
+//   migration.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/dms-2016-01-01/DeleteConnection
+func (c *DatabaseMigrationService) DeleteConnection(input *DeleteConnectionInput) (*DeleteConnectionOutput, error) {
+	req, out := c.DeleteConnectionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteConnectionWithContext is the same as DeleteConnection with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteConnection for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *DatabaseMigrationService) DeleteConnectionWithContext(ctx aws.Context, input *DeleteConnectionInput, opts ...request.Option) (*DeleteConnectionOutput, error) {
+	req, out := c.DeleteConnectionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1411,10 +1505,12 @@ func (c *DatabaseMigrationService) DescribeCertificatesPagesWithContext(ctx aws.
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeCertificatesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeCertificatesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1547,10 +1643,12 @@ func (c *DatabaseMigrationService) DescribeConnectionsPagesWithContext(ctx aws.C
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeConnectionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1677,10 +1775,12 @@ func (c *DatabaseMigrationService) DescribeEndpointTypesPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEndpointTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEndpointTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1812,10 +1912,12 @@ func (c *DatabaseMigrationService) DescribeEndpointsPagesWithContext(ctx aws.Con
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEndpointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2029,10 +2131,12 @@ func (c *DatabaseMigrationService) DescribeEventSubscriptionsPagesWithContext(ct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventSubscriptionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventSubscriptionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2162,10 +2266,12 @@ func (c *DatabaseMigrationService) DescribeEventsPagesWithContext(ctx aws.Contex
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeEventsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2293,10 +2399,12 @@ func (c *DatabaseMigrationService) DescribeOrderableReplicationInstancesPagesWit
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeOrderableReplicationInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOrderableReplicationInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2428,10 +2536,12 @@ func (c *DatabaseMigrationService) DescribePendingMaintenanceActionsPagesWithCon
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribePendingMaintenanceActionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribePendingMaintenanceActionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2650,10 +2760,12 @@ func (c *DatabaseMigrationService) DescribeReplicationInstanceTaskLogsPagesWithC
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationInstanceTaskLogsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationInstanceTaskLogsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2786,10 +2898,12 @@ func (c *DatabaseMigrationService) DescribeReplicationInstancesPagesWithContext(
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2921,10 +3035,12 @@ func (c *DatabaseMigrationService) DescribeReplicationSubnetGroupsPagesWithConte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationSubnetGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationSubnetGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3057,10 +3173,12 @@ func (c *DatabaseMigrationService) DescribeReplicationTaskAssessmentResultsPages
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationTaskAssessmentResultsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationTaskAssessmentResultsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3193,10 +3311,12 @@ func (c *DatabaseMigrationService) DescribeReplicationTasksPagesWithContext(ctx 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReplicationTasksOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReplicationTasksOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3332,10 +3452,12 @@ func (c *DatabaseMigrationService) DescribeSchemasPagesWithContext(ctx aws.Conte
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeSchemasOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeSchemasOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3476,10 +3598,12 @@ func (c *DatabaseMigrationService) DescribeTableStatisticsPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTableStatisticsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTableStatisticsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5254,21 +5378,21 @@ type CreateEndpointInput struct {
 
 	// The settings in JSON format for the DMS transfer type of source endpoint.
 	//
-	// Possible attributes include the following:
+	// Possible settings include the following:
 	//
-	//    * serviceAccessRoleArn - The IAM role that has permission to access the
+	//    * ServiceAccessRoleArn - The IAM role that has permission to access the
 	//    Amazon S3 bucket.
 	//
-	//    * bucketName - The name of the S3 bucket to use.
+	//    * BucketName - The name of the S3 bucket to use.
 	//
-	//    * compressionType - An optional parameter to use GZIP to compress the
+	//    * CompressionType - An optional parameter to use GZIP to compress the
 	//    target files. To use GZIP, set this value to NONE (the default). To keep
 	//    the files uncompressed, don't use this value.
 	//
-	// Shorthand syntax for these attributes is as follows: ServiceAccessRoleArn=string,BucketName=string,CompressionType=string
+	// Shorthand syntax for these settings is as follows: ServiceAccessRoleArn=string,BucketName=string,CompressionType=string
 	//
-	// JSON syntax for these attributes is as follows: { "ServiceAccessRoleArn":
-	// "string", "BucketName": "string", "CompressionType": "none"|"gzip" }
+	// JSON syntax for these settings is as follows: { "ServiceAccessRoleArn": "string",
+	// "BucketName": "string", "CompressionType": "none"|"gzip" }
 	DmsTransferSettings *DmsTransferSettings `type:"structure"`
 
 	// Settings in JSON format for the target Amazon DynamoDB endpoint. For more
@@ -6044,6 +6168,12 @@ type CreateReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
@@ -6296,6 +6426,81 @@ func (s DeleteCertificateOutput) GoString() string {
 // SetCertificate sets the Certificate field's value.
 func (s *DeleteCertificateOutput) SetCertificate(v *Certificate) *DeleteCertificateOutput {
 	s.Certificate = v
+	return s
+}
+
+type DeleteConnectionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
+	//
+	// EndpointArn is a required field
+	EndpointArn *string `type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the replication instance.
+	//
+	// ReplicationInstanceArn is a required field
+	ReplicationInstanceArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteConnectionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConnectionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteConnectionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteConnectionInput"}
+	if s.EndpointArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("EndpointArn"))
+	}
+	if s.ReplicationInstanceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationInstanceArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEndpointArn sets the EndpointArn field's value.
+func (s *DeleteConnectionInput) SetEndpointArn(v string) *DeleteConnectionInput {
+	s.EndpointArn = &v
+	return s
+}
+
+// SetReplicationInstanceArn sets the ReplicationInstanceArn field's value.
+func (s *DeleteConnectionInput) SetReplicationInstanceArn(v string) *DeleteConnectionInput {
+	s.ReplicationInstanceArn = &v
+	return s
+}
+
+type DeleteConnectionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The connection that is being deleted.
+	Connection *Connection `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteConnectionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteConnectionOutput) GoString() string {
+	return s.String()
+}
+
+// SetConnection sets the Connection field's value.
+func (s *DeleteConnectionOutput) SetConnection(v *Connection) *DeleteConnectionOutput {
+	s.Connection = v
 	return s
 }
 
@@ -6623,7 +6828,8 @@ type DescribeAccountAttributesOutput struct {
 	// dms-AccountNumber-UniqueAccountIdentifier. Here is an example name for this
 	// default S3 bucket: dms-111122223333-c44445555666.
 	//
-	// AWS DMS supports UniqueAccountIdentifier in versions 3.1.4 and later.
+	// AWS DMS supports the UniqueAccountIdentifier parameter in versions 3.1.4
+	// and later.
 	UniqueAccountIdentifier *string `type:"string"`
 }
 
@@ -8569,21 +8775,21 @@ type Endpoint struct {
 
 	// The settings in JSON format for the DMS transfer type of source endpoint.
 	//
-	// Possible attributes include the following:
+	// Possible settings include the following:
 	//
-	//    * serviceAccessRoleArn - The IAM role that has permission to access the
+	//    * ServiceAccessRoleArn - The IAM role that has permission to access the
 	//    Amazon S3 bucket.
 	//
-	//    * bucketName - The name of the S3 bucket to use.
+	//    * BucketName - The name of the S3 bucket to use.
 	//
-	//    * compressionType - An optional parameter to use GZIP to compress the
+	//    * CompressionType - An optional parameter to use GZIP to compress the
 	//    target files. To use GZIP, set this value to NONE (the default). To keep
 	//    the files uncompressed, don't use this value.
 	//
-	// Shorthand syntax for these attributes is as follows: ServiceAccessRoleArn=string,BucketName=string,CompressionType=string
+	// Shorthand syntax for these settings is as follows: ServiceAccessRoleArn=string,BucketName=string,CompressionType=string
 	//
-	// JSON syntax for these attributes is as follows: { "ServiceAccessRoleArn":
-	// "string", "BucketName": "string", "CompressionType": "none"|"gzip" }
+	// JSON syntax for these settings is as follows: { "ServiceAccessRoleArn": "string",
+	// "BucketName": "string", "CompressionType": "none"|"gzip" }
 	DmsTransferSettings *DmsTransferSettings `type:"structure"`
 
 	// The settings for the target DynamoDB database. For more information, see
@@ -9951,6 +10157,12 @@ type ModifyReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either
@@ -10100,10 +10312,10 @@ type MongoDbSettings struct {
 	// Valid values: DEFAULT, MONGODB_CR, SCRAM_SHA_1
 	//
 	// DEFAULT – For MongoDB version 2.x, use MONGODB_CR. For MongoDB version
-	// 3.x, use SCRAM_SHA_1. This attribute is not used when authType=No.
+	// 3.x, use SCRAM_SHA_1. This setting is not used when authType=No.
 	AuthMechanism *string `type:"string" enum:"AuthMechanismValue"`
 
-	// The MongoDB database name. This attribute is not used when authType=NO.
+	// The MongoDB database name. This setting is not used when authType=NO.
 	//
 	// The default is admin.
 	AuthSource *string `type:"string"`
@@ -10120,13 +10332,12 @@ type MongoDbSettings struct {
 	DatabaseName *string `type:"string"`
 
 	// Indicates the number of documents to preview to determine the document organization.
-	// Use this attribute when NestingLevel is set to ONE.
+	// Use this setting when NestingLevel is set to ONE.
 	//
 	// Must be a positive value greater than 0. Default value is 1000.
 	DocsToInvestigate *string `type:"string"`
 
-	// Specifies the document ID. Use this attribute when NestingLevel is set to
-	// NONE.
+	// Specifies the document ID. Use this setting when NestingLevel is set to NONE.
 	//
 	// Default value is false.
 	ExtractDocId *string `type:"string"`
@@ -10269,7 +10480,7 @@ type OrderableReplicationInstance struct {
 	// The value returned when the specified EngineVersion of the replication instance
 	// is in Beta or test mode. This indicates some features might not work as expected.
 	//
-	// AWS DMS supports ReleaseStatus in versions 3.1.4 and later.
+	// AWS DMS supports the ReleaseStatus parameter in versions 3.1.4 and later.
 	ReleaseStatus *string `type:"string" enum:"ReleaseStatusValues"`
 
 	// The compute and memory capacity of the replication instance.
@@ -11763,8 +11974,25 @@ type ReplicationTaskStats struct {
 	// The elapsed time of the task, in milliseconds.
 	ElapsedTimeMillis *int64 `type:"long"`
 
+	// The date the replication task was started either with a fresh start or a
+	// target reload.
+	FreshStartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task full load was completed.
+	FullLoadFinishDate *time.Time `type:"timestamp"`
+
 	// The percent complete for the full load migration task.
 	FullLoadProgressPercent *int64 `type:"integer"`
+
+	// The date the the replication task full load was started.
+	FullLoadStartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task was started either with a fresh start or a
+	// resume. For more information, see StartReplicationTaskType (https://docs.aws.amazon.com/dms/latest/APIReference/API_StartReplicationTask.html#DMS-StartReplicationTask-request-StartReplicationTaskType).
+	StartDate *time.Time `type:"timestamp"`
+
+	// The date the replication task was stopped.
+	StopDate *time.Time `type:"timestamp"`
 
 	// The number of errors that have occurred during this task.
 	TablesErrored *int64 `type:"integer"`
@@ -11795,9 +12023,39 @@ func (s *ReplicationTaskStats) SetElapsedTimeMillis(v int64) *ReplicationTaskSta
 	return s
 }
 
+// SetFreshStartDate sets the FreshStartDate field's value.
+func (s *ReplicationTaskStats) SetFreshStartDate(v time.Time) *ReplicationTaskStats {
+	s.FreshStartDate = &v
+	return s
+}
+
+// SetFullLoadFinishDate sets the FullLoadFinishDate field's value.
+func (s *ReplicationTaskStats) SetFullLoadFinishDate(v time.Time) *ReplicationTaskStats {
+	s.FullLoadFinishDate = &v
+	return s
+}
+
 // SetFullLoadProgressPercent sets the FullLoadProgressPercent field's value.
 func (s *ReplicationTaskStats) SetFullLoadProgressPercent(v int64) *ReplicationTaskStats {
 	s.FullLoadProgressPercent = &v
+	return s
+}
+
+// SetFullLoadStartDate sets the FullLoadStartDate field's value.
+func (s *ReplicationTaskStats) SetFullLoadStartDate(v time.Time) *ReplicationTaskStats {
+	s.FullLoadStartDate = &v
+	return s
+}
+
+// SetStartDate sets the StartDate field's value.
+func (s *ReplicationTaskStats) SetStartDate(v time.Time) *ReplicationTaskStats {
+	s.StartDate = &v
+	return s
+}
+
+// SetStopDate sets the StopDate field's value.
+func (s *ReplicationTaskStats) SetStopDate(v time.Time) *ReplicationTaskStats {
+	s.StopDate = &v
 	return s
 }
 
@@ -11879,7 +12137,7 @@ type S3Settings struct {
 	// the row was inserted, updated, or deleted at the source database for a CDC
 	// load to the target.
 	//
-	// If cdcInsertsOnly is set to true or y, only INSERTs from the source database
+	// If CdcInsertsOnly is set to true or y, only INSERTs from the source database
 	// are migrated to the .csv or .parquet file. For .csv format only, how these
 	// INSERTs are recorded depends on the value of IncludeOpForFullLoad. If IncludeOpForFullLoad
 	// is set to true, the first field of every CDC record is set to I to indicate
@@ -11889,8 +12147,8 @@ type S3Settings struct {
 	// together, see Indicating Source DB Operations in Migrated S3 Data (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring.InsertOps)
 	// in the AWS Database Migration Service User Guide..
 	//
-	// AWS DMS supports this interaction between CdcInsertsOnly and IncludeOpForFullLoad
-	// in versions 3.1.4 and later.
+	// AWS DMS supports this interaction between the CdcInsertsOnly and IncludeOpForFullLoad
+	// parameters in versions 3.1.4 and later.
 	CdcInsertsOnly *bool `type:"boolean"`
 
 	// An optional parameter to use GZIP to compress the target files. Set to GZIP
@@ -11980,7 +12238,8 @@ type S3Settings struct {
 	// value (.csv) output files only to indicate how the rows were added to the
 	// source database.
 	//
-	// AWS DMS supports IncludeOpForFullLoad in versions 3.1.4 and later.
+	// AWS DMS supports the IncludeOpForFullLoad parameter in versions 3.1.4 and
+	// later.
 	//
 	// For full load, records can only be inserted. By default (the false setting),
 	// no information is recorded in these output files for a full load to indicate
@@ -11989,11 +12248,34 @@ type S3Settings struct {
 	// field of the .csv file. This allows the format of your target records from
 	// a full load to be consistent with the target records from a CDC load.
 	//
-	// This setting works together with CdcInsertsOnly for output to .csv files
-	// only. For more information about how these settings work together, see Indicating
-	// Source DB Operations in Migrated S3 Data (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring.InsertOps)
+	// This setting works together with the CdcInsertsOnly parameter for output
+	// to .csv files only. For more information about how these settings work together,
+	// see Indicating Source DB Operations in Migrated S3 Data (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring.InsertOps)
 	// in the AWS Database Migration Service User Guide..
 	IncludeOpForFullLoad *bool `type:"boolean"`
+
+	// A value that specifies the precision of any TIMESTAMP column values that
+	// are written to an Amazon S3 object file in .parquet format.
+	//
+	// AWS DMS supports the ParquetTimestampInMillisecond parameter in versions
+	// 3.1.4 and later.
+	//
+	// When ParquetTimestampInMillisecond is set to true or y, AWS DMS writes all
+	// TIMESTAMP columns in a .parquet formatted file with millisecond precision.
+	// Otherwise, DMS writes them with microsecond precision.
+	//
+	// Currently, Amazon Athena and AWS Glue can handle only millisecond precision
+	// for TIMESTAMP values. Set this parameter to true for S3 endpoint object files
+	// that are .parquet formatted only if you plan to query or process the data
+	// with Athena or AWS Glue.
+	//
+	// AWS DMS writes any TIMESTAMP column values written to an S3 file in .csv
+	// format with microsecond precision.
+	//
+	// Setting ParquetTimestampInMillisecond has no effect on the string format
+	// of the timestamp column value that is inserted by setting the TimestampColumnName
+	// parameter.
+	ParquetTimestampInMillisecond *bool `type:"boolean"`
 
 	// The version of the Apache Parquet format that you want to use: parquet_1_0
 	// (the default) or parquet_2_0.
@@ -12019,20 +12301,28 @@ type S3Settings struct {
 	// The Amazon Resource Name (ARN) used by the service access IAM role.
 	ServiceAccessRoleArn *string `type:"string"`
 
-	// A value that includes a timestamp column in the Amazon S3 target endpoint
-	// data. AWS DMS includes an additional column in the migrated data when you
-	// set timestampColumnName to a non-blank value.
+	// A value that when nonblank causes AWS DMS to add a column with timestamp
+	// information to the endpoint data for an Amazon S3 target.
 	//
-	// AWS DMS supports TimestampColumnName in versions 3.1.4 and later.
+	// AWS DMS supports the TimestampColumnName parameter in versions 3.1.4 and
+	// later.
 	//
-	// For a full load, each row of the timestamp column contains a timestamp for
-	// when the data was transferred from the source to the target by DMS. For a
-	// CDC load, each row of the timestamp column contains the timestamp for the
-	// commit of that row in the source database. The format for the timestamp column
-	// value is yyyy-MM-dd HH:mm:ss.SSSSSS. For CDC, the microsecond precision depends
-	// on the commit timestamp supported by DMS for the source database. When the
-	// AddColumnName setting is set to true, DMS also includes the name for the
-	// timestamp column that you set as the nonblank value of timestampColumnName.
+	// DMS includes an additional STRING column in the .csv or .parquet object files
+	// of your migrated data when you set TimestampColumnName to a nonblank value.
+	//
+	// For a full load, each row of this timestamp column contains a timestamp for
+	// when the data was transferred from the source to the target by DMS.
+	//
+	// For a change data capture (CDC) load, each row of the timestamp column contains
+	// the timestamp for the commit of that row in the source database.
+	//
+	// The string format for this timestamp column value is yyyy-MM-dd HH:mm:ss.SSSSSS.
+	// By default, the precision of this value is in microseconds. For a CDC load,
+	// the rounding of the precision depends on the commit timestamp supported by
+	// DMS for the source database.
+	//
+	// When the AddColumnName parameter is set to true, DMS also includes a name
+	// for the timestamp column that you set with TimestampColumnName.
 	TimestampColumnName *string `type:"string"`
 }
 
@@ -12127,6 +12417,12 @@ func (s *S3Settings) SetExternalTableDefinition(v string) *S3Settings {
 // SetIncludeOpForFullLoad sets the IncludeOpForFullLoad field's value.
 func (s *S3Settings) SetIncludeOpForFullLoad(v bool) *S3Settings {
 	s.IncludeOpForFullLoad = &v
+	return s
+}
+
+// SetParquetTimestampInMillisecond sets the ParquetTimestampInMillisecond field's value.
+func (s *S3Settings) SetParquetTimestampInMillisecond(v bool) *S3Settings {
+	s.ParquetTimestampInMillisecond = &v
 	return s
 }
 
@@ -12235,6 +12531,12 @@ type StartReplicationTaskInput struct {
 	// Checkpoint Example: --cdc-start-position "checkpoint:V1#27#mysql-bin-changelog.157832:1975:-1:2002:677883278264080:mysql-bin-changelog.157832:1876#0#0#*#0#93"
 	//
 	// LSN Example: --cdc-start-position “mysql-bin-changelog.000024:373”
+	//
+	// When you use this task setting with a source PostgreSQL database, a logical
+	// replication slot should already be created and associated with the source
+	// endpoint. You can verify this by setting the slotName extra connection attribute
+	// to the name of this logical replication slot. For more information, see Extra
+	// Connection Attributes When Using PostgreSQL as a Source for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
 	CdcStartPosition *string `type:"string"`
 
 	// Indicates the start time for a change data capture (CDC) operation. Use either

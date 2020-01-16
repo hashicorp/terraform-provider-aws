@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_nat_gateway"
-sidebar_current: "docs-aws-resource-nat-gateway"
 description: |-
   Provides a resource to create a VPC NAT Gateway.
 ---

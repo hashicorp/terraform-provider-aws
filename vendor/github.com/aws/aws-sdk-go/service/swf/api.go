@@ -1355,10 +1355,12 @@ func (c *SWF) GetWorkflowExecutionHistoryPagesWithContext(ctx aws.Context, input
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetWorkflowExecutionHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetWorkflowExecutionHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1516,10 +1518,12 @@ func (c *SWF) ListActivityTypesPagesWithContext(ctx aws.Context, input *ListActi
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListActivityTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListActivityTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1682,10 +1686,12 @@ func (c *SWF) ListClosedWorkflowExecutionsPagesWithContext(ctx aws.Context, inpu
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1840,10 +1846,12 @@ func (c *SWF) ListDomainsPagesWithContext(ctx aws.Context, input *ListDomainsInp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListDomainsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListDomainsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2006,10 +2014,12 @@ func (c *SWF) ListOpenWorkflowExecutionsPagesWithContext(ctx aws.Context, input 
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*WorkflowExecutionInfos), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2252,10 +2262,12 @@ func (c *SWF) ListWorkflowTypesPagesWithContext(ctx aws.Context, input *ListWork
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkflowTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkflowTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -2554,10 +2566,12 @@ func (c *SWF) PollForDecisionTaskPagesWithContext(ctx aws.Context, input *PollFo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*PollForDecisionTaskOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*PollForDecisionTaskOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_key_pair"
-sidebar_current: "docs-aws-resource-lightsail-key-pair"
 description: |-
   Provides an Lightsail Key Pair
 ---

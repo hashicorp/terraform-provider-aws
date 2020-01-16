@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsBatchJobQueue() *schema.Resource {
@@ -18,6 +18,13 @@ func resourceAwsBatchJobQueue() *schema.Resource {
 		Read:   resourceAwsBatchJobQueueRead,
 		Update: resourceAwsBatchJobQueueUpdate,
 		Delete: resourceAwsBatchJobQueueDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("arn", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"compute_environments": {
@@ -86,7 +93,7 @@ func resourceAwsBatchJobQueueCreate(d *schema.ResourceData, meta interface{}) er
 func resourceAwsBatchJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).batchconn
 
-	jq, err := getJobQueue(conn, d.Get("name").(string))
+	jq, err := getJobQueue(conn, d.Id())
 	if err != nil {
 		return err
 	}

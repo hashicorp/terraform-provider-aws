@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_access_key"
-sidebar_current: "docs-aws-resource-iam-access-key"
 description: |-
   Provides an IAM access key. This is a set of credentials that allow API requests to be made as an IAM user.
 ---
@@ -54,7 +54,8 @@ The following arguments are supported:
 
 * `user` - (Required) The IAM user to associate with this access key.
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a
-  keybase username in the form `keybase:some_person_that_exists`.
+  keybase username in the form `keybase:some_person_that_exists`, for use
+  in the `encrypted_secret` output attribute.
 * `status` - (Optional) The access key status to apply. Defaults to `Active`.
 Valid values are `Active` and `Inactive`.
 
@@ -67,9 +68,11 @@ In addition to all arguments above, the following attributes are exported:
 * `key_fingerprint` - The fingerprint of the PGP key used to encrypt
   the secret
 * `secret` - The secret access key. Note that this will be written
-to the state file. Please supply a `pgp_key` instead, which will prevent the
-secret from being stored in plain text
-* `encrypted_secret` - The encrypted secret, base64 encoded.
+to the state file. If you use this, please protect your backend state file
+judiciously. Alternatively, you may supply a `pgp_key` instead, which will
+prevent the secret from being stored in plaintext, at the cost of preventing
+the use of the secret key in automation.
+* `encrypted_secret` - The encrypted secret, base64 encoded, if `pgp_key` was specified.
 ~> **NOTE:** The encrypted secret may be decrypted using the command line,
    for example: `terraform output encrypted_secret | base64 --decode | keybase pgp decrypt`.
 * `ses_smtp_password` - The secret access key converted into an SES SMTP

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpcs"
-sidebar_current: "docs-aws-datasource-vpcs"
 description: |-
     Provides a list of VPC Ids in a region
 ---

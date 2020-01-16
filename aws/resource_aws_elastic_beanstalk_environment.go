@@ -8,15 +8,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
@@ -87,6 +87,10 @@ func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
 				Computed: true,
 				Optional: true,
 				ForceNew: true,
+			},
+			"endpoint_url": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"tier": {
 				Type:     schema.TypeString,
@@ -220,14 +224,11 @@ func resourceAwsElasticBeanstalkEnvironmentCreate(d *schema.ResourceData, meta i
 	platformArn := d.Get("platform_arn").(string)
 	templateName := d.Get("template_name").(string)
 
-	// TODO set tags
-	// Note: at time of writing, you cannot view or edit Tags after creation
-	// d.Set("tags", tagsToMap(instance.Tags))
 	createOpts := elasticbeanstalk.CreateEnvironmentInput{
 		EnvironmentName: aws.String(name),
 		ApplicationName: aws.String(app),
 		OptionSettings:  extractOptionSettings(settings),
-		Tags:            tagsFromMapBeanstalk(d.Get("tags").(map[string]interface{})),
+		Tags:            keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreElasticbeanstalk().ElasticbeanstalkTags(),
 	}
 
 	if desc != "" {
@@ -475,25 +476,14 @@ func resourceAwsElasticBeanstalkEnvironmentUpdate(d *schema.ResourceData, meta i
 		}
 	}
 
+	arn := d.Get("arn").(string)
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		oldTags := tagsFromMapBeanstalk(o.(map[string]interface{}))
-		newTags := tagsFromMapBeanstalk(n.(map[string]interface{}))
-
-		tagsToAdd, tagNamesToRemove := diffTagsBeanstalk(oldTags, newTags)
-
-		updateTags := elasticbeanstalk.UpdateTagsForResourceInput{
-			ResourceArn:  aws.String(d.Get("arn").(string)),
-			TagsToAdd:    tagsToAdd,
-			TagsToRemove: tagNamesToRemove,
-		}
 
 		// Get the current time to filter getBeanstalkEnvironmentErrors messages
 		t := time.Now()
-		log.Printf("[DEBUG] Elastic Beanstalk Environment update tags: %s", updateTags)
-		_, err := conn.UpdateTagsForResource(&updateTags)
-		if err != nil {
-			return err
+		if err := keyvaluetags.ElasticbeanstalkUpdateTags(conn, arn, o, n); err != nil {
+			return fmt.Errorf("error updating Elastic Beanstalk environment (%s) tags: %s", arn, err)
 		}
 
 		waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
@@ -576,7 +566,8 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 		return err
 	}
 
-	d.Set("arn", env.EnvironmentArn)
+	arn := aws.StringValue(env.EnvironmentArn)
+	d.Set("arn", arn)
 
 	if err := d.Set("name", env.EnvironmentName); err != nil {
 		return err
@@ -649,17 +640,18 @@ func resourceAwsElasticBeanstalkEnvironmentRead(d *schema.ResourceData, meta int
 	if err := d.Set("triggers", flattenBeanstalkTrigger(resources.EnvironmentResources.Triggers)); err != nil {
 		return err
 	}
-
-	tags, err := conn.ListTagsForResource(&elasticbeanstalk.ListTagsForResourceInput{
-		ResourceArn: aws.String(d.Get("arn").(string)),
-	})
-
-	if err != nil {
+	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
 		return err
 	}
 
-	if err := d.Set("tags", tagsToMapBeanstalk(tags.ResourceTags)); err != nil {
-		return err
+	tags, err := keyvaluetags.ElasticbeanstalkListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Elastic Beanstalk environment (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreElasticbeanstalk().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return resourceAwsElasticBeanstalkEnvironmentSettingsRead(d, meta)

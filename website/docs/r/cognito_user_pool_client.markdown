@@ -1,7 +1,7 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool_client"
-sidebar_current: "docs-aws-resource-cognito-user-pool-client"
 description: |-
   Provides a Cognito User Pool Client resource.
 ---

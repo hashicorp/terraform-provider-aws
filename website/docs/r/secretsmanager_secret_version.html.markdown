@@ -1,7 +1,7 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret_version"
-sidebar_current: "docs-aws-resource-secretsmanager-secret-version"
 description: |-
   Provides a resource to manage AWS Secrets Manager secret version including its secret value
 ---

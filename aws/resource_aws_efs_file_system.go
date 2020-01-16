@@ -10,9 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEfsFileSystem() *schema.Resource {
@@ -31,6 +32,7 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"creation_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -93,6 +95,27 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 					efs.ThroughputModeProvisioned,
 				}, false),
 			},
+
+			"lifecycle_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"transition_to_ia": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								efs.TransitionToIARulesAfter7Days,
+								efs.TransitionToIARulesAfter14Days,
+								efs.TransitionToIARulesAfter30Days,
+								efs.TransitionToIARulesAfter60Days,
+								efs.TransitionToIARulesAfter90Days,
+							}, false),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -111,6 +134,7 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	createOpts := &efs.CreateFileSystemInput{
 		CreationToken:  aws.String(creationToken),
 		ThroughputMode: aws.String(throughputMode),
+		Tags:           keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EfsTags(),
 	}
 
 	if v, ok := d.GetOk("performance_mode"); ok {
@@ -160,9 +184,16 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	log.Printf("[DEBUG] EFS file system %q created.", d.Id())
 
-	err = setTagsEFS(conn, d)
-	if err != nil {
-		return fmt.Errorf("error setting tags for EFS file system (%q): %s", d.Id(), err)
+	_, hasLifecyclePolicy := d.GetOk("lifecycle_policy")
+	if hasLifecyclePolicy {
+		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
+			FileSystemId:      aws.String(d.Id()),
+			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
+				d.Id(), err.Error())
+		}
 	}
 
 	return resourceAwsEfsFileSystemRead(d, meta)
@@ -203,11 +234,22 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	if d.HasChange("tags") {
-		err := setTagsEFS(conn, d)
+	if d.HasChange("lifecycle_policy") {
+		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
+			FileSystemId:      aws.String(d.Id()),
+			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
+		})
 		if err != nil {
-			return fmt.Errorf("Error setting EC2 tags for EFS file system (%q): %s",
+			return fmt.Errorf("Error updating lifecycle policy for EFS file system %q: %s",
 				d.Id(), err.Error())
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.EfsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EFS file system (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -233,34 +275,14 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("EFS file system %q could not be found.", d.Id())
 	}
 
-	tags := make([]*efs.Tag, 0)
-	var marker string
-	for {
-		params := &efs.DescribeTagsInput{
-			FileSystemId: aws.String(d.Id()),
-		}
-		if marker != "" {
-			params.Marker = aws.String(marker)
-		}
+	tags, err := keyvaluetags.EfsListTags(conn, d.Id())
 
-		tagsResp, err := conn.DescribeTags(params)
-		if err != nil {
-			return fmt.Errorf("Error retrieving EC2 tags for EFS file system (%q): %s",
-				d.Id(), err.Error())
-		}
-
-		tags = append(tags, tagsResp.Tags...)
-
-		if tagsResp.NextMarker != nil {
-			marker = *tagsResp.NextMarker
-		} else {
-			break
-		}
+	if err != nil {
+		return fmt.Errorf("error listing tags for EFS file system (%s): %s", d.Id(), err)
 	}
 
-	err = d.Set("tags", tagsToMapEFS(tags))
-	if err != nil {
-		return err
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error settings tags: %s", err)
 	}
 
 	var fs *efs.FileSystemDescription
@@ -295,6 +317,17 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 	region := meta.(*AWSClient).region
 	if err := d.Set("dns_name", resourceAwsEfsDnsName(aws.StringValue(fs.FileSystemId), region)); err != nil {
 		return fmt.Errorf("error setting dns_name: %s", err)
+	}
+
+	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+		FileSystemId: fs.FileSystemId,
+	})
+	if err != nil {
+		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %s",
+			aws.StringValue(fs.FileSystemId), err)
+	}
+	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies); err != nil {
+		return err
 	}
 
 	return nil
@@ -378,4 +411,38 @@ func resourceEfsFileSystemCreateUpdateRefreshFunc(id string, conn *efs.EFS) reso
 		log.Printf("[DEBUG] current status of %q: %q", id, state)
 		return fs, state, nil
 	}
+}
+
+func resourceAwsEfsFileSystemSetLifecyclePolicy(d *schema.ResourceData, lp []*efs.LifecyclePolicy) error {
+	log.Printf("[DEBUG] lifecycle pols: %s %d", lp, len(lp))
+	if len(lp) == 0 {
+		d.Set("lifecycle_policy", nil)
+		return nil
+	}
+	newLP := make([]*map[string]interface{}, len(lp))
+
+	for i := 0; i < len(lp); i++ {
+		config := lp[i]
+		data := make(map[string]interface{})
+		newLP[i] = &data
+		if config.TransitionToIA != nil {
+			data["transition_to_ia"] = *config.TransitionToIA
+		}
+		log.Printf("[DEBUG] lp: %s", data)
+	}
+
+	if err := d.Set("lifecycle_policy", newLP); err != nil {
+		return fmt.Errorf("error setting lifecycle_policy: %s", err)
+	}
+	return nil
+}
+
+func resourceAwsEfsFileSystemLifecyclePolicy(lcPol []interface{}) []*efs.LifecyclePolicy {
+	result := make([]*efs.LifecyclePolicy, len(lcPol))
+
+	for i := 0; i < len(lcPol); i++ {
+		lp := lcPol[i].(map[string]interface{})
+		result[i] = &efs.LifecyclePolicy{TransitionToIA: aws.String(lp["transition_to_ia"].(string))}
+	}
+	return result
 }

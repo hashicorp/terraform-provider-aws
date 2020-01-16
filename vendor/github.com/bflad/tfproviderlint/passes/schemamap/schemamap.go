@@ -59,10 +59,9 @@ func isSchemaMap(pass *analysis.Pass, cl *ast.CompositeLit) bool {
 		default:
 			return false
 		case *ast.StarExpr:
-			return terraformtype.IsTypeHelperSchema(pass.TypesInfo.TypeOf(mv.X))
+			return terraformtype.IsHelperSchemaTypeSchema(pass.TypesInfo.TypeOf(mv.X))
 		}
 	}
-	return true
 }
 
 // GetSchemaAttributes returns all attributes held in a map[string]*schema.Schema

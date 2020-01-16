@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_group_policy_attachment"
-sidebar_current: "docs-aws-resource-iam-group-policy-attachment"
 description: |-
   Attaches a Managed IAM Policy to an IAM group
 ---

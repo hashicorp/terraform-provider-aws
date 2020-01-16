@@ -21,9 +21,10 @@ func resolveCredentials(cfg *aws.Config,
 ) (*credentials.Credentials, error) {
 
 	switch {
-	case len(envCfg.Profile) != 0:
-		// User explicitly provided an Profile, so load from shared config
-		// first.
+	case len(sessOpts.Profile) != 0:
+		// User explicitly provided an Profile in the session's configuration
+		// so load that profile from shared config first.
+		// Github(aws/aws-sdk-go#2727)
 		return resolveCredsFromProfile(cfg, envCfg, sharedCfg, handlers, sessOpts)
 
 	case envCfg.Creds.HasKeys():
@@ -46,10 +47,10 @@ func resolveCredentials(cfg *aws.Config,
 }
 
 // WebIdentityEmptyRoleARNErr will occur if 'AWS_WEB_IDENTITY_TOKEN_FILE' was set but
-// 'AWS_IAM_ROLE_ARN' was not set.
+// 'AWS_ROLE_ARN' was not set.
 var WebIdentityEmptyRoleARNErr = awserr.New(stscreds.ErrCodeWebIdentity, "role ARN is not set", nil)
 
-// WebIdentityEmptyTokenFilePathErr will occur if 'AWS_IAM_ROLE_ARN' was set but
+// WebIdentityEmptyTokenFilePathErr will occur if 'AWS_ROLE_ARN' was set but
 // 'AWS_WEB_IDENTITY_TOKEN_FILE' was not set.
 var WebIdentityEmptyTokenFilePathErr = awserr.New(stscreds.ErrCodeWebIdentity, "token file path is not set", nil)
 

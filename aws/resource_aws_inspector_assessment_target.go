@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAWSInspectorAssessmentTarget() *schema.Resource {
@@ -104,11 +104,11 @@ func resourceAwsInspectorAssessmentTargetUpdate(d *schema.ResourceData, meta int
 
 func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).inspectorconn
-
-	return resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteAssessmentTarget(&inspector.DeleteAssessmentTargetInput{
-			AssessmentTargetArn: aws.String(d.Id()),
-		})
+	input := &inspector.DeleteAssessmentTargetInput{
+		AssessmentTargetArn: aws.String(d.Id()),
+	}
+	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteAssessmentTarget(input)
 
 		if isAWSErr(err, inspector.ErrCodeAssessmentRunInProgressException, "") {
 			return resource.RetryableError(err)
@@ -120,7 +120,13 @@ func resourceAwsInspectorAssessmentTargetDelete(d *schema.ResourceData, meta int
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteAssessmentTarget(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting Inspector Assessment Target: %s", err)
+	}
+	return nil
 }
 
 func describeInspectorAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector.AssessmentTarget, error) {

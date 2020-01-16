@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_aggregate_authorization"
-sidebar_current: "docs-aws-resource-config-aggregate-authorization"
 description: |-
   Manages an AWS Config Aggregate Authorization.
 ---

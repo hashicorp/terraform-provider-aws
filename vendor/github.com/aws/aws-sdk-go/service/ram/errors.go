@@ -120,6 +120,12 @@ const (
 	// The requested tags exceed the limit for your account.
 	ErrCodeTagLimitExceededException = "TagLimitExceededException"
 
+	// ErrCodeTagPolicyViolationException for service response error code
+	// "TagPolicyViolationException".
+	//
+	// The specified tag is a reserved word and cannot be used.
+	ErrCodeTagPolicyViolationException = "TagPolicyViolationException"
+
 	// ErrCodeUnknownResourceException for service response error code
 	// "UnknownResourceException".
 	//

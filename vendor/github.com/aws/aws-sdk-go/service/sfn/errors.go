@@ -63,6 +63,10 @@ const (
 	// The provided JSON input data is invalid.
 	ErrCodeInvalidExecutionInput = "InvalidExecutionInput"
 
+	// ErrCodeInvalidLoggingConfiguration for service response error code
+	// "InvalidLoggingConfiguration".
+	ErrCodeInvalidLoggingConfiguration = "InvalidLoggingConfiguration"
+
 	// ErrCodeInvalidName for service response error code
 	// "InvalidName".
 	//
@@ -91,7 +95,7 @@ const (
 	// ErrCodeResourceNotFound for service response error code
 	// "ResourceNotFound".
 	//
-	// Could not fine the referenced resource. Only state machine and activity ARNs
+	// Could not find the referenced resource. Only state machine and activity ARNs
 	// are supported.
 	ErrCodeResourceNotFound = "ResourceNotFound"
 
@@ -120,6 +124,10 @@ const (
 	// The maximum number of state machines has been reached. Existing state machines
 	// must be deleted before a new state machine can be created.
 	ErrCodeStateMachineLimitExceeded = "StateMachineLimitExceeded"
+
+	// ErrCodeStateMachineTypeNotSupported for service response error code
+	// "StateMachineTypeNotSupported".
+	ErrCodeStateMachineTypeNotSupported = "StateMachineTypeNotSupported"
 
 	// ErrCodeTaskDoesNotExist for service response error code
 	// "TaskDoesNotExist".

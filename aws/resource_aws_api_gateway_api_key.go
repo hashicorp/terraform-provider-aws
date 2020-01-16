@@ -6,9 +6,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsApiGatewayApiKey() *schema.Resource {
@@ -77,6 +79,11 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(30, 128),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -90,9 +97,10 @@ func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{})
 		Description: aws.String(d.Get("description").(string)),
 		Enabled:     aws.Bool(d.Get("enabled").(bool)),
 		Value:       aws.String(d.Get("value").(string)),
+		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ApigatewayTags(),
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway: %s", err)
+		return fmt.Errorf("Error creating API Gateway API Key: %s", err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))
@@ -117,6 +125,18 @@ func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) e
 
 		return err
 	}
+
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	d.Set("name", apiKey.Name)
 	d.Set("description", apiKey.Description)
@@ -163,6 +183,13 @@ func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).apigateway
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
 
 	_, err := conn.UpdateApiKey(&apigateway.UpdateApiKeyInput{
 		ApiKey:          aws.String(d.Id()),

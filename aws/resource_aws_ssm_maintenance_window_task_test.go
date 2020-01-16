@@ -7,14 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
-	resourceName := "aws_ssm_maintenance_window_task.target"
+	resourceName := "aws_ssm_maintenance_window_task.test"
 
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
@@ -55,7 +55,7 @@ func TestAccAWSSSMMaintenanceWindowTask_basic(t *testing.T) {
 func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 	var before, after ssm.MaintenanceWindowTask
 	name := acctest.RandString(10)
-	resourceName := "aws_ssm_maintenance_window_task.target"
+	resourceName := "aws_ssm_maintenance_window_task.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -89,7 +89,7 @@ func TestAccAWSSSMMaintenanceWindowTask_updateForcesNewResource(t *testing.T) {
 
 func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationAutomationParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
-	resourceName := "aws_ssm_maintenance_window_task.target"
+	resourceName := "aws_ssm_maintenance_window_task.test"
 
 	name := acctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
@@ -123,7 +123,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationAutomationParameters(t *te
 
 func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationLambdaParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
-	resourceName := "aws_ssm_maintenance_window_task.target"
+	resourceName := "aws_ssm_maintenance_window_task.test"
 	rString := acctest.RandString(8)
 	rInt := acctest.RandInt()
 
@@ -155,7 +155,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationLambdaParameters(t *testin
 
 func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
-	resourceName := "aws_ssm_maintenance_window_task.target"
+	resourceName := "aws_ssm_maintenance_window_task.test"
 	serviceRoleResourceName := "aws_iam_role.test"
 	s3BucketResourceName := "aws_s3_bucket.foo"
 
@@ -196,7 +196,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 
 func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationStepFunctionParameters(t *testing.T) {
 	var task ssm.MaintenanceWindowTask
-	resourceName := "aws_ssm_maintenance_window_task.target"
+	resourceName := "aws_ssm_maintenance_window_task.test"
 	rString := acctest.RandString(8)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -241,6 +241,27 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskParameters(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSSMMaintenanceWindowTask_emptyNotificationConfig(t *testing.T) {
+	var task ssm.MaintenanceWindowTask
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ssm_maintenance_window_task.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskConfigEmptyNotifcationConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -397,7 +418,7 @@ POLICY
 func testAccAWSSSMMaintenanceWindowTaskBasicConfig(rName string) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id   = "${aws_ssm_maintenance_window.test.id}"
   task_type   = "RUN_COMMAND"
   task_arn    = "AWS-RunShellScript"
@@ -423,7 +444,7 @@ resource "aws_ssm_maintenance_window_task" "target" {
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdate(rName, description, taskType, taskArn string, priority, maxConcurrency, maxErrors int) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id   = "${aws_ssm_maintenance_window.test.id}"
   task_type   = "%[2]s"
   task_arn    = "%[3]s"
@@ -486,7 +507,7 @@ EOF
 func testAccAWSSSMMaintenanceWindowTaskBasicConfigUpdated(rName string) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id   = "${aws_ssm_maintenance_window.test.id}"
   task_type   = "RUN_COMMAND"
   task_arn    = "AWS-RunShellScript"
@@ -511,10 +532,39 @@ resource "aws_ssm_maintenance_window_task" "target" {
 `)
 }
 
+func testAccAWSSSMMaintenanceWindowTaskConfigEmptyNotifcationConfig(rName string) string {
+	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + `
+
+resource "aws_ssm_maintenance_window_task" "test" {
+    window_id = "${aws_ssm_maintenance_window.test.id}"
+    task_type = "RUN_COMMAND"
+    task_arn = "AWS-CreateImage"
+    priority = 1
+    service_role_arn = "${aws_iam_role.test.arn}"
+    max_concurrency = "2"
+    max_errors = "1"
+    targets {
+      key    = "WindowTargetIds"
+      values = ["${aws_ssm_maintenance_window_target.test.id}"]
+    }
+    task_invocation_parameters {
+      run_command_parameters {
+        timeout_seconds      = 600
+        notification_config {}
+        parameter {
+          name   = "Operation"
+          values = ["Install"]
+        }
+      }
+    }
+  }
+`)
+}
+
 func testAccAWSSSMMaintenanceWindowTaskAutomationConfig(rName, version string) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "AUTOMATION"
   task_arn = "AWS-CreateImage"
@@ -552,7 +602,7 @@ resource "aws_s3_bucket" "foo" {
     force_destroy = true
 }
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "AUTOMATION"
   task_arn = "AWS-CreateImage"
@@ -585,10 +635,10 @@ func testAccAWSSSMMaintenanceWindowTaskLambdaConfig(funcName, policyName, roleNa
 	return fmt.Sprintf(testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName)+
 		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "LAMBDA"
-  task_arn = "${aws_lambda_function.lambda_function_test.arn}"
+  task_arn = "${aws_lambda_function.test.arn}"
   priority = 1
   service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
@@ -599,37 +649,24 @@ resource "aws_ssm_maintenance_window_task" "target" {
   }
   task_invocation_parameters {
     lambda_parameters {
-      client_context = "${base64encode(data.template_file.client_context.rendered)}"
-      payload = "${data.template_file.payload.rendered}"
+      client_context = base64encode(jsonencode({
+        key1 = "value1"
+        key2 = "value2"
+        key3 = "value3"
+      }))
+      payload = jsonencode({
+        number = %[2]d
+      })
     }
   }
 }
-
-data "template_file" "client_context" {
-  template = <<EOF
-{
-  "key1": "value1",
-  "key2": "value2",
-  "key3": "value3"
-}
-EOF
-}
-
-data "template_file" "payload" {
-  template = <<EOF
-{
-  "number": %[2]d
-}
-EOF
-}
-
 `, rName, rInt)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(rName, comment string, timeoutSeconds int) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "RUN_COMMAND"
   task_arn = "AWS-RunShellScript"
@@ -667,7 +704,7 @@ resource "aws_s3_bucket" "foo" {
     force_destroy = true
 }
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "RUN_COMMAND"
   task_arn = "AWS-RunShellScript"
@@ -701,13 +738,15 @@ resource "aws_ssm_maintenance_window_task" "target" {
 }
 
 func testAccAWSSSMMaintenanceWindowTaskStepFunctionConfig(rName string) string {
-	return fmt.Sprintf(testAccAWSSfnActivityBasicConfig(rName)+
-		testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
+	return testAccAWSSSMMaintenanceWindowTaskConfigBase(rName) + fmt.Sprintf(`
+resource "aws_sfn_activity" "test" {
+  name = %[1]q
+}
 
-resource "aws_ssm_maintenance_window_task" "target" {
+resource "aws_ssm_maintenance_window_task" "test" {
   window_id = "${aws_ssm_maintenance_window.test.id}"
   task_type = "STEP_FUNCTIONS"
-  task_arn = "${aws_sfn_activity.foo.id}"
+  task_arn = "${aws_sfn_activity.test.id}"
   priority = 1
   service_role_arn = "${aws_iam_role.test.arn}"
   max_concurrency = "2"
@@ -718,22 +757,15 @@ resource "aws_ssm_maintenance_window_task" "target" {
   }
   task_invocation_parameters {
     step_functions_parameters {
-      input = "${data.template_file.input.rendered}"
+      input = jsonencode({
+        key1 = "value1"
+        key2 = "value2"
+        key3 = "value3"
+      })
       name = "tf-step-function-%[1]s"
     }
   }
 }
-
-data "template_file" "input" {
-  template = <<EOF
-{
-  "key1": "value1",
-  "key2": "value2",
-  "key3": "value3"
-}
-EOF
-}
-
 `, rName)
 }
 

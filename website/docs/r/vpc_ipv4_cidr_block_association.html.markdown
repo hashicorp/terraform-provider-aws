@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_ipv4_cidr_block_association"
-sidebar_current: "docs-aws-resource-vpc-ipv4-cidr-block-association"
 description: |-
   Associate additional IPv4 CIDR blocks with a VPC
 ---

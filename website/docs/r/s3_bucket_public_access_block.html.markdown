@@ -1,7 +1,7 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_public_access_block"
-sidebar_current: "docs-aws-resource-s3-bucket-public-access-block"
 description: |-
   Manages S3 bucket-level Public Access Block Configuration
 ---
