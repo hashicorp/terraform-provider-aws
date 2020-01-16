@@ -56,6 +56,7 @@ var serviceNames = []string{
 	"efs",
 	"eks",
 	"elasticache",
+	"elasticbeanstalk",
 	"elasticsearchservice",
 	"elb",
 	"elbv2",
@@ -372,6 +373,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "CreateTags"
 	case "elasticache":
 		return "AddTagsToResource"
+	case "elasticbeanstalk":
+		return "UpdateTagsForResource"
 	case "elasticsearchservice":
 		return "AddTags"
 	case "elb":
@@ -546,6 +549,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 		return "TagList"
 	case "cloudtrail":
 		return "TagsList"
+	case "elasticbeanstalk":
+		return "TagsToAdd"
 	case "elasticsearchservice":
 		return "TagList"
 	case "glue":
@@ -608,6 +613,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "DeleteTags"
 	case "elasticache":
 		return "RemoveTagsFromResource"
+	case "elasticbeanstalk":
+		return "UpdateTagsForResource"
 	case "elasticsearchservice":
 		return "RemoveTags"
 	case "elb":
@@ -694,6 +701,8 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "Keys"
 	case "ec2":
 		return "Tags"
+	case "elasticbeanstalk":
+		return "TagsToRemove"
 	case "elb":
 		return "Tags"
 	case "glue":

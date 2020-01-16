@@ -45,6 +45,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/aws/aws-sdk-go/service/eks"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
@@ -1499,6 +1500,41 @@ func ElasticacheUpdateTags(conn *elasticache.ElastiCache, identifier string, old
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 		}
+	}
+
+	return nil
+}
+
+// ElasticbeanstalkUpdateTags updates elasticbeanstalk service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElasticbeanstalkUpdateTags(conn *elasticbeanstalk.ElasticBeanstalk, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags := New(oldTagsMap)
+	newTags := New(newTagsMap)
+	removedTags := oldTags.Removed(newTags)
+	updatedTags := oldTags.Updated(newTags)
+
+	// Ensure we do not send empty requests
+	if len(removedTags) == 0 && len(updatedTags) == 0 {
+		return nil
+	}
+
+	input := &elasticbeanstalk.UpdateTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	if len(updatedTags) > 0 {
+		input.TagsToAdd = updatedTags.IgnoreAws().ElasticbeanstalkTags()
+	}
+
+	if len(removedTags) > 0 {
+		input.TagsToRemove = aws.StringSlice(removedTags.Keys())
+	}
+
+	_, err := conn.UpdateTagsForResource(input)
+
+	if err != nil {
+		return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
 	}
 
 	return nil
