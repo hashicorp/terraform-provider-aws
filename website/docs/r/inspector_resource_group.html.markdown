@@ -25,7 +25,7 @@ resource "aws_inspector_resource_group" "example" {
 
 The following arguments are supported:
 
-* `tags` - (Required) The tags tags (key and value pairs) that are used to select the EC2 instances to be included in an [Amazon Inspector assessment target](/docs/providers/aws/r/inspector_assessment_target.html).
+* `tags` - (Required) Key-value map of tags that are used to select the EC2 instances to be included in an [Amazon Inspector assessment target](/docs/providers/aws/r/inspector_assessment_target.html).
 
 ## Attributes Reference
 
