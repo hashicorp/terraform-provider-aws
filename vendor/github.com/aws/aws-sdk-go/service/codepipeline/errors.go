@@ -2,6 +2,10 @@
 
 package codepipeline
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeActionNotFoundException for service response error code
@@ -201,3 +205,38 @@ const (
 	// The specified webhook was entered in an invalid format or cannot be found.
 	ErrCodeWebhookNotFoundException = "WebhookNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ActionNotFoundException":                         newErrorActionNotFoundException,
+	"ActionTypeNotFoundException":                     newErrorActionTypeNotFoundException,
+	"ApprovalAlreadyCompletedException":               newErrorApprovalAlreadyCompletedException,
+	"ConcurrentModificationException":                 newErrorConcurrentModificationException,
+	"InvalidActionDeclarationException":               newErrorInvalidActionDeclarationException,
+	"InvalidApprovalTokenException":                   newErrorInvalidApprovalTokenException,
+	"InvalidArnException":                             newErrorInvalidArnException,
+	"InvalidBlockerDeclarationException":              newErrorInvalidBlockerDeclarationException,
+	"InvalidClientTokenException":                     newErrorInvalidClientTokenException,
+	"InvalidJobException":                             newErrorInvalidJobException,
+	"InvalidJobStateException":                        newErrorInvalidJobStateException,
+	"InvalidNextTokenException":                       newErrorInvalidNextTokenException,
+	"InvalidNonceException":                           newErrorInvalidNonceException,
+	"InvalidStageDeclarationException":                newErrorInvalidStageDeclarationException,
+	"InvalidStructureException":                       newErrorInvalidStructureException,
+	"InvalidTagsException":                            newErrorInvalidTagsException,
+	"InvalidWebhookAuthenticationParametersException": newErrorInvalidWebhookAuthenticationParametersException,
+	"InvalidWebhookFilterPatternException":            newErrorInvalidWebhookFilterPatternException,
+	"JobNotFoundException":                            newErrorJobNotFoundException,
+	"LimitExceededException":                          newErrorLimitExceededException,
+	"NotLatestPipelineExecutionException":             newErrorNotLatestPipelineExecutionException,
+	"OutputVariablesSizeExceededException":            newErrorOutputVariablesSizeExceededException,
+	"PipelineExecutionNotFoundException":              newErrorPipelineExecutionNotFoundException,
+	"PipelineNameInUseException":                      newErrorPipelineNameInUseException,
+	"PipelineNotFoundException":                       newErrorPipelineNotFoundException,
+	"PipelineVersionNotFoundException":                newErrorPipelineVersionNotFoundException,
+	"ResourceNotFoundException":                       newErrorResourceNotFoundException,
+	"StageNotFoundException":                          newErrorStageNotFoundException,
+	"StageNotRetryableException":                      newErrorStageNotRetryableException,
+	"TooManyTagsException":                            newErrorTooManyTagsException,
+	"ValidationException":                             newErrorValidationException,
+	"WebhookNotFoundException":                        newErrorWebhookNotFoundException,
+}

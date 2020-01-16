@@ -66,8 +66,8 @@ func (c *CodeBuild) BatchDeleteBuildsRequest(input *BatchDeleteBuildsInput) (req
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation BatchDeleteBuilds for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchDeleteBuilds
@@ -145,8 +145,8 @@ func (c *CodeBuild) BatchGetBuildsRequest(input *BatchGetBuildsInput) (req *requ
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation BatchGetBuilds for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetBuilds
@@ -224,8 +224,8 @@ func (c *CodeBuild) BatchGetProjectsRequest(input *BatchGetProjectsInput) (req *
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation BatchGetProjects for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetProjects
@@ -303,8 +303,8 @@ func (c *CodeBuild) BatchGetReportGroupsRequest(input *BatchGetReportGroupsInput
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation BatchGetReportGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetReportGroups
@@ -382,8 +382,8 @@ func (c *CodeBuild) BatchGetReportsRequest(input *BatchGetReportsInput) (req *re
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation BatchGetReports for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/BatchGetReports
@@ -461,15 +461,15 @@ func (c *CodeBuild) CreateProjectRequest(input *CreateProjectInput) (req *reques
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation CreateProject for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified AWS resource cannot be created, because an AWS resource with
 //   the same settings already exists.
 //
-//   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
+//   * AccountLimitExceededException
 //   An AWS service limit was exceeded for the calling AWS account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateProject
@@ -547,15 +547,15 @@ func (c *CodeBuild) CreateReportGroupRequest(input *CreateReportGroupInput) (req
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation CreateReportGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified AWS resource cannot be created, because an AWS resource with
 //   the same settings already exists.
 //
-//   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
+//   * AccountLimitExceededException
 //   An AWS service limit was exceeded for the calling AWS account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateReportGroup
@@ -644,18 +644,18 @@ func (c *CodeBuild) CreateWebhookRequest(input *CreateWebhookInput) (req *reques
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation CreateWebhook for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeOAuthProviderException "OAuthProviderException"
+//   * OAuthProviderException
 //   There was a problem with the underlying OAuth provider.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified AWS resource cannot be created, because an AWS resource with
 //   the same settings already exists.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/CreateWebhook
@@ -734,8 +734,8 @@ func (c *CodeBuild) DeleteProjectRequest(input *DeleteProjectInput) (req *reques
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation DeleteProject for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteProject
@@ -814,8 +814,8 @@ func (c *CodeBuild) DeleteReportRequest(input *DeleteReportInput) (req *request.
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation DeleteReport for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteReport
@@ -898,8 +898,8 @@ func (c *CodeBuild) DeleteReportGroupRequest(input *DeleteReportGroupInput) (req
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation DeleteReportGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteReportGroup
@@ -978,8 +978,8 @@ func (c *CodeBuild) DeleteResourcePolicyRequest(input *DeleteResourcePolicyInput
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation DeleteResourcePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteResourcePolicy
@@ -1057,11 +1057,11 @@ func (c *CodeBuild) DeleteSourceCredentialsRequest(input *DeleteSourceCredential
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation DeleteSourceCredentials for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteSourceCredentials
@@ -1142,14 +1142,14 @@ func (c *CodeBuild) DeleteWebhookRequest(input *DeleteWebhookInput) (req *reques
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation DeleteWebhook for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
-//   * ErrCodeOAuthProviderException "OAuthProviderException"
+//   * OAuthProviderException
 //   There was a problem with the underlying OAuth provider.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DeleteWebhook
@@ -1227,11 +1227,11 @@ func (c *CodeBuild) DescribeTestCasesRequest(input *DescribeTestCasesInput) (req
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation DescribeTestCases for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/DescribeTestCases
@@ -1309,11 +1309,11 @@ func (c *CodeBuild) GetResourcePolicyRequest(input *GetResourcePolicyInput) (req
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation GetResourcePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/GetResourcePolicy
@@ -1392,14 +1392,14 @@ func (c *CodeBuild) ImportSourceCredentialsRequest(input *ImportSourceCredential
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ImportSourceCredentials for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
+//   * AccountLimitExceededException
 //   An AWS service limit was exceeded for the calling AWS account.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   The specified AWS resource cannot be created, because an AWS resource with
 //   the same settings already exists.
 //
@@ -1479,11 +1479,11 @@ func (c *CodeBuild) InvalidateProjectCacheRequest(input *InvalidateProjectCacheI
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation InvalidateProjectCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/InvalidateProjectCache
@@ -1561,8 +1561,8 @@ func (c *CodeBuild) ListBuildsRequest(input *ListBuildsInput) (req *request.Requ
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListBuilds for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuilds
@@ -1641,11 +1641,11 @@ func (c *CodeBuild) ListBuildsForProjectRequest(input *ListBuildsForProjectInput
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListBuildsForProject for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListBuildsForProject
@@ -1798,8 +1798,8 @@ func (c *CodeBuild) ListProjectsRequest(input *ListProjectsInput) (req *request.
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListProjects for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListProjects
@@ -1877,8 +1877,8 @@ func (c *CodeBuild) ListReportGroupsRequest(input *ListReportGroupsInput) (req *
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListReportGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListReportGroups
@@ -1956,8 +1956,8 @@ func (c *CodeBuild) ListReportsRequest(input *ListReportsInput) (req *request.Re
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListReports for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListReports
@@ -2035,11 +2035,11 @@ func (c *CodeBuild) ListReportsForReportGroupRequest(input *ListReportsForReport
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListReportsForReportGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListReportsForReportGroup
@@ -2117,8 +2117,8 @@ func (c *CodeBuild) ListSharedProjectsRequest(input *ListSharedProjectsInput) (r
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListSharedProjects for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedProjects
@@ -2196,8 +2196,8 @@ func (c *CodeBuild) ListSharedReportGroupsRequest(input *ListSharedReportGroupsI
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation ListSharedReportGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/ListSharedReportGroups
@@ -2349,11 +2349,11 @@ func (c *CodeBuild) PutResourcePolicyRequest(input *PutResourcePolicyInput) (req
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation PutResourcePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/PutResourcePolicy
@@ -2431,14 +2431,14 @@ func (c *CodeBuild) StartBuildRequest(input *StartBuildInput) (req *request.Requ
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation StartBuild for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
-//   * ErrCodeAccountLimitExceededException "AccountLimitExceededException"
+//   * AccountLimitExceededException
 //   An AWS service limit was exceeded for the calling AWS account.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StartBuild
@@ -2516,11 +2516,11 @@ func (c *CodeBuild) StopBuildRequest(input *StopBuildInput) (req *request.Reques
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation StopBuild for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/StopBuild
@@ -2598,11 +2598,11 @@ func (c *CodeBuild) UpdateProjectRequest(input *UpdateProjectInput) (req *reques
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation UpdateProject for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateProject
@@ -2680,11 +2680,11 @@ func (c *CodeBuild) UpdateReportGroupRequest(input *UpdateReportGroupInput) (req
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation UpdateReportGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateReportGroup
@@ -2764,14 +2764,14 @@ func (c *CodeBuild) UpdateWebhookRequest(input *UpdateWebhookInput) (req *reques
 // See the AWS API reference guide for AWS CodeBuild's
 // API operation UpdateWebhook for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The input value that was provided is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified AWS resource cannot be found.
 //
-//   * ErrCodeOAuthProviderException "OAuthProviderException"
+//   * OAuthProviderException
 //   There was a problem with the underlying OAuth provider.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/codebuild-2016-10-06/UpdateWebhook
@@ -2794,6 +2794,57 @@ func (c *CodeBuild) UpdateWebhookWithContext(ctx aws.Context, input *UpdateWebho
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// An AWS service limit was exceeded for the calling AWS account.
+type AccountLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s AccountLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccountLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccountLimitExceededException(v protocol.ResponseMetadata) error {
+	return &AccountLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccountLimitExceededException) Code() string {
+	return "AccountLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s AccountLimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccountLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s AccountLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccountLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccountLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type BatchDeleteBuildsInput struct {
@@ -4927,7 +4978,8 @@ type EnvironmentVariable struct {
 	//    * PARAMETER_STORE: An environment variable stored in Amazon EC2 Systems
 	//    Manager Parameter Store.
 	//
-	//    * PLAINTEXT: An environment variable in plain text format.
+	//    * PLAINTEXT: An environment variable in plain text format. This is the
+	//    default value.
 	//
 	//    * SECRETS_MANAGER: An environment variable stored in AWS Secrets Manager.
 	Type *string `locationName:"type" type:"string" enum:"EnvironmentVariableType"`
@@ -5249,6 +5301,57 @@ func (s ImportSourceCredentialsOutput) GoString() string {
 func (s *ImportSourceCredentialsOutput) SetArn(v string) *ImportSourceCredentialsOutput {
 	s.Arn = &v
 	return s
+}
+
+// The input value that was provided is not valid.
+type InvalidInputException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidInputException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidInputException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
+	return &InvalidInputException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidInputException) Code() string {
+	return "InvalidInputException"
+}
+
+// Message returns the exception's message.
+func (s InvalidInputException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidInputException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidInputException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidInputException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidInputException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type InvalidateProjectCacheInput struct {
@@ -6448,6 +6551,57 @@ func (s *NetworkInterface) SetNetworkInterfaceId(v string) *NetworkInterface {
 func (s *NetworkInterface) SetSubnetId(v string) *NetworkInterface {
 	s.SubnetId = &v
 	return s
+}
+
+// There was a problem with the underlying OAuth provider.
+type OAuthProviderException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OAuthProviderException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OAuthProviderException) GoString() string {
+	return s.String()
+}
+
+func newErrorOAuthProviderException(v protocol.ResponseMetadata) error {
+	return &OAuthProviderException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OAuthProviderException) Code() string {
+	return "OAuthProviderException"
+}
+
+// Message returns the exception's message.
+func (s OAuthProviderException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OAuthProviderException) OrigErr() error {
+	return nil
+}
+
+func (s OAuthProviderException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OAuthProviderException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OAuthProviderException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Additional information about a build phase that has an error. You can use
@@ -7977,6 +8131,109 @@ func (s *ReportGroup) SetType(v string) *ReportGroup {
 	return s
 }
 
+// The specified AWS resource cannot be created, because an AWS resource with
+// the same settings already exists.
+type ResourceAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s ResourceAlreadyExistsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified AWS resource cannot be found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about S3 logs for a build project.
 type S3LogsConfig struct {
 	_ struct{} `type:"structure"`
@@ -8247,6 +8504,17 @@ type StartBuildInput struct {
 	// in the build project.
 	ComputeTypeOverride *string `locationName:"computeTypeOverride" type:"string" enum:"ComputeType"`
 
+	// The AWS Key Management Service (AWS KMS) customer master key (CMK) that overrides
+	// the one specified in the build project. The CMK key encrypts the build output
+	// artifacts.
+	//
+	// You can use a cross-account KMS key to encrypt the build output artifacts
+	// if your service role has permission to that key.
+	//
+	// You can specify either the Amazon Resource Name (ARN) of the CMK or, if available,
+	// the CMK's alias (using the format alias/alias-name ).
+	EncryptionKeyOverride *string `locationName:"encryptionKeyOverride" min:"1" type:"string"`
+
 	// A container type for this build that overrides the one specified in the build
 	// project.
 	EnvironmentTypeOverride *string `locationName:"environmentTypeOverride" type:"string" enum:"EnvironmentType"`
@@ -8393,6 +8661,9 @@ func (s StartBuildInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *StartBuildInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "StartBuildInput"}
+	if s.EncryptionKeyOverride != nil && len(*s.EncryptionKeyOverride) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("EncryptionKeyOverride", 1))
+	}
 	if s.ImageOverride != nil && len(*s.ImageOverride) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ImageOverride", 1))
 	}
@@ -8515,6 +8786,12 @@ func (s *StartBuildInput) SetCertificateOverride(v string) *StartBuildInput {
 // SetComputeTypeOverride sets the ComputeTypeOverride field's value.
 func (s *StartBuildInput) SetComputeTypeOverride(v string) *StartBuildInput {
 	s.ComputeTypeOverride = &v
+	return s
+}
+
+// SetEncryptionKeyOverride sets the EncryptionKeyOverride field's value.
+func (s *StartBuildInput) SetEncryptionKeyOverride(v string) *StartBuildInput {
+	s.EncryptionKeyOverride = &v
 	return s
 }
 

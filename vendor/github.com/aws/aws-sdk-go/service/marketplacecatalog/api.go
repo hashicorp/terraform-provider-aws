@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
 )
 
 const opCancelChangeSet = "CancelChangeSet"
@@ -66,23 +67,23 @@ func (c *MarketplaceCatalog) CancelChangeSetRequest(input *CancelChangeSetInput)
 // See the AWS API reference guide for AWS Marketplace Catalog Service's
 // API operation CancelChangeSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   There was an internal service exception.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access is denied.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An error occurred during validation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource wasn't found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is currently in use.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Too many requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/CancelChangeSet
@@ -160,20 +161,20 @@ func (c *MarketplaceCatalog) DescribeChangeSetRequest(input *DescribeChangeSetIn
 // See the AWS API reference guide for AWS Marketplace Catalog Service's
 // API operation DescribeChangeSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   There was an internal service exception.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access is denied.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An error occurred during validation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource wasn't found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Too many requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/DescribeChangeSet
@@ -251,23 +252,23 @@ func (c *MarketplaceCatalog) DescribeEntityRequest(input *DescribeEntityInput) (
 // See the AWS API reference guide for AWS Marketplace Catalog Service's
 // API operation DescribeEntity for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   There was an internal service exception.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access is denied.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An error occurred during validation.
 //
-//   * ErrCodeResourceNotSupportedException "ResourceNotSupportedException"
+//   * ResourceNotSupportedException
 //   Currently, the specified resource is not supported.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource wasn't found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Too many requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/DescribeEntity
@@ -357,17 +358,17 @@ func (c *MarketplaceCatalog) ListChangeSetsRequest(input *ListChangeSetsInput) (
 // See the AWS API reference guide for AWS Marketplace Catalog Service's
 // API operation ListChangeSets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   There was an internal service exception.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access is denied.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An error occurred during validation.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Too many requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/ListChangeSets
@@ -503,20 +504,20 @@ func (c *MarketplaceCatalog) ListEntitiesRequest(input *ListEntitiesInput) (req 
 // See the AWS API reference guide for AWS Marketplace Catalog Service's
 // API operation ListEntities for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   There was an internal service exception.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access is denied.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An error occurred during validation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource wasn't found.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Too many requests.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/ListEntities
@@ -646,26 +647,26 @@ func (c *MarketplaceCatalog) StartChangeSetRequest(input *StartChangeSetInput) (
 // See the AWS API reference guide for AWS Marketplace Catalog Service's
 // API operation StartChangeSet for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServiceException "InternalServiceException"
+// Returned Error Types:
+//   * InternalServiceException
 //   There was an internal service exception.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   Access is denied.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An error occurred during validation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource wasn't found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The resource is currently in use.
 //
-//   * ErrCodeThrottlingException "ThrottlingException"
+//   * ThrottlingException
 //   Too many requests.
 //
-//   * ErrCodeServiceQuotaExceededException "ServiceQuotaExceededException"
+//   * ServiceQuotaExceededException
 //   The maximum number of open requests per account has been exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/marketplace-catalog-2018-09-17/StartChangeSet
@@ -688,6 +689,62 @@ func (c *MarketplaceCatalog) StartChangeSetWithContext(ctx aws.Context, input *S
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// Access is denied.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type CancelChangeSetInput struct {
@@ -1495,6 +1552,62 @@ func (s *Filter) SetValueList(v []*string) *Filter {
 	return s
 }
 
+// There was an internal service exception.
+type InternalServiceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServiceException(v protocol.ResponseMetadata) error {
+	return &InternalServiceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServiceException) Code() string {
+	return "InternalServiceException"
+}
+
+// Message returns the exception's message.
+func (s InternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServiceException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServiceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServiceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListChangeSetsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -1783,6 +1896,230 @@ func (s *ListEntitiesOutput) SetNextToken(v string) *ListEntitiesOutput {
 	return s
 }
 
+// The resource is currently in use.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified resource wasn't found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Currently, the specified resource is not supported.
+type ResourceNotSupportedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotSupportedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotSupportedException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotSupportedException(v protocol.ResponseMetadata) error {
+	return &ResourceNotSupportedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotSupportedException) Code() string {
+	return "ResourceNotSupportedException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotSupportedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotSupportedException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotSupportedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotSupportedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotSupportedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of open requests per account has been exceeded.
+type ServiceQuotaExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceQuotaExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceQuotaExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceQuotaExceededException(v protocol.ResponseMetadata) error {
+	return &ServiceQuotaExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceQuotaExceededException) Code() string {
+	return "ServiceQuotaExceededException"
+}
+
+// Message returns the exception's message.
+func (s ServiceQuotaExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceQuotaExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceQuotaExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceQuotaExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceQuotaExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // An object that contains two attributes, sortBy and sortOrder.
 type Sort struct {
 	_ struct{} `type:"structure"`
@@ -1955,6 +2292,118 @@ func (s *StartChangeSetOutput) SetChangeSetArn(v string) *StartChangeSetOutput {
 func (s *StartChangeSetOutput) SetChangeSetId(v string) *StartChangeSetOutput {
 	s.ChangeSetId = &v
 	return s
+}
+
+// Too many requests.
+type ThrottlingException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ThrottlingException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ThrottlingException) GoString() string {
+	return s.String()
+}
+
+func newErrorThrottlingException(v protocol.ResponseMetadata) error {
+	return &ThrottlingException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ThrottlingException) Code() string {
+	return "ThrottlingException"
+}
+
+// Message returns the exception's message.
+func (s ThrottlingException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ThrottlingException) OrigErr() error {
+	return nil
+}
+
+func (s ThrottlingException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ThrottlingException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ThrottlingException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// An error occurred during validation.
+type ValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ValidationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 const (

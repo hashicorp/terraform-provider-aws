@@ -608,8 +608,7 @@ func (ctx *signingCtx) buildCanonicalHeaders(r rule, header http.Header) {
 	var headers []string
 	headers = append(headers, "host")
 	for k, v := range header {
-		canonicalKey := http.CanonicalHeaderKey(k)
-		if !r.IsValid(canonicalKey) {
+		if !r.IsValid(k) {
 			continue // ignored header
 		}
 		if ctx.SignedHeaderVals == nil {

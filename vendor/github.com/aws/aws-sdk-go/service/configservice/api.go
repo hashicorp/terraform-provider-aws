@@ -74,11 +74,11 @@ func (c *ConfigService) BatchGetAggregateResourceConfigRequest(input *BatchGetAg
 // See the AWS API reference guide for AWS Config's
 // API operation BatchGetAggregateResourceConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/BatchGetAggregateResourceConfig
@@ -164,11 +164,11 @@ func (c *ConfigService) BatchGetResourceConfigRequest(input *BatchGetResourceCon
 // See the AWS API reference guide for AWS Config's
 // API operation BatchGetResourceConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
+//   * NoAvailableConfigurationRecorderException
 //   There are no configuration recorders available to provide the role needed
 //   to describe your resources. Create a configuration recorder.
 //
@@ -249,8 +249,8 @@ func (c *ConfigService) DeleteAggregationAuthorizationRequest(input *DeleteAggre
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteAggregationAuthorization for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -336,12 +336,12 @@ func (c *ConfigService) DeleteConfigRuleRequest(input *DeleteConfigRuleInput) (r
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteConfigRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+// Returned Error Types:
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -445,8 +445,8 @@ func (c *ConfigService) DeleteConfigurationAggregatorRequest(input *DeleteConfig
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteConfigurationAggregator for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+// Returned Error Types:
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteConfigurationAggregator
@@ -534,8 +534,8 @@ func (c *ConfigService) DeleteConfigurationRecorderRequest(input *DeleteConfigur
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteConfigurationRecorder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigurationRecorderException "NoSuchConfigurationRecorderException"
+// Returned Error Types:
+//   * NoSuchConfigurationRecorderException
 //   You have specified a configuration recorder that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteConfigurationRecorder
@@ -618,11 +618,11 @@ func (c *ConfigService) DeleteConformancePackRequest(input *DeleteConformancePac
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteConformancePack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+// Returned Error Types:
+//   * NoSuchConformancePackException
 //   You specified one or more conformance packs that do not exist.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -728,11 +728,11 @@ func (c *ConfigService) DeleteDeliveryChannelRequest(input *DeleteDeliveryChanne
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteDeliveryChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchDeliveryChannelException "NoSuchDeliveryChannelException"
+// Returned Error Types:
+//   * NoSuchDeliveryChannelException
 //   You have specified a delivery channel that does not exist.
 //
-//   * ErrCodeLastDeliveryChannelDeleteFailedException "LastDeliveryChannelDeleteFailedException"
+//   * LastDeliveryChannelDeleteFailedException
 //   You cannot delete the delivery channel you specified because the configuration
 //   recorder is running.
 //
@@ -815,12 +815,12 @@ func (c *ConfigService) DeleteEvaluationResultsRequest(input *DeleteEvaluationRe
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteEvaluationResults for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+// Returned Error Types:
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -928,11 +928,11 @@ func (c *ConfigService) DeleteOrganizationConfigRuleRequest(input *DeleteOrganiz
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteOrganizationConfigRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+// Returned Error Types:
+//   * NoSuchOrganizationConfigRuleException
 //   You specified one or more organization config rules that do not exist.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -959,7 +959,7 @@ func (c *ConfigService) DeleteOrganizationConfigRuleRequest(input *DeleteOrganiz
 //      * For DeleteConformancePack, a conformance pack creation, update, and
 //      deletion is in progress. Try your request again later.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -1049,15 +1049,15 @@ func (c *ConfigService) DeleteOrganizationConformancePackRequest(input *DeleteOr
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteOrganizationConformancePack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+// Returned Error Types:
+//   * NoSuchOrganizationConformancePackException
 //   AWS Config organization conformance pack that you passed in the filter does
 //   not exist.
 //
 //   For DeleteOrganizationConformancePack, you tried to delete an organization
 //   conformance pack that does not exist.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -1084,7 +1084,7 @@ func (c *ConfigService) DeleteOrganizationConformancePackRequest(input *DeleteOr
 //      * For DeleteConformancePack, a conformance pack creation, update, and
 //      deletion is in progress. Try your request again later.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -1169,8 +1169,8 @@ func (c *ConfigService) DeletePendingAggregationRequestRequest(input *DeletePend
 // See the AWS API reference guide for AWS Config's
 // API operation DeletePendingAggregationRequest for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -1250,11 +1250,11 @@ func (c *ConfigService) DeleteRemediationConfigurationRequest(input *DeleteRemed
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteRemediationConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchRemediationConfigurationException "NoSuchRemediationConfigurationException"
+// Returned Error Types:
+//   * NoSuchRemediationConfigurationException
 //   You specified an AWS Config rule without a remediation configuration.
 //
-//   * ErrCodeRemediationInProgressException "RemediationInProgressException"
+//   * RemediationInProgressException
 //   Remediation action is in progress. You can either cancel execution in AWS
 //   Systems Manager or wait and try again later.
 //
@@ -1333,8 +1333,8 @@ func (c *ConfigService) DeleteRemediationExceptionsRequest(input *DeleteRemediat
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteRemediationExceptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchRemediationExceptionException "NoSuchRemediationExceptionException"
+// Returned Error Types:
+//   * NoSuchRemediationExceptionException
 //   You tried to delete a remediation exception that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteRemediationExceptions
@@ -1416,11 +1416,11 @@ func (c *ConfigService) DeleteResourceConfigRequest(input *DeleteResourceConfigI
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteResourceConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeNoRunningConfigurationRecorderException "NoRunningConfigurationRecorderException"
+//   * NoRunningConfigurationRecorderException
 //   There is no configuration recorder running.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteResourceConfig
@@ -1499,12 +1499,12 @@ func (c *ConfigService) DeleteRetentionConfigurationRequest(input *DeleteRetenti
 // See the AWS API reference guide for AWS Config's
 // API operation DeleteRetentionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeNoSuchRetentionConfigurationException "NoSuchRetentionConfigurationException"
+//   * NoSuchRetentionConfigurationException
 //   You have specified a retention configuration that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeleteRetentionConfiguration
@@ -1592,15 +1592,15 @@ func (c *ConfigService) DeliverConfigSnapshotRequest(input *DeliverConfigSnapsho
 // See the AWS API reference guide for AWS Config's
 // API operation DeliverConfigSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchDeliveryChannelException "NoSuchDeliveryChannelException"
+// Returned Error Types:
+//   * NoSuchDeliveryChannelException
 //   You have specified a delivery channel that does not exist.
 //
-//   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
+//   * NoAvailableConfigurationRecorderException
 //   There are no configuration recorders available to provide the role needed
 //   to describe your resources. Create a configuration recorder.
 //
-//   * ErrCodeNoRunningConfigurationRecorderException "NoRunningConfigurationRecorderException"
+//   * NoRunningConfigurationRecorderException
 //   There is no configuration recorder running.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DeliverConfigSnapshot
@@ -1682,18 +1682,18 @@ func (c *ConfigService) DescribeAggregateComplianceByConfigRulesRequest(input *D
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeAggregateComplianceByConfigRules for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeAggregateComplianceByConfigRules
@@ -1772,16 +1772,16 @@ func (c *ConfigService) DescribeAggregationAuthorizationsRequest(input *Describe
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeAggregationAuthorizations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeAggregationAuthorizations
@@ -1881,16 +1881,16 @@ func (c *ConfigService) DescribeComplianceByConfigRuleRequest(input *DescribeCom
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeComplianceByConfigRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -1993,12 +1993,12 @@ func (c *ConfigService) DescribeComplianceByResourceRequest(input *DescribeCompl
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeComplianceByResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -2080,16 +2080,16 @@ func (c *ConfigService) DescribeConfigRuleEvaluationStatusRequest(input *Describ
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConfigRuleEvaluationStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+// Returned Error Types:
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -2168,12 +2168,12 @@ func (c *ConfigService) DescribeConfigRulesRequest(input *DescribeConfigRulesInp
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConfigRules for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+// Returned Error Types:
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -2255,19 +2255,19 @@ func (c *ConfigService) DescribeConfigurationAggregatorSourcesStatusRequest(inpu
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConfigurationAggregatorSourcesStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConfigurationAggregatorSourcesStatus
@@ -2347,19 +2347,19 @@ func (c *ConfigService) DescribeConfigurationAggregatorsRequest(input *DescribeC
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConfigurationAggregators for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConfigurationAggregators
@@ -2442,8 +2442,8 @@ func (c *ConfigService) DescribeConfigurationRecorderStatusRequest(input *Descri
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConfigurationRecorderStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigurationRecorderException "NoSuchConfigurationRecorderException"
+// Returned Error Types:
+//   * NoSuchConfigurationRecorderException
 //   You have specified a configuration recorder that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConfigurationRecorderStatus
@@ -2526,8 +2526,8 @@ func (c *ConfigService) DescribeConfigurationRecordersRequest(input *DescribeCon
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConfigurationRecorders for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigurationRecorderException "NoSuchConfigurationRecorderException"
+// Returned Error Types:
+//   * NoSuchConfigurationRecorderException
 //   You have specified a configuration recorder that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConfigurationRecorders
@@ -2607,22 +2607,22 @@ func (c *ConfigService) DescribeConformancePackComplianceRequest(input *Describe
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConformancePackCompliance for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+// Returned Error Types:
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeNoSuchConfigRuleInConformancePackException "NoSuchConfigRuleInConformancePackException"
+//   * NoSuchConfigRuleInConformancePackException
 //   AWS Config rule that you passed in the filter does not exist.
 //
-//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+//   * NoSuchConformancePackException
 //   You specified one or more conformance packs that do not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeConformancePackCompliance
@@ -2702,11 +2702,11 @@ func (c *ConfigService) DescribeConformancePackStatusRequest(input *DescribeConf
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConformancePackStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+// Returned Error Types:
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -2785,14 +2785,14 @@ func (c *ConfigService) DescribeConformancePacksRequest(input *DescribeConforman
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeConformancePacks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+// Returned Error Types:
+//   * NoSuchConformancePackException
 //   You specified one or more conformance packs that do not exist.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -2875,8 +2875,8 @@ func (c *ConfigService) DescribeDeliveryChannelStatusRequest(input *DescribeDeli
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeDeliveryChannelStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchDeliveryChannelException "NoSuchDeliveryChannelException"
+// Returned Error Types:
+//   * NoSuchDeliveryChannelException
 //   You have specified a delivery channel that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeDeliveryChannelStatus
@@ -2958,8 +2958,8 @@ func (c *ConfigService) DescribeDeliveryChannelsRequest(input *DescribeDeliveryC
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeDeliveryChannels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchDeliveryChannelException "NoSuchDeliveryChannelException"
+// Returned Error Types:
+//   * NoSuchDeliveryChannelException
 //   You have specified a delivery channel that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribeDeliveryChannels
@@ -3048,18 +3048,18 @@ func (c *ConfigService) DescribeOrganizationConfigRuleStatusesRequest(input *Des
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeOrganizationConfigRuleStatuses for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+// Returned Error Types:
+//   * NoSuchOrganizationConfigRuleException
 //   You specified one or more organization config rules that do not exist.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -3149,18 +3149,18 @@ func (c *ConfigService) DescribeOrganizationConfigRulesRequest(input *DescribeOr
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeOrganizationConfigRules for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+// Returned Error Types:
+//   * NoSuchOrganizationConfigRuleException
 //   You specified one or more organization config rules that do not exist.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -3254,22 +3254,22 @@ func (c *ConfigService) DescribeOrganizationConformancePackStatusesRequest(input
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeOrganizationConformancePackStatuses for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+// Returned Error Types:
+//   * NoSuchOrganizationConformancePackException
 //   AWS Config organization conformance pack that you passed in the filter does
 //   not exist.
 //
 //   For DeleteOrganizationConformancePack, you tried to delete an organization
 //   conformance pack that does not exist.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -3360,22 +3360,22 @@ func (c *ConfigService) DescribeOrganizationConformancePacksRequest(input *Descr
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeOrganizationConformancePacks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+// Returned Error Types:
+//   * NoSuchOrganizationConformancePackException
 //   AWS Config organization conformance pack that you passed in the filter does
 //   not exist.
 //
 //   For DeleteOrganizationConformancePack, you tried to delete an organization
 //   conformance pack that does not exist.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -3458,16 +3458,16 @@ func (c *ConfigService) DescribePendingAggregationRequestsRequest(input *Describ
 // See the AWS API reference guide for AWS Config's
 // API operation DescribePendingAggregationRequests for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/DescribePendingAggregationRequests
@@ -3633,12 +3633,12 @@ func (c *ConfigService) DescribeRemediationExceptionsRequest(input *DescribeReme
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeRemediationExceptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -3778,11 +3778,11 @@ func (c *ConfigService) DescribeRemediationExecutionStatusRequest(input *Describ
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeRemediationExecutionStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchRemediationConfigurationException "NoSuchRemediationConfigurationException"
+// Returned Error Types:
+//   * NoSuchRemediationConfigurationException
 //   You specified an AWS Config rule without a remediation configuration.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -3918,15 +3918,15 @@ func (c *ConfigService) DescribeRetentionConfigurationsRequest(input *DescribeRe
 // See the AWS API reference guide for AWS Config's
 // API operation DescribeRetentionConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeNoSuchRetentionConfigurationException "NoSuchRetentionConfigurationException"
+//   * NoSuchRetentionConfigurationException
 //   You have specified a retention configuration that does not exist.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -4011,18 +4011,18 @@ func (c *ConfigService) GetAggregateComplianceDetailsByConfigRuleRequest(input *
 // See the AWS API reference guide for AWS Config's
 // API operation GetAggregateComplianceDetailsByConfigRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetAggregateComplianceDetailsByConfigRule
@@ -4104,18 +4104,18 @@ func (c *ConfigService) GetAggregateConfigRuleComplianceSummaryRequest(input *Ge
 // See the AWS API reference guide for AWS Config's
 // API operation GetAggregateConfigRuleComplianceSummary for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetAggregateConfigRuleComplianceSummary
@@ -4201,18 +4201,18 @@ func (c *ConfigService) GetAggregateDiscoveredResourceCountsRequest(input *GetAg
 // See the AWS API reference guide for AWS Config's
 // API operation GetAggregateDiscoveredResourceCounts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetAggregateDiscoveredResourceCounts
@@ -4291,17 +4291,17 @@ func (c *ConfigService) GetAggregateResourceConfigRequest(input *GetAggregateRes
 // See the AWS API reference guide for AWS Config's
 // API operation GetAggregateResourceConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
-//   * ErrCodeOversizedConfigurationItemException "OversizedConfigurationItemException"
+//   * OversizedConfigurationItemException
 //   The configuration item size is outside the allowable range.
 //
-//   * ErrCodeResourceNotDiscoveredException "ResourceNotDiscoveredException"
+//   * ResourceNotDiscoveredException
 //   You have specified a resource that is either unknown or has not been discovered.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetAggregateResourceConfig
@@ -4381,16 +4381,16 @@ func (c *ConfigService) GetComplianceDetailsByConfigRuleRequest(input *GetCompli
 // See the AWS API reference guide for AWS Config's
 // API operation GetComplianceDetailsByConfigRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
@@ -4471,8 +4471,8 @@ func (c *ConfigService) GetComplianceDetailsByResourceRequest(input *GetComplian
 // See the AWS API reference guide for AWS Config's
 // API operation GetComplianceDetailsByResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -4628,8 +4628,8 @@ func (c *ConfigService) GetComplianceSummaryByResourceTypeRequest(input *GetComp
 // See the AWS API reference guide for AWS Config's
 // API operation GetComplianceSummaryByResourceType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -4709,21 +4709,21 @@ func (c *ConfigService) GetConformancePackComplianceDetailsRequest(input *GetCon
 // See the AWS API reference guide for AWS Config's
 // API operation GetConformancePackComplianceDetails for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+// Returned Error Types:
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+//   * NoSuchConformancePackException
 //   You specified one or more conformance packs that do not exist.
 //
-//   * ErrCodeNoSuchConfigRuleInConformancePackException "NoSuchConfigRuleInConformancePackException"
+//   * NoSuchConfigRuleInConformancePackException
 //   AWS Config rule that you passed in the filter does not exist.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -4803,14 +4803,14 @@ func (c *ConfigService) GetConformancePackComplianceSummaryRequest(input *GetCon
 // See the AWS API reference guide for AWS Config's
 // API operation GetConformancePackComplianceSummary for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConformancePackException "NoSuchConformancePackException"
+// Returned Error Types:
+//   * NoSuchConformancePackException
 //   You specified one or more conformance packs that do not exist.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -4922,14 +4922,14 @@ func (c *ConfigService) GetDiscoveredResourceCountsRequest(input *GetDiscoveredR
 // See the AWS API reference guide for AWS Config's
 // API operation GetDiscoveredResourceCounts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -5011,18 +5011,18 @@ func (c *ConfigService) GetOrganizationConfigRuleDetailedStatusRequest(input *Ge
 // See the AWS API reference guide for AWS Config's
 // API operation GetOrganizationConfigRuleDetailedStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConfigRuleException "NoSuchOrganizationConfigRuleException"
+// Returned Error Types:
+//   * NoSuchOrganizationConfigRuleException
 //   You specified one or more organization config rules that do not exist.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -5108,22 +5108,22 @@ func (c *ConfigService) GetOrganizationConformancePackDetailedStatusRequest(inpu
 // See the AWS API reference guide for AWS Config's
 // API operation GetOrganizationConformancePackDetailedStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchOrganizationConformancePackException "NoSuchOrganizationConformancePackException"
+// Returned Error Types:
+//   * NoSuchOrganizationConformancePackException
 //   AWS Config organization conformance pack that you passed in the filter does
 //   not exist.
 //
 //   For DeleteOrganizationConformancePack, you tried to delete an organization
 //   conformance pack that does not exist.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -5225,26 +5225,26 @@ func (c *ConfigService) GetResourceConfigHistoryRequest(input *GetResourceConfig
 // See the AWS API reference guide for AWS Config's
 // API operation GetResourceConfigHistory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidTimeRangeException "InvalidTimeRangeException"
+//   * InvalidTimeRangeException
 //   The specified time range is not valid. The earlier time is not chronologically
 //   before the later time.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
+//   * NoAvailableConfigurationRecorderException
 //   There are no configuration recorders available to provide the role needed
 //   to describe your resources. Create a configuration recorder.
 //
-//   * ErrCodeResourceNotDiscoveredException "ResourceNotDiscoveredException"
+//   * ResourceNotDiscoveredException
 //   You have specified a resource that is either unknown or has not been discovered.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/GetResourceConfigHistory
@@ -5383,18 +5383,18 @@ func (c *ConfigService) ListAggregateDiscoveredResourcesRequest(input *ListAggre
 // See the AWS API reference guide for AWS Config's
 // API operation ListAggregateDiscoveredResources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoSuchConfigurationAggregatorException "NoSuchConfigurationAggregatorException"
+//   * NoSuchConfigurationAggregatorException
 //   You have specified a configuration aggregator that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/ListAggregateDiscoveredResources
@@ -5485,18 +5485,18 @@ func (c *ConfigService) ListDiscoveredResourcesRequest(input *ListDiscoveredReso
 // See the AWS API reference guide for AWS Config's
 // API operation ListDiscoveredResources for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
-//   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
+//   * NoAvailableConfigurationRecorderException
 //   There are no configuration recorders available to provide the role needed
 //   to describe your resources. Create a configuration recorder.
 //
@@ -5575,17 +5575,17 @@ func (c *ConfigService) ListTagsForResourceRequest(input *ListTagsForResourceInp
 // See the AWS API reference guide for AWS Config's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   You have specified a resource that does not exist.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -5665,8 +5665,8 @@ func (c *ConfigService) PutAggregationAuthorizationRequest(input *PutAggregation
 // See the AWS API reference guide for AWS Config's
 // API operation PutAggregationAuthorization for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -5781,17 +5781,17 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 // See the AWS API reference guide for AWS Config's
 // API operation PutConfigRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeMaxNumberOfConfigRulesExceededException "MaxNumberOfConfigRulesExceededException"
+//   * MaxNumberOfConfigRulesExceededException
 //   Failed to add the AWS Config rule because the account already contains the
 //   maximum number of 150 rules. Consider deleting any deactivated rules before
 //   you add new rules.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -5818,7 +5818,7 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //      * For DeleteConformancePack, a conformance pack creation, update, and
 //      deletion is in progress. Try your request again later.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   Indicates one of the following errors:
 //
 //      * For PutConfigRule, the rule cannot be created because the IAM role assigned
@@ -5835,7 +5835,7 @@ func (c *ConfigService) PutConfigRuleRequest(input *PutConfigRuleInput) (req *re
 //      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
 //
-//   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
+//   * NoAvailableConfigurationRecorderException
 //   There are no configuration recorders available to provide the role needed
 //   to describe your resources. Create a configuration recorder.
 //
@@ -5923,12 +5923,12 @@ func (c *ConfigService) PutConfigurationAggregatorRequest(input *PutConfiguratio
 // See the AWS API reference guide for AWS Config's
 // API operation PutConfigurationAggregator for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   For StartConfigRulesEvaluation API, this exception is thrown if an evaluation
 //   is in progress or if you call the StartConfigRulesEvaluation API more than
 //   once per minute.
@@ -5936,10 +5936,10 @@ func (c *ConfigService) PutConfigurationAggregatorRequest(input *PutConfiguratio
 //   For PutConfigurationAggregator API, this exception is thrown if the number
 //   of accounts and aggregators exceeds the limit.
 //
-//   * ErrCodeInvalidRoleException "InvalidRoleException"
+//   * InvalidRoleException
 //   You have provided a null or empty role ARN.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -5947,10 +5947,10 @@ func (c *ConfigService) PutConfigurationAggregatorRequest(input *PutConfiguratio
 //   Config throws an exception if APIs are called from member accounts. All APIs
 //   must be called from organization master account.
 //
-//   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
+//   * NoAvailableOrganizationException
 //   Organization is no longer available.
 //
-//   * ErrCodeOrganizationAllFeaturesNotEnabledException "OrganizationAllFeaturesNotEnabledException"
+//   * OrganizationAllFeaturesNotEnabledException
 //   AWS Config resource cannot be created because your organization does not
 //   have all features enabled.
 //
@@ -6040,17 +6040,17 @@ func (c *ConfigService) PutConfigurationRecorderRequest(input *PutConfigurationR
 // See the AWS API reference guide for AWS Config's
 // API operation PutConfigurationRecorder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMaxNumberOfConfigurationRecordersExceededException "MaxNumberOfConfigurationRecordersExceededException"
+// Returned Error Types:
+//   * MaxNumberOfConfigurationRecordersExceededException
 //   You have reached the limit of the number of recorders you can create.
 //
-//   * ErrCodeInvalidConfigurationRecorderNameException "InvalidConfigurationRecorderNameException"
+//   * InvalidConfigurationRecorderNameException
 //   You have provided a configuration recorder name that is not valid.
 //
-//   * ErrCodeInvalidRoleException "InvalidRoleException"
+//   * InvalidRoleException
 //   You have provided a null or empty role ARN.
 //
-//   * ErrCodeInvalidRecordingGroupException "InvalidRecordingGroupException"
+//   * InvalidRecordingGroupException
 //   AWS Config throws an exception if the recording group does not contain a
 //   valid list of resource types. Invalid values might also be incorrectly formatted.
 //
@@ -6140,8 +6140,8 @@ func (c *ConfigService) PutConformancePackRequest(input *PutConformancePackInput
 // See the AWS API reference guide for AWS Config's
 // API operation PutConformancePack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+// Returned Error Types:
+//   * InsufficientPermissionsException
 //   Indicates one of the following errors:
 //
 //      * For PutConfigRule, the rule cannot be created because the IAM role assigned
@@ -6158,10 +6158,10 @@ func (c *ConfigService) PutConformancePackRequest(input *PutConformancePackInput
 //      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
 //
-//   * ErrCodeConformancePackTemplateValidationException "ConformancePackTemplateValidationException"
+//   * ConformancePackTemplateValidationException
 //   You have specified a template that is not valid or supported.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -6188,11 +6188,11 @@ func (c *ConfigService) PutConformancePackRequest(input *PutConformancePackInput
 //      * For DeleteConformancePack, a conformance pack creation, update, and
 //      deletion is in progress. Try your request again later.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeMaxNumberOfConformancePacksExceededException "MaxNumberOfConformancePacksExceededException"
+//   * MaxNumberOfConformancePacksExceededException
 //   You have reached the limit (6) of the number of conformance packs in an account
 //   (6 conformance pack with 25 AWS Config rules per pack).
 //
@@ -6285,27 +6285,27 @@ func (c *ConfigService) PutDeliveryChannelRequest(input *PutDeliveryChannelInput
 // See the AWS API reference guide for AWS Config's
 // API operation PutDeliveryChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMaxNumberOfDeliveryChannelsExceededException "MaxNumberOfDeliveryChannelsExceededException"
+// Returned Error Types:
+//   * MaxNumberOfDeliveryChannelsExceededException
 //   You have reached the limit of the number of delivery channels you can create.
 //
-//   * ErrCodeNoAvailableConfigurationRecorderException "NoAvailableConfigurationRecorderException"
+//   * NoAvailableConfigurationRecorderException
 //   There are no configuration recorders available to provide the role needed
 //   to describe your resources. Create a configuration recorder.
 //
-//   * ErrCodeInvalidDeliveryChannelNameException "InvalidDeliveryChannelNameException"
+//   * InvalidDeliveryChannelNameException
 //   The specified delivery channel name is not valid.
 //
-//   * ErrCodeNoSuchBucketException "NoSuchBucketException"
+//   * NoSuchBucketException
 //   The specified Amazon S3 bucket does not exist.
 //
-//   * ErrCodeInvalidS3KeyPrefixException "InvalidS3KeyPrefixException"
+//   * InvalidS3KeyPrefixException
 //   The specified Amazon S3 key prefix is not valid.
 //
-//   * ErrCodeInvalidSNSTopicARNException "InvalidSNSTopicARNException"
+//   * InvalidSNSTopicARNException
 //   The specified Amazon SNS topic does not exist.
 //
-//   * ErrCodeInsufficientDeliveryPolicyException "InsufficientDeliveryPolicyException"
+//   * InsufficientDeliveryPolicyException
 //   Your Amazon S3 bucket policy does not permit AWS Config to write to it.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutDeliveryChannel
@@ -6385,15 +6385,15 @@ func (c *ConfigService) PutEvaluationsRequest(input *PutEvaluationsInput) (req *
 // See the AWS API reference guide for AWS Config's
 // API operation PutEvaluations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeInvalidResultTokenException "InvalidResultTokenException"
+//   * InvalidResultTokenException
 //   The specified ResultToken is invalid.
 //
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
@@ -6493,12 +6493,12 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 // See the AWS API reference guide for AWS Config's
 // API operation PutOrganizationConfigRule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMaxNumberOfOrganizationConfigRulesExceededException "MaxNumberOfOrganizationConfigRulesExceededException"
+// Returned Error Types:
+//   * MaxNumberOfOrganizationConfigRulesExceededException
 //   You have reached the limit of the number of organization config rules you
 //   can create.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -6525,14 +6525,14 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //      * For DeleteConformancePack, a conformance pack creation, update, and
 //      deletion is in progress. Try your request again later.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -6540,14 +6540,14 @@ func (c *ConfigService) PutOrganizationConfigRuleRequest(input *PutOrganizationC
 //   Config throws an exception if APIs are called from member accounts. All APIs
 //   must be called from organization master account.
 //
-//   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
+//   * NoAvailableOrganizationException
 //   Organization is no longer available.
 //
-//   * ErrCodeOrganizationAllFeaturesNotEnabledException "OrganizationAllFeaturesNotEnabledException"
+//   * OrganizationAllFeaturesNotEnabledException
 //   AWS Config resource cannot be created because your organization does not
 //   have all features enabled.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   Indicates one of the following errors:
 //
 //      * For PutConfigRule, the rule cannot be created because the IAM role assigned
@@ -6655,13 +6655,13 @@ func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganiza
 // See the AWS API reference guide for AWS Config's
 // API operation PutOrganizationConformancePack for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeMaxNumberOfOrganizationConformancePacksExceededException "MaxNumberOfOrganizationConformancePacksExceededException"
+// Returned Error Types:
+//   * MaxNumberOfOrganizationConformancePacksExceededException
 //   You have reached the limit (6) of the number of organization conformance
 //   packs in an account (6 conformance pack with 25 AWS Config rules per pack
 //   per account).
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -6688,10 +6688,10 @@ func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganiza
 //      * For DeleteConformancePack, a conformance pack creation, update, and
 //      deletion is in progress. Try your request again later.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeOrganizationAccessDeniedException "OrganizationAccessDeniedException"
+//   * OrganizationAccessDeniedException
 //   For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
 //   API.
 //
@@ -6699,7 +6699,7 @@ func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganiza
 //   Config throws an exception if APIs are called from member accounts. All APIs
 //   must be called from organization master account.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   Indicates one of the following errors:
 //
 //      * For PutConfigRule, the rule cannot be created because the IAM role assigned
@@ -6716,14 +6716,14 @@ func (c *ConfigService) PutOrganizationConformancePackRequest(input *PutOrganiza
 //      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
 //
-//   * ErrCodeOrganizationConformancePackTemplateValidationException "OrganizationConformancePackTemplateValidationException"
+//   * OrganizationConformancePackTemplateValidationException
 //   You have specified a template that is not valid or supported.
 //
-//   * ErrCodeOrganizationAllFeaturesNotEnabledException "OrganizationAllFeaturesNotEnabledException"
+//   * OrganizationAllFeaturesNotEnabledException
 //   AWS Config resource cannot be created because your organization does not
 //   have all features enabled.
 //
-//   * ErrCodeNoAvailableOrganizationException "NoAvailableOrganizationException"
+//   * NoAvailableOrganizationException
 //   Organization is no longer available.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/PutOrganizationConformancePack
@@ -6805,8 +6805,8 @@ func (c *ConfigService) PutRemediationConfigurationsRequest(input *PutRemediatio
 // See the AWS API reference guide for AWS Config's
 // API operation PutRemediationConfigurations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+// Returned Error Types:
+//   * InsufficientPermissionsException
 //   Indicates one of the following errors:
 //
 //      * For PutConfigRule, the rule cannot be created because the IAM role assigned
@@ -6823,7 +6823,7 @@ func (c *ConfigService) PutRemediationConfigurationsRequest(input *PutRemediatio
 //      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -6904,8 +6904,8 @@ func (c *ConfigService) PutRemediationExceptionsRequest(input *PutRemediationExc
 // See the AWS API reference guide for AWS Config's
 // API operation PutRemediationExceptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -6996,11 +6996,11 @@ func (c *ConfigService) PutResourceConfigRequest(input *PutResourceConfigInput) 
 // See the AWS API reference guide for AWS Config's
 // API operation PutResourceConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   Indicates one of the following errors:
 //
 //      * For PutConfigRule, the rule cannot be created because the IAM role assigned
@@ -7017,10 +7017,10 @@ func (c *ConfigService) PutResourceConfigRequest(input *PutResourceConfigInput) 
 //      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
 //
-//   * ErrCodeNoRunningConfigurationRecorderException "NoRunningConfigurationRecorderException"
+//   * NoRunningConfigurationRecorderException
 //   There is no configuration recorder running.
 //
-//   * ErrCodeMaxActiveResourcesExceededException "MaxActiveResourcesExceededException"
+//   * MaxActiveResourcesExceededException
 //   You have reached the limit (100,000) of active custom resource types in your
 //   account. Delete unused resources using DeleteResourceConfig.
 //
@@ -7106,12 +7106,12 @@ func (c *ConfigService) PutRetentionConfigurationRequest(input *PutRetentionConf
 // See the AWS API reference guide for AWS Config's
 // API operation PutRetentionConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeMaxNumberOfRetentionConfigurationsExceededException "MaxNumberOfRetentionConfigurationsExceededException"
+//   * MaxNumberOfRetentionConfigurationsExceededException
 //   Failed to add the retention configuration because a retention configuration
 //   with that name already exists.
 //
@@ -7194,14 +7194,14 @@ func (c *ConfigService) SelectResourceConfigRequest(input *SelectResourceConfigI
 // See the AWS API reference guide for AWS Config's
 // API operation SelectResourceConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidExpressionException "InvalidExpressionException"
+// Returned Error Types:
+//   * InvalidExpressionException
 //   The syntax of the query is incorrect.
 //
-//   * ErrCodeInvalidLimitException "InvalidLimitException"
+//   * InvalidLimitException
 //   The specified limit is outside the allowable range.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The specified next token is invalid. Specify the nextToken string that was
 //   returned in the previous response to get the next page of results.
 //
@@ -7310,12 +7310,12 @@ func (c *ConfigService) StartConfigRulesEvaluationRequest(input *StartConfigRule
 // See the AWS API reference guide for AWS Config's
 // API operation StartConfigRulesEvaluation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigRuleException "NoSuchConfigRuleException"
+// Returned Error Types:
+//   * NoSuchConfigRuleException
 //   One or more AWS Config rules in the request are invalid. Verify that the
 //   rule names are correct and try again.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   For StartConfigRulesEvaluation API, this exception is thrown if an evaluation
 //   is in progress or if you call the StartConfigRulesEvaluation API more than
 //   once per minute.
@@ -7323,7 +7323,7 @@ func (c *ConfigService) StartConfigRulesEvaluationRequest(input *StartConfigRule
 //   For PutConfigurationAggregator API, this exception is thrown if the number
 //   of accounts and aggregators exceeds the limit.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   You see this exception in the following cases:
 //
 //      * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
@@ -7350,7 +7350,7 @@ func (c *ConfigService) StartConfigRulesEvaluationRequest(input *StartConfigRule
 //      * For DeleteConformancePack, a conformance pack creation, update, and
 //      deletion is in progress. Try your request again later.
 //
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
@@ -7434,11 +7434,11 @@ func (c *ConfigService) StartConfigurationRecorderRequest(input *StartConfigurat
 // See the AWS API reference guide for AWS Config's
 // API operation StartConfigurationRecorder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigurationRecorderException "NoSuchConfigurationRecorderException"
+// Returned Error Types:
+//   * NoSuchConfigurationRecorderException
 //   You have specified a configuration recorder that does not exist.
 //
-//   * ErrCodeNoAvailableDeliveryChannelException "NoAvailableDeliveryChannelException"
+//   * NoAvailableDeliveryChannelException
 //   There is no delivery channel available to record configurations.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/StartConfigurationRecorder
@@ -7522,12 +7522,12 @@ func (c *ConfigService) StartRemediationExecutionRequest(input *StartRemediation
 // See the AWS API reference guide for AWS Config's
 // API operation StartRemediationExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterValueException "InvalidParameterValueException"
+// Returned Error Types:
+//   * InvalidParameterValueException
 //   One or more of the specified parameters are invalid. Verify that your parameters
 //   are valid and try again.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   Indicates one of the following errors:
 //
 //      * For PutConfigRule, the rule cannot be created because the IAM role assigned
@@ -7544,7 +7544,7 @@ func (c *ConfigService) StartRemediationExecutionRequest(input *StartRemediation
 //      pack cannot be created because you do not have permissions: To call IAM
 //      GetRole action or create a service linked role. To read Amazon S3 bucket.
 //
-//   * ErrCodeNoSuchRemediationConfigurationException "NoSuchRemediationConfigurationException"
+//   * NoSuchRemediationConfigurationException
 //   You specified an AWS Config rule without a remediation configuration.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/StartRemediationExecution
@@ -7624,8 +7624,8 @@ func (c *ConfigService) StopConfigurationRecorderRequest(input *StopConfiguratio
 // See the AWS API reference guide for AWS Config's
 // API operation StopConfigurationRecorder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNoSuchConfigurationRecorderException "NoSuchConfigurationRecorderException"
+// Returned Error Types:
+//   * NoSuchConfigurationRecorderException
 //   You have specified a configuration recorder that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/StopConfigurationRecorder
@@ -7707,14 +7707,14 @@ func (c *ConfigService) TagResourceRequest(input *TagResourceInput) (req *reques
 // See the AWS API reference guide for AWS Config's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   You have specified a resource that does not exist.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   You have reached the limit of the number of tags you can use. You have more
 //   than 50 tags.
 //
@@ -7794,11 +7794,11 @@ func (c *ConfigService) UntagResourceRequest(input *UntagResourceInput) (req *re
 // See the AWS API reference guide for AWS Config's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   The requested action is not valid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   You have specified a resource that does not exist.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/config-2014-11-12/UntagResource
@@ -10414,6 +10414,57 @@ func (s *ConformancePackStatusDetail) SetLastUpdateRequestedTime(v time.Time) *C
 func (s *ConformancePackStatusDetail) SetStackArn(v string) *ConformancePackStatusDetail {
 	s.StackArn = &v
 	return s
+}
+
+// You have specified a template that is not valid or supported.
+type ConformancePackTemplateValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ConformancePackTemplateValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConformancePackTemplateValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorConformancePackTemplateValidationException(v protocol.ResponseMetadata) error {
+	return &ConformancePackTemplateValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ConformancePackTemplateValidationException) Code() string {
+	return "ConformancePackTemplateValidationException"
+}
+
+// Message returns the exception's message.
+func (s ConformancePackTemplateValidationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ConformancePackTemplateValidationException) OrigErr() error {
+	return nil
+}
+
+func (s ConformancePackTemplateValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ConformancePackTemplateValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ConformancePackTemplateValidationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type DeleteAggregationAuthorizationInput struct {
@@ -15382,6 +15433,846 @@ func (s *GroupedResourceCount) SetResourceCount(v int64) *GroupedResourceCount {
 	return s
 }
 
+// Your Amazon S3 bucket policy does not permit AWS Config to write to it.
+type InsufficientDeliveryPolicyException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InsufficientDeliveryPolicyException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InsufficientDeliveryPolicyException) GoString() string {
+	return s.String()
+}
+
+func newErrorInsufficientDeliveryPolicyException(v protocol.ResponseMetadata) error {
+	return &InsufficientDeliveryPolicyException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InsufficientDeliveryPolicyException) Code() string {
+	return "InsufficientDeliveryPolicyException"
+}
+
+// Message returns the exception's message.
+func (s InsufficientDeliveryPolicyException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InsufficientDeliveryPolicyException) OrigErr() error {
+	return nil
+}
+
+func (s InsufficientDeliveryPolicyException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InsufficientDeliveryPolicyException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InsufficientDeliveryPolicyException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Indicates one of the following errors:
+//
+//    * For PutConfigRule, the rule cannot be created because the IAM role assigned
+//    to AWS Config lacks permissions to perform the config:Put* action.
+//
+//    * For PutConfigRule, the AWS Lambda function cannot be invoked. Check
+//    the function ARN, and check the function's permissions.
+//
+//    * For PutOrganizationConfigRule, organization config rule cannot be created
+//    because you do not have permissions to call IAM GetRole action or create
+//    a service linked role.
+//
+//    * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//    pack cannot be created because you do not have permissions: To call IAM
+//    GetRole action or create a service linked role. To read Amazon S3 bucket.
+type InsufficientPermissionsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InsufficientPermissionsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InsufficientPermissionsException) GoString() string {
+	return s.String()
+}
+
+func newErrorInsufficientPermissionsException(v protocol.ResponseMetadata) error {
+	return &InsufficientPermissionsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InsufficientPermissionsException) Code() string {
+	return "InsufficientPermissionsException"
+}
+
+// Message returns the exception's message.
+func (s InsufficientPermissionsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InsufficientPermissionsException) OrigErr() error {
+	return nil
+}
+
+func (s InsufficientPermissionsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InsufficientPermissionsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InsufficientPermissionsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have provided a configuration recorder name that is not valid.
+type InvalidConfigurationRecorderNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidConfigurationRecorderNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidConfigurationRecorderNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidConfigurationRecorderNameException(v protocol.ResponseMetadata) error {
+	return &InvalidConfigurationRecorderNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidConfigurationRecorderNameException) Code() string {
+	return "InvalidConfigurationRecorderNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidConfigurationRecorderNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidConfigurationRecorderNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidConfigurationRecorderNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidConfigurationRecorderNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidConfigurationRecorderNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified delivery channel name is not valid.
+type InvalidDeliveryChannelNameException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidDeliveryChannelNameException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidDeliveryChannelNameException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidDeliveryChannelNameException(v protocol.ResponseMetadata) error {
+	return &InvalidDeliveryChannelNameException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidDeliveryChannelNameException) Code() string {
+	return "InvalidDeliveryChannelNameException"
+}
+
+// Message returns the exception's message.
+func (s InvalidDeliveryChannelNameException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidDeliveryChannelNameException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidDeliveryChannelNameException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidDeliveryChannelNameException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidDeliveryChannelNameException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The syntax of the query is incorrect.
+type InvalidExpressionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidExpressionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidExpressionException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidExpressionException(v protocol.ResponseMetadata) error {
+	return &InvalidExpressionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidExpressionException) Code() string {
+	return "InvalidExpressionException"
+}
+
+// Message returns the exception's message.
+func (s InvalidExpressionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidExpressionException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidExpressionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidExpressionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidExpressionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified limit is outside the allowable range.
+type InvalidLimitException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidLimitException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidLimitException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidLimitException(v protocol.ResponseMetadata) error {
+	return &InvalidLimitException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidLimitException) Code() string {
+	return "InvalidLimitException"
+}
+
+// Message returns the exception's message.
+func (s InvalidLimitException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidLimitException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidLimitException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidLimitException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidLimitException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified next token is invalid. Specify the nextToken string that was
+// returned in the previous response to get the next page of results.
+type InvalidNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidNextTokenException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more of the specified parameters are invalid. Verify that your parameters
+// are valid and try again.
+type InvalidParameterValueException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidParameterValueException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterValueException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterValueException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterValueException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterValueException) Code() string {
+	return "InvalidParameterValueException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterValueException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterValueException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterValueException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterValueException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterValueException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Config throws an exception if the recording group does not contain a
+// valid list of resource types. Invalid values might also be incorrectly formatted.
+type InvalidRecordingGroupException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRecordingGroupException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRecordingGroupException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRecordingGroupException(v protocol.ResponseMetadata) error {
+	return &InvalidRecordingGroupException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRecordingGroupException) Code() string {
+	return "InvalidRecordingGroupException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRecordingGroupException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRecordingGroupException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRecordingGroupException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRecordingGroupException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRecordingGroupException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified ResultToken is invalid.
+type InvalidResultTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidResultTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidResultTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidResultTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidResultTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidResultTokenException) Code() string {
+	return "InvalidResultTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidResultTokenException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidResultTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidResultTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidResultTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidResultTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have provided a null or empty role ARN.
+type InvalidRoleException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidRoleException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRoleException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRoleException(v protocol.ResponseMetadata) error {
+	return &InvalidRoleException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRoleException) Code() string {
+	return "InvalidRoleException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRoleException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRoleException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRoleException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRoleException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRoleException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified Amazon S3 key prefix is not valid.
+type InvalidS3KeyPrefixException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidS3KeyPrefixException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidS3KeyPrefixException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidS3KeyPrefixException(v protocol.ResponseMetadata) error {
+	return &InvalidS3KeyPrefixException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidS3KeyPrefixException) Code() string {
+	return "InvalidS3KeyPrefixException"
+}
+
+// Message returns the exception's message.
+func (s InvalidS3KeyPrefixException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidS3KeyPrefixException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidS3KeyPrefixException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidS3KeyPrefixException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidS3KeyPrefixException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified Amazon SNS topic does not exist.
+type InvalidSNSTopicARNException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidSNSTopicARNException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidSNSTopicARNException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidSNSTopicARNException(v protocol.ResponseMetadata) error {
+	return &InvalidSNSTopicARNException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidSNSTopicARNException) Code() string {
+	return "InvalidSNSTopicARNException"
+}
+
+// Message returns the exception's message.
+func (s InvalidSNSTopicARNException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidSNSTopicARNException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidSNSTopicARNException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidSNSTopicARNException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidSNSTopicARNException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified time range is not valid. The earlier time is not chronologically
+// before the later time.
+type InvalidTimeRangeException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s InvalidTimeRangeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTimeRangeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTimeRangeException(v protocol.ResponseMetadata) error {
+	return &InvalidTimeRangeException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTimeRangeException) Code() string {
+	return "InvalidTimeRangeException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTimeRangeException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTimeRangeException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTimeRangeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTimeRangeException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTimeRangeException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You cannot delete the delivery channel you specified because the configuration
+// recorder is running.
+type LastDeliveryChannelDeleteFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s LastDeliveryChannelDeleteFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LastDeliveryChannelDeleteFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorLastDeliveryChannelDeleteFailedException(v protocol.ResponseMetadata) error {
+	return &LastDeliveryChannelDeleteFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LastDeliveryChannelDeleteFailedException) Code() string {
+	return "LastDeliveryChannelDeleteFailedException"
+}
+
+// Message returns the exception's message.
+func (s LastDeliveryChannelDeleteFailedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LastDeliveryChannelDeleteFailedException) OrigErr() error {
+	return nil
+}
+
+func (s LastDeliveryChannelDeleteFailedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LastDeliveryChannelDeleteFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LastDeliveryChannelDeleteFailedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// For StartConfigRulesEvaluation API, this exception is thrown if an evaluation
+// is in progress or if you call the StartConfigRulesEvaluation API more than
+// once per minute.
+//
+// For PutConfigurationAggregator API, this exception is thrown if the number
+// of accounts and aggregators exceeds the limit.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ListAggregateDiscoveredResourcesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -15727,6 +16618,422 @@ func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput
 	return s
 }
 
+// You have reached the limit (100,000) of active custom resource types in your
+// account. Delete unused resources using DeleteResourceConfig.
+type MaxActiveResourcesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxActiveResourcesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxActiveResourcesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxActiveResourcesExceededException(v protocol.ResponseMetadata) error {
+	return &MaxActiveResourcesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxActiveResourcesExceededException) Code() string {
+	return "MaxActiveResourcesExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxActiveResourcesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxActiveResourcesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxActiveResourcesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxActiveResourcesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxActiveResourcesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Failed to add the AWS Config rule because the account already contains the
+// maximum number of 150 rules. Consider deleting any deactivated rules before
+// you add new rules.
+type MaxNumberOfConfigRulesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxNumberOfConfigRulesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxNumberOfConfigRulesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxNumberOfConfigRulesExceededException(v protocol.ResponseMetadata) error {
+	return &MaxNumberOfConfigRulesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxNumberOfConfigRulesExceededException) Code() string {
+	return "MaxNumberOfConfigRulesExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxNumberOfConfigRulesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxNumberOfConfigRulesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxNumberOfConfigRulesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxNumberOfConfigRulesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxNumberOfConfigRulesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have reached the limit of the number of recorders you can create.
+type MaxNumberOfConfigurationRecordersExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxNumberOfConfigurationRecordersExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxNumberOfConfigurationRecordersExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxNumberOfConfigurationRecordersExceededException(v protocol.ResponseMetadata) error {
+	return &MaxNumberOfConfigurationRecordersExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxNumberOfConfigurationRecordersExceededException) Code() string {
+	return "MaxNumberOfConfigurationRecordersExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxNumberOfConfigurationRecordersExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxNumberOfConfigurationRecordersExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxNumberOfConfigurationRecordersExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxNumberOfConfigurationRecordersExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxNumberOfConfigurationRecordersExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have reached the limit (6) of the number of conformance packs in an account
+// (6 conformance pack with 25 AWS Config rules per pack).
+type MaxNumberOfConformancePacksExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxNumberOfConformancePacksExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxNumberOfConformancePacksExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxNumberOfConformancePacksExceededException(v protocol.ResponseMetadata) error {
+	return &MaxNumberOfConformancePacksExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxNumberOfConformancePacksExceededException) Code() string {
+	return "MaxNumberOfConformancePacksExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxNumberOfConformancePacksExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxNumberOfConformancePacksExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxNumberOfConformancePacksExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxNumberOfConformancePacksExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxNumberOfConformancePacksExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have reached the limit of the number of delivery channels you can create.
+type MaxNumberOfDeliveryChannelsExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxNumberOfDeliveryChannelsExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxNumberOfDeliveryChannelsExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxNumberOfDeliveryChannelsExceededException(v protocol.ResponseMetadata) error {
+	return &MaxNumberOfDeliveryChannelsExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxNumberOfDeliveryChannelsExceededException) Code() string {
+	return "MaxNumberOfDeliveryChannelsExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxNumberOfDeliveryChannelsExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxNumberOfDeliveryChannelsExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxNumberOfDeliveryChannelsExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxNumberOfDeliveryChannelsExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxNumberOfDeliveryChannelsExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have reached the limit of the number of organization config rules you
+// can create.
+type MaxNumberOfOrganizationConfigRulesExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxNumberOfOrganizationConfigRulesExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxNumberOfOrganizationConfigRulesExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxNumberOfOrganizationConfigRulesExceededException(v protocol.ResponseMetadata) error {
+	return &MaxNumberOfOrganizationConfigRulesExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxNumberOfOrganizationConfigRulesExceededException) Code() string {
+	return "MaxNumberOfOrganizationConfigRulesExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxNumberOfOrganizationConfigRulesExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxNumberOfOrganizationConfigRulesExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxNumberOfOrganizationConfigRulesExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxNumberOfOrganizationConfigRulesExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxNumberOfOrganizationConfigRulesExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have reached the limit (6) of the number of organization conformance
+// packs in an account (6 conformance pack with 25 AWS Config rules per pack
+// per account).
+type MaxNumberOfOrganizationConformancePacksExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxNumberOfOrganizationConformancePacksExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxNumberOfOrganizationConformancePacksExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxNumberOfOrganizationConformancePacksExceededException(v protocol.ResponseMetadata) error {
+	return &MaxNumberOfOrganizationConformancePacksExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxNumberOfOrganizationConformancePacksExceededException) Code() string {
+	return "MaxNumberOfOrganizationConformancePacksExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxNumberOfOrganizationConformancePacksExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxNumberOfOrganizationConformancePacksExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxNumberOfOrganizationConformancePacksExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxNumberOfOrganizationConformancePacksExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxNumberOfOrganizationConformancePacksExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Failed to add the retention configuration because a retention configuration
+// with that name already exists.
+type MaxNumberOfRetentionConfigurationsExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s MaxNumberOfRetentionConfigurationsExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MaxNumberOfRetentionConfigurationsExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorMaxNumberOfRetentionConfigurationsExceededException(v protocol.ResponseMetadata) error {
+	return &MaxNumberOfRetentionConfigurationsExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s MaxNumberOfRetentionConfigurationsExceededException) Code() string {
+	return "MaxNumberOfRetentionConfigurationsExceededException"
+}
+
+// Message returns the exception's message.
+func (s MaxNumberOfRetentionConfigurationsExceededException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s MaxNumberOfRetentionConfigurationsExceededException) OrigErr() error {
+	return nil
+}
+
+func (s MaxNumberOfRetentionConfigurationsExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s MaxNumberOfRetentionConfigurationsExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s MaxNumberOfRetentionConfigurationsExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Organization config rule creation or deletion status in each member account.
 // This includes the name of the rule, the status, error code and error message
 // when the rule creation or deletion failed.
@@ -15831,6 +17138,884 @@ func (s *MemberAccountStatus) SetMemberAccountRuleStatus(v string) *MemberAccoun
 	return s
 }
 
+// There are no configuration recorders available to provide the role needed
+// to describe your resources. Create a configuration recorder.
+type NoAvailableConfigurationRecorderException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoAvailableConfigurationRecorderException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoAvailableConfigurationRecorderException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoAvailableConfigurationRecorderException(v protocol.ResponseMetadata) error {
+	return &NoAvailableConfigurationRecorderException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoAvailableConfigurationRecorderException) Code() string {
+	return "NoAvailableConfigurationRecorderException"
+}
+
+// Message returns the exception's message.
+func (s NoAvailableConfigurationRecorderException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoAvailableConfigurationRecorderException) OrigErr() error {
+	return nil
+}
+
+func (s NoAvailableConfigurationRecorderException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoAvailableConfigurationRecorderException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoAvailableConfigurationRecorderException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// There is no delivery channel available to record configurations.
+type NoAvailableDeliveryChannelException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoAvailableDeliveryChannelException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoAvailableDeliveryChannelException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoAvailableDeliveryChannelException(v protocol.ResponseMetadata) error {
+	return &NoAvailableDeliveryChannelException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoAvailableDeliveryChannelException) Code() string {
+	return "NoAvailableDeliveryChannelException"
+}
+
+// Message returns the exception's message.
+func (s NoAvailableDeliveryChannelException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoAvailableDeliveryChannelException) OrigErr() error {
+	return nil
+}
+
+func (s NoAvailableDeliveryChannelException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoAvailableDeliveryChannelException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoAvailableDeliveryChannelException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Organization is no longer available.
+type NoAvailableOrganizationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoAvailableOrganizationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoAvailableOrganizationException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoAvailableOrganizationException(v protocol.ResponseMetadata) error {
+	return &NoAvailableOrganizationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoAvailableOrganizationException) Code() string {
+	return "NoAvailableOrganizationException"
+}
+
+// Message returns the exception's message.
+func (s NoAvailableOrganizationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoAvailableOrganizationException) OrigErr() error {
+	return nil
+}
+
+func (s NoAvailableOrganizationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoAvailableOrganizationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoAvailableOrganizationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// There is no configuration recorder running.
+type NoRunningConfigurationRecorderException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoRunningConfigurationRecorderException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoRunningConfigurationRecorderException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoRunningConfigurationRecorderException(v protocol.ResponseMetadata) error {
+	return &NoRunningConfigurationRecorderException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoRunningConfigurationRecorderException) Code() string {
+	return "NoRunningConfigurationRecorderException"
+}
+
+// Message returns the exception's message.
+func (s NoRunningConfigurationRecorderException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoRunningConfigurationRecorderException) OrigErr() error {
+	return nil
+}
+
+func (s NoRunningConfigurationRecorderException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoRunningConfigurationRecorderException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoRunningConfigurationRecorderException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified Amazon S3 bucket does not exist.
+type NoSuchBucketException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchBucketException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchBucketException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchBucketException(v protocol.ResponseMetadata) error {
+	return &NoSuchBucketException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchBucketException) Code() string {
+	return "NoSuchBucketException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchBucketException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchBucketException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchBucketException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchBucketException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchBucketException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more AWS Config rules in the request are invalid. Verify that the
+// rule names are correct and try again.
+type NoSuchConfigRuleException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchConfigRuleException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchConfigRuleException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchConfigRuleException(v protocol.ResponseMetadata) error {
+	return &NoSuchConfigRuleException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchConfigRuleException) Code() string {
+	return "NoSuchConfigRuleException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchConfigRuleException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchConfigRuleException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchConfigRuleException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchConfigRuleException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchConfigRuleException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Config rule that you passed in the filter does not exist.
+type NoSuchConfigRuleInConformancePackException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchConfigRuleInConformancePackException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchConfigRuleInConformancePackException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchConfigRuleInConformancePackException(v protocol.ResponseMetadata) error {
+	return &NoSuchConfigRuleInConformancePackException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchConfigRuleInConformancePackException) Code() string {
+	return "NoSuchConfigRuleInConformancePackException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchConfigRuleInConformancePackException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchConfigRuleInConformancePackException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchConfigRuleInConformancePackException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchConfigRuleInConformancePackException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchConfigRuleInConformancePackException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have specified a configuration aggregator that does not exist.
+type NoSuchConfigurationAggregatorException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchConfigurationAggregatorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchConfigurationAggregatorException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchConfigurationAggregatorException(v protocol.ResponseMetadata) error {
+	return &NoSuchConfigurationAggregatorException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchConfigurationAggregatorException) Code() string {
+	return "NoSuchConfigurationAggregatorException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchConfigurationAggregatorException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchConfigurationAggregatorException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchConfigurationAggregatorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchConfigurationAggregatorException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchConfigurationAggregatorException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have specified a configuration recorder that does not exist.
+type NoSuchConfigurationRecorderException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchConfigurationRecorderException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchConfigurationRecorderException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchConfigurationRecorderException(v protocol.ResponseMetadata) error {
+	return &NoSuchConfigurationRecorderException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchConfigurationRecorderException) Code() string {
+	return "NoSuchConfigurationRecorderException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchConfigurationRecorderException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchConfigurationRecorderException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchConfigurationRecorderException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchConfigurationRecorderException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchConfigurationRecorderException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You specified one or more conformance packs that do not exist.
+type NoSuchConformancePackException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchConformancePackException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchConformancePackException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchConformancePackException(v protocol.ResponseMetadata) error {
+	return &NoSuchConformancePackException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchConformancePackException) Code() string {
+	return "NoSuchConformancePackException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchConformancePackException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchConformancePackException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchConformancePackException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchConformancePackException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchConformancePackException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have specified a delivery channel that does not exist.
+type NoSuchDeliveryChannelException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchDeliveryChannelException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchDeliveryChannelException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchDeliveryChannelException(v protocol.ResponseMetadata) error {
+	return &NoSuchDeliveryChannelException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchDeliveryChannelException) Code() string {
+	return "NoSuchDeliveryChannelException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchDeliveryChannelException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchDeliveryChannelException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchDeliveryChannelException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchDeliveryChannelException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchDeliveryChannelException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You specified one or more organization config rules that do not exist.
+type NoSuchOrganizationConfigRuleException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchOrganizationConfigRuleException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchOrganizationConfigRuleException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchOrganizationConfigRuleException(v protocol.ResponseMetadata) error {
+	return &NoSuchOrganizationConfigRuleException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchOrganizationConfigRuleException) Code() string {
+	return "NoSuchOrganizationConfigRuleException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchOrganizationConfigRuleException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchOrganizationConfigRuleException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchOrganizationConfigRuleException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchOrganizationConfigRuleException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchOrganizationConfigRuleException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// AWS Config organization conformance pack that you passed in the filter does
+// not exist.
+//
+// For DeleteOrganizationConformancePack, you tried to delete an organization
+// conformance pack that does not exist.
+type NoSuchOrganizationConformancePackException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchOrganizationConformancePackException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchOrganizationConformancePackException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchOrganizationConformancePackException(v protocol.ResponseMetadata) error {
+	return &NoSuchOrganizationConformancePackException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchOrganizationConformancePackException) Code() string {
+	return "NoSuchOrganizationConformancePackException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchOrganizationConformancePackException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchOrganizationConformancePackException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchOrganizationConformancePackException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchOrganizationConformancePackException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchOrganizationConformancePackException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You specified an AWS Config rule without a remediation configuration.
+type NoSuchRemediationConfigurationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchRemediationConfigurationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchRemediationConfigurationException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchRemediationConfigurationException(v protocol.ResponseMetadata) error {
+	return &NoSuchRemediationConfigurationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchRemediationConfigurationException) Code() string {
+	return "NoSuchRemediationConfigurationException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchRemediationConfigurationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchRemediationConfigurationException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchRemediationConfigurationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchRemediationConfigurationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchRemediationConfigurationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You tried to delete a remediation exception that does not exist.
+type NoSuchRemediationExceptionException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchRemediationExceptionException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchRemediationExceptionException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchRemediationExceptionException(v protocol.ResponseMetadata) error {
+	return &NoSuchRemediationExceptionException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchRemediationExceptionException) Code() string {
+	return "NoSuchRemediationExceptionException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchRemediationExceptionException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchRemediationExceptionException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchRemediationExceptionException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchRemediationExceptionException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchRemediationExceptionException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have specified a retention configuration that does not exist.
+type NoSuchRetentionConfigurationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s NoSuchRetentionConfigurationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoSuchRetentionConfigurationException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoSuchRetentionConfigurationException(v protocol.ResponseMetadata) error {
+	return &NoSuchRetentionConfigurationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoSuchRetentionConfigurationException) Code() string {
+	return "NoSuchRetentionConfigurationException"
+}
+
+// Message returns the exception's message.
+func (s NoSuchRetentionConfigurationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoSuchRetentionConfigurationException) OrigErr() error {
+	return nil
+}
+
+func (s NoSuchRetentionConfigurationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoSuchRetentionConfigurationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoSuchRetentionConfigurationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// For PutConfigAggregator API, no permission to call EnableAWSServiceAccess
+// API.
+//
+// For all OrganizationConfigRule and OrganizationConformancePack APIs, AWS
+// Config throws an exception if APIs are called from member accounts. All APIs
+// must be called from organization master account.
+type OrganizationAccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OrganizationAccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationAccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorOrganizationAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &OrganizationAccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OrganizationAccessDeniedException) Code() string {
+	return "OrganizationAccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s OrganizationAccessDeniedException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OrganizationAccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s OrganizationAccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OrganizationAccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OrganizationAccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // This object contains regions to set up the aggregator and an IAM role to
 // retrieve organization details.
 type OrganizationAggregationSource struct {
@@ -15891,6 +18076,58 @@ func (s *OrganizationAggregationSource) SetAwsRegions(v []*string) *Organization
 func (s *OrganizationAggregationSource) SetRoleArn(v string) *OrganizationAggregationSource {
 	s.RoleArn = &v
 	return s
+}
+
+// AWS Config resource cannot be created because your organization does not
+// have all features enabled.
+type OrganizationAllFeaturesNotEnabledException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OrganizationAllFeaturesNotEnabledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationAllFeaturesNotEnabledException) GoString() string {
+	return s.String()
+}
+
+func newErrorOrganizationAllFeaturesNotEnabledException(v protocol.ResponseMetadata) error {
+	return &OrganizationAllFeaturesNotEnabledException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OrganizationAllFeaturesNotEnabledException) Code() string {
+	return "OrganizationAllFeaturesNotEnabledException"
+}
+
+// Message returns the exception's message.
+func (s OrganizationAllFeaturesNotEnabledException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OrganizationAllFeaturesNotEnabledException) OrigErr() error {
+	return nil
+}
+
+func (s OrganizationAllFeaturesNotEnabledException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OrganizationAllFeaturesNotEnabledException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OrganizationAllFeaturesNotEnabledException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An organization config rule that has information about config rules that
@@ -16371,6 +18608,57 @@ func (s *OrganizationConformancePackStatus) SetStatus(v string) *OrganizationCon
 	return s
 }
 
+// You have specified a template that is not valid or supported.
+type OrganizationConformancePackTemplateValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OrganizationConformancePackTemplateValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationConformancePackTemplateValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorOrganizationConformancePackTemplateValidationException(v protocol.ResponseMetadata) error {
+	return &OrganizationConformancePackTemplateValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OrganizationConformancePackTemplateValidationException) Code() string {
+	return "OrganizationConformancePackTemplateValidationException"
+}
+
+// Message returns the exception's message.
+func (s OrganizationConformancePackTemplateValidationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OrganizationConformancePackTemplateValidationException) OrigErr() error {
+	return nil
+}
+
+func (s OrganizationConformancePackTemplateValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OrganizationConformancePackTemplateValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OrganizationConformancePackTemplateValidationException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // An object that specifies organization custom rule metadata such as resource
 // type, resource ID of AWS resource, Lamdba function ARN, and organization
 // trigger types that trigger AWS Config to evaluate your AWS resources against
@@ -16724,6 +19012,57 @@ func (s *OrganizationResourceDetailedStatusFilters) SetAccountId(v string) *Orga
 func (s *OrganizationResourceDetailedStatusFilters) SetStatus(v string) *OrganizationResourceDetailedStatusFilters {
 	s.Status = &v
 	return s
+}
+
+// The configuration item size is outside the allowable range.
+type OversizedConfigurationItemException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s OversizedConfigurationItemException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OversizedConfigurationItemException) GoString() string {
+	return s.String()
+}
+
+func newErrorOversizedConfigurationItemException(v protocol.ResponseMetadata) error {
+	return &OversizedConfigurationItemException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OversizedConfigurationItemException) Code() string {
+	return "OversizedConfigurationItemException"
+}
+
+// Message returns the exception's message.
+func (s OversizedConfigurationItemException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OversizedConfigurationItemException) OrigErr() error {
+	return nil
+}
+
+func (s OversizedConfigurationItemException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OversizedConfigurationItemException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OversizedConfigurationItemException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // An object that represents the account ID and region of an aggregator account
@@ -18658,6 +20997,58 @@ func (s *RemediationExecutionStep) SetStopTime(v time.Time) *RemediationExecutio
 	return s
 }
 
+// Remediation action is in progress. You can either cancel execution in AWS
+// Systems Manager or wait and try again later.
+type RemediationInProgressException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s RemediationInProgressException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RemediationInProgressException) GoString() string {
+	return s.String()
+}
+
+func newErrorRemediationInProgressException(v protocol.ResponseMetadata) error {
+	return &RemediationInProgressException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s RemediationInProgressException) Code() string {
+	return "RemediationInProgressException"
+}
+
+// Message returns the exception's message.
+func (s RemediationInProgressException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s RemediationInProgressException) OrigErr() error {
+	return nil
+}
+
+func (s RemediationInProgressException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s RemediationInProgressException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s RemediationInProgressException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The value is either a dynamic (resource) value or a static value. You must
 // select either a dynamic value or a static value.
 type RemediationParameterValue struct {
@@ -18920,6 +21311,81 @@ func (s *ResourceIdentifier) SetResourceType(v string) *ResourceIdentifier {
 	return s
 }
 
+// You see this exception in the following cases:
+//
+//    * For DeleteConfigRule, AWS Config is deleting this rule. Try your request
+//    again later.
+//
+//    * For DeleteConfigRule, the rule is deleting your evaluation results.
+//    Try your request again later.
+//
+//    * For DeleteConfigRule, a remediation action is associated with the rule
+//    and AWS Config cannot delete this rule. Delete the remediation action
+//    associated with the rule before deleting the rule and try your request
+//    again later.
+//
+//    * For PutConfigOrganizationRule, organization config rule deletion is
+//    in progress. Try your request again later.
+//
+//    * For DeleteOrganizationConfigRule, organization config rule creation
+//    is in progress. Try your request again later.
+//
+//    * For PutConformancePack and PutOrganizationConformancePack, a conformance
+//    pack creation, update, and deletion is in progress. Try your request again
+//    later.
+//
+//    * For DeleteConformancePack, a conformance pack creation, update, and
+//    deletion is in progress. Try your request again later.
+type ResourceInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s ResourceInUseException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // The details that identify a resource within AWS Config, including the resource
 // type and resource ID.
 type ResourceKey struct {
@@ -18975,6 +21441,108 @@ func (s *ResourceKey) SetResourceId(v string) *ResourceKey {
 func (s *ResourceKey) SetResourceType(v string) *ResourceKey {
 	s.ResourceType = &v
 	return s
+}
+
+// You have specified a resource that is either unknown or has not been discovered.
+type ResourceNotDiscoveredException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceNotDiscoveredException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotDiscoveredException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotDiscoveredException(v protocol.ResponseMetadata) error {
+	return &ResourceNotDiscoveredException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotDiscoveredException) Code() string {
+	return "ResourceNotDiscoveredException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotDiscoveredException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotDiscoveredException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotDiscoveredException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotDiscoveredException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotDiscoveredException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// You have specified a resource that does not exist.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // The dynamic value of the resource.
@@ -19947,6 +22515,58 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// You have reached the limit of the number of tags you can use. You have more
+// than 50 tags.
+type TooManyTagsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s TooManyTagsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
+	return &TooManyTagsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TooManyTagsException) Code() string {
+	return "TooManyTagsException"
+}
+
+// Message returns the exception's message.
+func (s TooManyTagsException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TooManyTagsException) OrigErr() error {
+	return nil
+}
+
+func (s TooManyTagsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TooManyTagsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TooManyTagsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -20019,6 +22639,57 @@ func (s UntagResourceOutput) String() string {
 // GoString returns the string representation
 func (s UntagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// The requested action is not valid.
+type ValidationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s ValidationException) Message() string {
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ValidationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ValidationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 const (

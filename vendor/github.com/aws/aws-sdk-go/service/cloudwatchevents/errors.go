@@ -2,6 +2,10 @@
 
 package cloudwatchevents
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeConcurrentModificationException for service response error code
@@ -62,3 +66,15 @@ const (
 	// An entity that you specified doesn't exist.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ConcurrentModificationException": newErrorConcurrentModificationException,
+	"InternalException":               newErrorInternalException,
+	"InvalidEventPatternException":    newErrorInvalidEventPatternException,
+	"InvalidStateException":           newErrorInvalidStateException,
+	"LimitExceededException":          newErrorLimitExceededException,
+	"ManagedRuleException":            newErrorManagedRuleException,
+	"PolicyLengthExceededException":   newErrorPolicyLengthExceededException,
+	"ResourceAlreadyExistsException":  newErrorResourceAlreadyExistsException,
+	"ResourceNotFoundException":       newErrorResourceNotFoundException,
+}

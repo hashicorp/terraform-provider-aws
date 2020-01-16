@@ -67,14 +67,14 @@ func (c *DLM) CreateLifecyclePolicyRequest(input *CreateLifecyclePolicyInput) (r
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation CreateLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+// Returned Error Types:
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/CreateLifecyclePolicy
@@ -154,14 +154,14 @@ func (c *DLM) DeleteLifecyclePolicyRequest(input *DeleteLifecyclePolicyInput) (r
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation DeleteLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/DeleteLifecyclePolicy
@@ -241,17 +241,17 @@ func (c *DLM) GetLifecyclePoliciesRequest(input *GetLifecyclePoliciesInput) (req
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation GetLifecyclePolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/GetLifecyclePolicies
@@ -329,14 +329,14 @@ func (c *DLM) GetLifecyclePolicyRequest(input *GetLifecyclePolicyInput) (req *re
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation GetLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/GetLifecyclePolicy
@@ -414,14 +414,14 @@ func (c *DLM) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/ListTagsForResource
@@ -500,14 +500,14 @@ func (c *DLM) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/TagResource
@@ -586,14 +586,14 @@ func (c *DLM) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/UntagResource
@@ -672,17 +672,17 @@ func (c *DLM) UpdateLifecyclePolicyRequest(input *UpdateLifecyclePolicyInput) (r
 // See the AWS API reference guide for Amazon Data Lifecycle Manager's
 // API operation UpdateLifecyclePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   A requested resource was not found.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Bad request. The request is missing required parameters or has invalid parameters.
 //
-//   * ErrCodeInternalServerException "InternalServerException"
+//   * InternalServerException
 //   The service failed in an unexpected way.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The request failed because a limit was exceeded.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/dlm-2018-01-12/UpdateLifecyclePolicy
@@ -1335,6 +1335,128 @@ func (s *GetLifecyclePolicyOutput) SetPolicy(v *LifecyclePolicy) *GetLifecyclePo
 	return s
 }
 
+// The service failed in an unexpected way.
+type InternalServerException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InternalServerException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InternalServerException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Bad request. The request is missing required parameters or has invalid parameters.
+type InvalidRequestException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The request included parameters that cannot be provided together.
+	MutuallyExclusiveParameters []*string `type:"list"`
+
+	// The request omitted one or more required parameters.
+	RequiredParameters []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidRequestException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidRequestException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Detailed information about a lifecycle policy.
 type LifecyclePolicy struct {
 	_ struct{} `type:"structure"`
@@ -1490,6 +1612,67 @@ func (s *LifecyclePolicySummary) SetState(v string) *LifecyclePolicySummary {
 func (s *LifecyclePolicySummary) SetTags(v map[string]*string) *LifecyclePolicySummary {
 	s.Tags = v
 	return s
+}
+
+// The request failed because a limit was exceeded.
+type LimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// Value is the type of resource for which a limit was exceeded.
+	ResourceType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s LimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s LimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type ListTagsForResourceInput struct {
@@ -1681,6 +1864,70 @@ func (s *PolicyDetails) SetSchedules(v []*Schedule) *PolicyDetails {
 func (s *PolicyDetails) SetTargetTags(v []*Tag) *PolicyDetails {
 	s.TargetTags = v
 	return s
+}
+
+// A requested resource was not found.
+type ResourceNotFoundException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	Code_ *string `locationName:"Code" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// Value is a list of resource IDs that were not found.
+	ResourceIds []*string `type:"list"`
+
+	// Value is the type of resource that was not found.
+	ResourceType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ResourceNotFoundException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ResourceNotFoundException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Specifies the retention rule for a lifecycle policy. You can retain snapshots

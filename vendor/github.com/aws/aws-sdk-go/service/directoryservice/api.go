@@ -67,20 +67,20 @@ func (c *DirectoryService) AcceptSharedDirectoryRequest(input *AcceptSharedDirec
 // See the AWS API reference guide for AWS Directory Service's
 // API operation AcceptSharedDirectory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeDirectoryAlreadySharedException "DirectoryAlreadySharedException"
+//   * DirectoryAlreadySharedException
 //   The specified directory has already been shared with this AWS account.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/AcceptSharedDirectory
@@ -168,27 +168,27 @@ func (c *DirectoryService) AddIpRoutesRequest(input *AddIpRoutesInput) (req *req
 // See the AWS API reference guide for AWS Directory Service's
 // API operation AddIpRoutes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+//   * EntityAlreadyExistsException
 //   The specified entity already exists.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeIpRouteLimitExceededException "IpRouteLimitExceededException"
+//   * IpRouteLimitExceededException
 //   The maximum allowed number of IP addresses was exceeded. The default limit
 //   is 100 IP address blocks.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/AddIpRoutes
@@ -269,20 +269,20 @@ func (c *DirectoryService) AddTagsToResourceRequest(input *AddTagsToResourceInpu
 // See the AWS API reference guide for AWS Directory Service's
 // API operation AddTagsToResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeTagLimitExceededException "TagLimitExceededException"
+//   * TagLimitExceededException
 //   The maximum allowed number of tags was exceeded.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/AddTagsToResource
@@ -364,14 +364,14 @@ func (c *DirectoryService) CancelSchemaExtensionRequest(input *CancelSchemaExten
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CancelSchemaExtension for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CancelSchemaExtension
@@ -454,19 +454,19 @@ func (c *DirectoryService) ConnectDirectoryRequest(input *ConnectDirectoryInput)
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ConnectDirectory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryLimitExceededException "DirectoryLimitExceededException"
+// Returned Error Types:
+//   * DirectoryLimitExceededException
 //   The maximum number of directories in the region has been reached. You can
 //   use the GetDirectoryLimits operation to determine your directory limits in
 //   the region.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ConnectDirectory
@@ -549,20 +549,20 @@ func (c *DirectoryService) CreateAliasRequest(input *CreateAliasInput) (req *req
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateAlias for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+// Returned Error Types:
+//   * EntityAlreadyExistsException
 //   The specified entity already exists.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateAlias
@@ -641,29 +641,29 @@ func (c *DirectoryService) CreateComputerRequest(input *CreateComputerInput) (re
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateComputer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeAuthenticationFailedException "AuthenticationFailedException"
+// Returned Error Types:
+//   * AuthenticationFailedException
 //   An authentication error occurred.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+//   * EntityAlreadyExistsException
 //   The specified entity already exists.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateComputer
@@ -744,26 +744,26 @@ func (c *DirectoryService) CreateConditionalForwarderRequest(input *CreateCondit
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateConditionalForwarder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+// Returned Error Types:
+//   * EntityAlreadyExistsException
 //   The specified entity already exists.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateConditionalForwarder
@@ -848,19 +848,19 @@ func (c *DirectoryService) CreateDirectoryRequest(input *CreateDirectoryInput) (
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateDirectory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryLimitExceededException "DirectoryLimitExceededException"
+// Returned Error Types:
+//   * DirectoryLimitExceededException
 //   The maximum number of directories in the region has been reached. You can
 //   use the GetDirectoryLimits operation to determine your directory limits in
 //   the region.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateDirectory
@@ -940,23 +940,23 @@ func (c *DirectoryService) CreateLogSubscriptionRequest(input *CreateLogSubscrip
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateLogSubscription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+// Returned Error Types:
+//   * EntityAlreadyExistsException
 //   The specified entity already exists.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   The account does not have sufficient permission to perform the operation.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateLogSubscription
@@ -1041,22 +1041,22 @@ func (c *DirectoryService) CreateMicrosoftADRequest(input *CreateMicrosoftADInpu
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateMicrosoftAD for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryLimitExceededException "DirectoryLimitExceededException"
+// Returned Error Types:
+//   * DirectoryLimitExceededException
 //   The maximum number of directories in the region has been reached. You can
 //   use the GetDirectoryLimits operation to determine your directory limits in
 //   the region.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateMicrosoftAD
@@ -1136,22 +1136,22 @@ func (c *DirectoryService) CreateSnapshotRequest(input *CreateSnapshotInput) (re
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeSnapshotLimitExceededException "SnapshotLimitExceededException"
+//   * SnapshotLimitExceededException
 //   The maximum number of manual snapshots for the directory has been reached.
 //   You can use the GetSnapshotLimits operation to determine the snapshot limits
 //   for a directory.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateSnapshot
@@ -1237,23 +1237,23 @@ func (c *DirectoryService) CreateTrustRequest(input *CreateTrustInput) (req *req
 // See the AWS API reference guide for AWS Directory Service's
 // API operation CreateTrust for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+// Returned Error Types:
+//   * EntityAlreadyExistsException
 //   The specified entity already exists.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/CreateTrust
@@ -1332,23 +1332,23 @@ func (c *DirectoryService) DeleteConditionalForwarderRequest(input *DeleteCondit
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DeleteConditionalForwarder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteConditionalForwarder
@@ -1431,14 +1431,14 @@ func (c *DirectoryService) DeleteDirectoryRequest(input *DeleteDirectoryInput) (
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DeleteDirectory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteDirectory
@@ -1517,17 +1517,17 @@ func (c *DirectoryService) DeleteLogSubscriptionRequest(input *DeleteLogSubscrip
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DeleteLogSubscription for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteLogSubscription
@@ -1605,17 +1605,17 @@ func (c *DirectoryService) DeleteSnapshotRequest(input *DeleteSnapshotInput) (re
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DeleteSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteSnapshot
@@ -1694,20 +1694,20 @@ func (c *DirectoryService) DeleteTrustRequest(input *DeleteTrustInput) (req *req
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DeleteTrust for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeleteTrust
@@ -1787,30 +1787,30 @@ func (c *DirectoryService) DeregisterCertificateRequest(input *DeregisterCertifi
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DeregisterCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+// Returned Error Types:
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   * DirectoryDoesNotExistException
 //   The specified directory does not exist in the system.
 //
-//   * ErrCodeCertificateDoesNotExistException "CertificateDoesNotExistException"
+//   * CertificateDoesNotExistException
 //   The certificate is not present in the system for describe or deregister activities.
 //
-//   * ErrCodeCertificateInUseException "CertificateInUseException"
+//   * CertificateInUseException
 //   The certificate is being used for the LDAP security connection and cannot
 //   be removed without disabling LDAP security.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeregisterCertificate
@@ -1889,17 +1889,17 @@ func (c *DirectoryService) DeregisterEventTopicRequest(input *DeregisterEventTop
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DeregisterEventTopic for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DeregisterEventTopic
@@ -1978,23 +1978,23 @@ func (c *DirectoryService) DescribeCertificateRequest(input *DescribeCertificate
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+// Returned Error Types:
+//   * DirectoryDoesNotExistException
 //   The specified directory does not exist in the system.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeCertificateDoesNotExistException "CertificateDoesNotExistException"
+//   * CertificateDoesNotExistException
 //   The certificate is not present in the system for describe or deregister activities.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeCertificate
@@ -2075,23 +2075,23 @@ func (c *DirectoryService) DescribeConditionalForwardersRequest(input *DescribeC
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeConditionalForwarders for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeConditionalForwarders
@@ -2180,20 +2180,20 @@ func (c *DirectoryService) DescribeDirectoriesRequest(input *DescribeDirectories
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeDirectories for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeDirectories
@@ -2277,23 +2277,23 @@ func (c *DirectoryService) DescribeDomainControllersRequest(input *DescribeDomai
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeDomainControllers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeDomainControllers
@@ -2427,17 +2427,17 @@ func (c *DirectoryService) DescribeEventTopicsRequest(input *DescribeEventTopics
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeEventTopics for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeEventTopics
@@ -2515,23 +2515,23 @@ func (c *DirectoryService) DescribeLDAPSSettingsRequest(input *DescribeLDAPSSett
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeLDAPSSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+// Returned Error Types:
+//   * DirectoryDoesNotExistException
 //   The specified directory does not exist in the system.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeLDAPSSettings
@@ -2609,23 +2609,23 @@ func (c *DirectoryService) DescribeSharedDirectoriesRequest(input *DescribeShare
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeSharedDirectories for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeSharedDirectories
@@ -2710,20 +2710,20 @@ func (c *DirectoryService) DescribeSnapshotsRequest(input *DescribeSnapshotsInpu
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeSnapshots for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeSnapshots
@@ -2804,23 +2804,23 @@ func (c *DirectoryService) DescribeTrustsRequest(input *DescribeTrustsInput) (re
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DescribeTrusts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DescribeTrusts
@@ -2899,27 +2899,27 @@ func (c *DirectoryService) DisableLDAPSRequest(input *DisableLDAPSInput) (req *r
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DisableLDAPS for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+// Returned Error Types:
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   * DirectoryDoesNotExistException
 //   The specified directory does not exist in the system.
 //
-//   * ErrCodeInvalidLDAPSStatusException "InvalidLDAPSStatusException"
+//   * InvalidLDAPSStatusException
 //   The LDAP activities could not be performed because they are limited by the
 //   LDAPS status.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableLDAPS
@@ -3000,14 +3000,14 @@ func (c *DirectoryService) DisableRadiusRequest(input *DisableRadiusInput) (req 
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DisableRadius for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableRadius
@@ -3086,20 +3086,20 @@ func (c *DirectoryService) DisableSsoRequest(input *DisableSsoInput) (req *reque
 // See the AWS API reference guide for AWS Directory Service's
 // API operation DisableSso for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   The account does not have sufficient permission to perform the operation.
 //
-//   * ErrCodeAuthenticationFailedException "AuthenticationFailedException"
+//   * AuthenticationFailedException
 //   An authentication error occurred.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/DisableSso
@@ -3179,31 +3179,31 @@ func (c *DirectoryService) EnableLDAPSRequest(input *EnableLDAPSInput) (req *req
 // See the AWS API reference guide for AWS Directory Service's
 // API operation EnableLDAPS for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+// Returned Error Types:
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   * DirectoryDoesNotExistException
 //   The specified directory does not exist in the system.
 //
-//   * ErrCodeNoAvailableCertificateException "NoAvailableCertificateException"
+//   * NoAvailableCertificateException
 //   The LDAP activities could not be performed because at least one valid certificate
 //   must be registered with the system.
 //
-//   * ErrCodeInvalidLDAPSStatusException "InvalidLDAPSStatusException"
+//   * InvalidLDAPSStatusException
 //   The LDAP activities could not be performed because they are limited by the
 //   LDAPS status.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableLDAPS
@@ -3284,20 +3284,20 @@ func (c *DirectoryService) EnableRadiusRequest(input *EnableRadiusInput) (req *r
 // See the AWS API reference guide for AWS Directory Service's
 // API operation EnableRadius for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeEntityAlreadyExistsException "EntityAlreadyExistsException"
+//   * EntityAlreadyExistsException
 //   The specified entity already exists.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableRadius
@@ -3378,20 +3378,20 @@ func (c *DirectoryService) EnableSsoRequest(input *EnableSsoInput) (req *request
 // See the AWS API reference guide for AWS Directory Service's
 // API operation EnableSso for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInsufficientPermissionsException "InsufficientPermissionsException"
+//   * InsufficientPermissionsException
 //   The account does not have sufficient permission to perform the operation.
 //
-//   * ErrCodeAuthenticationFailedException "AuthenticationFailedException"
+//   * AuthenticationFailedException
 //   An authentication error occurred.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/EnableSso
@@ -3469,14 +3469,14 @@ func (c *DirectoryService) GetDirectoryLimitsRequest(input *GetDirectoryLimitsIn
 // See the AWS API reference guide for AWS Directory Service's
 // API operation GetDirectoryLimits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/GetDirectoryLimits
@@ -3554,14 +3554,14 @@ func (c *DirectoryService) GetSnapshotLimitsRequest(input *GetSnapshotLimitsInpu
 // See the AWS API reference guide for AWS Directory Service's
 // API operation GetSnapshotLimits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/GetSnapshotLimits
@@ -3640,23 +3640,23 @@ func (c *DirectoryService) ListCertificatesRequest(input *ListCertificatesInput)
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ListCertificates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+// Returned Error Types:
+//   * DirectoryDoesNotExistException
 //   The specified directory does not exist in the system.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListCertificates
@@ -3734,20 +3734,20 @@ func (c *DirectoryService) ListIpRoutesRequest(input *ListIpRoutesInput) (req *r
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ListIpRoutes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListIpRoutes
@@ -3825,17 +3825,17 @@ func (c *DirectoryService) ListLogSubscriptionsRequest(input *ListLogSubscriptio
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ListLogSubscriptions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListLogSubscriptions
@@ -3913,17 +3913,17 @@ func (c *DirectoryService) ListSchemaExtensionsRequest(input *ListSchemaExtensio
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ListSchemaExtensions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+// Returned Error Types:
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListSchemaExtensions
@@ -4001,20 +4001,20 @@ func (c *DirectoryService) ListTagsForResourceRequest(input *ListTagsForResource
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The NextToken value is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ListTagsForResource
@@ -4092,33 +4092,33 @@ func (c *DirectoryService) RegisterCertificateRequest(input *RegisterCertificate
 // See the AWS API reference guide for AWS Directory Service's
 // API operation RegisterCertificate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+// Returned Error Types:
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeDirectoryDoesNotExistException "DirectoryDoesNotExistException"
+//   * DirectoryDoesNotExistException
 //   The specified directory does not exist in the system.
 //
-//   * ErrCodeInvalidCertificateException "InvalidCertificateException"
+//   * InvalidCertificateException
 //   The certificate PEM that was provided has incorrect encoding.
 //
-//   * ErrCodeCertificateLimitExceededException "CertificateLimitExceededException"
+//   * CertificateLimitExceededException
 //   The certificate could not be added because the certificate limit has been
 //   reached.
 //
-//   * ErrCodeCertificateAlreadyExistsException "CertificateAlreadyExistsException"
+//   * CertificateAlreadyExistsException
 //   The certificate has already been registered into the system.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RegisterCertificate
@@ -4202,17 +4202,17 @@ func (c *DirectoryService) RegisterEventTopicRequest(input *RegisterEventTopicIn
 // See the AWS API reference guide for AWS Directory Service's
 // API operation RegisterEventTopic for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RegisterEventTopic
@@ -4291,20 +4291,20 @@ func (c *DirectoryService) RejectSharedDirectoryRequest(input *RejectSharedDirec
 // See the AWS API reference guide for AWS Directory Service's
 // API operation RejectSharedDirectory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeDirectoryAlreadySharedException "DirectoryAlreadySharedException"
+//   * DirectoryAlreadySharedException
 //   The specified directory has already been shared with this AWS account.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RejectSharedDirectory
@@ -4383,20 +4383,20 @@ func (c *DirectoryService) RemoveIpRoutesRequest(input *RemoveIpRoutesInput) (re
 // See the AWS API reference guide for AWS Directory Service's
 // API operation RemoveIpRoutes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RemoveIpRoutes
@@ -4475,17 +4475,17 @@ func (c *DirectoryService) RemoveTagsFromResourceRequest(input *RemoveTagsFromRe
 // See the AWS API reference guide for AWS Directory Service's
 // API operation RemoveTagsFromResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RemoveTagsFromResource
@@ -4579,27 +4579,27 @@ func (c *DirectoryService) ResetUserPasswordRequest(input *ResetUserPasswordInpu
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ResetUserPassword for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+// Returned Error Types:
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeUserDoesNotExistException "UserDoesNotExistException"
+//   * UserDoesNotExistException
 //   The user provided a username that does not exist in your directory.
 //
-//   * ErrCodeInvalidPasswordException "InvalidPasswordException"
+//   * InvalidPasswordException
 //   The new password provided by the user does not meet the password complexity
 //   requirements defined in your directory.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ResetUserPassword
@@ -4686,17 +4686,17 @@ func (c *DirectoryService) RestoreFromSnapshotRequest(input *RestoreFromSnapshot
 // See the AWS API reference guide for AWS Directory Service's
 // API operation RestoreFromSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/RestoreFromSnapshot
@@ -4791,36 +4791,36 @@ func (c *DirectoryService) ShareDirectoryRequest(input *ShareDirectoryInput) (re
 // See the AWS API reference guide for AWS Directory Service's
 // API operation ShareDirectory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryAlreadySharedException "DirectoryAlreadySharedException"
+// Returned Error Types:
+//   * DirectoryAlreadySharedException
 //   The specified directory has already been shared with this AWS account.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidTargetException "InvalidTargetException"
+//   * InvalidTargetException
 //   The specified shared target is not valid.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeShareLimitExceededException "ShareLimitExceededException"
+//   * ShareLimitExceededException
 //   The maximum number of AWS accounts that you can share with this directory
 //   has been reached.
 //
-//   * ErrCodeOrganizationsException "OrganizationsException"
+//   * OrganizationsException
 //   Exception encountered while trying to access your AWS organization.
 //
-//   * ErrCodeAccessDeniedException "AccessDeniedException"
+//   * AccessDeniedException
 //   You do not have sufficient access to perform this action.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/ShareDirectory
@@ -4898,25 +4898,25 @@ func (c *DirectoryService) StartSchemaExtensionRequest(input *StartSchemaExtensi
 // See the AWS API reference guide for AWS Directory Service's
 // API operation StartSchemaExtension for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+// Returned Error Types:
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeSnapshotLimitExceededException "SnapshotLimitExceededException"
+//   * SnapshotLimitExceededException
 //   The maximum number of manual snapshots for the directory has been reached.
 //   You can use the GetSnapshotLimits operation to determine the snapshot limits
 //   for a directory.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/StartSchemaExtension
@@ -4994,20 +4994,20 @@ func (c *DirectoryService) UnshareDirectoryRequest(input *UnshareDirectoryInput)
 // See the AWS API reference guide for AWS Directory Service's
 // API operation UnshareDirectory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidTargetException "InvalidTargetException"
+//   * InvalidTargetException
 //   The specified shared target is not valid.
 //
-//   * ErrCodeDirectoryNotSharedException "DirectoryNotSharedException"
+//   * DirectoryNotSharedException
 //   The specified directory has not been shared with this AWS account.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UnshareDirectory
@@ -5086,23 +5086,23 @@ func (c *DirectoryService) UpdateConditionalForwarderRequest(input *UpdateCondit
 // See the AWS API reference guide for AWS Directory Service's
 // API operation UpdateConditionalForwarder for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateConditionalForwarder
@@ -5186,27 +5186,27 @@ func (c *DirectoryService) UpdateNumberOfDomainControllersRequest(input *UpdateN
 // See the AWS API reference guide for AWS Directory Service's
 // API operation UpdateNumberOfDomainControllers for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeDirectoryUnavailableException "DirectoryUnavailableException"
+//   * DirectoryUnavailableException
 //   The specified directory is unavailable or could not be found.
 //
-//   * ErrCodeDomainControllerLimitExceededException "DomainControllerLimitExceededException"
+//   * DomainControllerLimitExceededException
 //   The maximum allowed number of domain controllers per directory was exceeded.
 //   The default limit per directory is 20 domain controllers.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateNumberOfDomainControllers
@@ -5286,17 +5286,17 @@ func (c *DirectoryService) UpdateRadiusRequest(input *UpdateRadiusInput) (req *r
 // See the AWS API reference guide for AWS Directory Service's
 // API operation UpdateRadius for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateRadius
@@ -5375,17 +5375,17 @@ func (c *DirectoryService) UpdateTrustRequest(input *UpdateTrustInput) (req *req
 // See the AWS API reference guide for AWS Directory Service's
 // API operation UpdateTrust for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/UpdateTrust
@@ -5467,20 +5467,20 @@ func (c *DirectoryService) VerifyTrustRequest(input *VerifyTrustInput) (req *req
 // See the AWS API reference guide for AWS Directory Service's
 // API operation VerifyTrust for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeEntityDoesNotExistException "EntityDoesNotExistException"
+// Returned Error Types:
+//   * EntityDoesNotExistException
 //   The specified entity could not be found.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   One or more parameters are not valid.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   A client exception has occurred.
 //
-//   * ErrCodeServiceException "ServiceException"
+//   * ServiceException
 //   An exception has occurred in AWS Directory Service.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The operation is not supported.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ds-2015-04-16/VerifyTrust
@@ -5565,6 +5565,66 @@ func (s AcceptSharedDirectoryOutput) GoString() string {
 func (s *AcceptSharedDirectoryOutput) SetSharedDirectory(v *SharedDirectory) *AcceptSharedDirectoryOutput {
 	s.SharedDirectory = v
 	return s
+}
+
+// You do not have sufficient access to perform this action.
+type AccessDeniedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AccessDeniedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AccessDeniedException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 type AddIpRoutesInput struct {
@@ -5810,6 +5870,66 @@ func (s *Attribute) SetValue(v string) *Attribute {
 	return s
 }
 
+// An authentication error occurred.
+type AuthenticationFailedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The textual message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The identifier of the request that caused the exception.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s AuthenticationFailedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AuthenticationFailedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAuthenticationFailedException(v protocol.ResponseMetadata) error {
+	return &AuthenticationFailedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s AuthenticationFailedException) Code() string {
+	return "AuthenticationFailedException"
+}
+
+// Message returns the exception's message.
+func (s AuthenticationFailedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s AuthenticationFailedException) OrigErr() error {
+	return nil
+}
+
+func (s AuthenticationFailedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s AuthenticationFailedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s AuthenticationFailedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type CancelSchemaExtensionInput struct {
 	_ struct{} `type:"structure"`
 
@@ -5945,6 +6065,187 @@ func (s *Certificate) SetStateReason(v string) *Certificate {
 	return s
 }
 
+// The certificate has already been registered into the system.
+type CertificateAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CertificateAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorCertificateAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &CertificateAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CertificateAlreadyExistsException) Code() string {
+	return "CertificateAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s CertificateAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CertificateAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s CertificateAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CertificateAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CertificateAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The certificate is not present in the system for describe or deregister activities.
+type CertificateDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CertificateDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorCertificateDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &CertificateDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CertificateDoesNotExistException) Code() string {
+	return "CertificateDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s CertificateDoesNotExistException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CertificateDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s CertificateDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CertificateDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CertificateDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The certificate is being used for the LDAP security connection and cannot
+// be removed without disabling LDAP security.
+type CertificateInUseException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CertificateInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorCertificateInUseException(v protocol.ResponseMetadata) error {
+	return &CertificateInUseException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CertificateInUseException) Code() string {
+	return "CertificateInUseException"
+}
+
+// Message returns the exception's message.
+func (s CertificateInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CertificateInUseException) OrigErr() error {
+	return nil
+}
+
+func (s CertificateInUseException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CertificateInUseException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CertificateInUseException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains general information about a certificate.
 type CertificateInfo struct {
 	_ struct{} `type:"structure"`
@@ -5985,6 +6286,127 @@ func (s *CertificateInfo) SetCommonName(v string) *CertificateInfo {
 func (s *CertificateInfo) SetState(v string) *CertificateInfo {
 	s.State = &v
 	return s
+}
+
+// The certificate could not be added because the certificate limit has been
+// reached.
+type CertificateLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CertificateLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CertificateLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorCertificateLimitExceededException(v protocol.ResponseMetadata) error {
+	return &CertificateLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s CertificateLimitExceededException) Code() string {
+	return "CertificateLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s CertificateLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s CertificateLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s CertificateLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s CertificateLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s CertificateLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// A client exception has occurred.
+type ClientException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ClientException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientException(v protocol.ResponseMetadata) error {
+	return &ClientException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ClientException) Code() string {
+	return "ClientException"
+}
+
+// Message returns the exception's message.
+func (s ClientException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ClientException) OrigErr() error {
+	return nil
+}
+
+func (s ClientException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ClientException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ClientException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains information about a computer account in a directory.
@@ -8381,6 +8803,66 @@ func (s *DescribeTrustsOutput) SetTrusts(v []*Trust) *DescribeTrustsOutput {
 	return s
 }
 
+// The specified directory has already been shared with this AWS account.
+type DirectoryAlreadySharedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DirectoryAlreadySharedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DirectoryAlreadySharedException) GoString() string {
+	return s.String()
+}
+
+func newErrorDirectoryAlreadySharedException(v protocol.ResponseMetadata) error {
+	return &DirectoryAlreadySharedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DirectoryAlreadySharedException) Code() string {
+	return "DirectoryAlreadySharedException"
+}
+
+// Message returns the exception's message.
+func (s DirectoryAlreadySharedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DirectoryAlreadySharedException) OrigErr() error {
+	return nil
+}
+
+func (s DirectoryAlreadySharedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DirectoryAlreadySharedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DirectoryAlreadySharedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains information for the ConnectDirectory operation when an AD Connector
 // directory is being created.
 type DirectoryConnectSettings struct {
@@ -8792,6 +9274,128 @@ func (s *DirectoryDescription) SetVpcSettings(v *DirectoryVpcSettingsDescription
 	return s
 }
 
+// The specified directory does not exist in the system.
+type DirectoryDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DirectoryDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DirectoryDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorDirectoryDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &DirectoryDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DirectoryDoesNotExistException) Code() string {
+	return "DirectoryDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s DirectoryDoesNotExistException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DirectoryDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s DirectoryDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DirectoryDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DirectoryDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The maximum number of directories in the region has been reached. You can
+// use the GetDirectoryLimits operation to determine your directory limits in
+// the region.
+type DirectoryLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DirectoryLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DirectoryLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorDirectoryLimitExceededException(v protocol.ResponseMetadata) error {
+	return &DirectoryLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DirectoryLimitExceededException) Code() string {
+	return "DirectoryLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s DirectoryLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DirectoryLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s DirectoryLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DirectoryLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DirectoryLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains directory limit information for a Region.
 type DirectoryLimits struct {
 	_ struct{} `type:"structure"`
@@ -8887,6 +9491,126 @@ func (s *DirectoryLimits) SetConnectedDirectoriesLimit(v int64) *DirectoryLimits
 func (s *DirectoryLimits) SetConnectedDirectoriesLimitReached(v bool) *DirectoryLimits {
 	s.ConnectedDirectoriesLimitReached = &v
 	return s
+}
+
+// The specified directory has not been shared with this AWS account.
+type DirectoryNotSharedException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DirectoryNotSharedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DirectoryNotSharedException) GoString() string {
+	return s.String()
+}
+
+func newErrorDirectoryNotSharedException(v protocol.ResponseMetadata) error {
+	return &DirectoryNotSharedException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DirectoryNotSharedException) Code() string {
+	return "DirectoryNotSharedException"
+}
+
+// Message returns the exception's message.
+func (s DirectoryNotSharedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DirectoryNotSharedException) OrigErr() error {
+	return nil
+}
+
+func (s DirectoryNotSharedException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DirectoryNotSharedException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DirectoryNotSharedException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified directory is unavailable or could not be found.
+type DirectoryUnavailableException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DirectoryUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DirectoryUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorDirectoryUnavailableException(v protocol.ResponseMetadata) error {
+	return &DirectoryUnavailableException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DirectoryUnavailableException) Code() string {
+	return "DirectoryUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s DirectoryUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DirectoryUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s DirectoryUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DirectoryUnavailableException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DirectoryUnavailableException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains VPC information for the CreateDirectory or CreateMicrosoftAD operation.
@@ -9305,6 +10029,67 @@ func (s *DomainController) SetVpcId(v string) *DomainController {
 	return s
 }
 
+// The maximum allowed number of domain controllers per directory was exceeded.
+// The default limit per directory is 20 domain controllers.
+type DomainControllerLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DomainControllerLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainControllerLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorDomainControllerLimitExceededException(v protocol.ResponseMetadata) error {
+	return &DomainControllerLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s DomainControllerLimitExceededException) Code() string {
+	return "DomainControllerLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s DomainControllerLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s DomainControllerLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s DomainControllerLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s DomainControllerLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s DomainControllerLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type EnableLDAPSInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9528,6 +10313,126 @@ func (s EnableSsoOutput) GoString() string {
 	return s.String()
 }
 
+// The specified entity already exists.
+type EntityAlreadyExistsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EntityAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EntityAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorEntityAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &EntityAlreadyExistsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EntityAlreadyExistsException) Code() string {
+	return "EntityAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s EntityAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EntityAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s EntityAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EntityAlreadyExistsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EntityAlreadyExistsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified entity could not be found.
+type EntityDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EntityDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EntityDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorEntityDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &EntityDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s EntityDoesNotExistException) Code() string {
+	return "EntityDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s EntityDoesNotExistException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s EntityDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s EntityDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s EntityDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s EntityDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Information about SNS topic and AWS Directory Service directory associations.
 type EventTopic struct {
 	_ struct{} `type:"structure"`
@@ -9693,6 +10598,428 @@ func (s *GetSnapshotLimitsOutput) SetSnapshotLimits(v *SnapshotLimits) *GetSnaps
 	return s
 }
 
+// The account does not have sufficient permission to perform the operation.
+type InsufficientPermissionsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InsufficientPermissionsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InsufficientPermissionsException) GoString() string {
+	return s.String()
+}
+
+func newErrorInsufficientPermissionsException(v protocol.ResponseMetadata) error {
+	return &InsufficientPermissionsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InsufficientPermissionsException) Code() string {
+	return "InsufficientPermissionsException"
+}
+
+// Message returns the exception's message.
+func (s InsufficientPermissionsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InsufficientPermissionsException) OrigErr() error {
+	return nil
+}
+
+func (s InsufficientPermissionsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InsufficientPermissionsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InsufficientPermissionsException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The certificate PEM that was provided has incorrect encoding.
+type InvalidCertificateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidCertificateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidCertificateException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidCertificateException(v protocol.ResponseMetadata) error {
+	return &InvalidCertificateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidCertificateException) Code() string {
+	return "InvalidCertificateException"
+}
+
+// Message returns the exception's message.
+func (s InvalidCertificateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidCertificateException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidCertificateException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidCertificateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidCertificateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The LDAP activities could not be performed because they are limited by the
+// LDAPS status.
+type InvalidLDAPSStatusException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidLDAPSStatusException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidLDAPSStatusException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidLDAPSStatusException(v protocol.ResponseMetadata) error {
+	return &InvalidLDAPSStatusException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidLDAPSStatusException) Code() string {
+	return "InvalidLDAPSStatusException"
+}
+
+// Message returns the exception's message.
+func (s InvalidLDAPSStatusException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidLDAPSStatusException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidLDAPSStatusException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidLDAPSStatusException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidLDAPSStatusException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The NextToken value is not valid.
+type InvalidNextTokenException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidNextTokenException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidNextTokenException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// One or more parameters are not valid.
+type InvalidParameterException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidParameterException) Code() string {
+	return "InvalidParameterException"
+}
+
+// Message returns the exception's message.
+func (s InvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidParameterException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidParameterException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidParameterException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidParameterException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The new password provided by the user does not meet the password complexity
+// requirements defined in your directory.
+type InvalidPasswordException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidPasswordException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPasswordException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPasswordException(v protocol.ResponseMetadata) error {
+	return &InvalidPasswordException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidPasswordException) Code() string {
+	return "InvalidPasswordException"
+}
+
+// Message returns the exception's message.
+func (s InvalidPasswordException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidPasswordException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidPasswordException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidPasswordException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidPasswordException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// The specified shared target is not valid.
+type InvalidTargetException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidTargetException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTargetException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTargetException(v protocol.ResponseMetadata) error {
+	return &InvalidTargetException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s InvalidTargetException) Code() string {
+	return "InvalidTargetException"
+}
+
+// Message returns the exception's message.
+func (s InvalidTargetException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s InvalidTargetException) OrigErr() error {
+	return nil
+}
+
+func (s InvalidTargetException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s InvalidTargetException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s InvalidTargetException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // IP address block. This is often the address block of the DNS server used
 // for your on-premises domain.
 type IpRoute struct {
@@ -9796,6 +11123,67 @@ func (s *IpRouteInfo) SetIpRouteStatusMsg(v string) *IpRouteInfo {
 func (s *IpRouteInfo) SetIpRouteStatusReason(v string) *IpRouteInfo {
 	s.IpRouteStatusReason = &v
 	return s
+}
+
+// The maximum allowed number of IP addresses was exceeded. The default limit
+// is 100 IP address blocks.
+type IpRouteLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s IpRouteLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IpRouteLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorIpRouteLimitExceededException(v protocol.ResponseMetadata) error {
+	return &IpRouteLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s IpRouteLimitExceededException) Code() string {
+	return "IpRouteLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s IpRouteLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s IpRouteLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s IpRouteLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s IpRouteLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s IpRouteLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Contains general information about the LDAPS settings.
@@ -10326,6 +11714,127 @@ func (s *LogSubscription) SetLogGroupName(v string) *LogSubscription {
 func (s *LogSubscription) SetSubscriptionCreatedDateTime(v time.Time) *LogSubscription {
 	s.SubscriptionCreatedDateTime = &v
 	return s
+}
+
+// The LDAP activities could not be performed because at least one valid certificate
+// must be registered with the system.
+type NoAvailableCertificateException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NoAvailableCertificateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NoAvailableCertificateException) GoString() string {
+	return s.String()
+}
+
+func newErrorNoAvailableCertificateException(v protocol.ResponseMetadata) error {
+	return &NoAvailableCertificateException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s NoAvailableCertificateException) Code() string {
+	return "NoAvailableCertificateException"
+}
+
+// Message returns the exception's message.
+func (s NoAvailableCertificateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s NoAvailableCertificateException) OrigErr() error {
+	return nil
+}
+
+func (s NoAvailableCertificateException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s NoAvailableCertificateException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s NoAvailableCertificateException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
+// Exception encountered while trying to access your AWS organization.
+type OrganizationsException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s OrganizationsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OrganizationsException) GoString() string {
+	return s.String()
+}
+
+func newErrorOrganizationsException(v protocol.ResponseMetadata) error {
+	return &OrganizationsException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s OrganizationsException) Code() string {
+	return "OrganizationsException"
+}
+
+// Message returns the exception's message.
+func (s OrganizationsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s OrganizationsException) OrigErr() error {
+	return nil
+}
+
+func (s OrganizationsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s OrganizationsException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s OrganizationsException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes the directory owner account details that have been shared to the
@@ -11077,6 +12586,66 @@ func (s *SchemaExtensionInfo) SetStartDateTime(v time.Time) *SchemaExtensionInfo
 	return s
 }
 
+// An exception has occurred in AWS Directory Service.
+type ServiceException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceException(v protocol.ResponseMetadata) error {
+	return &ServiceException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ServiceException) Code() string {
+	return "ServiceException"
+}
+
+// Message returns the exception's message.
+func (s ServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ServiceException) OrigErr() error {
+	return nil
+}
+
+func (s ServiceException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ServiceException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ServiceException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 type ShareDirectoryInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11185,6 +12754,67 @@ func (s ShareDirectoryOutput) GoString() string {
 func (s *ShareDirectoryOutput) SetSharedDirectoryId(v string) *ShareDirectoryOutput {
 	s.SharedDirectoryId = &v
 	return s
+}
+
+// The maximum number of AWS accounts that you can share with this directory
+// has been reached.
+type ShareLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ShareLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ShareLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorShareLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ShareLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s ShareLimitExceededException) Code() string {
+	return "ShareLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s ShareLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s ShareLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s ShareLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s ShareLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s ShareLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Identifier that contains details about the directory consumer account.
@@ -11416,6 +13046,68 @@ func (s *Snapshot) SetType(v string) *Snapshot {
 	return s
 }
 
+// The maximum number of manual snapshots for the directory has been reached.
+// You can use the GetSnapshotLimits operation to determine the snapshot limits
+// for a directory.
+type SnapshotLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SnapshotLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SnapshotLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorSnapshotLimitExceededException(v protocol.ResponseMetadata) error {
+	return &SnapshotLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s SnapshotLimitExceededException) Code() string {
+	return "SnapshotLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s SnapshotLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s SnapshotLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s SnapshotLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s SnapshotLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s SnapshotLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
+}
+
 // Contains manual snapshot limit information for a directory.
 type SnapshotLimits struct {
 	_ struct{} `type:"structure"`
@@ -11626,6 +13318,66 @@ func (s *Tag) SetKey(v string) *Tag {
 func (s *Tag) SetValue(v string) *Tag {
 	s.Value = &v
 	return s
+}
+
+// The maximum allowed number of tags was exceeded.
+type TagLimitExceededException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s TagLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagLimitExceededException(v protocol.ResponseMetadata) error {
+	return &TagLimitExceededException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s TagLimitExceededException) Code() string {
+	return "TagLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s TagLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s TagLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s TagLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s TagLimitExceededException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s TagLimitExceededException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Describes a trust relationship between an AWS Managed Microsoft AD directory
@@ -11882,6 +13634,66 @@ func (s *UnshareTarget) SetId(v string) *UnshareTarget {
 func (s *UnshareTarget) SetType(v string) *UnshareTarget {
 	s.Type = &v
 	return s
+}
+
+// The operation is not supported.
+type UnsupportedOperationException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedOperationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedOperationException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedOperationException(v protocol.ResponseMetadata) error {
+	return &UnsupportedOperationException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UnsupportedOperationException) Code() string {
+	return "UnsupportedOperationException"
+}
+
+// Message returns the exception's message.
+func (s UnsupportedOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UnsupportedOperationException) OrigErr() error {
+	return nil
+}
+
+func (s UnsupportedOperationException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UnsupportedOperationException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UnsupportedOperationException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Updates a conditional forwarder.
@@ -12189,6 +14001,66 @@ func (s *UpdateTrustOutput) SetRequestId(v string) *UpdateTrustOutput {
 func (s *UpdateTrustOutput) SetTrustId(v string) *UpdateTrustOutput {
 	s.TrustId = &v
 	return s
+}
+
+// The user provided a username that does not exist in your directory.
+type UserDoesNotExistException struct {
+	_            struct{} `type:"structure"`
+	respMetadata protocol.ResponseMetadata
+
+	// The descriptive message for the exception.
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The AWS request identifier.
+	RequestId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s UserDoesNotExistException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UserDoesNotExistException) GoString() string {
+	return s.String()
+}
+
+func newErrorUserDoesNotExistException(v protocol.ResponseMetadata) error {
+	return &UserDoesNotExistException{
+		respMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s UserDoesNotExistException) Code() string {
+	return "UserDoesNotExistException"
+}
+
+// Message returns the exception's message.
+func (s UserDoesNotExistException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s UserDoesNotExistException) OrigErr() error {
+	return nil
+}
+
+func (s UserDoesNotExistException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s UserDoesNotExistException) StatusCode() int {
+	return s.respMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s UserDoesNotExistException) RequestID() string {
+	return s.respMetadata.RequestID
 }
 
 // Initiates the verification of an existing trust relationship between an AWS
