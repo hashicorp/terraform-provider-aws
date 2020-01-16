@@ -863,6 +863,11 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 			}
 		}
 
+		// allow postgresql as input as postgres
+		if strings.ToLower(d.Get("engine").(string)) == "postgresql" {
+			d.Set("engine", "postgres")
+		}
+
 		if attr, ok := d.GetOk("allocated_storage"); ok {
 			modifyDbInstanceInput.AllocatedStorage = aws.Int64(int64(attr.(int)))
 			requiresModifyDbInstance = true
