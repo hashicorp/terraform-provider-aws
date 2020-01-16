@@ -696,6 +696,10 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			m := v.(map[string]interface{})
 			flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(m)
 		}
+		if v, ok := d.GetOk("monitoring_configuration"); ok {
+			m := v.(map[string]interface{})
+			flinkApplicationConfiguration.MonitoringConfiguration = expandMonitoringConfiguration(m)
+		}
 	}
 
 	var contentType *string
@@ -1336,12 +1340,39 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 					ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
 					MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
 				}
+				monitoringConfig := expandMonitoringConfiguration(v)
+				flinkUpdate.MonitoringConfigurationUpdate = &kinesisanalyticsv2.MonitoringConfigurationUpdate{
+					ConfigurationTypeUpdate: monitoringConfig.ConfigurationType,
+					LogLevelUpdate:          monitoringConfig.LogLevel,
+					MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
+				}
 			}
 		}
 		applicationUpdate.ApplicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = flinkUpdate
 	}
 
 	return applicationUpdate, nil
+}
+
+func expandMonitoringConfiguration(v map[string]interface{}) *kinesisanalyticsv2.MonitoringConfiguration {
+	var configurationType *string
+	var logLevel *string
+	var metricsLevel *string
+
+	if confType, ok := v["configuration_type"]; ok {
+		configurationType = aws.String(confType.(string))
+	}
+	if level, ok := v["log_level"]; ok {
+		logLevel = aws.String(level.(string))
+	}
+	if level, ok := v["metrics_level"]; ok {
+		metricsLevel = aws.String(level.(string))
+	}
+	return &kinesisanalyticsv2.MonitoringConfiguration{
+		ConfigurationType: configurationType,
+		LogLevel:          logLevel,
+		MetricsLevel:      metricsLevel,
+	}
 }
 
 func expandCheckpointConfiguration(v map[string]interface{}) *kinesisanalyticsv2.CheckpointConfiguration {
