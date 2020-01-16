@@ -85,7 +85,7 @@ func testSweepEfsMountTargets(region string) error {
 		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
 	}
 
-	return err
+	return errors
 }
 
 func TestAccAWSEFSMountTarget_basic(t *testing.T) {
