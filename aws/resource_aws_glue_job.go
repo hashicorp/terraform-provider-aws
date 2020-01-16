@@ -122,7 +122,7 @@ func resourceAwsGlueJob() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"allocated_capacity", "max_capacity"},
-				ValidateFunc:  validation.StringInSlice([]string{
+				ValidateFunc: validation.StringInSlice([]string{
 					glue.WorkerTypeG1x,
 					glue.WorkerTypeG2x,
 					glue.WorkerTypeStandard,
