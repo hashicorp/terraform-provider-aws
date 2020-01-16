@@ -34,13 +34,35 @@ func testSweepEfsFileSystems(region string) error {
 	}
 	conn := client.(*AWSClient).efsconn
 
+	err = testSweepIterateEfsFileSystems(conn, region, "EFS File Systems", func(id string) error {
+		log.Printf("[INFO] Deleting EFS File System: %s", id)
+
+		_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
+			FileSystemId: aws.String(id),
+		})
+		if err != nil {
+			return fmt.Errorf("error deleting EFS File System %q: %w", id, err)
+		}
+
+		err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
+		if err != nil {
+			return fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err)
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+func testSweepIterateEfsFileSystems(conn *efs.EFS, region, resource string, iterator func(id string) error) error {
 	var errors error
 	input := &efs.DescribeFileSystemsInput{}
 	for {
 		out, err := conn.DescribeFileSystems(input)
 		if err != nil {
 			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping EFS File Systems sweep for %s: %s", region, err)
+				log.Printf("[WARN] Skipping %s sweep for %s: %s", resource, region, err)
 				return errors
 			}
 			errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
@@ -55,19 +77,9 @@ func testSweepEfsFileSystems(region string) error {
 		for _, filesystem := range out.FileSystems {
 			id := aws.StringValue(filesystem.FileSystemId)
 
-			log.Printf("[INFO] Deleting EFS File System: %s", id)
-			_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
-				FileSystemId: filesystem.FileSystemId,
-			})
+			err := iterator(id)
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error deleting EFS File System %q: %w", id, err))
-				continue
-			}
-
-			err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
-			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err))
-				continue
+				errors = multierror.Append(errors, err)
 			}
 		}
 
@@ -76,7 +88,6 @@ func testSweepEfsFileSystems(region string) error {
 		}
 		input.Marker = out.NextMarker
 	}
-
 	return errors
 }
 

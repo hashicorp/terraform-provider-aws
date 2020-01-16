@@ -31,80 +31,58 @@ func testSweepEfsMountTargets(region string) error {
 	}
 	conn := client.(*AWSClient).efsconn
 
-	var errors error
-	input := &efs.DescribeFileSystemsInput{}
-	for {
-		out, err := conn.DescribeFileSystems(input)
-		if err != nil {
-			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping EFS Mount Targets sweep for %s: %s", region, err)
-				return errors
-			}
-			errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS Mount Targets: %w", err))
-			return errors
+	err = testSweepIterateEfsFileSystems(conn, region, "EFS Mount Targets", func(id string) error {
+		log.Printf("[INFO] Deleting Mount Targets for EFS File System: %s", id)
+
+		var errors error
+		input := &efs.DescribeMountTargetsInput{
+			FileSystemId: aws.String(id),
 		}
-
-		if out == nil || len(out.FileSystems) == 0 {
-			log.Printf("[INFO] No EFS File Systems to sweep")
-			return errors
-		}
-
-		for _, filesystem := range out.FileSystems {
-			id := aws.StringValue(filesystem.FileSystemId)
-
-			log.Printf("[INFO] Deleting Mount Targets for EFS File System: %s", id)
-			input := &efs.DescribeMountTargetsInput{
-				FileSystemId: filesystem.FileSystemId,
+		for {
+			out, err := conn.DescribeMountTargets(input)
+			if err != nil {
+				if testSweepSkipSweepError(err) {
+					log.Printf("[WARN] Skipping EFS Mount Targets sweep for %s: %s", region, err)
+					return errors
+				}
+				errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS Mount Targets on File System %q: %w", id, err))
+				break
 			}
-			for {
-				out, err := conn.DescribeMountTargets(input)
+
+			if out == nil || len(out.MountTargets) == 0 {
+				log.Printf("[INFO] No EFS Mount Targets to sweep on File System %q", id)
+				break
+			}
+
+			for _, mounttarget := range out.MountTargets {
+				id := aws.StringValue(mounttarget.MountTargetId)
+
+				log.Printf("[INFO] Deleting EFS Mount Target: %s", id)
+				_, err := conn.DeleteMountTarget(&efs.DeleteMountTargetInput{
+					MountTargetId: mounttarget.MountTargetId,
+				})
 				if err != nil {
-					if testSweepSkipSweepError(err) {
-						log.Printf("[WARN] Skipping EFS Mount Targets sweep for %s: %s", region, err)
-						return errors
-					}
-					errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS Mount Targets on File System %q: %w", id, err))
-					break
+					errors = multierror.Append(errors, fmt.Errorf("error deleting EFS Mount Target %q: %w", id, err))
+					continue
 				}
 
-				if out == nil || len(out.MountTargets) == 0 {
-					log.Printf("[INFO] No EFS Mount Targets to sweep on File System %q", id)
-					break
+				err = waitForDeleteEfsMountTarget(conn, id, 10*time.Minute)
+				if err != nil {
+					errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS Mount Target %q to delete: %w", id, err))
+					continue
 				}
-
-				for _, mounttarget := range out.MountTargets {
-					id := aws.StringValue(mounttarget.MountTargetId)
-
-					log.Printf("[INFO] Deleting EFS Mount Target: %s", id)
-					_, err := conn.DeleteMountTarget(&efs.DeleteMountTargetInput{
-						MountTargetId: mounttarget.MountTargetId,
-					})
-					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error deleting EFS Mount Target %q: %w", id, err))
-						continue
-					}
-
-					err = waitForDeleteEfsMountTarget(conn, id, 10*time.Minute)
-					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS Mount Target %q to delete: %w", id, err))
-						continue
-					}
-				}
-
-				if out.NextMarker == nil {
-					break
-				}
-				input.Marker = out.NextMarker
 			}
+
+			if out.NextMarker == nil {
+				break
+			}
+			input.Marker = out.NextMarker
 		}
 
-		if out.NextMarker == nil {
-			break
-		}
-		input.Marker = out.NextMarker
-	}
+		return errors
+	})
 
-	return errors
+	return err
 }
 
 func TestAccAWSEFSMountTarget_basic(t *testing.T) {
