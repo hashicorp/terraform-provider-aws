@@ -692,6 +692,10 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		}
 	case strings.HasPrefix(runtime, "FLINK"):
 		flinkApplicationConfiguration = &kinesisanalyticsv2.FlinkApplicationConfiguration{}
+		if v, ok := d.GetOk("checkpoint_configuration"); ok {
+			m := v.(map[string]interface{})
+			flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(m)
+		}
 	}
 
 	var contentType *string
@@ -908,43 +912,43 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			}
 		}
 
-		oldInputs, newInputs := d.GetChange("inputs")
-		if len(oldInputs.([]interface{})) == 0 && len(newInputs.([]interface{})) > 0 {
-			if v, ok := d.GetOk("inputs"); ok {
-				i := v.([]interface{})[0].(map[string]interface{})
-				input := expandKinesisAnalyticsInputs(i)
-				addOpts := &kinesisanalyticsv2.AddApplicationInputInput{
-					ApplicationName:             aws.String(name),
-					CurrentApplicationVersionId: aws.Int64(int64(version)),
-					Input:                       input,
-				}
-				// Retry for IAM eventual consistency
-				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-					_, err := conn.AddApplicationInput(addOpts)
-					if err != nil {
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-							return resource.RetryableError(err)
-						}
-						// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
-						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
-							return resource.RetryableError(err)
-						}
-						return resource.NonRetryableError(err)
-					}
-					return nil
-				})
-				if isResourceTimeoutError(err) {
-					_, err = conn.AddApplicationInput(addOpts)
-				}
-
-				if err != nil {
-					return fmt.Errorf("Unable to add application inputs: %s", err)
-				}
-				version = version + 1
-			}
-		}
-
 		if d.Get("runtime") == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
+			oldInputs, newInputs := d.GetChange("inputs")
+			if len(oldInputs.([]interface{})) == 0 && len(newInputs.([]interface{})) > 0 {
+				if v, ok := d.GetOk("inputs"); ok {
+					i := v.([]interface{})[0].(map[string]interface{})
+					input := expandKinesisAnalyticsInputs(i)
+					addOpts := &kinesisanalyticsv2.AddApplicationInputInput{
+						ApplicationName:             aws.String(name),
+						CurrentApplicationVersionId: aws.Int64(int64(version)),
+						Input:                       input,
+					}
+					// Retry for IAM eventual consistency
+					err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+						_, err := conn.AddApplicationInput(addOpts)
+						if err != nil {
+							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+								return resource.RetryableError(err)
+							}
+							// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
+							if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "does not provide Invoke permissions on the Lambda resource") {
+								return resource.RetryableError(err)
+							}
+							return resource.NonRetryableError(err)
+						}
+						return nil
+					})
+					if isResourceTimeoutError(err) {
+						_, err = conn.AddApplicationInput(addOpts)
+					}
+
+					if err != nil {
+						return fmt.Errorf("Unable to add application inputs: %s", err)
+					}
+					version = version + 1
+				}
+			}
+
 			oldOutputs, newOutputs := d.GetChange("outputs")
 			if len(oldOutputs.([]interface{})) == 0 && len(newOutputs.([]interface{})) > 0 {
 				if v, ok := d.GetOk("outputs"); ok {
@@ -1325,30 +1329,12 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 		oldConfig, newConfig := d.GetChange("checkpoint_configuration")
 		if len(oldConfig.(map[string]interface{})) > 0 && len(newConfig.(map[string]interface{})) > 0 {
 			if v := d.Get("checkpoint_configuration").(map[string]interface{}); len(v) > 0 {
-
-				var checkpointingEnabled *bool
-				var checkpointInterval *int64
-				var configurationType *string
-				var configurationMinPause *int64
-
-				if interval, ok := v["checkpoint_interval"]; ok {
-					checkpointInterval = aws.Int64(interval.(int64))
-				}
-				if enabled, ok := v["checkpointing_enabled"]; ok {
-					v, _ := strconv.ParseBool(enabled.(string))
-					checkpointingEnabled = aws.Bool(v)
-				}
-				if confType, ok := v["configuration_type"]; ok {
-					configurationType = aws.String(confType.(string))
-				}
-				if minPause, ok := v["min_pause_between_checkpoints"]; ok {
-					configurationMinPause = aws.Int64(minPause.(int64))
-				}
+				checkpointConfig := expandCheckpointConfiguration(v)
 				flinkUpdate.CheckpointConfigurationUpdate = &kinesisanalyticsv2.CheckpointConfigurationUpdate{
-					CheckpointIntervalUpdate:         checkpointInterval,
-					CheckpointingEnabledUpdate:       checkpointingEnabled,
-					ConfigurationTypeUpdate:          configurationType,
-					MinPauseBetweenCheckpointsUpdate: configurationMinPause,
+					CheckpointIntervalUpdate:         checkpointConfig.CheckpointInterval,
+					CheckpointingEnabledUpdate:       checkpointConfig.CheckpointingEnabled,
+					ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
+					MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
 				}
 			}
 		}
@@ -1356,6 +1342,33 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 	}
 
 	return applicationUpdate, nil
+}
+
+func expandCheckpointConfiguration(v map[string]interface{}) *kinesisanalyticsv2.CheckpointConfiguration {
+	var checkpointingEnabled *bool
+	var checkpointInterval *int64
+	var configurationType *string
+	var configurationMinPause *int64
+
+	if interval, ok := v["checkpoint_interval"]; ok {
+		checkpointInterval = aws.Int64(interval.(int64))
+	}
+	if enabled, ok := v["checkpointing_enabled"]; ok {
+		v, _ := strconv.ParseBool(enabled.(string))
+		checkpointingEnabled = aws.Bool(v)
+	}
+	if confType, ok := v["configuration_type"]; ok {
+		configurationType = aws.String(confType.(string))
+	}
+	if minPause, ok := v["min_pause_between_checkpoints"]; ok {
+		configurationMinPause = aws.Int64(minPause.(int64))
+	}
+	return &kinesisanalyticsv2.CheckpointConfiguration{
+		CheckpointInterval:         checkpointInterval,
+		CheckpointingEnabled:       checkpointingEnabled,
+		ConfigurationType:          configurationType,
+		MinPauseBetweenCheckpoints: configurationMinPause,
+	}
 }
 
 func expandKinesisAnalyticsInputUpdate(vL map[string]interface{}) *kinesisanalyticsv2.InputUpdate {
