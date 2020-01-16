@@ -34,60 +34,34 @@ func testSweepEfsFileSystems(region string) error {
 	}
 	conn := client.(*AWSClient).efsconn
 
-	err = testSweepIterateEfsFileSystems(conn, region, "EFS File Systems", func(id string) error {
-		log.Printf("[INFO] Deleting EFS File System: %s", id)
-
-		_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
-			FileSystemId: aws.String(id),
-		})
-		if err != nil {
-			return fmt.Errorf("error deleting EFS File System %q: %w", id, err)
-		}
-
-		err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
-		if err != nil {
-			return fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err)
-		}
-
-		return nil
-	})
-
-	return err
-}
-
-func testSweepIterateEfsFileSystems(conn *efs.EFS, region, resource string, iterator func(id string) error) error {
 	var errors error
 	input := &efs.DescribeFileSystemsInput{}
-	for {
-		out, err := conn.DescribeFileSystems(input)
-		if err != nil {
-			if testSweepSkipSweepError(err) {
-				log.Printf("[WARN] Skipping %s sweep for %s: %s", resource, region, err)
-				return errors
-			}
-			errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
-			return errors
-		}
-
-		if out == nil || len(out.FileSystems) == 0 {
-			log.Printf("[INFO] No EFS File Systems to sweep")
-			return errors
-		}
-
-		for _, filesystem := range out.FileSystems {
+	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+		for _, filesystem := range page.FileSystems {
 			id := aws.StringValue(filesystem.FileSystemId)
 
-			err := iterator(id)
+			log.Printf("[INFO] Deleting EFS File System: %s", id)
+
+			_, err := conn.DeleteFileSystem(&efs.DeleteFileSystemInput{
+				FileSystemId: filesystem.FileSystemId,
+			})
 			if err != nil {
-				errors = multierror.Append(errors, err)
+				errors = multierror.Append(errors, fmt.Errorf("error deleting EFS File System %q: %w", id, err))
+				continue
+			}
+
+			err = waitForDeleteEfsFileSystem(conn, id, 10*time.Minute)
+			if err != nil {
+				errors = multierror.Append(fmt.Errorf("error waiting for EFS File System %q to delete: %w", id, err))
+				continue
 			}
 		}
-
-		if out.NextMarker == nil {
-			break
-		}
-		input.Marker = out.NextMarker
+		return true
+	})
+	if err != nil {
+		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
 	}
+
 	return errors
 }
 
