@@ -31,6 +31,7 @@ func init() {
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
+			"aws_efs_file_system",
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",

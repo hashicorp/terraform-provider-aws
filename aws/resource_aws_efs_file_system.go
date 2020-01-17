@@ -343,12 +343,24 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 		return fmt.Errorf("Error delete file system: %s with err %s", d.Id(), err.Error())
 	}
+
+	err = waitForDeleteEfsFileSystem(conn, d.Id(), 10*time.Minute)
+	if err != nil {
+		return fmt.Errorf("Error waiting for EFS file system (%q) to delete: %w", d.Id(), err)
+	}
+
+	log.Printf("[DEBUG] EFS file system %q deleted.", d.Id())
+
+	return nil
+}
+
+func waitForDeleteEfsFileSystem(conn *efs.EFS, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"available", "deleting"},
 		Target:  []string{},
 		Refresh: func() (interface{}, string, error) {
 			resp, err := conn.DescribeFileSystems(&efs.DescribeFileSystemsInput{
-				FileSystemId: aws.String(d.Id()),
+				FileSystemId: aws.String(id),
 			})
 			if err != nil {
 				efsErr, ok := err.(awserr.Error)
@@ -366,20 +378,12 @@ func resourceAwsEfsFileSystemDelete(d *schema.ResourceData, meta interface{}) er
 			log.Printf("[DEBUG] current status of %q: %q", *fs.FileSystemId, *fs.LifeCycleState)
 			return fs, *fs.LifeCycleState, nil
 		},
-		Timeout:    10 * time.Minute,
+		Timeout:    timeout,
 		Delay:      2 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for EFS file system (%q) to delete: %s",
-			d.Id(), err.Error())
-	}
-
-	log.Printf("[DEBUG] EFS file system %q deleted.", d.Id())
-
-	return nil
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 func hasEmptyFileSystems(fs *efs.DescribeFileSystemsOutput) bool {
