@@ -43,6 +43,9 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/foo_role_.*")),
 
 					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo", "blue_green_deployment_config.#", "0"),
+
+					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "ec2_tag_set.#", "0"),
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo", "ec2_tag_filter.#", "1"),
@@ -1296,17 +1299,16 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_create
 		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: test_config_blue_green_deployment_config_default(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "0"),
-				),
-			},
-			{
 				Config: test_config_blue_green_deployment_config_create_with_asg(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITH_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "BLUE_GREEN"),
+
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
 
@@ -1421,6 +1423,13 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
 					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITH_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "BLUE_GREEN"),
+
+					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
 
 					resource.TestCheckResourceAttr(
@@ -1447,6 +1456,13 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_update
 				Config: test_config_blue_green_deployment_config_update_no_asg(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_option", "WITH_TRAFFIC_CONTROL"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "BLUE_GREEN"),
+
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
 
@@ -1487,6 +1503,11 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
 					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "BLUE_GREEN"),
+
+					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
 
 					resource.TestCheckResourceAttr(
@@ -1510,9 +1531,15 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeploymentConfiguration_delete
 				),
 			},
 			{
-				Config: test_config_blue_green_deployment_config_default(rName),
+				Config: test_config_blue_green_deployment_config_delete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.foo_group", &group),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.#", "1"),
+					resource.TestCheckResourceAttr(
+						"aws_codedeploy_deployment_group.foo_group", "deployment_style.0.deployment_type", "IN_PLACE"),
+
+					// The state is preserved, but AWS ignores it
 					resource.TestCheckResourceAttr(
 						"aws_codedeploy_deployment_group.foo_group", "blue_green_deployment_config.#", "1"),
 				),
@@ -3082,24 +3109,18 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
 `, baseCodeDeployConfig(rName), rName)
 }
 
-func test_config_blue_green_deployment_config_default(rName string) string {
+func test_config_blue_green_deployment_config_delete(rName string) string {
 	return fmt.Sprintf(`
-
-  %s
-
 resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
 }
-`, baseCodeDeployConfig(rName), rName)
+`, rName) + baseCodeDeployConfig(rName)
 }
 
 func test_config_blue_green_deployment_config_create_with_asg(rName string) string {
 	return fmt.Sprintf(`
-
-  %s
-
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
@@ -3151,32 +3172,40 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
 
+  deployment_style {
+	deployment_option = "WITH_TRAFFIC_CONTROL"
+	deployment_type   = "BLUE_GREEN"
+  }
+  
   autoscaling_groups = ["${aws_autoscaling_group.foo_asg.name}"]
 
+  load_balancer_info {
+    elb_info {
+      name = "foo-elb"
+    }
+  }
+  
   blue_green_deployment_config {
     deployment_ready_option {
       action_on_timeout = "STOP_DEPLOYMENT"
       wait_time_in_minutes = 60
     }
-
+    
     green_fleet_provisioning_option {
       action = "COPY_AUTO_SCALING_GROUP"
     }
-
+    
     terminate_blue_instances_on_deployment_success {
       action = "TERMINATE"
       termination_wait_time_in_minutes = 120
     }
   }
 }
-`, baseCodeDeployConfig(rName), rName, rName)
+`, rName, rName) + baseCodeDeployConfig(rName)
 }
 
 func test_config_blue_green_deployment_config_update_with_asg(rName string) string {
 	return fmt.Sprintf(`
-
-  %s
-
 data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
   most_recent = true
   owners      = ["amazon"]
@@ -3228,7 +3257,18 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
 
+  deployment_style {
+	deployment_option = "WITH_TRAFFIC_CONTROL"
+	deployment_type   = "BLUE_GREEN"
+  }
+
   autoscaling_groups = ["${aws_autoscaling_group.foo_asg.name}"]
+
+  load_balancer_info {
+    elb_info {
+      name = "foo-elb"
+    }
+  }
 
   blue_green_deployment_config {
     deployment_ready_option {
@@ -3245,7 +3285,8 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
     }
   }
 }
-`, baseCodeDeployConfig(rName), rName, rName)
+
+`, rName, rName) + baseCodeDeployConfig(rName)
 }
 
 func test_config_blue_green_deployment_config_create_no_asg(rName string) string {
@@ -3257,6 +3298,17 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
+
+  deployment_style {
+	deployment_option = "WITH_TRAFFIC_CONTROL"
+	deployment_type   = "BLUE_GREEN"
+  }
+
+  load_balancer_info {
+    elb_info {
+      name = "foo-elb"
+    }
+  }
 
   blue_green_deployment_config {
     deployment_ready_option {
@@ -3286,6 +3338,17 @@ resource "aws_codedeploy_deployment_group" "foo_group" {
   app_name = "${aws_codedeploy_app.foo_app.name}"
   deployment_group_name = "foo-group-%s"
   service_role_arn = "${aws_iam_role.foo_role.arn}"
+
+  deployment_style {
+	deployment_option = "WITH_TRAFFIC_CONTROL"
+	deployment_type   = "BLUE_GREEN"
+  }
+
+  load_balancer_info {
+    elb_info {
+      name = "foo-elb"
+    }
+  }
 
   blue_green_deployment_config {
     deployment_ready_option {
