@@ -2,14 +2,14 @@
 
 BUG FIXES:
 
-* data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11492]
-* resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11492]
-* resource/aws_emr_security_configuration: Properly set `creation_date` value into the Terraform state [GH-11492]
-* resource/aws_iam_service_linked_role: Properly set `create_date` value into the Terraform state [GH-11492]
-* resource/aws_lambda_event_source_mapping: Properly set `last_modified` value into the Terraform state [GH-11492]
-* resource/aws_organizations_account: Properly set `joined_timestamp` value into the Terraform state [GH-11492]
-* resource/aws_ssm_activation: Properly set `expiration_date` value into the Terraform state and perform drift detection when configured [GH-11492]
-* resource/aws_ssm_document: Properly set `created_date` value into the Terraform state [GH-11492]
+* data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
+* resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
+* resource/aws_emr_security_configuration: Properly set `creation_date` value into the Terraform state [GH-11491]
+* resource/aws_iam_service_linked_role: Properly set `create_date` value into the Terraform state [GH-11491]
+* resource/aws_lambda_event_source_mapping: Properly set `last_modified` value into the Terraform state [GH-11491]
+* resource/aws_organizations_account: Properly set `joined_timestamp` value into the Terraform state [GH-11491]
+* resource/aws_ssm_activation: Properly set `expiration_date` value into the Terraform state and perform drift detection when configured [GH-11491]
+* resource/aws_ssm_document: Properly set `created_date` value into the Terraform state [GH-11491]
 
 ## 2.45.0 (January 17, 2020)
 
