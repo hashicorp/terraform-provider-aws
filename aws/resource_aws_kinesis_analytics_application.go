@@ -649,7 +649,6 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			}
 			sqlApplicationConfiguration.Outputs = outputs
 		}
-		fmt.Printf("sqApplicationConfiguration: %+v\n", sqlApplicationConfiguration)
 	case strings.HasPrefix(runtime, "FLINK"):
 		flinkApplicationConfiguration = &kinesisanalyticsv2.FlinkApplicationConfiguration{}
 		if v, ok := d.GetOk("checkpoint_configuration"); ok {
@@ -786,13 +785,13 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	d.Set("status", aws.StringValue(resp.ApplicationDetail.ApplicationStatus))
 	d.Set("version", int(aws.Int64Value(resp.ApplicationDetail.ApplicationVersionId)))
 
+	fmt.Printf("cloudwatch logging optinons: %+v\n\n", resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)
 	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
 	}
 
 	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
-		fmt.Printf("resp: %+v\n", resp)
 		if resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription != nil {
 			if err := d.Set("inputs", flattenKinesisAnalyticsInputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions)); err != nil {
 				return fmt.Errorf("error setting inputs: %s", err)
@@ -867,6 +866,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
 				clo := v.([]interface{})[0].(map[string]interface{})
 				cloudwatchLoggingOption := expandKinesisAnalyticsCloudwatchLoggingOption(clo)
+				fmt.Printf("cloudwatch_logging_options: %+v\n\n", cloudwatchLoggingOption)
 				addOpts := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
 					ApplicationName:             aws.String(name),
 					CurrentApplicationVersionId: aws.Int64(int64(version)),

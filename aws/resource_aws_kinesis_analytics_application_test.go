@@ -734,31 +734,14 @@ func testAccPreCheckAWSKinesisAnalytics(t *testing.T) {
 
 func testAccKinesisAnalyticsApplication_basic(rInt int) string {
 	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
-
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  service_execution_role = "${aws_iam_role.test.arn}"
 }
-`, rInt, rInt)
+`, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_update(rInt int) string {
@@ -783,6 +766,7 @@ resource "aws_iam_role" "kinesis_analytics_application" {
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode2\n"
+  code_content_type      = "plain_text"
   runtime                = "SQL-1_0"
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
 }
@@ -791,23 +775,6 @@ resource "aws_kinesis_analytics_application" "test" {
 
 func testAccKinesisAnalyticsApplication_cloudwatchLoggingOptions(rInt int, streamName string) string {
 	return fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
-
 resource "aws_cloudwatch_log_group" "test" {
   name = "testAcc-%d"
 }
@@ -822,13 +789,13 @@ resource "aws_kinesis_analytics_application" "test" {
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  service_execution_role = "${aws_iam_role.test.arn}"
 
   cloudwatch_logging_options {
     log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
   }
 }
-`, rInt, rInt, streamName, rInt, rInt)
+`, rInt, streamName, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_inputsKinesisFirehose(rInt int) string {
@@ -1030,23 +997,6 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
-
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
@@ -1084,7 +1034,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
   }
 }
-`, rInt, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_inputsUpdateKinesisStream(rInt int, streamName string) string {
@@ -1099,7 +1049,7 @@ resource "aws_kinesis_analytics_application" "test" {
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  service_execution_role = "${aws_iam_role.test.arn}"
 
   inputs {
     name_prefix = "test_prefix2"
@@ -1394,6 +1344,7 @@ resource "aws_iam_role" "kinesis_analytics_application" {
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL-1_0"
+  code                   = "testCode\n"
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
 
@@ -1436,6 +1387,7 @@ resource "aws_s3_bucket" "test" {
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL_1-0"
+  code                   = "testCode\n"
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
 
