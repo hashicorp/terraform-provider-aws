@@ -22,8 +22,8 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"addresses": {
-				Type:     schema.TypeSet,
-				Required: true,
+				Type:     schema.TypeList,
+				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"arn": {
@@ -68,12 +68,13 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 	var resp *wafv2.CreateIPSetOutput
 
 	params := &wafv2.CreateIPSetInput{
-		Addresses:        expandStringSet(d.Get("addresses").(*schema.Set)),
+		Addresses:        expandStringList(d.Get("addresses").([]interface{})),
 		Description:      aws.String(d.Get("description").(string)),
 		IPAddressVersion: aws.String(d.Get("ip_address_version").(string)),
 		Name:             aws.String(d.Get("name").(string)),
 		Scope:            aws.String(d.Get("scope").(string)),
 	}
+
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateIPSet(params)
@@ -128,8 +129,8 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.IPSet.Name)
 	d.Set("description", resp.IPSet.Description)
 	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
-	d.Set("addresses", resp.IPSet.Addresses)
 	d.Set("arn", resp.IPSet.ARN)
+	d.Set("addresses", flattenStringList(resp.IPSet.Addresses))
 
 	return nil
 }
