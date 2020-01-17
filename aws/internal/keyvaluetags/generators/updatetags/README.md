@@ -199,3 +199,18 @@ The field name with the tag keys for untagging must be updated. Add an entry wit
 case "cloudhsmv2":
     return "TagKeyList"
 ```
+
+#### ServiceUntagInputCustomValue
+
+Given the following compilation error:
+
+```text
+aws/internal/keyvaluetags/update_tags_gen.go:523:4: cannot use updatedTags.IgnoreAws().CloudfrontTags() (type []*cloudfront.Tag) as type *cloudfront.Tags in field value
+```
+
+The value of the tags for untagging must be transformed. Add an entry within the `ServiceUntagInputCustomValue()` function of the generator to return the custom value. In the above case:
+
+```go
+case "cloudfront":
+	return "&cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreAws().Keys())}"
+```

@@ -26,6 +26,7 @@ var serviceNames = []string{
 	"appsync",
 	"athena",
 	"backup",
+	"cloudfront",
 	"cloudhsmv2",
 	"cloudtrail",
 	"cloudwatch",
@@ -266,6 +267,8 @@ func ServiceListTagsInputIdentifierField(serviceName string) string {
 		return "CertificateAuthorityArn"
 	case "athena":
 		return "ResourceARN"
+	case "cloudfront":
+		return "Resource"
 	case "cloudhsmv2":
 		return "ResourceId"
 	case "cloudtrail":
@@ -380,6 +383,8 @@ func ServiceListTagsInputResourceTypeField(serviceName string) string {
 // ServiceListTagsOutputTagsField determines the service tag field.
 func ServiceListTagsOutputTagsField(serviceName string) string {
 	switch serviceName {
+	case "cloudfront":
+		return "Tags.Items"
 	case "cloudhsmv2":
 		return "TagList"
 	case "cloudtrail":

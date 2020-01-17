@@ -28,6 +28,7 @@ var serviceNames = []string{
 	"appsync",
 	"athena",
 	"backup",
+	"cloudfront",
 	"cloudhsmv2",
 	"cloudtrail",
 	"cloudwatch",
@@ -135,6 +136,7 @@ func main() {
 		"TagPackage":                      keyvaluetags.ServiceTagPackage,
 		"Title":                           strings.Title,
 		"UntagFunction":                   ServiceUntagFunction,
+		"UntagInputCustomValue":           ServiceUntagInputCustomValue,
 		"UntagInputRequiresTagKeyType":    ServiceUntagInputRequiresTagKeyType,
 		"UntagInputRequiresTagType":       ServiceUntagInputRequiresTagType,
 		"UntagInputTagsField":             ServiceUntagInputTagsField,
@@ -222,6 +224,10 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 	if len(removedTags) > 0 {
 		{{- if . | UntagInputRequiresTagType }}
 		input.{{ . | UntagInputTagsField }} = removedTags.IgnoreAws().{{ . | Title }}Tags()
+		{{- else if . | UntagInputRequiresTagKeyType }}
+		input.{{ . | UntagInputTagsField }} = removedTags.IgnoreAws().{{ . | Title }}TagKeys()
+		{{- else if . | UntagInputCustomValue }}
+		input.{{ . | UntagInputTagsField }} = {{ . | UntagInputCustomValue }}
 		{{- else }}
 		input.{{ . | UntagInputTagsField }} = aws.StringSlice(removedTags.Keys())
 		{{- end }}
@@ -251,6 +257,10 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 				{{- end }}
 				{{- if . | UntagInputRequiresTagType }}
 				{{ . | UntagInputTagsField }}:       chunk.IgnoreAws().{{ . | Title }}Tags(),
+				{{- else if . | UntagInputRequiresTagKeyType }}
+				{{ . | UntagInputTagsField }}:       chunk.IgnoreAws().{{ . | Title }}TagKeys(),
+				{{- else if . | UntagInputCustomValue }}
+				{{ . | UntagInputTagsField }}:       {{ . | UntagInputCustomValue }},
 				{{- else }}
 				{{ . | UntagInputTagsField }}:       aws.StringSlice(chunk.Keys()),
 				{{- end }}
@@ -276,8 +286,10 @@ func {{ . | Title }}UpdateTags(conn {{ . | ClientType }}, identifier string{{ if
 			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}Tags(),
 			{{- else if . | UntagInputRequiresTagKeyType }}
 			{{ . | UntagInputTagsField }}:       removedTags.IgnoreAws().{{ . | Title }}TagKeys(),
+			{{- else if . | UntagInputCustomValue }}
+			{{ . | UntagInputTagsField }}:       {{ . | UntagInputCustomValue }},
 			{{- else }}
-			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.Keys()),
+			{{ . | UntagInputTagsField }}:       aws.StringSlice(removedTags.IgnoreAws().Keys()),
 			{{- end }}
 		}
 
@@ -435,6 +447,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "CertificateAuthorityArn"
 	case "athena":
 		return "ResourceARN"
+	case "cloudfront":
+		return "Resource"
 	case "cloudhsmv2":
 		return "ResourceId"
 	case "cloudtrail":
@@ -567,6 +581,8 @@ func ServiceTagInputTagsField(serviceName string) string {
 // ServiceTagInputCustomValue determines any custom value for the service tagging tags field.
 func ServiceTagInputCustomValue(serviceName string) string {
 	switch serviceName {
+	case "cloudfront":
+		return "&cloudfront.Tags{Items: updatedTags.IgnoreAws().CloudfrontTags()}"
 	case "kinesis":
 		return "aws.StringMap(chunk.IgnoreAws().Map())"
 	case "pinpoint":
@@ -713,5 +729,15 @@ func ServiceUntagInputTagsField(serviceName string) string {
 		return "RemoveTagKeys"
 	default:
 		return "TagKeys"
+	}
+}
+
+// ServiceUntagInputCustomValue determines any custom value for the service untagging tags field.
+func ServiceUntagInputCustomValue(serviceName string) string {
+	switch serviceName {
+	case "cloudfront":
+		return "&cloudfront.TagKeys{Items: aws.StringSlice(removedTags.IgnoreAws().Keys())}"
+	default:
+		return ""
 	}
 }
