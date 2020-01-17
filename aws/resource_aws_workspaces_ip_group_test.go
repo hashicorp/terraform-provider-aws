@@ -18,6 +18,7 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	ipGroupName := fmt.Sprintf("terraform-acctest-%s", acctest.RandString(10))
 	ipGroupNewName := fmt.Sprintf("terraform-acctest-new-%s", acctest.RandString(10))
 	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
+	resourceName := "aws_workspaces_ip_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -27,34 +28,35 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 			{
 				Config: testAccAwsWorkspacesIpGroupConfigA(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccWorkspacesIpGroupConfigExists("aws_workspaces_ip_group.test", &wipg),
-					resource.TestCheckResourceAttr(
-						"aws_workspaces_ip_group.test", "name", ipGroupName),
-					resource.TestCheckResourceAttr(
-						"aws_workspaces_ip_group.test", "description", ipGroupDescription),
-					resource.TestCheckResourceAttr(
-						"aws_workspaces_ip_group.test", "rules.#", "2"),
+					testAccWorkspacesIpGroupConfigExists(resourceName, &wipg),
+					resource.TestCheckResourceAttr(resourceName, "name", ipGroupName),
+					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Terraform", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.IPGroup", "Home"),
 				),
 			},
 			{
-				ResourceName:      "aws_workspaces_ip_group.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsWorkspacesIpGroupConfigB(ipGroupNewName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccWorkspacesIpGroupConfigExists("aws_workspaces_ip_group.test", &wipg),
-					resource.TestCheckResourceAttr(
-						"aws_workspaces_ip_group.test", "name", ipGroupNewName),
-					resource.TestCheckResourceAttr(
-						"aws_workspaces_ip_group.test", "description", ipGroupDescription),
-					resource.TestCheckResourceAttr(
-						"aws_workspaces_ip_group.test", "rules.#", "1"),
+					testAccWorkspacesIpGroupConfigExists(resourceName, &wipg),
+					resource.TestCheckResourceAttr(resourceName, "name", ipGroupNewName),
+					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.IPGroup", "Home"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Purpose", "test"),
 				),
 			},
 			{
-				ResourceName:      "aws_workspaces_ip_group.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -135,11 +137,13 @@ resource "aws_workspaces_ip_group" "test" {
 
   rules {
     source      = "10.0.0.1/16"
-    description = "Home" 
+    description = "Home"
   }
 
   tags = {
-    Name = "Home IP Group"
+    Name = "test"
+    Terraform = true
+    IPGroup = "Home"
   }
 }
 `, name, description)
@@ -153,11 +157,12 @@ resource "aws_workspaces_ip_group" "test" {
 
   rules {
     source      = "10.0.0.1/16"
-    description = "Home" 
+    description = "Home"
   }
 
   tags = {
-    Owner = "Andrew"
+    Purpose   = "test"
+    IPGroup = "Home"
   }
 }
 `, name, description)
