@@ -39,6 +39,10 @@ const (
 	//
 	// The request was rejected because an error occurred.
 	ErrCodeCloudHsmServiceException = "CloudHsmServiceException"
+
+	// ErrCodeCloudHsmTagException for service response error code
+	// "CloudHsmTagException".
+	ErrCodeCloudHsmTagException = "CloudHsmTagException"
 )
 
 var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
@@ -47,4 +51,5 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"CloudHsmInvalidRequestException":   newErrorCloudHsmInvalidRequestException,
 	"CloudHsmResourceNotFoundException": newErrorCloudHsmResourceNotFoundException,
 	"CloudHsmServiceException":          newErrorCloudHsmServiceException,
+	"CloudHsmTagException":              newErrorCloudHsmTagException,
 }

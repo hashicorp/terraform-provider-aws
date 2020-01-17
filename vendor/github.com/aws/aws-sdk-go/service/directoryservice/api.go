@@ -9730,7 +9730,9 @@ type DisableLDAPSInput struct {
 	// The type of LDAP security that the customer wants to enable. The security
 	// can be either server or client, but currently only the default Client is
 	// supported.
-	Type *string `type:"string" enum:"LDAPSType"`
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"LDAPSType"`
 }
 
 // String returns the string representation
@@ -9748,6 +9750,9 @@ func (s *DisableLDAPSInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "DisableLDAPSInput"}
 	if s.DirectoryId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10100,7 +10105,9 @@ type EnableLDAPSInput struct {
 
 	// The type of LDAP security the customer wants to enable. The security can
 	// be either server or client, but currently only the default Client is supported.
-	Type *string `type:"string" enum:"LDAPSType"`
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"LDAPSType"`
 }
 
 // String returns the string representation
@@ -10118,6 +10125,9 @@ func (s *EnableLDAPSInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "EnableLDAPSInput"}
 	if s.DirectoryId == nil {
 		invalidParams.Add(request.NewErrParamRequired("DirectoryId"))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
 
 	if invalidParams.Len() > 0 {

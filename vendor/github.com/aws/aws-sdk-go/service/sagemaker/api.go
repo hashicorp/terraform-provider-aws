@@ -6129,6 +6129,85 @@ func (c *SageMaker) DescribeUserProfileWithContext(ctx aws.Context, input *Descr
 	return out, req.Send()
 }
 
+const opDescribeWorkforce = "DescribeWorkforce"
+
+// DescribeWorkforceRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeWorkforce operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeWorkforce for more information on using the DescribeWorkforce
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeWorkforceRequest method.
+//    req, resp := client.DescribeWorkforceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeWorkforce
+func (c *SageMaker) DescribeWorkforceRequest(input *DescribeWorkforceInput) (req *request.Request, output *DescribeWorkforceOutput) {
+	op := &request.Operation{
+		Name:       opDescribeWorkforce,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeWorkforceInput{}
+	}
+
+	output = &DescribeWorkforceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeWorkforce API operation for Amazon SageMaker Service.
+//
+// Lists private workforce information, including workforce name, Amazon Resource
+// Name (ARN), and, if applicable, allowed IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)).
+// Allowable IP address ranges are the IP addresses that workers can use to
+// access tasks.
+//
+// This operation applies only to private workforces.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation DescribeWorkforce for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/DescribeWorkforce
+func (c *SageMaker) DescribeWorkforce(input *DescribeWorkforceInput) (*DescribeWorkforceOutput, error) {
+	req, out := c.DescribeWorkforceRequest(input)
+	return out, req.Send()
+}
+
+// DescribeWorkforceWithContext is the same as DescribeWorkforce with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeWorkforce for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) DescribeWorkforceWithContext(ctx aws.Context, input *DescribeWorkforceInput, opts ...request.Option) (*DescribeWorkforceOutput, error) {
+	req, out := c.DescribeWorkforceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDescribeWorkteam = "DescribeWorkteam"
 
 // DescribeWorkteamRequest generates a "aws/request.Request" representing the
@@ -10006,9 +10085,16 @@ func (c *SageMaker) ListTrialComponentsRequest(input *ListTrialComponentsInput) 
 
 // ListTrialComponents API operation for Amazon SageMaker Service.
 //
-// Lists the trial components in your account. You can filter the list to show
-// only components that were created in a specific time range. You can sort
-// the list by trial component name or creation time.
+// Lists the trial components in your account. You can sort the list by trial
+// component name or creation time. You can filter the list to show only components
+// that were created in a specific time range. You can also filter on one of
+// the following:
+//
+//    * ExperimentName
+//
+//    * SourceArn
+//
+//    * TrialName
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12547,6 +12633,91 @@ func (c *SageMaker) UpdateUserProfile(input *UpdateUserProfileInput) (*UpdateUse
 // for more information on using Contexts.
 func (c *SageMaker) UpdateUserProfileWithContext(ctx aws.Context, input *UpdateUserProfileInput, opts ...request.Option) (*UpdateUserProfileOutput, error) {
 	req, out := c.UpdateUserProfileRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateWorkforce = "UpdateWorkforce"
+
+// UpdateWorkforceRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateWorkforce operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateWorkforce for more information on using the UpdateWorkforce
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateWorkforceRequest method.
+//    req, resp := client.UpdateWorkforceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateWorkforce
+func (c *SageMaker) UpdateWorkforceRequest(input *UpdateWorkforceInput) (req *request.Request, output *UpdateWorkforceOutput) {
+	op := &request.Operation{
+		Name:       opUpdateWorkforce,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateWorkforceInput{}
+	}
+
+	output = &UpdateWorkforceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateWorkforce API operation for Amazon SageMaker Service.
+//
+// Restricts access to tasks assigned to workers in the specified workforce
+// to those within specific ranges of IP addresses. You specify allowed IP addresses
+// by creating a list of up to four CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html).
+//
+// By default, a workforce isn't restricted to specific IP addresses. If you
+// specify a range of IP addresses, workers who attempt to access tasks using
+// any IP address outside the specified range are denied access and get a Not
+// Found error message on the worker portal. After restricting access with this
+// operation, you can see the allowed IP values for a private workforce with
+// the operation.
+//
+// This operation applies only to private workforces.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon SageMaker Service's
+// API operation UpdateWorkforce for usage and error information.
+// See also, https://docs.aws.amazon.com/goto/WebAPI/sagemaker-2017-07-24/UpdateWorkforce
+func (c *SageMaker) UpdateWorkforce(input *UpdateWorkforceInput) (*UpdateWorkforceOutput, error) {
+	req, out := c.UpdateWorkforceRequest(input)
+	return out, req.Send()
+}
+
+// UpdateWorkforceWithContext is the same as UpdateWorkforce with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateWorkforce for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SageMaker) UpdateWorkforceWithContext(ctx aws.Context, input *UpdateWorkforceInput, opts ...request.Option) (*UpdateWorkforceOutput, error) {
+	req, out := c.UpdateWorkforceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -16350,13 +16521,13 @@ type CreateEndpointConfigInput struct {
 	//
 	// The KmsKeyId can be any of the following formats:
 	//
-	//    * // KMS Key ID "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // Amazon Resource Name (ARN) (ARN) of a KMS Key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // KMS Key Alias "alias/ExampleAlias"
+	//    * Alias name: alias/ExampleAlias
 	//
-	//    * // Amazon Resource Name (ARN) of a KMS Key Alias "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"
+	//    * Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
 	//
 	// The KMS key policy must grant permission to the IAM role that you specify
 	// in your CreateEndpoint, UpdateEndpoint requests. For more information, refer
@@ -26161,6 +26332,78 @@ func (s *DescribeUserProfileOutput) SetUserSettings(v *UserSettings) *DescribeUs
 	return s
 }
 
+type DescribeWorkforceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the private workforce whose access you want to restrict. WorkforceName
+	// is automatically set to "default" when a workforce is created and cannot
+	// be modified.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeWorkforceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkforceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeWorkforceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeWorkforceInput"}
+	if s.WorkforceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkforceName"))
+	}
+	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *DescribeWorkforceInput) SetWorkforceName(v string) *DescribeWorkforceInput {
+	s.WorkforceName = &v
+	return s
+}
+
+type DescribeWorkforceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A single private workforce, which is automatically created when you create
+	// your first private work team. You can create one private work force in each
+	// AWS Region. By default, any workforce related API operation used in a specific
+	// region will apply to the workforce created in that region. To learn how to
+	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
+	//
+	// Workforce is a required field
+	Workforce *Workforce `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeWorkforceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeWorkforceOutput) GoString() string {
+	return s.String()
+}
+
+// SetWorkforce sets the Workforce field's value.
+func (s *DescribeWorkforceOutput) SetWorkforce(v *Workforce) *DescribeWorkforceOutput {
+	s.Workforce = v
+	return s
+}
+
 type DescribeWorkteamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -27589,7 +27832,7 @@ func (s *GitConfigForUpdate) SetSecretArn(v string) *GitConfigForUpdate {
 	return s
 }
 
-// Defines under what conditions SageMaker creates a human loop.
+// Defines under what conditions SageMaker creates a human loop. Used within .
 type HumanLoopActivationConditionsConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -29788,6 +30031,16 @@ type InputConfig struct {
 	//    If using the CLI, {\"input\":[1,1024,1024,3]} Examples for two inputs:
 	//    If using the console, {"data1": [1,28,28,1], "data2":[1,28,28,1]} If using
 	//    the CLI, {\"data1\": [1,28,28,1], \"data2\":[1,28,28,1]}
+	//
+	//    * KERAS: You must specify the name and shape (NCHW format) of expected
+	//    data inputs using a dictionary format for your trained model. Note that
+	//    while Keras model artifacts should be uploaded in NHWC (channel-last)
+	//    format, DataInputConfig should be specified in NCHW (channel-first) format.
+	//    The dictionary formats required for the console and CLI are different.
+	//    Examples for one input: If using the console, {"input_1":[1,3,224,224]}
+	//    If using the CLI, {\"input_1\":[1,3,224,224]} Examples for two inputs:
+	//    If using the console, {"input_1": [1,3,224,224], "input_2":[1,3,224,224]}
+	//    If using the CLI, {\"input_1\": [1,3,224,224], \"input_2\":[1,3,224,224]}
 	//
 	//    * MXNET/ONNX: You must specify the name and shape (NCHW format) of the
 	//    expected data inputs in order using a dictionary format for your trained
@@ -34607,7 +34860,7 @@ type ListTrialComponentsInput struct {
 	CreatedBefore *time.Time `type:"timestamp"`
 
 	// A filter that returns only components that are part of the specified experiment.
-	// If you specify ExperimentName, you can't specify TrialName.
+	// If you specify ExperimentName, you can't filter by SourceArn or TrialName.
 	ExperimentName *string `min:"1" type:"string"`
 
 	// The maximum number of components to return in the response. The default value
@@ -34625,11 +34878,12 @@ type ListTrialComponentsInput struct {
 	SortOrder *string `type:"string" enum:"SortOrder"`
 
 	// A filter that returns only components that have the specified source Amazon
-	// Resource Name (ARN).
+	// Resource Name (ARN). If you specify SourceArn, you can't filter by ExperimentName
+	// or TrialName.
 	SourceArn *string `type:"string"`
 
 	// A filter that returns only components that are part of the specified trial.
-	// If you specify TrialName, you can't specify ExperimentName.
+	// If you specify TrialName, you can't filter by ExperimentName or SourceArn.
 	TrialName *string `min:"1" type:"string"`
 }
 
@@ -39942,13 +40196,13 @@ func (s *SharingSettings) SetS3OutputPath(v string) *SharingSettings {
 // of the JSON lines in the AugmentedManifestFile is shuffled. The shuffling
 // order is determined using the Seed value.
 //
-// For Pipe input mode, shuffling is done at the start of every epoch. With
-// large datasets, this ensures that the order of the training data is different
-// for each epoch, and it helps reduce bias and possible overfitting. In a multi-node
-// training job when ShuffleConfig is combined with S3DataDistributionType of
-// ShardedByS3Key, the data is shuffled across nodes so that the content sent
-// to a particular node on the first epoch might be sent to a different node
-// on the second epoch.
+// For Pipe input mode, when ShuffleConfig is specified shuffling is done at
+// the start of every epoch. With large datasets, this ensures that the order
+// of the training data is different for each epoch, and it helps reduce bias
+// and possible overfitting. In a multi-node training job when ShuffleConfig
+// is combined with S3DataDistributionType of ShardedByS3Key, the data is shuffled
+// across nodes so that the content sent to a particular node on the first epoch
+// might be sent to a different node on the second epoch.
 type ShuffleConfig struct {
 	_ struct{} `type:"structure"`
 
@@ -40093,6 +40347,53 @@ func (s *SourceAlgorithmSpecification) Validate() error {
 // SetSourceAlgorithms sets the SourceAlgorithms field's value.
 func (s *SourceAlgorithmSpecification) SetSourceAlgorithms(v []*SourceAlgorithm) *SourceAlgorithmSpecification {
 	s.SourceAlgorithms = v
+	return s
+}
+
+// A list of IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)).
+// Used to create an allow list of IP addresses for a private workforce. For
+// more information, see .
+type SourceIpConfig struct {
+	_ struct{} `type:"structure"`
+
+	// A list of one to four Classless Inter-Domain Routing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
+	// (CIDR) values.
+	//
+	// Maximum: 4 CIDR values
+	//
+	// The following Length Constraints apply to individual CIDR values in the CIDR
+	// value list.
+	//
+	// Cidrs is a required field
+	Cidrs []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s SourceIpConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SourceIpConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *SourceIpConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "SourceIpConfig"}
+	if s.Cidrs == nil {
+		invalidParams.Add(request.NewErrParamRequired("Cidrs"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCidrs sets the Cidrs field's value.
+func (s *SourceIpConfig) SetCidrs(v []*string) *SourceIpConfig {
+	s.Cidrs = v
 	return s
 }
 
@@ -42262,13 +42563,13 @@ type TransformOutput struct {
 	// encrypt the model artifacts at rest using Amazon S3 server-side encryption.
 	// The KmsKeyId can be any of the following formats:
 	//
-	//    * // KMS Key ID "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // Amazon Resource Name (ARN) of a KMS Key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // KMS Key Alias "alias/ExampleAlias"
+	//    * Alias name: alias/ExampleAlias
 	//
-	//    * // Amazon Resource Name (ARN) of a KMS Key Alias "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"
+	//    * Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
 	//
 	// If you don't provide a KMS key ID, Amazon SageMaker uses the default KMS
 	// key for Amazon S3 for your role's account. For more information, see KMS-Managed
@@ -42370,13 +42671,13 @@ type TransformResources struct {
 	// that run the batch transform job. The VolumeKmsKeyId can be any of the following
 	// formats:
 	//
-	//    * // KMS Key ID "1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // Amazon Resource Name (ARN) of a KMS Key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+	//    * Key ARN: arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
 	//
-	//    * // KMS Key Alias "alias/ExampleAlias"
+	//    * Alias name: alias/ExampleAlias
 	//
-	//    * // Amazon Resource Name (ARN) (ARN) of a KMS Key Alias "arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias"
+	//    * Alias name ARN: arn:aws:kms:us-west-2:111122223333:alias/ExampleAlias
 	VolumeKmsKeyId *string `type:"string"`
 }
 
@@ -44734,6 +45035,95 @@ func (s *UpdateUserProfileOutput) SetUserProfileArn(v string) *UpdateUserProfile
 	return s
 }
 
+type UpdateWorkforceInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of one to four worker IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// that can be used to access tasks assigned to this workforce.
+	//
+	// Maximum: 4 CIDR values
+	SourceIpConfig *SourceIpConfig `type:"structure"`
+
+	// The name of the private workforce whose access you want to restrict. WorkforceName
+	// is automatically set to "default" when a workforce is created and cannot
+	// be modified.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateWorkforceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateWorkforceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateWorkforceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateWorkforceInput"}
+	if s.WorkforceName == nil {
+		invalidParams.Add(request.NewErrParamRequired("WorkforceName"))
+	}
+	if s.WorkforceName != nil && len(*s.WorkforceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("WorkforceName", 1))
+	}
+	if s.SourceIpConfig != nil {
+		if err := s.SourceIpConfig.Validate(); err != nil {
+			invalidParams.AddNested("SourceIpConfig", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetSourceIpConfig sets the SourceIpConfig field's value.
+func (s *UpdateWorkforceInput) SetSourceIpConfig(v *SourceIpConfig) *UpdateWorkforceInput {
+	s.SourceIpConfig = v
+	return s
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *UpdateWorkforceInput) SetWorkforceName(v string) *UpdateWorkforceInput {
+	s.WorkforceName = &v
+	return s
+}
+
+type UpdateWorkforceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A single private workforce, which is automatically created when you create
+	// your first private work team. You can create one private work force in each
+	// AWS Region. By default, any workforce related API operation used in a specific
+	// region will apply to the workforce created in that region. To learn how to
+	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
+	//
+	// Workforce is a required field
+	Workforce *Workforce `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateWorkforceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateWorkforceOutput) GoString() string {
+	return s.String()
+}
+
+// SetWorkforce sets the Workforce field's value.
+func (s *UpdateWorkforceOutput) SetWorkforce(v *Workforce) *UpdateWorkforceOutput {
+	s.Workforce = v
+	return s
+}
+
 type UpdateWorkteamInput struct {
 	_ struct{} `type:"structure"`
 
@@ -45095,6 +45485,70 @@ func (s *VpcConfig) SetSecurityGroupIds(v []*string) *VpcConfig {
 // SetSubnets sets the Subnets field's value.
 func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
 	s.Subnets = v
+	return s
+}
+
+// A single private workforce, which is automatically created when you create
+// your first private work team. You can create one private work force in each
+// AWS Region. By default, any workforce related API operation used in a specific
+// region will apply to the workforce created in that region. To learn how to
+// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
+type Workforce struct {
+	_ struct{} `type:"structure"`
+
+	// The most recent date that was used to successfully add one or more IP address
+	// ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// to a private workforce's allow list.
+	LastUpdatedDate *time.Time `type:"timestamp"`
+
+	// A list of one to four IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
+	// to be added to the workforce allow list.
+	SourceIpConfig *SourceIpConfig `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the private workforce.
+	//
+	// WorkforceArn is a required field
+	WorkforceArn *string `type:"string" required:"true"`
+
+	// The name of the private workforce whose access you want to restrict. WorkforceName
+	// is automatically set to "default" when a workforce is created and cannot
+	// be modified.
+	//
+	// WorkforceName is a required field
+	WorkforceName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Workforce) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Workforce) GoString() string {
+	return s.String()
+}
+
+// SetLastUpdatedDate sets the LastUpdatedDate field's value.
+func (s *Workforce) SetLastUpdatedDate(v time.Time) *Workforce {
+	s.LastUpdatedDate = &v
+	return s
+}
+
+// SetSourceIpConfig sets the SourceIpConfig field's value.
+func (s *Workforce) SetSourceIpConfig(v *SourceIpConfig) *Workforce {
+	s.SourceIpConfig = v
+	return s
+}
+
+// SetWorkforceArn sets the WorkforceArn field's value.
+func (s *Workforce) SetWorkforceArn(v string) *Workforce {
+	s.WorkforceArn = &v
+	return s
+}
+
+// SetWorkforceName sets the WorkforceName field's value.
+func (s *Workforce) SetWorkforceName(v string) *Workforce {
+	s.WorkforceName = &v
 	return s
 }
 
@@ -46912,6 +47366,24 @@ const (
 
 	// TrainingInstanceTypeMlM416xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlM416xlarge = "ml.m4.16xlarge"
+
+	// TrainingInstanceTypeMlG4dnXlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dnXlarge = "ml.g4dn.xlarge"
+
+	// TrainingInstanceTypeMlG4dn2xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn2xlarge = "ml.g4dn.2xlarge"
+
+	// TrainingInstanceTypeMlG4dn4xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn4xlarge = "ml.g4dn.4xlarge"
+
+	// TrainingInstanceTypeMlG4dn8xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn8xlarge = "ml.g4dn.8xlarge"
+
+	// TrainingInstanceTypeMlG4dn12xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn12xlarge = "ml.g4dn.12xlarge"
+
+	// TrainingInstanceTypeMlG4dn16xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlG4dn16xlarge = "ml.g4dn.16xlarge"
 
 	// TrainingInstanceTypeMlM5Large is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlM5Large = "ml.m5.large"

@@ -540,7 +540,8 @@ func (c *Batch) DeregisterJobDefinitionRequest(input *DeregisterJobDefinitionInp
 
 // DeregisterJobDefinition API operation for AWS Batch.
 //
-// Deregisters an AWS Batch job definition.
+// Deregisters an AWS Batch job definition. Job definitions will be permanently
+// deleted after 180 days.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2213,13 +2214,16 @@ type ComputeResource struct {
 	// limits (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-resource-limits.html).
 	// If this is not specified, the default is BEST_FIT, which will use only the
 	// best fitting instance type, waiting for additional capacity if it's not available.
-	// This allocation strategy keeps costs lower but can limit scaling. BEST_FIT_PROGRESSIVE
-	// will select an additional instance type that is large enough to meet the
-	// requirements of the jobs in the queue, with a preference for an instance
-	// type with a lower cost. SPOT_CAPACITY_OPTIMIZED is only available for Spot
-	// Instance compute resources and will select an additional instance type that
-	// is large enough to meet the requirements of the jobs in the queue, with a
-	// preference for an instance type that is less likely to be interrupted.
+	// This allocation strategy keeps costs lower but can limit scaling. If you
+	// are using Spot Fleets with BEST_FIT then the Spot Fleet IAM Role must be
+	// specified. BEST_FIT_PROGRESSIVE will select additional instance types that
+	// are large enough to meet the requirements of the jobs in the queue, with
+	// a preference for instance types with a lower cost per vCPU. SPOT_CAPACITY_OPTIMIZED
+	// is only available for Spot Instance compute resources and will select additional
+	// instance types that are large enough to meet the requirements of the jobs
+	// in the queue, with a preference for instance types that are less likely to
+	// be interrupted. For more information, see Allocation Strategies (https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html)
+	// in the AWS Batch User Guide.
 	AllocationStrategy *string `locationName:"allocationStrategy" type:"string" enum:"CRAllocationStrategy"`
 
 	// The maximum percentage that a Spot Instance price can be when compared with
@@ -2296,8 +2300,9 @@ type ComputeResource struct {
 	SecurityGroupIds []*string `locationName:"securityGroupIds" type:"list"`
 
 	// The Amazon Resource Name (ARN) of the Amazon EC2 Spot Fleet IAM role applied
-	// to a SPOT compute environment. For more information, see Amazon EC2 Spot
-	// Fleet Role (https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html)
+	// to a SPOT compute environment. This role is required if the allocation strategy
+	// set to BEST_FIT or if the allocation strategy is not specified. For more
+	// information, see Amazon EC2 Spot Fleet Role (https://docs.aws.amazon.com/batch/latest/userguide/spot_fleet_IAM_role.html)
 	// in the AWS Batch User Guide.
 	SpotIamFleetRole *string `locationName:"spotIamFleetRole" type:"string"`
 
@@ -4149,7 +4154,7 @@ type JobDetail struct {
 	// state.
 	CreatedAt *int64 `locationName:"createdAt" type:"long"`
 
-	// A list of job names or IDs on which this job depends.
+	// A list of job IDs on which this job depends.
 	DependsOn []*JobDependency `locationName:"dependsOn" type:"list"`
 
 	// The job definition that is used by this job.
@@ -5587,8 +5592,9 @@ type SubmitJobInput struct {
 	// begin.
 	DependsOn []*JobDependency `locationName:"dependsOn" type:"list"`
 
-	// The job definition used by this job. This value can be either a name:revision
-	// or the Amazon Resource Name (ARN) for the job definition.
+	// The job definition used by this job. This value can be one of name, name:revision,
+	// or the Amazon Resource Name (ARN) for the job definition. If name is specified
+	// without a revision then the latest active revision is used.
 	//
 	// JobDefinition is a required field
 	JobDefinition *string `locationName:"jobDefinition" type:"string" required:"true"`
