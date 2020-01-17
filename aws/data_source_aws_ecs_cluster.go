@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEcsCluster() *schema.Resource {
@@ -61,6 +62,36 @@ func dataSourceAwsEcsCluster() *schema.Resource {
 					},
 				},
 			},
+			"capacity_providers": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"default_capacity_provider_strategy": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"base": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+
+						"capacity_provider": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"weight": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -96,6 +127,15 @@ func dataSourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error
 
 	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
 		return fmt.Errorf("error setting setting: %s", err)
+	}
+	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
+		return fmt.Errorf("error setting capacity_providers: %s", err)
+	}
+	if err := d.Set("default_capacity_provider_strategy", flattenEcsCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
+		return fmt.Errorf("error setting default_capacity_provider_strategy: %s", err)
+	}
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

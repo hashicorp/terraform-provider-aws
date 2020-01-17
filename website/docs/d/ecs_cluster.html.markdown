@@ -35,3 +35,6 @@ In addition to all arguments above, the following attributes are exported:
 * `running_tasks_count` - The number of running tasks for the ECS Cluster
 * `registered_container_instances_count` - The number of registered container instances for the ECS Cluster
 * `setting` - The settings associated with the ECS Cluster.
+* `capacity_providers` - List of short names of one or more capacity providers to associate with the cluster.
+* `default_capacity_provider_strategy` - The capacity provider strategy to use by default for the cluster.
+* `tags` - Key-value mapping of resource tags
