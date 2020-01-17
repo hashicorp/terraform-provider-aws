@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_cognito_user_pool_client: Support plan-time validation values of `ALLOW_*` variations for `explicit_auth_flows` argument [GH-10976]
 * resource/aws_egress_only_internet_gateway: Support resource import [GH-11071]
 * resource/aws_organization_organization: Support plan-time validation value of `TAG_POLICY` in `enabled_policy_types` argument [GH-11535]
 * resource/aws_placement_group: Add `tags` argument and `placement_group_id` attribute [GH-11482]
