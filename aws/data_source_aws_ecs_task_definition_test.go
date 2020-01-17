@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -23,7 +22,7 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "family", resourceName, "family"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_mode", resourceName, "network_mode"),
-					resource.TestMatchResourceAttr(dataSourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
+					resource.TestCheckResourceAttrPair(dataSourceName, "revision", resourceName, "revision"),
 					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "task_role_arn", resourceName, "task_role_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role_arn", resourceName, "execution_role_arn"),
