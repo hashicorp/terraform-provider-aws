@@ -10,8 +10,9 @@ import (
 )
 
 func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
-	resourceName := "data.aws_ecs_task_definition.mongo"
-	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_ecs_task_definition.test"
+	resourceName := "aws_ecs_task_definition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -20,11 +21,20 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 			{
 				Config: testAccCheckAwsEcsTaskDefinitionDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "family", rName),
-					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
-					resource.TestMatchResourceAttr(resourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
-					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.mongo_role", "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "family", resourceName, "family"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_mode", resourceName, "network_mode"),
+					resource.TestMatchResourceAttr(dataSourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
+					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "task_role_arn", resourceName, "task_role_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role_arn", resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "cpu", resourceName, "cpu"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "memory", resourceName, "memory"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "volume", resourceName, "volume"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "placement_constraints", resourceName, "placement_constraints"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "requires_compatibilities", resourceName, "requires_compatibilities"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "proxy_configuration", resourceName, "proxy_configuration"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.test", "arn"),
 				),
 			},
 		},
@@ -33,8 +43,8 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 
 func testAccCheckAwsEcsTaskDefinitionDataSourceConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "mongo_role" {
-  name = "%[1]s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<POLICY
 {
@@ -53,9 +63,9 @@ resource "aws_iam_role" "mongo_role" {
 POLICY
 }
 
-resource "aws_ecs_task_definition" "mongo" {
-  family        = "%[1]s"
-  task_role_arn = "${aws_iam_role.mongo_role.arn}"
+resource "aws_ecs_task_definition" "test" {
+  family        = %[1]q
+  task_role_arn = "${aws_iam_role.test.arn}"
   network_mode  = "bridge"
 
   container_definitions = <<DEFINITION
@@ -70,14 +80,14 @@ resource "aws_ecs_task_definition" "mongo" {
     "image": "mongo:latest",
     "memory": 128,
     "memoryReservation": 64,
-    "name": "mongodb"
+    "name": "testdb"
   }
 ]
 DEFINITION
 }
 
-data "aws_ecs_task_definition" "mongo" {
-  task_definition = "${aws_ecs_task_definition.mongo.family}"
+data "aws_ecs_task_definition" "test" {
+  task_definition = "${aws_ecs_task_definition.test.family}"
 }
 `, rName)
 }

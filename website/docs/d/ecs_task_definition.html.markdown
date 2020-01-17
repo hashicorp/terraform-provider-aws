@@ -70,3 +70,11 @@ In addition to all arguments above, the following attributes are exported:
 * `revision` - The revision of this task definition
 * `status` - The status of this task definition
 * `task_role_arn` - The ARN of the IAM role that containers in this task can assume
+* `execution_role_arn` - The Amazon Resource Name (ARN) of the task execution role that the Amazon ECS container agent and the Docker daemon can assume.
+* `volume` - A set of volume blocks that containers in your task may use.
+* `placement_constraints` - A set of placement constraints rules that are taken into consideration during task placement.
+* `cpu` - The number of cpu units used by the task.
+* `memory` - The amount (in MiB) of memory used by the task.
+* `requires_compatibilities` - A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
+* `proxy_configuration` - The proxy configuration details for the App Mesh proxy.
+* `tags` - Key-value mapping of resource tags
