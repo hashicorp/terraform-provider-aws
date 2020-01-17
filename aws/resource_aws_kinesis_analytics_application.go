@@ -226,12 +226,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validateArn,
 									},
-
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
-									},
 								},
 							},
 						},
@@ -245,12 +239,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateArn,
-									},
-
-									"role_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
 										ValidateFunc: validateArn,
 									},
 								},
@@ -289,12 +277,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"resource_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateArn,
-												},
-
-												"role_arn": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validateArn,
@@ -443,12 +425,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validateArn,
 									},
-
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
-									},
 								},
 							},
 						},
@@ -464,12 +440,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validateArn,
 									},
-
-									"role_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validateArn,
-									},
 								},
 							},
 						},
@@ -481,12 +451,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
-									},
-
-									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validateArn,
@@ -547,12 +511,6 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 									"file_key": {
 										Type:     schema.TypeString,
 										Required: true,
-									},
-
-									"role_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateArn,
 									},
 								},
 							},
@@ -670,6 +628,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 	runtime := d.Get("runtime").(string)
 	s3Bucket := d.Get("s3_bucket").(string)
 	s3Object := d.Get("s3_object").(string)
+	textCode := d.Get("code").(string)
 	codeContentType := d.Get("code_content_type").(string)
 
 	var sqlApplicationConfiguration *kinesisanalyticsv2.SqlApplicationConfiguration
@@ -690,6 +649,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			}
 			sqlApplicationConfiguration.Outputs = outputs
 		}
+		fmt.Printf("sqApplicationConfiguration: %+v\n", sqlApplicationConfiguration)
 	case strings.HasPrefix(runtime, "FLINK"):
 		flinkApplicationConfiguration = &kinesisanalyticsv2.FlinkApplicationConfiguration{}
 		if v, ok := d.GetOk("checkpoint_configuration"); ok {
@@ -717,6 +677,10 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			FileKey:   aws.String(s3Object),
 		}
 	}
+	var textContent *string
+	if textCode != "" {
+		textContent = aws.String(textCode)
+	}
 
 	createOpts := &kinesisanalyticsv2.CreateApplicationInput{
 		RuntimeEnvironment:   aws.String(runtime),
@@ -728,6 +692,7 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 			ApplicationCodeConfiguration: &kinesisanalyticsv2.ApplicationCodeConfiguration{
 				CodeContent: &kinesisanalyticsv2.CodeContent{
 					S3ContentLocation: s3ContentLocation,
+					TextContent:       textContent,
 				},
 				CodeContentType: contentType,
 			},
@@ -804,7 +769,17 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	arn := aws.StringValue(resp.ApplicationDetail.ApplicationARN)
 	d.Set("name", aws.StringValue(resp.ApplicationDetail.ApplicationName))
 	d.Set("arn", arn)
+	d.Set("service_execution_role", aws.StringValue(resp.ApplicationDetail.ServiceExecutionRole))
+	d.Set("runtime", aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment))
 	d.Set("code", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.TextContent))
+	var tfContentType string
+	contentType := aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentType)
+	if contentType == kinesisanalyticsv2.CodeContentTypePlaintext {
+		tfContentType = "plain_text"
+	} else if contentType == kinesisanalyticsv2.CodeContentTypeZipfile {
+		tfContentType = "zip"
+	}
+	d.Set("code_content_type", tfContentType)
 	d.Set("create_timestamp", aws.TimeValue(resp.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
 	d.Set("description", aws.StringValue(resp.ApplicationDetail.ApplicationDescription))
 	d.Set("last_update_timestamp", aws.TimeValue(resp.ApplicationDetail.LastUpdateTimestamp).Format(time.RFC3339))
@@ -817,16 +792,19 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 
 	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
-		if err := d.Set("inputs", flattenKinesisAnalyticsInputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions)); err != nil {
-			return fmt.Errorf("error setting inputs: %s", err)
-		}
+		fmt.Printf("resp: %+v\n", resp)
+		if resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription != nil {
+			if err := d.Set("inputs", flattenKinesisAnalyticsInputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.InputDescriptions)); err != nil {
+				return fmt.Errorf("error setting inputs: %s", err)
+			}
 
-		if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.OutputDescriptions)); err != nil {
-			return fmt.Errorf("error setting outputs: %s", err)
-		}
+			if err := d.Set("outputs", flattenKinesisAnalyticsOutputs(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.OutputDescriptions)); err != nil {
+				return fmt.Errorf("error setting outputs: %s", err)
+			}
 
-		if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions)); err != nil {
-			return fmt.Errorf("error setting reference_data_sources: %s", err)
+			if err := d.Set("reference_data_sources", flattenKinesisAnalyticsReferenceDataSources(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription.ReferenceDataSourceDescriptions)); err != nil {
+				return fmt.Errorf("error setting reference_data_sources: %s", err)
+			}
 		}
 	}
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
@@ -1642,7 +1620,6 @@ func flattenKinesisAnalyticsInputs(inputs []*kinesisanalyticsv2.InputDescription
 						"lambda": []interface{}{
 							map[string]interface{}{
 								"resource_arn": aws.StringValue(ipcd.InputLambdaProcessorDescription.ResourceARN),
-								"role_arn":     aws.StringValue(ipcd.InputLambdaProcessorDescription.RoleARN),
 							},
 						},
 					},
@@ -1720,7 +1697,6 @@ func flattenKinesisAnalyticsInputs(inputs []*kinesisanalyticsv2.InputDescription
 			input["kinesis_firehose"] = []interface{}{
 				map[string]interface{}{
 					"resource_arn": aws.StringValue(id.KinesisFirehoseInputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisFirehoseInputDescription.RoleARN),
 				},
 			}
 		}
@@ -1729,7 +1705,6 @@ func flattenKinesisAnalyticsInputs(inputs []*kinesisanalyticsv2.InputDescription
 			input["kinesis_stream"] = []interface{}{
 				map[string]interface{}{
 					"resource_arn": aws.StringValue(id.KinesisStreamsInputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisStreamsInputDescription.RoleARN),
 				},
 			}
 		}
@@ -1752,7 +1727,6 @@ func flattenKinesisAnalyticsOutputs(outputs []*kinesisanalyticsv2.OutputDescript
 			output["kinesis_firehose"] = []interface{}{
 				map[string]interface{}{
 					"resource_arn": aws.StringValue(o.KinesisFirehoseOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(o.KinesisFirehoseOutputDescription.RoleARN),
 				},
 			}
 		}
@@ -1761,7 +1735,6 @@ func flattenKinesisAnalyticsOutputs(outputs []*kinesisanalyticsv2.OutputDescript
 			output["kinesis_stream"] = []interface{}{
 				map[string]interface{}{
 					"resource_arn": aws.StringValue(o.KinesisStreamsOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(o.KinesisStreamsOutputDescription.RoleARN),
 				},
 			}
 		}
@@ -1770,7 +1743,6 @@ func flattenKinesisAnalyticsOutputs(outputs []*kinesisanalyticsv2.OutputDescript
 			output["lambda"] = []interface{}{
 				map[string]interface{}{
 					"resource_arn": aws.StringValue(o.LambdaOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(o.LambdaOutputDescription.RoleARN),
 				},
 			}
 		}
@@ -1804,7 +1776,6 @@ func flattenKinesisAnalyticsReferenceDataSources(dataSources []*kinesisanalytics
 					map[string]interface{}{
 						"bucket_arn": aws.StringValue(ds.S3ReferenceDataSourceDescription.BucketARN),
 						"file_key":   aws.StringValue(ds.S3ReferenceDataSourceDescription.FileKey),
-						"role_arn":   aws.StringValue(ds.S3ReferenceDataSourceDescription.ReferenceRoleARN),
 					},
 				}
 			}
