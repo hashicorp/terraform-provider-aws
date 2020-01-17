@@ -182,7 +182,7 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_FlinkApplication(rInt, "testStream"),
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalyticsApplication_FlinkApplication(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -199,6 +199,39 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism", "1"),
 					resource.TestCheckResourceAttr(resName, "parallelism_configuration.parallelism_per_kpu", "1"),
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsApplication_flinkApplicationUpdate(t *testing.T) {
+	var application kinesisanalyticsv2.ApplicationDetail
+	resName := "aws_kinesis_analytics_application.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalyticsApplication_FlinkApplication(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+				),
+			},
+			{
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalyticsApplication_FlinkApplication_update(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "version", "2"),
+					resource.TestCheckResourceAttr(resName, "parallelism_configuration.autoscaling_enabled", "false"),
 				),
 			},
 			{
@@ -880,7 +913,7 @@ resource "aws_kinesis_analytics_application" "test" {
 `, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
-func testAccKinesisAnalyticsApplication_FlinkApplication(rInt int, streamName string) string {
+func testAccKinesisAnalyticsApplication_FlinkApplication_prereq(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "test-acc-flink-%d"
@@ -938,7 +971,11 @@ resource "aws_cloudwatch_log_stream" "test" {
   name           = "testAcc-flink-%s-%d"
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
 }
+`, rInt, rInt, rInt, rInt, streamName, rInt)
+}
 
+func testAccKinesisAnalyticsApplication_FlinkApplication(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_kinesis_analytics_application" "test" {
   name    = "testAccFlink-%d"
 
@@ -973,7 +1010,46 @@ resource "aws_kinesis_analytics_application" "test" {
     log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
   }
 }
-`, rInt, rInt, rInt, rInt, streamName, rInt, rInt)
+`, rInt)
+}
+
+func testAccKinesisAnalyticsApplication_FlinkApplication_update(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_analytics_application" "test" {
+  name    = "testAccFlink-%d"
+
+  runtime           = "FLINK-1_8"
+  s3_bucket         = "${aws_s3_bucket.test.arn}"
+  s3_object         = "${aws_s3_bucket_object.object.key}"
+  code_content_type = "zip"
+
+  checkpoint_configuration = {
+    checkpointing_enabled         = false
+    checkpoint_interval           = 30000
+    configuration_type            = "CUSTOM"
+    min_pause_between_checkpoints = 10000
+  }
+
+  parallelism_configuration = {
+    "configuration_type"  = "CUSTOM"
+    "autoscaling_enabled" = false
+    "parallelism"         = 1
+    "parallelism_per_kpu" = 1
+  }
+
+  monitoring_configuration = {
+    "configuration_type" = "CUSTOM"
+    "log_level"          = "WARN"
+    "metrics_level"      = "APPLICATION"
+  }
+
+  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+
+  cloudwatch_logging_options {
+    log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
+  }
+}
+`, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_inputsKinesisStream(rInt int) string {

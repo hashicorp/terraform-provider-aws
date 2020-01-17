@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -689,6 +690,17 @@ func validateAwsAccountId(v interface{}, k string) (ws []string, errors []error)
 			k, value))
 	}
 
+	return
+}
+
+func validateKinesisAnalayticsRuntime(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value != kinesisanalyticsv2.RuntimeEnvironmentSql10 &&
+		value != kinesisanalyticsv2.RuntimeEnvironmentFlink16 && value != kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
+		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics runtime. Valid runtimes are: %s", value, fmt.Sprintf("%s, %s, %s", kinesisanalyticsv2.RuntimeEnvironmentSql10, kinesisanalyticsv2.RuntimeEnvironmentFlink16,
+			kinesisanalyticsv2.RuntimeEnvironmentFlink18)))
+	}
 	return
 }
 

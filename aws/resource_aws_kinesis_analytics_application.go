@@ -50,8 +50,9 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 			},
 
 			"runtime": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateKinesisAnalayticsRuntime,
 			},
 
 			"s3_bucket": {
@@ -1351,12 +1352,22 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 					ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
 					MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
 				}
+			}
+		}
+		oldConfig, newConfig = d.GetChange("monitoring_configuration")
+		if len(oldConfig.(map[string]interface{})) > 0 && len(newConfig.(map[string]interface{})) > 0 {
+			if v := d.Get("monitoring_configuration").(map[string]interface{}); len(v) > 0 {
 				monitoringConfig := expandMonitoringConfiguration(v)
 				flinkUpdate.MonitoringConfigurationUpdate = &kinesisanalyticsv2.MonitoringConfigurationUpdate{
 					ConfigurationTypeUpdate: monitoringConfig.ConfigurationType,
 					LogLevelUpdate:          monitoringConfig.LogLevel,
 					MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
 				}
+			}
+		}
+		oldConfig, newConfig = d.GetChange("parallelism_configuration")
+		if len(oldConfig.(map[string]interface{})) > 0 && len(newConfig.(map[string]interface{})) > 0 {
+			if v := d.Get("parallelism_configuration").(map[string]interface{}); len(v) > 0 {
 				parallelismConfig := expandParallelismConfiguration(v)
 				flinkUpdate.ParallelismConfigurationUpdate = &kinesisanalyticsv2.ParallelismConfigurationUpdate{
 					AutoScalingEnabledUpdate: parallelismConfig.AutoScalingEnabled,
@@ -1366,6 +1377,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 				}
 			}
 		}
+
 		if (*flinkUpdate != kinesisanalyticsv2.FlinkApplicationConfigurationUpdate{}) {
 			if applicationUpdate.ApplicationConfigurationUpdate == nil {
 				applicationUpdate.ApplicationConfigurationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
