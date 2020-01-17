@@ -4,6 +4,7 @@ BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
 * resource/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
+* resource/aws_dms_certificate: Properly set `certificate_wallet` value into Terraform state [GH-11496]
 * resource/aws_emr_security_configuration: Properly set `creation_date` value into the Terraform state [GH-11491]
 * resource/aws_iam_service_linked_role: Properly set `create_date` value into the Terraform state [GH-11491]
 * resource/aws_lambda_event_source_mapping: Properly set `last_modified` value into the Terraform state [GH-11491]
