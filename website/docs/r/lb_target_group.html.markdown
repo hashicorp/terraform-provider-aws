@@ -54,6 +54,27 @@ resource "aws_lb_target_group" "lambda-example" {
 }
 ```
 
+### Instance Target Group with least_outstanding_requests load_balancing algorithm
+
+```hcl
+resource "aws_lb_target_group" "test" {
+  name     = "tf-example-lb-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+  load_balancing {
+    algorithm {
+      # type = "round_robin" # Default
+      type = "least_outstanding_requests"
+    }
+  }
+}
+
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -70,6 +91,7 @@ The following arguments are supported:
 * `proxy_protocol_v2` - (Optional) Boolean to enable / disable support for proxy protocol v2 on Network Load Balancers. See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html#proxy-protocol) for more information.
 * `stickiness` - (Optional) A Stickiness block. Stickiness blocks are documented below. `stickiness` is only valid if used with Load Balancers of type `Application`
 * `health_check` - (Optional) A Health Check block. Health Check blocks are documented below.
+* `load_balancing` - (Optional) A Load Balancing block. Load Balancing blocks are documented below.
 * `target_type` - (Optional, Forces new resource) The type of target that you must specify when registering targets with this target group.
 The possible values are `instance` (targets are specified by instance ID) or `ip` (targets are specified by IP address) or `lambda` (targets are specified by lambda arn).
 The default is `instance`. Note that you can't specify targets for a target group using both instance IDs and IP addresses.
@@ -105,6 +127,14 @@ The underlying function is invoked when `target_type` is set to `lambda`.
 * `healthy_threshold` - (Optional) The number of consecutive health checks successes required before considering an unhealthy target healthy. Defaults to 3.
 * `unhealthy_threshold` - (Optional) The number of consecutive health check failures required before considering the target unhealthy . For Network Load Balancers, this value must be the same as the `healthy_threshold`. Defaults to 3.
 * `matcher` (Required for HTTP/HTTPS ALB) The HTTP codes to use when checking for a successful response from a target. You can specify multiple values (for example, "200,202") or a range of values (for example, "200-299"). Applies to Application Load Balancers only (HTTP/HTTPS), not Network Load Balancers (TCP).   
+
+Load Balancing Block (`load_balancing`):
+
+* `algorithm` - (Optional) An Algorithm block. Algorithm block is documented below.
+
+Algorithm Block (`algorithm`):
+
+* `type` - (Optional) The load balancing algorithm determines how the load balancer selects targets when routing requests. The value is `round_robin` or `least_outstanding_requests`. The default is `round_robin`.
 
 ## Attributes Reference
 

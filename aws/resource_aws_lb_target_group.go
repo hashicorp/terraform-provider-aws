@@ -150,6 +150,36 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				},
 			},
 
+			"load_balancing": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"algorithm": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "round_robin",
+										ValidateFunc: validation.StringInSlice([]string{
+											"round_robin",
+											"least_outstanding_requests",
+										}, false),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			"health_check": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -399,6 +429,21 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 
 	var attrs []*elbv2.TargetGroupAttribute
 
+	if d.HasChange("load_balancing") {
+		loadBalancings := d.Get("load_balancing").([]interface{})
+		if len(loadBalancings) == 1 {
+			loadBalancing := loadBalancings[0].(map[string]interface{})
+			algorithms := loadBalancing["algorithm"].([]interface{})
+			if len(algorithms) == 1 {
+				algorithm := algorithms[0].(map[string]interface{})
+				attrs = append(attrs, &elbv2.TargetGroupAttribute{
+					Key:   aws.String("load_balancing.algorithm.type"),
+					Value: aws.String(algorithm["type"].(string)),
+				})
+			}
+		}
+	}
+
 	switch d.Get("target_type").(string) {
 	case elbv2.TargetTypeEnumInstance, elbv2.TargetTypeEnumIp:
 		if d.HasChange("deregistration_delay") {
@@ -608,6 +653,15 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 				return fmt.Errorf("Error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("slow_start", slowStart)
+		case "load_balancing.algorithm.type":
+			loadBalancing := make(map[string]interface{})
+			algorithm := make(map[string]interface{})
+			algorithm["type"] = aws.StringValue(attr.Value)
+			loadBalancing["algorithm"] = []interface{}{algorithm}
+
+			if err := d.Set("load_balancing", []interface{}{loadBalancing}); err != nil {
+				return fmt.Errorf("error setting load_balancing: %s", err)
+			}
 		}
 	}
 
