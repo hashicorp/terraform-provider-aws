@@ -112,7 +112,6 @@ var serviceNames = []string{
 	"waf",
 	"wafregional",
 	"wafv2",
-	"workspaces",
 }
 
 type TemplateData struct {
@@ -375,8 +374,6 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "storagegateway":
 		return "AddTagsToResource"
-	case "workspaces":
-		return "CreateTags"
 	default:
 		return "TagResource"
 	}
@@ -493,8 +490,6 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "wafv2":
 		return "ResourceARN"
-	case "workspaces":
-		return "ResourceId"
 	default:
 		return "ResourceArn"
 	}
@@ -623,8 +618,6 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "storagegateway":
 		return "RemoveTagsFromResource"
-	case "workspaces":
-		return "DeleteTags"
 	default:
 		return "UntagResource"
 	}

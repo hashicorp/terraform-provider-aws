@@ -5,16 +5,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
-	var wipg workspaces.IpGroup
+	var v workspaces.IpGroup
 	ipGroupName := fmt.Sprintf("terraform-acctest-%s", acctest.RandString(10))
 	ipGroupNewName := fmt.Sprintf("terraform-acctest-new-%s", acctest.RandString(10))
 	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
@@ -28,7 +27,7 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 			{
 				Config: testAccAwsWorkspacesIpGroupConfigA(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccWorkspacesIpGroupConfigExists(resourceName, &wipg),
+					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", ipGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
@@ -46,7 +45,7 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 			{
 				Config: testAccAwsWorkspacesIpGroupConfigB(ipGroupNewName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccWorkspacesIpGroupConfigExists(resourceName, &wipg),
+					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", ipGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
@@ -92,7 +91,7 @@ func testAccCheckAwsWorkspacesIpGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccWorkspacesIpGroupConfigExists(n string, wipg *workspaces.IpGroup) resource.TestCheckFunc {
+func testAccCheckAwsWorkspacesIpGroupExists(n string, v *workspaces.IpGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -107,17 +106,12 @@ func testAccWorkspacesIpGroupConfigExists(n string, wipg *workspaces.IpGroup) re
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})
-
 		if err != nil {
 			return err
 		}
 
 		if *resp.Result[0].GroupId == rs.Primary.ID {
-			wipg = &workspaces.IpGroup{
-				GroupId:   resp.Result[0].GroupId,
-				GroupName: resp.Result[0].GroupName,
-				GroupDesc: resp.Result[0].GroupDesc,
-			}
+			*v = *resp.Result[0]
 			return nil
 		}
 
