@@ -12,6 +12,7 @@ BUG FIXES:
 * resource/aws_organizations_account: Properly set `joined_timestamp` value into the Terraform state [GH-11491]
 * resource/aws_ssm_activation: Properly set `expiration_date` value into the Terraform state and perform drift detection when configured [GH-11491]
 * resource/aws_ssm_document: Properly set `created_date` value into the Terraform state [GH-11491]
+* resource/aws_waf_sql_injection_match_set: Properly set `sql_injection_match_tuples` value into Terraform state [GH-11498]
 
 ## 2.45.0 (January 17, 2020)
 
