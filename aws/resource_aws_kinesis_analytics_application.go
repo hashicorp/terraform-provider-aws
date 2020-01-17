@@ -852,9 +852,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			return err
 		}
 
-		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{
-			ApplicationConfigurationUpdate: &kinesisanalyticsv2.ApplicationConfigurationUpdate{},
-		}) {
+		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{}) {
 			updateApplicationOpts.SetApplicationConfigurationUpdate(applicationUpdate.ApplicationConfigurationUpdate)
 			_, updateErr := conn.UpdateApplication(updateApplicationOpts)
 			if updateErr != nil {
@@ -1225,9 +1223,7 @@ func expandKinesisAnalyticsReferenceData(rd map[string]interface{}) *kinesisanal
 }
 
 func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.UpdateApplicationInput, error) {
-	applicationUpdate := &kinesisanalyticsv2.UpdateApplicationInput{
-		ApplicationConfigurationUpdate: &kinesisanalyticsv2.ApplicationConfigurationUpdate{},
-	}
+	applicationUpdate := &kinesisanalyticsv2.UpdateApplicationInput{}
 
 	if d.HasChange("code") {
 		if v, ok := d.GetOk("code"); ok && v.(string) != "" {
@@ -1306,6 +1302,9 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 		if len(sqlUpdate.InputUpdates) > 0 ||
 			len(sqlUpdate.OutputUpdates) > 0 ||
 			len(sqlUpdate.ReferenceDataSourceUpdates) > 0 {
+			if applicationUpdate.ApplicationConfigurationUpdate == nil {
+				applicationUpdate.ApplicationConfigurationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
+			}
 
 			applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate = sqlUpdate
 		}
@@ -1341,6 +1340,9 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 			}
 		}
 		if (*flinkUpdate != kinesisanalyticsv2.FlinkApplicationConfigurationUpdate{}) {
+			if applicationUpdate.ApplicationConfigurationUpdate == nil {
+				applicationUpdate.ApplicationConfigurationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
+			}
 			applicationUpdate.ApplicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = flinkUpdate
 		}
 	}

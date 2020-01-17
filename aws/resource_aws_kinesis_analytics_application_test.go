@@ -22,7 +22,7 @@ func TestAccAWSKinesisAnalyticsApplication_basic(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsApplication_basic(rInt),
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -49,13 +49,13 @@ func TestAccAWSKinesisAnalyticsApplication_update(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsApplication_basic(rInt),
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsApplication_update(rInt),
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplication_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "code", "testCode2\n"),
@@ -498,7 +498,7 @@ func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &application2),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -528,7 +528,7 @@ func TestAccAWSKinesisAnalyticsApplication_Outputs_Lambda_Create(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
+				Config: testAccKinesisAnalyticsApplication_prereq(rInt) + testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsApplicationExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -737,8 +737,8 @@ func testAccKinesisAnalyticsApplication_basic(rInt int) string {
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
-  runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
+  runtime                = "SQL-1_0"
   service_execution_role = "${aws_iam_role.test.arn}"
 }
 `, rInt)
@@ -1075,23 +1075,6 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
-
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
@@ -1111,7 +1094,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
   }
 }
-`, rInt, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_outputsMultiple(rInt1, rInt2 int) string {
@@ -1205,24 +1188,19 @@ data "aws_iam_policy_document" "lambda_assume_role_policy" {
 
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.kinesisanalytics_assume_role_policy.json}"
-}
-
 resource "aws_iam_role_policy_attachment" "kinesis_analytics_application-AWSLambdaRole" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaRole"
-  role       = "${aws_iam_role.kinesis_analytics_application.name}"
+  role       = "${aws_iam_role.test.name}"
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_function-AWSLambdaBasicExecutionRole" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role       = "${aws_iam_role.test.name}"
 }
 
 resource "aws_iam_role" "lambda_function" {
   name               = "tf-acc-test-%d-lambda"
   assume_role_policy = "${data.aws_iam_policy_document.lambda_assume_role_policy.json}"
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_function-AWSLambdaBasicExecutionRole" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = "${aws_iam_role.lambda_function.name}"
 }
 
 resource "aws_lambda_function" "test" {
@@ -1238,7 +1216,7 @@ resource "aws_kinesis_analytics_application" "test" {
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  service_execution_role = "${aws_iam_role.test.arn}"
 
   outputs {
     name = "test_name"
@@ -1252,7 +1230,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
   }
 }
-`, rInt, rInt, rInt, rInt)
+`, rInt, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_outputsUpdateKinesisStream(rInt int, streamName string) string {
@@ -1262,29 +1240,12 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
-
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  service_execution_role = "${aws_iam_role.test.arn}"
 
   outputs {
     name = "test_name2"
@@ -1298,7 +1259,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
   }
 }
-`, streamName, rInt, rInt, rInt)
+`, streamName, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_referenceDataSource(rInt int) string {
@@ -1307,29 +1268,12 @@ resource "aws_s3_bucket" "test" {
   bucket = "testacc-%d"
 }
 
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "kinesis_analytics_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
-
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL-1_0"
   code                   = "testCode\n"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  service_execution_role = "${aws_iam_role.test.arn}"
 
   reference_data_sources {
     table_name = "test_table"
@@ -1358,7 +1302,7 @@ resource "aws_kinesis_analytics_application" "test" {
     }
   }
 }
-`, rInt, rInt, rInt)
+`, rInt, rInt)
 }
 
 func testAccKinesisAnalyticsApplication_referenceDataSourceUpdate(rInt int) string {
@@ -1372,7 +1316,7 @@ resource "aws_kinesis_analytics_application" "test" {
   runtime                = "SQL_1-0"
   code                   = "testCode\n"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application.arn}"
+  service_execution_role = "${aws_iam_role.test.arn}"
 
   reference_data_sources {
     table_name = "test_table2"
