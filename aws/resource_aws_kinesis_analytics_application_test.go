@@ -187,7 +187,9 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 					testAccCheckKinesisAnalyticsApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.checkpointing_enabled", "false"),
+					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.checkpoint_interval", "30000"),
 					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "checkpoint_configuration.min_pause_between_checkpoints", "10000"),
 					resource.TestCheckResourceAttr(resName, "cloudwatch_logging_options.#", "1"),
 					resource.TestCheckResourceAttr(resName, "monitoring_configuration.configuration_type", "CUSTOM"),
 					resource.TestCheckResourceAttr(resName, "monitoring_configuration.log_level", "WARN"),
@@ -199,12 +201,11 @@ func TestAccAWSKinesisAnalyticsApplication_flinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 				),
 			},
-			// TODO: support this
-			// {
-			// 	ResourceName:      resName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
+			{
+				ResourceName:      resName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -947,8 +948,10 @@ resource "aws_kinesis_analytics_application" "test" {
   code_content_type = "zip"
 
   checkpoint_configuration = {
-    checkpointing_enabled = false
-    configuration_type    = "CUSTOM"
+    checkpointing_enabled         = false
+    checkpoint_interval           = 30000
+    configuration_type            = "CUSTOM"
+    min_pause_between_checkpoints = 10000
   }
 
   parallelism_configuration = {
