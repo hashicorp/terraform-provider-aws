@@ -785,7 +785,6 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 	d.Set("status", aws.StringValue(resp.ApplicationDetail.ApplicationStatus))
 	d.Set("version", int(aws.Int64Value(resp.ApplicationDetail.ApplicationVersionId)))
 
-	fmt.Printf("cloudwatch logging optinons: %+v\n\n", resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)
 	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsCloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
 	}
@@ -841,6 +840,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 		version = 1
 	}
 
+	runtime := d.Get("runtime").(string)
 	if !d.IsNewResource() {
 		updateApplicationOpts := &kinesisanalyticsv2.UpdateApplicationInput{
 			ApplicationName:             aws.String(name),
@@ -866,7 +866,6 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
 				clo := v.([]interface{})[0].(map[string]interface{})
 				cloudwatchLoggingOption := expandKinesisAnalyticsCloudwatchLoggingOption(clo)
-				fmt.Printf("cloudwatch_logging_options: %+v\n\n", cloudwatchLoggingOption)
 				addOpts := &kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionInput{
 					ApplicationName:             aws.String(name),
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
@@ -894,7 +893,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			}
 		}
 
-		if d.Get("runtime") == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
+		if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
 			oldInputs, newInputs := d.GetChange("inputs")
 			if len(oldInputs.([]interface{})) == 0 && len(newInputs.([]interface{})) > 0 {
 				if v, ok := d.GetOk("inputs"); ok {
@@ -965,46 +964,47 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					version = version + 1
 				}
 			}
-			oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
-			if len(oldReferenceData.([]interface{})) == 0 && len(newReferenceData.([]interface{})) > 0 {
-				if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
-					for _, r := range v {
-						rd := r.(map[string]interface{})
-						referenceData := expandKinesisAnalyticsReferenceData(rd)
-						addOpts := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
-							ApplicationName:             aws.String(name),
-							CurrentApplicationVersionId: aws.Int64(int64(version)),
-							ReferenceDataSource:         referenceData,
-						}
-						// Retry for IAM eventual consistency
-						err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-							_, err := conn.AddApplicationReferenceDataSource(addOpts)
-							if err != nil {
-								if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
-									return resource.RetryableError(err)
-								}
-								return resource.NonRetryableError(err)
-							}
-							return nil
-						})
-						if isResourceTimeoutError(err) {
-							_, err = conn.AddApplicationReferenceDataSource(addOpts)
-						}
-						if err != nil {
-							return fmt.Errorf("Unable to add application reference data source: %s", err)
-						}
-						version = version + 1
-					}
-				}
-			}
 		}
-
 		arn := d.Get("arn").(string)
 		if d.HasChange("tags") {
 			o, n := d.GetChange("tags")
 
 			if err := keyvaluetags.Kinesisanalyticsv2UpdateTags(conn, arn, o, n); err != nil {
 				return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
+			}
+		}
+	}
+	oldReferenceData, newReferenceData := d.GetChange("reference_data_sources")
+	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 &&
+		len(oldReferenceData.([]interface{})) == 0 && len(newReferenceData.([]interface{})) > 0 {
+
+		if v := d.Get("reference_data_sources").([]interface{}); len(v) > 0 {
+			for _, r := range v {
+				rd := r.(map[string]interface{})
+				referenceData := expandKinesisAnalyticsReferenceData(rd)
+				addOpts := &kinesisanalyticsv2.AddApplicationReferenceDataSourceInput{
+					ApplicationName:             aws.String(name),
+					CurrentApplicationVersionId: aws.Int64(int64(version)),
+					ReferenceDataSource:         referenceData,
+				}
+				// Retry for IAM eventual consistency
+				err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+					_, err := conn.AddApplicationReferenceDataSource(addOpts)
+					if err != nil {
+						if isAWSErr(err, kinesisanalyticsv2.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+							return resource.RetryableError(err)
+						}
+						return resource.NonRetryableError(err)
+					}
+					return nil
+				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationReferenceDataSource(addOpts)
+				}
+				if err != nil {
+					return fmt.Errorf("Unable to add application reference data source: %s", err)
+				}
+				version = version + 1
 			}
 		}
 	}
@@ -1299,9 +1299,9 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 				sqlUpdate.ReferenceDataSourceUpdates = rdsus
 			}
 		}
-		if len(sqlUpdate.InputUpdates) > 0 ||
-			len(sqlUpdate.OutputUpdates) > 0 ||
-			len(sqlUpdate.ReferenceDataSourceUpdates) > 0 {
+		if sqlUpdate.InputUpdates != nil ||
+			sqlUpdate.OutputUpdates != nil ||
+			sqlUpdate.ReferenceDataSourceUpdates != nil {
 			if applicationUpdate.ApplicationConfigurationUpdate == nil {
 				applicationUpdate.ApplicationConfigurationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
 			}

@@ -1313,7 +1313,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_kinesis_analytics_application" "test" {
   name                   = "testAcc-%d"
-  runtime                = "SQL_1-0"
+  runtime                = "SQL-1_0"
   code                   = "testCode\n"
   code_content_type      = "plain_text"
   service_execution_role = "${aws_iam_role.test.arn}"
