@@ -2,7 +2,7 @@
 
 ENHANCEMENTS:
 
-* resource/aws_organization_organization: Support plan-time validation value of `TAG_POLICY` in `service_policy_types` argument [GH-11535]
+* resource/aws_organization_organization: Support plan-time validation value of `TAG_POLICY` in `enabled_policy_types` argument [GH-11535]
 
 BUG FIXES:
 
