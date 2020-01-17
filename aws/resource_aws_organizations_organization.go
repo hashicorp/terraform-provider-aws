@@ -137,6 +137,7 @@ func resourceAwsOrganizationsOrganization() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						organizations.PolicyTypeServiceControlPolicy,
+						organizations.PolicyTypeTagPolicy,
 					}, false),
 				},
 			},
