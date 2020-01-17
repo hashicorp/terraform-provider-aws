@@ -852,7 +852,9 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			return err
 		}
 
-		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{}) {
+		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{
+			ApplicationConfigurationUpdate: &kinesisanalyticsv2.ApplicationConfigurationUpdate{},
+		}) {
 			updateApplicationOpts.SetApplicationConfigurationUpdate(applicationUpdate.ApplicationConfigurationUpdate)
 			_, updateErr := conn.UpdateApplication(updateApplicationOpts)
 			if updateErr != nil {
@@ -1301,7 +1303,12 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 				sqlUpdate.ReferenceDataSourceUpdates = rdsus
 			}
 		}
-		applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate = sqlUpdate
+		if len(sqlUpdate.InputUpdates) > 0 ||
+			len(sqlUpdate.OutputUpdates) > 0 ||
+			len(sqlUpdate.ReferenceDataSourceUpdates) > 0 {
+
+			applicationUpdate.ApplicationConfigurationUpdate.SqlApplicationConfigurationUpdate = sqlUpdate
+		}
 	}
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
 		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18 {
@@ -1333,7 +1340,9 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 				}
 			}
 		}
-		applicationUpdate.ApplicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = flinkUpdate
+		if (*flinkUpdate != kinesisanalyticsv2.FlinkApplicationConfigurationUpdate{}) {
+			applicationUpdate.ApplicationConfigurationUpdate.FlinkApplicationConfigurationUpdate = flinkUpdate
+		}
 	}
 
 	return applicationUpdate, nil
