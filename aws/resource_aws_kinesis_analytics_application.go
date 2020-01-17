@@ -854,6 +854,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 
 		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{}) {
 			updateApplicationOpts.SetApplicationConfigurationUpdate(applicationUpdate.ApplicationConfigurationUpdate)
+			updateApplicationOpts.SetCloudWatchLoggingOptionUpdates(applicationUpdate.CloudWatchLoggingOptionUpdates)
 			_, updateErr := conn.UpdateApplication(updateApplicationOpts)
 			if updateErr != nil {
 				return updateErr
@@ -1302,6 +1303,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.Up
 		if sqlUpdate.InputUpdates != nil ||
 			sqlUpdate.OutputUpdates != nil ||
 			sqlUpdate.ReferenceDataSourceUpdates != nil {
+
 			if applicationUpdate.ApplicationConfigurationUpdate == nil {
 				applicationUpdate.ApplicationConfigurationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{}
 			}
