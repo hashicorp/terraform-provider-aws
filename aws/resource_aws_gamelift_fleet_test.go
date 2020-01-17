@@ -715,7 +715,8 @@ resource "aws_gamelift_fleet" "test" {
 }
 
 func testAccAWSGameliftFleetAllFieldsConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) +
+		testAccAWSGameLiftFleetIAMRole(buildName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
@@ -768,7 +769,8 @@ resource "aws_gamelift_fleet" "test" {
 }
 
 func testAccAWSGameliftFleetAllFieldsUpdatedConfig(fleetName, desc, launchPath string, params string, buildName, bucketName, key, roleArn string) string {
-	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) + fmt.Sprintf(`
+	return testAccAWSGameliftFleetBasicTemplate(buildName, bucketName, key, roleArn) +
+		testAccAWSGameLiftFleetIAMRole(buildName) + fmt.Sprintf(`
 resource "aws_gamelift_fleet" "test" {
   build_id          = "${aws_gamelift_build.test.id}"
   ec2_instance_type = "c4.large"
