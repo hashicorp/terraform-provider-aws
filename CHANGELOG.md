@@ -1,5 +1,9 @@
 ## 2.46.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_organization_organization: Support plan-time validation value of `TAG_POLICY` in `service_policy_types` argument [GH-11535]
+
 BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Properly set `not_after` and `not_before` values into the Terraform state [GH-11491]
